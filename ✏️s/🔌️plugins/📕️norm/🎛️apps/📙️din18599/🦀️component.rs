@@ -10,7 +10,6 @@ use crate::apps::din18599::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::din18599::modes::edit as edit_mode;
 use crate::apps::din18599::modes::edit::windows::{inputs, results};
 use crate::apps::din18599::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::apps::din18599::DinV18599Family;
 use crate::artifacts::din18599::op::Din18599Mutation;
 use crate::artifacts::din18599::Din18599Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};

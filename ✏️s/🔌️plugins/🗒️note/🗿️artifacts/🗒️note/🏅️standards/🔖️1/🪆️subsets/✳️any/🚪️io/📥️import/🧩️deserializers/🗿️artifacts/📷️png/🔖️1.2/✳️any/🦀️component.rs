@@ -4,7 +4,7 @@
 //! `PngSnapshot`'s `RasterImage` wrapper -> direct `width`/`height`/`pixels` fields).
 use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
 use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
-use semio_s_plugin_stdio::artifacts::png::engine::encode_png;
+use semio_s_plugin_stdio::artifacts::png::io::encode_png;
 use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
 use std::collections::BTreeMap;
 pub fn register() {}
@@ -37,5 +37,5 @@ pub fn deserialize(from: &PngSnapshot) -> Result<NoteSnapshot, String> {
     Ok(snap)
 }
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<NoteSnapshot, String> {
-    deserialize(&semio_s_plugin_stdio::artifacts::png::engine::decode_png(bytes)?)
+    deserialize(&semio_s_plugin_stdio::artifacts::png::io::decode_png(bytes)?)
 }

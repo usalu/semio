@@ -91,7 +91,8 @@ mod tests {
 /// `⚙️engine`. `evaluate` is the `Din18599Snapshot -> CheckReport` projection; `balance_annual`
 /// composes every `part_N::check` (pure helpers living in the parent `🧬️schema`).
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity};
-use crate::artifacts::din18599::standards::v1::subsets::any::schema::{part_1, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9, part_10, part_11, part_12, BalancingInputs};
+use crate::artifacts::din18599::standards::v1::subsets::any::schema::{part_1, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9, part_10, part_11, part_12};
+use crate::artifacts::din18599::BalancingInputs;
 
 /// 📋️ Full annual balancing per DIN V 18599.
 pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError> {

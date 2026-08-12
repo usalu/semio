@@ -111,11 +111,11 @@ pub mod artifacts {
                                 }
                                 #[path = "."]
                                 pub mod reorder_widgets {
-                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-widgets/🦠️mutation/🦀️component.rs"]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🪟️reorder-widgets/🦠️mutation/🦀️component.rs"]
                                     pub mod mutation;
-                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-widgets/🔺️diff/🦀️component.rs"]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🪟️reorder-widgets/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-widgets/↩️inverse/🦀️component.rs"]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🪟️reorder-widgets/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
                                 #[path = "."]
@@ -368,7 +368,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🌊️flow/🎮️commands/🧩️widget/🦀️component.rs"]
+            #[path = "../../🎛️apps/🌊️flow/🎮️commands/🪟️widget/🦀️component.rs"]
             pub mod widget;
             #[path = "../../🎛️apps/🌊️flow/🎮️commands/🔗️synapse/🦀️component.rs"]
             pub mod synapse;

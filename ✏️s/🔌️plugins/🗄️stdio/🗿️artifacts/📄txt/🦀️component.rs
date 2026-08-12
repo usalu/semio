@@ -36,7 +36,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::txt::standards::v_utf_8::engine::io_registry as v_utf_8;
+    use crate::artifacts::txt::standards::v_utf_8::subsets::any::io::io_registry as v_utf_8;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

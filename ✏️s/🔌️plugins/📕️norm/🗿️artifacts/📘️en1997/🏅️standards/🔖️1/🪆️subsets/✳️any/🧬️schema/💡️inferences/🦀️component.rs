@@ -90,7 +90,7 @@ mod tests {
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1997Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
-use crate::document::CheckReport;
+use crate::document::{AnnexChoice, CheckReport, CheckStatus};
 use crate::artifacts::en1997::standards::v1::subsets::any::schema::{check_shallow_foundation, part_1, part_2, DesignApproach};
 
 /// 📋️ Full EN 1997 check across bearing, sliding, settlement, pile axial (part 1), and ground investigation adequacy (part 2).

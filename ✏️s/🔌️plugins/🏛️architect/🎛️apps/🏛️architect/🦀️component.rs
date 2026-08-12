@@ -621,7 +621,7 @@ pub mod behavior {
     /// 📥️ Decodes CSV via stdio's real RFC 4180 codec, then merges rows into matching
     /// register collections via `MergeStrategy`.
     pub fn import_registers_csv(program: &mut ProgramSnapshot, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
-        let snapshot = stdio_csv::engine::decode_csv_with(csv, true);
+        let snapshot = stdio_csv::schema::snapshot::decode_csv_with(csv, true);
         import_rows(program, csv_snapshot_to_rows(&snapshot)?, strategy)
     }
 
@@ -1079,7 +1079,7 @@ pub mod behavior {
         #[test]
         fn quoted_csv_parses_commas_in_name() {
             let csv = "register,id,name,status,priority,tags,source\nelements,e1,\"Room, A\",Draft,Preferred,,src\n";
-            let snapshot = stdio_csv::engine::decode_csv_with(csv, true);
+            let snapshot = stdio_csv::schema::snapshot::decode_csv_with(csv, true);
             let rows = csv_snapshot_to_rows(&snapshot).expect("parse");
             assert_eq!(rows[0].name, "Room, A");
             assert_eq!(rows[0].source, "src");

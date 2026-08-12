@@ -164,7 +164,7 @@ pub mod derived_analysis {
         if sample.trim().is_empty() {
             return IoConfidence::Low;
         }
-        let snapshot = crate::artifacts::csv::engine::decode_csv_with(&sample, false);
+        let snapshot = crate::artifacts::csv::schema::snapshot::decode_csv_with(&sample, false);
         if snapshot.records.is_empty() {
             return IoConfidence::Low;
         }

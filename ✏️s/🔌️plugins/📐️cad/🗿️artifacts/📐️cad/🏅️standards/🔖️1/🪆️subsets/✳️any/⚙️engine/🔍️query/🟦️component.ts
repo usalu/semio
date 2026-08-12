@@ -1401,7 +1401,7 @@ export class ConstructEngine {
 
 // #region 🧪️Tests
 const __spatialQueryTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️component.ts") : null;
-const __spatialQueryTestKernel = import.meta.vitest ? await import("../📐️brepjs/🟦️component.ts") : null;
+const __spatialQueryTestKernel = import.meta.vitest ? await import("../🧱️brepjs/🟦️component.ts") : null;
 
 if (import.meta.vitest) {
   __spatialQueryTestRuntime!.bootstrapCadModules();

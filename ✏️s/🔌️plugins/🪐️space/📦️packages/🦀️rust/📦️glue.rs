@@ -423,13 +423,13 @@ pub mod apps {
                 pub mod windows {
                     #[path = "."]
                     pub mod workflow {
-                        #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🦀️component.rs"]
+                        #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🦀️component.rs"]
                         mod component;
                         pub use component::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️workflow/🎚️options/🎯️active-instance/🦀️component.rs"]
+                            #[path = "../../🎛️apps/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🎚️options/🎯️active-instance/🦀️component.rs"]
                             pub mod active_instance;
                         }
                     }

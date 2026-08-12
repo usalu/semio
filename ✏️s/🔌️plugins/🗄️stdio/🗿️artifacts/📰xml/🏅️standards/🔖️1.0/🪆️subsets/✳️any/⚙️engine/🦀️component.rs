@@ -460,8 +460,8 @@ mod tests {
         let sample = sample_snapshot();
         assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&sample, &sample), &sample), sample);
 
-        // Real fixture (the demo's `example.xml`) diffed against a mutated variant.
-        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/example.xml");
+        // Real fixture (the demo's `📰️example.xml`) diffed against a mutated variant.
+        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📰️example.xml");
         let fixture_doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
         let fixture = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: fixture_doc };
         let mut mutated = fixture.clone();
@@ -478,7 +478,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     #[test]
     fn codec_retention_law() {
-        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/example.xml");
+        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📰️example.xml");
         let doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
         // Documented normal form: leading/trailing whitespace around the document is trimmed (the
         // codec re-emits no trailing newline); the fixture has neither internal whitespace nor

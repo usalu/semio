@@ -17,7 +17,7 @@ use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
 use crate::apps::lowpoly::view::{format_selection_targets_label, selection_targets_from_config, utility_param_f64, LowpolyView};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::{artifact_kind, mesh_artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
+use crate::artifacts::lowpoly::{artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
@@ -38,7 +38,7 @@ pub use crate::apps::lowpoly::panels::inspection::LOWPOLY_PLAY_BODY_INSPECTION;
 pub use crate::apps::lowpoly::panels::layers::LOWPOLY_PLAY_BODY_LAYERS;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`🎚️options/*`, `📌️panels/*`, window/engagement builders) builds its `on_change`/item actions with.
+/// (`🛠️options/*`, `📌️panels/*`, window/engagement builders) builds its `on_change`/item actions with.
 pub fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(LOWPOLY_PLAY_CONTROLLER_ID).action(action, args)
 }
@@ -48,11 +48,18 @@ pub fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `crate::artifacts::lowpoly::artifact_kind()` declares for `"3d.lowpoly"`, plus the two workflow
 /// ports: `mesh:in` (Many, unrequired — accepts upstream mesh producers, e.g. cad via a Brep→Mesh
-/// conversion) and `mesh:out` (Many, unrequired, `kind_id: "3d.mesh"` — the shared interchange kind
-/// `crate::artifacts::lowpoly::mesh_artifact_kind()` declares). Relocated from the deleted
+/// conversion) and `mesh:out` (Many, unrequired). Relocated from the deleted
 /// `🗿️artifacts/💠️lowpoly/…/⚙️engine/🦀️component.rs` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): behaviour describing this app's own IO
 /// surface belongs on the app, not the artifact.
+///
+/// 🧱️ `mesh:out`'s `kind_id` was `Some("3d.mesh")`, pinned to the now-deleted duplicate interchange
+/// kind (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — `3d.mesh` is being removed repo-wide,
+/// mesh is canonically `s.stdio.semio@v1/mesh`, a subset of a composite artifact kind, never its own
+/// standalone `ArtifactKindSpec`). Set to `None` here (matching `mesh:in`'s existing precedent of
+/// accepting without a specific kind pin) rather than repointing at a stdio kind id, since choosing
+/// the RIGHT replacement wiring for a cross-plugin media port is a design decision beyond this
+/// migration's boundary — flagged under `sharedFileRequests` in this wave's report.
 pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(),
@@ -72,7 +79,7 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
                 label: "Mesh".into(),
                 direction: semio_framework_plugin::MediaPortDirection::Out,
                 media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
-                kind_id: Some("3d.mesh".into()),
+                kind_id: None,
                 required: false,
                 multiplicity: semio_framework_plugin::PortMultiplicity::Many,
             },
@@ -94,7 +101,7 @@ thread_local! {
 
 
 //#region 🔖️SharedMeasures
-/// 🎛️ Collects every window-chrome measure from the app-level `🎚️options/*` shared by both windows
+/// 🎛️ Collects every window-chrome measure from the app-level `🛠️options/*` shared by both windows
 /// (Model + UV expose an identical set — see this file's top-level doc comment).
 pub fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
     use crate::apps::lowpoly::options;
@@ -457,7 +464,6 @@ pub fn create_lowpoly_app() -> App {
         App::builder(LOWPOLY_PLAY_APP_ID, LocalizedLabel::native("Lowpoly", "Lowpoly"))
             .document(["semio", "lowpoly"])
             .artifact_kind(artifact_kind())
-            .artifact_kind(mesh_artifact_kind())
             .icon_id("shapes")
             .mode_def(edit::definition())
             .mode_def(paint_mode::definition())

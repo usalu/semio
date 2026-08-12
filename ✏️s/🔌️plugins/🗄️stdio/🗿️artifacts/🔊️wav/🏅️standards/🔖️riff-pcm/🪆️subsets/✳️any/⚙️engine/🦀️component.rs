@@ -174,10 +174,10 @@ mod tests {
     use super::*;
 
     /// 🌱 Real ~1s 440Hz mono 8kHz 16-bit PCM fixture — byte-identical to the artifact's own
-    /// `📚️examples/🎬️demo/🖼️assets/example.wav` (per ticket `fixtures/wav/NOTES.md`), duplicated
+    /// `📚️examples/🎬️demo/🖼️assets/🔊️example.wav` (per ticket `fixtures/wav/NOTES.md`), duplicated
     /// here as a literal so the test doesn't reach across an emoji-path `include_bytes!` boundary.
     fn real_fixture() -> Vec<u8> {
-        include_bytes!("../📚️examples/🎬️demo/🖼️assets/example.wav").to_vec()
+        include_bytes!("../📚️examples/🎬️demo/🖼️assets/🔊️example.wav").to_vec()
     }
 
     #[test]

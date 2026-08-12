@@ -1,5 +1,62 @@
-//! 🚪️ IO stdio.docx (ecma-376/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
+//! 🚪️ IO stdio.docx (ecma-376/✳️any) — registration flows through `docx::declaration()`
+//! (`🗄️stdio/🗿️artifacts/📜️docx/🦀️component.rs`), not a side-effecting `register()`; `⚙️engine`
+//! dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — its orphaned
+//! `register()`/`register_artifact_inferences()`/`register_pilot_languages()` (zero callers,
+//! superseded by `declaration()`) deleted outright; `DocxError` + shared OPC/XML constants below
+//! (used by both `📥️import/🧩️deserializers` and `📤️export/🧵️serializers`); `io_registry` moved
+//! here from `⚙️engine`, live (`docx::declaration()`'s `.composers(...)` and this artifact's own
+//! root `io_registry` both reach it).
+//#region 🔖️Error
+/// ⚠️ Typed docx decode/encode failure — a package this engine cannot honestly interpret is
+/// never fabricated into a partial/empty document.
+#[derive(Clone, Debug, PartialEq)]
+pub enum DocxError {
+    Opc(crate::artifacts::zip::opc::OpcError),
+    MissingMainDocumentRelationship,
+    MissingPart(String),
+    Xml { part: String, detail: String },
+    Malformed(String),
+}
+
+impl std::fmt::Display for DocxError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Opc(e) => write!(f, "docx: {e}"),
+            Self::MissingMainDocumentRelationship => write!(f, "docx: package root has no officeDocument relationship"),
+            Self::MissingPart(p) => write!(f, "docx: missing required part {p}"),
+            Self::Xml { part, detail } => write!(f, "docx: xml in {part}: {detail}"),
+            Self::Malformed(detail) => write!(f, "docx: {detail}"),
+        }
+    }
+}
+
+impl std::error::Error for DocxError {}
+
+impl From<crate::artifacts::zip::opc::OpcError> for DocxError {
+    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self { Self::Opc(e) }
+}
+//#endregion 🔖️Error
+
+//#region 🔖️Constants
+/// 🏅️ ISO/IEC 29500-1 Strict's officeDocument relationship type (`✳️strict`'s
+/// `STRICT_REL_BASE`/`officeDocument`) — decode must recognize this alongside the transitional
+/// `REL_TYPE_OFFICE_DOCUMENT`, since this `✳️any`-level decoder is shared by every subset
+/// including `✳️strict`, which legitimately never uses the transitional relationship type.
+pub const STRICT_REL_TYPE_OFFICE_DOCUMENT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument";
+pub const W_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+pub const R_NS: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+pub const MAIN_DOCUMENT_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+pub const MAIN_DOCUMENT_PART: &str = "word/document.xml";
+pub const STYLES_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml";
+pub const STYLES_PART: &str = "word/styles.xml";
+/// 🧭️ The styles relationship's `Target`, RELATIVE TO ITS OWNER'S DIRECTORY (`word/`) per OPC
+/// §9.3 -- NOT `STYLES_PART` verbatim, which is package-root-relative and would resolve (via
+/// `resolve_relationship_target("word/document.xml", "word/styles.xml")`) to the wrong path
+/// `word/word/styles.xml`. This is the OPC module's own documented "#1 relative-target gotcha".
+pub const STYLES_REL_TARGET: &str = "styles.xml";
+pub const REL_TYPE_STYLES: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
+//#endregion 🔖️Constants
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
@@ -49,3 +106,27 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxComposer as DocxRawAnyComposer;
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::DocxStrictComposer;
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::DocxTransitionalComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<DocxRawAnyComposer>(),
+                    composer_entry_of::<DocxStrictComposer>(),
+                    composer_entry_of::<DocxTransitionalComposer>(),
+                ]
+            })
+            .as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

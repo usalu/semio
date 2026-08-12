@@ -4,7 +4,7 @@
 //! belongs to the app that edits it). Hosts the static-site compiler (`compiler`, real filesystem
 //! writes), the scene-based presentation document types (`slide`), and headless video export
 //! (`🔖️VideoExport`) — plus, as sibling `<topic>/🦀️component.rs` files mirroring this taxonomy node's
-//! own subdirs, the Manim-class animation core (`⏱️rate`, `🎛️config`, `🎞️animation`, `🎥️camera`,
+//! own subdirs, the Manim-class animation core (`⏱️rate`, `🎛️config`, `🎞️animation`, `📷️camera`,
 //! `🎬️scene`, `📐️geometry`, `🔤️text`) and the headless video renderer (`🎥️video`). Both were their own
 //! plugin-level crates before an earlier migration; neither has a dependent outside this app, so per
 //! that migration's placement rule they stay folded in here rather than becoming a plugin-level

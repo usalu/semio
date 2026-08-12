@@ -226,6 +226,54 @@ pub mod derived_analysis {
 pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot.
+pub fn empty_ply_snapshot() -> PlySnapshot {
+    PlySnapshot::default()
+}
+
+/// ✅️ P2-FG3: the representative `PlySnapshot` every conformance law and the shipped
+/// `📚️examples/🎬️demo/🖼️assets` fixtures are built from — a `vertex` element (2 rows, plain
+/// scalar `float` properties) and a `face` element (1 row, a `list uchar int vertex_indices`
+/// property, exercising the count-prefixed list-cell shape) plus one comment. `format:
+/// PlyFormat::Ascii` deliberately — `print_dsl`/`parse_dsl` always render/read the CANONICAL
+/// ascii encoding regardless of `format` (see `📸️snapshot/🦀️component.rs`'s own
+/// `HandcraftedArtifactCodecs` doc comment), so a demo snapshot whose OWN `format` field isn't
+/// `Ascii` would make `fixture_honesty_law`'s `parse_dsl(print_dsl(demo)) == demo` fail — the
+/// DSL/text facet's own format-normalization would silently overwrite it. The Pack facet (which
+/// DOES respect `self.format`) is exercised against genuine BINARY bytes separately, by
+/// `protocol_walk_law` calling `encode_ply_with_format` directly with a non-ascii format.
+pub fn demo_ply_snapshot() -> PlySnapshot {
+    use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyRow, PlyScalarType, PlyValue};
+    PlySnapshot {
+        schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
+        format: PlyFormat::Ascii,
+        comments: vec!["semio demo".into()],
+        elements: vec![
+            PlyElement {
+                name: "vertex".into(),
+                count: 2,
+                properties: vec![
+                    PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float },
+                    PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float },
+                    PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float },
+                ],
+                rows: vec![
+                    PlyRow { values: vec![PlyValue::Float(0.0), PlyValue::Float(0.0), PlyValue::Float(0.0)] },
+                    PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(0.5), PlyValue::Float(-1.5)] },
+                ],
+            },
+            PlyElement {
+                name: "face".into(),
+                count: 1,
+                properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }],
+                rows: vec![PlyRow { values: vec![PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1)])] }],
+            },
+        ],
+    }
+}
+//#endregion 🔖️DocumentHelpers
+
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec PlyBuilderFacets {

@@ -7,7 +7,7 @@ pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 /// 📦️ Genuine `encode_docx(demo_docx_snapshot())` bytes (populated by engine fixture honesty).
-pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/example.docx");
+pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/📜️example.docx");
 pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
 
 #[cfg(test)]
@@ -82,7 +82,7 @@ mod tests {
         let asset = ExampleAsset {
             bytes: NATIVE_BYTES,
             text: None,
-            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/example.docx",
+            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx",
         };
         test_support::assert_subset_roundtrip::<DocxAnyRoundtrip>(&asset, None);
     }

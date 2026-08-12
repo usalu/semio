@@ -47,7 +47,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(MP4_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor())
         .inferences([crate::artifacts::mp4::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()])
-        .composers(crate::artifacts::mp4::standards::isobmff::engine::io_registry::entries())
+        .composers(crate::artifacts::mp4::standards::isobmff::subsets::any::io::io_registry::entries())
         .document_codec_bare::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA)
         .build()
 }
@@ -56,7 +56,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::mp4::standards::isobmff::engine::io_registry as std_composer;
+    use crate::artifacts::mp4::standards::isobmff::subsets::any::io::io_registry as std_composer;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

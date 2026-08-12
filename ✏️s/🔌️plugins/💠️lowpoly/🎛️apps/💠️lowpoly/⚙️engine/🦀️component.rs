@@ -35,7 +35,7 @@ pub enum LowpolyCoreError {
 //#region 🔖️ComputeSession
 /// @emoji 🛠️ Mutable compute session built from a projection clone plus ephemeral editing context
 /// (active object + selection). The program runs a mesh/paint edit against it, then reads the mutated
-/// `mesh_json`/pixels back out to construct the typed operation it emits. Never the source of truth.
+/// `mesh_workspace`/pixels back out to construct the typed operation it emits. Never the source of truth.
 pub struct LowpolyDocument {
     snapshot: LowpolySnapshot,
     active_object_id: String,
@@ -108,15 +108,20 @@ impl LowpolyDocument {
     pub fn reload_meshes(&mut self) -> Result<(), LowpolyCoreError> {
         self.meshes.clear();
         for object in &self.snapshot.objects {
-            let mesh = HalfedgeMesh::from_json(&object.mesh_json)?;
+            let mesh = HalfedgeMesh::from_json(&object.mesh_workspace)?;
             self.meshes.push(mesh);
         }
         Ok(())
     }
 
+    /// 🕸️ Writes the live kernel geometry back into each object's ephemeral `mesh_workspace`, then
+    /// (re-)derives the persisted `mesh` CHILD handle from that content via `mesh_child_handle` —
+    /// identical geometry always resolves to the identical handle, so an unchanged mesh produces no
+    /// spurious diff on the handle even though this runs on every sync.
     pub fn sync_meshes_to_snapshot(&mut self) -> Result<(), LowpolyCoreError> {
         for (object, mesh) in self.snapshot.objects.iter_mut().zip(self.meshes.iter()) {
-            object.mesh_json = mesh.to_json()?;
+            object.mesh_workspace = mesh.to_json()?;
+            object.mesh = Some(crate::artifacts::lowpoly::mesh_child_handle(&object.id, &object.mesh_workspace));
         }
         Ok(())
     }
@@ -247,8 +252,9 @@ impl LowpolyDocument {
         prepare_paint_mesh(&mut mesh);
         self.next_object_serial += 1;
         let id = format!("obj-{}", self.next_object_serial);
-        let mesh_json = mesh.to_json()?;
-        self.snapshot.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh_json, paint_layers: vec![LowpolyPaintLayer::new("Base")] });
+        let mesh_workspace = mesh.to_json()?;
+        let mesh_handle = crate::artifacts::lowpoly::mesh_child_handle(&id, &mesh_workspace);
+        self.snapshot.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh_handle), mesh_workspace, paint_layers: vec![LowpolyPaintLayer::new("Base")] });
         self.meshes.push(mesh);
         self.active_object_id = id.clone();
         Ok(id)
@@ -460,9 +466,9 @@ mod tests {
         doc.add_primitive("box").unwrap();
         doc.active_mesh_mut().unwrap().translate(Vec3::new(1.0, 0.0, 0.0)).unwrap();
         let idx = doc.active_index().unwrap();
-        let before = doc.snapshot().objects[idx].mesh_json.clone();
+        let before = doc.snapshot().objects[idx].mesh_workspace.clone();
         doc.sync_meshes_to_snapshot().unwrap();
-        assert_ne!(doc.snapshot().objects[idx].mesh_json, before);
+        assert_ne!(doc.snapshot().objects[idx].mesh_workspace, before);
     }
 
     #[test]

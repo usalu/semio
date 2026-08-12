@@ -14,7 +14,7 @@ Use a single Fable agent for creating the plan, a single Opus 5 agent for main p
 
 ---
 
-Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
+Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.6 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
 
 ---
 
@@ -373,11 +373,23 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The following architecture must be reached:
+- Every artifact has a schema, snapshot, diff, mutations, inferences, io system.
+- Every artifact is tracked over vcs.
+- Every artifact has children artifacts that have their own version history and referenced artifacts that also have their own version history.
+- Every app have a headless engine.
+- Every app has modes.
+- Every mode has windows.
+- Every window has actions, utilities, options, presence.
+
+---
+
 The process models need to be 
 
 ---
 
-Every window must have actions, utilities, options folder. 
+Every window must have actions, utilities, options folder, etc.
+Make sure this is enforced by policies and all breaches are fixed.
 e.g. ✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/👁️preview
 
 ```
@@ -389,11 +401,30 @@ s
           <window>
             actions
               <action>
+                component.rs
+                component.ts
+                …
             utilities
               <utility>
+                component.rs
+                component.ts
+                …
             options
               <option>
+                component.rs
+                component.ts
+                …
+            presence
+              <presence>
+                component.rs
+                component.ts
+                …
 ```
+
+---
+
+
+
 ---
 
 Artifacts must not have an engine but only a schema, snapshot, diff, mutations, inferences, io system.

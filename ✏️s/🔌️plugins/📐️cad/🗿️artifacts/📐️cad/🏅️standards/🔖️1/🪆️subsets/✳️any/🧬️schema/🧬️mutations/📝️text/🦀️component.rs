@@ -2,7 +2,7 @@
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
 pub use crate::artifacts::cad::mutations::{
-    CadMutation, CadNodePatch, CadObjectPatch, CadReferencePatch,
+    CadMutation, CadNodePatch, CadReferencePatch,
 };
 
 //#region 📖️SemioGrammar

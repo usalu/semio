@@ -134,13 +134,13 @@ pub mod derived_construction {
     /// 🧱️ Typed content constructors — build a `word/document.xml` document from paragraphs/runs
     /// with basic formatting (bold/italic), mirroring the svg artifact's "builder builds a full
     /// standard document" reference shape. Chainable; `build()` (from `ArtifactBuilder`) produces
-    /// the final `DocxSnapshot`, whose OPC container is assembled fresh (see `engine::build_minimal_docx`)
+    /// the final `DocxSnapshot`, whose OPC container is assembled fresh (see `io::export::serializers::build_minimal_docx`)
     /// the first time a paragraph is added to an otherwise-empty builder.
     impl DocxBuilderConstruction {
         /// ➕️ Appends a paragraph.
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.snapshot.document.body.push(DocxBlock::Paragraph(paragraph));
-            self.snapshot = crate::artifacts::docx::engine::build_minimal_docx(self.snapshot.document);
+            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
@@ -157,7 +157,7 @@ pub mod derived_construction {
         /// ➕️ Appends a table.
         pub fn add_table(mut self, table: DocxTable) -> Self {
             self.snapshot.document.body.push(DocxBlock::Table(table));
-            self.snapshot = crate::artifacts::docx::engine::build_minimal_docx(self.snapshot.document);
+            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
@@ -168,7 +168,7 @@ pub mod derived_construction {
             } else {
                 self.snapshot.document.styles.push(style);
             }
-            self.snapshot = crate::artifacts::docx::engine::build_minimal_docx(self.snapshot.document);
+            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
     }
@@ -203,7 +203,7 @@ pub mod derived_analysis {
             // relationship resolves under `word/` — disambiguates from xlsx/pptx, which share the
             // same zip magic and OPC shape but resolve under `xl/`/`ppt/` instead.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::docx::engine::sniff_docx_bytes(bytes) => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_docx_bytes(bytes) => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -245,6 +245,66 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
+
+//#region 🔖️DocumentHelpers
+pub fn empty_docx_snapshot() -> DocxSnapshot { DocxSnapshot::default() }
+
+/// 📄️ FG-wave: the demo `stdio.docx` document — a genuinely non-trivial `DocxSnapshot` exercising
+/// a styled heading paragraph, a mixed-formatting run (bold/italic/plain), a 2x2 table (recursing
+/// through `Table -> row -> cell -> Paragraph`), two named styles (one `based_on` the other), and
+/// one unmodeled raw OPC part (`word/numbering.xml`, verbatim-retained). The single source of
+/// truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are
+/// literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
+/// `fixture_honesty_law` below) — same shape `📷️png/…/⚙️engine/🦀️component.rs`'s own
+/// `demo_png_snapshot()` establishes.
+pub fn demo_docx_snapshot() -> DocxSnapshot {
+    use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+    let document = DocxDocument {
+        body: vec![
+            DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Semio Demo") }),
+            DocxBlock::Paragraph(DocxParagraph {
+                runs: vec![
+                    DocxRun { text: "Bold and ".into(), bold: true, ..Default::default() },
+                    DocxRun { text: "italic".into(), italic: true, ..Default::default() },
+                    DocxRun { text: " text".into(), ..Default::default() },
+                ],
+                style: None,
+                extra_paragraph_properties: Vec::new(),
+            }),
+            DocxBlock::Table(DocxTable {
+                rows: vec![
+                    DocxTableRow {
+                        cells: vec![
+                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C1")], ..Default::default() },
+                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C2")], ..Default::default() },
+                        ],
+                        ..Default::default()
+                    },
+                    DocxTableRow {
+                        cells: vec![
+                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C1")], ..Default::default() },
+                            DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C2")], ..Default::default() },
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            }),
+        ],
+        styles: vec![
+            DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None },
+            DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) },
+        ],
+    };
+    let mut snap = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(document);
+    snap.opc.set_part(
+        "word/numbering.xml",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml",
+        b"<w:numbering/>".to_vec(),
+    );
+    snap
+}
+//#endregion 🔖️DocumentHelpers
 
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(

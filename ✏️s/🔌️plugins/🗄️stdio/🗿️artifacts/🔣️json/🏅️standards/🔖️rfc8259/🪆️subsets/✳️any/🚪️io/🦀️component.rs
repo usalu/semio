@@ -48,3 +48,25 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🚪️DerivedIoRegistry
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure `ComposerEntry` aggregation, no
+/// engine needed. NOTE: always reach this via a fully-qualified path
+/// (`standards::v_rfc8259::subsets::any::io::io_registry::entries()`) — the artifact root's OWN
+/// `io_registry` (`🗿️artifacts/🔣️json/🦀️component.rs`) shadows this name with a DIFFERENT return
+/// type (`&'static [&'static ComposerEntry]` vs this module's `&'static [ComposerEntry]`); a bare
+/// `io_registry::entries()` silently rebinds to the wrong one.
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonComposer as JsonRawAnyComposer;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::JsonIJsonComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<JsonRawAnyComposer>(), composer_entry_of::<JsonIJsonComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

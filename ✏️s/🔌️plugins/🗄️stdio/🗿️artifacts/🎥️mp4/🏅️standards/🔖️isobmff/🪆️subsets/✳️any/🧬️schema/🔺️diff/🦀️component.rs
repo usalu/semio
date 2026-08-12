@@ -340,7 +340,7 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
     fn is_empty(&self) -> bool { self.ftyp.is_none() && self.tracks.is_none() && self.unknown_boxes.is_none() }
 }
 
-/// 🧩 Set-snapshot diff helper — used by the `📄set-snapshot/🔺️diff` leaf.
+/// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
 pub fn diff_set_snapshot(base: &Mp4Snapshot, snapshot: &Mp4Snapshot) -> Mp4Diff {
     <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(base, snapshot)
 }

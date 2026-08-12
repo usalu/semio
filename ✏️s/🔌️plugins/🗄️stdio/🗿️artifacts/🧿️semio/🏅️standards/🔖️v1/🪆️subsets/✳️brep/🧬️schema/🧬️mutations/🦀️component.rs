@@ -23,7 +23,7 @@
 //! rewrite, just re-pointed at the new 13-verb vocabulary instead of the old 22-variant
 //! `Add*`/`Remove*`/`Set*` one.
 //!
-//! `📄set-snapshot` is DELETED, with no replacement, per the locked decision
+//! `📸️set-snapshot` is DELETED, with no replacement, per the locked decision
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{

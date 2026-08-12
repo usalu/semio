@@ -6,7 +6,7 @@
 //! see that module's doc comment), the same pattern `stdio.png`'s snapshot uses — NOT a
 //! JSON-pack passthrough.
 
-use crate::artifacts::mp4::standards::isobmff::engine;
+use crate::artifacts::mp4::standards::isobmff::subsets::any::io as engine;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

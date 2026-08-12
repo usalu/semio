@@ -24,26 +24,13 @@ pub fn decode(bytes: &[u8]) -> Result<CadSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::testkit::{sample_geometry_without_anchors, sample_object, sample_scene_with};
-
-    fn sample_scene() -> CadSnapshot {
-        sample_scene_with(sample_geometry_without_anchors())
-    }
+    use crate::artifacts::cad::testkit::sample_scene;
 
     #[test]
     fn cad_scene_round_trips_through_pack() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&sample_scene());
         let bytes = encode(&sample_scene());
         assert_eq!(decode(&bytes).expect("decode"), sample_scene());
-    }
-
-    #[test]
-    fn cad_scene_with_all_geometry_panes_round_trips_through_pack() {
-        let mut scene = sample_scene();
-        scene.building_geometry = Some(sample_geometry_without_anchors());
-        scene.energy_geometry = Some(sample_geometry_without_anchors());
-        scene.structure_classic_geometry = Some(sample_geometry_without_anchors());
-        store::os_store::test_support::assert_dsl_pack_equivalence(&scene);
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -53,14 +40,15 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::cad::mutations::create_object::mutation::CreateObject;
+        use crate::artifacts::cad::mutations::create_shape_model::mutation::CreateShapeModel;
         use crate::artifacts::cad::op::CadMutation;
-        use crate::artifacts::cad::{empty_cad_snapshot, CadPaneId, CAD_DOCUMENT_SCHEMA};
+        use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<CadSnapshot, CadMutation> = ArtifactStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad-demo", empty_cad_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, object: sample_object("object-1") })], description: None }).expect("apply");
+        let sample = sample_model_child("command-envelope-1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() })], description: None }).expect("apply");
         let edit: &Edit<CadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<CadSnapshot, CadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

@@ -16,7 +16,7 @@ pub fn empty_dwg_snapshot() -> DwgSnapshot {
 }
 
 /// 📄️ The demo `stdio.dwg` (ac1018) document — decodes the real, committed 22-byte AC1018 stub
-/// (`📚️examples/🎬️demo/🖼️assets/example.dwg`, this standard's OWN dedicated fixture — NOT the
+/// (`📚️examples/🎬️demo/🖼️assets/🖊️example.dwg`, this standard's OWN dedicated fixture — NOT the
 /// artifact-level `📚️examples/🎬️demo` demo, which is ac1024-shaped, the canonical standard, per
 /// S-6/Decision #5) via ac1018's own real `decode_dwg`. The single source of truth for
 /// `🏅️standards/🔖️ac1018/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`

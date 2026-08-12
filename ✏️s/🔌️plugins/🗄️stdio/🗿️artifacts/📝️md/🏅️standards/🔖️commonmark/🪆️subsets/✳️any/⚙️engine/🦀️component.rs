@@ -1511,8 +1511,8 @@ mod tests {
         let sample = sample_snapshot();
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&sample, &sample), &sample), sample);
 
-        // Real fixture (the demo's `example.md`) diffed against a mutated variant.
-        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/example.md");
+        // Real fixture (the demo's `📝️example.md`) diffed against a mutated variant.
+        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📝️example.md");
         let fixture_blocks = parse_markdown_blocks(fixture_text);
         let fixture = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: fixture_blocks };
         let mut mutated = fixture.clone();
@@ -1533,7 +1533,7 @@ mod tests {
         // point at the SNAPSHOT level, not byte-identical text. Fixture is written to already be
         // a fixed point of this codec's own parse/render pair (avoids incidental normalizations --
         // e.g. indented-vs-fenced code -- that would make a byte-diff assertion meaningless here).
-        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/example.md");
+        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📝️example.md");
         let blocks = parse_markdown_blocks(fixture_text);
         let re_encoded_text = render_markdown_blocks(&blocks);
         let re_parsed = parse_markdown_blocks(&re_encoded_text);

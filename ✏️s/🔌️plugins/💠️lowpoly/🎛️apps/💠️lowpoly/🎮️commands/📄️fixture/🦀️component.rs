@@ -64,7 +64,7 @@ mod tests {
     /// store, that's the real host's job), same pattern as the already-migrated `shooting` sibling.
     #[test]
     fn import_snapshot_json_replaces_the_whole_document() {
-        let replacement = crate::artifacts::lowpoly::snapshot_from_mesh_json(&default_snapshot().objects[0].mesh_json, "obj-x", "X");
+        let replacement = crate::artifacts::lowpoly::snapshot_from_mesh_json(&default_snapshot().objects[0].mesh_workspace, "obj-x", "X");
         let json = serde_json::to_string(&replacement).unwrap();
         let snapshot = default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();

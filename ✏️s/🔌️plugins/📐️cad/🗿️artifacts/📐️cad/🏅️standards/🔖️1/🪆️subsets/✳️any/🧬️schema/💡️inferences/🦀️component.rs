@@ -42,11 +42,11 @@ impl protocol::InferenceSpec<CadSnapshot> for CadInference {
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
-            protocol::InferenceFieldSpec { id: "s.cad.cad.inference.objectCount", reads: &["objects", "buildingObjects", "energyObjects", "structureClassicObjects"] },
-            protocol::InferenceFieldSpec { id: "s.cad.cad.inference.vertexCount", reads: &["shapeGeometry", "buildingGeometry", "energyGeometry", "structureClassicGeometry"] },
+            protocol::InferenceFieldSpec { id: "s.cad.cad.inference.objectCount", reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"] },
+            protocol::InferenceFieldSpec { id: "s.cad.cad.inference.vertexCount", reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"] },
             protocol::InferenceFieldSpec {
                 id: "s.cad.cad.inference.bounds",
-                reads: &["objects", "buildingObjects", "energyObjects", "structureClassicObjects", "shapeGeometry", "buildingGeometry", "energyGeometry", "structureClassicGeometry"],
+                reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"],
             },
         ]
     }
@@ -81,27 +81,14 @@ pub fn cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescripto
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::cad::{empty_cad_snapshot, CadObject};
+    use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child};
     use protocol::Inference;
 
     //#region 🧪️InferenceLaws
     #[test]
     fn inference_determinism_law() {
         let mut snapshot = empty_cad_snapshot();
-        snapshot.objects.push(CadObject {
-            id: "o1".into(),
-            label: "O1".into(),
-            typology: "generic".into(),
-            visible: true,
-            locked: false,
-            origin: [1.0, 2.0, 3.0],
-            orientation: None,
-            scale: None,
-            mesh_url: None,
-            extent: None,
-            solid_handle: None,
-            primitives: Vec::new(),
-        });
+        snapshot.shape_model = Some(sample_model_child("inference-law-1"));
         assert_eq!(CadInference::infer(&snapshot), CadInference::infer(&snapshot));
     }
 
@@ -119,7 +106,7 @@ mod tests {
 // classification/reclassification (rule 2: pure fn snapshot/objects -> derived objects), not
 // stateful app behaviour.
 mod derive_transformation {
-    use crate::artifacts::cad::{CadObject, CadPrimitiveSlot};
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 
     use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle, Vec3};
     use std::collections::HashMap;
@@ -567,7 +554,7 @@ pub use derive_transformation::*;
 // Jack `QueryableGraph` adapter over one `CadGeometry` pane (rule 2/CAD-map: query -> D4
 // inference-shaped derived compute).
 mod construct_query {
-    use crate::artifacts::cad::CadGeometry;
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry;
     use math::graph::dsl::{QueryableEdge, QueryableGraph};
     use math::graph::manifest::PropertyValue;
     use std::collections::BTreeSet;
@@ -704,7 +691,7 @@ mod construct_query {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::cad::{CadEdge, CadEdgeCurve, CadFace, CadPlaneSurface, CadShell, CadSolid, CadVertex, CadWire};
+        use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadEdge, CadEdgeCurve, CadFace, CadPlaneSurface, CadShell, CadSolid, CadVertex, CadWire};
 
         fn box_geometry() -> CadGeometry {
             let corners: [[f64; 3]; 8] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];
@@ -802,8 +789,8 @@ pub use construct_query::*;
 // moved to `🚪️io/🦀️component.rs` instead; the interaction statechart moved to the app's own
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
-    use crate::artifacts::cad::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
+    use crate::artifacts::cad::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot};
     use semio_framework_3d::brep::kernel::mesh_data_from_mesh_transfer;
     use semio_framework_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
     use semio_framework::parse_contributions;
@@ -956,6 +943,7 @@ mod scene_compute {
     }
 
     /// @emoji 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
+    #[allow(dead_code)]
     fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
         let Ok(root) = serde_json::from_str::<Value>(source_json) else {
             return (Vec::new(), CadGeometry::default());
@@ -1001,32 +989,23 @@ mod scene_compute {
         }
     }
 
+    /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the single-box placeholder
+    /// object this used to inline directly is gone — `CadSnapshot` no longer carries inline object
+    /// data, only composed `s.stdio.semio.model` child HANDLES (minted by the host, out of a pure
+    /// function's reach). The default document now starts with no model children set; a caller that
+    /// wants the placeholder box back mints a `SemioModelSnapshot` child (via `model_element_from_solid_handle`-
+    /// style construction) and dispatches `create-shape-model` against the result. Documented gap,
+    /// not silently dropped.
     pub fn default_document() -> CadSnapshot {
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: "cad".into(),
-            objects: vec![CadObject {
-                id: "object-box-1".into(),
-                label: "Box".into(),
-                typology: "spatial.shape.primitive.box".into(),
-                visible: true,
-                locked: false,
-                origin: [0.0, 0.0, 0.0],
-                orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                scale: None,
-                mesh_url: None,
-                extent: Some([1.0, 1.0, 1.0]),
-                solid_handle: None,
-                primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "box-solid".into(), kind: "solid".into() }],
-            }],
+            shape_model: None,
+            building_model: None,
+            energy_model: None,
+            structure_classic_model: None,
+            drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Model".into(), kind: "group".into() }, CadNode { id: "node-box".into(), label: "Box".into(), kind: "solid".into() }],
-            building_objects: Vec::new(),
-            energy_objects: Vec::new(),
-            structure_classic_objects: Vec::new(),
-            shape_geometry: None,
-            building_geometry: None,
-            energy_geometry: None,
-            structure_classic_geometry: None,
             references_by_model_definition_id: std::collections::BTreeMap::new(),
             active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
         }
@@ -1035,23 +1014,23 @@ mod scene_compute {
     /// @emoji 📟️ Builds the quad play document: shape/building/energy/structure-classic panes each
     /// sourced from their own model definition inside the shared fixture JSON. Empty panes stay empty —
     /// never collapse to `default_document` (that single-box placeholder was the cut-concrete bug).
+    /// ⚠️ Same documented gap as `default_document` — the quad fixture's per-pane objects/geometry
+    /// (still real, still importable via `cad_document_pane_bundle`) can no longer be written
+    /// directly into `CadSnapshot`'s deleted `objects`/`*Geometry` fields. `cad_document_pane_bundle`
+    /// is KEPT (still exercised by this module's own tests below) as the real fixture-import path a
+    /// future host-level "compose the forest example" gesture will feed into freshly-minted model
+    /// children; this function itself now returns nodes/references only.
     fn forest_play_document(source_json: &str, id: &str) -> CadSnapshot {
-        let (shape_objects, shape_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_SHAPE);
-        let (building_objects, building_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_BUILDING);
-        let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
-        let (structure_classic_objects, structure_classic_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
+        let _ = source_json;
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: id.into(),
-            objects: shape_objects,
+            shape_model: None,
+            building_model: None,
+            energy_model: None,
+            structure_classic_model: None,
+            drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Concrete Forest Left".into(), kind: "group".into() }],
-            building_objects,
-            energy_objects,
-            structure_classic_objects,
-            shape_geometry: Some(shape_geometry),
-            building_geometry: Some(building_geometry),
-            energy_geometry: Some(energy_geometry),
-            structure_classic_geometry: Some(structure_classic_geometry),
             references_by_model_definition_id: forest_references_for_model_definitions(CAD_FOREST_REFERENCE_PLANE_Z),
             active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
         }
@@ -1186,13 +1165,15 @@ mod scene_compute {
     /// @emoji 🧵️ Tessellates a representative mesh for the OS mesh-exporter boundary — the document's
     /// first object across panes, or the default box typology for an empty scene (no runtime selection
     /// exists at this boundary).
+    /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: this used to scan the
+    /// document's inline object list for a representative mesh. `CadSnapshot` no longer carries
+    /// inline objects (only composed model child HANDLES, unresolved at this boundary) — falls back
+    /// to the default box typology unconditionally. Documented reduced-fidelity gap, not silently
+    /// wrong: `document`'s model-child handles are available via `crate::artifacts::cad::
+    /// cad_pane_model` for a caller that has ALSO resolved the child content and wants to do better.
     pub fn export_mesh_from_scene(document: &CadSnapshot) -> MeshData {
-        let first = cad_all_objects(document).next();
-        let typology = first.map_or("spatial.shape.primitive.box", |(object, _)| object.typology.as_str());
-        let extent = first.and_then(|(object, _)| object.extent);
-        let solid_handle = first.and_then(|(object, _)| object.solid_handle.as_deref());
-        let centroid = first.and_then(|(object, pane)| cad_pane_geometry(document, pane).and_then(|geometry| centroid_from_fixture_primitives(geometry, &object.primitives)));
-        typology_brep_mesh(typology, extent, solid_handle, centroid)
+        let _ = document;
+        typology_brep_mesh("spatial.shape.primitive.box", None, None, None)
     }
 
     //#region 🧩️Contributions

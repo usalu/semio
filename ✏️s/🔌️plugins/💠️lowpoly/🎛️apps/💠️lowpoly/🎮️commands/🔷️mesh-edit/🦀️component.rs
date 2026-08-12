@@ -337,8 +337,8 @@ mod tests {
         let object_id = small.snapshot().expect("projection").objects[0].id.clone();
         dispatch(&mut small, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: Some(0.1) }));
         dispatch(&mut large, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: Some(1.5) }));
-        let small_json = small.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh_json.clone();
-        let large_json = large.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh_json.clone();
+        let small_json = small.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh_workspace.clone();
+        let large_json = large.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh_workspace.clone();
         assert_ne!(small_json, large_json, "different staged extrude distances must produce different meshes");
     }
 

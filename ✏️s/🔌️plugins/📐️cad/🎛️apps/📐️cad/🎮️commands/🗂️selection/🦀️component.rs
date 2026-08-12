@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::apps::cad::{apply_component_selection, cad_pane_id_from_suffix, cad_pane_id_from_surface_id, clear_component_selection, resolve_active_object_id, runtime_of, snapshot_of};
 use crate::apps::cad::config::CadHoverTarget;
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::primary_primitive_kind;
-use crate::artifacts::cad::{cad_all_objects, cad_pane_objects, CadPaneId};
+use crate::artifacts::cad::CadPaneId;
 use semio_framework_plugin::{merge_world_selection_ids, SelectionSet};
 
 
@@ -123,15 +123,13 @@ pub mod set_hover {
             runtime.hovered_target = None;
             runtime.hovered_object_id = None;
         } else {
-            let mut mode = payload.mode.clone();
-            // 🧵️ Curve-primitive objects (structure beams/columns/walls) are whole instances.
-            if mode.as_deref() == Some("edge") {
-                if let Some(object_id) = payload.object_id.as_deref() {
-                    if cad_all_objects(document).find(|(object, _)| object.id == object_id).is_some_and(|(object, _)| primary_primitive_kind(object) == "curve") {
-                        mode = Some("mesh".into());
-                    }
-                }
-            }
+            // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the curve-primitive
+            // whole-instance special-case used to scan `CadSnapshot`'s inline object list, which no
+            // longer exists (object data lives inside composed `s.stdio.semio.model` CHILD
+            // documents, unresolved at this boundary). Documented reduced-fidelity gap: `edge` mode
+            // is no longer downgraded to `mesh` for curve objects.
+            let mode = payload.mode.clone();
+            let _ = document;
             runtime.hovered_object_id = payload.object_id.clone();
             runtime.hovered_target = Some(CadHoverTarget { object_id: payload.object_id.clone(), mode, id: payload.id });
         }
@@ -170,10 +168,10 @@ pub mod world_pick {
         }
         if matches!(payload.granularity.as_str(), "edge" | "face" | "vertex") {
             let resolved_object_id = payload.object_id.clone().or_else(|| runtime.hovered_target.as_ref().and_then(|target| target.object_id.clone())).or_else(|| runtime.hovered_object_id.clone()).or_else(|| resolve_active_object_id(&runtime));
-            // 🧵️ Curve centerlines are the model-definition objects — select the instance, not an edge component.
-            let curve_object_id = resolved_object_id
-                .as_deref()
-                .and_then(|object_id| cad_all_objects(document).find(|(object, _)| object.id == object_id).map(|(object, _)| object).filter(|object| primary_primitive_kind(object) == "curve").map(|object| object.id.clone()));
+            // ⚠️ Same documented gap as `set_hover` — curve-centerline whole-instance selection can
+            // no longer scan `CadSnapshot`'s (now-deleted) inline object list.
+            let _ = document;
+            let curve_object_id: Option<String> = None;
             if let Some(curve_id) = curve_object_id {
                 runtime.selected_object_ids = merge_world_selection_ids(&runtime.selected_object_ids, std::slice::from_ref(&curve_id), &payload.merge);
                 runtime.active_object_id = Some(curve_id);
@@ -194,19 +192,11 @@ pub mod world_pick {
             runtime.selected_reference_id = None;
             return Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]));
         }
-        let index = payload.id.unwrap_or(0) as usize;
-        let pane_id = payload.surface_id.as_deref().map(cad_pane_id_from_surface_id).or_else(|| payload.pane.as_deref().map(cad_pane_id_from_suffix)).unwrap_or(CadPaneId::Shape);
-        if let Some(object) = cad_pane_objects(document, pane_id).iter().filter(|object| object.visible).nth(index) {
-            let picked_id = object.id.clone();
-            runtime.selected_object_ids = merge_world_selection_ids(&runtime.selected_object_ids, std::slice::from_ref(&picked_id), &payload.merge);
-            runtime.active_object_id = Some(picked_id);
-            runtime.selected_node_ids.clear();
-            runtime.selected_primitive_id = None;
-            runtime.selected_primitive_kind = None;
-            runtime.selected_reference_model_definition_id = None;
-            runtime.selected_reference_id = None;
-            clear_component_selection(&mut runtime);
-        }
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: mesh-level world-pick by
+        // pane index used to scan `CadSnapshot`'s inline per-pane object list (now composed
+        // `s.stdio.semio.model` CHILD documents, unresolved at this boundary). Documented
+        // reduced-fidelity gap: index-based mesh pick no longer resolves an object id.
+        let _ = (payload.id, payload.surface_id.as_deref().map(cad_pane_id_from_surface_id), payload.pane.as_deref().map(cad_pane_id_from_suffix), document);
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
     }
 }

@@ -1,1 +1,13 @@
 00:59:59 start
+error[E0432]: unresolved import `crate::artifacts::semio::standards::v1::engine::demo_mesh_snapshot`
+error[E0425]: cannot find function `print_mesh_dsl` in module `crate::artifacts::semio::standards::v1::engine`
+error[E0425]: cannot find function `demo_mesh_snapshot` in module `crate::artifacts::semio::standards::v1::engine`
+error[E0425]: cannot find function `encode_mesh_pack` in module `crate::artifacts::semio::standards::v1::engine`
+error[E0425]: cannot find function `demo_mesh_snapshot` in module `crate::artifacts::semio::standards::v1::engine`
+error[E0425]: cannot find function `demo_mesh_snapshot` in module `crate::artifacts::semio::standards::v1::engine`
+error[E0425]: cannot find function `parse_mesh_dsl` in module `crate::artifacts::semio::standards::v1::engine`
+error[E0425]: cannot find function `print_mesh_dsl` in module `crate::artifacts::semio::standards::v1::engine`
+error[E0425]: cannot find function `parse_mesh_dsl` in module `crate::artifacts::semio::standards::v1::engine`
+error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error; 603 warnings emitted
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 9 previous errors; 737 warnings emitted
+01:00:45 end

@@ -865,7 +865,7 @@ mod tests {
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_docx_snapshot()) drifted from the shipped .pack.semio fixture");
 
             let native = encode_docx(&demo).expect("encode native docx");
-            assert_eq!(native.as_slice(), include_bytes!("../📚️examples/🎬️demo/🖼️assets/example.docx"), "encode_docx(demo) drifted from example.docx");
+            assert_eq!(native.as_slice(), include_bytes!("../📚️examples/🎬️demo/🖼️assets/📜️example.docx"), "encode_docx(demo) drifted from 📜️example.docx");
         }
 
         #[test]
@@ -873,8 +873,8 @@ mod tests {
         fn zzz_write_native_docx_fixture() {
             let demo = demo_docx_snapshot();
             let native = encode_docx(&demo).expect("encode");
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/example.docx");
-            std::fs::write(path, native).expect("write example.docx");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx");
+            std::fs::write(path, native).expect("write 📜️example.docx");
         }
     }
     //#endregion 🔖️ConformanceLaws

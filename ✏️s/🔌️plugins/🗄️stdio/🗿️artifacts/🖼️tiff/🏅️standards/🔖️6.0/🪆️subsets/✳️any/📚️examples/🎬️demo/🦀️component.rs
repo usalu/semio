@@ -7,7 +7,7 @@ pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 /// 🖼️ Genuine `encode_tiff(demo_tiff_snapshot())` bytes (populated by engine fixture honesty).
-pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/example.tiff");
+pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/🖼️example.tiff");
 pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
 
 #[cfg(test)]
@@ -113,7 +113,7 @@ mod tests {
         let asset = store::os_store::test_support::ExampleAsset {
             bytes: super::NATIVE_BYTES,
             text: None,
-            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/example.tiff",
+            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🖼️example.tiff",
         };
         store::os_store::test_support::assert_subset_roundtrip::<TiffAnyRoundtrip>(&asset, None);
     }

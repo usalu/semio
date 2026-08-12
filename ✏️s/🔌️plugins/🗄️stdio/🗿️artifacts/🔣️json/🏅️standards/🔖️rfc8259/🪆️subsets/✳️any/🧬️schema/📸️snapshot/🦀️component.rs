@@ -604,6 +604,48 @@ impl store::ArtifactPack for JsonSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot. Dissolved out of the former `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure document helper, no engine needed.
+pub fn empty_json_snapshot() -> JsonSnapshot {
+    JsonSnapshot::default()
+}
+
+/// 📄️ The demo `stdio.json` document — a genuinely 3-level-nested `JsonValue` (object → array,
+/// object → object → object → array) exercising every `JsonValue` variant (`Null`/`Bool`/`Number`/
+/// `String`/`Array`/`Object`) at least once. The single source of truth for
+/// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this
+/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
+/// `../💡️inferences/🦀️component.rs`'s `conformance_laws`) and for
+/// `nontrivial_nested_value_round_trip` below, which calls this instead of duplicating the literal.
+pub fn demo_json_snapshot() -> JsonSnapshot {
+    let value = JsonValue::Object {
+        members: vec![
+            JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } },
+            JsonMember { key: "count".into(), value: JsonValue::Number { lexeme: "42".into() } },
+            JsonMember { key: "ratio".into(), value: JsonValue::Number { lexeme: "3.5".into() } },
+            JsonMember { key: "active".into(), value: JsonValue::Bool { value: true } },
+            JsonMember { key: "missing".into(), value: JsonValue::Null },
+            JsonMember {
+                key: "tags".into(),
+                value: JsonValue::Array { items: vec![JsonValue::String { value: "a".into() }, JsonValue::String { value: "b".into() }, JsonValue::String { value: "c".into() }] },
+            },
+            JsonMember {
+                key: "nested".into(),
+                value: JsonValue::Object { members: vec![JsonMember {
+                    key: "deep".into(),
+                    value: JsonValue::Object { members: vec![JsonMember {
+                        key: "deeper".into(),
+                        value: JsonValue::Array { items: vec![JsonValue::Number { lexeme: "1".into() }, JsonValue::Number { lexeme: "2".into() }, JsonValue::Number { lexeme: "3".into() }] },
+                    }] },
+                }] },
+            },
+        ],
+    };
+    JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value }
+}
+//#endregion 🔖️DocumentHelpers
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -684,6 +726,33 @@ mod tests {
         let bytes = store::ArtifactPack::encode_pack(&snapshot);
         let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snapshot);
+    }
+
+    // 🦑 Dissolved out of the former `⚙️engine`'s own test region (ticket
+    // 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES). `empty_snapshot_matches_schema`'s
+    // former assertion (`empty_json_snapshot().schema == STDIO_JSON_DOCUMENT_SCHEMA`) already
+    // survives via `empty_snapshot_matches_schema` above (same fact, `JsonSnapshot::default()`).
+
+    #[test]
+    fn codec_round_trip() {
+        let snap = empty_json_snapshot();
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        assert_eq!(parsed.schema, snap.schema);
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        assert_eq!(decoded, snap);
+    }
+
+    #[test]
+    fn nontrivial_nested_value_round_trip() {
+        let snap = demo_json_snapshot();
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        assert_eq!(parsed.value, snap.value);
+        let bytes = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        assert_eq!(decoded.value, snap.value);
     }
 }
 //#endregion 🧪️Tests

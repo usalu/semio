@@ -292,7 +292,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `bending_resistance_knm`/`buckling_resistance_kn` and `check_aluminium_member` are pure function
 /// libraries; the snapshot-level composition (`evaluate`, `check_full_aluminium`) lives in
 /// `💡️inferences`. `na_de` re-exports `crate::artifacts::en1990`'s relocated `NaDe`.
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use crate::document::{CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖️NaDe
 pub mod na_de {

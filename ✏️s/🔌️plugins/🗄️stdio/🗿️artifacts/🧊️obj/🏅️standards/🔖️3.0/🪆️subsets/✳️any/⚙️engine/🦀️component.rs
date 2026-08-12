@@ -34,7 +34,7 @@ pub fn empty_obj_snapshot() -> ObjSnapshot {
 }
 
 /// 📄️ Raw demo Wavefront OBJ text — a two-triangle quad split across two named groups/materials,
-/// matching `📚️examples/🎬️demo/🖼️assets/example.obj` verbatim (this module's own single source
+/// matching `📚️examples/🎬️demo/🖼️assets/🧊️example.obj` verbatim (this module's own single source
 /// of truth for the demo fixture — exercises every statement kind: `mtllib`, `v`/`vt`/`vn`
 /// (incl. `w`-omitted forms), `f` (`v/vt/vn` triangles), `o`, `g`, `usemtl`, `s` (both numeric and
 /// `off`), a `#` comment, and one genuinely-unrecognized keyword line retained via

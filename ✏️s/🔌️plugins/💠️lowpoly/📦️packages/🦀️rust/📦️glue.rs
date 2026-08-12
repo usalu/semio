@@ -161,12 +161,21 @@ pub mod artifacts {
                                     pub mod inverse;
                                 }
                                 #[path = "."]
-                                pub mod replace_object_mesh {
-                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️replace-object-mesh/🦠️mutation/🦀️component.rs"]
+                                pub mod create_mesh {
+                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🦠️mutation/🦀️component.rs"]
                                     pub mod mutation;
-                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️replace-object-mesh/🔺️diff/🦀️component.rs"]
+                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️replace-object-mesh/↩️inverse/🦀️component.rs"]
+                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                #[path = "."]
+                                pub mod delete_mesh {
+                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
                                 #[path = "."]
@@ -608,17 +617,17 @@ pub mod apps {
 
         #[path = "."]
         pub mod options {
-            #[path = "../../🎛️apps/💠️lowpoly/🎚️options/👁️show-edges/🦀️component.rs"]
+            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/👁️show-edges/🦀️component.rs"]
             pub mod show_edges;
-            #[path = "../../🎛️apps/💠️lowpoly/🎚️options/🌞️sun/🦀️component.rs"]
+            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🌞️sun/🦀️component.rs"]
             pub mod sun;
-            #[path = "../../🎛️apps/💠️lowpoly/🎚️options/🧲️snap/🦀️component.rs"]
+            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🧲️snap/🦀️component.rs"]
             pub mod snap;
-            #[path = "../../🎛️apps/💠️lowpoly/🎚️options/🗂️select/🦀️component.rs"]
+            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🗂️select/🦀️component.rs"]
             pub mod select;
-            #[path = "../../🎛️apps/💠️lowpoly/🎚️options/🖌️paint-params-brush/🦀️component.rs"]
+            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🖌️paint-params-brush/🦀️component.rs"]
             pub mod paint_params_brush;
-            #[path = "../../🎛️apps/💠️lowpoly/🎚️options/🧽️paint-params-eraser/🦀️component.rs"]
+            #[path = "../../🎛️apps/💠️lowpoly/🛠️options/🧽️paint-params-eraser/🦀️component.rs"]
             pub mod paint_params_eraser;
         }
 

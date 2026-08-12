@@ -278,7 +278,6 @@ semio_framework_plugin::derive_artifact_facets!(
 /// library; the snapshot-level composition (`evaluate`, `check_full_actions`, `check_floor_actions`)
 /// lives in `💡️inferences`.
 use crate::document::{AnnexChoice, CheckResult, ClauseId, ImposedCategory, NationalAnnex, Quantity};
-use crate::artifacts::en1991::part_1_2::FireCurve;
 
 // #region 🔖️NaDe
 pub mod na_de {

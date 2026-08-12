@@ -285,7 +285,7 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
     fn is_empty(&self) -> bool { self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none() }
 }
 
-/// 🧩 Set-snapshot diff helper — used by the `📄set-snapshot/🔺️diff` leaf.
+/// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
 pub fn diff_set_snapshot(base: &AviSnapshot, snapshot: &AviSnapshot) -> AviDiff {
     <AviDiff as DiffAlgebra<AviSnapshot>>::between(base, snapshot)
 }

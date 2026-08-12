@@ -4,7 +4,8 @@
 use crate::apps::cad::terminology::{typology_label, CadLabels};
 use crate::apps::cad::{cad_action, cad_pane_suffix, cad_tree_item, CadPlayRuntime, CadPlayView};
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
-use crate::artifacts::cad::{cad_find_object_pane, CadObject, CadPaneId, CadReference, CadSnapshot};
+use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
+use crate::artifacts::cad::{CadPaneId, CadReference, CadSnapshot};
 use semio_framework_plugin::{
     Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
@@ -158,7 +159,11 @@ pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRu
         }
         return None;
     }
-    cad_find_object_pane(document, hovered).map(|pane| vec![format!("cad-object:{}:{hovered}", cad_pane_suffix(pane))])
+    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `cad_find_object_pane` is
+    // retired (no live per-pane object list on `CadSnapshot`, only composed model-child HANDLES).
+    // Documented reduced-fidelity gap: hover highlighting no longer resolves an object's pane.
+    let _ = (document, hovered);
+    None
 }
 
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded.
@@ -175,13 +180,18 @@ pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode
     let node_items: Vec<UiTreeItemNode> =
         envelope.document.nodes.iter().map(|node| cad_tree_item(format!("cad-node:{}", node.id), Label::data(node.label.clone()), Some("git-branch"), cad_action("setNodeSelection", Some(json!({ "nodeIds": [node.id] }))))).collect();
 
-    let (shape_id, shape_label, shape_open, shape_items) = document_pane_section(labels.pane_shape, "shape", &envelope.document.objects, labels);
+    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `CadSnapshot`'s inline
+    // per-pane object lists are gone (composed `s.stdio.semio.model` CHILD documents now, unresolved
+    // at this render boundary — see `🔖️Composition` in `🏪️store/🦀️component.rs`). Each pane
+    // section renders empty until a resolved-child-content render path exists; documented gap.
+    let no_objects: Vec<CadObject> = Vec::new();
+    let (shape_id, shape_label, shape_open, shape_items) = document_pane_section(labels.pane_shape, "shape", &no_objects, labels);
     let (shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items) = artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_SHAPE, labels);
-    let (building_id, building_label, building_open, building_items) = document_pane_section(labels.pane_building, "building", &envelope.document.building_objects, labels);
+    let (building_id, building_label, building_open, building_items) = document_pane_section(labels.pane_building, "building", &no_objects, labels);
     let (building_refs_id, building_refs_label, building_refs_open, building_refs_items) = artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_BUILDING, labels);
-    let (energy_id, energy_label, energy_open, energy_items) = document_pane_section(labels.pane_energy, "energy", &envelope.document.energy_objects, labels);
+    let (energy_id, energy_label, energy_open, energy_items) = document_pane_section(labels.pane_energy, "energy", &no_objects, labels);
     let (energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items) = artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_ENERGY, labels);
-    let (structure_id, structure_label, structure_open, structure_items) = document_pane_section(labels.pane_structure_classic, "structure-classic", &envelope.document.structure_classic_objects, labels);
+    let (structure_id, structure_label, structure_open, structure_items) = document_pane_section(labels.pane_structure_classic, "structure-classic", &no_objects, labels);
     let (structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items) = artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, labels);
 
     let mut builder = PanelTreeBuilder::new("cad-play-document")

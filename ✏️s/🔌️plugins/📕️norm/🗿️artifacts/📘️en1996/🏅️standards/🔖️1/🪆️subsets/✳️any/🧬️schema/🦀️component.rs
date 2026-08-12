@@ -1,7 +1,7 @@
 //! 🧱️ EN 1996 artifact schema — every field with its state class.
 
-use crate::artifacts::en1996::{MasonryClass, part_2};
-use crate::document::{AnnexChoice, DesignSituation};
+use crate::artifacts::en1996::MasonryClass;
+use crate::document::{AnnexChoice, DesignSituation, CheckReport, CheckResult, CheckStatus, Quantity, ClauseId};
 use crate::artifacts::en1996::En1996Snapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -277,10 +277,6 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `part_1_1`/`part_1_2`/`part_3` and `check_masonry_wall` are pure function libraries; the
 /// snapshot-level composition (`evaluate`, `check_full_masonry`, `annex_params`) lives in
 /// `💡️inferences`. `na_de` re-exports `crate::artifacts::en1990`'s relocated `NaDe`.
-use crate::artifacts::en1996::MasonryClass;
-use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, Quantity, ClauseId};
-use serde::{Deserialize, Serialize};
-
 pub mod na_de {
     pub use crate::artifacts::en1990::standards::v1::subsets::any::schema::na_de::NaDe;
 

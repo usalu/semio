@@ -209,7 +209,6 @@ semio_framework_plugin::derive_artifact_facets!(
 /// function libraries over the artifact's own document types (`Catalogue`, `GeometryNode`,
 /// `Dictionary`, …), never over the whole `Iso16757Snapshot`; the snapshot-level composition
 /// (`evaluate`) lives in `💡️inferences`, and the JSON serializers live in `🚪️io`.
-use crate::artifacts::iso16757::CatalogueValue;
 use crate::document::{ClauseId, NormError};
 use std::collections::{HashMap, HashSet};
 
@@ -702,6 +701,7 @@ pub mod part_5 {
 mod compliance_helpers_tests {
     use super::*;
     use crate::artifacts::iso16757::Iso16757Snapshot;
+    use crate::artifacts::iso16757::standards::v1::subsets::any::schema::component::part_5::ScriptRuntime;
     use std::collections::BTreeMap;
 
     #[test]

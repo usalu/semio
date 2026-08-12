@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 
-use schema::ArtifactSchema;
+use ::schema::ArtifactSchema;
 use crate::artifacts::vdi3805::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
 use serde::{Deserialize, Serialize};
 
@@ -70,31 +70,31 @@ impl Vdi3805Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.vdi3805` — twenty handcrafted schema leaves.
-pub fn vdi3805_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn vdi3805_artifact_schema_descriptor() -> ::schema::ArtifactSchemaDescriptor {
+    ::schema::ArtifactSchemaDescriptor {
         id: "s.norm.vdi3805",
-        artifact: schema::FacetLeaves {
+        artifact: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
             typescript: include_str!("🟦️component.ts"),
             graphql: include_str!("🔗️component.graphql"),
             json_schema: include_str!("🔣️component.json"),
             proto: include_str!("🛰️component.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: ::schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️component.rs"),
             typescript: include_str!("📸️snapshot/🟦️component.ts"),
             graphql: include_str!("📸️snapshot/🔗️component.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️component.json"),
             proto: include_str!("📸️snapshot/🛰️component.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: ::schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️component.rs"),
             typescript: include_str!("🔺️diff/🟦️component.ts"),
             graphql: include_str!("🔺️diff/🔗️component.graphql"),
             json_schema: include_str!("🔺️diff/🔣️component.json"),
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: ::schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️component.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
@@ -217,9 +217,15 @@ semio_framework_plugin::derive_artifact_facets!(
 /// here). The whole-artifact JSON (de)serializers live in `🚪️io`.
 use crate::artifacts::vdi3805::*;
 use crate::document::{AnnexChoice, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
+// 🔀️ Explicit single-item import: the glob above also pulls in `crate::artifacts::vdi3805::dsl`
+// (the mounted native-text grammar submodule, see `📦️glue.rs`), which would otherwise shadow the
+// `extern crate semio_framework_os_kernel as dsl;` alias for every unqualified `dsl::…` path in this
+// module — including the one `derive_artifact_facets!` (below) expands to. An explicit `use` always
+// wins over a glob import for the same name, so this restores `dsl` to the intended crate alias.
+use ::dsl;
 
 const FAMILY: &str = "VDI 3805";
-const ANNEX: AnnexChoice = AnnexChoice::De;
+pub const ANNEX: AnnexChoice = AnnexChoice::De;
 
 pub fn clause(part: &str, section: &str) -> ClauseId {
     ClauseId::new(FAMILY, part, section)

@@ -15,7 +15,7 @@ record ChangeObjectSmoothShading tag 5
 record MoveObject tag 6
 record RotateObject tag 7
 record ScaleObject tag 8
-record ReplaceObjectMesh tag 9
+record CreateMesh tag 9
 record InsertPaintLayer tag 10
 record RemovePaintLayer tag 11
 record RenamePaintLayer tag 12
@@ -23,3 +23,4 @@ record ChangePaintLayerVisible tag 13
 record ChangePaintLayerOpacity tag 14
 record ChangePaintLayerBlendMode tag 15
 record EditPaintLayer tag 16
+record DeleteMesh tag 17

@@ -728,51 +728,77 @@ impl store::ArtifactPack for CollectionSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️CollectionMutation
-/// ⚡️ One settled collection-tree mutation. `Move*`/`Rename*`/`ReplaceEntryBody` diff as the WHOLE
-/// post-mutation folder/entry record (see `CollectionDiff` below) rather than a bare field delta —
-/// sidesteps the derive engine's lack of nested-`Option` support (a "was this field touched, and to
-/// what new *optional* value" diff shape) while staying exactly as replayable.
+/// 🔗️ Sparse per-field delta shared by folder re-parenting and entry re-filing — the item's id plus
+/// its new container link. Named for derivation rule 5 (`move-to-<container>{id, new_parent}`), which
+/// is why `MoveToCollection`/`MoveToFolder` below both carry this same shape despite addressing
+/// different collections (`CollectionFolder.parent_id` vs `CollectionEntry.folder_id`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct MovedToContainer {
+    pub id: String,
+    pub new_parent: Option<String>,
+}
+
+/// ✏️ Sparse per-field delta for a rename — the item's id plus its new name.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct RenamedItem {
+    pub id: String,
+    pub new_name: String,
+}
+
+/// 📦️ Sparse per-field delta for `ReplaceEntryBody` — the entry id plus its new body. Mirrors
+/// `CollectionEntry.body`'s own `#[dsl(statements)]` handling of the foreign-shaped `ArtifactBody`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ReplacedEntryBody {
+    pub entry_id: String,
+    #[dsl(statements)]
+    pub new_body: Box<ArtifactBody>,
+}
+
+/// ⚡️ One settled collection-tree mutation. Folders/entries are id-keyed entities (`create`/`delete`),
+/// re-parenting is derivation rule 5's hierarchy verb (`move-to-<container>`, not `change-*` — SMO
+/// corrected DKM's first `ChangeFolderParent`/`ChangeEntryFolder` proposal on exactly this point), and
+/// `RenameCollection` replaces `SetName` since the target is the document root's identity field.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum CollectionMutation {
-    SetName {
-        name: String,
+    RenameCollection {
+        new_name: String,
     },
-    AddFolder {
+    CreateFolder {
         #[dsl(block)]
         folder: CollectionFolder,
-        at: u32,
+        index: u32,
     },
-    RemoveFolder {
+    DeleteFolder {
         folder_id: String,
     },
-    MoveFolder {
+    MoveToCollection {
         folder_id: String,
-        parent_id: Option<String>,
+        new_parent: Option<String>,
     },
     RenameFolder {
         folder_id: String,
-        name: String,
+        new_name: String,
     },
-    AddEntry {
+    CreateEntry {
         #[dsl(block)]
         entry: CollectionEntry,
-        at: u32,
+        index: u32,
     },
-    RemoveEntry {
+    DeleteEntry {
         entry_id: String,
     },
-    MoveEntry {
+    MoveToFolder {
         entry_id: String,
-        folder_id: Option<String>,
+        new_folder: Option<String>,
     },
     RenameEntry {
         entry_id: String,
-        name: String,
+        new_name: String,
     },
     ReplaceEntryBody {
         entry_id: String,
         #[dsl(statements)]
-        body: Box<ArtifactBody>,
+        new_body: Box<ArtifactBody>,
     },
 }
 
@@ -813,122 +839,171 @@ impl protocol::OpBinary for CollectionMutation {
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
+/// 🌳️ Every folder id in `folder_id`'s subtree, root-first (`folder_id` itself is `ids[0]`), by
+/// BFS over `parent_id` links — the cascade `DeleteFolder`'s `diff`/`inverse` both need to know
+/// exactly which folders a delete removes.
+fn folder_subtree_ids(folders: &[CollectionFolder], folder_id: &str) -> Vec<String> {
+    let mut ids = vec![folder_id.to_string()];
+    let mut frontier = vec![folder_id.to_string()];
+    while let Some(current) = frontier.pop() {
+        for folder in folders {
+            if folder.parent_id.as_deref() == Some(current.as_str()) {
+                ids.push(folder.id.clone());
+                frontier.push(folder.id.clone());
+            }
+        }
+    }
+    ids
+}
+
+/// 📏️ Root-to-`folder_id` chain length (root folders are depth 0) — used to order a cascade
+/// delete's inverse leaves-first (deepest folders recreated before their ancestors).
+fn folder_depth(folders: &[CollectionFolder], folder_id: &str) -> usize {
+    let by_id: HashMap<&str, &CollectionFolder> = folders.iter().map(|folder| (folder.id.as_str(), folder)).collect();
+    let mut depth = 0usize;
+    let mut current = folder_id.to_string();
+    let mut guard = 0usize;
+    while let Some(folder) = by_id.get(current.as_str()) {
+        match &folder.parent_id {
+            Some(parent) => {
+                current = parent.clone();
+                depth += 1;
+            }
+            None => break,
+        }
+        guard += 1;
+        if guard > folders.len() {
+            break;
+        }
+    }
+    depth
+}
+
+/// 🧬️ Sparse per-field collection delta — every field records WHAT CHANGED (an id, a new value), never
+/// a whole post-mutation record. Handcrafted rather than relying on `#[derive(dsl::DslDiff)]`'s field
+/// lowering alone for `MovedToContainer`/`RenamedItem`/`ReplacedEntryBody`: SMO's ruling on this file's
+/// design doc adopted verbatim — *"replayability isn't the property the rule protects; mergeability
+/// is. A whole-record diff asserts every field, so two users renaming a folder and moving it cannot
+/// merge."* `deleted_folder_ids`/`deleted_entry_ids` are id lists (never full records) so a cascade
+/// delete's diff stays a set of removed ids — the removed folders'/entries' full payload lives only in
+/// `CollectionMutation::inverse`'s own reconstruction from `base`, never duplicated into the diff.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
 pub struct CollectionDiff {
-    pub name: Option<String>,
-    #[dsl(block)]
-    pub add_folder: Option<CollectionFolder>,
-    /// 🔢️ Companion to `add_folder` — the insertion index (clamped; `>= folders.len()` appends).
-    /// Always `Some` exactly when `add_folder` is, kept as a sibling field rather than nested inside
-    /// `add_folder` since the derive engine has no first-class "record + position" shape.
-    pub add_folder_at: Option<u32>,
-    pub remove_folder_id: Option<String>,
-    #[dsl(block)]
-    pub move_folder: Option<CollectionFolder>,
-    #[dsl(block)]
-    pub rename_folder: Option<CollectionFolder>,
-    #[dsl(block)]
-    pub add_entry: Option<CollectionEntry>,
-    /// 🔢️ Companion to `add_entry`, same convention as `add_folder_at`.
-    pub add_entry_at: Option<u32>,
-    pub remove_entry_id: Option<String>,
-    #[dsl(block)]
-    pub move_entry: Option<CollectionEntry>,
-    #[dsl(block)]
-    pub rename_entry: Option<CollectionEntry>,
-    #[dsl(block)]
-    pub replace_entry_body: Option<CollectionEntry>,
-}
+    pub renamed_collection: Option<String>,
 
-fn replace_folder(folders: &mut Vec<CollectionFolder>, replacement: CollectionFolder) {
-    match folders.iter_mut().find(|folder| folder.id == replacement.id) {
-        Some(existing) => *existing = replacement,
-        None => folders.push(replacement),
-    }
-}
+    #[dsl(block)]
+    pub created_folder: Option<CollectionFolder>,
+    /// 🔢️ Companion to `created_folder` — the insertion index. Always `Some` exactly when
+    /// `created_folder` is, kept as a sibling field rather than nested inside it since the derive
+    /// engine has no first-class "record + position" shape (see `📓️wave3c-reports/flow-space-report.md`'s
+    /// derive-engine-gap finding).
+    pub created_folder_at: Option<u32>,
+    /// 🗑️ Every folder id removed by a `DeleteFolder` — the target plus its full cascade subtree.
+    pub deleted_folder_ids: Option<Vec<String>>,
+    #[dsl(block)]
+    pub moved_folder: Option<MovedToContainer>,
+    #[dsl(block)]
+    pub renamed_folder: Option<RenamedItem>,
 
-fn replace_entry(entries: &mut Vec<CollectionEntry>, replacement: CollectionEntry) {
-    match entries.iter_mut().find(|entry| entry.id == replacement.id) {
-        Some(existing) => *existing = replacement,
-        None => entries.push(replacement),
-    }
+    #[dsl(block)]
+    pub created_entry: Option<CollectionEntry>,
+    /// 🔢️ Companion to `created_entry`, same convention as `created_folder_at`.
+    pub created_entry_at: Option<u32>,
+    /// 🗑️ Every entry id removed — either one `DeleteEntry` target, or every entry filed under a
+    /// `DeleteFolder`'s cascade subtree.
+    pub deleted_entry_ids: Option<Vec<String>>,
+    #[dsl(block)]
+    pub moved_entry: Option<MovedToContainer>,
+    #[dsl(block)]
+    pub renamed_entry: Option<RenamedItem>,
+    #[dsl(block)]
+    pub replaced_entry_body: Option<ReplacedEntryBody>,
 }
 
 impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
     fn apply(&self, base: &CollectionSnapshot) -> CollectionSnapshot {
         let mut next = base.clone();
-        if let Some(name) = &self.name {
-            next.name = name.clone();
+        if let Some(new_name) = &self.renamed_collection {
+            next.name = new_name.clone();
         }
-        if let Some(folder) = &self.add_folder {
-            let at = (self.add_folder_at.unwrap_or(u32::MAX) as usize).min(next.folders.len());
+        if let Some(folder) = &self.created_folder {
+            let at = (self.created_folder_at.unwrap_or(u32::MAX) as usize).min(next.folders.len());
             next.folders.insert(at, folder.clone());
         }
-        if let Some(folder_id) = &self.remove_folder_id {
-            // 🧮️ Mechanical replay only removes the folder itself — a dangling `parent_id`/
-            // `folder_id` left pointing at it is `reconcile_collection_integrity`'s job (rules
+        if let Some(ids) = &self.deleted_folder_ids {
+            // 🧮️ Mechanical replay only removes the folders themselves — a dangling `parent_id`/
+            // `folder_id` left pointing at one is `reconcile_collection_integrity`'s job (rules
             // `collection/folder-orphaned`/`collection/entry-folder-missing`), run separately after
-            // `apply`, never inline here. Keeping this pure-removal is what makes `RemoveFolder`'s
-            // mechanical inverse (`AddFolder`) exactly restore pre-state.
-            next.folders.retain(|folder| &folder.id != folder_id);
+            // `apply`, never inline here.
+            next.folders.retain(|folder| !ids.contains(&folder.id));
         }
-        if let Some(folder) = &self.move_folder {
-            replace_folder(&mut next.folders, folder.clone());
+        if let Some(moved) = &self.moved_folder {
+            if let Some(folder) = next.folders.iter_mut().find(|folder| folder.id == moved.id) {
+                folder.parent_id = moved.new_parent.clone();
+            }
         }
-        if let Some(folder) = &self.rename_folder {
-            replace_folder(&mut next.folders, folder.clone());
+        if let Some(renamed) = &self.renamed_folder {
+            if let Some(folder) = next.folders.iter_mut().find(|folder| folder.id == renamed.id) {
+                folder.name = renamed.new_name.clone();
+            }
         }
-        if let Some(entry) = &self.add_entry {
-            let at = (self.add_entry_at.unwrap_or(u32::MAX) as usize).min(next.entries.len());
+        if let Some(entry) = &self.created_entry {
+            let at = (self.created_entry_at.unwrap_or(u32::MAX) as usize).min(next.entries.len());
             next.entries.insert(at, entry.clone());
         }
-        if let Some(entry_id) = &self.remove_entry_id {
-            next.entries.retain(|entry| &entry.id != entry_id);
+        if let Some(ids) = &self.deleted_entry_ids {
+            next.entries.retain(|entry| !ids.contains(&entry.id));
         }
-        if let Some(entry) = &self.move_entry {
-            replace_entry(&mut next.entries, entry.clone());
+        if let Some(moved) = &self.moved_entry {
+            if let Some(entry) = next.entries.iter_mut().find(|entry| entry.id == moved.id) {
+                entry.folder_id = moved.new_parent.clone();
+            }
         }
-        if let Some(entry) = &self.rename_entry {
-            replace_entry(&mut next.entries, entry.clone());
+        if let Some(renamed) = &self.renamed_entry {
+            if let Some(entry) = next.entries.iter_mut().find(|entry| entry.id == renamed.id) {
+                entry.name = renamed.new_name.clone();
+            }
         }
-        if let Some(entry) = &self.replace_entry_body {
-            replace_entry(&mut next.entries, entry.clone());
+        if let Some(replaced) = &self.replaced_entry_body {
+            if let Some(entry) = next.entries.iter_mut().find(|entry| entry.id == replaced.entry_id) {
+                entry.body = replaced.new_body.clone();
+            }
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.name.is_some() {
-            self.name = other.name;
+        if other.renamed_collection.is_some() {
+            self.renamed_collection = other.renamed_collection;
         }
-        if other.add_folder.is_some() {
-            self.add_folder = other.add_folder;
-            self.add_folder_at = other.add_folder_at;
+        if other.created_folder.is_some() {
+            self.created_folder = other.created_folder;
+            self.created_folder_at = other.created_folder_at;
         }
-        if other.remove_folder_id.is_some() {
-            self.remove_folder_id = other.remove_folder_id;
+        if let Some(ids) = other.deleted_folder_ids {
+            self.deleted_folder_ids.get_or_insert_with(Vec::new).extend(ids);
         }
-        if other.move_folder.is_some() {
-            self.move_folder = other.move_folder;
+        if other.moved_folder.is_some() {
+            self.moved_folder = other.moved_folder;
         }
-        if other.rename_folder.is_some() {
-            self.rename_folder = other.rename_folder;
+        if other.renamed_folder.is_some() {
+            self.renamed_folder = other.renamed_folder;
         }
-        if other.add_entry.is_some() {
-            self.add_entry = other.add_entry;
-            self.add_entry_at = other.add_entry_at;
+        if other.created_entry.is_some() {
+            self.created_entry = other.created_entry;
+            self.created_entry_at = other.created_entry_at;
         }
-        if other.remove_entry_id.is_some() {
-            self.remove_entry_id = other.remove_entry_id;
+        if let Some(ids) = other.deleted_entry_ids {
+            self.deleted_entry_ids.get_or_insert_with(Vec::new).extend(ids);
         }
-        if other.move_entry.is_some() {
-            self.move_entry = other.move_entry;
+        if other.moved_entry.is_some() {
+            self.moved_entry = other.moved_entry;
         }
-        if other.rename_entry.is_some() {
-            self.rename_entry = other.rename_entry;
+        if other.renamed_entry.is_some() {
+            self.renamed_entry = other.renamed_entry;
         }
-        if other.replace_entry_body.is_some() {
-            self.replace_entry_body = other.replace_entry_body;
+        if other.replaced_entry_body.is_some() {
+            self.replaced_entry_body = other.replaced_entry_body;
         }
     }
 }
@@ -939,50 +1014,50 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
     fn diff(&self, base: &CollectionSnapshot) -> CollectionDiff {
         let mut diff = CollectionDiff::default();
         match self {
-            CollectionMutation::SetName { name } => diff.name = Some(name.clone()),
-            CollectionMutation::AddFolder { folder, at } => {
-                diff.add_folder = Some(folder.clone());
-                diff.add_folder_at = Some(*at);
+            CollectionMutation::RenameCollection { new_name } => diff.renamed_collection = Some(new_name.clone()),
+            CollectionMutation::CreateFolder { folder, index } => {
+                diff.created_folder = Some(folder.clone());
+                diff.created_folder_at = Some(*index);
             }
-            CollectionMutation::RemoveFolder { folder_id } => diff.remove_folder_id = Some(folder_id.clone()),
-            CollectionMutation::MoveFolder { folder_id, parent_id } => {
-                if let Some(folder) = base.folders.iter().find(|folder| &folder.id == folder_id) {
-                    let mut moved = folder.clone();
-                    moved.parent_id = parent_id.clone();
-                    diff.move_folder = Some(moved);
+            CollectionMutation::DeleteFolder { folder_id } => {
+                if base.folders.iter().any(|folder| &folder.id == folder_id) {
+                    let cascade_folder_ids = folder_subtree_ids(&base.folders, folder_id);
+                    let cascade_entry_ids: Vec<String> =
+                        base.entries.iter().filter(|entry| entry.folder_id.as_deref().is_some_and(|folder_id| cascade_folder_ids.iter().any(|id| id == folder_id))).map(|entry| entry.id.clone()).collect();
+                    diff.deleted_folder_ids = Some(cascade_folder_ids);
+                    if !cascade_entry_ids.is_empty() {
+                        diff.deleted_entry_ids = Some(cascade_entry_ids);
+                    }
                 }
             }
-            CollectionMutation::RenameFolder { folder_id, name } => {
-                if let Some(folder) = base.folders.iter().find(|folder| &folder.id == folder_id) {
-                    let mut renamed = folder.clone();
-                    renamed.name = name.clone();
-                    diff.rename_folder = Some(renamed);
+            CollectionMutation::MoveToCollection { folder_id, new_parent } => {
+                if base.folders.iter().any(|folder| &folder.id == folder_id) {
+                    diff.moved_folder = Some(MovedToContainer { id: folder_id.clone(), new_parent: new_parent.clone() });
                 }
             }
-            CollectionMutation::AddEntry { entry, at } => {
-                diff.add_entry = Some(entry.clone());
-                diff.add_entry_at = Some(*at);
-            }
-            CollectionMutation::RemoveEntry { entry_id } => diff.remove_entry_id = Some(entry_id.clone()),
-            CollectionMutation::MoveEntry { entry_id, folder_id } => {
-                if let Some(entry) = base.entries.iter().find(|entry| &entry.id == entry_id) {
-                    let mut moved = entry.clone();
-                    moved.folder_id = folder_id.clone();
-                    diff.move_entry = Some(moved);
+            CollectionMutation::RenameFolder { folder_id, new_name } => {
+                if base.folders.iter().any(|folder| &folder.id == folder_id) {
+                    diff.renamed_folder = Some(RenamedItem { id: folder_id.clone(), new_name: new_name.clone() });
                 }
             }
-            CollectionMutation::RenameEntry { entry_id, name } => {
-                if let Some(entry) = base.entries.iter().find(|entry| &entry.id == entry_id) {
-                    let mut renamed = entry.clone();
-                    renamed.name = name.clone();
-                    diff.rename_entry = Some(renamed);
+            CollectionMutation::CreateEntry { entry, index } => {
+                diff.created_entry = Some(entry.clone());
+                diff.created_entry_at = Some(*index);
+            }
+            CollectionMutation::DeleteEntry { entry_id } => diff.deleted_entry_ids = Some(vec![entry_id.clone()]),
+            CollectionMutation::MoveToFolder { entry_id, new_folder } => {
+                if base.entries.iter().any(|entry| &entry.id == entry_id) {
+                    diff.moved_entry = Some(MovedToContainer { id: entry_id.clone(), new_parent: new_folder.clone() });
                 }
             }
-            CollectionMutation::ReplaceEntryBody { entry_id, body } => {
-                if let Some(entry) = base.entries.iter().find(|entry| &entry.id == entry_id) {
-                    let mut replaced = entry.clone();
-                    replaced.body = body.clone();
-                    diff.replace_entry_body = Some(replaced);
+            CollectionMutation::RenameEntry { entry_id, new_name } => {
+                if base.entries.iter().any(|entry| &entry.id == entry_id) {
+                    diff.renamed_entry = Some(RenamedItem { id: entry_id.clone(), new_name: new_name.clone() });
+                }
+            }
+            CollectionMutation::ReplaceEntryBody { entry_id, new_body } => {
+                if base.entries.iter().any(|entry| &entry.id == entry_id) {
+                    diff.replaced_entry_body = Some(ReplacedEntryBody { entry_id: entry_id.clone(), new_body: new_body.clone() });
                 }
             }
         }
@@ -991,38 +1066,61 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
 
     fn inverse(&self, base: &CollectionSnapshot) -> Vec<Self> {
         match self {
-            CollectionMutation::SetName { .. } => vec![CollectionMutation::SetName { name: base.name.clone() }],
-            CollectionMutation::AddFolder { folder, .. } => vec![CollectionMutation::RemoveFolder { folder_id: folder.id.clone() }],
-            CollectionMutation::RemoveFolder { folder_id } => base
-                .folders
-                .iter()
-                .position(|folder| &folder.id == folder_id)
-                .map(|at| vec![CollectionMutation::AddFolder { folder: base.folders[at].clone(), at: at as u32 }])
-                .unwrap_or_default(),
-            CollectionMutation::MoveFolder { folder_id, .. } => base
+            CollectionMutation::RenameCollection { .. } => vec![CollectionMutation::RenameCollection { new_name: base.name.clone() }],
+            CollectionMutation::CreateFolder { folder, .. } => vec![CollectionMutation::DeleteFolder { folder_id: folder.id.clone() }],
+            CollectionMutation::DeleteFolder { folder_id } => {
+                if !base.folders.iter().any(|folder| &folder.id == folder_id) {
+                    return Vec::new();
+                }
+                let cascade_folder_ids = folder_subtree_ids(&base.folders, folder_id);
+                let mut mutations = Vec::new();
+                // 🍃️ Entries are always leaves (no descendants) — recreate every cascaded entry
+                // before any cascaded folder.
+                for entry in &base.entries {
+                    if entry.folder_id.as_deref().is_some_and(|folder_id| cascade_folder_ids.iter().any(|id| id == folder_id)) {
+                        if let Some(at) = base.entries.iter().position(|candidate| candidate.id == entry.id) {
+                            mutations.push(CollectionMutation::CreateEntry { entry: entry.clone(), index: at as u32 });
+                        }
+                    }
+                }
+                // 🌳️ Deepest folders first, the originally-deleted folder (shallowest in the
+                // cascade) last — leaves-first, mirroring the entries above.
+                let mut ordered_folder_ids = cascade_folder_ids;
+                ordered_folder_ids.sort_by_key(|id| std::cmp::Reverse(folder_depth(&base.folders, id)));
+                for id in ordered_folder_ids {
+                    if let Some(at) = base.folders.iter().position(|folder| folder.id == id) {
+                        mutations.push(CollectionMutation::CreateFolder { folder: base.folders[at].clone(), index: at as u32 });
+                    }
+                }
+                mutations
+            }
+            CollectionMutation::MoveToCollection { folder_id, .. } => base
                 .folders
                 .iter()
                 .find(|folder| &folder.id == folder_id)
-                .map(|folder| vec![CollectionMutation::MoveFolder { folder_id: folder_id.clone(), parent_id: folder.parent_id.clone() }])
+                .map(|folder| vec![CollectionMutation::MoveToCollection { folder_id: folder_id.clone(), new_parent: folder.parent_id.clone() }])
                 .unwrap_or_default(),
             CollectionMutation::RenameFolder { folder_id, .. } => {
-                base.folders.iter().find(|folder| &folder.id == folder_id).map(|folder| vec![CollectionMutation::RenameFolder { folder_id: folder_id.clone(), name: folder.name.clone() }]).unwrap_or_default()
+                base.folders.iter().find(|folder| &folder.id == folder_id).map(|folder| vec![CollectionMutation::RenameFolder { folder_id: folder_id.clone(), new_name: folder.name.clone() }]).unwrap_or_default()
             }
-            CollectionMutation::AddEntry { entry, .. } => vec![CollectionMutation::RemoveEntry { entry_id: entry.id.clone() }],
-            CollectionMutation::RemoveEntry { entry_id } => base
+            CollectionMutation::CreateEntry { entry, .. } => vec![CollectionMutation::DeleteEntry { entry_id: entry.id.clone() }],
+            CollectionMutation::DeleteEntry { entry_id } => base
                 .entries
                 .iter()
                 .position(|entry| &entry.id == entry_id)
-                .map(|at| vec![CollectionMutation::AddEntry { entry: base.entries[at].clone(), at: at as u32 }])
+                .map(|at| vec![CollectionMutation::CreateEntry { entry: base.entries[at].clone(), index: at as u32 }])
                 .unwrap_or_default(),
-            CollectionMutation::MoveEntry { entry_id, .. } => {
-                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::MoveEntry { entry_id: entry_id.clone(), folder_id: entry.folder_id.clone() }]).unwrap_or_default()
-            }
+            CollectionMutation::MoveToFolder { entry_id, .. } => base
+                .entries
+                .iter()
+                .find(|entry| &entry.id == entry_id)
+                .map(|entry| vec![CollectionMutation::MoveToFolder { entry_id: entry_id.clone(), new_folder: entry.folder_id.clone() }])
+                .unwrap_or_default(),
             CollectionMutation::RenameEntry { entry_id, .. } => {
-                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::RenameEntry { entry_id: entry_id.clone(), name: entry.name.clone() }]).unwrap_or_default()
+                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::RenameEntry { entry_id: entry_id.clone(), new_name: entry.name.clone() }]).unwrap_or_default()
             }
             CollectionMutation::ReplaceEntryBody { entry_id, .. } => {
-                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::ReplaceEntryBody { entry_id: entry_id.clone(), body: entry.body.clone() }]).unwrap_or_default()
+                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::ReplaceEntryBody { entry_id: entry_id.clone(), new_body: entry.body.clone() }]).unwrap_or_default()
             }
         }
     }
@@ -1338,7 +1436,7 @@ pub struct DraftEntry {
 /// 🎯️ W5 Lane B: promoted from the W2/W4 stub to the real thing. `promote_draft`/`demote_asset` now
 /// relocate the draft's actual envelope bytes via an injected `SpaceBackbonePort` — read at
 /// `draft_uri`, written at `artifact_backbone_uri`/vice versa, byte-for-byte, no decode/re-encode —
-/// while still returning the `CollectionMutation` (`AddEntry`/`RemoveEntry`) that keeps promotion
+/// while still returning the `CollectionMutation` (`CreateEntry`/`DeleteEntry`) that keeps promotion
 /// itself operation-sourced. One `DraftCatalog` per distinct backbone port identity lives in the
 /// port-keyed global registry below (`draft_catalog_for`), mirroring os-core's `SPACE_CATALOG_URIS`
 /// per-port keying — this crate still doesn't reach into os-core's session state directly (that
@@ -1422,7 +1520,7 @@ impl DraftCatalog {
     /// before and after, just at a different backbone uri — the plan's exact promotion invariant),
     /// then tombstones the draft uri. Only removes the draft bookkeeping once the byte move fully
     /// succeeds. Returns the draft bookkeeping (removed from this catalog) plus the
-    /// `CollectionMutation::AddEntry` the caller applies to their `CollectionSnapshot` — promotion
+    /// `CollectionMutation::CreateEntry` the caller applies to their `CollectionSnapshot` — promotion
     /// stays operation-sourced even though it now really touches bytes. The artifact keeps its id
     /// (`entry.id == draft.artifact_id == document id`); a caller who knows the artifact's concrete
     /// `<P, Mutation>` pair can reconstruct a live `store::ArtifactStore<P, Mutation>` from the SAME
@@ -1451,16 +1549,16 @@ impl DraftCatalog {
             kind_id: draft.kind_id.clone(),
             body: Box::new(ArtifactBody::Document { schema: draft.schema.clone(), document_id: draft.artifact_id.clone() }),
         };
-        Ok((draft, CollectionMutation::AddEntry { entry, at: u32::MAX }))
+        Ok((draft, CollectionMutation::CreateEntry { entry, index: u32::MAX }))
     }
 
     /// ⏪️ Demotion's STRUCTURAL inverse — removing the entry from the collection. `CollectionMutation`'s
-    /// own `inverse()` on `AddEntry` already produces exactly this (see `## Draft vs asset`'s
-    /// "demotion is AddEntry's natural inverse"); kept as a standalone helper since a caller building
-    /// a demote flow from scratch (not undoing a specific `AddEntry`) needs the operation without an
-    /// `AddEntry` in hand. Does NOT move bytes — see `demote_asset` for the real byte-moving version.
+    /// own `inverse()` on `CreateEntry` already produces exactly this (see `## Draft vs asset`'s
+    /// "demotion is CreateEntry's natural inverse"); kept as a standalone helper since a caller building
+    /// a demote flow from scratch (not undoing a specific `CreateEntry`) needs the operation without a
+    /// `CreateEntry` in hand. Does NOT move bytes — see `demote_asset` for the real byte-moving version.
     pub fn demote_operation(entry_id: &str) -> CollectionMutation {
-        CollectionMutation::RemoveEntry { entry_id: entry_id.to_string() }
+        CollectionMutation::DeleteEntry { entry_id: entry_id.to_string() }
     }
 
     /// ⏪️ REAL demotion: the byte-moving inverse of `promote_draft` — relocates `entry`'s envelope
@@ -1468,10 +1566,10 @@ impl DraftCatalog {
     /// byte-for-byte, tombstones the asset uri, and re-registers fresh draft bookkeeping (`now_ms`/
     /// `ttl_ms` are caller-supplied, same convention as `create_draft` — a demoted draft gets a fresh
     /// TTL window, it doesn't inherit whatever deadline it had before its original promotion). Returns
-    /// the `CollectionMutation::RemoveEntry` for the caller to apply to their `CollectionSnapshot`
+    /// the `CollectionMutation::DeleteEntry` for the caller to apply to their `CollectionSnapshot`
     /// (identical to `demote_operation`'s output — this is the byte-touching sibling of that pure
     /// helper, needed whenever a demotion must actually relocate bytes rather than just undo an
-    /// in-hand `AddEntry`).
+    /// in-hand `CreateEntry`).
     pub fn demote_asset(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, entry: &CollectionEntry, kind_id: &str, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionMutation, SpaceError> {
         let source_uri = artifact_backbone_uri(space_id, &entry.id);
         let target_uri = draft_uri(&entry.id);
@@ -1685,6 +1783,8 @@ pub fn import_blob(blob_store: &dyn store::BlobStore, blob: &store::BlobRef, byt
 mod tests {
     use super::*;
     use protocol::DiffCodec;
+    use protocol::Mutation as _;
+    use protocol::MutationDiff as _;
     use store::{BlobStore, ArtifactDsl};
 
     //#region 🧸️Fixtures
@@ -1888,43 +1988,70 @@ mod tests {
     fn collection_operation_op_text_round_trips_every_variant() {
         let folder = CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() };
         let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e3".into() }) };
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::SetName { name: "Renamed".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::AddFolder { folder: folder.clone(), at: 0 });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::RemoveFolder { folder_id: "f1".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveFolder { folder_id: "f1".into(), parent_id: Some("f2".into()) });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveFolder { folder_id: "f1".into(), parent_id: None });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameFolder { folder_id: "f1".into(), name: "Renders 2".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::AddEntry { entry: entry.clone(), at: 0 });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::RemoveEntry { entry_id: "e1".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveEntry { entry_id: "e1".into(), folder_id: None });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameEntry { entry_id: "e1".into(), name: "sketch 2".into() });
-        store::test_support::assert_op_line_round_trip(&CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameCollection { new_name: "Renamed".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::CreateFolder { folder: folder.clone(), index: 0 });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::DeleteFolder { folder_id: "f1".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: Some("f2".into()) });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: None });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameFolder { folder_id: "f1".into(), new_name: "Renders 2".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::CreateEntry { entry: entry.clone(), index: 0 });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::DeleteEntry { entry_id: "e1".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::MoveToFolder { entry_id: "e1".into(), new_folder: None });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::RenameEntry { entry_id: "e1".into(), new_name: "sketch 2".into() });
+        store::test_support::assert_op_line_round_trip(&CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), new_body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
     }
 
     #[test]
     fn collection_operation_binary_matches_text() {
-        store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::SetName { name: "Renamed".into() });
+        store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::RenameCollection { new_name: "Renamed".into() });
         let entry = CollectionEntry { id: "e3".into(), folder_id: None, name: "extra".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e3".into() }) };
-        store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::AddEntry { entry, at: 0 });
+        store::test_support::assert_op_text_binary_equivalence(&CollectionMutation::CreateEntry { entry, index: 0 });
     }
 
     #[test]
     fn collection_operation_backwards_restores_pre_state() {
         let base = demo_collection();
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::SetName { name: "Renamed".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::AddFolder { folder: CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() }, at: 0 });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RemoveFolder { folder_id: "f1".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveFolder { folder_id: "f1".into(), parent_id: None });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameFolder { folder_id: "f1".into(), name: "Renders 2".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RemoveEntry { entry_id: "e1".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveEntry { entry_id: "e1".into(), folder_id: None });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameEntry { entry_id: "e1".into(), name: "sketch 2".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameCollection { new_name: "Renamed".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::CreateFolder { folder: CollectionFolder { id: "f2".into(), parent_id: None, name: "Extra".into() }, index: 0 });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::DeleteFolder { folder_id: "f1".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveToCollection { folder_id: "f1".into(), new_parent: None });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameFolder { folder_id: "f1".into(), new_name: "Renders 2".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::DeleteEntry { entry_id: "e1".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveToFolder { entry_id: "e1".into(), new_folder: None });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameEntry { entry_id: "e1".into(), new_name: "sketch 2".into() });
+        store::test_support::assert_operation_round_trip(&base, CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), new_body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
+    }
+
+    /// 🧪️ `DeleteFolder`'s cascade: deleting a folder that contains a nested subfolder plus entries in
+    /// both must remove the whole subtree, and `inverse` must restore it leaves-first (proves the
+    /// `folder_subtree_ids`/`folder_depth` helpers rather than trusting the shallow single-folder cases
+    /// above to exercise them).
+    #[test]
+    fn delete_folder_cascade_removes_and_restores_whole_subtree() {
+        let mut collection = empty_collection_snapshot("Demo");
+        collection.folders.push(CollectionFolder { id: "root".into(), parent_id: None, name: "Root".into() });
+        collection.folders.push(CollectionFolder { id: "child".into(), parent_id: Some("root".into()), name: "Child".into() });
+        collection.entries.push(CollectionEntry { id: "e-root".into(), folder_id: Some("root".into()), name: "in-root".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e-root".into() }) });
+        collection.entries.push(CollectionEntry { id: "e-child".into(), folder_id: Some("child".into()), name: "in-child".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e-child".into() }) });
+
+        store::test_support::assert_operation_round_trip(&collection, CollectionMutation::DeleteFolder { folder_id: "root".into() });
+
+        let diff = CollectionMutation::DeleteFolder { folder_id: "root".into() }.diff(&collection);
+        let mut deleted_folders = diff.deleted_folder_ids.clone().unwrap_or_default();
+        deleted_folders.sort();
+        assert_eq!(deleted_folders, vec!["child".to_string(), "root".to_string()]);
+        let mut deleted_entries = diff.deleted_entry_ids.clone().unwrap_or_default();
+        deleted_entries.sort();
+        assert_eq!(deleted_entries, vec!["e-child".to_string(), "e-root".to_string()]);
+
+        let after = diff.apply(&collection);
+        assert!(after.folders.is_empty());
+        assert!(after.entries.is_empty());
     }
 
     #[test]
     fn collection_diff_print_parse_and_encode_decode_round_trip() {
-        let diffs = vec![CollectionDiff { name: Some("Renamed".into()), ..Default::default() }, CollectionDiff { remove_entry_id: Some("e1".into()), ..Default::default() }, CollectionDiff::default()];
+        let diffs = vec![CollectionDiff { renamed_collection: Some("Renamed".into()), ..Default::default() }, CollectionDiff { deleted_entry_ids: Some(vec!["e1".into()]), ..Default::default() }, CollectionDiff::default()];
         for diff in diffs {
             let printed = diff.print_diff();
             assert!(!printed.contains('\n'));
@@ -2110,7 +2237,7 @@ mod tests {
 
         let (removed_draft, operation) = catalog.promote_draft(&port, "space-1", &draft.artifact_id, Some("f1".into())).expect("promote");
         assert_eq!(removed_draft.artifact_id, draft.artifact_id);
-        let CollectionMutation::AddEntry { entry, .. } = &operation else { panic!("promote_draft must return AddEntry") };
+        let CollectionMutation::CreateEntry { entry, .. } = &operation else { panic!("promote_draft must return CreateEntry") };
         assert_eq!(entry.id, draft.artifact_id, "promotion preserves the document id");
         assert_eq!(entry.folder_id, Some("f1".into()));
         assert!(catalog.list_drafts().is_empty(), "promoted draft is no longer a draft");
@@ -2120,9 +2247,9 @@ mod tests {
         assert_eq!(port.read(&draft_uri(&draft.artifact_id)).expect("read tombstoned draft uri"), Vec::<u8>::new(), "draft uri is tombstoned after promotion");
 
         let demote = DraftCatalog::demote_operation(&entry.id);
-        assert_eq!(demote, CollectionMutation::RemoveEntry { entry_id: entry.id.clone() });
+        assert_eq!(demote, CollectionMutation::DeleteEntry { entry_id: entry.id.clone() });
 
-        // Mutation-sourced round trip: AddEntry then its inverse restores the empty collection.
+        // Mutation-sourced round trip: CreateEntry then its inverse restores the empty collection.
         let empty = empty_collection_snapshot("Demo");
         store::test_support::assert_operation_round_trip(&empty, operation);
     }
@@ -2138,10 +2265,10 @@ mod tests {
         port.write(&draft_uri(&draft.artifact_id), &original_bytes).expect("seed draft bytes");
 
         let (_, operation) = catalog.promote_draft(&port, "space-1", &draft.artifact_id, None).expect("promote");
-        let CollectionMutation::AddEntry { entry, .. } = operation else { panic!("expected AddEntry") };
+        let CollectionMutation::CreateEntry { entry, .. } = operation else { panic!("expected CreateEntry") };
 
         let demote_operation = catalog.demote_asset(&port, "space-1", &entry, "puzzle.2d", "test.puzzle2d", 2_000, Some(1_000)).expect("demote");
-        assert_eq!(demote_operation, CollectionMutation::RemoveEntry { entry_id: entry.id.clone() });
+        assert_eq!(demote_operation, CollectionMutation::DeleteEntry { entry_id: entry.id.clone() });
 
         let restored_bytes = port.read(&draft_uri(&entry.id)).expect("read demoted draft bytes");
         assert_eq!(restored_bytes, original_bytes, "demoted envelope bytes are byte-identical to the originally-promoted ones");

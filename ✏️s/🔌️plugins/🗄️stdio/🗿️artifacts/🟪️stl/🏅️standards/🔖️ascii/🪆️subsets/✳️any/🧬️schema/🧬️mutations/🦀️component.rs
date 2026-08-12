@@ -522,7 +522,7 @@ mod tests {
     fn codec_retention_law() {
         let bytes = std::fs::read(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/🟪️stl/📚️examples/🎬️demo/🖼️assets/example.stl"
+            "/../../🗿️artifacts/🟪️stl/📚️examples/🎬️demo/🖼️assets/🟪️example.stl"
         ));
         let decoded = bytes
             .ok()

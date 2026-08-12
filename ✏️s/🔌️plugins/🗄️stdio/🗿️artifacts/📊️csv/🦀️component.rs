@@ -35,27 +35,22 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) — replaces
-/// stdio's plugin root calling `crate::artifacts::csv::engine::register()` imperatively before
-/// `Plugin::builder` was even constructed, mirroring the `🔋️energy`/`🗒️note` exemplars. `crate::
-/// artifacts::csv::standards::v_rfc4180::subsets::any::engine::register()` (stdio's own `⚙️engine` —
-/// UNTOUCHED, per this ticket's rule that stdio's engines stay a public surface other plugins reach
-/// into) called, in call order: `io_registry::register()` → `.composers(...)` below, the same
-/// `standards::v_rfc4180::subsets::any::engine::io_registry::entries()` this artifact's own root
-/// `io_registry` module already wraps; `register_artifact_schema()`/`register_artifact_inferences()`
-/// → `.schema(...)`/`.inferences(...)`; `register_pilot_languages()` → `.languages(...)`, replicated
-/// verbatim below (same `OnceLock`-leak shape `🔋️energy`'s own `pilot_languages()` uses, since
-/// `dsl::LanguageSpec` isn't `const fn`-constructible); `register_document_codec` →
-/// `.document_codec_bare::<CsvSnapshot, CsvMutation>(...)`. Unlike `📄txt`/`💾️binary`, this
-/// artifact's `register()` never calls `register_schema_specs` — `CsvSnapshot`/`CsvDiff` don't carry
-/// the `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]` `register_schema_specs` needs, per txt's
-/// own engine doc ("unlike json/csv...") — so there is no uncovered call left behind here.
-/// `standards::v_rfc4180::subsets::any::engine::register()` itself is left in place, now
-/// orphaned/uncalled — deleting it means editing `⚙️engine/`, off-limits here.
+/// stdio's plugin root calling an imperative `register()` before `Plugin::builder` was even
+/// constructed, mirroring the `🔋️energy`/`🗒️note` exemplars. Call order, in `.builder()` order below:
+/// `.composers(...)` from `standards::v_rfc4180::subsets::any::io::io_registry::entries()` (dissolved
+/// out of the former `⚙️engine`, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES);
+/// `.schema(...)`/`.inferences(...)`; `.languages(...)` from `pilot_languages()` below (same
+/// `OnceLock`-leak shape `🔋️energy`'s own `pilot_languages()` uses, since `dsl::LanguageSpec` isn't
+/// `const fn`-constructible); `.document_codec_bare::<CsvSnapshot, CsvMutation>(...)`. Unlike
+/// `📄txt`/`💾️binary`, this artifact's declaration never calls `register_schema_specs` —
+/// `CsvSnapshot`/`CsvDiff` don't carry the `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]`
+/// `register_schema_specs` needs, per txt's own doc ("unlike json/csv...") — so there is no
+/// uncovered call left behind here.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.csv")
         .schema(crate::artifacts::csv::schema::csv_artifact_schema_descriptor())
         .inferences([crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::inferences::csv_artifact_inference_descriptor()])
-        .composers(crate::artifacts::csv::standards::v_rfc4180::subsets::any::engine::io_registry::entries())
+        .composers(crate::artifacts::csv::standards::v_rfc4180::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA)
         .build()
@@ -130,7 +125,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::csv::standards::v_rfc4180::subsets::any::engine::io_registry as v_rfc4180;
+    use crate::artifacts::csv::standards::v_rfc4180::subsets::any::io::io_registry as v_rfc4180;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

@@ -10,7 +10,6 @@ use crate::apps::en1997::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::en1997::modes::edit as edit_mode;
 use crate::apps::en1997::modes::edit::windows::{inputs, results};
 use crate::apps::en1997::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::apps::en1997::En1997Family;
 use crate::artifacts::en1997::op::En1997Mutation;
 use crate::artifacts::en1997::En1997Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};

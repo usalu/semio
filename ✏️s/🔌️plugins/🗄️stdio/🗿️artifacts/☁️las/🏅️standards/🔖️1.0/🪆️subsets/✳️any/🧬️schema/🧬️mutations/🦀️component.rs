@@ -825,7 +825,7 @@ mod tests {
     fn codec_retention_law() {
         let bytes = std::fs::read(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🖼️assets/example.las"
+            "/../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🖼️assets/☁️example.las"
         ));
         let snap = match bytes {
             Ok(b) => crate::artifacts::las::engine::decode_las(&b).expect("decode fixture"),

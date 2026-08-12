@@ -424,7 +424,7 @@ pub mod apps {
             pub mod config;
             #[path = "../../🎛️apps/🎬️present/⚙️engine/🎞️animation/🦀️component.rs"]
             pub mod animation;
-            #[path = "../../🎛️apps/🎬️present/⚙️engine/🎥️camera/🦀️component.rs"]
+            #[path = "../../🎛️apps/🎬️present/⚙️engine/📷️camera/🦀️component.rs"]
             pub mod camera;
             #[path = "../../🎛️apps/🎬️present/⚙️engine/🎥️video/🦀️component.rs"]
             pub mod video;

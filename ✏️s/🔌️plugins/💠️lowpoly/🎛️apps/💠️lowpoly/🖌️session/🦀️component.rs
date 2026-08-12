@@ -27,7 +27,7 @@ pub struct PaintStrokeSession {
 }
 
 /// @emoji 🧲️ In-progress gumball transform drag. The mesh-transform operation re-serializes the WHOLE
-/// `mesh_json` buffer per apply, so a per-tick `amend` would `combined.extend` N full-mesh patches and
+/// `mesh_workspace` buffer per apply, so a per-tick `amend` would `combined.extend` N full-mesh patches and
 /// replay them all (O(N) retained megabyte-scale JSON + O(N²) replay). Instead every mid-drag tick
 /// applies its delta to this scratch `LowpolyDocument` emitting ZERO operations, and the whole gesture
 /// commits as ONE `Objects(Patch)` (base → final mesh) on drag end (`Emit::commit`, coalesce-key `None`).
@@ -120,7 +120,8 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
         name: (before.name != after.name).then(|| after.name.clone()),
         smooth_shading: (before.smooth_shading != after.smooth_shading).then_some(after.smooth_shading),
         transform: (before.transform != after.transform).then(|| after.transform.clone()),
-        mesh_json: (before.mesh_json != after.mesh_json).then(|| after.mesh_json.clone()),
+        mesh: (before.mesh != after.mesh).then(|| after.mesh.clone()),
+        mesh_workspace: (before.mesh_workspace != after.mesh_workspace).then(|| after.mesh_workspace.clone()),
     }
 }
 
@@ -148,8 +149,17 @@ pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifac
             return Some(LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::mutation::ScaleObject { id, new_scale: transform.scale }));
         }
     }
-    if let Some(new_mesh_json) = &patch.mesh_json {
-        return Some(LowpolyMutation::ReplaceObjectMesh(crate::artifacts::lowpoly::mutations::replace_object_mesh::mutation::ReplaceObjectMesh { id, new_mesh_json: new_mesh_json.clone() }));
+    if let Some(new_mesh_workspace) = &patch.mesh_workspace {
+        if new_mesh_workspace.is_empty() {
+            return Some(LowpolyMutation::DeleteMesh(crate::artifacts::lowpoly::mutations::delete_mesh::mutation::DeleteMesh { id }));
+        }
+        let handle = crate::artifacts::lowpoly::mesh_child_handle(&id, new_mesh_workspace);
+        return Some(LowpolyMutation::CreateMesh(crate::artifacts::lowpoly::mutations::create_mesh::mutation::CreateMesh {
+            id,
+            child_id: handle.child_id,
+            target: handle.target,
+            mesh_workspace: new_mesh_workspace.clone(),
+        }));
     }
     None
 }
@@ -525,10 +535,10 @@ mod tests {
         let config = LowpolyConfig::default();
         scratch.set_transform_drag_active(true);
         scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(1.0, 0.0, 0.0)), "translate");
-        let mesh_before = scratch.transform.as_ref().unwrap().doc.snapshot().objects[0].mesh_json.clone();
+        let mesh_before = scratch.transform.as_ref().unwrap().doc.snapshot().objects[0].mesh_workspace.clone();
         let _ = scratch.gesture_preview();
         let _ = scratch.gesture_preview();
-        assert_eq!(scratch.transform.as_ref().unwrap().doc.snapshot().objects[0].mesh_json, mesh_before, "gesture_preview must never mutate the live transform scratch it reads");
+        assert_eq!(scratch.transform.as_ref().unwrap().doc.snapshot().objects[0].mesh_workspace, mesh_before, "gesture_preview must never mutate the live transform scratch it reads");
     }
 }
 //#endregion 🧪️Tests

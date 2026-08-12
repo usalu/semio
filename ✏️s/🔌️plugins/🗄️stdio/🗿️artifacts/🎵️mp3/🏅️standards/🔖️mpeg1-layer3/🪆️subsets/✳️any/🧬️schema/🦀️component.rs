@@ -84,6 +84,28 @@ pub fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         },
     }
 }
+//#region 🔖️SampleRateTable
+/// 📐️ Sample rate table (Hz), keyed by `(version_id, index)`. Index `3` is reserved. Lives in
+/// `🧬️schema/` (not `🚪️io/`, where the frame-header codec that also calls it lives) because
+/// `💡️inferences/⏱duration` needs the same real table for its duration derivation and
+/// `🧬️schema` must never depend on `🚪️io` — `🚪️io` depends on `🧬️schema` instead (both call
+/// sites reuse this one definition, never re-declare it).
+pub fn sample_rate_hz(version_id: u8, index: u8) -> Option<u32> {
+    match (version_id, index) {
+        (3, 0) => Some(44_100),
+        (3, 1) => Some(48_000),
+        (3, 2) => Some(32_000),
+        (2, 0) => Some(22_050),
+        (2, 1) => Some(24_000),
+        (2, 2) => Some(16_000),
+        (0, 0) => Some(11_025),
+        (0, 1) => Some(12_000),
+        (0, 2) => Some(8_000),
+        _ => None,
+    }
+}
+//#endregion 🔖️SampleRateTable
+
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;
@@ -124,7 +146,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
-    use crate::artifacts::mp3::standards::mpeg1_layer3::engine as engine;
+    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io as io;
 
     #[derive(Clone, Debug, Default)]
     pub struct Mp3Parts { pub snapshot: Option<Mp3Snapshot> }
@@ -138,14 +160,14 @@ pub mod derived_analysis {
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if engine::sniff_real_bytes(bytes) {
+                    if io::sniff_real_bytes(bytes) {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_MP3_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
                 }
                 AnalyzeSource::Text(text) => {
-                    if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_MP3_DOCUMENT_SCHEMA) {
+                    if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_MP3_DOCUMENT_SCHEMA) {
                         IoConfidence::High
                     } else {
                         IoConfidence::Low

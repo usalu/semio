@@ -7,7 +7,7 @@ pub fn label() -> LocalizedLabel { LocalizedLabel::native("Demo", "Demo") }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 /// 📄️ Genuine RFC 4180 bytes for the demo snapshot (`encode_csv(demo_csv_snapshot())`).
-pub const NATIVE_BYTES: &[u8] = include_str!("🖼️assets/example.csv").as_bytes();
+pub const NATIVE_BYTES: &[u8] = include_str!("🖼️assets/📊️example.csv").as_bytes();
 pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
 
 //#region 🔖️P2P1BinaryFixtures
@@ -58,16 +58,16 @@ mod tests {
 
         fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
             let text = std::str::from_utf8(asset.bytes).map_err(|e| e.to_string())?;
-            Ok(crate::artifacts::csv::engine::decode_csv_with(text, true))
+            Ok(crate::artifacts::csv::schema::snapshot::decode_csv_with(text, true))
         }
 
         fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-            Ok(crate::artifacts::csv::engine::encode_csv(snapshot).into_bytes())
+            Ok(crate::artifacts::csv::schema::snapshot::encode_csv(snapshot).into_bytes())
         }
 
         fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
             let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-            Ok(crate::artifacts::csv::engine::decode_csv_with(text, true))
+            Ok(crate::artifacts::csv::schema::snapshot::decode_csv_with(text, true))
         }
 
         fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
@@ -84,7 +84,7 @@ mod tests {
         fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
             std::str::from_utf8(bytes)
                 .map_err(|e| vec![e.to_string()])
-                .and_then(|text| crate::artifacts::csv::engine::decode_csv(text).map_err(|e| vec![e]))
+                .and_then(|text| crate::artifacts::csv::schema::snapshot::decode_csv(text).map_err(|e| vec![e]))
                 .map(|_| ())
         }
 
@@ -98,7 +98,7 @@ mod tests {
         let asset = ExampleAsset {
             bytes: NATIVE_BYTES,
             text: Some(std::str::from_utf8(NATIVE_BYTES).expect("utf-8 csv")),
-            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/example.csv",
+            provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📊️example.csv",
         };
         test_support::assert_subset_roundtrip::<CsvAnyRoundtrip>(&asset, None);
     }

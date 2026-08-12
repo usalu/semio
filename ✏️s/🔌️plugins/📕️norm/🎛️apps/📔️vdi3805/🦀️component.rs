@@ -10,7 +10,6 @@ use crate::apps::vdi3805::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::vdi3805::modes::edit as edit_mode;
 use crate::apps::vdi3805::modes::edit::windows::{inputs, results};
 use crate::apps::vdi3805::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::apps::vdi3805::Vdi3805Family;
 use crate::artifacts::vdi3805::op::Vdi3805Mutation;
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};

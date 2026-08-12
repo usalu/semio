@@ -5,7 +5,8 @@
 //! no interaction directory) and keep a bespoke hand-written statechart (`legacy_*` functions)
 //! identical to the pre-engine behavior.
 
-use crate::artifacts::cad::{evaluate_expr, CadObject, CadPaneId, CadPrimitiveSlot, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
+use crate::artifacts::cad::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
+use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 
 use semio_framework_3d::brep::engine::BrepKernel;
 use serde::{Deserialize, Serialize};

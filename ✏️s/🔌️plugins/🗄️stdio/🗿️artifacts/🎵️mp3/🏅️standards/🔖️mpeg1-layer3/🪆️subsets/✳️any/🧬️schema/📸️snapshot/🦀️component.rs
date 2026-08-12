@@ -132,12 +132,12 @@ impl store::ArtifactDsl for Mp3Snapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::mp3::standards::mpeg1_layer3::engine::decode_mp3(&bytes)
+        crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&bytes)
             .map_err(|e| store::TextError::new(format!("mp3 decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::mp3::standards::mpeg1_layer3::engine::encode_mp3(self);
+        let bytes = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -151,7 +151,7 @@ impl store::ArtifactDsl for Mp3Snapshot {
 impl store::ArtifactPack for Mp3Snapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::mp3::standards::mpeg1_layer3::engine::encode_mp3(self);
+        let raw = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -170,7 +170,7 @@ impl store::ArtifactPack for Mp3Snapshot {
             )));
         }
         let _ = options;
-        crate::artifacts::mp3::standards::mpeg1_layer3::engine::decode_mp3(&inner).map_err(store::PackError::Schema)
+        crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

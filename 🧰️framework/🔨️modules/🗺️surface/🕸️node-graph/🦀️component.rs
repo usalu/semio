@@ -2,6 +2,21 @@
 //!
 //! `GraphHost` diffs `NodeGraphScenePayload` into a retained `DagHost` for hit-testing and layout;
 //! the OS infinite-board projection remains authoritative — this host is a render-session cache.
+//!
+//! 🧭️ Doctrine classification (ticket `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS`,
+//! W3b): [`GraphHost`] owns **no tier-(a) authoritative state**, traced rather than assumed (full
+//! per-field table in `📓️wave3b-reports/surface-report.md`). Node positions/connections — genuine
+//! document content per the ticket's own framing — are NOT owned here: `self.dag` is rebuilt
+//! wholesale from `NodeGraphScenePayload` every time [`GraphHost::sync_from_payload`]'s content-hash
+//! signature changes, and the payload itself is produced from `💻️os/🔨️modules/🌊️flow`'s `FlowFixture`
+//! (`Widget`/`SynapseSpec` graph, consumed via `EngineCanvas` — see
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs`).
+//! That owner is real but **not yet properly event-sourced itself** — `🌊️flow/🌿️vcs/🦀️component.rs`
+//! still dispatches through the banned `CollectionMutation<K,V,P>`/`Patch` shape at the time of this
+//! wave, per its own hot-file entry ("W3c flow agent" owns it; frozen, read-only, for this wave).
+//! `move`/`connect`/`disconnect` are the right verbs once that lane lands (per this ticket's W3c
+//! design docs, already delivered to SMO) — not invented here, since the target enum they'd bind to
+//! does not exist yet in conforming form. No new `🧬️mutations` vocabulary is authored in THIS file.
 
 pub use infinite_canvas::board::ports::directed_dag as dag;
 pub use infinite_canvas as canvas;
@@ -250,10 +265,20 @@ impl NodeGraphScenePayload {
 //#region 🔖️GraphHost
 /// 🕸️ Retained generic node-graph host wrapping the DAG canvas engine.
 pub struct GraphHost {
+    /// 🧱️ (d) ephemeral working representation — hit-testing/layout structure rebuilt wholesale from
+    /// `NodeGraphScenePayload` on every content-hash change (see [`GraphHost::sync_from_payload`]).
+    /// Node positions/connections are real document content whose authoritative owner is OS `flow`'s
+    /// `FlowFixture` (see module docstring); this field is a render-session mirror of it, not a second
+    /// authoritative copy.
     pub dag: DagHost,
+    /// 📇 (c) Preview/Effect — transient catalogue-panel UI state, never persisted.
     pub catalogue_json: String,
+    /// 🎛️ (c) Preview/Effect — transient control-overlay UI state, never persisted.
     pub controls_json: String,
+    /// 📡️ (c) Preview/Effect — transient capability-advertisement UI state, never persisted.
     pub capabilities_json: String,
+    /// 🔗️ (d) runtime wiring — content-hash of the last-applied payload, so [`GraphHost::sync_from_payload`]
+    /// only rebuilds `dag` when the upstream content actually changed. A change-detection cache, not state.
     last_payload_signature: u64,
 }
 

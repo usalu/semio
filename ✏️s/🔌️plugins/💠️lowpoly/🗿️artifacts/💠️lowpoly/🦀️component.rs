@@ -2,6 +2,7 @@
 //! selection value threaded into the compute session (never part of the persisted document).
 
 use protocol::{Identified, Patchable};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Pixels
@@ -79,27 +80,62 @@ impl LowpolyPaintLayer {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+/// 🕸️ Deterministic content-addressed CHILD handle for an object's mesh — same `(child_id, target)`
+/// for identical geometry, a different pair once the geometry actually changes. Content-addressing
+/// (rather than a per-object-stable id) is what lets the parent's own diff/mutation machinery detect
+/// "the mesh changed" from the HANDLE alone, without ever comparing embedded content — the handle
+/// IS the change signal. Shared by `snapshot_from_mesh_json` and the app's kernel session
+/// (`⚙️engine::LowpolyDocument::sync_meshes_to_snapshot`, `add_primitive`), which both need the
+/// identical rule so the same geometry always resolves to the same handle.
+pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    mesh_json.hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let child_id = format!("mesh-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LowpolyObject {
     pub id: String,
     pub name: String,
-    #[dsl(block)]
     pub transform: LowpolyTransform,
     pub smooth_shading: bool,
-    // ⚠️ Deliberately plain `Shape::Text` (bare `String`, no `#[dsl(lang = "json")]`), NOT an
-    // oversight: `LowpolyObject` is the element type of `LowpolySnapshot.objects: Vec<LowpolyObject>`,
-    // a `Shape::List(Shape::Record(..))` field printed in `JoinMode::Document`. The engine's `Writer`
-    // only forces a line break after a `Shape::Embed` field's closing fence when the NEXT chunk is
-    // pushed via `new_record()` (as `Shape::Block`/`Shape::Table` fields do) — plain list-item
-    // iteration and the list's own closing `]` atom do not, so annotating this field glues the fence's
-    // closing "```" to the following `]` on the same text line and breaks the fence lexer's "closing
-    // ``` must be alone on its line" rule. Confirmed empirically (fails even with a single object):
-    // reparsing the printed output errors with "unterminated fenced block". This is a genuine ENGINE
-    // GAP distinct from the already-documented multi-`Shape::Embed`-field Lines-layout bug (see
-    // `trinity::rewrite::RewriteRuleModel`) — out of scope here, do not annotate until the engine's
-    // `Writer` forces a boundary after every `Shape::Embed` chunk regardless of what follows it.
-    pub mesh_json: String,
+    /// 🕸️ Owned CHILD handle for this object's mesh representation (`s.stdio.semio.mesh`, ticket
+    /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`). The child is its own document; this parent
+    /// stores only the two-string handle (`child_id`/`target`), never embedded geometry — replaces
+    /// the old opaque `mesh_json: String` this field used to be. Lifecycle via `create-mesh`/
+    /// `delete-mesh` (`🧬️mutations/🕸️create-mesh`, `🧬️mutations/🧨delete-mesh`), which replace the
+    /// old whole-value `replace-object-mesh`. `LowpolySnapshot`'s hand-rolled `ArtifactDsl`/
+    /// `ArtifactPack` below persist ONLY this handle for the mesh slot, never `mesh_workspace`.
+    ///
+    /// ⚠️ Framework limitation (flagged in this ticket's `lowpoly-report.md` for the next fan-out
+    /// agent hitting the same shape): `#[derive(ArtifactSchema)]`'s `#[child(kind = "…")]` mechanism
+    /// (`🧬️schema/✨️derive/🦀️component.rs`) only recognizes a child field declared DIRECTLY on the
+    /// struct it derives — it does not recurse into a `Vec<T>` element type's own fields the way
+    /// `LowpolySnapshot.objects: Vec<LowpolyObject>` would need. Every W2c precedent (`✳️object`,
+    /// `✳️kit`) only ever put its child fields directly on the top-level snapshot struct, never
+    /// nested inside a collection element — this is the first subset in the ticket with that shape.
+    /// Consequently `#[child(...)]` cannot be applied here (no derive on `LowpolyObject` declares it
+    /// as a valid helper attribute) and `LowpolySnapshot::child_slots()` cannot discover this slot.
+    /// The type/mutation-vocabulary/persistence layer is still fully real; only the derive-generated
+    /// SCHEMA INTROSPECTION table is incomplete for it.
+    pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
+    /// 🖌️ Ephemeral, session-local working copy of the live mesh-kernel's geometry (half-edge JSON —
+    /// `semio_framework_3d::mesh::HalfedgeMesh::to_json`/`from_json`) — NEVER the persisted document
+    /// representation (see `mesh` above for that). No child-document resolution API exists yet for
+    /// any plugin in this repo (`store::ChildStoreFactory`/`CompositionCoordinator` are host-side
+    /// only, unreachable from a WASM-guest plugin — verified against `🏪️store/🦀️component.rs`) —
+    /// until that lands, this field is how the kernel session keeps working end to end. Round-trips
+    /// through plain `Serialize`/the mutation-op JSON log (an event legitimately replays its full
+    /// payload) but is DELIBERATELY excluded from `LowpolySnapshot`'s own hand-rolled
+    /// `ArtifactDsl`/`ArtifactPack` codecs — the durable snapshot-at-rest bytes store only the
+    /// `mesh` handle above, never this content.
+    pub mesh_workspace: String,
     #[serde(default)]
     pub paint_layers: Vec<LowpolyPaintLayer>,
 }
@@ -156,21 +192,25 @@ impl Default for LowpolySelection {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Patches
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LowpolyObjectPatch {
     pub name: Option<String>,
     pub smooth_shading: Option<bool>,
     pub transform: Option<LowpolyTransform>,
-    // 🧬️ Unlike `LowpolyObject::mesh_json` (see its doc comment for the confirmed engine-gap reason
-    // it stays plain), `#[dsl(lang = "json")]` IS safe here: `LowpolyObjectPatch` only derives
-    // `dsl::DslRecord` (never `DslArtifact`) and is only ever printed through `DslOps::print_op`,
-    // which always uses `JoinMode::Inline` — `Shape::Embed` renders as an ordinary escaped quoted
-    // string in Inline mode (never a fence), so the Document-mode list-nesting fence-glue bug this
-    // record never reaches simply doesn't apply. Confirmed via the existing `op_text_round_trip_*`
-    // tests in the `op` component.
-    #[dsl(lang = "json")]
-    pub mesh_json: Option<String>,
+    /// 🕸️ Double-`Option`: outer = "this patch touches the `mesh` slot", inner = the new handle,
+    /// `None` to clear it — matches `✳️object`'s own `mesh: Option<Option<ArtifactChild<…>>>` diff
+    /// convention (`w2c-object-kit-report.md`). Never carries content, only `child_id`/`target`.
+    /// Replaces the old `mesh_json: Option<String>` scalar patch field; `dsl::DslRecord` dropped
+    /// from this struct (unused in practice — nothing calls its derived DSL machinery, confirmed by
+    /// grep — and `store::ArtifactChild<S>` has no `DslField` impl to derive against anyway).
+    pub mesh: Option<Option<store::ArtifactChild<SemioMeshSnapshot>>>,
+    /// 🖌️ Companion to `mesh`: the new `mesh_workspace` content, carried alongside the handle so a
+    /// kernel-edit commit updates BOTH in one mutation. Ordinary single-`Option` scalar patch (not
+    /// double — `mesh_workspace` is never cleared independently of `mesh`, see `LowpolyObject`'s own
+    /// doc comment on why this field must still flow through the normal patch/mutation pipeline even
+    /// though it is excluded from the persisted `ArtifactDsl`/`ArtifactPack` bytes).
+    pub mesh_workspace: Option<String>,
 }
 
 impl Patchable<LowpolyObjectPatch> for LowpolyObject {
@@ -184,8 +224,11 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         if let Some(value) = &patch.transform {
             self.transform = value.clone();
         }
-        if let Some(value) = &patch.mesh_json {
-            self.mesh_json = value.clone();
+        if let Some(value) = &patch.mesh {
+            self.mesh = value.clone();
+        }
+        if let Some(value) = &patch.mesh_workspace {
+            self.mesh_workspace = value.clone();
         }
     }
 
@@ -194,7 +237,8 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
             name: (self.name != other.name).then(|| other.name.clone()),
             smooth_shading: (self.smooth_shading != other.smooth_shading).then_some(other.smooth_shading),
             transform: (self.transform != other.transform).then(|| other.transform.clone()),
-            mesh_json: (self.mesh_json != other.mesh_json).then(|| other.mesh_json.clone()),
+            mesh: (self.mesh != other.mesh).then(|| other.mesh.clone()),
+            mesh_workspace: (self.mesh_workspace != other.mesh_workspace).then(|| other.mesh_workspace.clone()),
         };
         (patch != LowpolyObjectPatch::default()).then_some(patch)
     }
@@ -257,25 +301,13 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     }
 }
 
-/// 🧱️ The shared `3d.mesh` interchange kind — declared alongside `artifact_kind()` because several
-/// sibling plugins declare the identical shape privately; kept here so lowpoly's manifest stitch stays
-/// a single passthrough per kind.
-pub fn mesh_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
-        id: "3d.mesh".into(),
-        name: "3D Mesh".into(),
-        source_format: "mesh.reference".into(),
-        component_kind: "mesh".into(),
-        dimension: "3d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
-        schema: "mesh.reference".into(),
-        export_formats: vec![],
-        import_formats: vec![],
-            export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
-        import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
-    }
-}
+// 🧱️ `mesh_artifact_kind()` (the shared `3d.mesh` interchange kind) REMOVED — ticket
+// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`. `3d.mesh` is a duplicate kind id being deleted
+// repo-wide: mesh is now canonically `s.stdio.semio@v1/mesh` (composed via `LowpolyObject.mesh:
+// Option<store::ArtifactChild<SemioMeshSnapshot>>` above, never a standalone `ArtifactKindSpec`).
+// gis's `🏔️gisterrain` declared the identical id independently — that removal belongs to whichever
+// agent owns gis, not this one. Registration call site removed from
+// `🎛️apps/💠️lowpoly/🦀️component.rs`'s `create_lowpoly_app()` (`.artifact_kind(mesh_artifact_kind())`).
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️Register
@@ -375,16 +407,19 @@ mod tests {
 
     #[test]
     fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
-        let mesh_json = "{}".to_string();
-        let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh_json, paint_layers: vec![LowpolyPaintLayer::new("Base")] };
+        let mesh_workspace = "{}".to_string();
+        let original_mesh = mesh_child_handle("obj-1", &mesh_workspace);
+        let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh: Some(original_mesh), mesh_workspace, paint_layers: vec![LowpolyPaintLayer::new("Base")] };
         let original = object.clone();
-        let new_mesh = "{\"changed\":true}".to_string();
-        let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh_json: Some(new_mesh.clone()) };
+        let new_mesh_workspace = "{\"changed\":true}".to_string();
+        let new_mesh = mesh_child_handle("obj-1", &new_mesh_workspace);
+        let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh: Some(Some(new_mesh.clone())), mesh_workspace: Some(new_mesh_workspace.clone()) };
         object.apply_patch(&patch);
         assert_eq!(object.name, "Renamed");
         assert!(object.smooth_shading);
         assert_eq!(object.transform.position, [1.0, 2.0, 3.0]);
-        assert_eq!(object.mesh_json, new_mesh);
+        assert_eq!(object.mesh, Some(new_mesh));
+        assert_eq!(object.mesh_workspace, new_mesh_workspace);
         let inverse = object.diff_patch(&original).expect("patch changed state");
         object.apply_patch(&inverse);
         assert_eq!(object, original);
@@ -398,7 +433,8 @@ mod tests {
         assert_eq!(snapshot.objects.len(), 1);
         assert_eq!(snapshot.objects[0].id, "obj-42");
         assert_eq!(snapshot.objects[0].name, "Widget");
-        assert_eq!(snapshot.objects[0].mesh_json, mesh_json);
+        assert_eq!(snapshot.objects[0].mesh_workspace, mesh_json);
+        assert_eq!(snapshot.objects[0].mesh, Some(mesh_child_handle("obj-42", &mesh_json)));
         assert_eq!(snapshot.objects[0].paint_layers.len(), 1);
         assert_eq!(snapshot.objects[0].paint_layers[0].name, "Base");
     }

@@ -135,7 +135,7 @@ impl std::error::Error for ImageError {}
 /// same-process stdio call is the simpler of the two extraction shapes the ticket allows.
 /// <https://www.w3.org/TR/png-3/>
 pub fn decode_png(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
-    let snapshot = semio_s_plugin_stdio::artifacts::png::engine::decode_png(bytes).map_err(ImageError::Decode)?;
+    let snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(bytes).map_err(ImageError::Decode)?;
     Ok(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels })
 }
 
@@ -147,7 +147,7 @@ pub fn encode_png(img: &ImageRgba8) -> Result<Vec<u8>, ImageError> {
         return Err(ImageError::Dimensions);
     }
     let snapshot = semio_s_plugin_stdio::artifacts::png::PngSnapshot { width: img.width, height: img.height, pixels: img.data.clone(), ..Default::default() };
-    semio_s_plugin_stdio::artifacts::png::engine::encode_png(&snapshot).map_err(ImageError::Encode)
+    semio_s_plugin_stdio::artifacts::png::io::encode_png(&snapshot).map_err(ImageError::Encode)
 }
 
 /// 📤️ Encodes row-major 16-bit grayscale samples as a 16-bit grayscale PNG byte stream

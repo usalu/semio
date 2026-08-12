@@ -47,7 +47,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(AVI_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor())
         .inferences([crate::artifacts::avi::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor()])
-        .composers(crate::artifacts::avi::standards::v1_0::engine::io_registry::entries())
+        .composers(crate::artifacts::avi::standards::v1_0::subsets::any::io::io_registry::entries())
         .document_codec_bare::<AviSnapshot, AviMutation>(STDIO_AVI_DOCUMENT_SCHEMA)
         .build()
 }
@@ -56,7 +56,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::avi::standards::v1_0::engine::io_registry as std_composer;
+    use crate::artifacts::avi::standards::v1_0::subsets::any::io::io_registry as std_composer;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

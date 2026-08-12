@@ -2,7 +2,6 @@
 
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
-use crate::artifacts::cad::mutations::create_object::mutation::CreateObject;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -30,9 +29,15 @@ pub mod import_cad_file {
         let mut runtime = runtime_of(cfg);
         let name_lower = payload.name.to_ascii_lowercase();
         let payload_value: Value = serde_json::from_str(&payload.payload).unwrap_or_else(|_| Value::String(payload.payload.clone()));
-        if let Some(object) = import_cad_object_by_extension(&name_lower, &payload_value) {
-            runtime.selected_object_ids = SelectionSet::from(vec![object.id.clone()]);
-            let mut emit = Emit::mutations(vec![CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, object })]);
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
+        // now returns a `SemioModelElement` (id/placement/`GeometryRef`), the composed-child shape —
+        // composing it into a pane's `SemioModelSnapshot` CHILD needs a child-dispatch seam on
+        // `CadDispatchCtx`/`Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️component.rs`
+        // framework-kernel surface, W1-owned). Selection still updates; the document write is a
+        // documented no-op until that seam exists.
+        if let Some(element) = import_cad_object_by_extension(&name_lower, &payload_value) {
+            runtime.selected_object_ids = SelectionSet::from(vec![element.id.clone()]);
+            let mut emit = Emit::default();
             emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
             return Ok(emit);
         }

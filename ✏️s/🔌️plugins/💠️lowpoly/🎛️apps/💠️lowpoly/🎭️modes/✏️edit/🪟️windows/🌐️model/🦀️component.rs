@@ -55,7 +55,7 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from the app-level `🎚️options/*` shared by
+/// 🎚️ The live chrome measures for this window, collected from the app-level `🛠️options/*` shared by
 /// both windows (see the master ticket's TEMPLATE.md §12.2 pattern).
 pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
     lowpoly_window_measures(config, labels)

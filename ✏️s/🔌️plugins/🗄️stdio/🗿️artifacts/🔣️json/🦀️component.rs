@@ -35,30 +35,25 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) — replaces
-/// stdio's plugin root calling `crate::artifacts::json::engine::register()` imperatively before
-/// `Plugin::builder` was even constructed, mirroring the `🔋️energy`/`🗒️note` exemplars.
-/// `crate::artifacts::json::standards::v_rfc8259::engine::register()` (stdio's own `⚙️engine` —
-/// UNTOUCHED, per this ticket's rule that stdio's engines stay a public surface other plugins reach
-/// into) called, in call order: `io_registry::register()` → `.composers(...)` below, the same
-/// `standards::v_rfc8259::engine::io_registry::entries()` this artifact's own root `io_registry`
-/// module already wraps — that list already carries BOTH the `✳️any` raw composer and the `✳️i-json`
-/// composer, so `.composers()` alone covers both; `register_artifact_schema()`/
-/// `register_artifact_inferences()` → `.schema(...)`/`.inferences(...)`; `register_pilot_languages()`
-/// → `.languages(...)`, replicated verbatim below (same `OnceLock`-leak shape `🔋️energy`'s own
-/// `pilot_languages()` uses, since `dsl::LanguageSpec` isn't `const fn`-constructible);
-/// `register_document_codec` → `.document_codec_bare::<JsonSnapshot, JsonMutation>(...)`; and
+/// stdio's plugin root calling an imperative `register()` before `Plugin::builder` was even
+/// constructed, mirroring the `🔋️energy`/`🗒️note` exemplars. Call order, in `.builder()` order below:
+/// `.composers(...)` from `standards::v_rfc8259::subsets::any::io::io_registry::entries()` (dissolved
+/// out of the former `⚙️engine`, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES — that
+/// list already carries BOTH the `✳️any` raw composer and the `✳️i-json` composer, so `.composers()`
+/// alone covers both); `.schema(...)`/`.inferences(...)` from the schema/inferences descriptors
+/// directly; `.languages(...)` from `pilot_languages()` below (same `OnceLock`-leak shape `🔋️energy`'s
+/// own `pilot_languages()` uses, since `dsl::LanguageSpec` isn't `const fn`-constructible);
+/// `.document_codec_bare::<JsonSnapshot, JsonMutation>(...)`; and
 /// `crate::artifacts::json::standards::v_rfc8259::subsets::i_json::io::register()` — the ✳️i-json
-/// subset's own `register_subset_validator` call, living in `🚪️io/` (not `⚙️engine/`, so freely
-/// editable) → `.subset_validators(...)` below, built fresh via
-/// `subset_validator_entry_of::<JsonIJsonValidator>()` rather than reaching into that module's
-/// private `validator_entry()` OnceLock (left untouched — first artifact in the repo to populate
-/// this field, see its own builder doc). `standards::v_rfc8259::engine::register()` itself is left in
-/// place, now orphaned/uncalled — deleting it means editing `⚙️engine/`, off-limits here.
+/// subset's own `register_subset_validator` call, living in `🚪️io/` → `.subset_validators(...)`
+/// below, built fresh via `subset_validator_entry_of::<JsonIJsonValidator>()` rather than reaching
+/// into that module's private `validator_entry()` OnceLock (left untouched — first artifact in the
+/// repo to populate this field, see its own builder doc).
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.json")
         .schema(crate::artifacts::json::schema::json_artifact_schema_descriptor())
         .inferences([crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::inferences::json_artifact_inference_descriptor()])
-        .composers(crate::artifacts::json::standards::v_rfc8259::engine::io_registry::entries())
+        .composers(crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA)
@@ -144,7 +139,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::json::standards::v_rfc8259::engine::io_registry as v_rfc8259;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry as v_rfc8259;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

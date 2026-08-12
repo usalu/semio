@@ -31,17 +31,8 @@ use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
 };
 use crate::artifacts::cad::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
 use crate::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
-use crate::artifacts::cad::mutations::change_object_locked::mutation::ChangeObjectLocked;
-use crate::artifacts::cad::mutations::change_object_typology::mutation::ChangeObjectTypology;
-use crate::artifacts::cad::mutations::change_object_visible::mutation::ChangeObjectVisible;
-use crate::artifacts::cad::mutations::create_object::mutation::CreateObject;
-use crate::artifacts::cad::mutations::move_object::mutation::MoveObject;
-use crate::artifacts::cad::mutations::rename_object::mutation::RenameObject;
-use crate::artifacts::cad::mutations::replace_pane_objects::mutation::ReplacePaneObjects;
-use crate::artifacts::cad::mutations::rotate_object::mutation::RotateObject;
-use crate::artifacts::cad::mutations::scale_object::mutation::ScaleObject;
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::{artifact_kind, cad_all_objects, cad_pane_from_model_definition_id, cad_pane_objects, CadCamera, CadObject, CadPaneId, CadSnapshot, CAD_DOCUMENT_SCHEMA};
+use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
@@ -370,51 +361,23 @@ pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfigMutat
 //#endregion 🔖️Runtime
 
 //#region 🔖️Helpers
-/// @emoji 🔁️ Derives the target-pane objects for transformation `qid` and returns the operations
-/// that both replace the target pane and refocus onto the target model definition — dispatched by
-/// the caller through the store (no direct mutation).
-pub fn apply_transformation_mutations(document: &CadSnapshot, qid: &str) -> Vec<CadMutation> {
-    let Some((model_definition_id, transformation_id)) = qid.rsplit_once('.') else {
-        return Vec::new();
-    };
-    let Some(spec) = CAD_TRANSFORMATION_SPECS.iter().find(|entry| entry.source_model_definition_id == model_definition_id && entry.id == transformation_id) else {
-        return Vec::new();
-    };
-    let Some(source_pane) = cad_pane_from_model_definition_id(spec.source_model_definition_id) else {
-        return Vec::new();
-    };
-    let Some(target_pane) = cad_pane_from_model_definition_id(spec.target_model_definition_id) else {
-        return Vec::new();
-    };
-    let objects = {
-        let source_objects: Vec<CadObject> = cad_pane_objects(document, source_pane).to_vec();
-        let Ok(mut kernel) = cad_brep_kernel() else {
-            return Vec::new();
-        };
-        let mut prepared = source_objects;
-        for object in &mut prepared {
-            ensure_object_solid_handle(&mut *kernel, object);
-        }
-        match spec.mode {
-            TransformationMode::DeriveFromGeometry => run_derive_from_geometry(&mut *kernel, &prepared, "derived-energy"),
-            TransformationMode::FromBuilding => apply_from_building(&prepared, "derived-structure"),
-            TransformationMode::TypologyFallback => apply_typology_fallback(&prepared, &["building.building.slab", "building.building.column", "building.building.beam", "building.building.wall"], "derived-fallback"),
-        }
-    };
-    vec![
-        CadMutation::ReplacePaneObjects(ReplacePaneObjects { pane: target_pane, objects }),
-        CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: spec.target_model_definition_id.into() }),
-    ]
+/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: this used to dispatch a
+/// `ReplacePaneObjects` whole-pane-replace mutation (banned vocabulary shape, and gone: pane object
+/// data now lives inside composed `s.stdio.semio.model` CHILD documents, each its own document —
+/// see `🔖️Composition` in `🏪️store/🦀️component.rs`). Re-deriving building/energy/structure
+/// typologies from shape geometry and writing the result into a pane needs a child-dispatch seam
+/// on `CadDispatchCtx`/`Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️component.rs`
+/// framework-kernel surface, W1-owned, out of a plugin fan-out agent's write scope). Documented
+/// no-op until that seam exists, not silently dropped.
+pub fn apply_transformation_mutations(_document: &CadSnapshot, _qid: &str) -> Vec<CadMutation> {
+    Vec::new()
 }
 
-pub fn collect_pane_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayView, pane: CadPaneId) -> Vec<GeometryHandle> {
-    cad_pane_objects(&envelope.document, pane)
-        .iter()
-        .filter_map(|object| {
-            let next = object.clone();
-            solid_for_object(kernel, &next)
-        })
-        .collect()
+/// ⚠️ Same documented gap as `apply_transformation_mutations` — there is no live per-pane object
+/// list on `CadSnapshot` to collect solids from anymore (only composed model-child HANDLES,
+/// unresolved at this boundary).
+pub fn collect_pane_solids(_kernel: &mut dyn BrepKernel, _envelope: &CadPlayView, _pane: CadPaneId) -> Vec<GeometryHandle> {
+    Vec::new()
 }
 
 pub fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayView) -> Vec<GeometryHandle> {
@@ -459,6 +422,11 @@ pub fn cad_spatial_export_effect(value: &Value, filename: &str) -> HostEffect {
     HostEffect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: serde_json::to_string(value).unwrap_or_default(), encoding: None }
 }
 
+/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: exporting per-pane objects as
+/// spatial JSON used to read `CadSnapshot`'s inline `objects` field directly. That data now lives
+/// inside composed `s.stdio.semio.model` CHILD documents (unresolved at this boundary — see
+/// `🔖️Composition` in `🏪️store/🦀️component.rs`). Returns an empty `objects` array per pane;
+/// documented reduced-fidelity gap, not silently wrong.
 pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
     let models: Vec<Value> = CadPaneId::all()
         .into_iter()
@@ -468,7 +436,7 @@ pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
                 "model": {
                     "schema": "spatial.model",
                     "revision": 1,
-                    "objects": cad_pane_objects(&envelope.document, pane),
+                    "objects": Vec::<Value>::new(),
                 }
             })
         })
@@ -476,11 +444,10 @@ pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
     match mode {
         "selected" => {
             let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
-            let selected: Vec<&CadObject> = envelope.runtime.selected_object_ids.iter().filter_map(|id| cad_all_objects(&envelope.document).find(|(object, _)| &object.id == id).map(|(object, _)| object)).collect();
             let model = json!({
                 "schema": "spatial.model",
                 "revision": 1,
-                "objects": selected,
+                "objects": Vec::<Value>::new(),
             });
             let model_space = json!({
                 "schema": "spatial.modelspace",
@@ -502,7 +469,7 @@ pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
                 "schema": "spatial.model",
                 "revision": 1,
                 "modelDefinitionId": pane.model_definition_id(),
-                "objects": cad_pane_objects(&envelope.document, pane),
+                "objects": Vec::<Value>::new(),
             })
         }
         _ => json!({
@@ -608,14 +575,13 @@ pub fn reset_document_effect(scene: &CadSnapshot) -> HostEffect {
 /// 🎯️ Builds the whole-value-field semantic mutation for one object addressed by `pane`/`object_id`
 /// (label/typology/hidden/locked) — the counterpart of the axis-addressed spatial fields
 /// `patch_objects_mutations` below resolves separately.
-pub fn object_field_mutation(pane: CadPaneId, object_id: &str, field: &str, value: Option<&Value>) -> Option<CadMutation> {
-    match field {
-        "label" | "name" => value.and_then(|entry| entry.as_str()).map(|label| CadMutation::RenameObject(RenameObject { pane, object_id: object_id.into(), new_label: label.into() })),
-        "typology" => value.and_then(|entry| entry.as_str()).map(|typology| CadMutation::ChangeObjectTypology(ChangeObjectTypology { pane, object_id: object_id.into(), new_typology: typology.into() })),
-        "hidden" => value.and_then(|entry| entry.as_bool()).map(|hidden| CadMutation::ChangeObjectVisible(ChangeObjectVisible { pane, object_id: object_id.into(), new_visible: !hidden })),
-        "locked" => value.and_then(|entry| entry.as_bool()).map(|locked| CadMutation::ChangeObjectLocked(ChangeObjectLocked { pane, object_id: object_id.into(), new_locked: locked })),
-        _ => None,
-    }
+/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `rename-object`/
+/// `change-object-typology`/`change-object-visible`/`change-object-locked` are retired — object
+/// fields live inside composed `s.stdio.semio.model` CHILD documents now, whose own mutations are
+/// dispatched against that child directly (no seam for that from here yet; see
+/// `patch_objects_mutations`'s doc comment). Documented no-op.
+pub fn object_field_mutation(_pane: CadPaneId, _object_id: &str, _field: &str, _value: Option<&Value>) -> Option<CadMutation> {
+    None
 }
 
 pub fn resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
@@ -658,37 +624,20 @@ pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
 /// component so `value` (absolute) or `delta` (relative) applies per-object, preserving each
 /// object's other axes and any offset across a multi-select — `move-object`/`scale-object`/
 /// `rotate-object`, one per touched object.
-pub fn patch_objects_mutations(document: &CadSnapshot, object_ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) -> Vec<CadMutation> {
-    let mut operations = Vec::new();
-    for object_id in object_ids {
-        let Some((object, pane)) = cad_all_objects(document).find(|(object, _)| &object.id == object_id) else {
-            continue;
-        };
-        if let Some(mutation) = object_field_mutation(pane, object_id, field, value) {
-            operations.push(mutation);
-            continue;
-        }
-        if let Some(axis) = axis3_index(field, "origin") {
-            let mut origin = object.origin;
-            let Some(updated) = resolve_number_edit(origin[axis], value, delta) else { continue };
-            origin[axis] = updated;
-            operations.push(CadMutation::MoveObject(MoveObject { pane, object_id: object_id.clone(), new_origin: origin }));
-        } else if let Some(axis) = axis3_index(field, "scale") {
-            let mut scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
-            let Some(updated) = resolve_number_edit(scale[axis], value, delta) else { continue };
-            scale[axis] = updated;
-            operations.push(CadMutation::ScaleObject(ScaleObject { pane, object_id: object_id.clone(), new_scale: scale }));
-        } else if let Some(axis) = axis4_index(field, "orientation") {
-            let mut orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-            let Some(updated) = resolve_number_edit(orientation[axis], value, delta) else { continue };
-            orientation[axis] = updated;
-            operations.push(CadMutation::RotateObject(RotateObject { pane, object_id: object_id.clone(), new_orientation: quat_normalize(orientation) }));
-        }
-    }
-    operations
+/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `move-object`/`scale-object`/
+/// `rotate-object` are retired — object placement lives inside composed `s.stdio.semio.model`
+/// CHILD documents now (own document, own mutation history; see `🔖️Composition` in
+/// `🏪️store/🦀️component.rs`). Dispatching a mutation against a CHILD document from this
+/// parent-document command handler needs a child-dispatch seam on `CadDispatchCtx`/
+/// `Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️component.rs` framework-kernel
+/// surface, W1-owned, out of a plugin fan-out agent's write scope). Documented no-op until that
+/// seam exists, not silently dropped.
+pub fn patch_objects_mutations(_document: &CadSnapshot, _object_ids: &[String], _field: &str, _value: Option<&Value>, _delta: Option<&Value>) -> Vec<CadMutation> {
+    Vec::new()
 }
 
-pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> CadObject {
+pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject {
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
     let label = TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == typology).map_or("Object", |entry| entry.label);
     let extent = match typology {
         t if t.contains("column") => Some([0.5, 0.5, 3.0]),
@@ -722,15 +671,21 @@ pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPan
 /// direct-event and keyed-transition REPL paths in `engagement_submit_mutations` (a state reached via
 /// either path can be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed
 /// transition).
-pub fn try_commit_session_mutations(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadMutation> {
+pub fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut CadPlayRuntime, _pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadMutation> {
     if !can_commit(session) {
         return Vec::new();
     }
-    let label_count = cad_pane_objects(document, pane).len();
     let Ok(mut kernel) = cad_brep_kernel() else {
         return Vec::new();
     };
-    let Some(object) = commit_object(&mut *kernel, session, label_count, next_cad_id) else {
+    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `commit_object` still builds
+    // a real ephemeral `CadObject` (kernel handle + placement) from the interactive session — that
+    // part of the pipeline is untouched. What is retired is `create-object`: composing the result
+    // into a pane's `SemioModelSnapshot` CHILD needs a child-dispatch seam on `CadDispatchCtx`/
+    // `Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️component.rs` framework-kernel
+    // surface, W1-owned). Documented no-op — the session still clears (UI doesn't hang), but the
+    // constructed geometry does not yet land in the document.
+    let Some(object) = commit_object(&mut *kernel, session, 0, next_cad_id) else {
         return Vec::new();
     };
     drop(kernel);
@@ -741,7 +696,7 @@ pub fn try_commit_session_mutations(document: &CadSnapshot, runtime: &mut CadPla
     runtime.last_finalized_interaction_id = Some(interaction_id);
     runtime.engagement_session = None;
     runtime.engagement_step = "Idle".into();
-    vec![CadMutation::CreateObject(CreateObject { pane, object })]
+    Vec::new()
 }
 
 /// @emoji ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
@@ -1024,8 +979,13 @@ impl ArtifactApp for CadPlayApp {
             MediaPayload::Structured { json, .. } => Value::String(json.clone()),
             MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured payload today".into())),
         };
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
+        // now returns a `SemioModelElement` (composed-child shape); `create-object` is retired.
+        // Composing the imported element into the Shape pane's `SemioModelSnapshot` CHILD needs a
+        // child-dispatch seam on `Emit<CadMutation, _>` that does not exist yet
+        // (`🔌️plugin/🦀️component.rs` framework-kernel surface, W1-owned). Documented no-op.
         match crate::artifacts::cad::standards::v1::subsets::any::io::import_cad_object_by_extension(name, &payload) {
-            Some(object) => Ok(Emit::mutations(vec![CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, object })])),
+            Some(_element) => Ok(Emit::default()),
             None => Err(MediaError::Payload(port.to_string(), "unrecognized geometry payload".into())),
         }
     }

@@ -955,7 +955,7 @@ mod tests {
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_tiff_snapshot()) drifted from the shipped .pack.semio fixture");
 
             let native = encode_tiff(&demo).expect("encode native tiff");
-            assert_eq!(native.as_slice(), include_bytes!("../📚️examples/🎬️demo/🖼️assets/example.tiff"), "encode_tiff(demo) drifted from example.tiff");
+            assert_eq!(native.as_slice(), include_bytes!("../📚️examples/🎬️demo/🖼️assets/🖼️example.tiff"), "encode_tiff(demo) drifted from 🖼️example.tiff");
         }
 
         #[test]
@@ -963,8 +963,8 @@ mod tests {
         fn zzz_write_native_tiff_fixture() {
             let demo = demo_tiff_snapshot();
             let native = encode_tiff(&demo).expect("encode");
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/example.tiff");
-            std::fs::write(path, native).expect("write example.tiff");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🖼️example.tiff");
+            std::fs::write(path, native).expect("write 🖼️example.tiff");
         }
     }
     //#endregion 🔖️ConformanceLaws

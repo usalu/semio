@@ -1,10 +1,16 @@
 //! 📦 `bounds` — one named inference: 3d bounding box across every pane's object origins and
-//! brep vertex positions, plus object/vertex counts. All four panes (shape/building/energy/
-//! structure-classic) contribute uniformly — cad's four model definitions share one document.
-//! Simple whole-snapshot scalar: no `InferredField` caching, a full O(objects+vertices) pass is
-//! cheap at cad-document scale.
+//! brep vertex positions, plus object/vertex counts.
+//!
+//! ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `CadSnapshot` no longer inlines
+//! `objects`/`*Geometry` per pane — that data now lives inside composed `s.stdio.semio.model` CHILD
+//! documents (own document, own history; resolving one is a host/composition concern, never
+//! something a pure `CadSnapshot`-only function can do — see `🔖️Composition` in
+//! `🏪️store/🦀️component.rs`). This inference therefore degrades to counting/bounding only the
+//! FOUR fixed model-child SLOTS themselves (present vs. absent), not their resolved contents — a
+//! real, honest, reduced-fidelity signal (non-zero `object_count` again once a real per-child
+//! element/vertex inference exists over the composed children), not a silently wrong one.
 
-use crate::artifacts::cad::{CadGeometry, CadObject, CadSnapshot};
+use crate::artifacts::cad::CadSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 📦Bounds
@@ -16,51 +22,22 @@ pub struct CadBounds {
     pub max: [f64; 3],
 }
 
-fn grow(bounds: Option<CadBounds>, point: [f64; 3]) -> CadBounds {
-    match bounds {
-        Some(bounds) => CadBounds {
-            min: [bounds.min[0].min(point[0]), bounds.min[1].min(point[1]), bounds.min[2].min(point[2])],
-            max: [bounds.max[0].max(point[0]), bounds.max[1].max(point[1]), bounds.max[2].max(point[2])],
-        },
-        None => CadBounds { min: point, max: point },
-    }
+/// 📦 3d bounding box across every pane's object origins and brep vertex positions. `None`
+/// unconditionally now — real bounds require resolving the composed model children's content,
+/// which is out of this pure inference's reach (see module doc comment).
+pub(crate) fn scene_bounds(_snapshot: &CadSnapshot) -> Option<CadBounds> {
+    None
 }
 
-/// 🗂️ The four (objects, geometry) panes cad's document carries, in schema-declaration order.
-fn panes(snapshot: &CadSnapshot) -> [(&[CadObject], &Option<CadGeometry>); 4] {
-    [
-        (snapshot.objects.as_slice(), &snapshot.shape_geometry),
-        (snapshot.building_objects.as_slice(), &snapshot.building_geometry),
-        (snapshot.energy_objects.as_slice(), &snapshot.energy_geometry),
-        (snapshot.structure_classic_objects.as_slice(), &snapshot.structure_classic_geometry),
-    ]
-}
-
-/// 📦 3d bounding box across every pane's object origins and brep vertex positions, or `None` when
-/// the document carries neither.
-pub(crate) fn scene_bounds(snapshot: &CadSnapshot) -> Option<CadBounds> {
-    let mut bounds = None;
-    for (objects, geometry) in panes(snapshot) {
-        for object in objects {
-            bounds = Some(grow(bounds, object.origin));
-        }
-        if let Some(geometry) = geometry {
-            for vertex in &geometry.vertices {
-                bounds = Some(grow(bounds, vertex.position));
-            }
-        }
-    }
-    bounds
-}
-
-/// 📦 Total object count across every pane.
+/// 📦 Number of the four fixed model-child SLOTS that are occupied (0..=4) — a real, cheap signal
+/// over what `CadSnapshot` itself can see; NOT a count of elements inside those children.
 pub(crate) fn object_count(snapshot: &CadSnapshot) -> usize {
-    panes(snapshot).into_iter().map(|(objects, _)| objects.len()).sum()
+    [&snapshot.shape_model, &snapshot.building_model, &snapshot.energy_model, &snapshot.structure_classic_model].into_iter().filter(|slot| slot.is_some()).count()
 }
 
-/// 📦 Total brep vertex count across every pane's geometry.
-pub(crate) fn vertex_count(snapshot: &CadSnapshot) -> usize {
-    panes(snapshot).into_iter().map(|(_, geometry)| geometry.as_ref().map_or(0, |geometry| geometry.vertices.len())).sum()
+/// 📦 Vertex counting requires resolved child content (see module doc comment) — `0` unconditionally.
+pub(crate) fn vertex_count(_snapshot: &CadSnapshot) -> usize {
+    0
 }
 //#endregion 📦Bounds
 
@@ -68,7 +45,7 @@ pub(crate) fn vertex_count(snapshot: &CadSnapshot) -> usize {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::cad::{empty_cad_snapshot, CadVertex};
+    use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child};
 
     #[test]
     fn empty_scene_has_no_bounds() {
@@ -79,35 +56,12 @@ mod tests {
     }
 
     #[test]
-    fn object_origins_and_vertex_positions_both_grow_the_box() {
+    fn object_count_reflects_occupied_model_slots() {
         let mut snapshot = empty_cad_snapshot();
-        snapshot.objects.push(CadObject {
-            id: "o1".into(),
-            label: "O1".into(),
-            typology: "generic".into(),
-            visible: true,
-            locked: false,
-            origin: [1.0, 2.0, 3.0],
-            orientation: None,
-            scale: None,
-            mesh_url: None,
-            extent: None,
-            solid_handle: None,
-            primitives: Vec::new(),
-        });
-        snapshot.shape_geometry = Some(CadGeometry {
-            anchors: Vec::new(),
-            vertices: vec![CadVertex { id: "v1".into(), position: [-1.0, 0.0, 5.0] }],
-            edges: Vec::new(),
-            wires: Vec::new(),
-            faces: Vec::new(),
-            shells: Vec::new(),
-            solids: Vec::new(),
-        });
-        let bounds = scene_bounds(&snapshot).expect("bounds present");
-        assert_eq!(bounds, CadBounds { min: [-1.0, 0.0, 3.0], max: [1.0, 2.0, 5.0] });
+        snapshot.shape_model = Some(sample_model_child("bounds-law-1"));
         assert_eq!(object_count(&snapshot), 1);
-        assert_eq!(vertex_count(&snapshot), 1);
+        snapshot.building_model = Some(sample_model_child("bounds-law-2"));
+        assert_eq!(object_count(&snapshot), 2);
     }
 }
 //#endregion 🧪️Tests

@@ -7,7 +7,8 @@
 //! lagging-call-site update — the canonical always-8bit-RGBA `pixels` payload this leaf already
 //! built is exactly what `PngSnapshot.pixels` wants, just without the old wrapper struct.
 use crate::artifacts::note::NoteSnapshot;
-use semio_s_plugin_stdio::artifacts::png::engine::{encode_png, empty_png_snapshot};
+use semio_s_plugin_stdio::artifacts::png::io::encode_png;
+use semio_s_plugin_stdio::artifacts::png::schema::empty_png_snapshot;
 pub fn register() {}
 pub fn serialize(snapshot: &NoteSnapshot) -> Result<semio_s_plugin_stdio::artifacts::png::PngSnapshot, String> {
     let (w, h) = crate::artifacts::note::io::note_document_bounds(snapshot);

@@ -470,7 +470,7 @@ pub fn empty_dwg_snapshot() -> DwgSnapshot {
 }
 
 /// 📄️ The demo `stdio.dwg` (ac1024, the CANONICAL standard per S-6/Decision #5) document —
-/// decodes the real, committed 22-byte AC1024 stub (`📚️examples/🎬️demo/🖼️assets/example.dwg`)
+/// decodes the real, committed 22-byte AC1024 stub (`📚️examples/🎬️demo/🖼️assets/🖊️example.dwg`)
 /// via this standard's own real `decode_dwg`. The single source of truth for
 /// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally
 /// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by

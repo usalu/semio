@@ -219,7 +219,7 @@ pub fn register_pilot_languages() {
 mod tests {
     use super::*;
 
-    const REAL_FIXTURE: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/example.epw");
+    const REAL_FIXTURE: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🌦️example.epw");
 
     #[test]
     fn sniffs_and_parses_a_real_shaped_location_line() {
@@ -260,7 +260,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     /// 🔁️ decode→encode is byte-preserving on the real W0 fixture
-    /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📚️examples/🎬️demo/🖼️assets/example.epw`,
+    /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📚️examples/🎬️demo/🖼️assets/🌦️example.epw`,
     /// verified upstream by `verify_epw.py`): all 24 records × 35 columns exact, all 8 header
     /// lines exact, byte-for-byte incl. CRLF.
     #[test]

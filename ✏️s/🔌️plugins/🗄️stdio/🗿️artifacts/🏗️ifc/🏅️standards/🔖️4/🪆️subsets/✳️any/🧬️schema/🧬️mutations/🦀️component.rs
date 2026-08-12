@@ -622,7 +622,7 @@ mod tests {
     fn codec_retention_law() {
         let text = std::fs::read_to_string(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🖼️assets/example.ifc"
+            "/../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🖼️assets/🏗️example.ifc"
         ));
         let text = match text {
             Ok(t) => t,

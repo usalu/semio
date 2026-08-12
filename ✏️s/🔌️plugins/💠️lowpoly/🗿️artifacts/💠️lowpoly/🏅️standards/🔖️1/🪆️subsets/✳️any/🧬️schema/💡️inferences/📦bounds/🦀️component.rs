@@ -1,5 +1,5 @@
 //! 📦 `bounds` — one named inference: 3d bounding box across every object's transform position,
-//! plus object count. `LowpolyObject::mesh_json` is a raw half-edge-mesh JSON blob decoded by the
+//! plus object count. `LowpolyObject::mesh_workspace` is a raw half-edge-mesh JSON blob decoded by the
 //! `⚙️engine`'s own `HalfedgeMesh` codec (a whole separate geometry crate) — deliberately left
 //! unparsed here, this facet reads only the typed `transform.position` field every object already
 //! carries. Simple whole-snapshot scalar: no `InferredField` caching.
@@ -44,7 +44,8 @@ mod tests {
             name: id.into(),
             transform: LowpolyTransform { position, ..LowpolyTransform::default() },
             smooth_shading: false,
-            mesh_json: "{}".into(),
+            mesh: None,
+            mesh_workspace: "{}".into(),
             paint_layers: vec![LowpolyPaintLayer::new("Base")],
         }
     }

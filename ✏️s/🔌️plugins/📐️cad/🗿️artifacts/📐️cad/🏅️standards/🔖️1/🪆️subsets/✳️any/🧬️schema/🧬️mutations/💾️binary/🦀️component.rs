@@ -33,14 +33,14 @@ pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::mutations::drag_objects::mutation::DragObjects;
-    use crate::artifacts::cad::mutations::create_object::mutation::CreateObject;
-    use crate::artifacts::cad::{empty_cad_snapshot, CadObject, CadPaneId, CadPrimitiveSlot, CAD_DOCUMENT_SCHEMA};
+    use crate::artifacts::cad::mutations::create_shape_model::mutation::CreateShapeModel;
+    use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 
     #[test]
     fn encode_decode_op_round_trips_a_representative_operation() {
-        let operation = CadMutation::DragObjects(DragObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -2.0, dz: 3.5 });
+        let sample = sample_model_child("op-round-trip-1");
+        let operation = CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() });
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
@@ -52,56 +52,12 @@ mod tests {
     }
 
     #[test]
-    fn create_object_round_trips_through_store() {
+    fn create_shape_model_round_trips_through_store() {
         let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
-        let object = CadObject {
-            id: "object-1".into(),
-            label: "Box".into(),
-            typology: "spatial.shape.box".into(),
-            visible: true,
-            locked: false,
-            origin: [0.0, 0.0, 0.0],
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: None,
-            mesh_url: None,
-            extent: None,
-            solid_handle: None,
-            primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }],
-        };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, object })], description: None }).expect("apply");
+        let sample = sample_model_child("store-round-trip-1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() })], description: None }).expect("apply");
         let scene = store.snapshot().expect("projection");
-        assert_eq!(scene.objects.len(), 1);
-        assert_eq!(scene.objects[0].primitives[0].kind, "solid");
-    }
-
-    #[test]
-    fn drag_objects_updates_origin() {
-        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
-        store
-            .dispatch(ArtifactCommand::Apply {
-                mutations: vec![CadMutation::CreateObject(CreateObject {
-                    pane: CadPaneId::Shape,
-                    object: CadObject {
-                        id: "object-1".into(),
-                        label: "Box".into(),
-                        typology: "spatial.shape.box".into(),
-                        visible: true,
-                        locked: false,
-                        origin: [1.0, 2.0, 3.0],
-                        orientation: None,
-                        scale: None,
-                        mesh_url: None,
-                        extent: None,
-                        solid_handle: None,
-                        primitives: Vec::new(),
-                    },
-                })],
-                description: None,
-            })
-            .expect("apply");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::DragObjects(DragObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 })], description: None }).expect("drag");
-        let scene = store.snapshot().expect("projection");
-        assert_eq!(scene.objects[0].origin, [2.0, 1.0, 3.5]);
+        assert_eq!(scene.shape_model.expect("shape_model set").child_id, sample.child_id);
     }
 }
 //#endregion 🧪️Tests

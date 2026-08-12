@@ -502,7 +502,7 @@ mod tests {
     #[test]
     fn default_unit_box_mesh_parses_and_has_faces() {
         let projection = default_snapshot();
-        let mesh = HalfedgeMesh::from_json(&projection.objects[0].mesh_json).expect("default mesh");
+        let mesh = HalfedgeMesh::from_json(&projection.objects[0].mesh_workspace).expect("default mesh");
         assert!(mesh.face_count() >= 6, "unit box should expose six faces");
         assert!(mesh.vertex_count() >= 8, "unit box should expose eight vertices");
     }

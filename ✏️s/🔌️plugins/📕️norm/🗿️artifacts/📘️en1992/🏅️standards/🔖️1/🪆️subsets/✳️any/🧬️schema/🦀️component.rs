@@ -287,8 +287,6 @@ semio_framework_plugin::derive_artifact_facets!(
 /// relocated verbatim from the deleted `⚙️engine`. Every `part_1_N`/`part_N` module (including the
 /// `cross-fem`-gated `Fem` region) is a pure function library; the snapshot-level composition
 /// (`evaluate`) lives in `💡️inferences`.
-use crate::artifacts::en1992::part_1_2::FireRating;
-use crate::artifacts::en1992::part_3::TightnessClass;
 use crate::document::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, Quantity, TableEntry1D};
 
 // #region 🔖️NaDe

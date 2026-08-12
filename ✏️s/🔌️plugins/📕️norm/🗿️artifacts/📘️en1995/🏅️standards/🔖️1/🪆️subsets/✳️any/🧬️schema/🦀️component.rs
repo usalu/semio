@@ -268,7 +268,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `part_1_1`/`part_1_2`/`part_2` and `check_glulam_beam` are pure function libraries; the
 /// snapshot-level composition (`evaluate`, `check_full_timber`) lives in `💡️inferences`.
 /// `na_de` re-exports `crate::artifacts::en1990`'s relocated `NaDe`.
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LoadDuration, Quantity};
+use crate::document::{CheckReport, CheckResult, ClauseId, LoadDuration, Quantity};
 
 pub mod na_de {
     pub use crate::artifacts::en1990::standards::v1::subsets::any::schema::na_de::NaDe;

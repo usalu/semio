@@ -2,9 +2,6 @@
 
 use crate::apps::cad::config::{CadConfig, CadConfigMutation};
 use crate::apps::cad::CadDispatchCtx;
-use crate::artifacts::cad::mutations::drag_objects::mutation::DragObjects;
-use crate::artifacts::cad::mutations::rotate_objects::mutation::RotateObjects;
-use crate::artifacts::cad::mutations::scale_objects::mutation::ScaleObjects;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -31,7 +28,11 @@ pub mod translate_selection {
         if ids.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit::amend(vec![CadMutation::DragObjects(DragObjects { object_ids: ids, dx: payload.dx, dy: payload.dy, dz: payload.dz })], "gumball.translate"))
+        // ⚠️ `drag-objects` retired (26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 3): object
+        // placement now lives inside composed `s.stdio.semio.model` CHILD documents; no
+        // child-dispatch seam exists yet on `Emit<CadMutation, _>`. Documented no-op.
+        let _ = (ids, payload.dx, payload.dy, payload.dz);
+        Ok(Emit::default())
     }
 }
 //#endregion 🔖️TranslateSelection
@@ -56,7 +57,9 @@ pub mod rotate_selection {
         if ids.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit::amend(vec![CadMutation::RotateObjects(RotateObjects { object_ids: ids, ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle })], "gumball.rotate"))
+        // ⚠️ Same documented gap as `translate_selection` — `rotate-objects` retired.
+        let _ = (ids, payload.ax, payload.ay, payload.az, payload.angle);
+        Ok(Emit::default())
     }
 }
 //#endregion 🔖️RotateSelection
@@ -80,7 +83,9 @@ pub mod scale_selection {
         if ids.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit::amend(vec![CadMutation::ScaleObjects(ScaleObjects { object_ids: ids, sx: payload.sx, sy: payload.sy, sz: payload.sz })], "gumball.scale"))
+        // ⚠️ Same documented gap as `translate_selection` — `scale-objects` retired.
+        let _ = (ids, payload.sx, payload.sy, payload.sz);
+        Ok(Emit::default())
     }
 }
 //#endregion 🔖️ScaleSelection

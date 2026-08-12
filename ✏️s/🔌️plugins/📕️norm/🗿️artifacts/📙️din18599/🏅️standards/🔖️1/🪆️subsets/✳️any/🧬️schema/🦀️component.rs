@@ -223,7 +223,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// whole-document composition; `balance_annual`/`evaluate` (the actual snapshot-level conformance
 /// law) live in `💡️inferences`. Depends on `din4108` and `din16798`'s relocated schema helpers for
 /// the reference-building envelope/ventilation calculations.
-use crate::artifacts::din18599::{BalancingInputs, MonthlyClimate, UseClass};
+use crate::artifacts::din18599::BalancingInputs;
 use crate::artifacts::din16798::standards::v1::subsets::any::schema::part_3::residential_ventilation_rate;
 use crate::artifacts::din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
 use crate::artifacts::din4108::standards::v1::subsets::any::schema::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};

@@ -549,3 +549,40 @@ The mesh report claimed completion, and the wave *was* substantially right — b
 The mesh agent verified its inference mount complete at **76/76 paths resolving**, then found it had dropped to **74/76** on a later pass — **another session's commits had landed on the shared `📦️glue.rs` and silently dropped two of its mounts.** It re-applied and re-verified with a full recompile. This is the sharpest instance tonight of *"a verification is a timestamp, not a property"*: the agent's first measurement was correct **and** the tree later disagreed with it, through no error of its own.
 
 It also caught its own **unicode-normalization typo twice before shipping** — a corrupted CJK sequence where `🏅️standards` belonged — using the same path-resolution script. Exactly the trap that produced silently-empty modules and silently-empty searches elsewhere tonight, caught here by an instrument built for it.
+
+## W3b — surface family DONE, and the result reframes what "73 setters" meant
+
+Coordinator-verified independently (forced recheck, both mandatory flags):
+```
+cargo test  -p semio-framework-surface --lib        → 214 passed, 0 failed   (baseline unchanged)
+cargo check -p semio-framework-surface --all-targets → 0 errors
+fn set_ across 🗺️surface                            → 73  (unchanged — zero public API change)
+```
+
+### The finding: all three modules own no authoritative state — for a *stronger* reason than terrain
+
+Terrain's fields mirrored plugin state where only *one* field had a shipped mutation. Here, **every mirrored field's real owner is an already-shipped, event-sourced artifact with conforming triads**, confirmed on disk rather than asserted — and I re-verified the two headline claims myself:
+
+| surface field | real owner | owner's vocabulary (verified) |
+|---|---|---|
+| `RasterHost.document` | `✏️s/🔌️plugins/🖨️raster` `RasterSnapshot` | **12 triads** (create/delete/rename/move/resize/reorder-layer, change-layer-*, add/remove-layer-asset) |
+| `RasterHost` camera/brush/tool | raster's shipped `RasterConfig` | LOCAL_UI mutations |
+| `MapHost.features` | `✏️s/🔌️plugins/🌍️gis` `GismapSnapshot` | **12 triads** (positions/routes/regions) |
+| `MapHost` render/style/visibility | gis's shipped `Gis2dConfig` | config-lane mutations |
+| `GraphHost.dag` | OS `flow`'s `Widget`/`SynapseSpec` | ⚠️ real but **not yet event-sourced** — that is W3c's boundary, in flight |
+
+The gis case is the most convincing: the plugin's own `map_host_from()` **rebuilds `MapHost` fresh from the snapshot on every call**, which is the definition of a projection rather than a store.
+
+### 🔑 Why this is the doctrine working, not the doctrine being dodged
+
+Those 73 `fn set_` are **setters on a render-side projection**, not CRUD over authoritative state. Dissolving them into mutation triads would have **duplicated the vocabulary across two owners** — precisely the violation this ticket exists to remove. The right outcome was to author **nothing** and document the ownership, which is what happened: docstring-only changes (paint 1838→1880, node-graph 1145→1169, tiled-map 4236→4272), zero public API change.
+
+**This is the second time the honest answer was "no vocabulary here".** The pattern worth carrying: the test is never *"does this look like a setter"* — it is *"who owns the authority"*. A setter over a projection whose owner is already event-sourced is correct code; converting it would be the regression.
+
+⚠️ **It also means the W0 baseline metric was measuring the wrong thing.** "89 `fn set_` in claimed kernel dirs" was recorded as the size of the CRUD problem. Of those, **73 are surface** and are now confirmed legitimate. The count was never a measure of violations — the same instrument error as the presence-vs-completeness check, in the ticket's own headline number.
+
+### Honest remainders from this wave
+
+- `GraphHost.dag`'s owner (`💻️os/🔨️modules/🌊️flow/🌿️vcs`) is **not yet event-sourced**; node-graph's `move`/`connect`/`disconnect` verbs are designed and were sent to SMO, but cannot be authored until W3c lands the conforming dispatch enum.
+- The framework-module schema placement question **remains genuinely unpiloted repo-wide** — not because it was dodged, but because after tracing, no surface module needed a schema to place.
+- `semio-s-plugin-gis` has 3 pre-existing errors in `🏔️gisterrain` (not `🗺️gismap`), confirmed by mtime/git-log as concurrent churn predating this wave. Not fixed, not attributed here.

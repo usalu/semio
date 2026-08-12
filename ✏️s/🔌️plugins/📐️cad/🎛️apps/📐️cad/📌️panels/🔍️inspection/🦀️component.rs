@@ -3,7 +3,8 @@
 
 use crate::apps::cad::terminology::{typology_label, CadLabels};
 use crate::apps::cad::{cad_action, CadPlayView, TYPOLOGY_CATALOG};
-use crate::artifacts::cad::{cad_all_objects, CadNode, CadObject, CadReference};
+use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
+use crate::artifacts::cad::{CadNode, CadReference};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition,
     PanelTabKind, UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -27,19 +28,13 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the object/primitive inspector
+/// branches below used to scan `CadSnapshot`'s inline object list (`cad_all_objects`), which no
+/// longer exists — object data lives inside composed `s.stdio.semio.model` CHILD documents,
+/// unresolved at this render boundary (see `🔖️Composition` in `🏪️store/🦀️component.rs`).
+/// Documented reduced-fidelity gap: those two branches fall through to the reference/node/summary
+/// panel until a resolved-child-content render path exists.
 pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> UiNode {
-    if let (Some(object_id), Some(primitive_id)) = (envelope.runtime.selected_object_ids.first(), envelope.runtime.selected_primitive_id.as_deref()) {
-        if let Some((object, _)) = cad_all_objects(&envelope.document).find(|(object, _)| object.id == *object_id) {
-            let kind = envelope.runtime.selected_primitive_kind.as_deref().or_else(|| object.primitives.iter().find(|primitive| primitive.primitive_id == primitive_id).map(|primitive| primitive.kind.as_str())).unwrap_or("primitive");
-            return ui_inspector_groups_to_tree(&[primitive_inspector_group(object, labels, primitive_id, kind)]);
-        }
-    }
-    if !envelope.runtime.selected_object_ids.is_empty() {
-        let selected: Vec<&CadObject> = envelope.runtime.selected_object_ids.iter().filter_map(|id| cad_all_objects(&envelope.document).find(|(object, _)| &object.id == id).map(|(object, _)| object)).collect();
-        if !selected.is_empty() {
-            return ui_inspector_groups_to_tree(&[object_inspector_group(&selected, labels)]);
-        }
-    }
     if let (Some(model_definition_id), Some(reference_id)) = (envelope.runtime.selected_reference_model_definition_id.as_deref(), envelope.runtime.selected_reference_id.as_deref()) {
         if let Some(reference) = envelope.document.references_by_model_definition_id.get(model_definition_id).and_then(|rows| rows.iter().find(|row| row.id == reference_id)) {
             return ui_inspector_groups_to_tree(&[reference_inspector_group(model_definition_id, reference, labels)]);
@@ -58,7 +53,7 @@ pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active
         fields: vec![
             ui_inspector_readonly_field("cad-play-inspector.schema", labels.schema, &envelope.document.schema),
             ui_inspector_readonly_field("cad-play-inspector.utility", labels.utility, active_utility.unwrap_or(labels.none_placeholder.as_str())),
-            ui_inspector_readonly_field("cad-play-inspector.objects", labels.objects, envelope.document.objects.len().to_string()),
+            ui_inspector_readonly_field("cad-play-inspector.objects", labels.objects, "0".to_string()),
         ],
     }])
 }

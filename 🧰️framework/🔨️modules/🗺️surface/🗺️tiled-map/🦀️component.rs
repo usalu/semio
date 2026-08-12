@@ -1,4 +1,20 @@
 //! 🗺️ GIS map on the infinite canvas: Web Mercator tiles, positions, routes, regions.
+//!
+//! 🧭️ Doctrine classification (ticket `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS`,
+//! W3b): [`MapHost`] owns **no tier-(a) authoritative state**, traced field-by-field rather than
+//! assumed from the struct's setter shape (full per-field table in `📓️wave3b-reports/surface-report.md`).
+//! `features` is the field the wave's own recon flagged as real tier-(a) content — and it is real, but
+//! its authoritative owner is `✏️s/🔌️plugins/🌍️gis`'s shipped `GismapSnapshot`
+//! (`crate::artifacts::gismap::schema::{snapshot,diff,mutations}`, 12 real triads —
+//! `create/delete/reorder-positions`, `replace-position-data`, `create/delete/reorder-routes`,
+//! `replace-route-data`, `create/delete/reorder-regions`, `replace-region-data`), refreshed wholesale
+//! via [`MapHost::sync_map_json`] by `✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🗺️maphost/🦀️component.rs::map_host_from`
+//! — the field's own pre-existing docstring already said as much ("mirrored from projection JSON —
+//! not authoritative document state (OS `ArtifactStore` owns packs)"), confirmed rather than merely
+//! trusted. `render_mode`/`vector_style`/`forced_lod_id`/`layer_visibility`/`layer_stroke_scale`
+//! similarly mirror the plugin app's already-shipped `Gis2dConfig` commands (`SetRenderMode`,
+//! `SetVectorStyle`, `ToggleLayerVisibility`, `SetLayerStrokeScale`, `set_lod_mode`). No new
+//! `🧬️mutations` vocabulary is authored here — the owners already have it.
 
 pub use infinite_canvas::{self as canvas, *};
 pub use std::sync::Arc;
@@ -1367,21 +1383,41 @@ struct MapTileLedger {
 }
 
 pub struct MapHost {
+    /// 🖱️ (c) Preview/Effect — live viewport camera during pan/zoom, never dispatched at frame rate.
     pub camera: canvas::camera::Camera,
+    /// 🖥️ (d) Render-session wiring — device viewport size/DPR, not document content.
     pub viewport: canvas::camera::Viewport,
+    /// 🗺️ (a) elsewhere, not here — see the module docstring: mirrors the gis plugin's real
+    /// `GismapSnapshot` positions/routes/regions, which already carries the full 12-triad mutation
+    /// vocabulary. Refreshed wholesale by [`MapHost::sync_map_json`]; never mutated field-by-field here.
     pub features: MapFeatureTables,
+    /// 🧱️ (d) ephemeral working representation — decoded raster/vector tile cache, evictable LRU,
+    /// wholly rebuildable from tile coordinates + network fetch, analogous to `🏔️terrain`'s
+    /// out-of-doctrine external-resource cache (network bytes, not derivable from any snapshot).
     tiles: MapTileLedger,
+    /// 🎛️ (c) Preview/Effect — mirrors the gis plugin's `Gis2dConfig::SetRenderMode` LOCAL_UI command.
     render_mode: MapTileMode,
+    /// 🎨️ (c) Preview/Effect — mirrors `Gis2dConfig::SetVectorStyle`, plugin-owned.
     vector_style: MapVectorStyle,
+    /// 🔍️ (c) Preview/Effect — pinned LOD override, mirrors `Gis2dConfig::set_lod_mode`.
     forced_lod_id: Option<String>,
+    /// 👁️ (c) Preview/Effect — per-layer visibility toggles, mirrors `Gis2dConfig::ToggleLayerVisibility`.
     layer_visibility: MapLayerVisibility,
+    /// 📏️ (c) Preview/Effect — per-layer stroke-weight multipliers, mirrors `Gis2dConfig::SetLayerStrokeScale`.
     layer_stroke_scale: MapLayerStrokeScale,
+    /// 📡️ (c) Preview/Effect — interaction event log drained each frame; not persisted, not a document.
     pub events: Vec<serde_json::Value>,
+    /// 🖐️ (c) Preview/Effect — current pan gesture state, discarded on release.
     interaction: MapInteraction,
+    /// 🎨️ (d) runtime wiring — color palette derived from the app's UI theme.
     theme: MapPalette,
+    /// 🖱️ (c) Preview/Effect — UI selection state for positions, mirrors `Gis2dConfig`'s selection.
     selected_positions: std::collections::BTreeSet<String>,
+    /// 🖱️ (c) Preview/Effect — UI selection state for routes, mirrors `Gis2dConfig`'s selection.
     selected_routes: std::collections::BTreeSet<String>,
+    /// 🖱️ (c) Preview/Effect — hover feedback kind (position/route), UI-only.
     hovered_kind: Option<String>,
+    /// 🖱️ (c) Preview/Effect — hover feedback entity id, UI-only.
     hovered_id: Option<String>,
 }
 

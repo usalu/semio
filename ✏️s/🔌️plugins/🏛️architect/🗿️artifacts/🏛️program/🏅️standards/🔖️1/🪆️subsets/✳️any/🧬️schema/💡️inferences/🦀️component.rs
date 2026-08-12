@@ -2183,7 +2183,7 @@ fn csv_record(values: &[&str]) -> stdio_csv::schema::snapshot::CsvRecord {
 
 /// 📤️ Flattens all registers into a `CsvSnapshot`, encoded by stdio's real RFC 4180 codec.
 pub fn export_registers_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
-    Ok(stdio_csv::engine::encode_csv(&rows_to_csv_snapshot(&collect_rows(program))))
+    Ok(stdio_csv::schema::snapshot::encode_csv(&rows_to_csv_snapshot(&collect_rows(program))))
 }
 
 /// ↔ Exports relationships as a CSV table preserving endpoints, encoded by stdio's real RFC 4180
@@ -2194,7 +2194,7 @@ pub fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, Plu
         records.push(csv_record(&[&rel.header.id.to_string(), &rel.source_id.to_string(), &rel.target_id.to_string(), &format!("{:?}", rel.kind), &rel.header.name]));
     }
     let snapshot = stdio_csv::CsvSnapshot { schema: stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records };
-    Ok(stdio_csv::engine::encode_csv(&snapshot))
+    Ok(stdio_csv::schema::snapshot::encode_csv(&snapshot))
 }
 
 fn rows_to_csv_snapshot(rows: &[RegisterCsvRow]) -> stdio_csv::CsvSnapshot {
@@ -2318,7 +2318,7 @@ mod tests_exchange {
     fn relationships_csv_round_trips_via_stdio_codec() {
         let program = sample_plugin();
         let csv = export_relationships_csv(&program).expect("relationships csv export");
-        let snapshot = stdio_csv::engine::decode_csv_with(&csv, true);
+        let snapshot = stdio_csv::schema::snapshot::decode_csv_with(&csv, true);
         assert_eq!(snapshot.records.len(), program.relationships.len() + 1, "header + one row per relationship");
     }
 }

@@ -50,7 +50,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(PNG_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor())
         .inferences([crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()])
-        .composers(crate::artifacts::png::standards::v1_2::engine::io_registry::entries())
+        .composers(crate::artifacts::png::standards::v1_2::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)
         .build()
@@ -121,11 +121,29 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 }
 //#endregion 🔖️Declaration
 
+//#region 🔖️ImperativeRegister
+/// 🌉️ Relocated from `⚙️engine::register` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): `declaration()` above is what stdio's
+/// own plugin-host boot path now uses, but external plugins (`🖨️raster`'s own
+/// `ensure_stdio_semio_and_png_registered`) call this imperative entry point directly for
+/// standalone `cargo test` runs that never execute the declarative plugin-host boot. Behavior
+/// preserved verbatim — only the module path changed (`engine::register` → `png::register`).
+pub fn register() {
+    io_registry::register();
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor());
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor());
+    for lang in pilot_languages() {
+        dsl::register_language(lang.clone());
+    }
+    store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA));
+}
+//#endregion 🔖️ImperativeRegister
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::png::standards::v1_2::engine::io_registry as v1_2;
+    use crate::artifacts::png::standards::v1_2::subsets::any::io::io_registry as v1_2;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

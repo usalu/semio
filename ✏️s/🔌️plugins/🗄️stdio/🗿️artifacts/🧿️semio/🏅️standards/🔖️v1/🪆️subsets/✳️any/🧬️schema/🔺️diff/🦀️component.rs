@@ -222,7 +222,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
     }
 }
 
-/// 🧩 Set-snapshot diff helper — used by the `📄set-snapshot/🔺️diff` leaf.
+/// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
 pub fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> SemioDiff {
     <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(base, snapshot)
 }

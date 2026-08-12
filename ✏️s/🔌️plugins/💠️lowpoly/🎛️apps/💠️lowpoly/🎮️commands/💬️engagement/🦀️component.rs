@@ -74,9 +74,9 @@ mod tests {
     fn engagement_submit_resolves_a_typed_token_into_a_real_command() {
         let mut a = app();
         dispatch(&mut a, face_selection());
-        let before = a.snapshot().expect("projection").objects[0].mesh_json.clone();
+        let before = a.snapshot().expect("projection").objects[0].mesh_workspace.clone();
         dispatch(&mut a, LowpolyCommand::EngagementSubmit(super::engagement_submit::EngagementSubmit { value: Some("extrude".into()) }));
-        assert_ne!(a.snapshot().expect("projection").objects[0].mesh_json, before, "typed 'extrude' must run the extrude command");
+        assert_ne!(a.snapshot().expect("projection").objects[0].mesh_workspace, before, "typed 'extrude' must run the extrude command");
     }
 
     #[test]

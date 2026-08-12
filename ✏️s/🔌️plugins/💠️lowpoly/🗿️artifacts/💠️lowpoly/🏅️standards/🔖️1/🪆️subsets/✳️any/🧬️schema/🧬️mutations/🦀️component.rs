@@ -52,7 +52,8 @@ pub enum LowpolyMutation {
     MoveObject(super::move_object::mutation::MoveObject),
     RotateObject(super::rotate_object::mutation::RotateObject),
     ScaleObject(super::scale_object::mutation::ScaleObject),
-    ReplaceObjectMesh(super::replace_object_mesh::mutation::ReplaceObjectMesh),
+    CreateMesh(super::create_mesh::mutation::CreateMesh),
+    DeleteMesh(super::delete_mesh::mutation::DeleteMesh),
     InsertPaintLayer(super::insert_paint_layer::mutation::InsertPaintLayer),
     RemovePaintLayer(super::remove_paint_layer::mutation::RemovePaintLayer),
     RenamePaintLayer(super::rename_paint_layer::mutation::RenamePaintLayer),
@@ -71,8 +72,9 @@ mod tests {
     use protocol::{Mutation, MutationDiff};
 
     fn tiny_object(id: &str, name: &str) -> LowpolyObject {
-        let mesh_json = default_snapshot().objects[0].mesh_json.clone();
-        LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh_json, paint_layers: Vec::new() }
+        let mesh_workspace = default_snapshot().objects[0].mesh_workspace.clone();
+        let mesh = default_snapshot().objects[0].mesh.clone();
+        LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, mesh_workspace, paint_layers: Vec::new() }
     }
 
     //#region ⚖️SemanticLaws

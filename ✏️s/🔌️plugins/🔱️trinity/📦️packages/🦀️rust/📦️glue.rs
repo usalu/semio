@@ -880,14 +880,14 @@ pub mod apps {
 
             #[path = "."]
             pub(crate) mod after {
-                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/➡️after/🦀️component.rs"]
+                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/⏭️after/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod lhs {
-                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/⬅️lhs/🦀️component.rs"]
+                #[path = "../../🎛️apps/♻️rewrite/🪟️windows/👈️lhs/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }

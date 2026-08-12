@@ -509,7 +509,7 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗂️document/🦀️component.rs"]
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/📄️document/🦀️component.rs"]
             pub mod document;
             #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs"]
             pub mod layer;

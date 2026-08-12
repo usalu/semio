@@ -57,6 +57,35 @@ And one that defeats all of them: a relocated **unqualified** path. **44 of 45**
 > - **After any operation creating or removing a directory referenced by `📦️glue.rs`, resolve every `#[path]` against disk before reporting done.** Five instances tonight across four sessions.
 > - **An exemption list built from intent is a guess; one built from two readings is a fact.** APA instructed an agent that `plugin-purity` was safe to ceiling; it measured 116 → 118 → 125 and exempted it *against the instruction*. Correctly.
 
+## Check the shim, not the shape — directory structure is NOT module path
+
+Third occurrence of the `en1990` shape tonight, and the first where the exception was **invisible from the filesystem entirely**. Inside one plugin (`🗄️stdio`):
+
+```rust
+// md / json — engine declared BESIDE subsets
+pub mod v_commonmark {
+    #[path = "…/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
+    pub mod engine;                          → artifacts::md::standards::v_commonmark::engine
+    pub mod subsets { pub mod any { … } }
+}
+// csv / xml — engine declared INSIDE subsets
+                                             → artifacts::csv::standards::v_rfc4180::subsets::any::engine
+```
+
+**Every one of those four engines sits at `🪆️subsets/✳️any/⚙️engine/` on disk.** `#[path]` exists precisely so a module can be *declared* in one place and *sourced* from another, and this repo uses that freedom inconsistently. A `find` cannot distinguish them.
+
+**How this ticket got it wrong.** This session diagnosed a peer's `E0433` as "`.composers(…)` is missing `::subsets::any`" and offered the on-disk location as proof. The original path was correct; the "fix" was applied across nine artifacts and *generated* the error it claimed to cure, and the subsequent revert over-reached and broke two files that were right.
+
+> **The category error: an *inference dressed as a measurement*.** Every other claim exchanged between sessions tonight was re-runnable — counts, greps, `find` output, quoted compiler errors. This one had the same shape and was not. Peer verification did not catch it because the peer checked *the same insufficient evidence*: **two people verifying the same wrong thing is not corroboration, it is the same error twice.**
+
+**The agents already had it right.** Two independently applied the correct method while both coordinating sessions reasoned from directory listings:
+- `🪵️sourcing`'s, unprompted: *"engine was mounted at `standards::v1`, NOT under `subsets::any`, so a naive path swap would have been wrong."*
+- the peer's own `md` agent: hit the `E0433`, diagnosed it from the glue, corrected itself, re-verified — **before** the coordinator intervened and broke it again.
+
+> **Standing method: parse `📦️glue.rs`'s `pub mod` nesting to derive the authoritative module path per artifact, and match each `declaration()` against its own artifact's real path. Never copy a path between siblings. Where a working line exists in the same file (e.g. an already-resolving `.inferences(…)` prefix), copy from that — it is evidence; a directory name is not.**
+
+This ticket's own wave is clear of the defect: of five dissolved plugins carrying a `.composers(…)` path, four compile clean and the fifth fails on unrelated mutation-derive and type errors, with **zero `E0433`** touching composers or `io_registry`.
+
 ## Defects this ticket caused, and fixed
 
 1. **20 dangling `#[path]` mounts** (`🏛️architect` 11, `🧩️puzzle` 9). Agents deleted directories and left glue pointing at them — `os error 2`, crates unbuildable. Both agents then sat in wait-loops on compiles that *could never return*; one burned 386k tokens waiting. Repaired: architect by its own agent, puzzle by hand.

@@ -117,7 +117,36 @@ Note the cascade re-`connect` logic was already correct in those inverses — th
 positional. Worth checking every other facet's `delete-*`/`remove-*` inverse for the same
 `None`-index pattern; it is invisible to `cargo check` and only a law test catches it.
 
-**Still open (delta-granularity family, 3).**
+**Still open (delta-granularity family, 3) — ANALYSIS NARROWED, fix deliberately NOT attempted.**
+
+Static analysis done (no build available). The generator is
+`puzzle2d_snapshot_mutations` (`🧬️mutations/🦀️component.rs:96`), reached via
+`puzzle2d_document_delta_operations(:265)`, which round-trips both `Value`s through the typed
+`Puzzle2dSnapshot` and diffs field-by-field. The test asserts **both** directions: forward replay
+of the generated ops equals `after`, and replaying each op's inverse in reverse equals `before`.
+
+Two candidate causes, in order of likelihood:
+
+1. **`Value`-level equality against a partial fixture.** The test's fixtures list only a few keys
+   per node (`{id, anchor, x, y, handles}`), but forward replay reconstructs nodes through the
+   *typed* `Puzzle2dNode`, which reserialises every field (`shape`, `radius`, `width`, `height`,
+   `node_kind`, `text`, `icon_kind`, `scale`, `visible`, `locked`, `root`…). Unless those carry
+   `skip_serializing_if`, the replayed JSON is a strict superset of `after` and `assert_eq!` on
+   `Value` fails on *key presence*, not on any mutation being wrong. If so the defect is in the
+   fixture/serialisation contract, not the vocabulary.
+2. **`create_*(x.clone(), None)` in the generator** (`:105` 2d, `:117/:193/:220` 3d, `:103` 5d) —
+   same `None`-as-FINAL-state-index shape as the inverse bug fixed above. Note the calls at
+   `:393/:448/:401` are *test* usages and are legitimate; leave them.
+
+**Deliberately not "fixed".** Walking the test's own fixture by hand
+(before `[n1,n2]` → after `[n2,n3]`) shows candidate 2 produces an identical result either way
+here — `None` appends to `[n2]` giving `[n2,n3]`, which is what `after` wants. So changing it
+would not fix this test, and making an unverifiable edit that I can already predict is inert is
+precisely the failure mode this ticket has spent the day arguing against. Candidate 1 is the live
+hypothesis and needs a compiler to settle.
+
+**First action for the next session**: run the one blocked command, then check whether the
+assertion failure is a key-presence diff (candidate 1) or a value/order diff (candidate 2).
 `puzzle2d_delta_ops_are_granular_and_round_trip` and its 3d/5d twins. These do not exercise triad
 leaves directly — they call `puzzle<N>d_document_delta_operations(&before, &after)`, a
 JSON-level delta generator, then assert forward replay reproduces `after` **and** that replaying

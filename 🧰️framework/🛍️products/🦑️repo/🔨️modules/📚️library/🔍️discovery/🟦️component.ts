@@ -164,7 +164,10 @@ export interface Taxonomy {
   readonly semioFileExtension: string;
   /** 📖️ Normative `.semio` spec filename per constitutional artifact facet (`artifactComponentDirs` keys only). */
   readonly artifactSpecFilenames: Readonly<Record<string, string>>;
+  /** 🪟️ STRUCTURAL set: every directory allowed directly below a window. */
   readonly windowChildDirs: readonly string[];
+  /** 🪟️ COMPLETENESS set: capability directories every window must carry, empty modules allowed. */
+  readonly windowRequiredChildDirs: readonly string[];
   readonly taxonomyLeafParentDirs: readonly string[];
   /** 🍃️ Leaf component filename, keyed by target when a package has one (e.g. `"🧊️wgpu"`), else by lang (e.g. `"🦀️rust"` for plugins, which never have a target level). */
   readonly taxonomyLeafFilenames: Readonly<Record<string, string>>;
@@ -412,6 +415,23 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   for (const dir of taxonomy.artifactComponentDirs) {
     if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactComponentDirs member "${dir}" is missing from artifactChildDirs — the structural set must be a superset of the completeness set.`);
   }
+  //#region WindowShapeContract
+  if (!Array.isArray(taxonomy.windowRequiredChildDirs) || taxonomy.windowRequiredChildDirs.length === 0) {
+    problems.push(`windowRequiredChildDirs must be a non-empty array.`);
+  } else {
+    const seen = new Set<string>();
+    for (const dir of taxonomy.windowRequiredChildDirs) {
+      if (seen.has(dir)) problems.push(`windowRequiredChildDirs contains duplicate member "${dir}".`);
+      seen.add(dir);
+      if (!taxonomy.windowChildDirs.includes(dir)) {
+        problems.push(`windowRequiredChildDirs member "${dir}" is missing from windowChildDirs — the structural set must be a superset of the completeness set.`);
+      }
+      if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) {
+        problems.push(`windowRequiredChildDirs member "${dir}" is missing from taxonomyLeafParentDirs.`);
+      }
+    }
+  }
+  //#endregion WindowShapeContract
   //#region MutationFacetContract
   for (const required of ["🧬️schema", "🚪️io"] as const) {
     if (!taxonomy.artifactComponentDirs.includes(required)) {

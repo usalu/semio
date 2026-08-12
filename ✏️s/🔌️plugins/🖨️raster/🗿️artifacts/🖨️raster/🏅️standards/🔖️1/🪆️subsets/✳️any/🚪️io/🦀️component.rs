@@ -41,7 +41,7 @@ fn ensure_stdio_semio_and_png_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::register();
-        semio_s_plugin_stdio::artifacts::png::engine::register();
+        semio_s_plugin_stdio::artifacts::png::register();
     });
 }
 
@@ -179,7 +179,7 @@ fn dispatch_drawing_to_svg(snapshot: &SemioDrawingSnapshot) -> Result<String, St
 /// (`io_dispatch`) — the honest, structured way to learn a decoded image's real width/height/pixels.
 fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
-    let png_snapshot = semio_s_plugin_stdio::artifacts::png::engine::decode_png(raw_png_bytes)?;
+    let png_snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
     let composed = io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }]).map_err(|error| error.message)?;
@@ -196,7 +196,7 @@ fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, Str
     let composed = io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }]).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
     let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
-    semio_s_plugin_stdio::artifacts::png::engine::encode_png(&png_snapshot)
+    semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
 }
 
 /// 🌉️🌉️ Round-trips raw PNG bytes through `s.stdio.semio/v1/image` (import then export) via the
@@ -206,14 +206,14 @@ fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, Str
 /// 🦀️component.rs`'s `raster_composite_media` (rule 4: `AppIo`-adjacent behaviour lives in the app).
 pub fn canonicalize_png_bytes(raw_png_bytes: &[u8]) -> Result<Vec<u8>, String> {
     ensure_stdio_semio_and_png_registered();
-    let png_snapshot = semio_s_plugin_stdio::artifacts::png::engine::decode_png(raw_png_bytes)?;
+    let png_snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
     let hub_key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
     let target_key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
     let composed = io_compose_via(&hub_key, &target_key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }]).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
     let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
-    semio_s_plugin_stdio::artifacts::png::engine::encode_png(&png_snapshot)
+    semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
 }
 //#endregion 🔖️SemioBridge
 

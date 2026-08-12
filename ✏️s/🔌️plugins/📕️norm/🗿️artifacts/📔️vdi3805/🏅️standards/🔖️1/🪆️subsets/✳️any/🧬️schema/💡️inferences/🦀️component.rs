@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
-use schema::ArtifactSchema;
+use ::schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 
@@ -52,10 +52,10 @@ impl ArtifactInferrer for crate::artifacts::vdi3805::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.vdi3805.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `vdi3805_artifact_schema_descriptor`'s registration.
-pub fn vdi3805_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn vdi3805_artifact_inference_descriptor() -> ::schema::ArtifactInferenceDescriptor {
+    ::schema::ArtifactInferenceDescriptor {
         id: "s.norm.vdi3805.inference",
-        inference: schema::FacetLeaves {
+        inference: ::schema::FacetLeaves {
             rust: include_str!("🦀️component.rs"),
             typescript: include_str!("🟦️component.ts"),
             graphql: include_str!("🔗️component.graphql"),
@@ -95,7 +95,7 @@ mod tests {
 /// from the parent `🧬️schema`; the JSON (de)serializers come from `🚪️io`.
 use crate::artifacts::vdi3805::*;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
-use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, fail_check, na_check, pass_check, validate_structure, parse_native_text, serialize_native_text};
+use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, fail_check, na_check, pass_check, validate_structure, parse_native_text, serialize_native_text, ANNEX};
 use crate::artifacts::vdi3805::standards::v1::subsets::any::io::{catalog_from_json, catalog_to_json};
 
 // #region SheetParts

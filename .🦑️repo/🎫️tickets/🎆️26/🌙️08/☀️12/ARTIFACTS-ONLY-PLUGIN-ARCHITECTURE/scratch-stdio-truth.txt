@@ -1,0 +1,6 @@
+01:02:10
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/📸️snapshot/🦀️component.rs:8:68: error[E0432]: unresolved import `crate::artifacts::semio::standards::v1::subsets::mesh::engine::geometry`: could not find `geometry` in `engine`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/📸️snapshot/🦀️component.rs:9:68: error[E0432]: unresolved import `crate::artifacts::semio::standards::v1::subsets::mesh::engine::triples`: could not find `triples` in `engine`
+error: could not compile `semio-s-plugin-stdio` (lib) due to 2 previous errors; 603 warnings emitted
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 2 previous errors; 737 warnings emitted
+01:02:24

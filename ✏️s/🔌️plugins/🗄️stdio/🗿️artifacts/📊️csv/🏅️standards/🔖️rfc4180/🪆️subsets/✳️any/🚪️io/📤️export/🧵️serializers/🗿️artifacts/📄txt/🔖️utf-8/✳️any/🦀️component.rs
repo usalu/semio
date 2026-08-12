@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📤️ Encode csv into a TxtSnapshot.
 pub fn serialize(from: &CsvSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::artifacts::csv::engine::encode_csv(from);
+    let text = crate::artifacts::csv::schema::snapshot::encode_csv(from);
     Ok(TxtSnapshot::from_body(&text))
 }
 

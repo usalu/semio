@@ -84,7 +84,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from the rfc8259 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::json::standards::v_rfc8259::engine::io_registry::entries()`).
+    /// (`crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry::entries()`).
     pub fn register() {
         register_subset_validator(validator_entry());
     }

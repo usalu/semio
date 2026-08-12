@@ -34,15 +34,43 @@ would silently rebind under a bare call). `grep -rn "io_registry::entries"` acro
 zero bare calls, all fully qualified — pasted output above shows each hit prefixed with
 `crate::artifacts::<x>::engine::...` or `crate::artifacts::pdf::standards::v1_{4,7}::engine::...`.
 
-**Verify — ONE `cargo check -p semio-s-plugin-stdio --all-targets` at the end:**
+**Verify — `cargo check -p semio-s-plugin-stdio --all-targets`, run 3 times (once green, then two
+retries after upstream churn touched the crate):**
+
+Run 1 (`scratch-w6-g2-check-1.txt`), taken right after all 7 artifacts + the plugin root were
+converted, before any other session's concurrent edit landed:
 ```
 RUSTC_WRAPPER="" CARGO_TARGET_DIR=…/🎯️target cargo check -p semio-s-plugin-stdio --all-targets
 Finished `dev` profile [unoptimized] target(s) in 1m 20s
 ```
-Exit 0. `grep -c "^error"` on the full log: 0. Only pre-existing dead-code warnings (unused demo/
+Exit 0, `grep -c "^error"` on the full log: 0. Only pre-existing dead-code warnings (unused demo/
 sweep/fixture helpers across docx/pptx/xlsx/bcf/json/semio schema files — none touched by this
-pass, none inside my `declaration()` regions). Full log:
-`scratch-w6-g2-check-1.txt` in this ticket folder.
+pass, none inside my `declaration()` regions).
+
+Between runs, a repo-wide edit briefly inserted a bogus `subsets::any::` segment into several
+artifacts' `engine::` paths (json/md/svg/png/jpg/mp4/avi/mp3 — none of them mine, all owned by
+other groups' already-landed declarations) AND transiently touched my own `pdf::component.rs`'s
+three `standards::v1_7::engine::…` references the same way. Verified against `📦️glue.rs` (`engine`
+sits directly under `v1_7`, never under `subsets::any`) that this was wrong; by the time I re-read
+the file to fix it, it had already reverted to my original correct paths (confirmed:
+`grep -n "subsets::any::engine" pdf/🦀️component.rs` → no match) — a concurrent session's transient
+edit-in-flight, not a change I needed to make myself.
+
+Run 3 (`scratch-w6-g2-check-final.txt`, final, stable across two consecutive runs 30s apart):
+```
+RUSTC_WRAPPER="" CARGO_TARGET_DIR=…/🎯️target cargo check -p semio-s-plugin-stdio --all-targets
+error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error; 603 warnings emitted
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 9 previous errors; 737 warnings emitted
+```
+Exit 101, 11 error lines — **every one** inside `crate::artifacts::semio::standards::v1::engine`
+(missing `demo_mesh_snapshot`/`print_mesh_dsl`/`parse_mesh_dsl`/`encode_mesh_pack`, referenced from
+`🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/📸️snapshot/🦀️component.rs`). Proved upstream,
+not mine: (1) `🧿️semio` is not one of my 7 assigned artifacts and I never opened any file under
+`🗿️artifacts/🧿️semio/`; (2) `stat -f '%Sm'` on the failing snapshot file reports `Aug 13 00:59:01`,
+seconds before this check ran — live in-progress editing, not stable churn I could wait out; (3)
+zero error lines mention any of `zip`/`deflate`/`bcf`/`xlsx`/`pptx`/`docx`/`pdf`. Classified (c)
+upstream/live-churn per this ticket's own protocol ("retry-and-wait, do not patch") — `🧿️semio` is
+not mine to fix.
 
 **Files touched**: the 7 artifact roots (`🎒️zip`, `🗜️deflate`, `💬️bcf`, `📕️xlsx`, `🎞️pptx`,
 `📜️docx`, `📄️pdf` — `🦀️component.rs` each, `declaration()`/`declaration_1_4()` regions only,

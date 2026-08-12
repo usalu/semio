@@ -28,15 +28,43 @@ pub fn print_dsl(document: &LowpolySnapshot) -> String {
 mod tests {
     use super::*;
 
+    /// 🕸️ `mesh_workspace` is DELIBERATELY excluded from the persisted DSL codec (ephemeral kernel
+    /// scratch, never part of the durable snapshot-at-rest bytes — see `📸️snapshot/🦀️component.rs`'s
+    /// module doc comment). `assert_dsl_round_trip` checks full struct equality, so both tests below
+    /// clear it on the input first — an honest reflection of what a REAL round trip through the
+    /// persisted format does (it resets to empty, exactly like re-hydrating from storage would),
+    /// not a workaround hiding a bug.
+    #[test]
+    fn debug_dump_fixture_bytes() {
+        let mesh_workspace = crate::artifacts::lowpoly::schema::default_snapshot().objects[0].mesh_workspace.clone();
+        let mesh = crate::artifacts::lowpoly::mesh_child_handle("obj-1", &mesh_workspace);
+        let object = crate::artifacts::lowpoly::LowpolyObject {
+            id: "obj-1".into(),
+            name: "Unit Box".into(),
+            transform: Default::default(),
+            smooth_shading: false,
+            mesh: Some(mesh),
+            mesh_workspace,
+            paint_layers: Vec::new(),
+        };
+        let projection = LowpolySnapshot { schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![object] };
+        let text = print_dsl(&projection);
+        eprintln!("[DEBUG] FIXTURE_TEXT_START");
+        eprintln!("{text}");
+        eprintln!("[DEBUG] FIXTURE_TEXT_END");
+    }
+
     #[test]
     fn dsl_round_trips_the_default_snapshot() {
-        let projection = crate::artifacts::lowpoly::schema::default_snapshot();
+        let mut projection = crate::artifacts::lowpoly::schema::default_snapshot();
+        for object in &mut projection.objects { object.mesh_workspace.clear(); }
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 
     #[test]
     fn dsl_round_trips_a_projection_with_a_painted_layer() {
         let mut projection = crate::artifacts::lowpoly::schema::default_snapshot();
+        for object in &mut projection.objects { object.mesh_workspace.clear(); }
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
@@ -61,40 +89,66 @@ mod tests {
         assert!(result.is_err());
     }
 
+    // ⚠️ The four tests below were rewritten for the hand-rolled hex/bracket codec (this ticket,
+    // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — see `📸️snapshot/🦀️component.rs`'s module doc
+    // comment for why `dsl::DslRecord`'s derive-based quoted-string grammar had to go). The old
+    // literal test strings used the RETIRED derive grammar (`schema="…" objects=[ id="…" … ]`,
+    // backslash-escaped quotes, `#`-comments) and no longer exercise this parser at all.
+
     #[test]
     fn dsl_parse_rejects_invalid_bool_value() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=@0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=notabool mesh-json=\"{}\" paint-layers=[] ]";
-        let result = parse_dsl(text);
+        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        let text = format!(
+            "schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],notabool,[],[]]]",
+            enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),
+        );
+        let result = parse_dsl(&text);
         assert!(result.is_err());
     }
 
     #[test]
     fn dsl_parse_rejects_object_missing_required_field() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" ]";
-        let result = parse_dsl(text);
+        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        let text = format!("schema={}\nobjects=[[{}]]", enc_str("lowpoly.document"), enc_str("o"));
+        let result = parse_dsl(&text);
         assert!(result.is_err());
     }
 
     #[test]
     fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=@notanumber,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
-        let result = parse_dsl(text);
+        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        let text = format!(
+            "schema={}\nobjects=[[{},{},[notanumber,0,0,0,0,0,1,1,1],false,[],[]]]",
+            enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),
+        );
+        let result = parse_dsl(&text);
         assert!(result.is_err());
     }
 
+    /// 🧬️ The hand-rolled parser does not skip `#` comment lines (matching `✳️object`/`✳️kit`'s own
+    /// hand-rolled codecs, which have no comment support either — the old derive-based grammar's
+    /// comment handling did not survive the switch). An unrecognized line is a hard parse error.
     #[test]
-    fn dsl_parse_skips_comment_lines() {
-        let text = "# a leading comment\nschema=\"lowpoly.document\" objects=[] # trailing comment\n";
-        let projection = parse_dsl(text).expect("comments are not significant");
-        assert_eq!(projection.schema, crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA);
-        assert!(projection.objects.is_empty());
+    fn dsl_parse_rejects_unrecognized_lines() {
+        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        let text = format!("# a leading comment\nschema={}\nobjects=[]\n", enc_str("lowpoly.document"));
+        let result = parse_dsl(&text);
+        assert!(result.is_err(), "comment lines are not a recognized field, unlike the retired derive grammar");
     }
 
+    /// 🧬️ Hex-encoding sidesteps escaping ENTIRELY — a stronger guarantee than the old
+    /// backslash-escape grammar: ANY string content (quotes, backslashes, newlines) round-trips
+    /// with zero special-casing, because it is never interpreted as DSL syntax in the first place.
     #[test]
-    fn dsl_parse_handles_escaped_characters_in_quoted_strings() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o1\" name=\"Quote \\\" and \\\\ and newline\\ndone\" transform { position=@0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
-        let projection = parse_dsl(text).expect("escapes must decode");
-        assert_eq!(projection.objects[0].name, "Quote \" and \\ and newline\ndone");
+    fn dsl_parse_handles_arbitrary_characters_via_hex_encoding() {
+        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        let tricky_name = "Quote \" and \\ and newline\ndone";
+        let text = format!(
+            "schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],false,[],[]]]",
+            enc_str("lowpoly.document"), enc_str("o1"), enc_str(tricky_name),
+        );
+        let projection = parse_dsl(&text).expect("hex-encoded strings never need escaping");
+        assert_eq!(projection.objects[0].name, tricky_name);
     }
 }
 //#endregion 🧪️Tests

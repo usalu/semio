@@ -1907,7 +1907,7 @@ pub mod apps {
             pub mod object;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🔗️attraction/🦀️component.rs"]
             pub mod attraction;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧊️volume/🦀️component.rs"]
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/📦️volume/🦀️component.rs"]
             pub mod volume;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs"]
             pub mod camera;

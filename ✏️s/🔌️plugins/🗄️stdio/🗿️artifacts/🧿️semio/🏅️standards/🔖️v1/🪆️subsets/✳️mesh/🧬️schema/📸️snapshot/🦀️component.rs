@@ -569,7 +569,7 @@ impl store::ArtifactPack for SemioMeshSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️Demo
-pub use crate::artifacts::semio::standards::v1::engine::demo_mesh_snapshot;
+pub use crate::artifacts::semio::standards::v1::subsets::mesh::engine::demo_mesh_snapshot;
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests

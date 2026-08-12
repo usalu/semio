@@ -41,7 +41,7 @@ impl protocol::OpBinary for LowpolyMutation {
 mod tests {
     use super::*;
     use crate::artifacts::lowpoly::schema::default_snapshot;
-    use crate::artifacts::lowpoly::mutations::{create_object, delete_object, edit_paint_layer, insert_paint_layer, rename_object};
+    use crate::artifacts::lowpoly::mutations::{create_mesh, create_object, delete_mesh, delete_object, edit_paint_layer, insert_paint_layer, rename_object};
     use protocol::{OpBinary, OpText};
 
     fn tiny_mesh_json() -> String {
@@ -49,12 +49,15 @@ mod tests {
     }
 
     fn tiny_object(id: &str, name: &str) -> crate::artifacts::lowpoly::LowpolyObject {
+        let mesh_workspace = tiny_mesh_json();
+        let mesh = crate::artifacts::lowpoly::mesh_child_handle(id, &mesh_workspace);
         crate::artifacts::lowpoly::LowpolyObject {
             id: id.into(),
             name: name.into(),
             transform: Default::default(),
             smooth_shading: false,
-            mesh_json: tiny_mesh_json(),
+            mesh: Some(mesh),
+            mesh_workspace,
             paint_layers: vec![crate::artifacts::lowpoly::LowpolyPaintLayer::new("Base")],
         }
     }
@@ -72,7 +75,8 @@ mod tests {
             LowpolyMutation::MoveObject(crate::artifacts::lowpoly::mutations::move_object::mutation::MoveObject { id: object_id.clone(), new_position: [1.0, 2.0, 3.0] }),
             LowpolyMutation::RotateObject(crate::artifacts::lowpoly::mutations::rotate_object::mutation::RotateObject { id: object_id.clone(), new_rotation: [0.1, 0.2, 0.3] }),
             LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::mutation::ScaleObject { id: object_id.clone(), new_scale: [2.0, 2.0, 2.0] }),
-            LowpolyMutation::ReplaceObjectMesh(crate::artifacts::lowpoly::mutations::replace_object_mesh::mutation::ReplaceObjectMesh { id: object_id.clone(), new_mesh_json: tiny_mesh_json() }),
+            LowpolyMutation::CreateMesh(create_mesh::mutation::CreateMesh { id: object_id.clone(), child_id: "mesh-fixture-01".into(), target: store::os_io::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } }, mesh_workspace: tiny_mesh_json() }),
+            LowpolyMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: object_id.clone() }),
             LowpolyMutation::InsertPaintLayer(insert_paint_layer::mutation::InsertPaintLayer { object_id: object_id.clone(), index: 1, layer: crate::artifacts::lowpoly::LowpolyPaintLayer::new("Detail") }),
             LowpolyMutation::RemovePaintLayer(crate::artifacts::lowpoly::mutations::remove_paint_layer::mutation::RemovePaintLayer { object_id: object_id.clone(), index: 0 }),
             LowpolyMutation::RenamePaintLayer(crate::artifacts::lowpoly::mutations::rename_paint_layer::mutation::RenamePaintLayer { object_id: object_id.clone(), index: 0, new_name: "Top".into() }),

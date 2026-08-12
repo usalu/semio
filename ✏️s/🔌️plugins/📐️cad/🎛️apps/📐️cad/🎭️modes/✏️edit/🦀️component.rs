@@ -8,7 +8,8 @@ use crate::apps::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, cam
 use crate::apps::cad::config::CadDislocateOptions;
 use crate::apps::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
-use crate::artifacts::cad::{cad_all_objects, cad_pane_geometry, cad_pane_objects, CadGeometry, CadObject, CadPaneId, CadSnapshot};
+use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
+use crate::artifacts::cad::{CadPaneId, CadSnapshot};
 use semio_framework_plugin::{
     build_world_3d_scene, mesh_from_kind, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, LocalizedLabel, ModeDefinition, UiNode, WindowEngagement,
     WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
@@ -63,22 +64,11 @@ pub fn gumball_active(runtime: &CadPlayRuntime, active_utility: Option<&str>, op
 }
 
 /// @emoji 🎯️ World-space pivot for the gumball: centroid of selected objects across all panes.
-pub fn gumball_target_for(document: &CadSnapshot, selected_ids: &[String]) -> Option<[f64; 3]> {
-    let mut sum = [0.0; 3];
-    let mut count = 0usize;
-    for (object, _) in cad_all_objects(document) {
-        if selected_ids.contains(&object.id) {
-            sum[0] += object.origin[0];
-            sum[1] += object.origin[1];
-            sum[2] += object.origin[2];
-            count += 1;
-        }
-    }
-    if count == 0 {
-        return None;
-    }
-    let n = count as f64;
-    Some([sum[0] / n, sum[1] / n, sum[2] / n])
+/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the gumball pivot used to scan
+/// `CadSnapshot`'s inline object list, which no longer exists (composed `s.stdio.semio.model`
+/// CHILD documents now, unresolved at this render boundary). Documented reduced-fidelity gap.
+pub fn gumball_target_for(_document: &CadSnapshot, _selected_ids: &[String]) -> Option<[f64; 3]> {
+    None
 }
 
 pub fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
@@ -195,15 +185,21 @@ pub fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<
     Some(serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()))
 }
 
+/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `cad_pane_objects`/
+/// `cad_pane_geometry` are retired — a pane's object/geometry data lives inside its composed
+/// `s.stdio.semio.model` CHILD document now (unresolved at this render boundary; see
+/// `🔖️Composition` in `🏪️store/🦀️component.rs`). Renders an empty object list per pane until a
+/// resolved-child-content render path exists; `world_instances_json`/`world_meshes_json` themselves
+/// are untouched real functions, just fed an empty slice here.
 pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiNode {
-    let objects = cad_pane_objects(&envelope.document, pane);
+    let objects: &[CadObject] = &[];
     let preview = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane).map(preview_display_items).filter(|items| !items.is_empty()).map(|items| serde_json::to_string(&items).unwrap_or_else(|_| "[]".into()));
     build_world_3d_scene(
         surface_id,
         CAD_PLAY_APP_ID,
         world3d_scene_extended(
             camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
-            world_meshes_json(objects, cad_pane_geometry(&envelope.document, pane)),
+            world_meshes_json(objects, None),
             world_instances_json(objects, &envelope.runtime),
             world_selection_json(&envelope.document, &envelope.runtime, active_utility, options),
             None,

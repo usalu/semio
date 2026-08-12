@@ -1,4 +1,18 @@
 //! 🖼️ Non-destructive raster compositor on the infinite canvas (Vello/WebGPU).
+//!
+//! 🧭️ Doctrine classification (ticket `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS`,
+//! W3b): [`RasterHost`] owns **no tier-(a) authoritative state**, traced field-by-field rather than
+//! assumed from the struct's setter shape (see `📓️wave3b-reports/surface-report.md` for the full
+//! per-field table). `document` mirrors `✏️s/🔌️plugins/🖨️raster`'s real, shipped, event-sourced
+//! `RasterSnapshot` (`crate::artifacts::raster::schema::{snapshot,diff,mutations}`, 11 real triads —
+//! `create/delete/rename/move/resize/reorder-layers`, `change-layer-{opacity,blend-mode,visible,
+//! adjustment-kind}`, `add/remove-layer-asset`), refreshed wholesale via [`RasterHost::sync_document_json`]
+//! exactly the way `🏔️terrain`'s exemplar mirrored gis-plugin state. `camera`/`brush_size`/`brush_opacity`/
+//! `active_utility`/`selected_ids`/`hovered_id` mirror the plugin app's already-shipped `RasterConfig`
+//! LOCAL_UI state (`RasterConfigMutation::{SetBrushSize,SetActiveUtility,…}`,
+//! `✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎚️config/🦀️component.rs`). No new `🧬️mutations` vocabulary is
+//! authored here — per the exemplar's mandate, an empty dispatch with no triad dirs, reasoned and
+//! flagged, is correct where there is no dispatch to author.
 
 pub use infinite_canvas::{self as canvas, *};
 pub use std::sync::Arc;
@@ -312,23 +326,52 @@ struct RasterLayerBuffers {
 }
 
 pub struct RasterHost {
+    /// 🖱️ (c) Preview/Effect — live viewport camera during pan/zoom, never dispatched at frame rate.
+    /// Mirrors `RasterConfig.camera` (`RasterConfigMutation` LOCAL_UI, plugin-owned) once a gesture settles.
     camera: Camera,
+    /// 🖥️ (d) Render-session wiring — device viewport size/DPR, not document content.
     viewport: Viewport,
+    /// 🎞️ (a) elsewhere, not here — wholesale mirror of the plugin's real `RasterSnapshot.layers`
+    /// (`crate::artifacts::raster::schema::snapshot`), refreshed by [`RasterHost::sync_document_json`].
+    /// The 11 real `create/delete/rename/move/resize/reorder-layers` + `change-layer-*` +
+    /// `add/remove-layer-asset` triads already live on that owner; authoring a second mutation set
+    /// here would duplicate authoritative state, the exact violation this ticket exists to remove.
     document: RasterDocument,
+    /// 🖼️ (d) ephemeral working representation — decoded-image GPU cache, rebuildable from `buffers`.
     images: canvas::raster::RasterImageCache,
+    /// 🖌️ (d) ephemeral working representation during an active paint gesture — raw pixel scratch
+    /// buffers keyed by layer, analogous to `DraftEngineSession`'s rebuild-from-base invariant: drop
+    /// at any instant and nothing a user has committed is lost. The eventual persisted commit of
+    /// painted pixels is an `image:in`-shaped asset import through the plugin's real `add-layer-asset`
+    /// mutation (see the module docstring) — this host never calls that; it only holds the scratch.
     buffers: RasterLayerBuffers,
+    /// 🧰️ (c) Preview/Effect — active tool id. Mirrors `RasterConfig.active_utility_id`
+    /// (`RasterConfigMutation::SetActiveUtility`, plugin-owned LOCAL_UI state).
     active_utility: String,
+    /// 🖌️ (c) Preview/Effect — brush diameter. Mirrors `RasterConfig.brush_size`
+    /// (`RasterConfigMutation::SetBrushSize`, plugin-owned LOCAL_UI state).
     brush_size: f32,
+    /// 🖌️ (c) Preview/Effect — brush opacity. Mirrors `RasterConfig.brush_opacity`, plugin-owned.
     brush_opacity: f32,
+    /// 🖱️ (c) Preview/Effect — hover feedback id, mirrors `RasterConfig.hovered_id`.
     hovered_id: Option<String>,
+    /// 🖱️ (c) Preview/Effect — selection ids, mirrors `RasterConfig.selected_ids`.
     selected_ids: Vec<String>,
+    /// 🖐️ (c) Preview/Effect — pan-gesture-in-progress flag, discarded on release.
     panning: bool,
+    /// 🖌️ (c) Preview/Effect — paint-gesture-in-progress flag, discarded on release.
     painting: bool,
+    /// 🖌️ (c) Preview/Effect — stroke interpolation anchor, discarded on release.
     last_paint: Option<Point>,
+    /// 🖐️ (c) Preview/Effect — pan interpolation anchor, discarded on release.
     pan_last: Option<Point>,
+    /// 👁️ (c) Preview/Effect — selection-chrome visibility toggle, UI rendering only.
     show_selection_chrome: bool,
+    /// 🎨️ (d) runtime wiring — clear color derived from the app's UI theme, recomputed on theme change.
     theme_clear: Color,
+    /// 🎨️ (d) runtime wiring — checkerboard fill cache derived from `theme_clear`.
     checkerboard_light_cell: u8,
+    /// 🎨️ (d) runtime wiring — checkerboard fill cache derived from `theme_clear`.
     checkerboard_dark_cell: u8,
 }
 

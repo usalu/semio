@@ -333,6 +333,11 @@
     "🎬️actions",
     "🎚️options"
   ],
+  "windowRequiredChildDirs": [
+    "🎬️actions",
+    "🪛️utilities",
+    "🎚️options"
+  ],
   "taxonomyLeafParentDirs": [
     "🧬️schema",
     "🧬️mutations",

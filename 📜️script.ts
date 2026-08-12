@@ -801,6 +801,14 @@ export class VerifyScript extends Script {
         throw new Error(`[verify] ${dissolveBreaches.length} dissolve-core / plugin-root policy breach(es)`);
       }
     }
+    console.log("[verify] window capability taxonomy…");
+    {
+      const windowBreaches = policyWindowCompletenessBreaches(this.root, policyDiscoverCrateDirs(this.root));
+      if (windowBreaches.length > 0) {
+        for (const breach of windowBreaches) console.error(`[verify] ${breach.kind}: ${breach.summary}`);
+        throw new Error(`[verify] ${windowBreaches.length} window capability taxonomy breach(es)`);
+      }
+    }
     console.log("[verify] dsl fixture laws…");
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/dsl-fixture-sweep-rs) runs at
@@ -4197,6 +4205,47 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
 }
 
 /**
+ * 📏️Window completeness: every app window declares actions, utilities, and options explicitly. A
+ * capability may be empty, but its taxonomy node may never be absent; the required set comes from the
+ * shared vocabulary so policy and package discovery cannot drift.
+ */
+export function policyWindowCompletenessBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const breaches: BreachRecord[] = [];
+  for (const crate of crates) {
+    if (crate.shape !== "taxonomy") continue;
+    const scopeId = crate.pluginId || policyStripEmoji(crate.ownerRel.split("/").pop() ?? "");
+    const walk = (relDir: string): void => {
+      for (const entry of policyReaddirSafe(repoRoot, relDir).filter((candidate) => candidate.isDirectory)) {
+        const childRel = `${relDir}/${entry.name}`;
+        if (entry.name === taxonomy.windowsDirName) {
+          for (const window of policyReaddirSafe(repoRoot, childRel).filter((candidate) => candidate.isDirectory)) {
+            const windowDir = `${childRel}/${window.name}`;
+            const actual = new Set(policyReaddirSafe(repoRoot, windowDir).filter((candidate) => candidate.isDirectory).map((candidate) => candidate.name));
+            for (const required of taxonomy.windowRequiredChildDirs) {
+              if (actual.has(required)) continue;
+              breaches.push({
+                id: `taxonomy-window-completeness-${windowDir}-${required}`,
+                summary: `"${windowDir}" is missing required window capability dir "${required}"`,
+                kind: "taxonomy/window-completeness",
+                scope: `${scopeId}/${policyStripEmoji(window.name)}`,
+                priority: "high",
+                reason: `Every window must explicitly carry ${taxonomy.windowRequiredChildDirs.join(", ")}; an empty capability is valid, an absent capability is not.`,
+                solution: `Add ${windowDir}/${required}/${taxonomy.taxonomyLeafFilenames["🦀️rust"] ?? "🦀️component.rs"}; keep the module empty when the window has no ${policyStripEmoji(required)} yet.`,
+              });
+            }
+          }
+          continue;
+        }
+        walk(childRel);
+      }
+    };
+    walk(`${crate.ownerRel}/${taxonomy.appsDirName}`);
+  }
+  return breaches;
+}
+
+/**
  * 📏️ Per-example unit shape: `📚️examples/<emoji-slug>/{definition leaves, 🖼️assets/, 🧪️tests/}` under
  * every artifact and every app (apps own examples directly — never under `⚙️engine`). Plugin-root
  * `📚️examples` and plural facet dirs are forbidden.
@@ -4702,9 +4751,15 @@ function policyEmojiEntryIsRenamable(relDir: string, name: string, isDirectory: 
 }
 
 /** 🎭️Families whose shared leading emoji is a structural kind marker rather than a sibling identity. */
-function policyEmojiSiblingIdentityIsStructural(relDir: string): boolean {
+function policyEmojiSiblingIdentityIsStructural(relDir: string, name: string): boolean {
   const parent = relDir.split("/").pop() ?? "";
-  return parent === "🏅️standards" || parent === "🪆️subsets" || parent === "💡️inferences";
+  return name === "📝️text" || name === "💾️binary" || parent === "🏅️standards" || parent === "🪆️subsets" || parent === "💡️inferences" || parent === "🗿️artifacts" || parent === "📚️examples" || parent === "🎛️apps" || relDir.split("/").includes("🖼️assets");
+}
+
+/** 🧬️Migration slug families whose bare-symbol presentation is enforced by their dedicated policy. */
+function policyEmojiPresentationIsStructural(relDir: string): boolean {
+  const segments = relDir.split("/");
+  return segments.includes("🧬️mutations") || segments.includes("💡️inferences");
 }
 
 /** ✨️Whether a name starts with an actual emoji sequence rather than arbitrary non-ASCII text. */
@@ -4746,7 +4801,7 @@ export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
           reason: "Every renamable file and directory in a clean taxonomy area must start with an emoji identity.",
           solution: `Rename "${entry.name}" with a sibling-unique emoji prefix and update every reference.`,
         });
-      } else if (renamable && policyEmojiPrefixNeedsVs16(entry.name)) {
+      } else if (renamable && !policyEmojiPresentationIsStructural(relDir) && policyEmojiPrefixNeedsVs16(entry.name)) {
         breaches.push({
           id: `emoji-vs16-${childRel}`,
           summary: `"${childRel}" is missing U+FE0F on its emoji prefix`,
@@ -4757,7 +4812,7 @@ export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
           solution: `Rename the leading emoji so it includes U+FE0F, preserving the stem and references.`,
         });
       }
-      if (renamable && hasPrefix && !policyEmojiSiblingIdentityIsStructural(relDir)) {
+      if (renamable && hasPrefix && !policyEmojiSiblingIdentityIsStructural(relDir, entry.name)) {
         const prefix = policyLeadingEmojiPrefix(entry.name).replaceAll(POLICY_VS16, "");
         const previous = seen.get(prefix);
         if (previous) {
@@ -12267,6 +12322,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyCargoArtifactBreaches(repoRoot, crateDirs));
   breaches.push(...policyAppCouplingBreaches(repoRoot, crateDirs));
   breaches.push(...policyTaxonomyDirsBreaches(repoRoot, crateDirs));
+  breaches.push(...policyWindowCompletenessBreaches(repoRoot, crateDirs));
   breaches.push(...policySemioArtifactExamplesBreaches(repoRoot, crateDirs));
   breaches.push(...policyDeadExampleLeafBreaches(repoRoot, crateDirs));
   breaches.push(...policyComponentFileBreaches(repoRoot, crateDirs));

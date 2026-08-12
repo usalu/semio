@@ -10,7 +10,6 @@ use crate::apps::iso16757::commands::{evaluate, selected_check, set_snapshot};
 use crate::apps::iso16757::modes::edit as edit_mode;
 use crate::apps::iso16757::modes::edit::windows::{inputs, results};
 use crate::apps::iso16757::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::apps::iso16757::Iso16757Family;
 use crate::artifacts::iso16757::op::Iso16757Mutation;
 use crate::artifacts::iso16757::Iso16757Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};

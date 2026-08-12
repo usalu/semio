@@ -45,8 +45,20 @@ describe("emoji-prefix policy", () => {
     const owner = join(root, "✏️s", "🔌️plugins", "🧪️probe");
     try {
       mkdirSync(owner, { recursive: true });
-      writeFileSync(join(owner, "🧭️first.ts"), "");
-      writeFileSync(join(owner, "🧭️second.ts"), "");
+      mkdirSync(join(owner, "🧭️first"), { recursive: true });
+      mkdirSync(join(owner, "🧭️second"), { recursive: true });
+      expect(policyEmojiPrefixBreaches(root).some((breach) => breach.kind === "taxonomy/emoji-prefix-uniqueness")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects duplicate identities shared by sibling files and directories", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-emoji-policy-"));
+    const owner = join(root, "✏️s", "🔌️plugins", "🧪️probe");
+    try {
+      mkdirSync(join(owner, "📄️folder"), { recursive: true });
+      writeFileSync(join(owner, "📄️file.ts"), "");
       expect(policyEmojiPrefixBreaches(root).some((breach) => breach.kind === "taxonomy/emoji-prefix-uniqueness")).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -1179,6 +1191,7 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.artifactSpecFilenames["📸️snapshot/🎒️pack"]).toBe("📡️component.protocol.semio");
     expect("🎒️pack" in taxonomy.artifactSpecFilenames).toBe(false);
     expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
+    expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "🎚️options"]);
     expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
     expect(taxonomy.taxonomyLeafFilenames["🟦️typescript"]).toBe("🟦️component.ts");
     expect(taxonomy.artifactSpecFilenames["🗣️dsl"]).toBe("📖️component.grammar.semio");
@@ -1336,6 +1349,14 @@ describe("validateTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, mutationChildDirs: [] };
     expect(validateTaxonomy(broken).some((problem) => problem.includes("mutationChildDirs"))).toBe(true);
+  });
+
+  test("reports an invalid required window capability set", () => {
+    const taxonomy = loadTaxonomy();
+    const missing = { ...taxonomy, windowRequiredChildDirs: [] };
+    expect(validateTaxonomy(missing).some((problem) => problem.includes("windowRequiredChildDirs must be a non-empty array"))).toBe(true);
+    const outsideAllowlist = { ...taxonomy, windowRequiredChildDirs: [...taxonomy.windowRequiredChildDirs, "🧪️unknown"] };
+    expect(validateTaxonomy(outsideAllowlist).some((problem) => problem.includes('"🧪️unknown" is missing from windowChildDirs'))).toBe(true);
   });
 
   test("reports empty pluginChildDirs", () => {

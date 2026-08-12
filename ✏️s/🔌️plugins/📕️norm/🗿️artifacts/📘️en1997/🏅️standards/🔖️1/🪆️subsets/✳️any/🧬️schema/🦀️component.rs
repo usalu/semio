@@ -279,7 +279,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 📚️ Models the classic (pre-2024) Eurocode 7 generation only: EN 1997-1 (general design rules,
 /// including piles) + EN 1997-2 (ground investigation and testing); the second-generation EN 1997-3
 /// does not apply here.
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use crate::document::{CheckReport, CheckResult, ClauseId, Quantity};
 
 pub mod na_de {
     pub use crate::artifacts::en1990::standards::v1::subsets::any::schema::na_de::NaDe;

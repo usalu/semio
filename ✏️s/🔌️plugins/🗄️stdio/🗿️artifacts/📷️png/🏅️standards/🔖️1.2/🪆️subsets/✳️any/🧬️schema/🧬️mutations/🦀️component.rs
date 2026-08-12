@@ -767,7 +767,7 @@ mod tests {
     fn codec_retention_law() {
         let bytes = std::fs::read(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🖼️assets/example.png"
+            "/../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🖼️assets/📷️example.png"
         ));
         let bytes = match bytes {
             Ok(b) if !b.is_empty() => b,

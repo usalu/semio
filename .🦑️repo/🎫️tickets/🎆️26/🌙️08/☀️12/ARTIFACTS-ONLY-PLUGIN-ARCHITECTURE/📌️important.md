@@ -115,6 +115,63 @@ Four independent agent groups hit it in APA's set and a peer session found it at
 
 **Corollary, learned the same day:** a *stopped* pass does not leave nothing behind. Halting the first relocation attempt five minutes in still left `pilot_languages()` stranded as `pub` in two plugins — precisely the artifact being prevented, in a state nothing would ever have flagged. Always re-derive the invariant after aborting a pass; do not assume the abort was clean.
 
+## ⛔ NEVER FIX A PATH BY BLANKET REPLACE — the unit of correctness is the SYMBOL, not the file
+
+The single most expensive self-inflicted episode of this ticket, and the fix took four attempts because each attempt was still too coarse.
+
+`🧿️semio`'s mesh snapshot file legitimately references **two different engine modules at once**:
+
+| symbol | correct module |
+|---|---|
+| `demo_mesh_snapshot`, `print_mesh_dsl`, `parse_mesh_dsl`, `encode_mesh_pack` | `semio::standards::v1::**subsets::mesh::**engine` |
+| `geometry`, `triples` | `semio::standards::v1::engine` |
+
+Every blanket edit therefore broke half of it:
+1. Replace-all → `subsets::mesh` — broke `geometry`/`triples`.
+2. Revert-all → standard level — broke the four mesh functions.
+3. Correct fix — **rewrite per symbol**, driven by the compiler's exact error list.
+
+**The unit of correctness is the symbol, not the file and not the pattern.** A file is not homogeneous just because a regex matches it uniformly.
+
+### The escalation ladder that should have been used immediately
+
+When a path is wrong, resolve it in this order and stop at the first that answers:
+1. **The compiler's error list** — it names the exact unresolved symbol and module. This is ground truth and costs one build.
+2. **The glue's `pub mod` nesting** — authoritative for *where a module is declared*.
+3. **A sibling line in the same file that already compiles** — evidence, not inference.
+4. ~~A directory listing~~ — **never**; `#[path]` exists so these can differ.
+
+Four rounds of edit-and-hope were spent before running step 1. The compiler had the answer the entire time, and each blanket attempt destroyed information about which half had been right.
+
+## ⛔ DIRECTORY STRUCTURE IS NOT MODULE PATH — check the shim, not the shape
+
+`#[path]` exists precisely so a module's *declaration site* can differ from its *file location*, and this repo uses that freedom **inconsistently within a single plugin**. stdio's glue:
+
+```rust
+pub mod v_commonmark {
+    #[path = "…/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
+    pub mod engine;                    // ← declared HERE, a SIBLING of `subsets`
+    pub mod subsets { pub mod any { … } }
+}
+```
+
+The file lives under `subsets/any/`; the module is `standards::v_commonmark::engine`. Meanwhile `csv` and `xml` genuinely *do* nest theirs at `standards::<v>::subsets::any::engine`. **Same plugin, both forms.**
+
+**Derive module paths from the glue's `pub mod` nesting, never from `find`.** A directory listing cannot answer a question about module declarations.
+
+### Two people verifying the same insufficient evidence is not corroboration
+
+A peer reported md's `.composers(…)` as missing `::subsets::any`, with a directory listing as evidence. APA "verified the destination on disk" — confirmed all nine engine *directories* sat under `🪆️subsets/✳️any/` — agreed, and applied the change to nine artifacts. **That produced exactly the `cannot find engine in any` error it was meant to cure.**
+
+Both parties checked the same wrong thing. Agreement felt like confirmation and was **the same error twice**. The subsequent revert then over-reached and broke `csv` and `xml`, which were correct.
+
+Resolved only by parsing the glue's module nesting to get ground truth per artifact, then matching each `declaration()` against *its own* artifact's real path.
+
+**Rules:**
+1. When accepting a diagnosis from anyone, check **what kind of evidence** supports it — not merely whether the evidence is accurate. A true fact of the wrong category is worse than a doubtful one, because it survives scrutiny.
+2. A revert is an edit. It needs the same per-site verification as the change it undoes; a broad pattern revert will hit sites the original change never touched.
+3. Third occurrence of the `en1990` shape tonight: **mostly uniform, a couple of exceptions, and any rule applied across the set breaks exactly the members that differ.**
+
 ## ⛔ NEVER TELL AN AGENT WHAT RESULT TO EXPECT — it will find that result
 
 The most transferable orchestration lesson in this ticket, and it was self-inflicted.

@@ -5,7 +5,7 @@ use family-scene
 start mutation
 
 mutation = create-object | delete-object | reorder-objects | rename-object | change-object-smooth-shading
-         | move-object | rotate-object | scale-object | replace-object-mesh
+         | move-object | rotate-object | scale-object | create-mesh | delete-mesh
          | insert-paint-layer | remove-paint-layer | rename-paint-layer
          | change-paint-layer-visible | change-paint-layer-opacity | change-paint-layer-blend-mode
          | edit-paint-layer
@@ -18,7 +18,8 @@ change-object-smooth-shading = "change-object-smooth-shading" "id" "=" IDENT "ne
 move-object = "move-object" "id" "=" IDENT "new-position" "=" VEC3
 rotate-object = "rotate-object" "id" "=" IDENT "new-rotation" "=" VEC3
 scale-object = "scale-object" "id" "=" IDENT "new-scale" "=" VEC3
-replace-object-mesh = "replace-object-mesh" "id" "=" IDENT "new-mesh" mesh
+create-mesh = "create-mesh" "id" "=" IDENT "child-id" "=" IDENT "target" "=" TEXT "mesh-workspace" "=" TEXT
+delete-mesh = "delete-mesh" "id" "=" IDENT
 
 insert-paint-layer = "insert-paint-layer" "object-id" "=" IDENT "index" "=" INT paint-layer-block
 remove-paint-layer = "remove-paint-layer" "object-id" "=" IDENT "index" "=" INT
@@ -29,16 +30,10 @@ change-paint-layer-blend-mode = "change-paint-layer-blend-mode" "object-id" "=" 
 edit-paint-layer = "edit-paint-layer" "object-id" "=" IDENT "layer-index" "=" INT runs-table
 
 object-block = "object" "{" object-field* "}"
-object-field = {"id" "=" IDENT} | {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | mesh | object-transform | paint-layers
+object-field = {"id" "=" IDENT} | {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | mesh-handle | object-transform | paint-layers
 object-transform = "transform" "{" transform-field* "}"
 transform-field = {"position" "=" VEC3} | {"rotation" "=" VEC3} | {"scale" "=" VEC3}
-mesh = "mesh" "{" vertices halfedges faces "}"
-vertices = "vertices" "[" vertex* "]" | "vertices" "{" vertex* "}"
-vertex = "{" {"position" "=" VEC3} {"normal" "=" VEC3}? {"halfedge" "=" INT}? "}"
-halfedges = "halfedges" "[" halfedge* "]" | "halfedges" "{" halfedge* "}"
-halfedge = "{" {"vertex" "=" INT} {"next" "=" INT} {"twin" "=" INT}? {"face" "=" INT}? {"u" "=" FLOAT}? {"v" "=" FLOAT}? "}"
-faces = "faces" "[" face* "]" | "faces" "{" face* "}"
-face = "{" {"halfedge" "=" INT} {"smooth" "=" BOOL}? {"flipped" "=" BOOL}? "}"
+mesh-handle = "mesh" "{" {"child-id" "=" IDENT} {"target" "=" TEXT} "}" # owned CHILD handle (s.stdio.semio.mesh) — two strings, never embedded geometry
 paint-layers = "paint-layers" "=" "[" paint-layer* "]" | "paint-layers" "{" paint-layer* "}"
 paint-layer = "{" paint-layer-field* "}"
 paint-layer-field = {"name" "=" TEXT} | {"visible" "=" BOOL} | {"opacity" "=" FLOAT} | {"blend-mode" "=" IDENT} | {"pixels" "=" TEXT}

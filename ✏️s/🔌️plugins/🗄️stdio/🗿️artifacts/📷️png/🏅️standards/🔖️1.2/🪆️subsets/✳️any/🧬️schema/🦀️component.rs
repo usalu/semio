@@ -3,7 +3,7 @@
 
 use crate::artifacts::png::schema::snapshot::{
     PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims,
-    PngRgb, PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency,
+    PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency,
 };
 use crate::artifacts::png::PngSnapshot;
 use schema::ArtifactSchema;
@@ -116,6 +116,80 @@ impl PngArtifact {
         *self = Self::from_snapshot(snapshot);
     }
 }
+
+//#region 🔖️DemoFixtures
+/// 🕳️ Relocated verbatim from `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: pure helpers over document
+/// types live in `🧬️schema/`).
+pub fn empty_png_snapshot() -> PngSnapshot { PngSnapshot::default() }
+
+/// 📄️ P2-P2: the demo `stdio.png` document — a genuinely non-trivial `PngSnapshot` exercising
+/// PLTE, every typed ancillary chunk (gAMA/cHRM/sRGB/pHYs/tIME/bKGD), one text chunk, and one
+/// verbatim-retained unknown ancillary chunk, all in a real relative chunk order. The single
+/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`
+/// (both are literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
+/// `fixture_honesty_law` in `💡️inferences/🦀️component.rs`).
+///
+/// **Deliberately safe against `encode_png`'s own canonicalization** (see `encode_png`'s own
+/// `🚫️EncodeScopeNote` in `🚪️io/🦀️component.rs`): `bit_depth`/`color_type`/`interlace` are set to
+/// EXACTLY what `encode_png` always hardcodes into the real IHDR bytes regardless of the
+/// snapshot's own field values (`8`/`Rgba`/`false`) — any OTHER value here would silently
+/// "self-correct" on the first decode and break `fixture_honesty_law`'s
+/// `parse_dsl(fixture) == demo()` identity. `trns` is deliberately `None` (a `tRNS` chunk decoded
+/// under `color_type == 6` is spec-mandated to be IGNORED — `decode_png`'s own `_ => {}` arm — so
+/// no non-`None` value here could ever round-trip either); `bkgd` uses the `Rgb` variant
+/// specifically (the ONLY variant whose own 6-byte wire shape matches what `color_type == 6`
+/// decodes, `2|6 => 6 bytes`).
+pub fn demo_png_snapshot() -> PngSnapshot {
+    let (w, h) = (3u32, 3u32);
+    let mut pixels = Vec::with_capacity((w * h * 4) as usize);
+    for y in 0..h {
+        for x in 0..w {
+            let checker = if (x + y) % 2 == 0 { 255u8 } else { 0u8 };
+            pixels.extend_from_slice(&[checker, ((x * 37) % 256) as u8, ((y * 53) % 256) as u8, 255]);
+        }
+    }
+    PngSnapshot {
+        schema: crate::artifacts::png::STDIO_PNG_DOCUMENT_SCHEMA.into(),
+        width: w,
+        height: h,
+        bit_depth: 8,
+        color_type: PngColorType::Rgba,
+        interlace: false,
+        plte: Some(vec![
+            PngRgb { r: 255, g: 0, b: 0 },
+            PngRgb { r: 0, g: 255, b: 0 },
+            PngRgb { r: 0, g: 0, b: 255 },
+        ]),
+        trns: None,
+        gama: Some(45455),
+        chrm: Some(PngChromaticities {
+            white_x: 31270, white_y: 32900, red_x: 64000, red_y: 33000,
+            green_x: 30000, green_y: 60000, blue_x: 15000, blue_y: 6000,
+        }),
+        srgb: Some(PngSrgbIntent::Perceptual),
+        phys: Some(PngPhysicalDims { ppu_x: 2835, ppu_y: 2835, unit_is_meter: true }),
+        time: Some(PngTimestamp { year: 2024, month: 6, day: 15, hour: 12, minute: 30, second: 0 }),
+        bkgd: Some(PngBackground::Rgb { r: 255, g: 255, b: 255 }),
+        text_chunks: vec![PngTextChunk {
+            keyword: "Title".into(),
+            value: "semio demo".into(),
+            compressed: false,
+            kind: PngTextKind::Text,
+            language_tag: String::new(),
+            translated_keyword: String::new(),
+        }],
+        pixels,
+        chunk_order: vec![
+            PngChunkMarker::Ihdr, PngChunkMarker::Plte, PngChunkMarker::Gama, PngChunkMarker::Chrm,
+            PngChunkMarker::Srgb, PngChunkMarker::Phys, PngChunkMarker::Time, PngChunkMarker::Bkgd,
+            PngChunkMarker::Text { index: 0 }, PngChunkMarker::Unknown { index: 0 },
+            PngChunkMarker::Idat, PngChunkMarker::Iend,
+        ],
+        unknown_chunks: vec![PngChunk { kind: *b"prIV", data: vec![9, 9, 9] }],
+    }
+}
+//#endregion 🔖️DemoFixtures
 
 pub fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {

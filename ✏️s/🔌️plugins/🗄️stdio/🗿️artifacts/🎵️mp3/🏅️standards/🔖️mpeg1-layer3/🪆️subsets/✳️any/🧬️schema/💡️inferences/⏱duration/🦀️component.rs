@@ -4,7 +4,7 @@
 //! table, reused — not re-declared — so the two never drift). A pure whole-snapshot fold over
 //! `frames` — no `InferredField` needed.
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::engine::sample_rate_hz;
+use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz;
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use serde::{Deserialize, Serialize};
 

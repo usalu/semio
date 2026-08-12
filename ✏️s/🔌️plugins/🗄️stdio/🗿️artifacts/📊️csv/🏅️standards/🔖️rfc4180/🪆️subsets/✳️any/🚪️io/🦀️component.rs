@@ -48,3 +48,24 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🚪️DerivedIoRegistry
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure `ComposerEntry` aggregation, no
+/// engine needed. NOTE: always reach this via a fully-qualified path
+/// (`standards::v_rfc4180::subsets::any::io::io_registry::entries()`) — the artifact root's OWN
+/// `io_registry` (`🗿️artifacts/📊️csv/🦀️component.rs`) shadows this name with a DIFFERENT return
+/// type (`&'static [&'static ComposerEntry]` vs this module's `&'static [ComposerEntry]`); a bare
+/// `io_registry::entries()` silently rebinds to the wrong one.
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::CsvComposer as CsvRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<CsvRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

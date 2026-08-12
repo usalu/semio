@@ -75,7 +75,7 @@ pub fn register_pilot_languages() {
 mod tests {
     use super::*;
 
-    const REAL_FIXTURE: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/example.tsv");
+    const REAL_FIXTURE: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/📑️example.tsv");
 
     #[test]
     fn round_trips_a_real_shaped_tsv_body() {
@@ -129,7 +129,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     /// 🔁️ decode→encode is byte-preserving on the real W0 fixture
-    /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📚️examples/🎬️demo/🖼️assets/example.tsv`,
+    /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📚️examples/🎬️demo/🖼️assets/📑️example.tsv`,
     /// verified upstream by `verify_tsv.py`'s own "byte-exact split/rejoin" check).
     #[test]
     fn codec_retention_law() {

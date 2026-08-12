@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn unwrap_active_resyncs_mesh_json() {
         let mut a = app();
-        let before = a.snapshot().expect("projection").objects[0].mesh_json.clone();
+        let before = a.snapshot().expect("projection").objects[0].mesh_workspace.clone();
         dispatch(&mut a, LowpolyCommand::UnwrapActive(super::unwrap_active::UnwrapActive {}));
         // unwrap is idempotent-ish on an already-unwrapped mesh, so just assert it runs without error and
         // keeps the object count stable.
