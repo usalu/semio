@@ -485,7 +485,7 @@ mod tests {
 
     #[test]
     fn forest_wire_chains_reversed_edges_by_vertex_id() {
-        let source = include_str!("../../../../../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
         let edges = edge_map(&geometry);
@@ -505,7 +505,7 @@ mod tests {
 
     #[test]
     fn forest_shape_geometry_imports_solid_handle() {
-        let source = include_str!("../../../../../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
         let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
@@ -524,7 +524,7 @@ mod tests {
 
     #[test]
     fn forest_energy_surface_tessellates_at_authored_height() {
-        let source = include_str!("../../../../../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/2/model/geometry"));
         let objects = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
@@ -542,7 +542,7 @@ mod tests {
 
     #[test]
     fn forest_structure_surface_tessellates_at_authored_height() {
-        let source = include_str!("../../../../../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
         let objects = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
@@ -556,7 +556,7 @@ mod tests {
 
     #[test]
     fn forest_structure_curve_wires_tessellate_as_centerlines() {
-        let source = include_str!("../../../../../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
         let objects = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();

@@ -1,0 +1,11 @@
+# 🔺️ SemioGraphDiff schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+type SemioGraphNodeListDiff {
+  values: [SemioGraphNode!]!
+}
+type SemioGraphEdgeListDiff {
+  values: [SemioGraphEdge!]!
+}
+type SemioGraphDiff {
+  nodes: SemioGraphNodeListDiff @state(class: PERSISTENT)
+  edges: SemioGraphEdgeListDiff @state(class: PERSISTENT)
+}

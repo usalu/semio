@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::forms::FormsSnapshot;
 
 /// 📄️ The building-component fixture, handcrafted in the `.forms` DSL.
-pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📄️ The `default` (Contact) fixture — a minimal single-step form, in the `.forms` DSL.
 pub const DEFAULT_EXAMPLE_TEXT: &str = r##"semio forms.form.dsl v1

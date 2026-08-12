@@ -94,6 +94,7 @@ impl Din18599Mutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use protocol::Mutation;
 
     fn every_mutation() -> Vec<Din18599Mutation> {

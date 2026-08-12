@@ -60,7 +60,7 @@ const CAD_MODEL_INDEX_ENERGY: usize = 2;
 const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 
 
-const FOREST_LEFT_MODEL_JSON: &str = include_str!("../../../../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+const FOREST_LEFT_MODEL_JSON: &str = include_str!("../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
 
 pub const CAD_MODEL_DEFINITION_SHAPE: &str = "spatial.shape";
 

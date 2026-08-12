@@ -1,0 +1,6 @@
+# 💾️ SemioTableDiff binary frame — descriptive twin of 📡️component.protocol.semio.
+type SemioTableDiffFrame {
+  format: Int!
+  presence: Int! # bit0=columns, bit1=rows
+  payload: String! # opaque base64: present sections only
+}

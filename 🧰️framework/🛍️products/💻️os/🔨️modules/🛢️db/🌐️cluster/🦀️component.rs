@@ -21,8 +21,8 @@
 //! Every genuinely content-addressed hash in the family (payloads, snapshots, WAL chains) already
 //! flows through `db_storage`/`db_wal`/`db_sync`, which this crate reuses via their public APIs
 //! rather than re-deriving.
-
-//#region 🔖️ShardMap
+use crate::*;
+use crate::db_durability::Frontier;
 /// @emoji 🏷️ A cluster node's identity — the consistent-hash ring's key type and the `holder`
 /// string `db_storage::LeaseStorage` records ownership grants under.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]

@@ -1,0 +1,16 @@
+(* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed) for s.stdio.semio.kit's DSL text. *)
+document = artifact mark, schema line, types line, designs line, objects line, models line, properties line, representations line ;
+artifact mark = "stdio.semio.kit" ;
+schema line = "schema", "=", hex ;
+types line = "types", "=", "[", [ kit type, { ",", kit type } ], "]" ;
+kit type = "[", hex, ",", hex, ",", hex, "]" ;
+designs line = "designs", "=", "[", [ design, { ",", design } ], "]" ;
+design = "[", hex, ",", hex, ",", "[", pieces, "]", ",", "[", connections, "]", "]" ;
+objects line = "objects", "=", child list ;
+models line = "models", "=", child list ;
+child list = "[", [ child, { ",", child } ], "]" ;
+child = "[", hex, ",", hex, "]" ;
+properties line = "properties", "=", ( "[", "]" | child ) ;
+representations line = "representations", "=", "[", [ link, { ",", link } ], "]" ;
+hex = { digit | "a" | "b" | "c" | "d" | "e" | "f" } ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

@@ -1,0 +1,18 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.graph/mutations.json",
+  "title": "SemioGraphMutation",
+  "description": "Closed, eleven-variant mutation dispatch over SemioGraphSnapshot's id-keyed nodes/edges and each node's nested ports/properties collections. Edges are id-keyed entities (create/delete), never connect/disconnect.",
+  "oneOf": [
+    { "properties": { "mutation": { "const": "createNode" }, "payload": { "type": "object" } } },
+    { "properties": { "mutation": { "const": "deleteNode" }, "payload": { "type": "object", "properties": { "id": { "type": "object" } } } } },
+    { "properties": { "mutation": { "const": "changeNodeKind" }, "payload": { "type": "object", "properties": { "id": { "type": "object" }, "newKind": { "type": "string" } } } } },
+    { "properties": { "mutation": { "const": "changeNodeLabel" }, "payload": { "type": "object", "properties": { "id": { "type": "object" }, "newLabel": { "type": "string" } } } } },
+    { "properties": { "mutation": { "const": "moveNode" }, "payload": { "type": "object", "properties": { "id": { "type": "object" }, "newPosition": { "type": "object" } } } } },
+    { "properties": { "mutation": { "const": "addNodePort" }, "payload": { "type": "object", "properties": { "nodeId": { "type": "object" }, "index": { "type": "integer" }, "port": { "type": "object" } } } } },
+    { "properties": { "mutation": { "const": "removeNodePort" }, "payload": { "type": "object", "properties": { "nodeId": { "type": "object" }, "index": { "type": "integer" } } } } },
+    { "properties": { "mutation": { "const": "addNodeProperty" }, "payload": { "type": "object", "properties": { "nodeId": { "type": "object" }, "index": { "type": "integer" }, "property": { "type": "object" } } } } },
+    { "properties": { "mutation": { "const": "removeNodeProperty" }, "payload": { "type": "object", "properties": { "nodeId": { "type": "object" }, "index": { "type": "integer" } } } } },
+    { "properties": { "mutation": { "const": "createEdge" }, "payload": { "type": "object" } } },
+    { "properties": { "mutation": { "const": "deleteEdge" }, "payload": { "type": "object", "properties": { "id": { "type": "object" } } } } }
+  ]
+}

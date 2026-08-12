@@ -1,0 +1,53 @@
+### RERUN post-APA-fix: cargo check -p semio-s-plugin-fem --all-targets
+    |                                  ^^^^^^^^^^^
+
+warning: unused import: `ArtifactApp`
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/◻2d/🦀️component.rs:377:34
+    |
+377 |     use semio_framework_plugin::{ArtifactApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    |                                  ^^^^^^^^^^^
+
+warning: function `fem2d_app_with_registry` is never used
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/◻2d/🦀️component.rs:387:12
+    |
+387 |     pub fn fem2d_app_with_registry() -> Fem2dApp {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `fem3d_app_with_registry` is never used
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🦀️component.rs:372:12
+    |
+372 |     pub fn fem3d_app_with_registry() -> Fem3dApp {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-fem` (lib) generated 33 warnings (run `cargo fix --lib -p semio-s-plugin-fem` to apply 25 suggestions)
+warning: `semio-s-plugin-fem` (lib test) generated 48 warnings (31 duplicates) (run `cargo fix --lib -p semio-s-plugin-fem --tests` to apply 3 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 9m 12s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-s-plugin-fem v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+
+### cargo test -p semio-s-plugin-fem --lib -- bounds
+
+warning: function `fem3d_app_with_registry` is never used
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🦀️component.rs:372:12
+    |
+372 |     pub fn fem3d_app_with_registry() -> Fem3dApp {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-fem` (lib test) generated 48 warnings (run `cargo fix --lib -p semio-s-plugin-fem --tests` to apply 26 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 29.45s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-s-plugin-fem v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests 📦️glue.rs (.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/🎯️target/debug/deps/semio_s_plugin_fem-676dcc4daddad84e)
+
+running 8 tests
+test artifacts::fem2d::standards::v1::subsets::any::schema::inferences::bounds::component::tests::bounds_matches_hand_built_node_extent ... ok
+test artifacts::fem3d::standards::v1::subsets::any::schema::inferences::bounds::component::tests::bounds_matches_hand_built_node_extent ... ok
+test artifacts::fem2d::standards::v1::subsets::any::schema::inferences::bounds::component::tests::inference_determinism_law ... ok
+test artifacts::fem3d::standards::v1::subsets::any::schema::inferences::component::tests::bounds_matches_node_extent ... ok
+test artifacts::fem2d::standards::v1::subsets::any::schema::inferences::component::tests::bounds_matches_node_extent ... ok
+test artifacts::fem3d::standards::v1::subsets::any::schema::inferences::bounds::component::tests::inference_determinism_law ... ok
+test artifacts::fem3d::standards::v1::subsets::any::schema::inferences::bounds::component::tests::inference_default_law ... ok
+test artifacts::fem2d::standards::v1::subsets::any::schema::inferences::bounds::component::tests::inference_default_law ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 348 filtered out; finished in 0.00s
+

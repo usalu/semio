@@ -367,7 +367,7 @@ pub mod host {
         P: Clone,
         Op: Clone,
     {
-        ArtifactEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None }
+        ArtifactEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None }
     }
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
@@ -620,7 +620,7 @@ pub mod host {
     impl OsWorkflowStore {
         pub fn new(document: OsWorkflowArtifactDocument) -> Self {
             let applied_edit_ids = document.applied_edit_ids.clone();
-            let envelope = ArtifactEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None };
+            let envelope = ArtifactEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None };
             let mut inner = ArtifactStore::new(envelope);
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();
@@ -4201,7 +4201,7 @@ pub mod registry {
     pub struct OsAppRegistration {
         pub id: String,
         pub label: LocalizedLabel,
-        pub label: Vec<String>,
+        pub breadcrumb: Vec<String>,
         pub controller_id: String,
         pub inputs: Vec<semio_framework::MediaPortSpec>,
         pub outputs: Vec<semio_framework::MediaPortSpec>,
@@ -4239,7 +4239,7 @@ pub mod registry {
         let registration = OsAppRegistration {
             id: app.id.clone(),
             label: app.label.clone(),
-            document: app.document.clone(),
+            breadcrumb: app.breadcrumb.clone(),
             controller_id: app.controller_id.clone(),
             inputs,
             outputs,
@@ -4315,7 +4315,7 @@ pub mod registry {
         Some(AppDefinition {
             id: registration.id,
             label: registration.label,
-            document: registration.document,
+            breadcrumb: registration.breadcrumb,
             icon_id: None,
             controller_id: registration.controller_id,
             modes,

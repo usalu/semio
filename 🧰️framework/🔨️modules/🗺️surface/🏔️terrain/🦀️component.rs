@@ -2,6 +2,20 @@
 //! wasm-bindgen `TerrainSession` consumed by the React `World3dHost` terrain layer. Mirrors the
 //! `framework_surface_tiled_map` crate's tile/session architecture, but produces renderable mesh buffers (for the
 //! existing `World3d` instancing pipeline) instead of rasterized pixels.
+//!
+//! 🧬️ DKM doctrine classification (ticket `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS`,
+//! wave 2 exemplar): every field of [`TerrainSessionCore`] was measured against consumers before
+//! authoring, not assumed. Verdict — **this module owns no authoritative (tier-a) state and
+//! therefore no mutation triad applies.** `origin_lon`/`origin_lat`/`exaggeration` mirror
+//! `TerrainDescriptorJson.project_origin`/`exaggeration`, an artifact snapshot owned by the gis
+//! plugin (`✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/…`), re-set by the consumer once per frame
+//! when ITS signature changes — the real edit, if ever authored, belongs on that snapshot, not
+//! here. `elevation` is a content-addressed cache of externally-fetched DEM tile bytes, out of the
+//! tier a-e table entirely (nothing here is computable from any snapshot this module owns — see
+//! [`TerrainElevationTiles`]). Everything else — [`projection`], [`tiles`], [`build_terrain_tile_mesh`],
+//! [`visible_tile_coords`] — is tier-(e) pure compute. See `📓️wave2-reports/terrain-report.md` for
+//! the full per-field table, the empty-dispatch rationale, and the placement recommendation for the
+//! sibling `paint`/`node-graph`/`tiled-map` lanes.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -227,12 +241,7 @@ fn normalize3(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
 }
 //#endregion TerrainTileMesh
 
-//#region TerrainSession
-#[derive(Default)]
-struct TerrainElevationTiles {
-    by_key: HashMap<String, DecodedElevationTile>,
-}
-
+//#region VisibleTileQuery
 #[derive(Deserialize)]
 struct CameraRecord {
     position: Option<[f64; 3]>,
@@ -247,10 +256,48 @@ struct VisibleTileRow {
     key: String,
 }
 
+/// 🔭️ Tier-(e) pure compute: which DEM tiles a camera can see, given a project origin. Neither
+/// argument is state this module owns — `camera` is per-frame ephemeral view state, `origin_lon`/
+/// `origin_lat` mirror a snapshot field owned by the gis plugin's `TerrainDescriptorJson` artifact —
+/// so this is deliberately a free function rather than an `InferredField`: there is no snapshot
+/// here for a `DepHash` to key off, and the render loop already recomputes it every frame (see
+/// `♾️infinite/🌍️world/🦀️component.rs`'s `sync_terrain_state`), which a dep-hash cache would not help.
+fn visible_tile_coords(camera: &CameraRecord, origin_lon: f64, origin_lat: f64) -> Vec<(u32, u32, u32)> {
+    let target = camera.target.unwrap_or([0.0, 0.0, 0.0]);
+    let position = camera.position.unwrap_or([0.0, 0.0, 100.0]);
+    let dx = position[0] - target[0];
+    let dy = position[1] - target[1];
+    let dz = position[2] - target[2];
+    let distance = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0);
+    let zoom = tiles::pick_zoom(distance);
+    let (center_lon, center_lat) = projection::local_meters_to_lonlat(target[0], target[1], origin_lon, origin_lat);
+    tiles::visible_tiles(center_lon, center_lat, zoom)
+}
+//#endregion VisibleTileQuery
+
+//#region TerrainSession
+/// 🗃️ Cache of decoded DEM tile images, keyed by tile coordinate. NOT tier-(d): a tier-(d)
+/// `EngineRep` must be wholly rebuildable from a snapshot (`EngineRep::build(&P)`), and this cache
+/// cannot be — its contents arrive as externally-fetched PNG bytes (`fetch_pending_terrain_tiles` in
+/// `♾️infinite/🦀️component.rs`) that no artifact snapshot captures. It is analogous to
+/// `World3dState.meshes`/`pending_glb_urls` in the same consumer: a per-viewer materialized cache of
+/// an external resource, outside the tier a-e table entirely. Open question for the coordinator/W1
+/// owner (see `📓️wave2-reports/terrain-report.md`): whether decode+mesh-build should instead route
+/// through the frozen host `EngineCache` (`💻️os/🔨️modules/⚙️engine`) — its docstring scopes it to
+/// "the wasm guest↔host boundary", and whether this consumer crosses that boundary is unconfirmed.
+#[derive(Default)]
+struct TerrainElevationTiles {
+    by_key: HashMap<String, DecodedElevationTile>,
+}
+
 /// 🖥️ The browser-facing session: uploads decoded elevation tiles, reports which DEM tiles are
 /// currently visible for a given camera, and produces per-tile mesh buffers on demand. Mirrors
 /// `framework_surface_tiled_map`'s `MapSession`, but yields mesh JSON rather than driving a canvas itself — actual
 /// rendering happens via the existing `World3d`/three.js instancing pipeline in React.
+///
+/// 🧬️ Despite the "session + setters" shape, this struct owns NO tier-(a) authoritative state — see
+/// the module docstring and `📓️wave2-reports/terrain-report.md` for the full classification. No
+/// `🧬️mutations` triad exists for it: there is nothing here for one to edit.
 pub struct TerrainSessionCore {
     origin_lon: f64,
     origin_lat: f64,
@@ -265,29 +312,36 @@ impl Default for TerrainSessionCore {
 }
 
 impl TerrainSessionCore {
+    /// 🪞 Mirrors `TerrainDescriptorJson.project_origin` (gis-owned artifact field, tier-a there —
+    /// see the module docstring) into this render-support cache. Kept as a setter rather than
+    /// threading `origin_lon`/`origin_lat` through every call for API compatibility with the current
+    /// `♾️infinite/🌍️world` consumer, which this file does not own; see the report's recommended
+    /// target shape (drop the setter, pass origin as a parameter) as a `sharedFileRequests` patch.
     pub fn set_project_origin(&mut self, lon: f64, lat: f64) {
         self.origin_lon = lon;
         self.origin_lat = lat;
     }
 
+    /// 🪞 Mirrors `TerrainDescriptorJson.exaggeration` (gis-owned, tier-a there) — same rationale as
+    /// [`Self::set_project_origin`].
     pub fn set_exaggeration(&mut self, exaggeration: f64) {
         self.exaggeration = exaggeration.max(0.0);
     }
 
+    /// 🔭️ JSON-wrapping shim over the tier-(e) [`visible_tile_coords`] — kept `&self` for API
+    /// compatibility; the actual query is pure and argument-driven, not a method of this struct's
+    /// mutable state.
     pub fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
         let camera: CameraRecord = serde_json::from_str(camera_json).unwrap_or(CameraRecord { position: None, target: None });
-        let target = camera.target.unwrap_or([0.0, 0.0, 0.0]);
-        let position = camera.position.unwrap_or([0.0, 0.0, 100.0]);
-        let dx = position[0] - target[0];
-        let dy = position[1] - target[1];
-        let dz = position[2] - target[2];
-        let distance = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0);
-        let zoom = tiles::pick_zoom(distance);
-        let (center_lon, center_lat) = projection::local_meters_to_lonlat(target[0], target[1], self.origin_lon, self.origin_lat);
-        let rows: Vec<VisibleTileRow> = tiles::visible_tiles(center_lon, center_lat, zoom).into_iter().map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) }).collect();
+        let rows: Vec<VisibleTileRow> = visible_tile_coords(&camera, self.origin_lon, self.origin_lat)
+            .into_iter()
+            .map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) })
+            .collect();
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".to_string())
     }
 
+    /// 📥️ Decodes and stores one externally-fetched DEM tile — see [`TerrainElevationTiles`] for
+    /// why this is an out-of-doctrine resource cache, not tier-(d)/(c) state.
     pub fn upload_elevation_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
         match decode_terrarium_png(bytes) {
             Ok(image) => {
@@ -298,10 +352,13 @@ impl TerrainSessionCore {
         }
     }
 
+    /// 🗑️ Drops one cached tile — a cache eviction, not a `delete-*` mutation: nothing here is
+    /// authoritative, so there is nothing to capture for an inverse.
     pub fn evict_terrain_tile(&mut self, z: u32, x: u32, y: u32) {
         self.elevation.by_key.remove(&tiles::tile_key(z, x, y));
     }
 
+    /// 🕸️ Tier-(e) mesh build ([`build_terrain_tile_mesh`]) over a cached decoded tile, JSON-wrapped.
     pub fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
         match self.elevation.by_key.get(&tiles::tile_key(z, x, y)) {
             Some(tile) => {
@@ -564,6 +621,25 @@ mod tests {
         assert!(max_z - min_z > 1.0, "expected sloped tile to have elevation spread, got {min_z}..{max_z}");
         let has_tilted_normal = mesh.normals.chunks_exact(3).any(|n| n[0].abs() > 1e-3);
         assert!(has_tilted_normal, "expected at least one non-vertical normal on a sloped tile");
+    }
+
+    #[test]
+    fn visible_tile_coords_is_deterministic_for_identical_input() {
+        let camera = CameraRecord { position: Some([0.0, 0.0, 500.0]), target: Some([10.0, 10.0, 0.0]) };
+        let first = visible_tile_coords(&camera, 9.7382, 52.3759);
+        let second = visible_tile_coords(&camera, 9.7382, 52.3759);
+        assert_eq!(first, second, "a tier-(e) pure query must return identical output for identical input");
+    }
+
+    #[test]
+    fn terrain_tile_mesh_json_is_deterministic_for_the_same_cached_tile() {
+        let mut session = TerrainSessionCore::default();
+        session.set_project_origin(9.7382, 52.3759);
+        let bytes = gradient_terrarium_png();
+        assert!(session.upload_elevation_tile(12, 2000, 1300, &bytes));
+        let first = session.terrain_tile_mesh_json(12, 2000, 1300);
+        let second = session.terrain_tile_mesh_json(12, 2000, 1300);
+        assert_eq!(first, second, "mesh build over an unchanged cached tile must be byte-identical across calls");
     }
 }
 //#endregion Tests

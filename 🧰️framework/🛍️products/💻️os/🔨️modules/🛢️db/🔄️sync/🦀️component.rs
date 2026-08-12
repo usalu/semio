@@ -25,8 +25,8 @@
 //! frame — as the authoritative source of "where is the replica" on the receive path. The
 //! `resume_token` this crate ISSUES (`issue_resume_token`, on the send path, `Welcome.resume_token`)
 //! is fully real: `ResumeToken::encode` is public and exercised end to end.
-
-//#region 🔖️Codec
+use crate::*;
+use crate::db_durability::Frontier;
 /// @emoji ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
 /// `protocol_causal::encode_envelope`'s binary record — the same primitive codec `protocol_wire`
 /// uses for `ClientFrame::Commands`/`ServerFrame::Commands`, so a WAL command's bytes are

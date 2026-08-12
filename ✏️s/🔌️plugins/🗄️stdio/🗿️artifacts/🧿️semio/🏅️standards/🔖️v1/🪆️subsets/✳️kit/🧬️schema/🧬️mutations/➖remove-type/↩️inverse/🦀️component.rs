@@ -1,0 +1,14 @@
+//! ↩️ `remove-type` — undo is `add-type` with the escrowed type from BASE; empty when absent.
+
+use super::mutation::RemoveType;
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{add_type, SemioKitMutation};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+
+//#region 🔖️Inverse
+pub fn inverse(payload: &RemoveType, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+    match base.types.iter().find(|t| t.id == payload.id) {
+        Some(existing) => vec![SemioKitMutation::AddType(add_type::mutation::AddType { id: existing.id.clone(), name: existing.name.clone(), category: existing.category.clone() })],
+        None => Vec::new(),
+    }
+}
+//#endregion 🔖️Inverse

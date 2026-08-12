@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.kit.diff/text.json",
+  "title": "SemioKitDiffDsl",
+  "type": "object",
+  "properties": { "line": { "type": "string" } }
+}

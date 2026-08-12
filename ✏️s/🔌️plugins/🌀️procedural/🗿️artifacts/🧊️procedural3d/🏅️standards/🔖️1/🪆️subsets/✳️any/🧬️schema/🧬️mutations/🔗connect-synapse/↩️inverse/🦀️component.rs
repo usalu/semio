@@ -1,7 +1,7 @@
 //! ↩️ `connect-synapse` inverse — undo of a connect is always a `disconnect-synapse` by id.
 
 use crate::artifacts::procedural3d::mutations::connect_synapse::mutation::ConnectSynapse;
-use crate::artifacts::procedural3d::mutations::remove_synapse::mutation::DisconnectSynapse;
+use crate::artifacts::procedural3d::mutations::disconnect_synapse::mutation::DisconnectSynapse;
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

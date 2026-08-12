@@ -31,6 +31,56 @@ This happened. A W3 agent began relocating `✏️s/🔌️plugins/🖍️draw/�
 
 The rule, generalized: a directory is **inventory-only, never moved**, if it contains a `Cargo.toml`. Relocating it is a workspace-topology change (members, path dependencies, crate names), which is a different and much larger operation than moving source files, and it is never in scope for a per-plugin packet.
 
+## Evidence discipline — the coordinator got this wrong twice in one afternoon
+
+Both times the pattern was identical: a **plausible story** stood in for a **measurement**, and both times the disproof was `stat -f '%Sm' <path>` — one command, available before the claim was made.
+
+1. **"Orphaned debt from a closed ticket."** Two compile errors were traced to a rename whose ticket had closed, so they were declared unowned and a patch was offered to four sessions. A peer checked mtime: the file had been modified minutes earlier. It was live in-flight work.
+2. **"That session may be gone."** A peer went quiet across several messages while a build stalled, so silence plus a stalled build was read as an interrupted session, and criteria were proposed for treating their file as abandoned. The file's mtime was three minutes old and the crate compiled green shortly after. They were heads-down, not gone.
+
+**The specific error is treating absence of a reply as evidence.** It is only absence of evidence — a peer working intently is indistinguishable, over the channel, from a peer that has stopped. The two are told apart by the file, never by the silence.
+
+### The general form (DKM's statement of it, the sharpest anyone reached)
+
+> **A document written by a session is a derived artifact of that session, not a live predicate about it.**
+
+SMO said this first about report files; every session has since been caught by some version of it. It applies to a peer's `📓️status.md` exactly as much as to a report directory — and the worked example is the one that matters here. UCAS's status doc says *"W1 (kernel): CODE COMPLETE. A1, A2, B1, B2, C1 all landed."* That is their own authoritative record, minutes old, written by the owner. It is still **not** a release, because another line of the same document says *"Signal APA when C1 unfreezes the file"* — the document defers to a signal that has not been sent.
+
+**"Complete" and "released to you" are different claims, and only the owner can make the second.** APA holds W1 on exactly that basis. DKM independently holds its stdio handoff on the identical basis, despite having two of its three gates open — because two of three is not open.
+
+**The rule (from DKM, and better than the version this ticket was reaching for):**
+
+> If a file you need is owned and its owner is unresponsive, the answer is to work on something else and say so — **never to define a threshold past which taking it becomes acceptable.**
+
+This is stronger than a carefully-calibrated threshold, because a threshold is something you can be argued down. Any criteria for "when it becomes acceptable to take another session's file" will eventually be satisfied by a session that is merely busy — the evidence available over a channel cannot distinguish busy from gone. Removing the procedure removes the failure mode.
+
+**And the meta-rule:** when a conclusion would license an action you would otherwise consider off-limits — patching another session's file, adopting their claim, overriding their sequencing — that is exactly when the evidentiary bar goes **up**, not down. Before asserting anything about ownership or abandonment:
+- `stat -f '%Sm' <path>` — how old is the file, really?
+- `git log --oneline -3 -- <path>` — never `git status`; the repo auto-commits, so recent work reads as clean.
+- State the measurement in the message. "Its mtime is 03:50, 14h old" is a claim a peer can check; "this looks orphaned" is not.
+
+Corollary, learned the same way: **a result that says you are finished deserves more scrutiny than one that says you are not.** A breach-cache query reported 0 APA violations — total success — because the cache's top-level key is `breachs`, not `breaches`, and the wrong key returns an empty list rather than an error. It was caught only because 16 plugins still visibly carried the directories the rule counts.
+
+## ⛔ After relocating ANYTHING, grep the WHOLE TREE for the old path — not just your plugin
+
+A per-plugin agent verifies inside its own boundary. **A dangling reference to a moved file lives wherever the referrer is, which is often a different plugin.** So per-plugin structural verification is structurally incapable of catching this class.
+
+It happened here: APA's `📐️cad` agent relocated `🖼️assets` into the artifact's `📚️examples`. `💠️lowpoly` reached across plugins into cad's old asset path with `include_str!("../../../../../../../📐️cad/🖼️assets/🎮️play/…")`. cad's own verification passed — correctly, the break wasn't in cad. lowpoly's verification had already passed before the move. Nobody's boundary contained the defect.
+
+**Rule:** after any move, `grep -rn "<old-path-fragment>"` across the entire repo, and fix or report every hit. Relocation is not complete when the files are in the new place; it is complete when nothing points at the old one.
+
+## ⛔ Fix broken paths by RE-RESOLUTION, never by pattern substitution
+
+When a tree-wide relocation leaves stale `include_str!`/`include_bytes!` paths, the tempting fix is a depth rewrite (`7×../` → `3×../`). **That silently corrupts a large fraction of cases.** Measured on the real incident — 14 broken files under `✏️s/🔌️plugins`:
+
+| class | count | correct fix |
+|---|---:|---|
+| depth-only, too deep | 6 | remove `../` — but two were *not* `📚️examples` paths (a framework font, a manifest), so a `📚️examples`-scoped rewrite misses them |
+| **structurally different target** | **7** | insert `🏅️standards/🔖️1/🪆️subsets/✳️any/` mid-path — trinity ×5, space ×2 reach into *another artifact's or plugin's* examples dir |
+| **needed to get DEEPER** | **1** | 7-up → 9-up; lowpoly's target moved further down |
+
+**8 of 14 would have been silently broken by the substitution**, and one would have been broken in the opposite direction from the recipe. The correct method: locate the real file on disk, compute `os.path.relpath` from the referring file's directory, and only rewrite when the target is unambiguous — reporting the ambiguous ones rather than guessing.
+
 ## Repo gotchas that cost other sessions real time
 
 12. **Derive crates keep two byte-identical copies**: `<module>/✨️derive/🦀️component.rs` **and** `<module>/✨️derive/📦️packages/🦀️rust/📦️glue.rs`. Cargo compiles the **glue** copy — editing only `component.rs` silently does nothing. Edit one, mirror it exactly, then `diff -q` the pair before reporting done. (`mcp__repo__file_integrate` has corrupted this mirroring before — mirror by hand.)

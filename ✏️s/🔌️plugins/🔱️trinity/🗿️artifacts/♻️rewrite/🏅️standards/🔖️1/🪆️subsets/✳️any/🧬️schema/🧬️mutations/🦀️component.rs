@@ -110,6 +110,7 @@ pub fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutations: 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::LayoutPoint;
     use std::collections::BTreeMap;

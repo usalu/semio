@@ -1,0 +1,16 @@
+dialect protocol
+protocol stdio.semio.object.mutations
+version 1
+schema s.stdio.semio.object
+start body
+framing record
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM object wave (W2c). Real binary op frame: `format u8` +
+# `tag u8` (the `SemioObjectMutation` variant ordinal, `../💾️binary/🦀️component.rs`'s
+# `OP_KEYWORDS`/`variant_ordinal`, 0-8) as two REAL fixed fields, then the variant's own argument
+# payload as one opaque trailing `bytes` chain.
+header fixed 2
+field format u8
+field tag u8
+
+chain payload bytes

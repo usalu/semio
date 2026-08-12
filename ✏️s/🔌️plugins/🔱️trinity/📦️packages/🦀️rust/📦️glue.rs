@@ -21,13 +21,13 @@ extern crate semio_framework_schema as schema;
 #[allow(clippy::unnecessary_wraps)]
 
 //#region 🔤️Jack kernel
-//! 🫀️ Cross-artifact query-language kernel, physically homed under `jack`'s own artifact engine
-//! (the DSL it implements is literally the "jack query language" per every file's own docstring)
-//! but consumed unchanged as `crate::{ast,lexer,executor,language_service}` by both the `jack` app
-//! and the `rewrite` artifact's `apply_rule` — see `🗿️artifacts/♻️rewrite/…/⚙️engine/🦀️component.rs`
-//! header comment, which names this exact sharing relationship. Moved
-//! `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`; module names kept stable at crate root so no call
-//! site elsewhere in the crate needed to change.
+// 🫀️ Cross-artifact query-language kernel, physically homed under `jack`'s own artifact engine
+// (the DSL it implements is literally the "jack query language" per every file's own docstring)
+// but consumed unchanged as `crate::{ast,lexer,executor,language_service}` by both the `jack` app
+// and the `rewrite` artifact's `apply_rule` — see `🗿️artifacts/♻️rewrite/…/⚙️engine/🦀️component.rs`
+// header comment, which names this exact sharing relationship. Moved
+// `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`; module names kept stable at crate root so no call
+// site elsewhere in the crate needed to change.
 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🌳️ast/🦀️component.rs"]
 pub mod ast;
 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔤️lexer/🦀️component.rs"]
@@ -397,6 +397,12 @@ pub mod artifacts {
                                 #[path = "."]
                                 pub mod topology {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                                #[path = "."]
+                                pub mod flat_position {
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flat-position/🦀️component.rs"]
                                     mod component;
                                     pub use component::*;
                                 }

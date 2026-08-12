@@ -1,0 +1,6 @@
+# 🧬️ SemioObjectMutation dispatch — real facet mirror.
+enum SemioObjectMutationKind { MOVE_OBJECT ROTATE_OBJECT SCALE_OBJECT CREATE_BREP DELETE_BREP CREATE_MESH DELETE_MESH CREATE_PROPERTIES DELETE_PROPERTIES }
+type SemioObjectMutation {
+  kind: SemioObjectMutationKind!
+  payloadWire: String!
+}

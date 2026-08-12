@@ -1,0 +1,31 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.table/snapshot.json",
+  "title": "SemioTableSnapshot",
+  "description": "The neutral tabular interchange shape: named/typed columns plus rows of scalar cells (what csv/tsv/xlsx eventually map onto).",
+  "type": "object",
+  "required": ["schema", "columns", "rows"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "columns": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "native key — name-keyed collection" },
+          "kind": { "enum": ["null", "bool", "int", "float", "str", "bytes"] }
+        }
+      }
+    },
+    "rows": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cells": { "type": "array", "description": "positionally aligned with columns; items are SemioValue (see the value subset)", "items": { "type": "object" } }
+        }
+      }
+    }
+  }
+}

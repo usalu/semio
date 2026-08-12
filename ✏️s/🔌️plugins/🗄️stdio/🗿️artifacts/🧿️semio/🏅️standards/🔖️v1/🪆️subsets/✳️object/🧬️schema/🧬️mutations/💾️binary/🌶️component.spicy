@@ -1,0 +1,6 @@
+module StdioSemioObjectMutations;
+public type OpFrame = unit {
+    format: uint8;
+    tag: uint8;
+    payload: bytes &eod;
+};

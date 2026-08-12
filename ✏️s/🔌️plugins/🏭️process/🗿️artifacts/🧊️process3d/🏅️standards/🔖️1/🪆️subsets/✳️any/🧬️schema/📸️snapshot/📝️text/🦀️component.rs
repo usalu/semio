@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::process3d::Process3dSnapshot;
 
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::ArtifactDsl`).
-pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 🗄️ The drilled-plate example fixture, handcrafted inline (same DSL surface as the timber demo asset).
 pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = r#"semio process.process3d.dsl v1

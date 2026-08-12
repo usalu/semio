@@ -398,8 +398,9 @@ mod tests {
     #[test]
     fn split_rectangle_face_into_two() {
         let mut body = Body::new();
-        let wire = make_rectangle_wire(&mut body, 2.0, 2.0).unwrap();
-        let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z)
+        let mut rec = OpRecorder::new();
+        let wire = make_rectangle_wire(&mut body, 2.0, 2.0, &mut rec).unwrap();
+        let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec)
             .unwrap();
         let (f0, f1) = split_planar_face_by_line(
             &mut body,
@@ -431,8 +432,9 @@ mod tests {
     #[test]
     fn split_rejects_non_cutting_line() {
         let mut body = Body::new();
-        let wire = make_rectangle_wire(&mut body, 2.0, 2.0).unwrap();
-        let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z)
+        let mut rec = OpRecorder::new();
+        let wire = make_rectangle_wire(&mut body, 2.0, 2.0, &mut rec).unwrap();
+        let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec)
             .unwrap();
         let err = split_planar_face_by_line(
             &mut body,
@@ -462,6 +464,7 @@ mod tests {
     #[test]
     fn resolve_edge_containing_param_picks_survivor_after_split() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let face = crate::brep::primitives::make_planar_face_from_points(
             &mut body,
             &[
@@ -470,6 +473,7 @@ mod tests {
                 Pnt3::new(4.0, 2.0, 0.0),
                 Pnt3::new(0.0, 2.0, 0.0),
             ],
+            &mut rec,
         )
         .expect("rect face");
         let outer = body.faces.get(face).unwrap().outer.unwrap();
@@ -477,7 +481,6 @@ mod tests {
         let e = body.edges.get(edge).unwrap().clone();
         let mid_t = (e.range.0 + e.range.1) * 0.5;
         let mid_p = body.curves3.get(e.curve).unwrap().eval(mid_t);
-        let mut rec = OpRecorder::new();
         let (e1, e2, _) = split_edge(&mut body, edge, mid_t, mid_p, &mut rec);
         let low_t = e.range.0 + (e.range.1 - e.range.0) * 0.25;
         let high_t = e.range.0 + (e.range.1 - e.range.0) * 0.75;

@@ -1,6 +1,78 @@
 # Durable baselines — distinguish "new breakage" from "the tree was already like this"
 
+## ⚠️⚠️ sccache produces a FALSE CLEAN — disable it for every verification run
+
+`.cargo/config.toml:2` sets `rustc-wrapper = "sccache"` repo-wide. sccache is currently failing with `Operation not permitted`, and the failure mode is **a green result, not an error**. Every cargo verification in this repo must be run as:
+
+```
+RUSTC_WRAPPER="" CARGO_TARGET_DIR=<ticket>/🎯️target cargo check -p <crate> --all-targets
+```
+
+**A false clean is strictly worse than a red result**: red makes you look, green makes you stop looking. Found by SMO after it cost them a run; it had already tainted an APA sweep over 24 migrated plugins that was in flight when they reported it — those results were discarded and the sweep restarted rather than quoted.
+
+Combine with the other two rules and the full trust condition for any cargo evidence in this repo is:
+1. `RUSTC_WRAPPER=""` — otherwise the result may be fabricated.
+2. `--all-targets` — plain `check` skips `#[cfg(test)]`; four separate repo-wide breaks hid in that gap today, including one that let a ticket close believing it was finished.
+3. **Confirm the run actually reached your targets.** A run that halts at an upstream crate never compiles yours, so "zero errors in X" from it means "cargo never got to X". SMO retracted their own claim on these grounds.
+
+## ⚠️ Structural verification cannot see `include_str!`
+
+APA's later W3 batches ran with cargo deliberately disabled and verified structurally — plugin root shape, every `#[path]` mount resolving on disk, dangling-reference greps, `cargo metadata` parsing. That was correct while the SDK was red and the disk was full, and it caught real breakage that a red-tree `cargo check` would have masked (one agent found 8 dangling `#[path]` mounts a *concurrent session* had left behind after a git rename).
+
+But `🖨️raster` was later found broken by an `include_str!` whose target moved one level — a path only the compiler resolves. **Structural checks tell you the shape is right; only the compiler tells you the shape is true.** Any plugin verified structurally must be re-verified by compiler before it is called done.
+
 Three sessions edit this tree concurrently and all three have lost time to that ambiguity. Record a baseline before changing anything, cite it afterwards. Provenance is established with `git log --oneline -- <path>` against the auto-commit flag counter (`🐙️ueli…🚩️<n>`), **never** with `git status` — the repo auto-commits, so recent work reads as clean.
+
+## The disk fix bought a compute problem — and why the framing was wrong
+
+Deleting the shared 428G root `target/` freed the volume and **simultaneously destroyed the shared build cache five sessions were implicitly amortising.** Every session now cold-rebuilds the same dependency graph into its own per-ticket `CARGO_TARGET_DIR`, in parallel. Measured consequence (DKM): **load average 149** on a machine whose healthy load is its core count — roughly 10× oversubscription, with five parallel `rustc` on `semio_s_plugin_stdio` alone.
+
+Operational rules while this lasts:
+- **Do not kill a slow build.** Check whether its target dir has *grown*, not whether files changed in the last minutes. DKM's exemplar ran 31 minutes, grew 441M → 943M, and touched nothing for 5 — starved, not stuck.
+- **Timing-based judgements are void.** A long-running check is not evidence of a problem.
+- **Parallel builds across sessions are negative-sum.** Five concurrent cold rebuilds finish later in aggregate than the same five serialized. APA cut an 8-crate sweep to 1 crate on this basis — 7 of the 8 answered no open question, and the one that mattered (`dag`) got its answer sooner.
+
+**The framing error, recorded because it is more reusable than the incident.** APA escalated the disk decision to the user as *"root `target/` is stale — nothing writes to it"*, supported by a real measurement (zero files changed in two hours). That was true. But **"nothing writes to it" and "nothing reads from it" are different claims, and only the first was measured** — while a build cache's entire value is in being read. The cost was therefore invisible at decision time, and neither the user nor any session could have weighed it from the question as posed.
+
+This is the same shape as the derived-artifact confusion running through this whole ticket: *the property that was easy to measure was substituted for the property that mattered.* When escalating a decision, state which property was actually measured, not just the conclusion it supports.
+
+## Include-path repair (2026-08-12 ~19:20) — resolved, with the method that made it safe
+
+A tree-wide relocation moved every artifact's `📚️examples` dir under `🏅️standards/🔖️1/🪆️subsets/✳️any/` and updated only some consumers, leaving ~30 crates uncompilable (`couldn't read …: No such file or directory (os error 2)` is a **hard error**). This is why every plugin gate run after ~18:08 came back red, independent of sccache and of the SDK window.
+
+Repaired in two complementary passes — SMO cleared the 7-deep family (30 files); APA then fixed the 14 it did not cover. **Current state: 4393 include targets under `✏️s/🔌️plugins`, 4 unresolved, all in `🗄️stdio`'s brand-new `✳️table` subset (UCAS, mid-authoring — expected).**
+
+### Two numbers that look contradictory and are both correct
+
+APA measured `targets=4343 unresolved=0`; SMO measured 4 unresolved minutes later. Neither was wrong: **UCAS's `✳️table` subset added 50 include targets between the runs.** The tree moved, not the measurement. This is the cleanest illustration of the day's recurring hazard — **a count without its timestamp is not a fact**, and several hours were lost across five sessions to numbers that were true when taken and stale when quoted.
+
+### Why the "obvious" fix would have caused damage
+
+A depth substitution (`7×../` → `3×../`) was proposed and retracted. Of APA's 14 files: 6 depth-only (two of which weren't `📚️examples` paths at all — a framework font, a manifest — so a scoped rewrite misses them), **7 needing a structurally different target** (insert `🏅️standards/🔖️1/🪆️subsets/✳️any/` mid-path, for references into *another* artifact's or plugin's examples), and **1 needing to get deeper** (7-up → 9-up). **8 of 14 would have been silently corrupted**, one in the opposite direction from the recipe.
+
+### A false-positive lesson from the E0753 sweep
+
+SMO found an `//!` inner doc comment at file scope after code in trinity's `📦️glue.rs` (E0753 — the crate could not compile) and asked APA to grep the other 23 plugins. A naive "`//!` after code" scan reported **70 hits, all false**: `//!` inside a `mod { … }` block is legal and common in test harnesses. Re-run with brace-depth tracking so only file-scope occurrences count: **0 real sites**. The class is closed, not merely unobserved — but only because the check was made precise before its output was believed.
+
+## ✅ Compiler-verified APA-migrated plugins (RUSTC_WRAPPER="" , --all-targets)
+
+| crate | result |
+|---|---|
+| `semio-s-plugin-gis` | **0 errors** |
+| `semio-s-plugin-fem` | **0 errors** |
+| `semio-s-plugin-trinity` | **0 errors** |
+| `semio-s-plugin-lowpoly` | **0 errors** — after the two repairs below |
+
+fem and trinity are the two largest relocations in the ticket (8 and 5 plugin-root compute dirs respectively, moved into artifact engines with crate-root module names kept stable so no call site changed). Both compile clean, which is the first real evidence that the relocation technique is sound and not merely structurally tidy.
+
+### `💠️lowpoly`'s two failures — one APA's, one pre-existing
+
+1. **`include_str!` to the relocated `📚️examples`** — APA's, fixed by re-resolution (see the include-path section).
+2. **`Value` vs `JsonValue` mismatch ×3 in lowpoly's json IO leaves — NOT APA's.** stdio replaced `serde_json::Value` with its own handcrafted `JsonValue` enum (key-order and lexeme preserving); lowpoly's consumer leaves still used `serde_json::from_value`/`to_value`.
+
+**Provenance, measured not assumed:** the stdio snapshot defining `JsonValue` was last committed at **flag 484/485**, and lowpoly's leaf at **flag 477**, both with mtime `Aug 12 10:50` — all of which predate APA's first commit (**flag 492**, ~15:12). The breakage was in the tree hours before this ticket opened.
+
+**Fixed anyway**, because lowpoly is APA-held and there was an unambiguous working exemplar: `🔱️trinity`'s json leaves bridge through json's own RFC8259 text codec (`parse_json_text` / `write_json_text` / `write_json_pretty`) rather than through `serde_json::Value`, and trinity compiles clean. Applied that same pattern to lowpoly's serializer and deserializer — a pattern copied from a verified sibling, not an invented conversion. stdio exposes no `JsonValue ↔ serde_json::Value` converter at all, which is deliberate per its own module docs ("No `serde_json::Value` anywhere in this file"), so the text bridge is the sanctioned route.
 
 ## Flag counter reference
 
@@ -64,6 +136,20 @@ Consequences, both material:
 ### `🧩️puzzle` is `blocked-churn`, not green and not broken
 
 `cargo check -p semio-s-plugin-puzzle --all-targets` died on the dependency above before reaching puzzle. **Zero errors originate in any `🔌️plugins/🧩️puzzle` path** (grep-verified), but nothing is proven. Recorded here rather than reported as a pass, because a third session (INFERENCE-FAMILY) is waiting on this answer before building on puzzle, and an optimistic "probably fine" would have them build on an unverified base.
+
+## ✅ RESOLVED — `semio-framework-plugin` is green again (2026-08-12 ~18:41)
+
+UCAS finished propagating the `document`→`artifact` rename. Independently polled: `semio-framework-plugin (lib) generated 37 warnings; Finished dev profile in 4m 20s` — **0 errors**. Scoped plugin gates are trustworthy again for the first time in hours.
+
+**Both directions of the outage window are void.** Any *red* result recorded while the SDK was broken says nothing about the crate under test — it failed upstream. Any *green* result recorded while the disk was full is equally worthless — those builds were failing on `No space left on device`, not passing. Re-run anything gated, baselined or released in that window, including anything concluded to be one's own regression.
+
+Also expect **cold rebuilds** now that root `target/` is gone (deleted by another session's user decision; volume went 99%/16Gi → 49%/442Gi). A scoped check running past 10 minutes is normal. **Slow is not hung — do not kill it.**
+
+### ⚠️ Do not "finish" the rename — `document_json` legitimately survives
+
+`document_json` still appears ~16 times in `🔌️plugin/🦀️component.rs` and **every one is correct.** Only `ExampleDefinition`'s *field* was renamed to `artifact_json`. `ExampleSource` keeps its own vocabulary — its field, constructor, method, and `payload()` alias accessor — plus the conversion sites `ExampleDefinition { artifact_json: self.document_json }` (:3505) and `artifact_json: source.document_json.clone()` (:3521).
+
+**A future grep for `document_json` in this file will look like unfinished migration work and is not.** Recorded here and in DKM's ticket from both sides, because this is precisely the shape of trap that gets "helpfully" cleaned up by a later pass.
 
 ## APA's own cargo baseline
 

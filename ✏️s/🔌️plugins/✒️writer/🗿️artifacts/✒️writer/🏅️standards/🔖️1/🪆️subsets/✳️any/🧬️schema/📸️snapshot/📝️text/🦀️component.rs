@@ -12,9 +12,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// 📄️ The `jack` example document, handcrafted in the `.writer` DSL (see `store::ArtifactDsl`) instead
 /// of JSON — {@link crate::artifacts::writer::engine::jack_example_document}/
 /// {@link crate::artifacts::writer::engine::jack_example_json} are the only ways it should be consumed.
-pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 /// 📄️ The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
-pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️dag-example.dsl.semio");
+pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️dag-example.dsl.semio");
 
 /// 📖️ Parses `.writer` DSL text into a `WriterSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<WriterSnapshot, store::TextError> {

@@ -1,0 +1,6 @@
+; RFC 5234 ABNF mirror (descriptive, not test-walked — the real byte-level walker is
+; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the SemioTableDiff binary frame.
+diff-frame  = format presence payload
+format      = OCTET               ; DIFF_BINARY_FORMAT, currently 1
+presence    = OCTET               ; bit0=columns, bit1=rows
+payload     = *OCTET              ; present sections only, each a varint count + per-item record

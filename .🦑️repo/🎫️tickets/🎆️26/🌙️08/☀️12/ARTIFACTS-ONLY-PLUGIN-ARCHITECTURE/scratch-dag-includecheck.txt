@@ -1,0 +1,3 @@
+TARGETED: does the include_str! depth bug actually break compilation?
+crate=semio-s-plugin-dag (mounted 📝️text module uses 4x ../ where 📚️examples is 3 up)
+19:10:01 start

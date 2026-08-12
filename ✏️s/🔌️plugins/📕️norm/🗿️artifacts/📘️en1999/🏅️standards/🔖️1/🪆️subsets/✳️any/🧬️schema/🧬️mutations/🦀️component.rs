@@ -126,6 +126,7 @@ impl En1999Mutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use protocol::Mutation;
 
     /// ⚖️ One value per `En1999Mutation` variant — the closed set the semantics/round-trip

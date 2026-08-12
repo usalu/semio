@@ -40,7 +40,10 @@
 //! to `db_compact`'s "online compaction with manifest CAS + fencing" — `retain_from` here is the
 //! safe, mechanical pruning primitive that caller is expected to call after fencing itself.
 
-use {check_len, DbError, ArtifactId, EpochFence};
+use crate::*;
+use crate::db_durability::Frontier;
+use crate::db_ids::{check_len, DbError, ArtifactId};
+use crate::db_durability::EpochFence;
 use db_state::Page;
 use db_storage::{LeaseInfo, LeaseStorage, SnapshotStorage};
 

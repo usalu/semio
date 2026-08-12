@@ -3,9 +3,10 @@
   "title": "JackInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["topology"],
+  "required": ["topology", "flatPosition"],
   "properties": {
-    "topology": { "$ref": "#/$defs/JackTopology", "x-semio-state": "inferred" }
+    "topology": { "$ref": "#/$defs/JackTopology", "x-semio-state": "inferred" },
+    "flatPosition": { "$ref": "#/$defs/JackFlatPosition", "x-semio-state": "inferred" }
   },
   "$defs": {
     "JackTopology": {
@@ -17,6 +18,23 @@
         "depth": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
         "cycleFree": { "type": "boolean" },
         "nodeCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "JackFlatPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["positions"],
+      "properties": {
+        "positions": { "type": "object", "additionalProperties": { "$ref": "#/$defs/JackFlatPositionUv" } }
+      }
+    },
+    "JackFlatPositionUv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["u", "v"],
+      "properties": {
+        "u": { "type": "number" },
+        "v": { "type": "number" }
       }
     }
   }

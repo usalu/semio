@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.object.diff/binary.json",
+  "title": "SemioObjectDiffFrame",
+  "type": "object",
+  "properties": { "format": { "type": "integer" }, "presence": { "type": "integer" }, "payload": { "type": "string", "contentEncoding": "hex" } }
+}

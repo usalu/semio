@@ -49,6 +49,14 @@ SMO is running wave-2 mass fan-out across `✏️s/🔌️plugins/**/🧬️muta
    - Detect churn with these instead: `git log --oneline -5 -- <path>` (recent commits touching it), `stat -f '%Sm' <path>` (mtime, macOS), `git log --oneline -3` (has the auto-committer advanced since you started?).
    - Never assume a clean tree means a file is safe to overwrite — read it first.
 
+## ⚠️ Agent dispatch rule — never let an agent wait on a background job
+
+Three agents in this ticket burned **~600k tokens each (≈1.8M total) producing nothing** by spawning background cargo checks / monitors and then idling in a "waiting for the notification" loop. Once in that state they self-report `completed` between wake-ups, so `TaskStop` refuses them as not-running while they keep re-notifying — effectively unkillable zombies.
+
+**Every agent brief must say, verbatim:** run cargo in the FOREGROUND and simply wait; `Blocking waiting for file lock on build directory` is normal under concurrent sessions; do NOT spawn background wait-tasks or monitors; do NOT idle in a wait loop. If a command seems to hang, it is compiling.
+
+Corollary for the orchestrator: an agent's *final message before dying* is worth reading — C1's dying line ("the plugin check failed with real compile errors") is the only reason a false "green" claim didn't go out to another session.
+
 ## Repo conventions learned during this ticket (obey these)
 
 1. **Derive crates keep two byte-identical copies.** `<module>/✨️derive/🦀️component.rs` and `<module>/✨️derive/📦️packages/🦀️rust/📦️glue.rs` must stay identical — Cargo compiles the *glue* copy, so editing only `component.rs` silently does nothing. Verified true for both `🧬️schema/✨️derive` and `🗣️dsl/✨️derive`. Edit one, then mirror it exactly, then `diff -q` the pair before reporting done.
@@ -56,6 +64,36 @@ SMO is running wave-2 mass fan-out across `✏️s/🔌️plugins/**/🧬️muta
 3. **`#[link(...)]` is unusable as a custom field attribute** — `link` is a built-in Rust attribute (extern-block FFI) and applying it to a field is a hard error (E0659/E0539/E0459), not a lint. The composition link-slot attribute is therefore `#[link_slot(roles("a", "b"))]`. The child attribute `#[child(kind = "s.stdio.mesh")]` is fine as-is.
 4. **Additive struct fields still break struct literals** (serde `default` only affects (de)serialization, not Rust construction). After adding a field, grep for `TypeName {` across the whole workspace — not just your crate — and either fix the literals or file them under `sharedFileRequests`.
 5. **Adding an enum variant is expensive** where the enum is matched exhaustively. Measure with `grep -rln "EnumName::"` before committing to it. (`Shape::` matches in ~20 files — see deviation D1 in `📓️status.md`.)
+
+## 🚨 D2 — 6 failing law tests in `✳️text`. ROOT CAUSE NOT YET CONFIRMED. Fix before authoring more subsets.
+
+> **Diagnosis correction (read this first).** This was initially written up as "whole-list diffs are the defect". That is **not yet established** and may be wrong. Evidence against it: `SemioTextDiff::apply` is correct (`next.runs = list.values.clone()`), and the failing assertion (`restored == ["hello"]` vs base `["hello","world"]`) is only reachable if the **forward mutation had no effect at all** — i.e. `InsertRun.diff(base).apply(base) == base`. That points at the dispatch enum failing to route a variant to its triad's `diff`, producing an empty diff, rather than at the diff's *shape*. The `🔺️diff` file also argues in-place that whole-list is honest for `text` specifically, since the snapshot has exactly one mutable field.
+>
+> **Find the real root cause before reworking anything.** Both concerns below stand on their own merits, but do not conflate them.
+
+### Concern A — the 6 failing tests (blocking, cause unknown)
+`text::…::{insert_remove_run_round_trips, add_remove_mark_round_trips, reorder_runs_round_trips}`, `text::io::…::fixture_honesty_law`, and `any::io::derived_composition::…::{diff_grammar_conformance_law, ops_grammar_conformance_law}`. Start by asserting `forward != base` inside `round_trip` — if that fires, the bug is dispatch routing, not diff shape.
+
+### Concern B — whole-list collection diffs (design, non-blocking)
+
+`✳️text` (and, copied from it, `✳️table` and `✳️graph`) declare their collection diff as a **whole-list replace**:
+
+```rust
+pub struct SemioTextDiff { pub runs: Option<SemioTextRunList> }   // SemioTextRunList = the ENTIRE Vec
+// …and each 🔺️diff leaf does:
+let mut runs = base.runs.clone(); runs.insert(at, payload.run.clone());
+SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) }
+```
+
+**This is apply-then-capture in disguise** — it computes the post-state and stores it wholesale — which `📓️taxonomy.md` forbids ("build the sparse diff directly from `(payload, base)` — never apply-then-capture"). It is also a whole-object replace of the collection, the very shape this programme exists to eliminate.
+
+**Consequences already observed**: 6 real test failures — `✳️text`'s `insert_remove_run_round_trips`, `add_remove_mark_round_trips`, `reorder_runs_round_trips`, its `fixture_honesty_law`, plus `✳️any`'s `diff_grammar_conformance_law` and `ops_grammar_conformance_law`. Inverses only restore correctly if each is diffed against the *current* state rather than `base`, which the test harness had to special-case with a comment explaining the fragility. That fragility IS the defect.
+
+**Correct primitive — already exists, use it**: `📡️spr/🎮️command/🦀️component.rs` provides `IndexedTripleDiff<V, Patch>` + `indexed_apply` (`:510`, `:531`) for ordered/index-addressed collections and `NamedTripleDiff<K, V, Patch>` + `named_apply` (`:468`, `:489`) for keyed ones. Ordered run/row/node lists take `IndexedTripleDiff`; name- or id-keyed collections take `NamedTripleDiff`.
+
+**Why the audit missed it**: the four mechanical gates check that a real `pub fn diff` *exists*, not that it is *sparse*. A structural pass cannot catch this — only running the law tests does. **A structural audit is not a correctness audit.**
+
+**Action**: rework `✳️text`, `✳️table`, `✳️graph` onto DiffKit before authoring spatial `object` and `kit`, and before any of this reaches the 33-plugin fan-out.
 
 ## Authoring a `🧬️mutations` facet (BINDING — agreed with the SMO session)
 

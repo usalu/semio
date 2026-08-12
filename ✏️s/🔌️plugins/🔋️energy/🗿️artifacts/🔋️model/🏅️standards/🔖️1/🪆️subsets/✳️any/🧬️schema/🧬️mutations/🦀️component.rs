@@ -36,6 +36,7 @@ pub enum EnergyModelMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use protocol::Mutation;
 
     fn every_mutation() -> Vec<EnergyModelMutation> {

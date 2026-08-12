@@ -27,9 +27,11 @@
 //! `TouchedRegionOracle` (plain `TouchedSet::conflicts_with`, no bloom prefilter or kind matrix)
 //! remains available for callers that want to bypass `db_conflict` entirely.
 
-use {check_len, ActorId, DbError, DbLimits, ArtifactId, Frontier};
-use db_state::TouchedSet;
-use protocol::MutationEnvelope;
+use crate::*;
+use crate::db_durability::Frontier;
+use crate::db_ids::{check_len, ActorId, DbError, DbLimits, ArtifactId};
+use crate::db_state::TouchedSet;
+use crate::protocol::MutationEnvelope;
 use std::collections::HashMap;
 
 //#region 🔖️Identity
@@ -820,12 +822,12 @@ mod tests {
     /// token literals living inside THIS test do not trip the check against themselves.
     #[test]
     fn preview_crate_never_references_wal_shaped_symbols() {
-        let manifest = include_str!("../../../👁️preview/⚡️implementations/🦀️rust/Cargo.toml");
+        let manifest = include_str!("../📦️packages/🦀️rust/Cargo.toml");
         for forbidden_dependency in ["db_wal", "db_storage", "db_snapshot", "db_artifact", "db_engine"] {
             assert!(!manifest.contains(forbidden_dependency), "db_preview's Cargo.toml must not depend on {forbidden_dependency:?} — previews are never durable");
         }
 
-        let source = include_str!("../../../👁️preview/⚡️implementations/🦀️rust/📦️lib.rs");
+        let source = include_str!("🦀️component.rs");
         let marker = "//#region 🧪️Tests";
         let production_source = source.split(marker).next().expect("this file must contain its own tests region marker");
         let forbidden_tokens = ["Wal", "SprWriter", "FrameCursor", "recover(", "SnapshotStorage", "PayloadStorage", "CatalogStorage", "std::fs::", "std::io::", "fsync", "write_atomic"];

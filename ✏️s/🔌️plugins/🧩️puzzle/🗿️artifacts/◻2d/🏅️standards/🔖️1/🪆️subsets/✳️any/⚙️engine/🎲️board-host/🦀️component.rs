@@ -338,7 +338,7 @@ mod tests {
     /// 🔗️ Keeps the runtime kind-catalog JSON shape in sync with the compile-time `puzzle2d-default` manifest.
     #[test]
     fn puzzle2d_default_manifest_satisfies_board_host_validation() {
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../🛂️manifest.jsondefault.manifest.json")).unwrap();
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🛂️manifest.jsondefault.manifest.json")).unwrap();
         let handle_kinds: Vec<serde_json::Value> =
             manifest["portKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "color": row["presentation"]["color"], "defaultWireKind": row["presentation"]["defaultWireKind"] })).collect();
         let wire_kinds: Vec<serde_json::Value> = manifest["wireKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "defaultEdgeKind": row["presentation"]["defaultEdgeKind"] })).collect();

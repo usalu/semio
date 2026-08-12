@@ -244,7 +244,7 @@ impl store::ArtifactPack for JackSnapshot {
 //#endregion 🔖️Pack
 
 /// 📄️ The Nakagin Capsule Tower example fixture, handcrafted in the `.trinity` DSL.
-pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.trinity` DSL text into a `JackSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {
@@ -284,7 +284,7 @@ mod tests {
         let nakagin = parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap();
         ::store::os_store::test_support::assert_dsl_round_trip(&nakagin);
         ::store::os_store::test_support::assert_dsl_pack_equivalence(&nakagin);
-        let branch = parse_dsl(include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).unwrap();
+        let branch = parse_dsl(include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).unwrap();
         ::store::os_store::test_support::assert_dsl_round_trip(&branch);
         ::store::os_store::test_support::assert_dsl_pack_equivalence(&branch);
     }

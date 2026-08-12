@@ -234,7 +234,7 @@ pub fn import_triangle_mesh_to_body(body: &mut Body, mesh: &TriangleMesh, tolera
         } else if flip_all {
             std::mem::swap(&mut p1, &mut p2);
         }
-        let face = make_planar_face_from_points(body, &[p0, p1, p2])?;
+        let face = make_planar_face_from_points(body, &[p0, p1, p2], &mut rec)?;
         face_ids.push(face);
     }
     if face_ids.is_empty() {
@@ -366,7 +366,8 @@ mod tests {
     #[test]
     fn export_box_mesh_stl_nonempty() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let bytes = export_solid_stl(&body, solid, 0.1, StlFormat::Binary).unwrap();
         assert!(bytes.len() > 84, "binary STL must include header and triangles");
         let tri_count = u32::from_le_bytes(bytes[80..84].try_into().unwrap());
@@ -376,7 +377,8 @@ mod tests {
     #[test]
     fn import_stl_produces_faces() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let bytes = export_solid_stl(&body, solid, 0.1, StlFormat::Binary).unwrap();
         let mut imported_body = Body::new();
         let imported = import_stl_to_body(&mut imported_body, &bytes, 1e-4).unwrap();
@@ -386,7 +388,8 @@ mod tests {
     #[test]
     fn stl_ascii_round_trip_preserves_triangle_count() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
         let binary = export_solid_stl(&body, solid, 0.05, StlFormat::Binary).unwrap();
         let mesh = import_stl(&binary).unwrap();
         let ascii = export_stl(&mesh, StlFormat::Ascii).unwrap();
@@ -397,7 +400,8 @@ mod tests {
     #[test]
     fn obj_export_import_round_trip() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let text = export_solid_obj(&body, solid, 0.1).unwrap();
         assert!(text.contains("v "));
         let mesh = import_obj(&text).unwrap();
@@ -407,7 +411,8 @@ mod tests {
     #[test]
     fn glb_export_import_round_trip() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let bytes = export_solid_glb(&body, solid, 0.1).unwrap();
         assert!(!bytes.is_empty());
         let mesh = import_glb(&bytes).unwrap();
@@ -417,7 +422,8 @@ mod tests {
     #[test]
     fn import_glb_to_body_has_faces() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let bytes = export_solid_glb(&body, solid, 0.1).unwrap();
         let mut imported = Body::new();
         let imported_solid = import_glb_to_body(&mut imported, &bytes, 1e-4).unwrap();

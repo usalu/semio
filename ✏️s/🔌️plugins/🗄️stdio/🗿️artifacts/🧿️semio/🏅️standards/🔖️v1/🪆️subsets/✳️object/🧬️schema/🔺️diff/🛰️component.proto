@@ -1,0 +1,10 @@
+syntax = "proto3";
+// 🔺️ SemioObjectDiff schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+package semio.s_stdio_semio_object.diff;
+
+message SemioObjectDiff {
+  bool transform_touched = 1;
+  bool brep_touched = 2;
+  bool mesh_touched = 3;
+  bool properties_touched = 4;
+}

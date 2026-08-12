@@ -42,11 +42,14 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use DbError;
+use crate::*;
+use crate::db_ids::{DbError, ArtifactId, ActorId};
+
 
 //#region 🔖️Reexports
-pub use {DbCapabilities, DbConfig, DurabilityClass, Profile};
-pub use db_storage::DbStorage;
+pub use crate::db_policy::{DbCapabilities, DbConfig, Profile};
+pub use crate::db_durability::DurabilityClass;
+pub use crate::db_storage::DbStorage;
 //#endregion 🔖️Reexports
 
 //#region 🔖️Ids
@@ -92,7 +95,7 @@ impl Frontier {
     }
 }
 
-fn to_engine_frontier(core: &Frontier, document: protocol::ArtifactId) -> Frontier {
+fn to_engine_frontier(core: &crate::db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
     Frontier { document, head_seq: core.head_seq, commit_seq: core.commit_seq, chain_hash: core.chain_hash, epoch: core.epoch }
 }
 //#endregion 🔖️Frontier
@@ -260,7 +263,8 @@ impl db_artifact::AuthzHook for SecurityAuthzHook {
 /// `vcs` Cargo feature).
 #[cfg(feature = "vcs")]
 pub mod vcs_integration {
-    use DbError;
+    use crate::db_ids::*;
+    use crate::db_version_graph::*;
     use std::collections::HashMap;
     use std::sync::Mutex;
 
@@ -800,7 +804,7 @@ impl Database {
     /// @emoji 📇️ The frozen `catalog`: a point-in-time read of every document this `Database`
     /// knows about.
     pub fn catalog(&self) -> CatalogView {
-        CatalogView { documents: self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.clone() }
+        CatalogView { artifacts: self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.clone() }
     }
 
     /// @emoji 🩺️ The frozen `health`: this `Database`'s `HealthRegistry` snapshot plus its own open
@@ -1055,7 +1059,7 @@ mod tests {
     fn open_at_creates_a_fresh_zero_touch_database_with_an_empty_catalog() {
         let root = tempdir("open-at-fresh");
         let database = Database::open_at(&root, Profile::Test).unwrap();
-        assert!(database.catalog().documents.is_empty());
+        assert!(database.catalog().artifacts.is_empty());
         assert_eq!(database.health().open_artifacts, 0);
         assert!(matches!(database.health().report.overall, db_observe::HealthState::Healthy));
     }
@@ -1068,8 +1072,8 @@ mod tests {
         database.create_document(ArtifactSpec::new(document.clone())).unwrap();
 
         let catalog = database.catalog();
-        assert_eq!(catalog.documents.len(), 1);
-        assert_eq!(catalog.documents[0].document, document);
+        assert_eq!(catalog.artifacts.len(), 1);
+        assert_eq!(catalog.artifacts[0].document, document);
 
         let handle = database.document(&document).unwrap();
         assert_eq!(handle.document_id(), &document);
@@ -1138,7 +1142,7 @@ mod tests {
         }
 
         let reopened = Database::open_at(&root, Profile::Test).unwrap();
-        assert_eq!(reopened.catalog().documents.len(), 1, "the catalog root must have survived the reopen");
+        assert_eq!(reopened.catalog().artifacts.len(), 1, "the catalog root must have survived the reopen");
 
         let handle = reopened.document(&document).unwrap();
         let queried = handle.query(Query::Get { path: "count".to_string() }, Consistency::Canonical).unwrap();

@@ -1,0 +1,16 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.kit/mutations.json",
+  "title": "SemioKitMutation",
+  "description": "Fifteen-variant mutation dispatch across two owned-child collections, one optional owned-child slot, one link collection, and two id-keyed value collections.",
+  "type": "object",
+  "properties": {
+    "mutation": {
+      "enum": [
+        "createObject", "deleteObject", "createModel", "deleteModel", "createProperties", "deleteProperties",
+        "bindRepresentation", "unbindRepresentation", "changeRepresentationPin",
+        "addType", "removeType", "renameType", "addDesign", "removeDesign", "editDesign"
+      ]
+    },
+    "payload": { "type": "object" }
+  }
+}

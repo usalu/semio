@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.object.mutations/text.json",
+  "title": "SemioObjectMutationDsl",
+  "type": "object",
+  "properties": { "line": { "type": "string" } }
+}

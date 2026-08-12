@@ -943,12 +943,6 @@
           "name": "tier",
           "kind": "data",
           "valueType": "number"
-        },
-        {
-          "name": "flatPosition",
-          "kind": "derived",
-          "valueType": "object",
-          "expr": "flatFromConnections"
         }
       ]
     }

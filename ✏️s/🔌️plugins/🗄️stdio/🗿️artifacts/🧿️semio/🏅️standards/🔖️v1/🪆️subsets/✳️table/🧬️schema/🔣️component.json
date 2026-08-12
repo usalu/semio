@@ -1,0 +1,12 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.table/artifact.json",
+  "title": "SemioTableArtifact",
+  "description": "Full artifact state for s.stdio.semio.table — mirrors SemioTableSnapshot field for field.",
+  "type": "object",
+  "required": ["schema", "columns", "rows"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "columns": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } },
+    "rows": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+  }
+}

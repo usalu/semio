@@ -1,0 +1,1 @@
+type SemioKitSnapshotPackHeader { format: Int! schemaLen: Int! schemaBytes: String! payload: String! }

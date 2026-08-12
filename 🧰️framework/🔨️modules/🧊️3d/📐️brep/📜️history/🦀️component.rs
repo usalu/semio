@@ -21,10 +21,21 @@ impl LabelSource {
     pub fn new() -> Self {
         LabelSource { next: 0 }
     }
+    /// 📜️ Seeds the counter at an explicit high-water mark rather than restarting at 0 — used by
+    /// [`crate::brep::topo::Body`]'s `EngineRep::build` so a rebuild from a persisted seed carries
+    /// the label numbering forward instead of colliding with the labels it is restoring.
+    pub fn from_next(next: u64) -> Self {
+        LabelSource { next }
+    }
     pub fn next_label(&mut self) -> PersistentLabel {
         let label = PersistentLabel(self.next);
         self.next += 1;
         label
+    }
+    /// 📜️ The next label this source would mint — the high-water mark a seed must carry forward
+    /// (see [`Self::from_next`]) so a rebuilt `Body` never re-mints a label already in use.
+    pub fn next(&self) -> u64 {
+        self.next
     }
 }
 
@@ -95,6 +106,17 @@ impl OpRecorder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 📜️ `from_next`/`next` are the pair `Body`'s `EngineRep` impl uses to carry the label
+    /// high-water-mark forward across a rebuild instead of restarting at 0 (see `crate::brep::topo`).
+    #[test]
+    fn from_next_seeds_the_counter_and_next_reports_it_without_advancing() {
+        let mut source = LabelSource::from_next(42);
+        assert_eq!(source.next(), 42);
+        assert_eq!(source.next(), 42, "next() must be a pure read, not itself advance the counter");
+        assert_eq!(source.next_label(), PersistentLabel(42));
+        assert_eq!(source.next(), 43);
+    }
 
     #[test]
     fn label_source_never_repeats() {

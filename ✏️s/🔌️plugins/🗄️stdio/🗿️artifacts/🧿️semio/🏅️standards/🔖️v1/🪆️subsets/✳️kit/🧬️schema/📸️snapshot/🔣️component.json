@@ -1,0 +1,16 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.kit/snapshot.json",
+  "title": "SemioKitSnapshot",
+  "description": "Semio's type/design domain: types with representation links, designs of pieces and connections. Second COMPOSITE subset.",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "types": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object", "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "category": { "type": "string" } } } },
+    "designs": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } },
+    "objects": { "type": "array", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.object", "items": { "type": "object" } },
+    "models": { "type": "array", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.model", "items": { "type": "object" } },
+    "properties": { "type": "object", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.value" },
+    "representations": { "type": "array", "x-semio-state": "persistent", "x-semio-link": "representation", "items": { "type": "object" } }
+  }
+}

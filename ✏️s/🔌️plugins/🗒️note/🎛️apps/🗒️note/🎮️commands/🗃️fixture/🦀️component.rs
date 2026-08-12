@@ -66,7 +66,7 @@ mod tests {
     /// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
     /// itself, mirroring `fem2d`'s `set_active_example` test of the same `HostEffect::LoadDocument`
     /// reroute (whole-document replace is banned from the `Mutation` enum outright).
-    fn empty_view() -> (NoteSnapshot, semio_framework_plugin::HistoryView<'static>) {
+    fn empty_view() -> (NoteSnapshot, semio_framework_plugin::HistoryView) {
         (empty_note_snapshot(), semio_framework_plugin::HistoryView::empty())
     }
 

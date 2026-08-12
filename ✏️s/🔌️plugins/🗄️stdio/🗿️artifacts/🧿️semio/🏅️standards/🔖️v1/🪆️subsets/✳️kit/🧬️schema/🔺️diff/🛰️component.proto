@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_semio_kit.diff;
+message SemioKitDiff {
+  bool types_touched = 1; bool designs_touched = 2; bool objects_touched = 3;
+  bool models_touched = 4; bool properties_touched = 5; bool representations_touched = 6;
+}

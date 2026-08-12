@@ -422,6 +422,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
 
     #[test]
     fn move_object_diff_absorb_law() {

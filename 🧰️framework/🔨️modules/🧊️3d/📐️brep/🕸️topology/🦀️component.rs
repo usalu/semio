@@ -3,12 +3,15 @@
 //! owning directly. **Host authority:** construct `Body` only inside an `Engine::compute` call or a
 //! host-owned `EngineCache` entry — never as long-lived plugin state.
 
-use crate::brep::arena::{CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
+use std::collections::HashMap;
+
+use crate::brep::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
 use crate::brep::curve::{Curve2, Curve3};
 use crate::brep::history::{LabelSource, PersistentLabel};
 use crate::brep::surface::Surface;
 use crate::brep::tolerance::Tol;
 use crate::brep::vec::Pnt3;
+use semio_framework_os_kernel::EngineRep;
 
 // #region 🔖️Entities
 
@@ -187,6 +190,253 @@ impl Body {
 
 // #endregion 🔖️Remap
 
+// #region 🔖️EngineRep
+
+/// 🌱 One restored vertex, keyed by its own [`PersistentLabel`] rather than a persisted string id
+/// — translating a snapshot's own id convention into `PersistentLabel` is the caller's job (see
+/// [`crate::brep::history`]'s own docstring on why a label is never reused), done once per
+/// diff-constructor call, not baked into this ephemeral seed's own shape.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct SeedVertex {
+    pub label: PersistentLabel,
+    pub position: Pnt3,
+    pub tol: Tol,
+}
+
+/// 🌱 One restored edge; `v0`/`v1` reference [`SeedVertex::label`]s, not arena ids.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct SeedEdge {
+    pub label: PersistentLabel,
+    pub v0: PersistentLabel,
+    pub v1: PersistentLabel,
+    pub curve: Curve3,
+    pub range: (f64, f64),
+    pub tol: Tol,
+}
+
+/// 🌱 One restored face; `outer`/`inners` are indices into [`BrepArenaSeed::loops`] — loops carry
+/// no [`PersistentLabel`] of their own (structural, not independently document-nameable, per
+/// [`crate::brep::euler::make_loop`]'s own docstring), so an ordinal index is the only address.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct SeedFace {
+    pub label: PersistentLabel,
+    pub surface: Surface,
+    pub outer: Option<usize>,
+    pub inners: Vec<usize>,
+    pub flipped: bool,
+    pub tol: Tol,
+}
+
+/// 🌱 One restored shell; `faces` references [`SeedFace::label`]s.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct SeedShell {
+    pub label: PersistentLabel,
+    pub faces: Vec<PersistentLabel>,
+}
+
+/// 🌱 One restored solid; `outer`/`inners` reference [`SeedShell::label`]s.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct SeedSolid {
+    pub label: PersistentLabel,
+    pub outer: PersistentLabel,
+    pub inners: Vec<PersistentLabel>,
+}
+
+/// 🌱 A pure, ephemeral, tier-(d) working representation of a whole [`Body`] — the `P` in
+/// `EngineRep<P>`. Never persisted, never registered as an artifact schema, never a second
+/// `SemioBrepSnapshot`: it exists only for the span of one diff-constructor call, built from
+/// whatever snapshot the caller (stdio's `✳️brep` subset, once its mutation triads land) owns.
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct BrepArenaSeed {
+    /// 🌱 The label high-water-mark to seed [`LabelSource::from_next`] with — MUST be carried
+    /// forward from the persisted snapshot, never reset to 0, or two independent diff-constructor
+    /// calls against the same `base` would mint colliding labels the instant both merge.
+    pub next_label: u64,
+    pub vertices: Vec<SeedVertex>,
+    pub edges: Vec<SeedEdge>,
+    pub loops: Vec<Vec<(PersistentLabel, bool)>>,
+    pub faces: Vec<SeedFace>,
+    pub shells: Vec<SeedShell>,
+    pub solids: Vec<SeedSolid>,
+}
+
+fn placeholder_face_for_build() -> FaceId {
+    ArenaId::from_raw(0, 0)
+}
+
+impl EngineRep<BrepArenaSeed> for Body {
+    /// 🌱 Reconstructs a `Body` from `seed`, inserting directly into each `Store` — the ONE place
+    /// outside [`crate::brep::euler`] allowed to construct topology entities directly. This
+    /// mirrors euler's own "the *only* functions permitted to mutate a `Body`" docstring rather
+    /// than violating it: `build` constructs a *fresh* `Body`, it does not mutate an existing one.
+    /// It must NOT call `euler::make_vertex`/`make_edge`/`add_face`/`add_shell`/`add_solid` — those
+    /// mint a *fresh* label every time, which is correct for a genuine user-facing create but wrong
+    /// here, where the whole point is restoring each entity's *existing* label from the seed;
+    /// calling them would silently break the round-trip law below. `euler::make_loop` is the one
+    /// euler function this DOES call, because loops carry no label to preserve or break.
+    fn build(seed: &BrepArenaSeed) -> Self {
+        let mut body = Body::new();
+        body.labels = LabelSource::from_next(seed.next_label);
+
+        let mut vertex_ids: HashMap<PersistentLabel, VertexId> = HashMap::with_capacity(seed.vertices.len());
+        for v in &seed.vertices {
+            let id = body.vertices.insert(Vertex { position: v.position, tol: v.tol, label: v.label });
+            vertex_ids.insert(v.label, id);
+        }
+
+        let mut edge_ids: HashMap<PersistentLabel, EdgeId> = HashMap::with_capacity(seed.edges.len());
+        for e in &seed.edges {
+            let curve_id = body.curves3.insert(e.curve.clone());
+            let id = body.edges.insert(Edge {
+                curve: curve_id,
+                range: e.range,
+                v0: vertex_ids[&e.v0],
+                v1: vertex_ids[&e.v1],
+                tol: e.tol,
+                label: e.label,
+            });
+            edge_ids.insert(e.label, id);
+        }
+
+        let placeholder = placeholder_face_for_build();
+        let loop_ids: Vec<LoopId> = seed
+            .loops
+            .iter()
+            .map(|ring| {
+                let members: Vec<(EdgeId, bool)> = ring.iter().map(|(label, forward)| (edge_ids[label], *forward)).collect();
+                crate::brep::euler::make_loop(&mut body, placeholder, &members)
+            })
+            .collect();
+
+        let mut face_ids: HashMap<PersistentLabel, FaceId> = HashMap::with_capacity(seed.faces.len());
+        for f in &seed.faces {
+            let surface_id = body.surfaces.insert(f.surface.clone());
+            let outer = f.outer.map(|i| loop_ids[i]);
+            let inners: Vec<LoopId> = f.inners.iter().map(|&i| loop_ids[i]).collect();
+            let id = body.faces.insert(Face {
+                surface: surface_id,
+                outer,
+                inners: inners.clone(),
+                flipped: f.flipped,
+                tol: f.tol,
+                label: f.label,
+            });
+            if let Some(outer_id) = outer {
+                body.loops.get_mut(outer_id).expect("just inserted").face = id;
+            }
+            for inner_id in &inners {
+                body.loops.get_mut(*inner_id).expect("just inserted").face = id;
+            }
+            face_ids.insert(f.label, id);
+        }
+
+        let mut shell_ids: HashMap<PersistentLabel, ShellId> = HashMap::with_capacity(seed.shells.len());
+        for s in &seed.shells {
+            let faces = s.faces.iter().map(|l| face_ids[l]).collect();
+            let id = body.shells.insert(Shell { faces, label: s.label });
+            shell_ids.insert(s.label, id);
+        }
+
+        for s in &seed.solids {
+            let outer = shell_ids[&s.outer];
+            let inners = s.inners.iter().map(|l| shell_ids[l]).collect();
+            body.solids.insert(Solid { outer, inners, label: s.label });
+        }
+
+        body
+    }
+}
+
+/// 🌱 The mirror-image half of [`EngineRep::build`] — extracts an equivalent [`BrepArenaSeed`]
+/// from a live `Body`. Needed by the round-trip law (`to_seed(&Body::build(&seed)) == seed`) and
+/// by a future diff constructor, which reads post-op state back out this way to translate into a
+/// `SemioBrepDiff` via the label↔snapshot-id map it owns.
+pub fn to_seed(body: &Body) -> BrepArenaSeed {
+    let vertex_label = |id: VertexId| -> PersistentLabel { body.vertices.get(id).expect("live vertex").label };
+    let edge_label = |id: EdgeId| -> PersistentLabel { body.edges.get(id).expect("live edge").label };
+    let face_label = |id: FaceId| -> PersistentLabel { body.faces.get(id).expect("live face").label };
+    let shell_label = |id: ShellId| -> PersistentLabel { body.shells.get(id).expect("live shell").label };
+
+    let vertices: Vec<SeedVertex> = body
+        .vertices
+        .iter()
+        .map(|(_, v)| SeedVertex { label: v.label, position: v.position, tol: v.tol })
+        .collect();
+
+    let edges: Vec<SeedEdge> = body
+        .edges
+        .iter()
+        .map(|(_, e)| SeedEdge {
+            label: e.label,
+            v0: vertex_label(e.v0),
+            v1: vertex_label(e.v1),
+            curve: body.curves3.get(e.curve).expect("live curve").clone(),
+            range: e.range,
+            tol: e.tol,
+        })
+        .collect();
+
+    // One entry per distinct LoopId, in the order faces first reference it — the same order
+    // `build` assigns indices in, which is what the round-trip law needs to hold.
+    let mut loops: Vec<Vec<(PersistentLabel, bool)>> = Vec::new();
+    let mut loop_index: HashMap<LoopId, usize> = HashMap::new();
+    let mut faces: Vec<SeedFace> = Vec::with_capacity(body.faces.len());
+    for (_, f) in body.faces.iter() {
+        let mut resolve_loop = |loop_id: LoopId| -> usize {
+            if let Some(&i) = loop_index.get(&loop_id) {
+                return i;
+            }
+            let ring: Vec<(PersistentLabel, bool)> = body
+                .loop_coedges(loop_id)
+                .into_iter()
+                .filter_map(|cid| body.coedges.get(cid).map(|c| (edge_label(c.edge), c.forward)))
+                .collect();
+            let i = loops.len();
+            loops.push(ring);
+            loop_index.insert(loop_id, i);
+            i
+        };
+        let outer = f.outer.map(|l| resolve_loop(l));
+        let inners: Vec<usize> = f.inners.iter().map(|&l| resolve_loop(l)).collect();
+        faces.push(SeedFace {
+            label: f.label,
+            surface: body.surfaces.get(f.surface).expect("live surface").clone(),
+            outer,
+            inners,
+            flipped: f.flipped,
+            tol: f.tol,
+        });
+    }
+
+    let shells: Vec<SeedShell> = body
+        .shells
+        .iter()
+        .map(|(_, s)| SeedShell { label: s.label, faces: s.faces.iter().map(|&f| face_label(f)).collect() })
+        .collect();
+
+    let solids: Vec<SeedSolid> = body
+        .solids
+        .iter()
+        .map(|(_, s)| SeedSolid {
+            label: s.label,
+            outer: shell_label(s.outer),
+            inners: s.inners.iter().map(|&sh| shell_label(sh)).collect(),
+        })
+        .collect();
+
+    BrepArenaSeed {
+        next_label: body.labels.next(),
+        vertices,
+        edges,
+        loops,
+        faces,
+        shells,
+        solids,
+    }
+}
+
+// #endregion 🔖️EngineRep
+
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
@@ -344,6 +594,75 @@ mod tests {
         let mut copy = body.deep_copy();
         copy.vertices.get_mut(v).unwrap().position = Pnt3::new(9.0, 9.0, 9.0);
         assert_ne!(body.vertices.get(v).unwrap().position, copy.vertices.get(v).unwrap().position);
+    }
+
+    /// 🌱 Law A from the W3a-0 design: `to_seed(&Body::build(&seed)) == seed`. Exercised against a
+    /// real closed solid (a box built exclusively through the checked euler editors) rather than a
+    /// hand-assembled fixture, so the seed under test has the same shape a real diff constructor's
+    /// extraction would produce.
+    #[test]
+    fn engine_rep_build_round_trips_a_closed_box_through_to_seed() {
+        let mut body = Body::new();
+        let mut rec = crate::brep::history::OpRecorder::new();
+        crate::brep::primitives::make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
+
+        let seed = to_seed(&body);
+        assert_eq!(seed.vertices.len(), 8);
+        assert_eq!(seed.edges.len(), 12);
+        assert_eq!(seed.faces.len(), 6);
+        assert_eq!(seed.shells.len(), 1);
+        assert_eq!(seed.solids.len(), 1);
+
+        let rebuilt = Body::build(&seed);
+        let round_tripped = to_seed(&rebuilt);
+        assert_eq!(seed, round_tripped, "to_seed(Body::build(seed)) must equal seed");
+    }
+
+    /// 🌱 The same law on a simpler, loop-free-of-holes single face — guards the `outer`/`inners`
+    /// index bookkeeping independently of a full closed solid's shell/solid wrapping.
+    #[test]
+    fn engine_rep_build_round_trips_a_loose_planar_face() {
+        let mut body = Body::new();
+        let mut rec = crate::brep::history::OpRecorder::new();
+        crate::brep::primitives::make_planar_face_from_points(
+            &mut body,
+            &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)],
+            &mut rec,
+        )
+        .unwrap();
+
+        let seed = to_seed(&body);
+        let rebuilt = Body::build(&seed);
+        assert_eq!(to_seed(&rebuilt), seed);
+    }
+
+    /// 🌱 `LabelSource` determinism (the frozen W1 `EngineRep` contract, "build(s) equals build(s)
+    /// for byte-identical s"): rebuilding the same seed twice must not re-mint or collide labels.
+    #[test]
+    fn engine_rep_build_is_deterministic_for_identical_seeds() {
+        let mut body = Body::new();
+        let mut rec = crate::brep::history::OpRecorder::new();
+        crate::brep::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let seed = to_seed(&body);
+
+        let a = Body::build(&seed);
+        let b = Body::build(&seed);
+        assert_eq!(to_seed(&a), to_seed(&b));
+    }
+
+    /// 🌱 The seed's `next_label` must survive `build`, not reset to 0 — otherwise two independent
+    /// diff-constructor calls against the same `base` mint colliding labels the instant they merge
+    /// (the exact defect §2 of the design flags for a `LabelSource` that restarts at 0 every build).
+    #[test]
+    fn engine_rep_build_preserves_the_label_high_water_mark() {
+        let mut body = Body::new();
+        let mut rec = crate::brep::history::OpRecorder::new();
+        crate::brep::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let seed = to_seed(&body);
+        assert!(seed.next_label > 0, "a box mints more than zero labels");
+
+        let rebuilt = Body::build(&seed);
+        assert_eq!(rebuilt.labels.next(), seed.next_label);
     }
 }
 // #endregion 🔖️Tests

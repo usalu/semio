@@ -1,0 +1,54 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling zmij v1.0.21
+   Compiling thiserror v2.0.18
+   Compiling serde_json v1.0.149
+   Compiling serde v1.0.228
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.0
+   Compiling syn v2.0.117
+   Compiling thiserror-impl v2.0.18
+   Compiling serde_derive v1.0.228
+   Compiling semio-framework-machine-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-machine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 7m 59s
+     Running unittests 📦️glue.rs (.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES/🎯️target/debug/deps/semio_framework_machine-96746197b6d765a9)
+
+running 26 tests
+test component::checkout_integration::dsl_machine_walks_cart_to_receipt ... ok
+test component::checkout_integration::dsl_machine_cancel_resume_round_trips_via_shallow_history ... ok
+test component::host::tests::test_host_advance_fires_due_timers_only ... ok
+test component::host::tests::test_host_cancel_timer_removes_pending ... ok
+test component::checkout_integration::dsl_machine_coverage_reaches_every_declared_state ... ok
+test component::host::tests::test_host_records_effects_and_task_lifecycle ... ok
+test component::inspect::tests::null_inspector_observes_nothing_observable ... ok
+test component::inspect::tests::trace_inspector_records_one_microstep_per_transition ... ok
+test component::kernel::tests::flat_machine_toggles_and_counts ... ok
+test component::kernel::tests::guard_blocks_transition_when_false ... ok
+test component::kernel::tests::hierarchical_machine_enters_default_descendant ... ok
+test component::kernel::tests::hierarchical_machine_transitions_into_compound_default ... ok
+test component::kernel::tests::parallel_done_bubbles_only_once_every_region_finishes ... ok
+test component::kernel::tests::parallel_regions_enter_together ... ok
+test component::kernel::tests::shallow_history_restores_last_active_child ... ok
+test component::persist::tests::restore_applies_migration_chain_until_fingerprint_matches ... ok
+test component::persist::tests::persist_then_restore_round_trips_active_state ... ok
+test component::persist::tests::restore_rejects_fingerprint_mismatch_without_migration ... ok
+test component::runtime::tests::actor_system_drains_sent_events_through_one_macrostep_each ... ok
+test component::testing::tests::conformance_fixture_passes_for_matching_sequence ... ok
+test component::testing::tests::conformance_fixture_fails_with_descriptive_message ... ok
+test component::testing::tests::invariant_reports_violation_by_name ... ok
+test component::tests::bitset_iter_ones_spans_words ... ok
+test component::tests::bitset_set_clear_contains ... ok
+test component::tests::bitset_clear_all_and_is_empty ... ok
+test component::testing::tests::explore_reaches_both_toggle_states ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests semio_framework_machine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

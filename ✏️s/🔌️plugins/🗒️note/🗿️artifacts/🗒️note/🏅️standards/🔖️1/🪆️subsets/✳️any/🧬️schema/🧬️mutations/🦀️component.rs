@@ -114,6 +114,7 @@ mod tests {
     use super::*;
     use crate::artifacts::note::{NoteBlockNode, NoteImageAsset};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
 
     fn sample_snapshot() -> NoteSnapshot {
         let mut snapshot = crate::artifacts::note::engine::empty_note_snapshot();

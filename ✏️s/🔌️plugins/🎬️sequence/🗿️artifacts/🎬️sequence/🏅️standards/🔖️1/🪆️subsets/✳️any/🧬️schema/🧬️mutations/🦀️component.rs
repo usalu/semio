@@ -105,6 +105,7 @@ mod tests {
     use super::*;
     use crate::artifacts::sequence::{default_snapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
     use store::{create_document_envelope, ArtifactCommand};
 
     fn round_trip(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {

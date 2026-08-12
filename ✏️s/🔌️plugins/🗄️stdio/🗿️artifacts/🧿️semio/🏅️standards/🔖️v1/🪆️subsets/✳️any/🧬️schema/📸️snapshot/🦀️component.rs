@@ -20,11 +20,17 @@ use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
-/// 🌐️ The envelope union of all 14 semio subset snapshot types (master plan: "SemioSnapshot =
-/// tagged union of the 14" — `text`, UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a, is the 14th arm).
-/// Wrapped by `SemioSnapshot` below (a struct, not the enum directly — keeps
-/// `#[derive(ArtifactSchema)]` on a proven struct shape; see the W1b manifest for why).
+/// 🌐️ The envelope union of all 18 semio subset snapshot types (master plan: "SemioSnapshot =
+/// tagged union of the 18" — `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) is the 14th arm,
+/// `table`/`graph` (W2b) the 15th/16th, `object`/`kit` (W2c, the two COMPOSITE subsets) the
+/// 17th/18th. Wrapped by `SemioSnapshot` below (a struct, not the enum
+/// directly — keeps `#[derive(ArtifactSchema)]` on a proven struct shape; see the W1b manifest for
+/// why).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "subset", rename_all = "camelCase")]
 pub enum SemioSubsetSnapshot {
@@ -42,6 +48,10 @@ pub enum SemioSubsetSnapshot {
     Presentation(SemioPresentationSnapshot),
     Flow(SemioFlowSnapshot),
     Text(SemioTextSnapshot),
+    Table(SemioTableSnapshot),
+    Graph(SemioGraphSnapshot),
+    Object(SemioObjectSnapshot),
+    Kit(SemioKitSnapshot),
 }
 
 impl Default for SemioSubsetSnapshot {
@@ -95,6 +105,10 @@ fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
         SemioSubsetSnapshot::Presentation(_) => "presentation",
         SemioSubsetSnapshot::Flow(_) => "flow",
         SemioSubsetSnapshot::Text(_) => "text",
+        SemioSubsetSnapshot::Table(_) => "table",
+        SemioSubsetSnapshot::Graph(_) => "graph",
+        SemioSubsetSnapshot::Object(_) => "object",
+        SemioSubsetSnapshot::Kit(_) => "kit",
     }
 }
 
@@ -116,6 +130,10 @@ pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
         SemioSubsetSnapshot::Presentation(_) => 11,
         SemioSubsetSnapshot::Flow(_) => 12,
         SemioSubsetSnapshot::Text(_) => 13,
+        SemioSubsetSnapshot::Table(_) => 14,
+        SemioSubsetSnapshot::Graph(_) => 15,
+        SemioSubsetSnapshot::Object(_) => 16,
+        SemioSubsetSnapshot::Kit(_) => 17,
     }
 }
 //#endregion 🔖️SubsetDispatch
@@ -164,6 +182,10 @@ fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
         SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Text(s) => <SemioTextSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Table(s) => <SemioTableSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Graph(s) => <SemioGraphSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Kit(s) => <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(s),
     };
     let inner_body = strip_inner_preamble(&inner_printed);
     format!("subset={tag}\nschema={}\n{inner_body}", hex_encode(snap.schema.as_bytes()))
@@ -192,6 +214,10 @@ fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
         "presentation" => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "flow" => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         "text" => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "table" => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "graph" => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "object" => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "kit" => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other:?}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -235,6 +261,10 @@ fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
         SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Text(s) => <SemioTextSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Table(s) => <SemioTableSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Graph(s) => <SemioGraphSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Kit(s) => <SemioKitSnapshot as store::ArtifactPack>::encode_pack(s),
     };
     out.extend_from_slice(&payload);
     out
@@ -264,6 +294,10 @@ fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
         11 => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         12 => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         13 => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        14 => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        15 => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        16 => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        17 => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -374,11 +408,11 @@ mod tests {
         assert_eq!(<SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snap);
     }
 
-    /// 🧪️ Every one of the 14 subset tags real-round-trips through both facets — proves the
+    /// 🧪️ Every one of the 18 subset tags real-round-trips through both facets — proves the
     /// dispatch tables (text AND binary) are wired correctly for every wrapped subset, not just
     /// the one exercised by [`demo_semio_snapshot`].
     #[test]
-    fn all_fourteen_subset_tags_round_trip_text_and_binary() {
+    fn all_eighteen_subset_tags_round_trip_text_and_binary() {
         let subsets: Vec<SemioSubsetSnapshot> = vec![
             SemioSubsetSnapshot::Brep(Default::default()),
             SemioSubsetSnapshot::Mesh(Default::default()),
@@ -394,6 +428,10 @@ mod tests {
             SemioSubsetSnapshot::Presentation(Default::default()),
             SemioSubsetSnapshot::Flow(Default::default()),
             SemioSubsetSnapshot::Text(Default::default()),
+            SemioSubsetSnapshot::Table(Default::default()),
+            SemioSubsetSnapshot::Graph(Default::default()),
+            SemioSubsetSnapshot::Object(Default::default()),
+            SemioSubsetSnapshot::Kit(Default::default()),
         ];
         for subset in subsets {
             let snap = SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset };

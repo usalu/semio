@@ -20,7 +20,9 @@
 //! own side of that boundary (detection, prioritization, the matrix, the bloom filter, constraint
 //! conflicts) is real and tested.
 
-use db_state::{TouchKind, TouchedRegion, TouchedSet};
+use crate::*;
+use crate::db_durability::Frontier;
+use crate::db_state::{TouchKind, TouchedRegion, TouchedSet};
 
 //#region 🔖️CommandTouch
 /// @emoji 🏷️ A command's declared kind — the tag `CommandKindMatrix` keys structural

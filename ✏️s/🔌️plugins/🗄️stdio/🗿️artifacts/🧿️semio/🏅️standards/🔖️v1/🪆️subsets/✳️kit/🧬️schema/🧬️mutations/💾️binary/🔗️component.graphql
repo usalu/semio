@@ -1,0 +1,1 @@
+type SemioKitMutationFrame { format: Int! tag: Int! payload: String! }

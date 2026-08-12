@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.s_stdio_semio_kit.mutations;
+message SemioKitMutation { string mutation = 1; bytes payload_wire = 2; }

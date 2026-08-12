@@ -1,0 +1,15 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.table/mutations.json",
+  "title": "SemioTableMutation",
+  "description": "Closed, eight-variant mutation dispatch over SemioTableSnapshot's name-keyed columns collection and index-keyed rows collection.",
+  "oneOf": [
+    { "properties": { "mutation": { "const": "createColumn" }, "payload": { "type": "object", "properties": { "name": { "type": "string" }, "kind": { "type": "string" }, "index": { "type": ["integer", "null"] } } } } },
+    { "properties": { "mutation": { "const": "deleteColumn" }, "payload": { "type": "object", "properties": { "name": { "type": "string" } } } } },
+    { "properties": { "mutation": { "const": "renameColumn" }, "payload": { "type": "object", "properties": { "name": { "type": "string" }, "newName": { "type": "string" } } } } },
+    { "properties": { "mutation": { "const": "reorderColumns" }, "payload": { "type": "object", "properties": { "name": { "type": "string" }, "toIndex": { "type": "integer" } } } } },
+    { "properties": { "mutation": { "const": "insertRow" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" }, "row": { "type": "object" } } } } },
+    { "properties": { "mutation": { "const": "removeRow" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" } } } } },
+    { "properties": { "mutation": { "const": "reorderRows" }, "payload": { "type": "object", "properties": { "from": { "type": "integer" }, "to": { "type": "integer" } } } } },
+    { "properties": { "mutation": { "const": "editCell" }, "payload": { "type": "object", "properties": { "rowIndex": { "type": "integer" }, "columnName": { "type": "string" }, "newValue": { "type": "object" } } } } }
+  ]
+}

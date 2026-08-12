@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.kit.snapshot/binary.json",
+  "title": "SemioKitSnapshotPackHeader",
+  "type": "object",
+  "properties": { "format": { "type": "integer" }, "schemaLen": { "type": "integer" }, "schemaBytes": { "type": "string" }, "payload": { "type": "string", "contentEncoding": "hex" } }
+}

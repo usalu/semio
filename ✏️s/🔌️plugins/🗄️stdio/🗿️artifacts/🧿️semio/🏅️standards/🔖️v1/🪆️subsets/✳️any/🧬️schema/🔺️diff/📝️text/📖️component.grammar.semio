@@ -4,12 +4,12 @@ extension semio
 start diff
 
 # W-S closer (`any`): `SemioDiff::print_diff` is one line — `noChange`, or `<tag>:<payload>` where
-# `payload` for the 13 same-kind variants is exactly that wrapped subset's OWN real `print_diff()`
+# `payload` for the 14 same-kind variants is exactly that wrapped subset's OWN real `print_diff()`
 # output (already validated by THAT subset's own `🔺️diff/📝️text/📖️component.grammar.semio`), and
 # for `replace` is hex(`SemioSnapshot::print_dsl`). Modeled the same way as the snapshot facet:
-# a real tag alternation, then the opaque remainder as REST — re-describing all 13 nested diff
+# a real tag alternation, then the opaque remainder as REST — re-describing all 14 nested diff
 # grammars (plus the recursive snapshot grammar for `replace`) inline here would duplicate
-# already-real, already-tested files.
-tag = "replace" | "brep" | "mesh" | "model" | "value" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "flow"
+# already-real, already-tested files. `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) is the 14th.
+tag = "replace" | "brep" | "mesh" | "model" | "value" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "flow" | "text" | "table" | "graph" | "object" | "kit"
 tagged-diff = tag ":" REST
 diff = "noChange" | tagged-diff

@@ -49,7 +49,7 @@ const TRINITY_REWRITE_PLAY_WINDOW_JACK: &str = "trinity-rewrite-jack";
 const TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS: &str = "trinity-rewrite-parameters";
 const TRINITY_REWRITE_PLAY_RULE_NAME: &str = "label-core";
 
-const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 const DEFAULT_LHS_JSON: &str = r#"{
   "pattern": {

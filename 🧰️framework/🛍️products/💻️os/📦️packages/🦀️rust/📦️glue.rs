@@ -2,6 +2,8 @@
 //!
 //! Infinite/flow component files exist under 🔨️modules/ but are unwired pending dep-DAG cleanup.
 
+#![allow(unused_extern_crates, ambiguous_glob_reexports, unused_imports)]
+
 extern crate self as dsl;
 extern crate self as dsl_grammar;
 extern crate self as dsl_notation;

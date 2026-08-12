@@ -766,7 +766,8 @@ mod tests {
     fn tessellate_rectangle_wire_emits_edge_segments() {
         use crate::brep::primitives::make_rectangle_wire;
         let mut body = Body::new();
-        let wire = make_rectangle_wire(&mut body, 2.0, 1.5).expect("wire");
+        let mut rec = OpRecorder::new();
+        let wire = make_rectangle_wire(&mut body, 2.0, 1.5, &mut rec).expect("wire");
         let mesh = tessellate_wire(&body, &wire, 0.1).expect("tessellate wire");
         assert!(mesh.edges.len() >= 24, "expected closed rectangle edge polylines, got {}", mesh.edges.len());
         assert!(mesh.position.is_empty());

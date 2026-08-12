@@ -10,6 +10,7 @@ use std::f64::consts::FRAC_PI_2;
 
 use crate::brep::arena::{EdgeId, FaceId, SolidId, VertexId};
 use crate::brep::error::KernelError;
+use crate::brep::history::OpRecorder;
 use crate::brep::measure::{edge_length, solid_volume};
 use crate::brep::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
 use crate::brep::surface::Surface;
@@ -18,16 +19,18 @@ use crate::brep::vec::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
-/// 🎨️ Constant-radius fillet on `edges` of `solid` (MVP arc-strip triangle soup).
+/// 🎨️ Constant-radius fillet on `edges` of `solid` (MVP arc-strip triangle soup). `rec` is threaded
+/// through to [`solid_from_blend_samples`] so the sample solid's provenance escapes this call.
 pub fn fillet_edges(
     body: &mut Body,
     solid: SolidId,
     edges: &[EdgeId],
     radius: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     validate_blend_request(body, solid, edges, radius)?;
     let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Fillet { radius })?;
-    solid_from_blend_samples(body, &points, &tris)
+    solid_from_blend_samples(body, &points, &tris, rec)
 }
 
 /// 🎨️ Linearly varying fillet radius `r0→r1` along a single `edge` (MVP arc-strip triangle soup).
@@ -37,6 +40,7 @@ pub fn fillet_variable(
     edge: EdgeId,
     r0: f64,
     r1: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     if r0 <= 0.0 || r1 <= 0.0 {
         return Err(KernelError::InvalidInput(
@@ -50,7 +54,7 @@ pub fn fillet_variable(
         &[edge],
         BlendKind::Variable { r0, r1 },
     )?;
-    solid_from_blend_samples(body, &points, &tris)
+    solid_from_blend_samples(body, &points, &tris, rec)
 }
 
 /// 🎨️ Constant-distance chamfer on `edges` of `solid` (MVP inset-strip triangle soup).
@@ -59,10 +63,11 @@ pub fn chamfer_edges(
     solid: SolidId,
     edges: &[EdgeId],
     distance: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     validate_blend_request(body, solid, edges, distance)?;
     let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Chamfer { distance })?;
-    solid_from_blend_samples(body, &points, &tris)
+    solid_from_blend_samples(body, &points, &tris, rec)
 }
 
 // #endregion 🔖️Api
@@ -218,13 +223,14 @@ fn solid_from_blend_samples(
     body: &mut Body,
     points: &[Pnt3],
     tris: &[[Pnt3; 3]],
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     if !tris.is_empty() {
-        if let Ok(id) = solid_from_triangle_soup(body, tris) {
+        if let Ok(id) = solid_from_triangle_soup(body, tris, rec) {
             return Ok(id);
         }
     }
-    make_convex_hull(body, points)
+    make_convex_hull(body, points, rec)
 }
 
 fn sample_blunt_geometry(
@@ -353,11 +359,12 @@ mod tests {
     #[test]
     fn chamfer_all_box_edges_reduces_volume() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let vol0 = solid_volume(&body, solid, 1e-6).unwrap();
         let edges = solid_edges(&body, solid);
         assert_eq!(edges.len(), 12);
-        let out = chamfer_edges(&mut body, solid, &edges, 0.1).unwrap();
+        let out = chamfer_edges(&mut body, solid, &edges, 0.1, &mut rec).unwrap();
         let vol1 = solid_volume(&body, out, 1e-6).unwrap();
         assert!(
             vol1 < vol0 - 1e-6,
@@ -368,9 +375,10 @@ mod tests {
     #[test]
     fn fillet_one_edge_yields_solid() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
         let edge = solid_edges(&body, solid)[0];
-        let out = fillet_edges(&mut body, solid, &[edge], 0.2).unwrap();
+        let out = fillet_edges(&mut body, solid, &[edge], 0.2, &mut rec).unwrap();
         assert!(!body.solid_faces(out).is_empty());
         let vol = solid_volume(&body, out, 1e-6).unwrap();
         assert!(vol > 0.0 && vol.is_finite());
@@ -379,28 +387,31 @@ mod tests {
     #[test]
     fn fillet_variable_runs() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
         let edge = solid_edges(&body, solid)[0];
-        let out = fillet_variable(&mut body, solid, edge, 0.1, 0.3).unwrap();
+        let out = fillet_variable(&mut body, solid, edge, 0.1, 0.3, &mut rec).unwrap();
         assert!(!body.solid_faces(out).is_empty());
     }
 
     #[test]
     fn reject_zero_radius() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let edge = solid_edges(&body, solid)[0];
-        assert!(fillet_edges(&mut body, solid, &[edge], 0.0).is_err());
-        assert!(chamfer_edges(&mut body, solid, &[edge], 0.0).is_err());
-        assert!(fillet_variable(&mut body, solid, edge, 0.0, 0.1).is_err());
+        assert!(fillet_edges(&mut body, solid, &[edge], 0.0, &mut rec).is_err());
+        assert!(chamfer_edges(&mut body, solid, &[edge], 0.0, &mut rec).is_err());
+        assert!(fillet_variable(&mut body, solid, edge, 0.0, 0.1, &mut rec).is_err());
     }
 
     #[test]
     fn reject_empty_edges() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
-        assert!(fillet_edges(&mut body, solid, &[], 0.1).is_err());
-        assert!(chamfer_edges(&mut body, solid, &[], 0.1).is_err());
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        assert!(fillet_edges(&mut body, solid, &[], 0.1, &mut rec).is_err());
+        assert!(chamfer_edges(&mut body, solid, &[], 0.1, &mut rec).is_err());
     }
 }
 // #endregion 🧪Tests

@@ -83,6 +83,7 @@ pub enum Process3dMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, WorkshopMachine};
     use change_machine_icon::mutation::ChangeMachineIcon;
     use change_step_enabled::mutation::ChangeStepEnabled;

@@ -43,6 +43,33 @@ Two mechanism findings worth keeping:
 
 Calibration for anyone reading the gate: **22188 pre-existing high-priority breaches across 27 rules**, 19601 of them handcrafted-grammar/spec-distinctness. None new.
 
+## W1 — the mechanism: LANDED
+
+UCAS explicitly released `🔌️plugin/🦀️component.rs` after a handshake; APA took it, landed the mechanism, and released it back. Their composition runtime was untouched throughout.
+
+**`ArtifactDeclaration`** — `🔌️plugin/🦀️component.rs:930-1241`. A consuming typestate builder (`NeedsSchema → DeclarationReady`) with module-private fields. Registration becomes **data the framework walks in a fixed deterministic order**, replacing 33 hand-written callbacks whose ordering was implicit.
+
+**`.composition::<Snapshot>()` is the only slot setter.** No public slice setter exists, so a hand-written slot list that diverges from `ArtifactCompositionFields` is *unwritable* rather than discouraged — UCAS's review correction, and the standard the rest of the design is held to.
+
+**Ownership validation — improved on the design during implementation.** The spec said "every composer entry's `artifact_kind` must equal `decl.kind`". That would have wrongly rejected **export** entries, which legitimately write a foreign dialect. The landed check is **produce-or-consume**: the declared kind must appear on one side or the other. A strict `s.<plugin>.<artifact>` segment check then activates *automatically* once a kind string is canonical — verified by tracing real on-disk dialects rather than assumed, since today's kinds (note's `"s.note"`) are pre-migration. When UCAS's W4 renames kinds, the strict check switches itself on per plugin with no further edit.
+
+**`genesis()` replaced `ArtifactApp::seed(&mut ArtifactStore)`** — the last place an app touched a store directly.
+
+**Exemplar:** `🗒️note` converted end-to-end, `cargo check -p semio-s-plugin-note --all-targets` → **0 errors**.
+
+### What was deliberately NOT done, and why
+
+- **`.setup()` still exists.** 31 live call sites; removing it now breaks every plugin simultaneously. `.artifact()` and `.setup()` coexist until the other 32 plugins migrate. **The honest claim is "the mechanism is landed and proven on one plugin", not "registration is declarative now".**
+- **`register_mesh_exporter`/`register_app_io` were not removed from that file** — measured zero definitions there, contrary to an earlier peer note. The family in `💻️os/🦀️component.rs` and `💻️os/🖥️host/` remains APA's to delete once call sites clear.
+
+## A gap in `PolicyRulePluginPurity`, found by a peer
+
+DKM found `📐️cad` holding `static HOST: OnceLock<BrepEngineHost>` (`🗿️artifacts/📐️cad/…/⚙️engine/🦀️component.rs:91-93`) and `🏭️process` holding `host: BrepEngineHost` as a struct field (`…/🧊️process3d/…/⚙️engine/🦀️component.rs:403,415`). **The purity rule does not catch either**, and by its own criterion it is correct not to: it exempts bare `OnceLock` as write-once-by-type, because every artifact's `io_registry` uses `static ENTRIES: OnceLock<Vec<ComposerEntry>>` and flagging those would drown the signal.
+
+**The rule measures the wrong property here.** `OnceLock<Vec<ComposerEntry>>` is a plugin caching its own immutable data. `OnceLock<BrepEngineHost>` is a plugin holding a **handle to host-owned engine state** for the process lifetime. Identical mutability; entirely different violation — not ambient *mutability* but ambient *reach*. The `OnceLock` makes the handle unforgeable after init and does nothing about a plugin having one at all.
+
+**Fix: a distinct check** — a plugin may not hold a host/engine handle in a static, whatever the wrapper — rather than widening the mutability rule, which would only manufacture false positives against the sanctioned tables. Deleting the handle model itself is cross-session (process is SMO-held, cad is APA-held, the trait reaches `💻️os/🖥️host`) and APA owns sequencing it.
+
 ## 💠️lowpoly — the named violation: RESOLVED
 
 The ticket was opened against `✏️s/🔌️plugins/💠️lowpoly/🔧️setup/🦀️component.rs`. Verified on disk:
@@ -59,6 +86,86 @@ $ grep -rn "register_mesh_\|register_solid_\|register_dwg_\|register_app_io\|reg
 ```
 
 All four defects are gone: no OS-host registry calls from a setup facet, no IO registered for `3d.mesh` (a kind lowpoly does not own), no duplication of the IO its own composer tree already declares, and no unguarded host-only calls in a crate that also builds to wasm. The surviving `3d.mesh` mentions are the `ArtifactKindSpec` declaration at `🗿️artifacts/💠️lowpoly/🦀️component.rs:265` — **deliberately left for UCAS**, who own duplicate-kind cleanup — and `kind_id` references inside the composer spec, which is the artifact-native form and correct.
+
+## W3 — plugin migration: EVERY AVAILABLE PLUGIN IS DONE (24 of 33; the other 9 are peer-held)
+
+**Fully closed** to exactly `🦀️component.rs` + `AGENTS.md`/`README.md` + `🎛️apps` + `🗿️artifacts` + `📦️packages` — **15**:
+`🪐️space` · `🔋️energy` · `🖨️raster` · `🕸️dag` · `🧩️puzzle` · `🧱️block` · `📋️forms` · `💠️lowpoly` · `🌍️gis` · `➗️mathematical` · `🌀️procedural` · `🏗️fem` · `🎥️shooting` · `📏️layout` · `📸️remodel`
+
+**Done except a sanctioned exception — 9.** Each leftover is either a directory containing its own `Cargo.toml` (inventory-only by hard rule, since relocating a crate is a workspace-topology change) or a root data file:
+`📐️cad` · `📖️playbook` · `📜️imperative` · `🪵️sourcing` (`🧩️extensions` crates) · `🔱️trinity` (`🔨️modules` = jack shell/lsp crates) · `🖍️draw` (`🔄️fsm` crate) · `🗒️note` (`🛂️manifest.json`) · `🎪️demonstrator` (`🎪️panes`) · `📕️norm` (`🎚️config`/`👥️presence`/`📄️artifact`/`🖥️app-surface` — deliberately left; see below)
+
+**Blocked, all peer-held — 9:** `🏛️architect`, `🎞️animate`, `🏭️process`, `💡️reasoning` (SMO lanes in flight); `✒️writer`, `🌿️vcs`, `🌊️flow`, `🎬️sequence` (SMO between waves); `🗄️stdio` (UCAS, roster not frozen).
+
+`📕️norm`'s four dirs were left on purpose. `🎚️config` and `👥️presence` are app-schema facets that belong under an app tree — but norm has **15 apps**, and the agent could not establish from the code whether they are shared by all fifteen or belong to one. It filed the question rather than guessing, which is right: a wrong split across 15 apps is expensive to undo and cheap to avoid.
+
+### Techniques that emerged, now standard
+
+1. **`🔱️trinity`: relocate with zero call-site edits.** Keep the crate-root module names in `📦️glue.rs` stable and repoint only the `#[path]` targets. Less work and far less risk than rewriting imports. `🌍️gis`, `📐️cad` and `🏗️fem` all followed it.
+2. **`💠️lowpoly`: check the composer tree before relocating a registration.** 7 of its 15 calls were pure duplicates of an existing `LowpolyComposerComposition` entry — the capability was already declared artifact-natively, so they were *deleted*, not moved. Prefer deletion wherever the composer tree already covers it.
+3. **`🏗️fem`: a relocation is not finished until the mounts are repointed.** A concurrent session had already git-renamed all 8 compute files into the artifact engines but left `📦️glue.rs` pointing at the old paths — 8 dangling `#[path]` mounts that would have failed the build. The agent found and repaired them. This is exactly the failure class that structural verification catches and `cargo check` (in a red tree) would not have.
+
+
+
+**Fully closed** to exactly `🦀️component.rs` + `AGENTS.md`/`README.md` + `🎛️apps` + `🗿️artifacts` + `📦️packages` (9):
+`🪐️space` · `🔋️energy` · `🖨️raster` · `🕸️dag` · `🧩️puzzle` · `🧱️block` · `📋️forms` · `💠️lowpoly` · `🌍️gis`
+
+**Done except a sanctioned exception** (8) — the leftover is either a crate-bearing directory (inventory-only by rule) or a root data file:
+`📐️cad` (`🧩️extensions`) · `🔱️trinity` (`🔨️modules` = jack shell/lsp crates) · `🖍️draw` (`🔄️fsm` crate) · `🗒️note` (`🛂️manifest.json`) · `🎪️demonstrator` (`🎪️panes`) · `📖️playbook` · `📜️imperative` · `🪵️sourcing` (all `🧩️extensions`)
+
+**In flight** (7): `➗️mathematical` · `🌀️procedural` · `🏗️fem` · `🎥️shooting` · `📏️layout` · `📕️norm` · `📸️remodel`
+
+**Held by peers** (9): `🏛️architect`, `🎞️animate`, `🏭️process`, `💡️reasoning` (SMO lanes in flight); `✒️writer`, `🌿️vcs`, `🌊️flow`, `🎬️sequence` (SMO between waves); `🗄️stdio` (UCAS, roster not frozen).
+
+### Technique that emerged, now the standard for relocations
+
+`🔱️trinity` moved four compute dirs into an artifact engine **with zero call-site edits anywhere in the crate**, by keeping the crate-root module names in `📦️glue.rs` stable and repointing only the `#[path]` targets. That is both less work and far less risk than rewriting imports, and it is now written into every packet. `🌍️gis` and `📐️cad` followed it.
+
+`💠️lowpoly` established the other half: **check the artifact's `🚪️io` composer tree before relocating a registration call.** Seven of its fifteen calls turned out to be pure duplicates of an existing `LowpolyComposerComposition` entry — the capability was already declared artifact-natively, so the calls were *deleted*, not moved. Prefer deletion over relocation wherever the composer tree already covers it.
+
+## Adopted: dead TS export paths (detector only)
+
+A peer session (IIF #2546) found that **517 of 567 relative export paths (91%)** in the plugin `📦️packages/🟦️typescript/📦️index.ts` barrels point at files that do not exist — pre-standards paths against a tree that migrated to `🏅️standards/🔖️<v>/🪆️subsets/✳️<s>/`. Worst: `📕️norm` **180/180**, then `🧱️block` and `🧩️puzzle` 36/36, `🔱️trinity`/`🌍️gis`/`🏗️fem` 24/24. Independently reproduced here at exactly 517/567.
+
+**Nothing enforced it — there was no policy on `📦️index.ts` at all.** That absence is the kind of gap this ticket exists to close, so APA took the *detector*; the peer left it unowned and the **fix remains unowned**, stated explicitly rather than quietly absorbed.
+
+Landed as `PluginIndexExportPathLintScript` in the **dev-side** `🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts` (a file APA already owns), **not** repo-root `📜️script.ts` — which sidesteps the single-writer queue entirely rather than contending for a second slot. It is reachable only via its own standalone `index-lint` target, never folded into `plugin lint` or `VerifyScript`, and `run()` cannot throw. So 517 findings are visible without blocking five other sessions on debt none of them created.
+
+Note: the agent hit the **same Bun comment-termination trap** already documented in this ticket — a docstring containing `plugins/*/📦️packages` closed the `/** … */` block early at the embedded `*/`. Documented once, cost recovered twice.
+
+## Measured effect of W3 (policy run, 2026-08-12 18:29)
+
+The five APA rules are the instrument, so their counts are the evidence. Before = the run taken when the rules landed; now = after 24 plugin packets.
+
+| rule kind | before | now | delta |
+|---|---:|---:|---:|
+| `plugin-closed-shape` | 104 | **41** | **−63** |
+| `plugin-registration-violation` | 582 | **525** | **−57** |
+| `plugin-dependency-os-host` | 13 | **10** | **−3** |
+| `plugin-registration-engine-backlog` | 721 | 722 | +1 |
+| `plugin-registration-setup-callback` | 31 | 31 | 0 |
+| `plugin-dependency-allowlist` | 105 | 105 | 0 |
+| `effect-capability-parity` | 47 | 47 | 0 |
+| purity (all sub-kinds) | 115 | 115 | 0 |
+| high-priority among APA rules | 0 | **0** | — |
+
+**The zeros are expected, not failures**, and each names its blocking wave:
+- **`setup-callback` (31) cannot fall in W3.** Deleting the `🔧️setup/` *facet directory* is W3's job and is nearly done; removing the builder's `.setup(fn)` *hook* requires `ArtifactDeclaration` to exist to replace it — that is W1, blocked on the SDK file.
+- **`purity` (115) is inventory-only by design this wave.** Draft-lane facets cannot be authored until per-app verb sets clear SMO review.
+- **`effect-capability-parity` (47)** needs the capability gating in W1/M5.
+- **`engine-backlog` (722)** is the *compliant interim* shape (registration called from an artifact engine); it converts to declarations in W1, not before.
+
+So W3 moved precisely the two dimensions it targets — plugin shape and escape-hatch call sites — and left the rest for the waves that own them.
+
+> ⚠️ **A near-miss worth recording.** The first attempt to read these numbers reported **0 total**, which would have been a spectacular false success. The breach cache's top-level key is `breachs`, not `breaches`; querying the wrong key returns an empty list, not an error. The result was implausible on its face — 16 plugins still carried facet dirs — which is the only reason it was caught. **A measurement that says you are finished deserves more scrutiny than one that says you are not.**
+
+## Disk exhaustion (resolved) and the cargo blackout
+
+The volume hit **100%, 933Mi free** — root `target/` alone was 428G of stale cache orphaned by the per-ticket `CARGO_TARGET_DIR` policy. Every cargo result repo-wide was untrustworthy during that window, in all six sessions.
+
+Escalated to the user rather than deleted unilaterally (shared state, everyone pays a cold rebuild). **The user chose to delete the per-ticket `🎯️target*` dirs and leave root `target/` alone** — the smaller win, with the trade-off disclosed. Executed after clearing with every reachable session; SMO and DKM both confirmed no build in flight. Volume now **84% used, 141Gi free**.
+
+Worth preserving for whoever revisits this: DKM measured root `target/` at 428G, mtime 17.5h old, with **zero files modified in the preceding two hours** — the signal that distinguishes "stale" from "idle but live". Recorded in their `📓️wave1-mechanism-report.md`.
 
 ## In flight
 

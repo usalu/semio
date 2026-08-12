@@ -23,8 +23,7 @@
 //! stages. Every building block (`RoleBasedPolicy`, `ReplayGuard`, `BudgetRegistry`, signing
 //! functions, `redact_fields`, `check_tenant`) is also usable standalone, since a deployment may
 //! wire only a subset (e.g. no signing, no per-tenant budgets).
-
-//#region 🔖️Identity
+use crate::*;
 /// @emoji 🏢️ A tenant's identity — the isolation unit `check_tenant` gates on. Kept as its own
 /// newtype (distinct from `protocol::ActorId`/`ActorId`) since one tenant spans many
 /// actors and a `Principal` always belongs to exactly one.

@@ -1,0 +1,5 @@
+; RFC 5234 ABNF mirror (descriptive) for the s.stdio.semio.object.diff binary frame.
+diff-frame = format presence payload
+format     = OCTET
+presence   = OCTET
+payload    = *OCTET

@@ -4,10 +4,11 @@ extension semio
 start op
 
 # W-S closer (`any`): `SemioMutation::print_op` is one line — `noMutation`, or `<tag>:<payload>`
-# where `payload` for the 13 wrapped variants is exactly that subset's OWN real `print_op()` output
+# where `payload` for the 14 wrapped variants is exactly that subset's OWN real `print_op()` output
 # (already validated by THAT subset's own `🧬️mutations/📝️text/📖️component.grammar.semio`), and for
 # `setSnapshot` is hex(`SemioSnapshot::print_dsl`). Same tag-alternation + opaque-REST treatment as
-# the sibling `diff` grammar, for the same reason (avoiding 14x duplication of already-real files).
-tag = "setSnapshot" | "brep" | "mesh" | "model" | "value" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "flow"
+# the sibling `diff` grammar, for the same reason (avoiding 15x duplication of already-real files).
+# `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) is the 14th wrapped variant.
+tag = "setSnapshot" | "brep" | "mesh" | "model" | "value" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "flow" | "text" | "table" | "graph" | "object" | "kit"
 tagged-op = tag ":" REST
 op = "noMutation" | tagged-op

@@ -1,5 +1,19 @@
 # Semantic Mutation Verb Taxonomy
 
+> ⚠️ **Never derive a verb from this file alone. Read `📓️derivation-rules.md` as well.**
+>
+> This file holds the **general axis**: what each verb means, and the scalar-vs-structured /
+> addressed-vs-root tests. `📓️derivation-rules.md` holds the **shape rules** — what to do with an
+> id-keyed collection, an ordered collection, an edge collection, a hierarchy. **A shape rule is
+> more specific and wins over the general axis.**
+>
+> This warning exists because the failure is real and does not feel like a mistake. A peer ticket
+> derived tree re-parenting as `change-folder-parent` — correctly, from this file's field test (one
+> scalar link field, identity and contents preserved). It was still wrong: `📓️derivation-rules.md`
+> rule 5 already specifies `move-to-<container>{id,new_parent}` for hierarchy fields. Their
+> measurement was right and their reasoning was right; the rulebook they consulted was incomplete.
+> "Be more careful" is not a fix for that. **Reading both files is.**
+
 Reference vocabulary for every `🧬️mutations/<slug>/` triad the fan-out waves author. Naming
 convention locked by the dev: **imperative in Rust** (variant name, triad-dir slug, serde tag,
 grammar keyword); **past tense lives only** in `protocol::SemanticDescriptor.record` (for a future

@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.table/diff.text.json",
+  "title": "SemioTableDiffTextLine",
+  "description": "Descriptive twin of 📖️component.grammar.semio — present fields joined with ';' on one physical line: '', 'columns=[...]', 'rows=[...]', or 'columns=[...];rows=[...]'.",
+  "type": "string"
+}

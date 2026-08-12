@@ -1,0 +1,13 @@
+{
+  "title": "Engineless Artifacts And App State Machines",
+  "emoji": "🔄️",
+  "status": "open",
+  "description": "Artifacts must not have an engine — only a schema (snapshot, diff, mutations, inferences) and an io system. Every app has an engine which IS a state machine, controlled by the app, communicating bidirectionally. `machine` becomes a core framework-provided full-blown state machine implementation (promoted from the plugin-private `✏️s/🔌️plugins/🖍️draw/🔄️fsm/`). State machines emit events on transitions: mutations (shared, VCS-tracked) and presence (ephemeral, broadcast within a space). Four state classes — persisted-shared (artifacts), persisted-local (config), ephemeral-local, ephemeral-shared (cursors, cameras) — and one field may belong to several at once (camera is persisted locally AND broadcast ephemerally), declared once rather than copy-pasted.\n\nThree workstreams:\nA) Dissolve 95 populated artifact engine dirs (153,457 LOC) per a mechanical D0-D6 classification procedure; repeal the three policy rules that currently MANDATE the dir; add a forbidding ratchet.\nB) Promote the draw fsm crate to `🧰️framework/🔨️modules/🔄️machine/` (+ derive proc-macro sibling); add `AppMachine`/`Views`/`MachineResidence`/`NoMachine` to the plugin crate; fill the 53 empty app engine slots with handcrafted statecharts.\nC) `StateClass` becomes `StateClassSet` (one field, several classes); invert the config/presence validator from equality to membership; revive the dead presence lane (`Emit` 4th param, `PresenceView`, `PresenceStore`, `dispatch_emit` arm, `presence_pack` broadcast).\n\nApproved plan: /Users/ueli/.claude/plans/artifacts-must-not-have-magical-hanrahan.md\nPeer sessions: APA #2549, UCAS #2548, SMO #2545, IIF, DKM #2550 — negotiate as a peer, never supersede.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2553"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪cde003b8618d4cf5836f4fb418e49de4"
+  ]
+}

@@ -18,8 +18,8 @@
 //! with hash-chaining required), so it takes direct `protocol_format`/`protocol_core` path
 //! dependencies alongside `protocol` rather than duplicating their logic. Every other
 //! protocol-family type this crate touches comes from the `protocol` facade, per the contract.
-
-//#region 🔖️RecordKinds
+use crate::*;
+use crate::db_durability::Frontier;
 /// @emoji 📍️ First record marker in a fresh segment: document identity, segment index, and the
 /// previous segment's final commit `chain_hash` (the WAL's cross-segment hash chain — protocol's
 /// own commit chain resets to `chain_0 = blake3(header)` at every segment boundary, since
@@ -424,8 +424,8 @@ impl pack::PackSink for SharedBuf {
 /// `SprWriter` always computes the commit chain regardless of this flag, but stamping it into the
 /// header makes the requirement an explicit, reader-enforced part of the file's contract rather
 /// than an implicit convention only this crate happens to uphold.
-fn segment_write_options() -> protocol::WriteOptions {
-    protocol::WriteOptions { required_flags: protocol_core::REQUIRED_HASH_CHAIN, optional_flags: 0 }
+fn segment_write_options() -> protocol_format::WriteOptions {
+    protocol_format::WriteOptions { required_flags: protocol_core::REQUIRED_HASH_CHAIN, optional_flags: 0 }
 }
 //#endregion 🔖️Sink
 

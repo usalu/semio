@@ -47,7 +47,7 @@
 //! incremental-apply law holding by construction rather than by two independently-written rules
 //! happening to agree.
 
-use {DbError, ArtifactId};
+use crate::*;
 use db_index::ProjectionIndex;
 use db_state::{PGraph, PMap, TouchedRegion, TouchedSet};
 use db_storage::IndexStorage;

@@ -349,9 +349,7 @@ mod tests {
                 },
             }],
         };
-        let mut g = Graph::from_fixture(fixture).unwrap();
-        g.recompute_derived();
-        g
+        Graph::from_fixture(fixture).unwrap()
     }
 
     #[test]

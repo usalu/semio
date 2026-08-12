@@ -1,0 +1,4 @@
+# 📝️ SemioTableDiff text line — descriptive twin of 📖️component.grammar.semio.
+type SemioTableDiffTextLine {
+  line: String! # "" | "columns=[...]" | "rows=[...]" | "columns=[...];rows=[...]"
+}

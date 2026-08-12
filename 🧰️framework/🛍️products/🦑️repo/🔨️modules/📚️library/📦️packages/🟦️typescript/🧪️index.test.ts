@@ -1114,7 +1114,7 @@ describe("resolveCargoPackageName", () => {
 describe("loadTaxonomy", () => {
   test("parses 🔣️taxonomy.json into the expected shape", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.artifactComponentDirs).toEqual(["🧬️schema", "⚙️engine", "🚪️io"]);
+    expect(taxonomy.artifactComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
     expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
     expect(taxonomy.snapshotChildDirs).toEqual(["🧬️schema", "🎒️pack"]);
     expect(taxonomy.diffChildDirs).toEqual(["🧬️schema"]);
@@ -1150,8 +1150,8 @@ describe("loadTaxonomy", () => {
 
   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
     const taxonomy = loadTaxonomy();
-    // ⚙️ Completeness includes 🧬️mutations + ⚙️engine; structural-only extra is 📚️examples.
-    expect(taxonomy.artifactChildDirs).toEqual(["🧬️mutations", "🔺️diff", "🗣️dsl", "🧬️schema", "📸️snapshot", "🔧️op", "📡️spr", "⚙️engine", "📚️examples"]);
+    // 🗿️ Completeness is 🧬️schema + 🚪️io — never ⚙️engine; structural-only extra is 📚️examples.
+    expect(taxonomy.artifactChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples"]);
     expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["📚️examples"]);
   });
 
@@ -1162,8 +1162,8 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.newArtifactChildDirs).toEqual(["🏅️standards"]);
     expect(taxonomy.standardComponentDirs).toEqual(["🪆️subsets"]);
     expect(taxonomy.standardChildDirs).toEqual(["🪆️subsets"]);
-    expect(taxonomy.subsetComponentDirs).toEqual(["🧬️schema", "⚙️engine", "🚪️io"]);
-    expect(taxonomy.subsetChildDirs).toEqual(["🧬️schema", "⚙️engine", "🚪️io", "📚️examples"]);
+    expect(taxonomy.subsetComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
+    expect(taxonomy.subsetChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples"]);
     expect(taxonomy.subsetArchetypes).toEqual(["owning", "derived"]);
     expect(taxonomy.ioFidelityClasses).toEqual(["exact", "canonical", "semantic", "lossy"]);
     expect([

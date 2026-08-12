@@ -1,17 +1,14 @@
 # Freeze Ledger
 
-## Coordinator holds
-- framework plugin component (E0499 fix applied; subset macro region)
-- store test_support harness region
-- io fidelity metadata
-- root script subset conformance policy region
-- taxonomy ownership keys (no inferences flip)
+## Released after W3
+- CAD / EN1990 / stdio reference subset bodies (workers completed)
 
-## Active workers
-- W3 CAD+EN1990 reference proof
-- W3 stdio five-ref proof (csv/tiff/docx/mesh/xml-valid)
+## Coordinator holds during W4
+- root `📜️script.ts` policy region
+- taxonomy.json (no inferences flip)
+- framework plugin/store harness regions (shared; edit only for compile breaks)
 
-## Released structural scopes
-- all plugin engine/example path moves complete
-- stdio glue path resolution complete
-- phantoms deleted
+## Active W4 scopes
+- remaining owning subsets missing examples
+- derived profiles (engine absence OK; need negative examples + real TS)
+- glue path maintenance per plugin after batch moves

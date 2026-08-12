@@ -1,0 +1,5 @@
+(* Descriptive, not test-parsed. *)
+diff = [ field list ] ;
+field list = field, { ";", field } ;
+field = ( "t" | "d" | "o" | "m" | "p" | "r" ), "=", value ;
+value = { any character } ;

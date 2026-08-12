@@ -1,0 +1,11 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.table/mutations.binary.json",
+  "title": "SemioTableMutationBinaryFrame",
+  "description": "Descriptive twin of 📡️component.protocol.semio — format u8, tag u8 (variant ordinal), then an opaque payload tail.",
+  "type": "object",
+  "properties": {
+    "format": { "type": "integer" },
+    "tag": { "type": "integer" },
+    "payload": { "type": "string", "contentEncoding": "base64" }
+  }
+}

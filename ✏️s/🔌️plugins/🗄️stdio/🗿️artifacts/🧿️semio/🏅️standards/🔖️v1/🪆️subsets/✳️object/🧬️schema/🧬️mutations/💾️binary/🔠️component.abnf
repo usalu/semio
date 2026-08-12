@@ -1,0 +1,5 @@
+; RFC 5234 ABNF mirror (descriptive) for the s.stdio.semio.object.mutations binary op frame.
+op-frame = format tag payload
+format   = OCTET
+tag      = OCTET
+payload  = *OCTET

@@ -242,9 +242,7 @@ mod tests {
     use store::ArtifactDsl;
 
     fn nakagin_graph() -> Graph {
-        let mut g = Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
-        g.recompute_derived();
-        g
+        Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap()
     }
 
     fn empty_rule() -> Rule {

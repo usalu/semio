@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// 📜️ The reuse example, handcrafted against `COMPONENT_GRAMMAR_SEMIO` — structured half-edge mesh
 /// productions (no `mesh-json`). Derive-based `parse_dsl` does not yet consume this shape; the
 /// recognizer / handcrafted codec will.
-pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.lowpoly` DSL text into a `LowpolySnapshot`.
 pub fn parse_dsl(text: &str) -> Result<LowpolySnapshot, store::TextError> {

@@ -1,0 +1,16 @@
+dialect protocol
+protocol stdio.semio.object.diff
+version 1
+schema s.stdio.semio.object
+start body
+framing record
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM object wave (W2c). Real binary diff frame: `format u8` +
+# `presence u8` (bit0=transform, bit1=brep, bit2=mesh, bit3=properties) are two REAL fixed fields;
+# the present fields' own encodings follow as one opaque trailing `payload` chain — the real Rust
+# `encode_diff`/`decode_diff` (`../../🦀️component.rs`) stays genuinely structured.
+header fixed 2
+field format u8
+field presence u8
+
+chain payload bytes

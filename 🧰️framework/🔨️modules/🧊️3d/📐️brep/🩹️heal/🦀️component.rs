@@ -8,6 +8,7 @@ use crate::brep::arena::{Curve3Id, FaceId, SolidId, SurfaceId};
 use crate::brep::bspline::KnotVector;
 use crate::brep::curve::Curve3;
 use crate::brep::error::KernelError;
+use crate::brep::history::OpRecorder;
 use crate::brep::sew::sew_faces;
 use crate::brep::surface::Surface;
 use crate::brep::tolerance::Tol;
@@ -39,7 +40,10 @@ impl HealingReport {
 }
 
 /// 🩹 Validates a clean solid (no-op success); dirty solids are rejected until full healing lands.
-pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64) -> Result<HealingReport, KernelError> {
+/// `rec` records every vertex this merges as modified — repositioning `body.vertices` directly
+/// (not through euler) is a pre-existing exception the docstring on [`crate::brep::euler`] calls
+/// out as the checked editors' exclusive right; `rec` at least keeps the entity's provenance honest.
+pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpRecorder) -> Result<HealingReport, KernelError> {
     solid_exists(body, solid)?;
     let tol = if tolerance.is_finite() && tolerance > 0.0 { tolerance } else { 1e-6 };
     let mut report = HealingReport::default();
@@ -52,6 +56,7 @@ pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64) -> Result<Hea
             if (pj - pi).norm() <= tol {
                 if let Some(v) = body.vertices.get_mut(ids[j]) {
                     v.position = pi;
+                    rec.record_modified(v.label);
                     report.vertices_merged += 1;
                 }
             }
@@ -85,7 +90,7 @@ pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64) -> Result<Hea
 }
 
 /// 🩹 Removes selected faces from the solid shell and attempts to sew coplanar neighbor pairs.
-pub fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId]) -> Result<SolidId, KernelError> {
+pub fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if faces_to_remove.is_empty() {
         return Err(KernelError::InvalidInput("must select at least one face to remove".into()));
     }
@@ -123,15 +128,17 @@ pub fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId]) ->
         let neighbors = adjacent_faces(body, *fid);
         let kept_neighbors: Vec<FaceId> = neighbors.into_iter().filter(|n| !remove_set.contains(n)).collect();
         if kept_neighbors.len() == 2 && coplanar_face_pair(body, kept_neighbors[0], kept_neighbors[1]) {
-            let _ = sew_faces(body, &kept_neighbors, sew_tol);
+            let _ = sew_faces(body, &kept_neighbors, sew_tol, rec);
         }
     }
     body.shells.get_mut(shell_id).expect("shell").faces = kept_faces;
     Ok(solid)
 }
 
-/// 🩹 Replaces analytic curves and planes in `solid` with NURBS where conversion exists.
-pub fn convert_to_nurbs(body: &mut Body, solid: SolidId) -> Result<usize, KernelError> {
+/// 🩹 Replaces analytic curves and planes in `solid` with NURBS where conversion exists. `rec`
+/// records every face/edge whose geometry pool entry this swaps as modified — the entities
+/// themselves keep their labels, only what they point to changes.
+pub fn convert_to_nurbs(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<usize, KernelError> {
     solid_exists(body, solid)?;
     let face_ids = body.solid_faces(solid);
     let mut converted = 0usize;
@@ -146,6 +153,7 @@ pub fn convert_to_nurbs(body: &mut Body, solid: SolidId) -> Result<usize, Kernel
         };
         if let Some(nurbs) = analytic_surface_to_nurbs(&surface) {
             *body.surfaces.get_mut(surface_id).expect("surface") = nurbs;
+            rec.record_modified(body.faces.get(*fid).expect("face").label);
             converted += 1;
             surface_done.insert(surface_id);
         }
@@ -175,7 +183,9 @@ pub fn convert_to_nurbs(body: &mut Body, solid: SolidId) -> Result<usize, Kernel
             controls: nurbs.controls,
             weights: nurbs.weights,
         });
-        body.edges.get_mut(edge_id).expect("edge").curve = new_curve;
+        let edge = body.edges.get_mut(edge_id).expect("edge");
+        edge.curve = new_curve;
+        rec.record_modified(edge.label);
         converted += 1;
     }
     Ok(converted)
@@ -256,17 +266,19 @@ mod tests {
     #[test]
     fn heal_solid_noop_on_valid_box() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
-        let report = heal_solid(&mut body, solid, 1e-4).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
+        let report = heal_solid(&mut body, solid, 1e-4, &mut rec).unwrap();
         assert_eq!(report.total_repairs(), 0);
     }
 
     #[test]
     fn defeature_removes_one_box_face() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
         let face = body.solid_faces(solid)[0];
-        let out = defeature(&mut body, solid, std::slice::from_ref(&face)).unwrap();
+        let out = defeature(&mut body, solid, std::slice::from_ref(&face), &mut rec).unwrap();
         assert_eq!(out, solid);
         assert_eq!(body.shell_faces(body.solids.get(solid).unwrap().outer).len(), 5);
     }
@@ -274,23 +286,26 @@ mod tests {
     #[test]
     fn defeature_rejects_empty_selection() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
-        assert!(defeature(&mut body, solid, &[]).is_err());
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        assert!(defeature(&mut body, solid, &[], &mut rec).is_err());
     }
 
     #[test]
     fn defeature_rejects_removing_too_many_faces() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let faces = body.solid_faces(solid);
-        assert!(defeature(&mut body, solid, &faces[0..3]).is_err());
+        assert!(defeature(&mut body, solid, &faces[0..3], &mut rec).is_err());
     }
 
     #[test]
     fn convert_to_nurbs_upgrades_box_planes_and_edges() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
-        let count = convert_to_nurbs(&mut body, solid).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let count = convert_to_nurbs(&mut body, solid, &mut rec).unwrap();
         assert!(count >= 6);
         for fid in body.solid_faces(solid) {
             let sid = body.faces.get(fid).unwrap().surface;

@@ -1,0 +1,10 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.kit/diff.json",
+  "title": "SemioKitDiff",
+  "description": "Sparse per-field diff over SemioKitSnapshot — types/designs/objects/models/properties/representations, each present only when touched.",
+  "type": "object",
+  "properties": {
+    "types": { "type": "array" }, "designs": { "type": "array" }, "objects": { "type": "array" },
+    "models": { "type": "array" }, "properties": { "type": ["object", "null"] }, "representations": { "type": "array" }
+  }
+}

@@ -5622,59 +5622,53 @@ export function policySubsetFacetTotalityBreaches(repoRoot: string): BreachRecor
   return breaches;
 }
 
-/** ⚙️ Engine must live at subset level, not standard level. */
-export function policySubsetEnginePresenceBreaches(repoRoot: string): BreachRecord[] {
-  const taxonomy = loadTaxonomy();
+/**
+ * ⚙️ An artifact is a `🧬️schema` (snapshot, diff, mutations, inferences) plus a `🚪️io` system — never
+ * an engine. Behaviour belongs to the app that edits the artifact (`🎛️apps/<app>/⚙️engine`, already a
+ * required app component); pure algorithms belong one level up, in a module's `⚙️engine`, which
+ * `taxonomyLeafParentDirs` keeps globally legal.
+ *
+ * Replaces the two rules that previously *mandated* the facet — `policySubsetEnginePresenceBreaches`
+ * and `policyArtifactEnginePresenceBreaches` — the latter of which gated at `high` on a missing
+ * folder. Both served `ArtifactEngine`, a trait that never shipped (`grep -rn "trait ArtifactEngine"`
+ * → 0 hits; see `🏪️store/🦀️component.rs`'s own note that it "never existed as a live trait").
+ *
+ * Lands at `low` while the 95 existing dirs burn down, then rises to `high` once the count is zero —
+ * verified by counting directories on disk, never via the breach cache. Ticket
+ * 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES (#2553).
+ */
+export function policyArtifactEngineFacetForbiddenBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
-    const eng = join(subRel, "⚙️engine");
-    if (!existsSync(join(repoRoot, eng))) {
+  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
+    for (const owner of policyArtifactEngineOwnerDirs(repoRoot, artRel)) {
+      if (!existsSync(join(repoRoot, join(owner, POLICY_ENGINE_FACET)))) continue;
       breaches.push({
-        id: `subset-engine-missing-${subRel}`,
-        summary: `"${subRel}" is missing ⚙️engine/`,
-        kind: "subset-conformance/engine-presence",
-        scope: subRel,
-        priority: "medium",
-        reason: "Engines moved from standards to subsets.",
-        solution: `Relocate the standard engine into ${eng}/.`,
+        id: `artifact-engine-forbidden-${owner}`,
+        summary: `"${owner}" declares a forbidden ${POLICY_ENGINE_FACET}/ facet`,
+        kind: "subset-conformance/engine-forbidden",
+        scope: owner,
+        priority: "low",
+        reason: "An artifact has a schema (snapshot, diff, mutations, inferences), an io system and examples — never an engine.",
+        solution: `Dissolve ${owner}/${POLICY_ENGINE_FACET} per the D0–D6 procedure: derived compute → 🧬️schema/💡️inferences, (de)serialization → 🚪️io, edits → a 🧬️mutations triad, behaviour → the app's ⚙️engine, pure algorithms → a module's ⚙️engine one level up. Then delete the directory.`,
       });
     }
   }
-  // flag remaining standard-level engines
-  const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
-  if (existsSync(pluginsRoot)) {
-    for (const plugin of readdirSync(pluginsRoot, { withFileTypes: true })) {
-      if (!plugin.isDirectory()) continue;
-      const arts = join(pluginsRoot, plugin.name, "🗿️artifacts");
-      if (!existsSync(arts)) continue;
-      for (const art of readdirSync(arts, { withFileTypes: true })) {
-        if (!art.isDirectory()) continue;
-        const standards = join(arts, art.name, "🏅️standards");
-        if (!existsSync(standards)) continue;
-        for (const std of readdirSync(standards, { withFileTypes: true })) {
-          if (!std.isDirectory()) continue;
-          const eng = join(standards, std.name, "⚙️engine");
-          if (existsSync(eng)) {
-            const rel = eng.replace(repoRoot + "/", "").replaceAll("\\", "/");
-            if (rel.startsWith("/")) {
-              // noop
-            }
-            const relPath = join("✏️s/🔌️plugins", plugin.name, "🗿️artifacts", art.name, "🏅️standards", std.name, "⚙️engine").replaceAll("\\", "/");
-            breaches.push({
-              id: `standard-engine-remaining-${relPath}`,
-              summary: `standard-level engine still present at "${relPath}"`,
-              kind: "subset-conformance/engine-presence",
-              scope: relPath,
-              priority: "medium",
-              reason: "After migration, engines must not remain at standard level.",
-              solution: "Move into each subset's ⚙️engine/ then delete the standard engine.",
-            });
-          }
-        }
-      }
+  return breaches;
+}
+
+/** ⚙️ Every level of an artifact tree that could carry an `⚙️engine`: the artifact, its standards, and their subsets. */
+function policyArtifactEngineOwnerDirs(repoRoot: string, artRel: string): string[] {
+  const owners = [artRel];
+  const standardsRel = join(artRel, "🏅️standards");
+  for (const std of policyReaddirSafe(repoRoot, standardsRel).filter((e) => e.isDirectory)) {
+    const stdRel = join(standardsRel, std.name);
+    owners.push(stdRel);
+    const subsetsRel = join(stdRel, "🪆️subsets");
+    for (const subset of policyReaddirSafe(repoRoot, subsetsRel).filter((e) => e.isDirectory)) {
+      owners.push(join(subsetsRel, subset.name));
     }
   }
-  return breaches;
+  return owners;
 }
 
 /** 📚️ Examples must not remain at artifact/standard level. */
@@ -5804,7 +5798,7 @@ export function policyNoGlueShimBlocksBreaches(repoRoot: string): BreachRecord[]
 export function policySubsetConformanceBreaches(repoRoot: string): BreachRecord[] {
   return [
     ...policySubsetFacetTotalityBreaches(repoRoot),
-    ...policySubsetEnginePresenceBreaches(repoRoot),
+    ...policyArtifactEngineFacetForbiddenBreaches(repoRoot),
     ...policyExampleNotAtArtifactLevelBreaches(repoRoot),
     ...policyPhantomStandardsBreaches(repoRoot),
     ...policySubsetTsParityBreaches(repoRoot),
@@ -6407,43 +6401,6 @@ function policyMutationImplPresenceBreaches(repoRoot: string): BreachRecord[] {
         solution: `Add impl Mutation<Snapshot> for the mutation struct in ${rsRel}.`,
       });
     }
-  }
-  return breaches;
-}
-
-/**
- * 📏️Every artifact must own `⚙️engine/` and that engine must eventually implement `ArtifactEngine`
- * (folder missing = high; trait missing = medium until Wave 3/4 rewrite engines as state machines).
- */
-function policyArtifactEnginePresenceBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const engineImplPattern = /\bimpl\b[^\n{]*\bArtifactEngine\b/;
-  for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
-    const engineRel = `${artRel}/${POLICY_ENGINE_FACET}`;
-    if (!existsSync(join(repoRoot, engineRel))) {
-      breaches.push({
-        id: `artifact-engine-folder-missing-${artRel}`,
-        summary: `"${artRel}" is missing required ${POLICY_ENGINE_FACET}/ facet`,
-        kind: "mutation-migration/artifact-engine",
-        scope: artRel,
-        priority: "high",
-        reason: "Every artifact must expose an ArtifactEngine state machine under ⚙️engine/.",
-        solution: `Create ${engineRel}/${POLICY_RS_COMPONENT_LEAF_NAME} implementing ArtifactEngine.`,
-      });
-      continue;
-    }
-    const rsFiles = policyWalkRelFiles(repoRoot, [engineRel], (_p, name) => name.endsWith(".rs"));
-    const hasImpl = rsFiles.some((rel) => engineImplPattern.test(readFileSync(join(repoRoot, rel), "utf8")));
-    if (hasImpl) continue;
-    breaches.push({
-      id: `artifact-engine-impl-missing-${artRel}`,
-      summary: `"${engineRel}" has no impl ArtifactEngine yet`,
-      kind: "mutation-migration/artifact-engine",
-      scope: artRel,
-      priority: "medium",
-      reason: "⚙️engine must implement ArtifactEngine (UI-independent apply/inverse over Mutation).",
-      solution: `Add impl ArtifactEngine for the artifact engine type under ${engineRel}.`,
-    });
   }
   return breaches;
 }
@@ -7063,7 +7020,6 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
   return [
     ...policyMutationTriadCompletenessBreaches(repoRoot),
     ...policyMutationImplPresenceBreaches(repoRoot),
-    ...policyArtifactEnginePresenceBreaches(repoRoot),
     ...policyOpGrammarStartMutationBreaches(repoRoot),
     ...policyMutationEmojiUniquenessBreaches(repoRoot),
     ...policyMutationDispatchCoverageBreaches(repoRoot),

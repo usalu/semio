@@ -378,8 +378,9 @@ The process models need to be
 ---
 
 Artifacts must not have an engine but only a schema, snapshot, diff, mutations, inferences, io system.
-Evera app has a an engine which is a state machine that is controlled by the app.
-machine is a core framework-provided stull blown state machine implementation.
+Evera app has a an engine which is a state machine that is controlled by the app. The communication between the app and the machine is bidirectional.
+machine is a core framework-provided full blown state machine implementation.
+State machines emit events on transitions (mutations: shared events that are tracked over vsc, presence: ephemeral events that are broadcasted to others inside a space, etc ). Some state is persisted shared (inside artifacts), some is persisted local-only (inside config), some is ephemeral local-only, some is ephemeral shared (such as cursors, cameras, etc). Specific information may overlap e.g. camera is both persisted locally and also empheraly shared on changes.
 
 ---
 

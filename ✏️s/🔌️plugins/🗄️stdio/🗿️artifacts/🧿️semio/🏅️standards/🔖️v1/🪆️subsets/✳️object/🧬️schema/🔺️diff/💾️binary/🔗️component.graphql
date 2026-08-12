@@ -1,0 +1,1 @@
+type SemioObjectDiffFrame { format: Int! presence: Int! payload: String! }

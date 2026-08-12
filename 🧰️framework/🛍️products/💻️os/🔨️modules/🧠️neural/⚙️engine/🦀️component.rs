@@ -2393,7 +2393,7 @@ mod tests {
             calls.fetch_add(1, Ordering::Relaxed);
             reg.dispatch(kind, input)
         };
-        let dirty: std::collections::HashSet<String> = ["b".to_string()].into_iter().collect();
+        let dirty: HashSet<String> = ["b".to_string()].into_iter().collect();
         cache.begin_epoch();
         let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &dirty, None, 0).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 0);
@@ -2533,7 +2533,7 @@ mod tests {
     fn point_schema() -> Schema {
         Schema {
             id: "point".into(),
-            extension: "math".into(),
+            module: "math".into(),
             name: "Point".into(),
             icon: "emoji:📍️".into(),
             summary: "Point with x, y, z".into(),

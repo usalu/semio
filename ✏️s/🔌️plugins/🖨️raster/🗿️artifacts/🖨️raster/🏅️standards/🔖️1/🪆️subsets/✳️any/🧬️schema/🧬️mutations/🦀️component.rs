@@ -74,6 +74,7 @@ pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use crate::artifacts::raster::engine::{empty_raster_snapshot, layer_name, layer_visible};
     use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use protocol::Mutation;

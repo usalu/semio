@@ -6648,6 +6648,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-machine"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "semio-framework-machine-derive",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-machine-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "semio-framework-math"
 version = "0.1.0"
 dependencies = [
@@ -6780,7 +6801,8 @@ dependencies = [
 name = "semio-framework-os-kernel-db"
 version = "0.1.0"
 dependencies = [
- "async-trait",
+ "blake3",
+ "rusqlite",
  "semio-framework-os-kernel",
  "serde",
  "serde_json",
@@ -7190,7 +7212,6 @@ dependencies = [
  "image",
  "semio-framework",
  "semio-framework-2d",
- "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",

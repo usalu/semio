@@ -26,7 +26,7 @@ use std::collections::BTreeMap;
 /// 📦️ The `procedural2d-play` "default" example, embedded at compile time as handcrafted `.procedural2d`
 /// DSL text — shared by the manifest's `.example(...)` registration, the `default_snapshot` fallback,
 /// and every test fixture.
-pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 //#region 🔖️DslMirror
 /// 🔒️ `ValueDsl` mirrors `flow::neural::Value`/`Atom` field-for-field rather than routing through

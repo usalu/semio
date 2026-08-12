@@ -1,0 +1,9 @@
+# 📝️ Text-facet grammar mirror, GraphQL SDL shape (descriptive) — see ../🔗️component.graphql for
+# the canonical facet schema; this file describes the DSL-text ENCODING of the same shape.
+type SemioObjectSnapshotDsl {
+  schema: String!
+  transformWire: String!
+  brepWire: String!
+  meshWire: String!
+  propertiesWire: String!
+}

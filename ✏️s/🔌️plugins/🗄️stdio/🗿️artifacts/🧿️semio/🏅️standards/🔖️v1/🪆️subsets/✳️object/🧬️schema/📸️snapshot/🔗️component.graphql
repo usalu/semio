@@ -1,0 +1,21 @@
+# 🧬️ SemioObjectSnapshot schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+type SemioTransform {
+  translationX: Float!
+  translationY: Float!
+  translationZ: Float!
+  rotationX: Float!
+  rotationY: Float!
+  rotationZ: Float!
+  rotationW: Float!
+  scaleX: Float!
+  scaleY: Float!
+  scaleZ: Float!
+}
+
+type SemioObjectSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  transform: SemioTransform! @state(class: PERSISTENT)
+  brep: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.brep")
+  mesh: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.mesh")
+  properties: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.value")
+}

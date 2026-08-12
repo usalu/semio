@@ -1,0 +1,2 @@
+    Checking semio-framework-machine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 1.20s

@@ -238,6 +238,7 @@ impl Din16798Mutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use protocol::Mutation;
 
     /// ⚖️ One value per `Din16798Mutation` variant — the closed set the semantics/round-trip tests

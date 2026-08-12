@@ -47,7 +47,121 @@ Ticket opened (#2550, goal `🎯aioptimizedrepo`). `📌️important.md` written
 
 Nothing in the session may be unrecoverable by rebuilding from the draft base. A field that survives that rebuild (a user-set tolerance, a selection, a pending value) is authored state living outside the store and belongs in the Draft snapshot with a real mutation. This is a **design** requirement, not a review checklist item: the type must make violation structurally hard (only `Rep` values keyed by a content hash of the base; no user-supplied fields). Precedent: APA's ruling that lowpoly's texture cache is an inference, not draft state.
 
-## W1 — Mechanism: DISPATCHED
+## ⚠️ Session-limit event — four agents lost, ZERO edits landed (verified)
+
+All four dispatched agents (W1, W2, W3c-design, W3a-recon) died simultaneously on an account session usage limit, two of them at their baseline step. **Verified rather than assumed** that nothing partial landed: `⚙️engine` mtime Aug 11 00:50 and `🖥️platform` mtime Aug 10 20:25 (both predating this session), `grep -c "EngineRep\|DraftEngineSession"` → 0, `grep -c "fn set_"` on platform → 4 (unchanged), ticket folder containing only the coordinator's own files. The bounded-rounds structure worked exactly as designed — agents died before any write. **The coordinator then executed W1 and the W3c design directly.**
+
+## Environment events (all five sessions affected)
+
+1. **Whole-workspace manifest outage (transient, resolved).** `✏️s/🔌️plugins/🖍️draw/🔄️fsm/` briefly vanished while root `Cargo.toml:66-67` and `🖍️draw/📦️packages/🦀️rust/Cargo.toml:27` still referenced it. Cargo refused to load the workspace — **no command worked repo-wide, not even `check -p`**. DKM diagnosed and reported it; APA confirmed their draw agent was relocating `🔄️fsm`, discovered it is a separate crate with two workspace-member entries, and reverted. `🔄️fsm` stays. **Rule now adopted repo-wide: a directory containing a `Cargo.toml` is inventory-only, never moved — a dangling `#[path]` mount is a local compile error, a dangling workspace member is a global one that stops cargo before it builds anything.**
+2. **Disk full, machine-wide.** `/System/Volumes/Data` hit 100% (1.2 GiB free of 926 GiB). Root `target/` = **428 G**, mtime 17.5 h old, **zero files modified in the preceding 2 hours** — i.e. genuinely stale, since repo policy is a per-ticket `CARGO_TARGET_DIR`. Escalated to the user rather than deleted; being handled externally. APA's user separately chose to delete the ~17 G of per-ticket `🎯️target*` dirs (DKM's 333 M included, agreed — no build in flight).
+3. ⚠️ **Consequence that invalidates evidence: all cargo results repo-wide in this window are untrustworthy.** SMO supplied the causal chain — disk at 100% → `rustc` fails to write `rmeta` → surfaces as plausible-but-bogus "cannot find crate" errors. This retroactively explains several phantom failures across sessions, including SMO's own retracted 144-error `tempfile` report (`tempfile = "3.20.0"` is present at `💻️os/📦️packages/🦀️rust/Cargo.toml:61`). **Standing rule: a cargo result is evidence only if you know the run reached the target.**
+4. **`semio-framework-plugin` is red repo-wide** (E0499 `self.children`; E0560/E0609 from the `document`→`artifact` rename reaching definitions but not two `#[cfg(test)]` call sites). Two peers initially misattributed it as orphaned debt from a closed ticket; DKM's mtime measurement (`🛂️manifest` Aug 12 03:50 vs `🔌️plugin` Aug 12 17:33) showed it is one session's rename mid-propagation. Both retracted. **Rule adopted: check mtime before declaring anything unowned — "nobody owns this" is a much stronger claim than "I can't tell who owns it", and usually only the second is true.** Blocks the brep/mesh/2d lanes, did not block W1.
+
+## W1 — Mechanism: DONE (green when measured, pending re-confirmation)
+
+Landed by the coordinator in `💻️os/🔨️modules/⚙️engine/🦀️component.rs`: `//#region 🔖️EngineRep` (tier-(d) marker trait; `build(&P)` is the **only** constructor — no seeded/incremental variant, so a representation cannot be grown from a previous one) and `//#region 🔖️DraftEngineSession` (holds one `Rep` keyed by a `DraftBaseHash` newtype; no `&mut R` accessor, no insert/replace, no `From<R>`, no user-supplied field anywhere on the struct — APA's invariant holds **by construction**, not by review). `EngineCache` given its narrowed-contract docstring, behaviour untouched.
+
+Verification at ~17:35, before the disk filled: `cargo check -p semio-framework-os-kernel` → **0 errors / 49 warnings, unchanged from baseline**; `cargo test -p semio-framework-os-kernel --lib engine` → **11 passed, 0 failed** (818 filtered out — the other tests were NOT run and are not claimed). Re-run both once the disk is clear. Full detail: `📓️wave1-mechanism-report.md`.
+
+## W3c design — DONE, both documents delivered to SMO
+
+`📓️wave3c-design/flow-target-shape.md` and `📓️wave3c-design/space-target-shape.md`. Authored by the coordinator after the design agent was lost.
+
+**Flow — a correction to SMO's own premise.** They rejected `update-widget` because "the `Patch` arm is an option-bag". Measured, `TPatch` is bound to the **full record type** (`CollectionMutation<String, Widget, Widget>`), so it is a whole-record swap, not an option-bag. SMO accepted the correction and asked that the replacement reasoning be the one recorded: *a whole-record swap is wrong not because it is an option-bag but because it is whole-document replace one level down — it records what the record became, never what the user did.* `Widget` is a **9-variant enum**, so the honest size is ~30 per-variant × per-field mutations, not a flat set. `SetFixture` and `SetLayout` die with no replacement.
+
+**SMO rulings (binding):** `connect`/`disconnect` for synapses + `create`/`delete` for widgets ✅ · `change-neuron-preview` over `toggle` ⚠️ (`toggle` is value-blind — under concurrent merge two toggles converge to the original state rather than either user's intent; `change` records intent) · `edit-note-text` ✅ · **no bridge** — `from_framework_mutation`/`to_framework_mutation` disappears entirely, which removes the last floor under SMO's plugin-scope exit.
+
+**`camera` doctrine violation found and resolved better than DKM proposed.** `FlowFixture.camera` is a persisted snapshot field while `FlowMutation`'s doc comment three lines above says the camera is ephemeral view state. DKM proposed deleting it; **SMO's resolution — route it to APA's draft lane** — keeps the capability and puts ephemeral local-only state where it belongs. Needs UCAS (snapshot shape) + APA (draft lane).
+
+**Space — the 70-hit count overstates the job.** The vocabulary is already close to conformant. Three verb changes (`SetName`→`RenameCollection`, `Add*`/`Remove*`→`Create*`/`Delete*`, and `Move*`→`ChangeFolderParent`/`ChangeEntryFolder` **pending SMO's ruling** — tree re-parenting is neither `move` (spatial) nor `reorder` (ordered list), so by the field test it is `change`). The real defect is `CollectionDiff` storing **whole post-mutation records**; both claimed derive-engine gaps were verified real (no nested-`Option`, no "record + position" composite). It violates gate 3 — mergeability, not replayability, is the property the rule protects. **DKM position: handcraft the diff, do not extend the derive engine** (blast radius of every facet in the repo for the benefit of one; the file already handcrafts its `OpText`/`OpBinary` for the same reason).
+
+## W1 — RE-CONFIRMED after the disk cleared
+
+Disk resolved (441 GiB free; root `target/` 428 G → 407 M). W1 re-verified on a **cold rebuild**, so the earlier result was genuine and not an artefact of the degraded window:
+
+- `cargo test -p semio-framework-os-kernel --lib engine` → **11 passed, 0 failed** (5m21s cold).
+- Full lib suite baseline: **828 passed, 1 failed**. The single failure is `os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures` — an `os_dsl` fixture sweep over *plugin grammars*, unrelated to `os_engine`; UCAS recorded the same `fixture_sweep` family as concurrent churn from another session's in-flight plugin work. **Recorded as the baseline failure**, not attributed to DKM, and not fixed by us.
+
+## ⚠️ W2 exemplar CHANGED — `🖥️platform` is dead scaffolding, not a dissolution target
+
+Measured before authoring, and the result cancels the planned exemplar:
+
+- **The Rust `Platform` struct has ZERO consumers.** `set_active_app_id`, `set_panel_visibility`, `Platform::new`, `PlatformSpec` have **no call sites anywhere** in `🧰️framework`, `✏️s`, or `🌎️hub`. The only reference is a re-export at `🧰️framework/📦️packages/🦀️rust/📦️glue.rs:75`.
+- **`chrome_generation`/`notify_chrome` have zero readers outside the module** — confirming the doctrine call that dirty-flag counters are dead weight, but also that nothing would notice their removal.
+- **The TS file `🖥️platform/🟦️component.ts` is NOT a twin.** It contains UI layout/element-id helpers (`windowElementId`, `createWindowLayout`, `canvasPickTargetKey`, …) — unrelated content, one setter, no importers found. So there is no live TypeScript counterpart keeping the Rust shape honest.
+
+**Consequence: dissolving `Platform` would validate nothing.** An exemplar exists to prove a recipe against real consumers; a dissolution of code nobody calls cannot fail, and would encode a facet shape no call site tests. Under the greenfield rule (delete rather than adapt) `Platform` should be **deleted as dead scaffolding** — deferred to W6's dead-code sweep, where it belongs, rather than done here as a side quest. Its re-export at `📦️glue.rs:75` goes with it.
+
+### Replacement exemplar, chosen on measured evidence
+
+| Candidate | LOC | External refs | Verdict |
+|---|---|---|---|
+| `🗺️surface/🏔️terrain` (`TerrainSessionCore`) | 569 | 9 (gis plugin, `♾️infinite` ×2) | ✅ **CHOSEN** |
+| `🗺️surface/🕸️node-graph` | 1144 | 2 | too few consumers to prove much |
+| `🗺️surface/🎨️paint` | 1837 | 4 | good but 3× the size |
+| `◻2d/🗄️store` (`DrawingStore`/`DrawingEngine`) | 1177 | 8 | the architecturally important target, but **blocked** on UCAS's `✳️drawing` stdio handoff |
+| `🧊️3d/🥽️mesh` | 2769 | **1117** | `Vec3`/`VertexId` are everywhere — far too large a blast radius for a first exemplar |
+
+`🏔️terrain` is the smallest module that has *real* consumers, is unblocked (no stdio dependency), and is representative of the whole W3b surface family — `paint`, `node-graph` and `tiled-map` share the same "session object with mutable state + setters" shape, so a recipe proved here transfers directly to the other three.
+
+## Environment recovered (2026-08-12, later)
+
+- **Disk resolved by user decision** — root `target/` (428 G) deleted. 441 GiB free, 49% used. ⚠️ **Everything is a cold rebuild now**: a scoped check can run 5–10 minutes. **A slow build is not a hung build** — do not kill it, do not read slowness as breakage.
+- **`semio-framework-plugin` reported GREEN** by the inference-family session (UCAS finished propagating the `document`→`artifact` rename; 0 errors, 37 warnings). **DKM has not independently confirmed this yet** — deliberately not run while the W2 agent holds the build lock, since concurrent cargo serialises on the flock and would starve it. To be verified before any brep/mesh/2d lane is dispatched, per the standing rule that a peer's build claim is not evidence until re-run.
+- ⚠️ **Every cargo result recorded between roughly 17:40 and the disk fix is void, in BOTH directions.** Reds were upstream (`semio-framework-plugin`) or `No space left on device`, not local regressions; greens may have been builds that never reached their target. Anything gated, baselined or released in that window must be re-run. DKM's own W1 green was re-confirmed on a cold rebuild after the fix (11/11) and is therefore sound.
+
+## W3a recon — DONE, and it INVERTS the fan-out plan
+
+Full report: `📓️wave3a-brep-recon.md` (391 lines). Headline numbers: **42 component files, 23,840 LOC** — the approved plan's estimate of ~30 files / 17,439 LOC undercounted by ~37%. 263 tests. Benchmark at `🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/benches/kernel.rs` (313 LOC, 9 groups covering primitives, curves, sweeps, booleans, features, measures, intersections, tessellation, patterns).
+
+### ⚠️ The finding that changes the plan: brep cannot be fanned out first
+
+The approved plan assumed 6–8 parallel dependency-cluster lanes from the start. The recon shows that is **not possible in the current shape**:
+
+- **`📐️brep/🧰️kernel` is a hub with 191 `&mut self` methods and 26 internal dependencies.** Every operation mutates shared `kernel.body`/`kernel.live`/`kernel.counter`.
+- **`📐️brep/🏟️arena` is the storage backbone**, depended on by ~20 modules.
+- **`BrepEngineHost` owns `cache: Mutex<EngineCache>` + `kernel: Mutex<Brep>`** — a process singleton.
+
+So lanes 4 (boolean/features), 5 (queries/intersection) and 6 (construction/export) all write through the same arena. Parallelising them today would mean N agents mutating one shared topology store — the exact defect the ticket exists to remove, reproduced in the workforce.
+
+**Consequence: the dissolution and the parallelisation are the same problem, in that order.** The kernel must be event-sourced FIRST (its 191 `&mut self` methods replaced by mutations whose diffs are computed against `base`), and only then do the dependent lanes become independent. Revised W3a shape:
+
+| Phase | Lanes | LOC | Character |
+|---|---|---|---|
+| **W3a-0 (serial, single writer)** | `🧰️kernel` + `🏟️arena` | 1,146 | the dissolution proper — everything else gates on it |
+| **W3a-1 (parallel, after W3a-0)** | boolean/features · queries/intersection · construction/export | 2,306 / 3,421 / 6,061 | become independent once the kernel is event-sourced |
+| **frozen, no work** | math foundations (2,148) · nurbs/curves (1,725) | 3,873 | pure functions, zero `&mut`, zero deps — doctrine tier (e), already conformant |
+
+The two frozen lanes are a genuine result, not a deferral: ~3,900 LOC of the kernel is *already* pure compute and needs no dissolution at all. That is 16% of the subsystem removed from scope by measurement.
+
+### 🎁 `📐️brep/📜️history` is provenance, NOT an event log — and it is the right foundation
+
+The recon proposed "use `OpRecorder` as the event log; replay to rebuild arena state". **That reading is wrong, and the reality is better.** Read directly (`📐️brep/📜️history/🦀️component.rs`, 157 LOC):
+
+- **`PersistentLabel(u64)`** — a stable identity per topological entity, issued from a per-`Body` monotonic counter at birth, **never reused**, surviving arena compaction. Its own docstring says it is *"the identity the document layer's persistent naming keys off of."*
+- **`OpDelta { generated, modified, deleted }`** — what one mutating Euler operation touched, expressed in labels rather than arena ids.
+- **`OpRecorder`** — accumulates an `OpDelta` as a checked editor runs; every `📐️brep/🔺️euler` operator is passed one *"so no operation can forget to log what it touched."*
+
+So it records **what changed**, not **what was asked for** — in CQRS terms it is shaped like a *diff*, not like a command log. Replay is not what it is for, and W3a-0 must not be designed around replaying it.
+
+**Why this materially de-risks W3a-0:**
+
+1. ~~**The addressing problem is already solved.**~~ ⚠️ **CORRECTED by the W3a-0 design — I overstated this.** The *type* exists and is right: arena ids are **generational and reused after removal**, so they would be a correctness bug as mutation addresses that only surfaces after a delete, while `PersistentLabel` is the non-reused stable id the taxonomy requires. But the design agent measured what I asserted: **`OpRecorder`/`OpDelta` never escape a function boundary.** Every top-level constructor (`make_box`, `boolean_solid`, `extrude_face` — ~14 functions across 8 files) creates a recorder locally and **discards it**. The provenance is correctly threaded *within* a call and thrown away at the end of it. So this is real, scoped Phase-1 work, not a finished mechanism I can build on. My "already threaded through every Euler operator" was true and irrelevant — threading is not the same as surfacing.
+   ⚠️ **A second correction from the same pass**: the `EngineRep` target is **`Body` (`📐️brep/🕸️topology`)**, not `Store<T,Id>` (`📐️brep/🏟️arena`). The recon named the wrong type and I repeated it.
+   ⚠️ **New gap, flagged to SMO**: `Loop`/`Coedge` carry **no `PersistentLabel`**, which conflicts with the `create-loop`/`delete-loop` verbs SMO already approved. Those two verbs have no stable address to key on as things stand.
+2. **`OpDelta` maps almost 1:1 onto the diff shape** — `generated`/`modified`/`deleted` against the `create-*`/`change-*`/`delete-*` verb families SMO approved.
+3. **The gap is exactly the command side**: the mutations themselves and their inverses. The kernel already knows what it touched; it does not yet record what the user asked for, nor how to undo it.
+
+**The imperative anchor to dissolve is named in that same docstring**: *"**Host authority:** `LabelSource` lives only inside a `Body` owned by engine compute or cache."* That host-owned `Body` — reached via `BrepEngineHost { cache: Mutex<EngineCache>, kernel: Mutex<Brep> }` — is the state that must move into an `ArtifactStore` envelope, with `LabelSource` becoming part of the snapshot so label issuance is deterministic and replica-convergent rather than host-local.
+
+### ⚠️ `Vec3` — the same trap as the collection type, caught again
+
+The earlier "~1117 external references" figure is **not one type**. There are **three separate `Vec3` types**: a math `f32` one, a brep `f64` one, and an engine `[f64;3]` alias. Total ~1211 refs (974 `Vec3`, 161 `FaceId`, 110 `VertexId`). **Current blast radius is LOW** — the brep types are not yet re-exported as public API through `🧰️framework/📦️packages/🦀️rust/📦️glue.rs`, so they can be touched. Risk rises to MEDIUM only once lanes exchange geometry and must agree on a representation.
+
+This is the third instance today of one identifier naming several unrelated types (`CollectionMutation` ×2, `🌿️vcs`/`🪐️space`/`🧊️3d` path glyphs, now `Vec3` ×3). The grep-is-a-search-not-a-census rule in `📌️important.md` is earning its place.
+
+## W1 — Mechanism: DISPATCHED (superseded by the section above)
 
 Sonnet agent, single writer of `💻️os/🔨️modules/⚙️engine/🦀️component.rs`. Deliverables: `//#region 🔖️EngineRep` (doctrine tier-(d) marker trait), `//#region 🔖️DraftEngineSession` (shaped to the invariant above, matching `💡️inference`'s `InferenceSession`/`InferenceCache` idiom rather than inventing a parallel one), `EngineCache` scope-narrowing note + an exhaustive construction-site census classified `wasm-boundary` vs `kernel-cache` (that table seeds W6's policy allowlist). Report: `📓️wave1-mechanism-report.md`.
 
@@ -58,3 +172,172 @@ Sonnet agent, single writer of `🧰️framework/🔨️modules/🖥️platform/
 ## Remaining
 
 W3a brep/mesh/2d fan-out (gated on W1 + W2 recipe + UCAS stdio handoff + SMO slug sign-off) · W3b surface (4 lanes, gated on W2) · W3c flow/space/db/infinite (gated on W1; flow+space gated additionally on sending SMO the target enum shape; db gated on the pre-existing `semio-framework-os-kernel-db` breakage, ~53 errors, `task_9a4155cc`, which predates DKM) · W5 serializer · W6 ratchet at queue position 5 · W7 adversarial verify + close.
+
+## Cross-session service: measured the `📚️examples` relocation fallout (not DKM's to fix)
+
+Two peers disagreed on the fallout from the `📚️examples` dir relocation (`🗿️artifacts/<a>/📚️examples/` → `🗿️artifacts/<a>/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/`): one reported 32 files / 24 plugins / one wrong-depth pattern with a mechanical 7→3 fix; the other reported 62 unresolved across several patterns and refused to substitute. DKM resolved it from the filesystem, no compiler, while the machine was too loaded for anyone to build.
+
+**Method**: resolve every `include_str!` whose path contains `📚️examples` under `✏️s/` against its real on-disk target. 197 candidates → **11 unresolved, 5 plugins**. Two structurally different classes:
+
+- **Class A — 4-up where 3 is correct** (depth rewrite genuinely fixes; verified): `🕸️dag`, `🪐️space/🏠️home`, `🪵️sourcing/🗂️curate`, `🔋️energy/🔋️model` — all in `📸️snapshot/📝️text/`.
+- **Class B — cross-artifact / cross-plugin references, which NO depth rewrite fixes** (7 files): `🔱️trinity/🎛️apps/{🔌️jack:40,41 · ♻️rewrite:52 · ♻️rewrite/🌍️world:759,969}` reach into `🗿️artifacts/🔌️jack/📚️examples/…`; `🪐️space/🦀️component.rs:30,31` reach into **two other plugins'** example dirs (`../🖍️draw/…`, `../✒️writer/…`). Their targets moved *structurally*, not just shallower.
+
+**Outcome**: confirmed one peer's finding from disk (saving them a cold rebuild started to answer it), and confirmed the other's retraction was correct — a blanket substitution would have silently corrupted all seven Class B files. **DKM holds none of the 11 and fixed none of them.**
+
+⚠️ **The inventory is moving**: 32 → 11 between the two measurements, because a session is actively repairing them, and `🏗️fem` (the plugin the 7→3 recipe was generalised from) is **already fixed**. Anyone acting on a list more than a few minutes old is acting on stale data — including this one.
+
+### Rules earned here, added to `📌️important.md`'s family
+
+- **An auto-commit flag carries no attribution signal at all.** We knew `git status` is useless in this tree because it auto-commits; the corollary nobody had drawn is that a commit's *contents* are equally useless for attribution — a timer-based commit bundles every session's in-flight work, so co-location in a flag means only "before 18:08". Attribution needs **content evidence** (here, `R100` pure-rename records) not co-location.
+- **A recipe generalised from two samples is a hypothesis.** The 7→3 fix was correct for both files it was derived from and wrong for the majority of the real population.
+
+## W2 exemplar — DONE, PASS (214/214), with a plan-changing negative result
+
+Full detail: `📓️wave2-reports/terrain-report.md`.
+
+**The finding is negative and that is its value.** `TerrainSessionCore` owns **no tier-(a) authoritative state**, so no mutation vocabulary applies. Every field was traced to its real owner rather than inferred from the struct's shape: `origin_lon`/`origin_lat`/`exaggeration` are *mirrors* of gis-plugin state, and `GisTerrainSnapshot.exaggeration` **already has a shipped, law-tested `change-exaggeration` mutation on the correct owner**; `elevation` holds network-fetched DEM PNG bytes, not derivable from any snapshot, so it fails `EngineRep::build(&P)`'s contract by construction. Terrain is a rendering-support cache, not a hidden document. The agent authored **no vocabulary** rather than inventing some — the correct outcome.
+
+⚠️ **Consequence for the plan: "session object + setters" is NOT a dissolution signal, and setter count — the heuristic this exemplar was chosen with — is the wrong instrument.** W3b is likely much smaller than scoped. Each surface lane must trace fields to owners before assuming there is anything to dissolve. This does NOT generalise to "no work in W3b": `📓️wave3b-surface-2d-recon.md` (as corrected) found real tier-(a) state in `MapHost.features` and real consumers for all three siblings.
+
+**Verification**: `cargo test -p semio-framework-surface --lib` → **214 passed, 0 failed, 1 ignored**; terrain subset **20 passed, 0 failed** including 2 new determinism law tests.
+
+### Two PRE-EXISTING defects fixed to reach the gate — separate from DKM's dissolution diff
+
+Both in `🗺️tiled-map/🦀️component.rs`, inside DKM's claimed boundary, so ours to fix (unlike the peer-owned files we declined all day). Attribution measured: tiled-map mtime **Aug 10 20:13**, only `🏔️terrain` dirty, all 6 compile errors in tiled-map and zero in terrain.
+
+1. **6 stale field accesses (E0609)** from an Aug-10 `MapHost` refactor that nested `positions` under `features` and `tile_images`/`vector_tiles` under a private `tiles`. **The crate's test target had not compiled for two days** — invisible to `cargo check`, so the refactor landed green.
+2. **12 stale RUNTIME fixture paths.** Ticket date dirs gained emoji prefixes (`🎫️tickets/26/06/03/…` → `🎫️tickets/🎆️26/🌙️06/☀️03/…`); 12 `std::fs::read` literals kept the bare form. The fixtures existed all along. 10 tests now pass.
+
+### 🔑 Generalisable: a gap in every path audit run today
+
+Defect 2 is the **same class** as the `📚️examples` relocation fallout four sessions spent the afternoon on — but it lives in a **runtime `std::fs::read`, not a compile-time `include_str!`**. It was therefore invisible to *both* instruments in use: `cargo check` never compiles `#[cfg(test)]`, and the repo-wide include-target audits (4343 targets, 0 unresolved) only scanned compile-time macros. **Anyone auditing path staleness should scan `std::fs::read`/`File::open` literals too.** DKM found it only because the crate was in our boundary and we ran the tests rather than the checker.
+
+### Coordinator errors the agent caught (recorded, not quietly fixed)
+
+- **Wrong crate in the dispatch brief**: `🗺️surface` does not mount into `semio-framework`; it is `semio-framework-surface`. The agent proved the negative (`cargo test -p semio-framework --lib terrain` → 0 tests matched) rather than assuming.
+- **Miscounted setters**: brief said 5, truth is 2 (+2 wasm wrappers); the fifth match was the *test function* `set_exaggeration_clamps_negative_to_zero`. That is the coordinator committing the "a grep is a search, not a census" error **in the brief that cites it**.
+
+## W3a-0 — design dispatched; one phantom gate removed
+
+**Baseline measured**: `cargo test -p semio-framework-3d --lib` → **407 passed, 0 failed**.
+
+⚠️ **`semio-framework-3d` does NOT depend on `semio-framework-plugin`** (verified in its `Cargo.toml`). The plan recorded brep as gated on that crate going green; **that gate never existed**. Brep work is unblocked by the plugin SDK entirely.
+
+A **design pass precedes implementation** for this wave, because one architectural question is load-bearing and currently unanswered: the framework cannot depend on a plugin, stdio owns `SemioBrepSnapshot`, stdio is another session's and unfrozen, and the W2 exemplar found **zero framework-module precedent** for schema registration (all 106 real `register_artifact_schema_descriptor` call sites are under `✏️s/🔌️plugins/**`). Guessing it wrong would put ~30 triads in the wrong crate. The previous wave burned 356k tokens partly by building before the architecture was settled.
+
+## W3a-0 design — DONE. Blocking question resolved; scope shrank substantially.
+
+Full design: `📓️wave3a-design/brep-dissolution-design.md`.
+
+### The load-bearing question, answered
+
+**The authoritative brep snapshot stays `SemioBrepSnapshot` in stdio's `✳️brep` subset** (already real, registered, codec'd — untouched). The mutation triads belong there too, plugin-owned, still gated on the UCAS handoff (2 of 3 gates open). **`semio-framework-3d` becomes pure compute**, with dependency direction **stdio → framework-3d**.
+
+Crucially that direction is the **established** pattern, not a novel shape: `cad`, `process`, `procedural`, `demonstrator` and `lowpoly` already depend on `semio-framework-3d`. stdio doesn't yet, but adding the edge is one `Cargo.toml` line. Framework-3d gains exactly **one** new tier-(d) type — an ephemeral seed struct (never persisted, explicitly *not* a second snapshot) serving as the `P` in a new `impl EngineRep<Seed> for Body`.
+
+### 🎁 The finding that shrinks the wave
+
+**The 191 `&mut self` kernel methods are overwhelmingly two layers of thin indirection** — a `GeometryHandle`-registry wrapper plus an async-trait wrapper — around functions that **already take `&mut Body`/`&Body` and are already pure**. Every real geometry algorithm (boolean, sweep, blend, offset, measure, classify, tessellate, validate) is *already* in the shape the doctrine wants.
+
+**So the bulk of this lane is deletion, not rewriting**, and it needs far fewer triads than the ~30 previously quoted to SMO. The imperative surface is a wrapper, not the substance.
+
+### Corrections this design forced (recorded, including to my own claims)
+
+1. ⚠️ **The `EngineRep` target is `Body` (`📐️brep/🕸️topology`), not `Store<T,Id>` (`📐️brep/🏟️arena`).** The recon named the wrong type; I repeated it.
+2. ⚠️ **My "the addressing problem is already solved" was wrong** — see the corrected entry above. Provenance is threaded within a call and discarded at its boundary; ~14 top-level constructors create an `OpRecorder` locally and throw it away. Real Phase-1 work, not a finished mechanism.
+3. ⚠️ **New verb gap, flagged to SMO, unresolved**: `Loop`/`Coedge` have **no `PersistentLabel`**, so the `create-loop`/`delete-loop` verbs SMO approved have no valid stable address (arena ids are generational/reused — a delete-triggered correctness bug). Three options put to them; DKM's weak prior is dropping those two verbs and treating loops as structure implied by face/edge mutations. **Not decided unilaterally.**
+4. ⚠️ **New cross-session finding: `BrepEngineHost` has two live consumers outside `🧊️3d`** that the recon missed — a plugin-owned struct field in `process3d`, and a **process-global `OnceLock` in `cad`** (the purest instance of the anti-pattern this ticket exists to remove). Its deletion is therefore **not framework-3d's to do alone**; it needs cross-session migration and reaches into APA's `SolidExporter`/`SolidImporter` territory via `💻️os/🖥️host`. Flagged to APA; DKM touches none of it.
+
+### Six-phase plan
+
+**Phases 1–3 are fully executable inside `semio-framework-3d`'s own boundary** and depend on no peer: surface the provenance past function boundaries, add `impl EngineRep<Seed> for Body` with a snapshot→body→snapshot round-trip law, and strip the two indirection layers. **Phases 4–6 are explicitly gated** on the stdio handoff (triad authoring) or the cross-session `BrepEngineHost` migration. Each phase is independently verifiable against the **407 passed / 0 failed** baseline, with `benches/kernel.rs` (9 groups) checked on the phases touching boolean/sweep/tessellate.
+
+## W3a-0 Phases 1–2 LANDED and independently verified; Phase 3 correctly self-blocked
+
+Report: `📓️wave3a-reports/phases-1-3-report.md`. **Coordinator re-ran the claimed gate rather than accepting it** (standing rule: a scout re-runs whatever an executor claims):
+
+```
+cargo test -p semio-framework-3d --lib   →   413 passed; 0 failed
+```
+Baseline was **407/0**; the wave added 6 executed law tests and regressed nothing. **Boundary discipline verified**: 16 changed files, all under `🧰️framework/🔨️modules/🧊️3d/📐️brep/`. Other diffs in the tree are peers' plugin migrations, not ours.
+
+**Phase 1 — provenance now escapes the call. DONE.** `rec: &mut OpRecorder` threaded through 12 primitives constructors, boolean (4 public + 4 private), sweep (6+3), blend (3+1), offset (6+4), sew (1), heal (3), plus ~30 call sites in the kernel and test sites across 6 files. Two functions — `heal_solid`, `convert_to_nurbs` — **previously bypassed euler's provenance entirely** and now genuinely record what they touch. A new law test proves `make_box`'s whole op-delta escapes the call.
+The agent improved on the design's literal file list: functions *transitively* calling those also needed threading, or the delta would still be swallowed one frame up. That is the correct reading of the intent, not scope creep.
+
+**Phase 2 — `impl EngineRep<BrepArenaSeed> for Body`. DONE.** Seed built natively on `PersistentLabel` rather than `String` (refining the design's own sketch per its §2 guidance) — which matters, because it makes the ephemeral representation key off the same never-reused identity the mutation layer will address by. `build()`/`to_seed()` in `🕸️topology`, with 4 executed round-trip/determinism laws against a real box constructed through the checked euler editors.
+
+**Phase 3 — BLOCKED in its full form, and this is the right outcome.** The agent verified by inspection that all ~92 `BrepKernel` async trait methods delegate 1:1 to `SyncApi`, and that `BrepEngineHost` — explicitly out of scope, with live consumers in `process3d` and `cad` — depends on that surface remaining intact. **Deleting the Registry/SyncApi layer now would break code outside this crate's boundary.** It therefore deleted only the two `SyncApi` methods with zero callers anywhere (`retain_sync`, `tessellate_to_mesh_data_sync`) and stopped. Checking consumers before deleting, then stopping when the answer said stop, is exactly the instructed behaviour.
+
+**Benchmarks**: no regression in the 5 of 9 groups that completed. 3 pre-existing bench-fixture bugs found, attributed, and **not fixed** — correctly reported rather than silently repaired or blamed on this diff.
+
+### What this means for the wave
+
+The imperative surface's *substance* is now dissolvable — provenance escapes, and the ephemeral representation exists with proven round-trip laws. What remains of Phase 3 is **gated on the cross-session `BrepEngineHost` migration APA owns**, not on anything DKM can do alone. That confirms the design's phasing was right: 1–3 inside the boundary, 4–6 gated.
+
+## 🧊️ STDIO ROSTER FROZEN — the third gate opened (2026-08-12, late)
+
+UCAS broadcast the explicit signal: **"roster frozen — `🗄️stdio` is released; start whenever you're ready."** They were deliberate that this means *the directory structure is final*, not merely that it compiles — the distinction this tree has repeatedly got wrong.
+
+**Final `🧿️semio` v1 roster — 18 subsets + `✳️any`** (19 dirs, verified by UCAS on disk rather than from an agent report): `animation audio brep cad document drawing flow graph image kit mesh model object presentation table text value video` + `✳️any`.
+
+**stdio baseline to diff against: `cargo nextest --profile long -p semio-s-plugin-stdio` → 2174 run, 2168 passed, 6 failed, 5 skipped.** All 6 pre-existing and attributed elsewhere (`dwg`/`ifc` `fixture_honesty_law` unowned; `html`/`json`/`pdf` `inference_default_law` + `md` outline are IIF's). **Diff against 6, never against zero, and attribute none of them to DKM.**
+
+### ⚠️ The `object`/`value` rename bites DKM specifically
+
+`workflow` → `flow` is a plain rename. But the old value-tree **`object` → `value`**, and **`object` now means a *spatial* thing** — transform plus owned **brep/mesh/value children**. Our design docs and SMO's approved verb roster predate that. Two consequences:
+1. A mechanical search for `object` finds the **wrong directory and still compiles** — a name surviving without its meaning, the same class as the two-types-one-name traps this ticket has hit three times.
+2. Spatial `object` **owns brep and mesh children**, so it sits directly downstream of the two subsets DKM is about to author. Our triads must be authored knowing they will be composed by it.
+
+### 🔑 Binding for DKM's triad authoring: do NOT derive law tests from `din4108`
+
+UCAS found the `din4108`-derived `round_trip()` helper diffs each inverse against the **stale pre-operation `base`** rather than the evolving state — silently discarding the forward mutation's effect. It caused 3 false failures and **reproduced independently in two more helpers copied from the same reference**.
+
+**General form, now binding here: a bug in a reference pattern is one bug per copy, and every copy looks correct.** DKM's brep/drawing law tests are authored from scratch against `(payload, base)` semantics; any inherited helper is suspect until read. (Our existing Phase-2 laws are representation round-trips — seed → `Body` → seed — a different shape, so they don't inherit it. Checked, not assumed.)
+
+**Grammar traps recorded for authors**: `✳️any`'s two hand-maintained `.semio` grammars need every new tag in their alternation and are **invisible to `cargo check`** (only grammar-conformance tests catch it); grouping is `{ }` never `( )`; `|` continuation unsupported.
+
+### Gate count for `✳️brep`/`✳️drawing`/`✳️mesh` — now 3 of 3, with one caveat
+
+| Gate | State |
+|---|---|
+| SMO verb approval | ✅ open — **except `create-loop`/`delete-loop`**, which have no stable address (`Loop`/`Coedge` carry no `PersistentLabel`). Ruling requested; SMO appears to have wound down |
+| IIF deferral of the three inference facets | ✅ open |
+| UCAS stdio write-handoff | ✅ **open** — read from "stdio is released", sent directly to DKM, with an explicit request to correct that reading immediately if wrong |
+
+**Authoring proceeds without `create-loop`/`delete-loop`**, which stay unauthored and flagged rather than invented — the sanctioned outcome per `📌️important.md` ("leave the enum EMPTY and flag it, never invent vocabulary"), applied narrowly to two verbs rather than a whole facet.
+
+**Peer sessions have wound down from five to one.** Remaining cross-session dependencies are therefore unlikely to resolve interactively: APA's `BrepEngineHost` migration (blocking W3a-0 Phase 3+), SMO's Loop ruling, and the `🧮️math` regeneration DKM claimed. All are recorded above with enough detail to resume without conversational context.
+
+## The UCAS disagreement is CLOSED — and the answer belongs in the doctrine
+
+UCAS asked the question that had been implicit since W0: *does DKM's mandate require the halfedge structure itself to be a snapshot with a diff, or only that no mutable CRUD store remains?*
+
+**Answer: the halfedge `Body` is NOT a snapshot and must never become one.** It is doctrine tier (d) — an ephemeral working representation, like a BVH or a tessellation buffer. The authoritative geometry is `SemioBrepSnapshot`; `Body` is derived from it by `EngineRep::build(&seed)` and dropped when the building function returns. No diff, no mutations, no persistence, no identity. **Making it a snapshot would be a violation, not compliance** — two authoritative representations of the same geometry is exactly the duplicated-state failure this ticket exists to remove.
+
+### Their carve-out was right about the types and wrong about the lifetime
+
+UCAS's `📓️design-full-plan.md` recorded *"engine (behind traits, never serialized) = framework MeshData+HalfedgeMesh, brep topology kernel, DrawingScene"*. **Everything except the parenthetical survives.** The types live, the algorithms live, nothing is serialized.
+
+The residue is narrow and real: **"behind traits, never serialized" permits a long-lived host-owned kernel session; `EngineRep` forbids it.** `EngineRep` is strictly stronger in three ways — `build(&P)` is the only constructor (no seeded variant, since a rep grown from a previous rep is no longer recoverable from the snapshot, which is how a cache becomes hidden state); it may not outlive the call; and it must be wholly derived, so dropping it at any instant costs only a pause.
+
+`BrepEngineHost { cache: Mutex<EngineCache>, kernel: Mutex<Brep> }` satisfies "behind traits, never serialized" and **fails all three**. So does `📐️cad`'s `static OnceLock<BrepEngineHost>` — write-once, passing every mutability test, and still a plugin holding a handle to host-owned engine state for the process lifetime. **Not ambient mutability; ambient reach.**
+
+So the two tickets never disagreed about what should exist, only about how long it may live. Recorded as a one-line correction rather than a live dispute.
+
+## ✅ `✳️brep`/`✳️drawing`/`✳️mesh` handoff CONFIRMED explicitly
+
+UCAS confirmed the grant was explicit and predated the freeze — DKM was not relying on inference. **The split, in one place:**
+
+| Scope | Owner |
+|---|---|
+| `🧬️schema/🧬️mutations/**` in all three — dispatch enums, all triads | **DKM** |
+| the three `💡️inference` facets | **DKM** |
+| the engine dissolution behind them | **DKM** |
+| composition slots (`ArtifactChild`/`ArtifactLink` *fields*) in `📸️snapshot/` for `mesh` and `drawing` | **UCAS, later** — ping before entering those files |
+| `✳️brep` | a DAG leaf; **UCAS never touches it** |
+
+### ⚠️ Correction to my own downstream-coupling warning
+
+I recorded spatial `object` as downstream of brep/mesh and therefore constraining our triad authoring. **UCAS showed that is much weaker than I claimed.** `ArtifactChild<S>` is `{ child_id, target: ArtifactRef, PhantomData<S> }` — a two-string handle carrying **no snapshot content**, with `S` only keeping the slot compile-time typed. So `SemioBrepSnapshot`/`SemioMeshSnapshot` internals can be restructured freely and `object` never sees it.
+
+That is the child-as-own-document decision paying off: **the parent holds two strings, not a subtree**, so a child's internal churn cannot propagate upward. The only things that would break `object` are renaming/deleting those types or changing the kind strings `s.stdio.semio.{brep,mesh}` — and either would be done in one joint change. **This supersedes the broader warning recorded above.**

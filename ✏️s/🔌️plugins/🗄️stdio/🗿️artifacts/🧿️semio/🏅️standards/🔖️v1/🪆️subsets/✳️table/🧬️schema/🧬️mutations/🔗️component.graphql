@@ -1,0 +1,11 @@
+# 🧬️ SemioTableMutation schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+input CreateColumnInput { name: String! kind: String! index: Int }
+input DeleteColumnInput { name: String! }
+input RenameColumnInput { name: String! newName: String! }
+input ReorderColumnsInput { name: String! toIndex: Int! }
+input InsertRowInput { index: Int! row: SemioTableRowInput! }
+input RemoveRowInput { index: Int! }
+input ReorderRowsInput { from: Int! to: Int! }
+input EditCellInput { rowIndex: Int! columnName: String! newValue: SemioValueInput! }
+
+input SemioTableRowInput { cells: [SemioValueInput!]! }

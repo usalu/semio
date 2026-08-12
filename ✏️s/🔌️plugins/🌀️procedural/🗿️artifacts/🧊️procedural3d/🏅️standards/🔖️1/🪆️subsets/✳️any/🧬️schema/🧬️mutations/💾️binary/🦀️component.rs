@@ -16,15 +16,15 @@ use crate::artifacts::procedural3d::mutations::connect_synapse::mutation::Connec
 use crate::artifacts::procedural3d::mutations::create_generation::mutation::CreateGeneration;
 use crate::artifacts::procedural3d::mutations::create_widget::mutation::CreateWidget;
 use crate::artifacts::procedural3d::mutations::delete_generation::mutation::DeleteGeneration;
-use crate::artifacts::procedural3d::mutations::remove_layout::mutation::DeleteWidgetPosition;
-use crate::artifacts::procedural3d::mutations::remove_synapse::mutation::DisconnectSynapse;
-use crate::artifacts::procedural3d::mutations::remove_widget::mutation::DeleteWidget;
+use crate::artifacts::procedural3d::mutations::delete_widget_position::mutation::DeleteWidgetPosition;
+use crate::artifacts::procedural3d::mutations::disconnect_synapse::mutation::DisconnectSynapse;
+use crate::artifacts::procedural3d::mutations::delete_widget::mutation::DeleteWidget;
 use crate::artifacts::procedural3d::mutations::rename_generation::mutation::RenameGeneration;
-use crate::artifacts::procedural3d::mutations::set_camera::mutation::UpdateCamera;
-use crate::artifacts::procedural3d::mutations::set_layout::mutation::MoveWidget;
-use crate::artifacts::procedural3d::mutations::set_schema::mutation::ChangeSchema;
-use crate::artifacts::procedural3d::mutations::set_synapse::mutation::UpdateSynapse;
-use crate::artifacts::procedural3d::mutations::set_widget::mutation::UpdateWidget;
+use crate::artifacts::procedural3d::mutations::update_camera::mutation::UpdateCamera;
+use crate::artifacts::procedural3d::mutations::move_widget::mutation::MoveWidget;
+use crate::artifacts::procedural3d::mutations::change_schema::mutation::ChangeSchema;
+use crate::artifacts::procedural3d::mutations::update_synapse::mutation::UpdateSynapse;
+use crate::artifacts::procedural3d::mutations::update_widget::mutation::UpdateWidget;
 use crate::artifacts::procedural3d::schema::mutations::text::Procedural3dMutation;
 use protocol::OpBinary;
 

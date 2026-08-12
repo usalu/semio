@@ -15,7 +15,9 @@
 //! way). `db_storage::IndexStorage` stores opaque per-`(document, run_id)` byte blobs; this crate
 //! owns everything about what's inside a run and how `run_id`s are namespaced per `IndexKind`.
 
-use {check_len, ActorId, DbError, ArtifactId, Frontier};
+use crate::*;
+use crate::db_durability::Frontier;
+use crate::db_ids::{check_len, ActorId, DbError, ArtifactId};
 use db_storage::IndexStorage;
 use pack::{crc32c, ByteReader, ByteWriter};
 

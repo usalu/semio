@@ -10,10 +10,10 @@ todos:
     status: completed
   - id: prove-references
     content: Complete and verify seven archetype reference subsets before any mass replication.
-    status: in_progress
+    status: completed
   - id: migrate-subsets
     content: Migrate all remaining subsets, examples, engines, missing facets, TypeScript mirrors, and generated plugin registration in collision-safe batches.
-    status: pending
+    status: in_progress
   - id: remove-old-structure
     content: Delete phantom trees, old engine/example paths, and compatibility shims after all subset migrations pass.
     status: pending

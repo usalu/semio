@@ -2,25 +2,19 @@
 
 use crate::apps::jack::config::JackConfig;
 use crate::apps::jack::terminology::TrinityJackLabels;
-use crate::artifacts::jack::{JackSnapshot, Node, PropertyValue};
+use crate::artifacts::jack::schema::inferences::flat_position::{compute_flat_position, JackFlatPosition};
+use crate::artifacts::jack::{JackSnapshot, Node};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde_json::json;
 
-fn flat_position_uv(node: &Node) -> (String, String) {
-    let Some(flat) = node.properties.get("flatPosition").and_then(PropertyValue::as_object) else {
+fn flat_position_uv(flat_position: &JackFlatPosition, node_id: &str) -> (String, String) {
+    let Some(uv) = flat_position.positions.get(node_id) else {
         return (String::new(), String::new());
     };
-    let format_axis = |axis: &str| flat.get(axis).and_then(PropertyValue::as_f64).map(|value| format!("{value:.2}")).unwrap_or_default();
-    (format_axis("u"), format_axis("v"))
-}
-
-fn fixture_with_derived(fixture: &JackSnapshot) -> Option<JackSnapshot> {
-    let mut graph = crate::artifacts::jack::Graph::from_fixture(fixture.clone()).ok()?;
-    graph.recompute_derived();
-    Some(graph.to_fixture())
+    (format!("{:.2}", uv.u), format!("{:.2}", uv.v))
 }
 
 pub(crate) fn render(fixture: &JackSnapshot, cfg: &JackConfig, term_labels: &TrinityJackLabels) -> UiNode {
@@ -51,8 +45,8 @@ pub(crate) fn render(fixture: &JackSnapshot, cfg: &JackConfig, term_labels: &Tri
     let kind_mixed = ui_inspector_mixed_text(&nodes.iter().map(|node| node.kind.clone()).collect::<Vec<_>>());
     let port_counts: Vec<String> = nodes.iter().map(|node| node.ports.len().to_string()).collect();
     let ports_mixed = ui_inspector_mixed_text(&port_counts);
-    let derived_fixture = fixture_with_derived(fixture);
-    let derived_uv = |id: &str| -> (String, String) { derived_fixture.as_ref().and_then(|fixture| fixture.nodes.iter().find(|node| node.id == id)).map(flat_position_uv).unwrap_or_default() };
+    let flat_position = compute_flat_position(fixture);
+    let derived_uv = |id: &str| -> (String, String) { flat_position_uv(&flat_position, id) };
     let u_values: Vec<String> = node_ids.iter().map(|id| derived_uv(id).0).collect();
     let v_values: Vec<String> = node_ids.iter().map(|id| derived_uv(id).1).collect();
     let u_mixed = ui_inspector_mixed_text(&u_values);

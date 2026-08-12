@@ -33,6 +33,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use crate as db;
 use db::storage::{SnapshotStorage as _, WalStorage as _};
 
 //#region 🔖️Args
@@ -161,8 +162,8 @@ fn cmd_inspect(rest: &[String]) -> i32 {
 
     let catalog = database.catalog();
     println!("== catalog: {root} ==");
-    println!("  documents: {}", catalog.documents.len());
-    for entry in &catalog.documents {
+    println!("  documents: {}", catalog.artifacts.len());
+    for entry in &catalog.artifacts {
         println!("  - {} (created_at_ms={})", entry.document.0, entry.created_at_ms);
     }
     print_health(&database.health());
@@ -175,7 +176,7 @@ fn cmd_inspect(rest: &[String]) -> i32 {
 //#endregion 🔖️Inspect
 
 //#region 🔖️Doc
-fn print_engine_frontier(frontier: &db::Frontier) {
+fn print_engine_frontier(frontier: &db::db_engine::Frontier) {
     println!("  head_seq: {}", frontier.head_seq);
     println!("  commit_seq: {}", frontier.commit_seq);
     println!("  epoch: {}", frontier.epoch);
@@ -302,7 +303,7 @@ fn cmd_wal_inspect(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::ArtifactId(id.clone());
+    let document = db::db_ids::ArtifactId(id.clone());
 
     let segments = match storage.list_segments(&document) {
         Ok(segments) => segments,
@@ -356,7 +357,7 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::ArtifactId(id.clone());
+    let document = db::db_ids::ArtifactId(id.clone());
 
     let generations = match storage.list_generations(&document) {
         Ok(generations) => generations,
@@ -416,7 +417,7 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
 //#region 🔖️Verify
 /// 🔬️ The shared per-document check `verify` runs: a full WAL replay (rejects a torn tail) plus,
 /// if a snapshot exists, a full-level `SnapshotManager::verify` of its latest generation.
-fn verify_document(storage: &db::storage::FsStorage, document: &db::core::ArtifactId) -> Result<String, db::DbError> {
+fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
     let records = db::wal::replay_document(storage, document)?;
     let manager = db::snapshot::SnapshotManager::new(storage);
     match manager.load_latest(document)? {
@@ -448,7 +449,7 @@ fn cmd_verify(rest: &[String]) -> i32 {
                 Ok(database) => database,
                 Err(err) => return fail("open", err),
             };
-            let ids = database.catalog().documents.iter().map(|entry| entry.document.0.clone()).collect();
+            let ids = database.catalog().artifacts.iter().map(|entry| entry.document.0.clone()).collect();
             if let Err(err) = database.shutdown(std::time::Duration::from_secs(5)) {
                 return fail("shutdown", err);
             }
@@ -466,7 +467,7 @@ fn cmd_verify(rest: &[String]) -> i32 {
     };
     let mut failures = 0usize;
     for id in &ids {
-        let document = db::core::ArtifactId(id.clone());
+        let document = db::db_ids::ArtifactId(id.clone());
         match verify_document(&storage, &document) {
             Ok(summary) => println!("OK   {id}: {summary}"),
             Err(err) => {
@@ -549,14 +550,14 @@ fn cmd_replay(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::ArtifactId(id.clone());
+    let document = db::db_ids::ArtifactId(id.clone());
     let records = match db::wal::replay_document(&storage, &document) {
         Ok(records) => records,
         Err(err) => return fail("replay", err),
     };
 
     let mut kind_counts: std::collections::BTreeMap<&'static str, usize> = std::collections::BTreeMap::new();
-    let mut last_frontier: Option<db::core::Frontier> = None;
+    let mut last_frontier: Option<db::db_durability::Frontier> = None;
     for record in &records {
         *kind_counts.entry(wal_record_kind_name(record)).or_insert(0) += 1;
         if let db::wal::WalRecord::Frontier(frontier) = record {
@@ -599,7 +600,7 @@ fn cmd_repair(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::ArtifactId(id.clone());
+    let document = db::db_ids::ArtifactId(id.clone());
     match db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now_ms()) {
         Ok((_wal, report)) => {
             println!("== repair: {id} ==");
@@ -810,7 +811,7 @@ fn cmd_replica_simulate(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open follower", err),
     };
-    let document = db::core::ArtifactId(id.clone());
+    let document = db::db_ids::ArtifactId(id.clone());
 
     match db::cluster::replicate_document(&leader, &follower, document, db::wal::GroupCommitPolicy::default(), now_ms()) {
         Ok(db::cluster::ReplicationOutcome::UpToDate { frontier }) => {
@@ -856,7 +857,7 @@ fn cmd_migrate(rest: &[String]) -> i32 {
         Ok(storage) => storage,
         Err(err) => return fail("open", err),
     };
-    let document = db::core::ArtifactId(id.clone());
+    let document = db::db_ids::ArtifactId(id.clone());
     let now = now_ms();
     let (mut wal, _report) = match db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now) {
         Ok(pair) => pair,

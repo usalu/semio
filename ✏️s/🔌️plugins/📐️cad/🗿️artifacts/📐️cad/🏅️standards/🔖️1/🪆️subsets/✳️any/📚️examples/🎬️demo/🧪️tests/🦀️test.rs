@@ -88,7 +88,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
 #[test]
 fn demo_subset_integrated_roundtrip() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
-    let asset = ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio" };
+    let asset = ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "../../🖼️assets/🗣️example.dsl.semio" };
     test_support::assert_subset_roundtrip::<CadAnyRoundtrip>(&asset, None);
 }
 //#endregion 🧪️SubsetRoundtrip

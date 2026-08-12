@@ -1,0 +1,8 @@
+syntax = "proto3";
+// 🧬️ SemioObjectMutation dispatch — real facet mirror.
+package semio.s_stdio_semio_object.mutations;
+
+message SemioObjectMutation {
+  string mutation = 1;
+  bytes payload_wire = 2;
+}

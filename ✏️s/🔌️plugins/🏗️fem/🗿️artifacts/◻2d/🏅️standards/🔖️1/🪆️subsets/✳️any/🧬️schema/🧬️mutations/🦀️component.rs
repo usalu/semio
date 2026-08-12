@@ -107,6 +107,7 @@ pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use crate::artifacts::fem2d::{element_id, load_id, FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
     use protocol::MutationDiff;
 

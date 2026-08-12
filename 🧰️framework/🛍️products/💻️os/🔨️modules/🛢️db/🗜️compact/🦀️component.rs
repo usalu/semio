@@ -30,7 +30,9 @@
 //! since a snapshot builder and a compactor may legitimately run concurrently for two different
 //! documents, but never for the SAME document at the same time).
 
-use {check_len, DbError, ArtifactId};
+use crate::*;
+use crate::db_durability::Frontier;
+use crate::db_ids::{check_len, DbError, ArtifactId};
 
 //#region 🔖️Budget
 /// @emoji 💰️ Bounds how much work one `Compactor::run` pass does across every subsystem — the

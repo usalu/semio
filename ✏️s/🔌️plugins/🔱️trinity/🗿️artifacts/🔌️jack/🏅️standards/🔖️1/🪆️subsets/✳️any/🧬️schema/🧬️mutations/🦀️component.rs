@@ -132,7 +132,7 @@ fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key:
 }
 
 fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::{PropertyKind, TrinityRamError};
+    use crate::artifacts::jack::TrinityRamError;
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
             let node = fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
@@ -146,11 +146,8 @@ fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &
     let Some(defs) = defs else {
         return Err(TrinityRamError::UnknownEntityKind { path: path_prefix });
     };
-    let Some(def) = defs.iter().find(|def| def.name == key) else {
+    if !defs.iter().any(|def| def.name == key) {
         return Err(TrinityRamError::UnknownPropertyAtPath { path: path_prefix, key: key.to_string() });
-    };
-    if def.kind == PropertyKind::Derived {
-        return Err(TrinityRamError::DerivedPropertyReadonly { path: path_prefix, key: key.to_string() });
     }
     let mut bag = PropertyBag::new();
     bag.insert(key.to_string(), value.clone());
@@ -273,6 +270,7 @@ pub fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operation
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use crate::artifacts::jack::{Camera, Manifest, PortDirection};
     use protocol::MutationDiff;
 

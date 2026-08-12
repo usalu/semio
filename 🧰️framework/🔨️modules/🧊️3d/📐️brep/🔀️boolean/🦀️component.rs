@@ -29,12 +29,15 @@ pub enum BooleanOp {
 }
 
 /// 🔀 Combines solids `a` and `b` under `op`, preferring AABB fast paths then classified triangle-soup stitch.
+/// `rec` accumulates the whole operation's [`crate::brep::history::OpDelta`] — every helper below
+/// threads it through instead of building its own and discarding it at a private function boundary.
 pub fn boolean_solid(
     body: &mut Body,
     a: SolidId,
     b: SolidId,
     op: BooleanOp,
     tol: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     require_tol(tol)?;
     require_solid(body, a)?;
@@ -46,11 +49,11 @@ pub fn boolean_solid(
     let bb_a = solid_bounding_box(body, a)?;
     let bb_b = solid_bounding_box(body, b)?;
     if aabb_finite(&bb_a) && aabb_finite(&bb_b) {
-        if let Some(id) = aabb_fast_path(body, a, b, &bb_a, &bb_b, op, tol)? {
+        if let Some(id) = aabb_fast_path(body, a, b, &bb_a, &bb_b, op, tol, rec)? {
             return Ok(id);
         }
     }
-    mesh_boolean(body, a, b, op, tol)
+    mesh_boolean(body, a, b, op, tol, rec)
 }
 
 /// 🔀 Successively cuts `tools` from `target` (folded [`BooleanOp::Cut`]).
@@ -59,6 +62,7 @@ pub fn compound_cut(
     target: SolidId,
     tools: &[SolidId],
     tol: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     require_tol(tol)?;
     require_solid(body, target)?;
@@ -67,7 +71,7 @@ pub fn compound_cut(
     }
     let mut current = target;
     for &tool in tools {
-        current = boolean_solid(body, current, tool, BooleanOp::Cut, tol)?;
+        current = boolean_solid(body, current, tool, BooleanOp::Cut, tol, rec)?;
     }
     Ok(current)
 }
@@ -81,6 +85,7 @@ pub fn section_solid_by_plane(
     origin: Pnt3,
     normal: Vec3,
     tol: f64,
+    rec: &mut OpRecorder,
 ) -> Result<Vec<FaceId>, KernelError> {
     require_tol(tol)?;
     require_solid(body, solid)?;
@@ -123,7 +128,7 @@ pub fn section_solid_by_plane(
         return Ok(Vec::new());
     }
     // Build a planar face from the convex hull of section points in-plane.
-    let face = crate::brep::primitives::make_planar_face_from_points(body, &section_pts)?;
+    let face = crate::brep::primitives::make_planar_face_from_points(body, &section_pts, rec)?;
     Ok(vec![face])
 }
 
@@ -134,6 +139,7 @@ pub fn split_solid_by_plane(
     origin: Pnt3,
     normal: Vec3,
     tol: f64,
+    rec: &mut OpRecorder,
 ) -> Result<(SolidId, SolidId), KernelError> {
     require_tol(tol)?;
     require_solid(body, solid)?;
@@ -187,15 +193,15 @@ pub fn split_solid_by_plane(
                 "split_solid_by_plane: one side has too few points".into(),
             )));
         }
-        return Ok((make_convex_hull(body, &pos)?, make_convex_hull(body, &neg)?));
+        return Ok((make_convex_hull(body, &pos, rec)?, make_convex_hull(body, &neg, rec)?));
     }
-    let solid_pos = match solid_from_triangle_soup(body, &pos_tris) {
+    let solid_pos = match solid_from_triangle_soup(body, &pos_tris, rec) {
         Ok(id) => id,
-        Err(_) => make_convex_hull(body, &pos_pts)?,
+        Err(_) => make_convex_hull(body, &pos_pts, rec)?,
     };
-    let solid_neg = match solid_from_triangle_soup(body, &neg_tris) {
+    let solid_neg = match solid_from_triangle_soup(body, &neg_tris, rec) {
         Ok(id) => id,
-        Err(_) => make_convex_hull(body, &neg_pts)?,
+        Err(_) => make_convex_hull(body, &neg_pts, rec)?,
     };
     Ok((solid_pos, solid_neg))
 }
@@ -212,6 +218,7 @@ fn aabb_fast_path(
     bb_b: &AxisAlignedBox,
     op: BooleanOp,
     tol: f64,
+    rec: &mut OpRecorder,
 ) -> Result<Option<SolidId>, KernelError> {
     let gap = aabb_gap(bb_a, bb_b);
     match op {
@@ -227,18 +234,18 @@ fn aabb_fast_path(
                     "boolean intersect is empty within tolerance".into(),
                 )));
             }
-            Ok(Some(make_box(body, w, d, h)?))
+            Ok(Some(make_box(body, w, d, h, rec)?))
         }
         BooleanOp::Unite => {
             if gap >= tol {
                 let mut faces = outer_faces(body, a)?;
                 faces.extend(outer_faces(body, b)?);
-                return Ok(Some(solid_from_outer_faces(body, faces, Vec::new())?));
+                return Ok(Some(solid_from_outer_faces(body, faces, Vec::new(), rec)?));
             }
             if is_aabb_box_solid(body, a, bb_a)? && is_aabb_box_solid(body, b, bb_b)? {
                 let u = aabb_union(bb_a, bb_b);
                 let (w, d, h) = aabb_dims(&u);
-                return Ok(Some(make_box(body, w, d, h)?));
+                return Ok(Some(make_box(body, w, d, h, rec)?));
             }
             Ok(None)
         }
@@ -249,12 +256,12 @@ fn aabb_fast_path(
                 )));
             }
             if gap >= tol {
-                return Ok(Some(clone_solid_shells(body, a)?));
+                return Ok(Some(clone_solid_shells(body, a, rec)?));
             }
             if aabb_contains(bb_a, bb_b, tol) {
                 let outer = outer_faces(body, a)?;
                 let inner = outer_faces(body, b)?;
-                return Ok(Some(solid_from_outer_faces(body, outer, vec![inner])?));
+                return Ok(Some(solid_from_outer_faces(body, outer, vec![inner], rec)?));
             }
             Ok(None)
         }
@@ -284,6 +291,7 @@ fn mesh_boolean(
     b: SolidId,
     op: BooleanOp,
     tol: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     let deflection = tol.max(1e-3);
     let mesh_a = tessellate_solid(body, a, deflection)?;
@@ -299,9 +307,9 @@ fn mesh_boolean(
     }
     // Prefer the classified triangle soup (non-convex cuts/fuses) over a convex hull of the kept
     // vertices — hull was collapsing C-shaped and holed results into the wrong solid.
-    match solid_from_triangle_soup(body, &triangles) {
+    match solid_from_triangle_soup(body, &triangles, rec) {
         Ok(id) => Ok(id),
-        Err(_) => make_convex_hull(body, &points).map_err(|e| match e {
+        Err(_) => make_convex_hull(body, &points, rec).map_err(|e| match e {
             KernelError::InvalidInput(msg) => KernelError::Boolean(BooleanError::InvalidResult(msg)),
             other => other,
         }),
@@ -385,23 +393,23 @@ fn solid_from_outer_faces(
     body: &mut Body,
     outer_faces: Vec<FaceId>,
     inner_face_sets: Vec<Vec<FaceId>>,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     if outer_faces.is_empty() {
         return Err(KernelError::InvalidInput("outer shell requires at least one face".into()));
     }
-    let mut rec = OpRecorder::new();
-    let outer = add_shell(body, outer_faces, &mut rec);
+    let outer = add_shell(body, outer_faces, rec);
     let mut inners = Vec::with_capacity(inner_face_sets.len());
     for faces in inner_face_sets {
         if faces.is_empty() {
             return Err(KernelError::InvalidInput("inner shell requires at least one face".into()));
         }
-        inners.push(add_shell(body, faces, &mut rec));
+        inners.push(add_shell(body, faces, rec));
     }
-    Ok(add_solid(body, outer, inners, &mut rec))
+    Ok(add_solid(body, outer, inners, rec))
 }
 
-fn clone_solid_shells(body: &mut Body, solid: SolidId) -> Result<SolidId, KernelError> {
+fn clone_solid_shells(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let data = body
         .solids
         .get(solid)
@@ -418,7 +426,7 @@ fn clone_solid_shells(body: &mut Body, solid: SolidId) -> Result<SolidId, Kernel
             .clone();
         inners.push(faces);
     }
-    solid_from_outer_faces(body, outer, inners)
+    solid_from_outer_faces(body, outer, inners, rec)
 }
 
 fn outer_faces(body: &Body, solid: SolidId) -> Result<Vec<FaceId>, KernelError> {
@@ -568,7 +576,7 @@ mod tests {
     use super::*;
     use crate::brep::primitives::make_box;
 
-    fn offset_unit_cube(body: &mut Body, offset: Pnt3) -> SolidId {
+    fn offset_unit_cube(body: &mut Body, offset: Pnt3, rec: &mut OpRecorder) -> SolidId {
         let corners = [
             offset + Vec3::new(0.0, 0.0, 0.0),
             offset + Vec3::new(1.0, 0.0, 0.0),
@@ -579,15 +587,16 @@ mod tests {
             offset + Vec3::new(1.0, 1.0, 1.0),
             offset + Vec3::new(0.0, 1.0, 1.0),
         ];
-        make_convex_hull(body, &corners).expect("offset cube hull")
+        make_convex_hull(body, &corners, rec).expect("offset cube hull")
     }
 
     #[test]
     fn disjoint_unit_boxes_fuse_volume_near_two() {
         let mut body = Body::new();
-        let a = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
-        let b = offset_unit_cube(&mut body, Pnt3::new(2.0, 0.0, 0.0));
-        let fused = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6).unwrap();
+        let mut rec = OpRecorder::new();
+        let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let b = offset_unit_cube(&mut body, Pnt3::new(2.0, 0.0, 0.0), &mut rec);
+        let fused = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6, &mut rec).unwrap();
         let vol = solid_volume(&body, fused, 1e-6).unwrap();
         assert!((vol - 2.0).abs() < 1e-3, "expected volume ≈ 2, got {vol}");
     }
@@ -595,9 +604,10 @@ mod tests {
     #[test]
     fn overlapping_aabb_intersect_volume_matches_dims() {
         let mut body = Body::new();
-        let a = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
-        let b = offset_unit_cube(&mut body, Pnt3::new(0.5, 0.5, 0.5));
-        let hit = boolean_solid(&mut body, a, b, BooleanOp::Intersect, 1e-6).unwrap();
+        let mut rec = OpRecorder::new();
+        let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let b = offset_unit_cube(&mut body, Pnt3::new(0.5, 0.5, 0.5), &mut rec);
+        let hit = boolean_solid(&mut body, a, b, BooleanOp::Intersect, 1e-6, &mut rec).unwrap();
         let vol = solid_volume(&body, hit, 1e-6).unwrap();
         let expected = 0.5 * 0.5 * 0.5;
         assert!((vol - expected).abs() < 1e-3, "expected {expected}, got {vol}");
@@ -606,14 +616,15 @@ mod tests {
     #[test]
     fn boolean_unite_is_deterministic() {
         let mut body = Body::new();
-        let a = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
-        let b = offset_unit_cube(&mut body, Pnt3::new(2.0, 0.0, 0.0));
+        let mut rec = OpRecorder::new();
+        let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let b = offset_unit_cube(&mut body, Pnt3::new(2.0, 0.0, 0.0), &mut rec);
         let faces_before = body.faces.len();
-        let r1 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6).unwrap();
+        let r1 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6, &mut rec).unwrap();
         let delta1 = body.faces.len() - faces_before;
         let n1 = body.solid_faces(r1).len();
         let faces_mid = body.faces.len();
-        let r2 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6).unwrap();
+        let r2 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6, &mut rec).unwrap();
         let delta2 = body.faces.len() - faces_mid;
         let n2 = body.solid_faces(r2).len();
         assert_eq!(delta1, delta2);
@@ -623,10 +634,11 @@ mod tests {
     #[test]
     fn cut_disjoint_preserves_volume() {
         let mut body = Body::new();
-        let a = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
-        let b = offset_unit_cube(&mut body, Pnt3::new(3.0, 0.0, 0.0));
+        let mut rec = OpRecorder::new();
+        let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let b = offset_unit_cube(&mut body, Pnt3::new(3.0, 0.0, 0.0), &mut rec);
         let vol_a = solid_volume(&body, a, 1e-6).unwrap();
-        let cut = boolean_solid(&mut body, a, b, BooleanOp::Cut, 1e-6).unwrap();
+        let cut = boolean_solid(&mut body, a, b, BooleanOp::Cut, 1e-6, &mut rec).unwrap();
         let vol_cut = solid_volume(&body, cut, 1e-6).unwrap();
         assert!((vol_cut - vol_a).abs() < 1e-3, "cut volume {vol_cut} vs A {vol_a}");
     }
@@ -634,8 +646,9 @@ mod tests {
     #[test]
     fn adversarial_scale_sweep_determinism() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         for scale in [0.1_f64, 1.0, 10.0, 100.0] {
-            let a = make_box(&mut body, scale, scale, scale).unwrap();
+            let a = make_box(&mut body, scale, scale, scale, &mut rec).unwrap();
             let o = Pnt3::new(scale * 2.0, 0.0, 0.0);
             let corners = [
                 o,
@@ -647,9 +660,9 @@ mod tests {
                 Pnt3::new(o.x + scale, o.y + scale, o.z + scale),
                 Pnt3::new(o.x, o.y + scale, o.z + scale),
             ];
-            let b = crate::brep::primitives::make_convex_hull(&mut body, &corners).unwrap();
-            let u0 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6).unwrap();
-            let u1 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6).unwrap();
+            let b = crate::brep::primitives::make_convex_hull(&mut body, &corners, &mut rec).unwrap();
+            let u0 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6, &mut rec).unwrap();
+            let u1 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6, &mut rec).unwrap();
             assert_eq!(body.solid_faces(u0).len(), body.solid_faces(u1).len());
             let v = solid_volume(&body, u0, scale * 1e-4).unwrap();
             assert!((v - 2.0 * scale.powi(3)).abs() < scale.powi(3) * 1e-2, "scale={scale} v={v}");
@@ -659,13 +672,14 @@ mod tests {
     #[test]
     fn fuzz_random_aabb_intersect_volume_nonnegative() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let mut seed = 1u64;
         for _ in 0..32 {
             seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
             let w = 0.5 + (seed % 50) as f64 * 0.1;
             seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
             let ox = (seed % 20) as f64 * 0.25;
-            let a = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
+            let a = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
             let o = Pnt3::new(ox, ox * 0.5, 0.0);
             let corners = [
                 o,
@@ -677,8 +691,8 @@ mod tests {
                 Pnt3::new(o.x + w, o.y + w, o.z + w),
                 Pnt3::new(o.x, o.y + w, o.z + w),
             ];
-            let b = crate::brep::primitives::make_convex_hull(&mut body, &corners).unwrap();
-            if let Ok(inter) = boolean_solid(&mut body, a, b, BooleanOp::Intersect, 1e-6) {
+            let b = crate::brep::primitives::make_convex_hull(&mut body, &corners, &mut rec).unwrap();
+            if let Ok(inter) = boolean_solid(&mut body, a, b, BooleanOp::Intersect, 1e-6, &mut rec) {
                 assert!(solid_volume(&body, inter, 1e-3).unwrap() >= -1e-9);
             }
         }

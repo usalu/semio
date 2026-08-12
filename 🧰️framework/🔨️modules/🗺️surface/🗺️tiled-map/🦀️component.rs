@@ -3551,7 +3551,7 @@ mod tests {
         let mut host = super::MapHost::new();
         let json = r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#;
         host.sync_map_json(json).expect("descriptor");
-        let pos = host.positions.get("zurich").expect("position");
+        let pos = host.features.positions.get("zurich").expect("position");
         assert_eq!(pos.label.as_deref(), Some("Zürich"));
     }
 
@@ -3560,7 +3560,7 @@ mod tests {
         let mut host = super::MapHost::new();
         let json = r#"{"positions":[{"id":"donor-1","lon":8.54,"lat":47.37,"name":"Donor site","kind":"donor","icon":"package","sourceUrl":"https://example.test/donor"}],"routes":[],"regions":[]}"#;
         host.sync_map_json(json).expect("descriptor");
-        let pos = host.positions.get("donor-1").expect("position");
+        let pos = host.features.positions.get("donor-1").expect("position");
         assert_eq!(pos.name.as_deref(), Some("Donor site"));
         assert_eq!(pos.kind.as_deref(), Some("donor"));
         assert_eq!(pos.icon.as_deref(), Some("package"));
@@ -3699,12 +3699,12 @@ mod tests {
         host.fit_world_camera();
         let png = test_png_1x1();
         host.upload_tile(0, 0, 0, &png).expect("upload");
-        assert!(host.tile_images.contains_key("0/0/0"));
+        assert!(host.tiles.tile_images.contains_key("0/0/0"));
         host.set_camera(0.0, 0.0, 6000.0);
         let z_fine = host.pick_raster_tile_zoom();
         assert!(z_fine >= 4, "zoomed camera should request finer raster tiles (got {z_fine})");
         host.prepare_visible_tiles();
-        assert!(host.tile_images.contains_key("0/0/0"), "ancestor tile must survive zoom-level change for pyramid fallback");
+        assert!(host.tiles.tile_images.contains_key("0/0/0"), "ancestor tile must survive zoom-level change for pyramid fallback");
     }
 
     #[test]
@@ -3727,12 +3727,12 @@ mod tests {
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
         host.upload_vector_tile(0, 0, 0, &[]).expect("upload");
-        assert!(host.vector_tiles.contains_key("0/0/0"));
+        assert!(host.tiles.vector_tiles.contains_key("0/0/0"));
         host.set_camera(0.0, 0.0, 2500.0);
         let vz = host.pick_vector_tile_zoom();
         assert!(vz >= 1, "zoomed camera should request finer vector tiles (got {vz})");
         host.prepare_visible_tiles();
-        assert!(host.vector_tiles.contains_key("0/0/0"), "ancestor vector tile must survive zoom-level change for pyramid fallback");
+        assert!(host.tiles.vector_tiles.contains_key("0/0/0"), "ancestor vector tile must survive zoom-level change for pyramid fallback");
     }
 
     #[test]
@@ -3742,9 +3742,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires .🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf from demotiles"]
+    #[ignore = "requires .🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf from demotiles"]
     fn decode_demotile_fixture_has_named_layers() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         assert!(!tile.layers.is_empty());
@@ -3756,7 +3756,7 @@ mod tests {
 
     #[test]
     fn demotile_fixture_countries_use_multi_ring_polygons() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries layer");
@@ -3766,7 +3766,7 @@ mod tests {
 
     #[test]
     fn fixture_linestrings_split_at_moveto() {
-        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES");
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES");
         let mut found = false;
         for entry in std::fs::read_dir(&dir).expect("fixture dir") {
             let path = entry.expect("entry").path();
@@ -3790,7 +3790,7 @@ mod tests {
 
     #[test]
     fn demotile_z5_has_countries_and_centroids() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
@@ -3802,7 +3802,7 @@ mod tests {
 
     #[test]
     fn demotile_z0_has_many_country_features() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
@@ -3811,7 +3811,7 @@ mod tests {
 
     #[test]
     fn figure_world_tile_paints_many_countries() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3826,7 +3826,7 @@ mod tests {
 
     #[test]
     fn colored_world_tile_paints_land_over_water_backdrop() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3840,7 +3840,7 @@ mod tests {
 
     #[test]
     fn figure_country_lod_uses_land_mass_backdrop() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-3-4-2.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-3-4-2.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3925,7 +3925,7 @@ mod tests {
 
     #[test]
     fn label_camera_setup_intersects_fixture_tile() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3941,7 +3941,7 @@ mod tests {
 
     #[test]
     fn figure_ground_labels_increase_scene_when_enabled() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3959,7 +3959,7 @@ mod tests {
 
     #[test]
     fn colored_vector_labels_increase_scene_when_enabled() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);

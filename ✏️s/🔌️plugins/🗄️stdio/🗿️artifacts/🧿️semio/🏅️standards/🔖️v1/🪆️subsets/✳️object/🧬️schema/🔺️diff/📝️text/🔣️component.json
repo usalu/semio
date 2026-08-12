@@ -1,0 +1,7 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.object.diff/text.json",
+  "title": "SemioObjectDiffDsl",
+  "description": "Text-encoding mirror of the diff facet.",
+  "type": "object",
+  "properties": { "line": { "type": "string" } }
+}

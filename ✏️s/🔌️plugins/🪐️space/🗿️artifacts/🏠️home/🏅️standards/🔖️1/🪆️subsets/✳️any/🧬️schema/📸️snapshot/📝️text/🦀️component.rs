@@ -13,7 +13,7 @@ use crate::artifacts::home::SHomeSnapshot;
 /// 📦️ The `home` app's "default" example, embedded at compile time as handcrafted `.shome` DSL text —
 /// exercised by the round-trip test below. Not yet wired into a `.example(...)` manifest registration
 /// (the `home` UI manifest has none today).
-pub const HOME_EXAMPLE_TEXT: &str = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const HOME_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.shome` DSL text into an `SHomeSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<SHomeSnapshot, store::TextError> {

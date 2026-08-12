@@ -427,6 +427,14 @@ impl semio::framework::host::Host for HostState {
             .map_err(|error| host_fault_bytes("os.host.engine-read", error.to_string()))
     }
 
+    /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): stub passthrough — the WIT signature's error is
+    /// a plain `string` (not `list<u8>` Fault bytes like every other function here), so no
+    /// `host_fault_bytes` wrapper. Full resolver wiring (`🏪️store::LinkResolver`/`LinkState`
+    /// against a real document registry) is a later wave; this stub exists so the guest-side import
+    /// and every plugin's `bindgen!`-generated `Host` trait already compile against the final shape.
+    fn resolve_artifact_link(&mut self, _link: Vec<u8>) -> Result<Vec<u8>, String> {
+        Err("resolve-artifact-link not implemented — full resolver wiring is a later wave".to_string())
+    }
 }
 //#endregion 🔖️HostState
 
@@ -951,6 +959,12 @@ impl extension_bindings::semio::framework::host::Host for ExtensionHostState {
 
     fn engine_read(&mut self, _engine_id: String, _key: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
         Err(host_fault_bytes("os.host.engine-read", "engine-read not implemented for extension host"))
+    }
+
+    /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): same stub shape as `HostState`'s own
+    /// `resolve_artifact_link` — `string` error, not `list<u8>` Fault bytes.
+    fn resolve_artifact_link(&mut self, _link: Vec<u8>) -> Result<Vec<u8>, String> {
+        Err("resolve-artifact-link not implemented for extension host".to_string())
     }
 }
 

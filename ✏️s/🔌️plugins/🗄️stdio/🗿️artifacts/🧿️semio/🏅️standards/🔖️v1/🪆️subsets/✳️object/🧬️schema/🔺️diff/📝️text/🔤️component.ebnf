@@ -1,0 +1,9 @@
+(* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed) for s.stdio.semio.object.diff. *)
+diff        = [ field list ] ;
+field list  = field, { ";", field } ;
+field       = "t", "=", transform value | "b", "=", child | "m", "=", child | "p", "=", child ;
+transform value = "[", number, { ",", number }, "]" ;
+child       = "[", "]" | "[", hex, ",", hex, "]" ;
+number      = [ "-" ], digit, { digit }, [ ".", digit, { digit } ] ;
+digit       = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+hex         = { digit | "a" | "b" | "c" | "d" | "e" | "f" } ;

@@ -24,6 +24,10 @@ use crate::artifacts::semio::standards::v1::subsets::animation::schema::{mutatio
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{mutations::SemioPresentationMutation, snapshot::SemioPresentationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::{mutations::SemioFlowMutation, snapshot::SemioFlowSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::text::schema::{mutations::SemioTextMutation, snapshot::SemioTextSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::table::schema::{mutations::SemioTableMutation, snapshot::SemioTableSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::{mutations::SemioGraphMutation, snapshot::SemioGraphSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::object::schema::{mutations::SemioObjectMutation, snapshot::SemioObjectSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::{mutations::SemioKitMutation, snapshot::SemioKitSnapshot};
 use protocol::Mutation;
 use protocol::MutationDiff;
 use protocol::OpText;
@@ -61,6 +65,10 @@ pub enum SemioMutation {
     Presentation(SemioPresentationMutation),
     Flow(SemioFlowMutation),
     Text(SemioTextMutation),
+    Table(SemioTableMutation),
+    Graph(SemioGraphMutation),
+    Object(SemioObjectMutation),
+    Kit(SemioKitMutation),
 }
 
 impl Mutation<SemioSnapshot> for SemioMutation {
@@ -85,6 +93,10 @@ impl Mutation<SemioSnapshot> for SemioMutation {
             (SemioMutation::Presentation(m), S::Presentation(b)) => SemioDiff::Presentation(<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(m, b)),
             (SemioMutation::Flow(m), S::Flow(b)) => SemioDiff::Flow(<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(m, b)),
             (SemioMutation::Text(m), S::Text(b)) => SemioDiff::Text(<SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(m, b)),
+            (SemioMutation::Table(m), S::Table(b)) => SemioDiff::Table(<SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(m, b)),
+            (SemioMutation::Graph(m), S::Graph(b)) => SemioDiff::Graph(<SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(m, b)),
+            (SemioMutation::Object(m), S::Object(b)) => SemioDiff::Object(<SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(m, b)),
+            (SemioMutation::Kit(m), S::Kit(b)) => SemioDiff::Kit(<SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(m, b)),
             // 🛡️ A wrapped mutation whose kind doesn't match the base snapshot's current kind
             // (e.g. `SemioMutation::Audio(..)` applied to a flow base): can only arise from
             // caller error, not from any path this module itself constructs. `diff()` has no
@@ -114,6 +126,10 @@ impl Mutation<SemioSnapshot> for SemioMutation {
             (SemioMutation::Presentation(m), S::Presentation(b)) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Presentation).collect(),
             (SemioMutation::Flow(m), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Flow).collect(),
             (SemioMutation::Text(m), S::Text(b)) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Text).collect(),
+            (SemioMutation::Table(m), S::Table(b)) => <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Table).collect(),
+            (SemioMutation::Graph(m), S::Graph(b)) => <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Graph).collect(),
+            (SemioMutation::Object(m), S::Object(b)) => <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Object).collect(),
+            (SemioMutation::Kit(m), S::Kit(b)) => <SemioKitMutation as Mutation<SemioKitSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Kit).collect(),
             // 🛡️ Same kind-mismatch fallback as `diff()` above.
             _ => vec![SemioMutation::NoMutation],
         }
@@ -154,11 +170,15 @@ fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
         SemioMutation::Presentation(_) => "presentation",
         SemioMutation::Flow(_) => "flow",
         SemioMutation::Text(_) => "text",
+        SemioMutation::Table(_) => "table",
+        SemioMutation::Graph(_) => "graph",
+        SemioMutation::Object(_) => "object",
+        SemioMutation::Kit(_) => "kit",
     }
 }
 
 /// 🏷️ Binary tag ordinal for [`SemioMutation`] — `0` = `NoMutation`, `1` = `SetSnapshot`,
-/// `2..=15` = the 14 wrapped subset kinds (enum declaration order).
+/// `2..=19` = the 18 wrapped subset kinds (enum declaration order).
 fn mutation_tag(m: &SemioMutation) -> u8 {
     match m {
         SemioMutation::NoMutation => 0,
@@ -177,6 +197,10 @@ fn mutation_tag(m: &SemioMutation) -> u8 {
         SemioMutation::Presentation(_) => 13,
         SemioMutation::Flow(_) => 14,
         SemioMutation::Text(_) => 15,
+        SemioMutation::Table(_) => 16,
+        SemioMutation::Graph(_) => 17,
+        SemioMutation::Object(_) => 18,
+        SemioMutation::Kit(_) => 19,
     }
 }
 
@@ -218,6 +242,10 @@ fn print_semio_mutation(m: &SemioMutation) -> String {
         SemioMutation::Presentation(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Flow(m) => format!("{tag}:{}", m.print_op()),
         SemioMutation::Text(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Table(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Graph(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Object(m) => format!("{tag}:{}", m.print_op()),
+        SemioMutation::Kit(m) => format!("{tag}:{}", m.print_op()),
     }
 }
 
@@ -242,6 +270,10 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
         "presentation" => Ok(SemioMutation::Presentation(SemioPresentationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "flow" => Ok(SemioMutation::Flow(SemioFlowMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         "text" => Ok(SemioMutation::Text(SemioTextMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "table" => Ok(SemioMutation::Table(SemioTableMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "graph" => Ok(SemioMutation::Graph(SemioGraphMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "object" => Ok(SemioMutation::Object(SemioObjectMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "kit" => Ok(SemioMutation::Kit(SemioKitMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         other => Err(format!("semio mutation: unknown tag {other:?}")),
     }
 }
@@ -281,6 +313,10 @@ impl protocol::OpBinary for SemioMutation {
             SemioMutation::Presentation(m) => m.encode_op()?,
             SemioMutation::Flow(m) => m.encode_op()?,
             SemioMutation::Text(m) => m.encode_op()?,
+            SemioMutation::Table(m) => m.encode_op()?,
+            SemioMutation::Graph(m) => m.encode_op()?,
+            SemioMutation::Object(m) => m.encode_op()?,
+            SemioMutation::Kit(m) => m.encode_op()?,
         };
         out.extend_from_slice(&payload);
         Ok(out)
@@ -314,6 +350,10 @@ impl protocol::OpBinary for SemioMutation {
             13 => SemioMutation::Presentation(SemioPresentationMutation::decode_op(payload)?),
             14 => SemioMutation::Flow(SemioFlowMutation::decode_op(payload)?),
             15 => SemioMutation::Text(SemioTextMutation::decode_op(payload)?),
+            16 => SemioMutation::Table(SemioTableMutation::decode_op(payload)?),
+            17 => SemioMutation::Graph(SemioGraphMutation::decode_op(payload)?),
+            18 => SemioMutation::Object(SemioObjectMutation::decode_op(payload)?),
+            19 => SemioMutation::Kit(SemioKitMutation::decode_op(payload)?),
             other => return Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
         })
     }
@@ -321,13 +361,13 @@ impl protocol::OpBinary for SemioMutation {
 //#endregion OpCodecs
 
 //#region 🔖️Demo
-/// 🌱 All 16 top-level [`SemioMutation`] tags (`NoMutation`, `SetSnapshot`, and each of the 14
+/// 🌱 All 18 top-level [`SemioMutation`] tags (`NoMutation`, `SetSnapshot`, and each of the 16
 /// wrapped-kind representative variants) — full dispatch-table coverage for this facet's
 /// grammar/protocol conformance-law tests. Single source of truth shared with
-/// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`. `text`
-/// (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) has no `NoMutation`-equivalent variant — that
-/// vocabulary is banned for new facets (`📓️taxonomy.md`) — so its representative case is a real
-/// `RemoveRun` against an out-of-range index, a genuine no-op at the snapshot-apply level.
+/// `🎹️composer/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`. `text`/
+/// `table`/`graph` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a/W2b) have no `NoMutation`-equivalent
+/// variant — that vocabulary is banned for new facets (`📓️taxonomy.md`) — so each's representative
+/// case is a real out-of-range/absent-target op, a genuine no-op at the snapshot-apply level.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
@@ -347,6 +387,12 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
         SemioMutation::Presentation(SemioPresentationMutation::NoMutation),
         SemioMutation::Flow(SemioFlowMutation::NoMutation),
         SemioMutation::Text(SemioTextMutation::RemoveRun(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::remove_run::mutation::RemoveRun { index: 99 })),
+        SemioMutation::Table(SemioTableMutation::RemoveRow(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::remove_row::mutation::RemoveRow { index: 99 })),
+        SemioMutation::Graph(SemioGraphMutation::DeleteNode(crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::delete_node::mutation::DeleteNode {
+            id: crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId::new("absent"),
+        })),
+        SemioMutation::Object(SemioObjectMutation::DeleteBrep(crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::delete_brep::mutation::DeleteBrep {})),
+        SemioMutation::Kit(SemioKitMutation::RemoveType(crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::remove_type::mutation::RemoveType { id: "absent".into() })),
     ]
 }
 //#endregion 🔖️Demo
@@ -459,7 +505,7 @@ mod tests {
         ];
         // 🔧️ `match` stays exhaustive over all 14 `SemioSubsetSnapshot` arms (compiler-enforced);
         // the `Text` arm is never reached since `bases` above excludes it.
-        let wrap_no_mutation = |s: &SemioSubsetSnapshot| -> SemioMutation {
+        let wrap_absent_mutation = |s: &SemioSubsetSnapshot| -> SemioMutation {
             match s {
                 SemioSubsetSnapshot::Brep(_) => SemioMutation::Brep(SemioBrepMutation::NoMutation),
                 SemioSubsetSnapshot::Mesh(_) => SemioMutation::Mesh(SemioMeshMutation::NoMutation),
@@ -475,11 +521,15 @@ mod tests {
                 SemioSubsetSnapshot::Presentation(_) => SemioMutation::Presentation(SemioPresentationMutation::NoMutation),
                 SemioSubsetSnapshot::Flow(_) => SemioMutation::Flow(SemioFlowMutation::NoMutation),
                 SemioSubsetSnapshot::Text(_) => unreachable!("excluded from `bases` above"),
+                SemioSubsetSnapshot::Table(_) => unreachable!("excluded from `bases` above"),
+                SemioSubsetSnapshot::Graph(_) => unreachable!("excluded from `bases` above"),
+                SemioSubsetSnapshot::Object(_) => unreachable!("excluded from `bases` above"),
+                SemioSubsetSnapshot::Kit(_) => unreachable!("excluded from `bases` above"),
             }
         };
         for subset in bases {
             let base = SemioSnapshot { schema: "stdio.semio".into(), subset };
-            let m = wrap_no_mutation(&base.subset);
+            let m = wrap_absent_mutation(&base.subset);
             let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
             assert!(diff.is_empty(), "wrapped NoMutation must diff empty: {diff:?}");
             let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
@@ -501,6 +551,114 @@ mod tests {
         }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
         assert!(matches!(diff, SemioDiff::Text(_)));
+        assert!(!diff.is_empty());
+        let mut applied = base.clone();
+        let returned_diff = apply_semio_mutation(&mut applied, &m);
+        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(returned_diff, diff);
+        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+        assert_eq!(inv.len(), 1);
+        let mut restored = applied;
+        let _ = apply_semio_mutation(&mut restored, &inv[0]);
+        assert_eq!(restored, base);
+    }
+
+    /// 🧪️ `table`'s own wrapped-kind coverage (mirrors `wrapped_text_kind_…` above): a real
+    /// `InsertRow` routes through the any-level dispatch, produces a nested `SemioDiff::Table`, and
+    /// its inverse restores `base` exactly.
+    #[test]
+    fn wrapped_table_kind_diff_and_inverse_route_correctly() {
+        use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::insert_row;
+        use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
+
+        let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Table(Default::default()) };
+        let m = SemioMutation::Table(SemioTableMutation::InsertRow(insert_row::mutation::InsertRow {
+            index: 0,
+            row: SemioTableRow { cells: vec![] },
+        }));
+        let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+        assert!(matches!(diff, SemioDiff::Table(_)));
+        assert!(!diff.is_empty());
+        let mut applied = base.clone();
+        let returned_diff = apply_semio_mutation(&mut applied, &m);
+        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(returned_diff, diff);
+        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+        assert_eq!(inv.len(), 1);
+        let mut restored = applied;
+        let _ = apply_semio_mutation(&mut restored, &inv[0]);
+        assert_eq!(restored, base);
+    }
+
+    /// 🧪️ `graph`'s own wrapped-kind coverage (mirrors `wrapped_text_kind_…` above): a real
+    /// `CreateNode` routes through the any-level dispatch, produces a nested `SemioDiff::Graph`,
+    /// and its inverse restores `base` exactly.
+    #[test]
+    fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
+        use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::create_node;
+        use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+        use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+
+        let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Graph(Default::default()) };
+        let m = SemioMutation::Graph(SemioGraphMutation::CreateNode(create_node::mutation::CreateNode {
+            id: GraphNodeId::new("n1"),
+            kind: "task".into(),
+            label: "N1".into(),
+            position: SemioPoint2::default(),
+            ports: vec![],
+            properties: vec![],
+        }));
+        let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+        assert!(matches!(diff, SemioDiff::Graph(_)));
+        assert!(!diff.is_empty());
+        let mut applied = base.clone();
+        let returned_diff = apply_semio_mutation(&mut applied, &m);
+        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(returned_diff, diff);
+        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+        assert_eq!(inv.len(), 1);
+        let mut restored = applied;
+        let _ = apply_semio_mutation(&mut restored, &inv[0]);
+        assert_eq!(restored, base);
+    }
+
+    /// 🧪️ `object`'s own wrapped-kind coverage (mirrors `wrapped_text_kind_…` above): a real
+    /// `CreateBrep` routes through the any-level dispatch, produces a nested `SemioDiff::Object`,
+    /// and its inverse restores `base` exactly. `object` is the first COMPOSITE subset wrapped
+    /// here — the mutation touches a CHILD slot (`brep`), not a scalar/collection field.
+    #[test]
+    fn wrapped_object_kind_diff_and_inverse_route_correctly() {
+        use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::create_brep;
+
+        let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Object(Default::default()) };
+        let target = store::os_io::ArtifactRef { artifact_id: "brep-x".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
+        let m = SemioMutation::Object(SemioObjectMutation::CreateBrep(create_brep::mutation::CreateBrep { child_id: "b1".into(), target }));
+        let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+        assert!(matches!(diff, SemioDiff::Object(_)));
+        assert!(!diff.is_empty());
+        let mut applied = base.clone();
+        let returned_diff = apply_semio_mutation(&mut applied, &m);
+        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(returned_diff, diff);
+        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+        assert_eq!(inv.len(), 1);
+        let mut restored = applied;
+        let _ = apply_semio_mutation(&mut restored, &inv[0]);
+        assert_eq!(restored, base);
+    }
+
+    /// 🧪️ `kit`'s own wrapped-kind coverage (mirrors `wrapped_object_kind_…` above): a real
+    /// `AddType` routes through the any-level dispatch, produces a nested `SemioDiff::Kit`, and its
+    /// inverse restores `base` exactly. `kit` is the SECOND composite subset and the first to carry
+    /// a LINK slot, though this particular case exercises a plain value-collection mutation.
+    #[test]
+    fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
+        use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::add_type;
+
+        let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Kit(Default::default()) };
+        let m = SemioMutation::Kit(SemioKitMutation::AddType(add_type::mutation::AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }));
+        let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
+        assert!(matches!(diff, SemioDiff::Kit(_)));
         assert!(!diff.is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);

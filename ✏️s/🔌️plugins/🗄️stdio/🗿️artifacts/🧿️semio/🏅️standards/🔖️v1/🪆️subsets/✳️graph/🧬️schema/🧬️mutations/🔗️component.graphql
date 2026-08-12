@@ -1,0 +1,18 @@
+# 🧬️ SemioGraphMutation schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+input CreateNodeInput { id: GraphNodeIdInput! kind: String! label: String! position: SemioPoint2Input! ports: [SemioGraphPortInput!]! properties: [SemioValueEntryInput!]! }
+input DeleteNodeInput { id: GraphNodeIdInput! }
+input ChangeNodeKindInput { id: GraphNodeIdInput! newKind: String! }
+input ChangeNodeLabelInput { id: GraphNodeIdInput! newLabel: String! }
+input MoveNodeInput { id: GraphNodeIdInput! newPosition: SemioPoint2Input! }
+input AddNodePortInput { nodeId: GraphNodeIdInput! index: Int! port: SemioGraphPortInput! }
+input RemoveNodePortInput { nodeId: GraphNodeIdInput! index: Int! }
+input AddNodePropertyInput { nodeId: GraphNodeIdInput! index: Int! property: SemioValueEntryInput! }
+input RemoveNodePropertyInput { nodeId: GraphNodeIdInput! index: Int! }
+input CreateEdgeInput { id: GraphEdgeIdInput! source: GraphNodeIdInput! target: GraphNodeIdInput! kind: String! label: String! }
+input DeleteEdgeInput { id: GraphEdgeIdInput! }
+
+input GraphNodeIdInput { value: String! }
+input GraphEdgeIdInput { value: String! }
+input SemioPoint2Input { x: Float! y: Float! }
+input SemioGraphPortInput { name: String! kind: String! }
+input SemioValueEntryInput { key: String! value: String! }

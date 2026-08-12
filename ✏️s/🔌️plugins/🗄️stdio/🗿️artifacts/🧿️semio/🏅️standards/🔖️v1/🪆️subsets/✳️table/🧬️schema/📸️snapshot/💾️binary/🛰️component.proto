@@ -1,0 +1,9 @@
+syntax = "proto3";
+// 💾️ SemioTableSnapshot binary frame — descriptive twin of 📡️component.protocol.semio.
+package semio.s_stdio_semio_table.snapshot.binary;
+
+message SemioTableSnapshotFrame {
+  uint32 format = 1;
+  bytes schema = 2;
+  bytes payload = 3; // opaque: columns + rows, protocol-array-of-records gap
+}

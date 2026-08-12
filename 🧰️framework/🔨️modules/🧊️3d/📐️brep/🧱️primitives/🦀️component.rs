@@ -110,11 +110,12 @@ fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
 // #region 🔖️Solids
 
 /// 🧱 Axis-aligned box from the origin to `(w, d, h)` with six planar faces (V=8, E=12, F=6).
-pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64) -> Result<SolidId, KernelError> {
+/// Threads the caller-owned `rec` through every euler call so the whole box's [`crate::brep::history::OpDelta`]
+/// is observable after this call returns, instead of being discarded at the function boundary.
+pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("box width", w)?;
     require_positive("box depth", d)?;
     require_positive("box height", h)?;
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
     let corners = [
         Pnt3::new(0.0, 0.0, 0.0),
@@ -126,19 +127,19 @@ pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64) -> Result<SolidId, Kern
         Pnt3::new(w, d, h),
         Pnt3::new(0.0, d, h),
     ];
-    let v: Vec<VertexId> = corners.iter().map(|&p| make_vertex(body, p, tol, &mut rec)).collect();
-    let eb0 = line_edge(body, corners[0], corners[1], v[0], v[1], tol, &mut rec);
-    let eb1 = line_edge(body, corners[1], corners[2], v[1], v[2], tol, &mut rec);
-    let eb2 = line_edge(body, corners[2], corners[3], v[2], v[3], tol, &mut rec);
-    let eb3 = line_edge(body, corners[3], corners[0], v[3], v[0], tol, &mut rec);
-    let et0 = line_edge(body, corners[4], corners[5], v[4], v[5], tol, &mut rec);
-    let et1 = line_edge(body, corners[5], corners[6], v[5], v[6], tol, &mut rec);
-    let et2 = line_edge(body, corners[6], corners[7], v[6], v[7], tol, &mut rec);
-    let et3 = line_edge(body, corners[7], corners[4], v[7], v[4], tol, &mut rec);
-    let ev0 = line_edge(body, corners[0], corners[4], v[0], v[4], tol, &mut rec);
-    let ev1 = line_edge(body, corners[1], corners[5], v[1], v[5], tol, &mut rec);
-    let ev2 = line_edge(body, corners[2], corners[6], v[2], v[6], tol, &mut rec);
-    let ev3 = line_edge(body, corners[3], corners[7], v[3], v[7], tol, &mut rec);
+    let v: Vec<VertexId> = corners.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
+    let eb0 = line_edge(body, corners[0], corners[1], v[0], v[1], tol, rec);
+    let eb1 = line_edge(body, corners[1], corners[2], v[1], v[2], tol, rec);
+    let eb2 = line_edge(body, corners[2], corners[3], v[2], v[3], tol, rec);
+    let eb3 = line_edge(body, corners[3], corners[0], v[3], v[0], tol, rec);
+    let et0 = line_edge(body, corners[4], corners[5], v[4], v[5], tol, rec);
+    let et1 = line_edge(body, corners[5], corners[6], v[5], v[6], tol, rec);
+    let et2 = line_edge(body, corners[6], corners[7], v[6], v[7], tol, rec);
+    let et3 = line_edge(body, corners[7], corners[4], v[7], v[4], tol, rec);
+    let ev0 = line_edge(body, corners[0], corners[4], v[0], v[4], tol, rec);
+    let ev1 = line_edge(body, corners[1], corners[5], v[1], v[5], tol, rec);
+    let ev2 = line_edge(body, corners[2], corners[6], v[2], v[6], tol, rec);
+    let ev3 = line_edge(body, corners[3], corners[7], v[3], v[7], tol, rec);
 
     let s_bottom = body.surfaces.insert(plane_at(corners[0], -Vec3::Z));
     let s_top = body.surfaces.insert(plane_at(corners[4], Vec3::Z));
@@ -146,22 +147,21 @@ pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64) -> Result<SolidId, Kern
     let s_back = body.surfaces.insert(plane_at(corners[3], Vec3::Y));
     let s_left = body.surfaces.insert(plane_at(corners[0], -Vec3::X));
     let s_right = body.surfaces.insert(plane_at(corners[1], Vec3::X));
-    let bottom = attach_face(body, s_bottom, &[(eb0, false), (eb3, false), (eb2, false), (eb1, false)], false, tol, &mut rec);
-    let top = attach_face(body, s_top, &[(et0, true), (et1, true), (et2, true), (et3, true)], false, tol, &mut rec);
-    let front = attach_face(body, s_front, &[(eb0, true), (ev1, true), (et0, false), (ev0, false)], false, tol, &mut rec);
-    let back = attach_face(body, s_back, &[(eb2, true), (ev3, true), (et2, false), (ev2, false)], false, tol, &mut rec);
-    let left = attach_face(body, s_left, &[(eb3, true), (ev0, true), (et3, false), (ev3, false)], false, tol, &mut rec);
-    let right = attach_face(body, s_right, &[(eb1, true), (ev2, true), (et1, false), (ev1, false)], false, tol, &mut rec);
-    Ok(finish_solid(body, vec![bottom, top, front, back, left, right], &mut rec))
+    let bottom = attach_face(body, s_bottom, &[(eb0, false), (eb3, false), (eb2, false), (eb1, false)], false, tol, rec);
+    let top = attach_face(body, s_top, &[(et0, true), (et1, true), (et2, true), (et3, true)], false, tol, rec);
+    let front = attach_face(body, s_front, &[(eb0, true), (ev1, true), (et0, false), (ev0, false)], false, tol, rec);
+    let back = attach_face(body, s_back, &[(eb2, true), (ev3, true), (et2, false), (ev2, false)], false, tol, rec);
+    let left = attach_face(body, s_left, &[(eb3, true), (ev0, true), (et3, false), (ev3, false)], false, tol, rec);
+    let right = attach_face(body, s_right, &[(eb1, true), (ev2, true), (et1, false), (ev1, false)], false, tol, rec);
+    Ok(finish_solid(body, vec![bottom, top, front, back, left, right], rec))
 }
 
 /// 🧱 Sphere centered at the origin as two hemispherical faces sharing an `segments`-gon equator.
-pub fn make_sphere(body: &mut Body, radius: f64, segments: usize) -> Result<SolidId, KernelError> {
+pub fn make_sphere(body: &mut Body, radius: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("sphere radius", radius)?;
     if segments < 4 {
         return Err(KernelError::InvalidInput(format!("sphere needs at least 4 segments, got {segments}")));
     }
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
     let frame = Frame3::WORLD;
     let surface_n = body.surfaces.insert(Surface::Sphere { frame, radius });
@@ -172,39 +172,38 @@ pub fn make_sphere(body: &mut Body, radius: f64, segments: usize) -> Result<Soli
         let theta = TAU * i as f64 / segments as f64;
         let p = Pnt3::new(radius * theta.cos(), radius * theta.sin(), 0.0);
         positions.push(p);
-        verts.push(make_vertex(body, p, tol, &mut rec));
+        verts.push(make_vertex(body, p, tol, rec));
     }
     let mut edges = Vec::with_capacity(segments);
     for i in 0..segments {
         let j = (i + 1) % segments;
-        edges.push(line_edge(body, positions[i], positions[j], verts[i], verts[j], tol, &mut rec));
+        edges.push(line_edge(body, positions[i], positions[j], verts[i], verts[j], tol, rec));
     }
     let north_members: Vec<(EdgeId, bool)> = edges.iter().map(|&e| (e, true)).collect();
     let south_members: Vec<(EdgeId, bool)> = edges.iter().rev().map(|&e| (e, false)).collect();
-    let north = attach_face(body, surface_n, &north_members, false, tol, &mut rec);
-    let south = attach_face(body, surface_s, &south_members, true, tol, &mut rec);
-    Ok(finish_solid(body, vec![north, south], &mut rec))
+    let north = attach_face(body, surface_n, &north_members, false, tol, rec);
+    let south = attach_face(body, surface_s, &south_members, true, tol, rec);
+    Ok(finish_solid(body, vec![north, south], rec))
 }
 
 /// 🧱 Cylinder along +Z from `z=0` to `z=height` with analytic lateral surface and planar caps.
 ///
 /// `segments` is retained for tessellation hints and must be ≥ 3; topology uses a single seam.
-pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize) -> Result<SolidId, KernelError> {
+pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("cylinder radius", radius)?;
     require_positive("cylinder height", height)?;
     if segments < 3 {
         return Err(KernelError::InvalidInput(format!("cylinder needs at least 3 segments, got {segments}")));
     }
     let _ = segments;
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
     let bot_pt = Pnt3::new(radius, 0.0, 0.0);
     let top_pt = Pnt3::new(radius, 0.0, height);
-    let v_bot = make_vertex(body, bot_pt, tol, &mut rec);
-    let v_top = make_vertex(body, top_pt, tol, &mut rec);
-    let e_bot = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_bot, tol, &mut rec);
-    let e_top = circle_edge(body, Pnt3::new(0.0, 0.0, height), Vec3::Z, radius, v_top, tol, &mut rec);
-    let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, &mut rec);
+    let v_bot = make_vertex(body, bot_pt, tol, rec);
+    let v_top = make_vertex(body, top_pt, tol, rec);
+    let e_bot = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_bot, tol, rec);
+    let e_top = circle_edge(body, Pnt3::new(0.0, 0.0, height), Vec3::Z, radius, v_top, tol, rec);
+    let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, rec);
     let cyl = body.surfaces.insert(Surface::Cylinder { frame: Frame3::WORLD, radius });
     let lateral = attach_face(
         body,
@@ -212,26 +211,25 @@ pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize)
         &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)],
         false,
         tol,
-        &mut rec,
+        rec,
     );
     let s_bottom = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0), -Vec3::Z));
     let s_top = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, height), Vec3::Z));
-    let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, &mut rec);
-    let top = attach_face(body, s_top, &[(e_top, true)], false, tol, &mut rec);
-    Ok(finish_solid(body, vec![lateral, bottom, top], &mut rec))
+    let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, rec);
+    let top = attach_face(body, s_top, &[(e_top, true)], false, tol, rec);
+    Ok(finish_solid(body, vec![lateral, bottom, top], rec))
 }
 
 /// 🧱 Pointed cone with base radius at `z=0` and apex at `(0,0,height)`.
 ///
 /// `segments` is a tessellation hint (≥ 3); topology uses a single generator seam.
-pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize) -> Result<SolidId, KernelError> {
+pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("cone radius", radius)?;
     require_positive("cone height", height)?;
     if segments < 3 {
         return Err(KernelError::InvalidInput(format!("cone needs at least 3 segments, got {segments}")));
     }
     let _ = segments;
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
     let half_angle = radius.atan2(height);
     if half_angle <= Tol::DEFAULT.value() || half_angle >= FRAC_PI_2 {
@@ -239,10 +237,10 @@ pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize) -> 
     }
     let apex = Pnt3::new(0.0, 0.0, height);
     let base_pt = Pnt3::new(radius, 0.0, 0.0);
-    let v_apex = make_vertex(body, apex, tol, &mut rec);
-    let v_base = make_vertex(body, base_pt, tol, &mut rec);
-    let e_circle = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_base, tol, &mut rec);
-    let e_seam = line_edge(body, base_pt, apex, v_base, v_apex, tol, &mut rec);
+    let v_apex = make_vertex(body, apex, tol, rec);
+    let v_base = make_vertex(body, base_pt, tol, rec);
+    let e_circle = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_base, tol, rec);
+    let e_seam = line_edge(body, base_pt, apex, v_base, v_apex, tol, rec);
     let cone_frame = Frame3 {
         origin: apex,
         x: Vec3::X,
@@ -256,15 +254,15 @@ pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize) -> 
         &[(e_circle, true), (e_seam, true), (e_seam, false)],
         false,
         tol,
-        &mut rec,
+        rec,
     );
     let s_base = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0), -Vec3::Z));
-    let base = attach_face(body, s_base, &[(e_circle, false)], false, tol, &mut rec);
-    Ok(finish_solid(body, vec![lateral, base], &mut rec))
+    let base = attach_face(body, s_base, &[(e_circle, false)], false, tol, rec);
+    Ok(finish_solid(body, vec![lateral, base], rec))
 }
 
 /// 🧱 Torus in the XY plane as one toroidal face with the fundamental-polygon seam wire (genus 1).
-pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize) -> Result<SolidId, KernelError> {
+pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_positive("torus major radius", major)?;
     require_positive("torus minor radius", minor)?;
     if minor >= major {
@@ -274,7 +272,6 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize) -> R
     }
     let major_seg = segments.max(8);
     let minor_seg = (segments / 2).max(6);
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
 
     let mut positions = Vec::with_capacity(major_seg * minor_seg);
@@ -290,7 +287,7 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize) -> R
             let r = major + minor * cv;
             let p = Pnt3::new(r * cu, r * su, minor * sv);
             positions.push(p);
-            verts.push(make_vertex(body, p, tol, &mut rec));
+            verts.push(make_vertex(body, p, tol, rec));
         }
     }
 
@@ -317,7 +314,7 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize) -> R
                             verts[ia],
                             verts[ib],
                             tol,
-                            &mut rec,
+                            rec,
                         );
                         edge_map.insert(key, eid);
                         (eid, true)
@@ -338,21 +335,20 @@ pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize) -> R
                     normal = -normal;
                 }
                 let surface = body.surfaces.insert(plane_at(pa, normal));
-                faces.push(attach_face(body, surface, &members, false, tol, &mut rec));
+                faces.push(attach_face(body, surface, &members, false, tol, rec));
             }
         }
     }
-    Ok(finish_solid(body, faces, &mut rec))
+    Ok(finish_solid(body, faces, rec))
 }
 
 
 
 /// 🧱 Builds a (possibly non-convex) solid from a triangle soup — used when convex-hull boolean fails.
-pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]]) -> Result<SolidId, KernelError> {
+pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if triangles.is_empty() {
         return Err(KernelError::InvalidInput("triangle soup is empty".into()));
     }
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
     let quant = |v: f64| -> i64 { (v * 1e6).round() as i64 };
     let mut key_to_idx: HashMap<(i64, i64, i64), usize> = HashMap::new();
@@ -366,7 +362,7 @@ pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]]) -> Res
             }
             key_to_idx.insert(key, positions.len());
             positions.push(p);
-            verts.push(make_vertex(body, p, tol, &mut rec));
+            verts.push(make_vertex(body, p, tol, rec));
         }
     }
     let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
@@ -384,7 +380,7 @@ pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]]) -> Res
                 let edge = body.edges.get(existing).unwrap();
                 (existing, edge.v0 == verts[ia])
             } else {
-                let eid = line_edge(body, positions[ia], positions[ib], verts[ia], verts[ib], tol, &mut rec);
+                let eid = line_edge(body, positions[ia], positions[ib], verts[ia], verts[ib], tol, rec);
                 edge_map.insert(key, eid);
                 (eid, true)
             };
@@ -392,19 +388,18 @@ pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]]) -> Res
         }
         let normal = (tri[1] - tri[0]).cross(tri[2] - tri[0]).normalized().unwrap_or(Vec3::Z);
         let surface = body.surfaces.insert(plane_at(tri[0], normal));
-        faces.push(attach_face(body, surface, &members, false, tol, &mut rec));
+        faces.push(attach_face(body, surface, &members, false, tol, rec));
     }
-    Ok(finish_solid(body, faces, &mut rec))
+    Ok(finish_solid(body, faces, rec))
 }
 
 /// 🧱 Convex hull of a point cloud as a closed solid of planar triangles (Quickhull).
-pub fn make_convex_hull(body: &mut Body, points: &[Pnt3]) -> Result<SolidId, KernelError> {
+pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let hull = convex_hull_3d(points).ok_or_else(|| {
         KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into())
     })?;
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
-    let vertex_ids: Vec<VertexId> = hull.vertices.iter().map(|&p| make_vertex(body, p, tol, &mut rec)).collect();
+    let vertex_ids: Vec<VertexId> = hull.vertices.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
     let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
     let mut faces = Vec::with_capacity(hull.faces.len());
     for &[a, b, c] in &hull.faces {
@@ -424,7 +419,7 @@ pub fn make_convex_hull(body: &mut Body, points: &[Pnt3]) -> Result<SolidId, Ker
                     vertex_ids[ia],
                     vertex_ids[ib],
                     tol,
-                    &mut rec,
+                    rec,
                 );
                 edge_map.insert(key, eid);
                 (eid, true)
@@ -436,9 +431,9 @@ pub fn make_convex_hull(body: &mut Body, points: &[Pnt3]) -> Result<SolidId, Ker
         let pc = hull.vertices[c];
         let normal = (pb - pa).cross(pc - pa).normalized().unwrap_or(Vec3::Z);
         let surface = body.surfaces.insert(plane_at(pa, normal));
-        faces.push(attach_face(body, surface, &members, false, tol, &mut rec));
+        faces.push(attach_face(body, surface, &members, false, tol, rec));
     }
-    Ok(finish_solid(body, faces, &mut rec))
+    Ok(finish_solid(body, faces, rec))
 }
 
 // #endregion 🔖️Solids
@@ -446,28 +441,27 @@ pub fn make_convex_hull(body: &mut Body, points: &[Pnt3]) -> Result<SolidId, Ker
 // #region 🔖️WiresFaces
 
 /// 🧱 Open or closed polyline wire through `points` (closed requires ≥ 3 points).
-pub fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool) -> Result<Wire, KernelError> {
+pub fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
     if points.len() < 2 {
         return Err(KernelError::InvalidInput("polyline needs at least 2 points".into()));
     }
     if closed && points.len() < 3 {
         return Err(KernelError::InvalidInput("closed polyline needs at least 3 points".into()));
     }
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
-    let vertices: Vec<VertexId> = points.iter().map(|&p| make_vertex(body, p, tol, &mut rec)).collect();
+    let vertices: Vec<VertexId> = points.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
     let mut members = Vec::new();
     let n_edges = if closed { points.len() } else { points.len() - 1 };
     for i in 0..n_edges {
         let j = (i + 1) % points.len();
-        let eid = line_edge(body, points[i], points[j], vertices[i], vertices[j], tol, &mut rec);
+        let eid = line_edge(body, points[i], points[j], vertices[i], vertices[j], tol, rec);
         members.push((eid, true));
     }
     Ok(Wire { members, vertices, closed })
 }
 
 /// 🧱 Axis-aligned rectangle wire in the XY plane from the origin to `(width, height)`.
-pub fn make_rectangle_wire(body: &mut Body, width: f64, height: f64) -> Result<Wire, KernelError> {
+pub fn make_rectangle_wire(body: &mut Body, width: f64, height: f64, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
     require_positive("rectangle width", width)?;
     require_positive("rectangle height", height)?;
     make_polyline_wire(
@@ -479,11 +473,12 @@ pub fn make_rectangle_wire(body: &mut Body, width: f64, height: f64) -> Result<W
             Pnt3::new(0.0, height, 0.0),
         ],
         true,
+        rec,
     )
 }
 
 /// 🧱 Regular `sides`-gon wire of given `radius` in the XY plane, centered at the origin.
-pub fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usize) -> Result<Wire, KernelError> {
+pub fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usize, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
     require_positive("polygon radius", radius)?;
     if sides < 3 {
         return Err(KernelError::InvalidInput(format!("polygon needs at least 3 sides, got {sides}")));
@@ -494,17 +489,17 @@ pub fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usize) -> 
             Pnt3::new(radius * a.cos(), radius * a.sin(), 0.0)
         })
         .collect();
-    make_polyline_wire(body, &points, true)
+    make_polyline_wire(body, &points, true, rec)
 }
 
 /// 🧱 Planar face from a closed point loop (Newell normal); points must be non-collinear.
-pub fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3]) -> Result<FaceId, KernelError> {
+pub fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     if points.len() < 3 {
         return Err(KernelError::InvalidInput("planar face needs at least 3 points".into()));
     }
     let normal = newell_normal(points).ok_or_else(|| KernelError::InvalidInput("points are collinear".into()))?;
-    let wire = make_polyline_wire(body, points, true)?;
-    make_planar_face_from_wire(body, &wire, points[0], normal)
+    let wire = make_polyline_wire(body, points, true, rec)?;
+    make_planar_face_from_wire(body, &wire, points[0], normal, rec)
 }
 
 /// 🧱 Planar face whose outer loop is an existing closed [`Wire`].
@@ -513,6 +508,7 @@ pub fn make_planar_face_from_wire(
     wire: &Wire,
     origin: Pnt3,
     normal: Vec3,
+    rec: &mut OpRecorder,
 ) -> Result<FaceId, KernelError> {
     if !wire.closed {
         return Err(KernelError::InvalidInput("planar face requires a closed wire".into()));
@@ -520,9 +516,8 @@ pub fn make_planar_face_from_wire(
     if wire.members.is_empty() {
         return Err(KernelError::InvalidInput("planar face wire is empty".into()));
     }
-    let mut rec = OpRecorder::new();
     let surface = body.surfaces.insert(plane_at(origin, normal));
-    Ok(attach_face(body, surface, &wire.members, false, Tol::DEFAULT, &mut rec))
+    Ok(attach_face(body, surface, &wire.members, false, Tol::DEFAULT, rec))
 }
 
 // #endregion 🔖️WiresFaces
@@ -736,7 +731,8 @@ mod tests {
     #[test]
     fn make_box_euler_and_validate() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 3.0, 4.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
         assert_eq!((v, e, f), (8, 12, 6));
         assert_eq!(v as i64 - e as i64 + f as i64, 2);
@@ -745,30 +741,44 @@ mod tests {
         assert!(issues.is_empty(), "box should validate clean: {issues:?}");
     }
 
+    /// 🧱 The whole box's provenance escapes the call — this is Phase 1's real deliverable, tested.
+    #[test]
+    fn make_box_surfaces_its_op_delta_to_the_caller() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
+        let delta = rec.into_delta();
+        assert_eq!(delta.generated.len(), 8 + 12 + 6 + 1 + 1, "vertices + edges + faces + shell + solid");
+        assert!(delta.deleted.is_empty());
+    }
+
     #[test]
     fn make_box_rejects_non_positive() {
         let mut body = Body::new();
-        assert!(make_box(&mut body, 0.0, 1.0, 1.0).is_err());
-        assert!(make_box(&mut body, 1.0, -1.0, 1.0).is_err());
+        let mut rec = OpRecorder::new();
+        assert!(make_box(&mut body, 0.0, 1.0, 1.0, &mut rec).is_err());
+        assert!(make_box(&mut body, 1.0, -1.0, 1.0, &mut rec).is_err());
     }
 
     #[test]
     fn make_sphere_two_hemispheres_euler() {
         let mut body = Body::new();
-        let solid = make_sphere(&mut body, 1.0, 8).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_sphere(&mut body, 1.0, 8, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
         assert_eq!(f, 2);
         assert_eq!(v, 8);
         assert_eq!(e, 8);
         assert_eq!(v as i64 - e as i64 + f as i64, 2);
         assert_rings_ok(&body);
-        assert!(make_sphere(&mut body, 1.0, 3).is_err());
+        assert!(make_sphere(&mut body, 1.0, 3, &mut rec).is_err());
     }
 
     #[test]
     fn make_cylinder_three_faces_and_rings() {
         let mut body = Body::new();
-        let solid = make_cylinder(&mut body, 1.0, 2.0, 16).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_cylinder(&mut body, 1.0, 2.0, 16, &mut rec).unwrap();
         let (_, _, f) = solid_counts(&body, solid);
         assert_eq!(f, 3);
         assert_rings_ok(&body);
@@ -782,7 +792,8 @@ mod tests {
     #[test]
     fn make_cone_pointed_two_faces() {
         let mut body = Body::new();
-        let solid = make_cone(&mut body, 1.0, 2.0, 12).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_cone(&mut body, 1.0, 2.0, 12, &mut rec).unwrap();
         let (_, _, f) = solid_counts(&body, solid);
         assert_eq!(f, 2);
         assert_rings_ok(&body);
@@ -791,26 +802,28 @@ mod tests {
     #[test]
     fn make_torus_genus_one_euler() {
         let mut body = Body::new();
-        let solid = make_torus(&mut body, 3.0, 1.0, 8).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_torus(&mut body, 3.0, 1.0, 8, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
         // Polyhedral torus grid: genus-1 ⇒ Euler characteristic 0, with many quad faces.
         assert!(f > 1, "polyhedral torus should expose multiple faces, got {f}");
         assert!(v > 1 && e > 2, "polyhedral torus counts v={v} e={e}");
         assert_eq!(v as i64 - e as i64 + f as i64, 0, "torus χ must be 0 (got V={v} E={e} F={f})");
         assert_rings_ok(&body);
-        assert!(make_torus(&mut body, 1.0, 1.0, 8).is_err());
+        assert!(make_torus(&mut body, 1.0, 1.0, 8, &mut rec).is_err());
     }
 
     #[test]
     fn make_convex_hull_tetrahedron() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let pts = [
             Pnt3::new(0.0, 0.0, 0.0),
             Pnt3::new(1.0, 0.0, 0.0),
             Pnt3::new(0.0, 1.0, 0.0),
             Pnt3::new(0.0, 0.0, 1.0),
         ];
-        let solid = make_convex_hull(&mut body, &pts).unwrap();
+        let solid = make_convex_hull(&mut body, &pts, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
         assert_eq!((v, e, f), (4, 6, 4));
         assert_eq!(v as i64 - e as i64 + f as i64, 2);
@@ -822,24 +835,26 @@ mod tests {
     #[test]
     fn make_convex_hull_rejects_coplanar() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let pts = [
             Pnt3::new(0.0, 0.0, 0.0),
             Pnt3::new(1.0, 0.0, 0.0),
             Pnt3::new(0.0, 1.0, 0.0),
             Pnt3::new(1.0, 1.0, 0.0),
         ];
-        assert!(make_convex_hull(&mut body, &pts).is_err());
+        assert!(make_convex_hull(&mut body, &pts, &mut rec).is_err());
     }
 
     #[test]
     fn wires_and_planar_faces() {
         let mut body = Body::new();
-        let rect = make_rectangle_wire(&mut body, 2.0, 3.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let rect = make_rectangle_wire(&mut body, 2.0, 3.0, &mut rec).unwrap();
         assert!(rect.closed);
         assert_eq!(rect.members.len(), 4);
-        let face = make_planar_face_from_wire(&mut body, &rect, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
+        let face = make_planar_face_from_wire(&mut body, &rect, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).unwrap();
         assert_eq!(body.loop_coedges(body.faces.get(face).unwrap().outer.unwrap()).len(), 4);
-        let poly = make_regular_polygon_wire(&mut body, 1.0, 6).unwrap();
+        let poly = make_regular_polygon_wire(&mut body, 1.0, 6, &mut rec).unwrap();
         assert_eq!(poly.members.len(), 6);
         let face2 = make_planar_face_from_points(
             &mut body,
@@ -848,6 +863,7 @@ mod tests {
                 Pnt3::new(1.0, 0.0, 1.0),
                 Pnt3::new(0.0, 1.0, 1.0),
             ],
+            &mut rec,
         )
         .unwrap();
         assert!(body.faces.get(face2).unwrap().outer.is_some());
@@ -857,15 +873,17 @@ mod tests {
     #[test]
     fn open_polyline_wire() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let wire = make_polyline_wire(
             &mut body,
             &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0)],
             false,
+            &mut rec,
         )
         .unwrap();
         assert!(!wire.closed);
         assert_eq!(wire.members.len(), 2);
-        assert!(make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).is_err());
+        assert!(make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).is_err());
     }
 }
 // #endregion 🔖️Tests

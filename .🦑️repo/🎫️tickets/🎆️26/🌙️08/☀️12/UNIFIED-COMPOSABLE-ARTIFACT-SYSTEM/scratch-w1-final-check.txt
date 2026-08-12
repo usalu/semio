@@ -1,0 +1,26 @@
+
+error[E0616]: field `children` of struct `VcsArtifactApp` is private
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:8671:41
+     |
+8671 | ...   let (dialect, member) = app.children.get_mut(&("genesisSlot".to_string(), "genesis-child".to_string())).expect("genesis chil...
+     |                                   ^^^^^^^^ private field
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6683:34
+     |
+6683 |             let VcsArtifactApp { app, cache, registry, .. } = self;
+     |                                  ^^^ help: try ignoring the field: `app: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2518:17
+     |
+2518 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+Some errors have detailed explanations: E0277, E0425, E0616, E0624.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-framework-plugin` (lib test) generated 43 warnings (35 duplicates)
+error: could not compile `semio-framework-plugin` (lib test) due to 10 previous errors; 43 warnings emitted
+EXIT=0

@@ -1008,7 +1008,8 @@ mod tests {
     #[test]
     fn box_round_trip_topology_counts() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 3.0, 4.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
         let step = write_step(&body, &[solid]).unwrap();
         assert!(step.contains("MANIFOLD_SOLID_BREP"));
         assert!(step.contains("ADVANCED_FACE"));

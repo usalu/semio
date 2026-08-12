@@ -343,6 +343,7 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA;
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
     use serde_json::json;
 
     #[test]

@@ -764,6 +764,16 @@ pub fn register_pilot_languages() {
         hooks: dsl::passthrough_hooks("en1992.spr"),
     });
 }
+
+//#region 🔖️Register
+/// 🧷️ Registers this artifact's pilot languages/schema descriptor (via `register_pilot_languages`,
+/// which already registers the schema) and its inference descriptor in one call — the fan-out
+/// target for the plugin root's `.setup()` hook (folded in from the deleted `🔧️setup` facet, APA).
+pub fn register() {
+    register_pilot_languages();
+    register_artifact_inferences();
+}
+//#endregion 🔖️Register
 //#endregion 🔖️Register
 
 

@@ -19,8 +19,7 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
-
-// 🔒️ `Emit::emit` method-call syntax is only exercised by this crate's own tests (production
+use crate::*;
 // callers hold a `dyn Emit` object or call through `db_core`'s own trait path) — gate the import
 // accordingly rather than leaving an always-unused warning on non-test builds.
 #[cfg(test)]

@@ -70,8 +70,15 @@ mod tests {
         let forward = operation.diff(base).apply(base);
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
+        // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
+        // stale pre-operation `base` — `text`'s whole-list-replace diff shape (📓️taxonomy.md's
+        // `SemioTextRunList` wrapper) reconstructs the entire `runs` vec from whatever base it is
+        // given, so calling it against the wrong base silently discards the forward mutation's
+        // effect instead of undoing it. Same standard `mutation.diff(&current); current =
+        // diff.apply(&current)` threading `apply_semio_image_mutation`/`apply_semio_mutation`
+        // establish elsewhere in this standard.
         for back in &backwards {
-            restored = back.diff(base).apply(&restored);
+            restored = back.diff(&restored).apply(&restored);
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
         forward

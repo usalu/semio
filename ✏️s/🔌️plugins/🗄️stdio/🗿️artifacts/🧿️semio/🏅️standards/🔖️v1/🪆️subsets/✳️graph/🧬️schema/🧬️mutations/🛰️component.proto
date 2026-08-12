@@ -1,0 +1,33 @@
+syntax = "proto3";
+// 🧬️ SemioGraphMutation schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+package semio.s_stdio_semio_graph.mutations;
+
+import "../📸️snapshot/🛰️component.proto";
+
+message CreateNode { semio.s_stdio_semio_graph.snapshot.GraphNodeId id = 1; string kind = 2; string label = 3; semio.s_stdio_semio_graph.snapshot.SemioPoint2 position = 4; repeated semio.s_stdio_semio_graph.snapshot.SemioGraphPort ports = 5; repeated bytes properties = 6; }
+message DeleteNode { semio.s_stdio_semio_graph.snapshot.GraphNodeId id = 1; }
+message ChangeNodeKind { semio.s_stdio_semio_graph.snapshot.GraphNodeId id = 1; string new_kind = 2; }
+message ChangeNodeLabel { semio.s_stdio_semio_graph.snapshot.GraphNodeId id = 1; string new_label = 2; }
+message MoveNode { semio.s_stdio_semio_graph.snapshot.GraphNodeId id = 1; semio.s_stdio_semio_graph.snapshot.SemioPoint2 new_position = 2; }
+message AddNodePort { semio.s_stdio_semio_graph.snapshot.GraphNodeId node_id = 1; uint64 index = 2; semio.s_stdio_semio_graph.snapshot.SemioGraphPort port = 3; }
+message RemoveNodePort { semio.s_stdio_semio_graph.snapshot.GraphNodeId node_id = 1; uint64 index = 2; }
+message AddNodeProperty { semio.s_stdio_semio_graph.snapshot.GraphNodeId node_id = 1; uint64 index = 2; bytes property = 3; }
+message RemoveNodeProperty { semio.s_stdio_semio_graph.snapshot.GraphNodeId node_id = 1; uint64 index = 2; }
+message CreateEdge { semio.s_stdio_semio_graph.snapshot.GraphEdgeId id = 1; semio.s_stdio_semio_graph.snapshot.GraphNodeId source = 2; semio.s_stdio_semio_graph.snapshot.GraphNodeId target = 3; string kind = 4; string label = 5; }
+message DeleteEdge { semio.s_stdio_semio_graph.snapshot.GraphEdgeId id = 1; }
+
+message SemioGraphMutation {
+  oneof variant {
+    CreateNode create_node = 1;
+    DeleteNode delete_node = 2;
+    ChangeNodeKind change_node_kind = 3;
+    ChangeNodeLabel change_node_label = 4;
+    MoveNode move_node = 5;
+    AddNodePort add_node_port = 6;
+    RemoveNodePort remove_node_port = 7;
+    AddNodeProperty add_node_property = 8;
+    RemoveNodeProperty remove_node_property = 9;
+    CreateEdge create_edge = 10;
+    DeleteEdge delete_edge = 11;
+  }
+}

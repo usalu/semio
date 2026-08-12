@@ -27,6 +27,13 @@ vocabulary from a snapshot), and `📓️remaining-work-map.md` (what state your
 
 ## Step 1 — derive the vocabulary
 
+**Read BOTH `📓️taxonomy.md` and `📓️derivation-rules.md` before choosing any verb.** The first
+holds the general axis (verb meanings; scalar vs structured; addressed vs root), the second holds
+the shape rules (id-keyed / ordered / edge / hierarchy collections). **A shape rule is more
+specific and wins.** Deriving from the verb table alone produces answers that are correctly
+reasoned and still wrong — it has already happened once on tree re-parenting, where the general
+axis said `change-<field>` and rule 5's `move-to-<container>` was correct.
+
 Read the facet's `🧬️schema/📸️snapshot/🦀️component.rs` FIRST. The vocabulary comes from the
 snapshot shape, not from the old mutation enum. Apply `📓️derivation-rules.md`:
 

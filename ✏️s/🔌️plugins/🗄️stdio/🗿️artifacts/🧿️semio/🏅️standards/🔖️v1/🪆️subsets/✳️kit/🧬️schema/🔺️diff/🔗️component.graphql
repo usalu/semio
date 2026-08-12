@@ -1,0 +1,8 @@
+type SemioKitDiff {
+  typesTouched: Boolean!
+  designsTouched: Boolean!
+  objectsTouched: Boolean!
+  modelsTouched: Boolean!
+  propertiesTouched: Boolean!
+  representationsTouched: Boolean!
+}

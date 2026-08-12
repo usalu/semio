@@ -6,29 +6,36 @@
 //! (currently: `🧭topology/`, honestly derivable from this directed property port graph's own
 //! `nodes`/`edges` — the closest fit from the family root's "workflow/dag-shaped" category, this
 //! artifact being a directed node/edge graph with a `root_node_id`, not the "positioned" category
-//! (its `x`/`y` are already explicit fields, not something to re-derive)).
+//! (its `x`/`y` are already explicit fields, not something to re-derive); and `🎛flat-position/`,
+//! ported from the former `Graph::recompute_derived` — each node's flattened `(u, v)` position is
+//! honestly re-derivable from `nodes`/`edges`/`root_node_id` alone, so it moved out of the manifest's
+//! former `flatPosition` `"derived"` node property into this family instead).
 
 use crate::artifacts::jack::JackSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 
+use super::flat_position::{compute_flat_position, JackFlatPosition};
 use super::topology::{compute_topology, JackTopology};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a jack snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
+/// `💡️inferences/` (currently: `topology`, backed by `🧭topology/`; `flat_position`, backed by
+/// `🎛flat-position/`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack.inference")]
 pub struct JackInference {
     #[state(inferred)]
     pub topology: JackTopology,
+    #[state(inferred)]
+    pub flat_position: JackFlatPosition,
 }
 
 impl protocol::Inference<JackSnapshot> for JackInference {
     fn infer(snapshot: &JackSnapshot) -> Self {
-        Self { topology: compute_topology(snapshot) }
+        Self { topology: compute_topology(snapshot), flat_position: compute_flat_position(snapshot) }
     }
 }
 
@@ -40,7 +47,10 @@ impl protocol::InferenceSpec<JackSnapshot> for JackInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.topology", reads: &["nodes", "edges"] }]
+        &[
+            protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.topology", reads: &["nodes", "edges"] },
+            protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.flatPosition", reads: &["nodes", "edges", "root_node_id"] },
+        ]
     }
 }
 //#endregion 🔖️Inference
@@ -132,6 +142,13 @@ mod tests {
         let snapshot = chain_snapshot();
         let inferred = JackInference::infer(&snapshot);
         assert_eq!(inferred.topology, compute_topology(&snapshot));
+    }
+
+    #[test]
+    fn inference_matches_compute_flat_position_directly() {
+        let snapshot = chain_snapshot();
+        let inferred = JackInference::infer(&snapshot);
+        assert_eq!(inferred.flat_position, compute_flat_position(&snapshot));
     }
     //#endregion 🧪️InferenceLaws
 }

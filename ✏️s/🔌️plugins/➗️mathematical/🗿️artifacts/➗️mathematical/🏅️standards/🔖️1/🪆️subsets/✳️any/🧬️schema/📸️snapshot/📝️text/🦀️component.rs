@@ -193,7 +193,7 @@ mod tests {
 
     #[test]
     fn example_primary_text_round_trips() {
-        let text = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+        let text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
         let parsed = crate::artifacts::mathematical::dsl::parse_dsl(text).expect("parse example");
         store::os_store::test_support::assert_dsl_round_trip(&parsed);
     }

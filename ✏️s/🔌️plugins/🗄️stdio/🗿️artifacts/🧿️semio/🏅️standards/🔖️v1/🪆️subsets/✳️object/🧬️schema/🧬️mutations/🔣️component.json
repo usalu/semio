@@ -1,0 +1,10 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.object/mutations.json",
+  "title": "SemioObjectMutation",
+  "description": "Nine-variant mutation dispatch: move/rotate/scale transform verbs plus create/delete pairs for brep/mesh/properties child slots.",
+  "type": "object",
+  "properties": {
+    "mutation": { "enum": ["moveObject", "rotateObject", "scaleObject", "createBrep", "deleteBrep", "createMesh", "deleteMesh", "createProperties", "deleteProperties"] },
+    "payload": { "type": "object" }
+  }
+}

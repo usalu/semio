@@ -1,0 +1,33 @@
+# 🧬️ SemioGraphSnapshot schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+enum SemioGraphPortKind { IN OUT IN_OUT }
+
+type SemioGraphPort {
+  name: String!
+  kind: SemioGraphPortKind!
+}
+
+type GraphNodeId { value: String! }
+type GraphEdgeId { value: String! }
+
+type SemioGraphNode {
+  id: GraphNodeId!
+  kind: String!
+  label: String!
+  position: SemioPoint2!
+  ports: [SemioGraphPort!]!
+  properties: [SemioValueEntry!]!
+}
+
+type SemioGraphEdge {
+  id: GraphEdgeId!
+  source: GraphNodeId!
+  target: GraphNodeId!
+  kind: String!
+  label: String!
+}
+
+type SemioGraphSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  nodes: [SemioGraphNode!]! @state(class: PERSISTENT)
+  edges: [SemioGraphEdge!]! @state(class: PERSISTENT)
+}

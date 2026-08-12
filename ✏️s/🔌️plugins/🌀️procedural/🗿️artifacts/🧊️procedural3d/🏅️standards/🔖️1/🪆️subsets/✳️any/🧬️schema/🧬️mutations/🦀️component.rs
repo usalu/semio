@@ -136,15 +136,15 @@ use super::set_widget;
 #[mutations(snapshot = Procedural3dSnapshot, diff = Procedural3dDiff, schema = "procedural.3d")]
 pub enum Procedural3dMutation {
     CreateWidget(create_widget::mutation::CreateWidget),
-    UpdateWidget(set_widget::mutation::UpdateWidget),
-    DeleteWidget(remove_widget::mutation::DeleteWidget),
+    UpdateWidget(update_widget::mutation::UpdateWidget),
+    DeleteWidget(delete_widget::mutation::DeleteWidget),
     ConnectSynapse(connect_synapse::mutation::ConnectSynapse),
-    UpdateSynapse(set_synapse::mutation::UpdateSynapse),
-    DisconnectSynapse(remove_synapse::mutation::DisconnectSynapse),
-    MoveWidget(set_layout::mutation::MoveWidget),
-    DeleteWidgetPosition(remove_layout::mutation::DeleteWidgetPosition),
-    UpdateCamera(set_camera::mutation::UpdateCamera),
-    ChangeSchema(set_schema::mutation::ChangeSchema),
+    UpdateSynapse(update_synapse::mutation::UpdateSynapse),
+    DisconnectSynapse(disconnect_synapse::mutation::DisconnectSynapse),
+    MoveWidget(move_widget::mutation::MoveWidget),
+    DeleteWidgetPosition(delete_widget_position::mutation::DeleteWidgetPosition),
+    UpdateCamera(update_camera::mutation::UpdateCamera),
+    ChangeSchema(change_schema::mutation::ChangeSchema),
     CreateGeneration(create_generation::mutation::CreateGeneration),
     DeleteGeneration(delete_generation::mutation::DeleteGeneration),
     RenameGeneration(rename_generation::mutation::RenameGeneration),
@@ -175,42 +175,42 @@ pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
     let mut operations = Vec::new();
     for widget in &before.widgets {
         if !after.widgets.iter().any(|entry| widget_id(entry) == widget_id(widget)) {
-            operations.push(Procedural3dMutation::DeleteWidget(remove_widget::mutation::DeleteWidget { id: widget_id(widget).to_string() }));
+            operations.push(Procedural3dMutation::DeleteWidget(delete_widget::mutation::DeleteWidget { id: widget_id(widget).to_string() }));
         }
     }
     for (index, widget) in after.widgets.iter().enumerate() {
         let prior = before.widgets.iter().find(|entry| widget_id(entry) == widget_id(widget));
         match prior {
-            Some(previous) if previous != widget => operations.push(Procedural3dMutation::UpdateWidget(set_widget::mutation::UpdateWidget { widget: widget.clone() })),
+            Some(previous) if previous != widget => operations.push(Procedural3dMutation::UpdateWidget(update_widget::mutation::UpdateWidget { widget: widget.clone() })),
             None => operations.push(Procedural3dMutation::CreateWidget(create_widget::mutation::CreateWidget { index, widget: widget.clone() })),
             _ => {}
         }
     }
     for synapse in &before.synapses {
         if !after.synapses.iter().any(|entry| entry.id == synapse.id) {
-            operations.push(Procedural3dMutation::DisconnectSynapse(remove_synapse::mutation::DisconnectSynapse { id: synapse.id.clone() }));
+            operations.push(Procedural3dMutation::DisconnectSynapse(disconnect_synapse::mutation::DisconnectSynapse { id: synapse.id.clone() }));
         }
     }
     for (index, synapse) in after.synapses.iter().enumerate() {
         let prior = before.synapses.iter().find(|entry| entry.id == synapse.id);
         match prior {
-            Some(previous) if previous != synapse => operations.push(Procedural3dMutation::UpdateSynapse(set_synapse::mutation::UpdateSynapse { synapse: synapse.clone() })),
+            Some(previous) if previous != synapse => operations.push(Procedural3dMutation::UpdateSynapse(update_synapse::mutation::UpdateSynapse { synapse: synapse.clone() })),
             None => operations.push(Procedural3dMutation::ConnectSynapse(connect_synapse::mutation::ConnectSynapse { index, synapse: synapse.clone() })),
             _ => {}
         }
     }
     for id in before.layout.keys() {
         if !after.layout.contains_key(id) {
-            operations.push(Procedural3dMutation::DeleteWidgetPosition(remove_layout::mutation::DeleteWidgetPosition { id: id.clone() }));
+            operations.push(Procedural3dMutation::DeleteWidgetPosition(delete_widget_position::mutation::DeleteWidgetPosition { id: id.clone() }));
         }
     }
     for (id, layout) in &after.layout {
         if before.layout.get(id) != Some(layout) {
-            operations.push(Procedural3dMutation::MoveWidget(set_layout::mutation::MoveWidget { id: id.clone(), layout: layout.clone() }));
+            operations.push(Procedural3dMutation::MoveWidget(move_widget::mutation::MoveWidget { id: id.clone(), layout: layout.clone() }));
         }
     }
     if before.schema != after.schema {
-        operations.push(Procedural3dMutation::ChangeSchema(set_schema::mutation::ChangeSchema { new_schema: after.schema.clone() }));
+        operations.push(Procedural3dMutation::ChangeSchema(change_schema::mutation::ChangeSchema { new_schema: after.schema.clone() }));
     }
     operations
 }
@@ -236,21 +236,22 @@ pub fn inverse_procedural3d_mutation(projection: &Procedural3dSnapshot, mutation
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use crate::artifacts::procedural3d::engine::empty_procedural3d_snapshot;
     use change_generation_value::mutation::ChangeGenerationValue;
     use connect_synapse::mutation::ConnectSynapse;
     use create_generation::mutation::CreateGeneration;
     use create_widget::mutation::CreateWidget;
     use delete_generation::mutation::DeleteGeneration;
-    use remove_layout::mutation::DeleteWidgetPosition;
-    use remove_synapse::mutation::DisconnectSynapse;
-    use remove_widget::mutation::DeleteWidget;
+    use delete_widget_position::mutation::DeleteWidgetPosition;
+    use disconnect_synapse::mutation::DisconnectSynapse;
+    use delete_widget::mutation::DeleteWidget;
     use rename_generation::mutation::RenameGeneration;
-    use set_camera::mutation::UpdateCamera;
-    use set_layout::mutation::MoveWidget;
-    use set_schema::mutation::ChangeSchema;
-    use set_synapse::mutation::UpdateSynapse;
-    use set_widget::mutation::UpdateWidget;
+    use update_camera::mutation::UpdateCamera;
+    use move_widget::mutation::MoveWidget;
+    use change_schema::mutation::ChangeSchema;
+    use update_synapse::mutation::UpdateSynapse;
+    use update_widget::mutation::UpdateWidget;
     use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use flow::playbook::FormGeneration;
     use protocol::Mutation;

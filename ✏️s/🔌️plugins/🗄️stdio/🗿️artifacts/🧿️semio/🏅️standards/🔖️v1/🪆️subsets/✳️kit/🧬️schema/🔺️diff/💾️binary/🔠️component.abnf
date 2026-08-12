@@ -1,0 +1,4 @@
+diff-frame = format presence payload
+format = OCTET
+presence = OCTET
+payload = *OCTET

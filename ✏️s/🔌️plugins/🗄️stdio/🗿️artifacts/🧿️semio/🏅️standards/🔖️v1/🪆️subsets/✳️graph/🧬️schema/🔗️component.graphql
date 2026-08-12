@@ -1,0 +1,6 @@
+# 🧬️ SemioGraphArtifact schema — full artifact state, mirrors `SemioGraphSnapshot` field for field.
+type SemioGraphArtifact {
+  schema: String! @state(class: PERSISTENT)
+  nodes: [SemioGraphNode!]! @state(class: PERSISTENT)
+  edges: [SemioGraphEdge!]! @state(class: PERSISTENT)
+}

@@ -1,0 +1,11 @@
+syntax = "proto3";
+// 💾️ Binary-facet grammar mirror (descriptive) — see ../🛰️component.proto for the canonical facet
+// schema; this file describes the PACK-BINARY ENCODING header of the same shape.
+package semio.s_stdio_semio_object_snapshot.binary;
+
+message SemioObjectSnapshotPackHeader {
+  uint32 format = 1;
+  uint32 schema_len = 2;
+  bytes schema_bytes = 3;
+  bytes payload = 4;
+}

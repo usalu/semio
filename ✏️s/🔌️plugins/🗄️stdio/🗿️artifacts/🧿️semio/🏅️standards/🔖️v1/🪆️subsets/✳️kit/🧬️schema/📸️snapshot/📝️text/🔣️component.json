@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.kit.snapshot/text.json",
+  "title": "SemioKitSnapshotDsl",
+  "type": "object",
+  "properties": { "line": { "type": "string" } }
+}

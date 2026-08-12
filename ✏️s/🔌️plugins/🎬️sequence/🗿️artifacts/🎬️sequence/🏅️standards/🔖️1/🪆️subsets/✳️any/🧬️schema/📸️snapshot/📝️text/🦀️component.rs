@@ -53,7 +53,7 @@ pub fn sequence_edge_from_dsl(edge: SequenceEdgeDsl) -> Result<SequenceEdge, Str
 /// 📄️ The handcrafted `.sequence` DSL-text fixture (regenerated from `default_snapshot()`'s canonical
 /// print form) — the permanent proof that the checked-in fixture still parses and round trips, not a
 /// one-time migration script.
-pub const SEQUENCE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const SEQUENCE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.sequence` DSL text into a `SequenceSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<SequenceSnapshot, store::TextError> {

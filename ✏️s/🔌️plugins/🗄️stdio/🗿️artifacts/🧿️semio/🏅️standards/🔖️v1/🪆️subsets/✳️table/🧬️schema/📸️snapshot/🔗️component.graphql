@@ -1,0 +1,17 @@
+# 🧬️ SemioTableSnapshot schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+enum SemioTableCellKind { NULL BOOL INT FLOAT STR BYTES }
+
+type SemioTableColumn {
+  name: String!
+  kind: SemioTableCellKind!
+}
+
+type SemioTableRow {
+  cells: [SemioValue!]!
+}
+
+type SemioTableSnapshot {
+  schema: String! @state(class: PERSISTENT)
+  columns: [SemioTableColumn!]! @state(class: PERSISTENT)
+  rows: [SemioTableRow!]! @state(class: PERSISTENT)
+}

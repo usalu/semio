@@ -151,13 +151,13 @@ pub enum RemoteState {
 #[serde(rename_all = "camelCase")]
 pub struct ArtifactSyncStatus {
     pub persisted: bool,
-    pub pendingMutations: usize,
+    pub pending_mutations: usize,
     pub remote: RemoteState,
 }
 
 impl Default for ArtifactSyncStatus {
     fn default() -> Self {
-        Self { persisted: false, pendingMutations: 0, remote: RemoteState::Detached }
+        Self { persisted: false, pending_mutations: 0, remote: RemoteState::Detached }
     }
 }
 
@@ -1258,7 +1258,7 @@ mod native_actor {
         }
 
         fn status(&self) -> ArtifactSyncStatus {
-            ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pendingMutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
+            ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pending_mutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
         }
 
         fn set_remote_state(&mut self, state: RemoteState) {
@@ -2034,12 +2034,43 @@ mod tests {
     use super::*;
     use crate::os_spr::{Edit, OpBinary, OpText, Mutation, MutationDiff};
     use serde::{Deserialize, Serialize};
-    use crate::os_store::{create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, ArtifactCodec, ArtifactCommand, ArtifactDsl, ParsedDocumentText};
+    use crate::os_store::{create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, pack_rt, PackEncodeOptions, PackDecodeOptions, PackError, ParsedDocumentText};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
     #[dsl(extension = "demo")]
     struct DemoSnapshot {
         n: i32,
+    }
+
+    impl ArtifactDsl for DemoSnapshot {
+        fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
+        fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
+            let body = match semio_format::split_text_preamble(text) { Ok((_, rest)) => rest, Err(_) => text };
+            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+            Self::__dsl_from_record(&record)
+        }
+        fn print_dsl(&self) -> String {
+            let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
+            semio_format::wrap_text(&envelope, &body)
+        }
+    }
+
+    impl ArtifactPack for DemoSnapshot {
+        fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
+            Ok(semio_format::wrap_binary(&envelope, &inner))
+        }
+        fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+            let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+            if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+                return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+            }
+            let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+            Self::__dsl_from_record(&record).map_err(|err| PackError::Schema(err.to_string()))
+        }
+        fn record_spec() -> Option<crate::os_dsl::RecordSpec> { Some(Self::__dsl_spec()) }
     }
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -2064,6 +2095,66 @@ mod tests {
     enum DemoMutation {
         #[dsl(key = "set-n")]
         SetN { n: i32 },
+    }
+
+    impl OpText for DemoMutation {
+        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            for (keyword, spec_fn) in &variants {
+                let probe = format!("{} ", keyword);
+                if line == keyword.as_str() || line.starts_with(&probe) {
+                    let record = crate::os_dsl::parse(
+                        line,
+                        &spec_fn(),
+                        &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+                    )?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                }
+            }
+            Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        }
+        fn print_op(&self) -> String {
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        }
+    }
+
+    impl OpBinary for DemoMutation {
+        fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
+            let body = crate::os_pack::encode_record_body(&spec_fn(), &record, &PackEncodeOptions::default()).map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
+            let mut out = Vec::with_capacity(2 + body.len());
+            out.push(pack_rt::OP_BINARY_FORMAT);
+            out.push(idx as u8);
+            out.extend_from_slice(&body);
+            Ok(out)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+            let mut reader = crate::os_pack::ByteReader::new(bytes);
+            let format = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
+            if format != pack_rt::OP_BINARY_FORMAT {
+                return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op binary format: {format}") });
+            }
+            let ordinal = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
+            let variants = <Self as crate::os_dsl::DslVariants>::variants();
+            let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| crate::os_spr::ProtocolError::Malformed {
+                what: "op ordinal",
+                offset: 1,
+                detail: format!("op ordinal {ordinal} out of range for {}", variants.len()),
+            })?;
+            let spec = spec_fn();
+            let body = &bytes[reader.position()..];
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+                what: "op record",
+                offset: reader.position() as u64,
+                detail: error.to_string(),
+            })
+        }
     }
 
     impl Mutation<DemoSnapshot> for DemoMutation {

@@ -12,9 +12,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle2d` DSL.
-pub const PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio");
+pub const PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio");
 /// 📄️ The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle2d` DSL.
-pub const PUZZLE2D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio");
+pub const PUZZLE2D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio");
 
 /// 📖️ Parses `.puzzle2d` DSL text into a `Puzzle2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle2dSnapshot, store::TextError> {

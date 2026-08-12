@@ -1,0 +1,41 @@
+dialect grammar
+grammar stdio.semio.graph.mutations
+extension semio
+start op
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM graph wave: real one-line `OpText::print_op`/`parse_op` shape
+# ALREADY emitted by `../📝️text/🦀️component.rs` (`print_graph_mutation`/`parse_graph_mutation`) —
+# `tag:args` (no space; `:` separates the keyword from its positional, comma-separated argument
+# list). Every keyword/tag token below is copied verbatim from the real `format!(...)` call sites
+# in that file's `print_graph_mutation`, not invented. Eleven keywords, one per closed-vocabulary
+# verb this facet registers (`create`/`delete`/`change`/`move`/`add`/`remove`) —
+# `📓️taxonomy.md`'s `APPROVED_VERBS`, no `no`/`setSnapshot` (banned vocabulary). Edges are
+# id-keyed ENTITIES (`createEdge`/`deleteEdge`), never `connect`/`disconnect`.
+op = create-node | delete-node | change-node-kind | change-node-label | move-node | add-node-port | remove-node-port | add-node-property | remove-node-property | create-edge | delete-edge
+
+create-node = "createNode" ":" hex "," hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]"
+delete-node = "deleteNode" ":" hex
+change-node-kind = "changeNodeKind" ":" hex "," hex
+change-node-label = "changeNodeLabel" ":" hex "," hex
+move-node = "moveNode" ":" hex "," hex "," hex
+add-node-port = "addNodePort" ":" hex "," INT "," port
+remove-node-port = "removeNodePort" ":" hex "," INT
+add-node-property = "addNodeProperty" ":" hex "," INT "," property
+remove-node-property = "removeNodeProperty" ":" hex "," INT
+create-edge = "createEdge" ":" hex "," hex "," hex "," hex "," hex
+delete-edge = "deleteEdge" ":" hex
+
+port-list = port {"," port}*
+port = "[" hex "," port-kind "]"
+port-kind = "i" | "o" | "x"
+property-list = property {"," property}*
+property = hex ":" value
+
+# `value` is the `✳️value` subset's own `SemioValue` grammar production, RESTATED here (every
+# grammar file is self-contained, no cross-file production references) — same convention the
+# sibling `📸️snapshot/📝️text/📖️component.grammar.semio` uses. `hex` (bare `hex`, deliberately NOT
+# defined as a production here) is the framework's built-in `hex` MACRO.
+value = "Z" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex "]" | "Y" "[" hex "]" | "L" "[" list-item* "]" | "M" "[" map-item* "]" | "R" "[" hex "]"
+list-item = value ","?
+map-item = hex ":" value ","?
+bit = "0" | "1"

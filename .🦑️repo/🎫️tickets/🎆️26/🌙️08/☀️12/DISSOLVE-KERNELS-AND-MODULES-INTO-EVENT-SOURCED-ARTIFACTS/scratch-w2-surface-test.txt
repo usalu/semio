@@ -1,0 +1,20 @@
+     |
+help: one of the expressions' fields has a field of the same name
+     |
+3730 |         assert!(host.tiles.vector_tiles.contains_key("0/0/0"));
+     |                      ++++++
+
+error[E0609]: no field `vector_tiles` on type `MapHost`
+    --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🗺️tiled-map/🦀️component.rs:3735:22
+     |
+3735 |         assert!(host.vector_tiles.contains_key("0/0/0"), "ancestor vector tile must survive zoom-level change for pyramid fallback");
+     |                      ^^^^^^^^^^^^ unknown field
+     |
+help: one of the expressions' fields has a field of the same name
+     |
+3735 |         assert!(host.tiles.vector_tiles.contains_key("0/0/0"), "ancestor vector tile must survive zoom-level change for pyramid fallback");
+     |                      ++++++
+
+For more information about this error, try `rustc --explain E0609`.
+warning: `semio-framework-surface` (lib test) generated 71 warnings
+error: could not compile `semio-framework-surface` (lib test) due to 6 previous errors; 71 warnings emitted

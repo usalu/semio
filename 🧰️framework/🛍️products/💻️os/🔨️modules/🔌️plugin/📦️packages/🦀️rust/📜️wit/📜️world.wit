@@ -103,6 +103,15 @@ interface host {
   /// ever one hop: the plugin that receives the resulting `plugin.artifact-compose` call must not
   /// itself call `io-compose` again for the same request.
   io-compose: func(key: list<u8>, sources: list<u8>) -> result<list<u8>, list<u8>>;
+  /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): resolves an `io::ArtifactLink` (`link` is that
+  /// type's own binary/DSL-pack encoding) into the linked artifact's current pack bytes. WASI guests
+  /// MUST NEVER resolve a link themselves (no guest has host-store access) — this is the ONE host
+  /// import that exists for exactly that reason, mirroring `io-compose`'s "cross-plugin routing is a
+  /// host concern, not a guest one" shape. Error is a plain `string` (not `list<u8>` Fault bytes,
+  /// unlike every other function on this interface) — deliberate per this ticket's own signature
+  /// spec; a full resolver (host-side `LinkResolver`/`LinkState` wiring, `🏪️store/🦀️component.rs`)
+  /// is a later wave — a stub/passthrough host implementation is sufficient for this one.
+  resolve-artifact-link: func(link: list<u8>) -> result<list<u8>, string>;
 }
 
 world plugin-world {

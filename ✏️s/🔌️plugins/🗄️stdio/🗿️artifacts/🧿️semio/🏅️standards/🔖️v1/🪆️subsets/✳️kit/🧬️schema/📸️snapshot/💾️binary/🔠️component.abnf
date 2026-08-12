@@ -1,0 +1,6 @@
+; RFC 5234 ABNF mirror (descriptive) for the s.stdio.semio.kit snapshot binary pack.
+snapshot-pack = format schema-len schema-bytes payload
+format        = OCTET
+schema-len    = 1*OCTET
+schema-bytes  = *OCTET
+payload       = *OCTET

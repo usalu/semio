@@ -135,6 +135,7 @@ mod tests {
     use super::*;
     use crate::artifacts::dag::default_snapshot;
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
     use vcs::apply_mutation;
 
     fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {

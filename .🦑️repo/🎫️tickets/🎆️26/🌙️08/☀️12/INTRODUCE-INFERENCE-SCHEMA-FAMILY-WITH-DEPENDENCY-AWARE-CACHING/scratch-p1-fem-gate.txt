@@ -1,0 +1,2 @@
+### cargo check -p semio-s-plugin-fem --all-targets
+    Blocking waiting for file lock on build directory

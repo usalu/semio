@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 use crate::artifacts::draw::DrawSnapshot;
 
 /// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`store::ArtifactDsl`).
-pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.draw` DSL text into a `DrawSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<DrawSnapshot, store::TextError> {

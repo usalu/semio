@@ -1,0 +1,14 @@
+(* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed) for s.stdio.semio.object.mutations. *)
+op = move object | rotate object | scale object | create brep | delete brep | create mesh | delete mesh | create properties | delete properties ;
+move object = "moveObject", ":", number, ",", number, ",", number ;
+rotate object = "rotateObject", ":", number, ",", number, ",", number, ",", number ;
+scale object = "scaleObject", ":", number, ",", number, ",", number ;
+create brep = "createBrep", ":", hex, ",", hex ;
+delete brep = "deleteBrep" ;
+create mesh = "createMesh", ":", hex, ",", hex ;
+delete mesh = "deleteMesh" ;
+create properties = "createProperties", ":", hex, ",", hex ;
+delete properties = "deleteProperties" ;
+number = [ "-" ], digit, { digit }, [ ".", digit, { digit } ] ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+hex = { digit | "a" | "b" | "c" | "d" | "e" | "f" } ;

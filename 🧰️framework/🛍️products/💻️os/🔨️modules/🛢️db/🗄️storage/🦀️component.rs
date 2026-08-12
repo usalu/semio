@@ -20,7 +20,9 @@
 //! convention — it compiles to an effectively-empty module on a `wasm32-unknown-unknown` target
 //! check. `MemoryStorage` has no such gate and is always available.
 
-use {check_len, DbError, ArtifactId, DurabilityClass, EpochFence};
+use crate::*;
+use crate::db_ids::{check_len, DbError, ArtifactId};
+use crate::db_durability::{DurabilityClass, EpochFence};
 use pack::{ByteRange, ContentHash};
 
 //#region 🔖️Limits
@@ -558,7 +560,7 @@ impl DbStorage for MemoryStorage {
 mod fs_storage {
     use super::{ByteRange, ContentHash, DbError, DbStorage, ArtifactId, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
     use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
-    use check_len;
+    use super::check_len;
     use std::io::{Read, Seek, SeekFrom, Write};
     use std::path::{Path, PathBuf};
     use std::sync::Mutex;

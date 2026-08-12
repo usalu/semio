@@ -24,6 +24,10 @@
     "animation": { "name": "Keyframe animation", "schema": "s.stdio.semio.animation" },
     "presentation": { "name": "Slide presentation", "schema": "s.stdio.semio.presentation" },
     "flow": { "name": "Node/edge flow graph", "schema": "s.stdio.semio.flow" },
-    "text": { "name": "Language-tagged inline-marked text runs", "schema": "s.stdio.semio.text" }
+    "text": { "name": "Language-tagged inline-marked text runs", "schema": "s.stdio.semio.text" },
+    "table": { "name": "Named-column, ordered-row tabular data", "schema": "s.stdio.semio.table" },
+    "graph": { "name": "Id-keyed node/edge property graph", "schema": "s.stdio.semio.graph" },
+    "object": { "name": "Spatial thing: placement, geometry, property sets", "schema": "s.stdio.semio.object" },
+    "kit": { "name": "Type/design domain: types with representations, designs of pieces and connections", "schema": "s.stdio.semio.kit" }
   }
 }

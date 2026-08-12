@@ -465,6 +465,7 @@ mod tests {
     use super::*;
     use crate::brep::mat::Trsf;
     use crate::brep::measure::{classify_point_on_solid, PointSolidClassification};
+    use crate::brep::history::OpRecorder;
     use crate::brep::oracle::{ClosedFormMass, Sdf};
     use crate::brep::primitives::{make_box, make_cylinder, make_sphere};
     use crate::brep::tolerance::Tol;
@@ -481,7 +482,8 @@ mod tests {
     #[test]
     fn unit_square_loop_uv_center() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let face = body.solid_faces(solid)[0];
         let outer = body.faces.get(face).unwrap().outer.unwrap();
         let surface = face_surface(&body, face).unwrap();
@@ -500,7 +502,8 @@ mod tests {
     #[test]
     fn box_inside_outside_boundary() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         assert_classify(&body, solid, Pnt3::new(0.5, 0.5, 0.5), PointClassification::Inside);
         assert_classify(&body, solid, Pnt3::new(2.0, 2.0, 2.0), PointClassification::Outside);
         assert_classify(&body, solid, Pnt3::new(0.0, 0.5, 0.5), PointClassification::OnBoundary);
@@ -517,7 +520,8 @@ mod tests {
     #[test]
     fn box_matches_measure_ray_parity() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let p = Pnt3::new(0.25, 0.75, 0.5);
         let c = point_in_solid(&body, solid, p, Tol::DEFAULT.value()).unwrap();
         let m = classify_point_on_solid(&body, solid, p).unwrap();
@@ -527,7 +531,8 @@ mod tests {
     #[test]
     fn box_oracle_sdf_inside_outside() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
         let sdf = Sdf::Box {
             half_extents: Pnt3::new(1.0, 1.0, 1.0),
             placement: Trsf::IDENTITY,
@@ -541,7 +546,8 @@ mod tests {
     fn sphere_samples_vs_oracle_sdf() {
         let mut body = Body::new();
         let r = 1.5;
-        let solid = make_sphere(&mut body, r, 24).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_sphere(&mut body, r, 24, &mut rec).unwrap();
         let sdf = Sdf::Sphere {
             radius: r,
             placement: Trsf::IDENTITY,
@@ -571,7 +577,8 @@ mod tests {
         let mut body = Body::new();
         let radius = 1.0;
         let height = 3.0;
-        let solid = make_cylinder(&mut body, radius, height, 32).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_cylinder(&mut body, radius, height, 32, &mut rec).unwrap();
         let sdf = Sdf::Cylinder {
             radius,
             half_height: height * 0.5,
@@ -585,7 +592,8 @@ mod tests {
     #[test]
     fn face_uv_interior_point_on_box_face() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
         let face = body.solid_faces(solid)[0];
         let outer = body.faces.get(face).unwrap().outer.unwrap();
         let surface = face_surface(&body, face).unwrap();

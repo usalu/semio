@@ -1,6 +1,6 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{App, ArtifactApp, Plugin, PluginApp};
+use crate::app::{App, ArtifactApp, ArtifactDeclaration, Plugin, PluginApp};
 use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -17,7 +17,13 @@ pub struct PluginBuilder<State> {
     plugin_id: String,
     label: Option<String>,
     version: Option<String>,
+    // 🚧️ ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1: `setup` is NOT deleted yet — 31 of
+    // 33 plugins still call `.setup(...)`, and deleting the method now would break every one of them
+    // at once (SCOPE DISCIPLINE in the W1 packet: "land the mechanism, keep the tree compiling").
+    // `.artifact()`/`artifacts` is the new, declarative surface; `setup` retires plugin-by-plugin as
+    // each converts, and the field/method/call below are deleted together once none remain.
     setup: Option<fn()>,
+    artifacts: Vec<ArtifactDeclaration>,
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<CommandDefinition>,
     artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
@@ -34,6 +40,7 @@ impl PluginBuilder<NeedsLabel> {
             label: None,
             version: None,
             setup: None,
+            artifacts: Vec::new(),
             capabilities: Vec::new(),
             commands: Vec::new(),
             artifact_kinds: Vec::new(),
@@ -50,6 +57,7 @@ impl PluginBuilder<NeedsLabel> {
             label: Some(label.into()),
             version: None,
             setup: self.setup,
+            artifacts: self.artifacts,
             capabilities: self.capabilities,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
@@ -68,6 +76,7 @@ impl PluginBuilder<NeedsVersion> {
             label: self.label,
             version: Some(version.into()),
             setup: self.setup,
+            artifacts: self.artifacts,
             capabilities: self.capabilities,
             commands: self.commands,
             artifact_kinds: self.artifact_kinds,
@@ -79,9 +88,19 @@ impl PluginBuilder<NeedsVersion> {
 }
 
 impl PluginBuilder<Ready> {
-    /// 🔧️ Registers a one-shot setup callback (codecs / languages / importers).
+    /// 🔧️ Registers a one-shot setup callback (codecs / languages / importers). Retiring in favor
+    /// of `.artifact()` — see the field doc on `PluginBuilder::setup` for why this is still here.
     pub fn setup(mut self, setup: fn()) -> Self {
         self.setup = Some(setup);
+        self
+    }
+
+    /// 🗿️ Declares one artifact this plugin owns — the declarative replacement for `.setup()`
+    /// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1). Repeatable. `build()` walks every
+    /// declared artifact in a fixed deterministic order and validates that it owns everything it
+    /// declares — see `ArtifactDeclaration::register_all`.
+    pub fn artifact(mut self, declaration: ArtifactDeclaration) -> Self {
+        self.artifacts.push(declaration);
         self
     }
 
@@ -139,16 +158,22 @@ impl PluginBuilder<Ready> {
         self.build()
     }
 
-    /// ✅️ Runs setup (if any) and materializes a [`Plugin`].
+    /// ✅️ Runs `.setup()` (if any — retiring, see the field doc), then walks every `.artifact()`
+    /// declaration (fixed order, ownership-checked — see `ArtifactDeclaration::register_all`), and
+    /// materializes a [`Plugin`].
     pub fn build(self) -> Plugin {
         if let Some(setup) = self.setup {
             setup();
         }
+        let plugin_id = self.plugin_id.clone();
         let mut plugin = Plugin::new(
             self.plugin_id,
             self.label.expect("typestate Ready implies label"),
             self.version.expect("typestate Ready implies version"),
         );
+        for declaration in self.artifacts {
+            plugin = declaration.register_all(&plugin_id, plugin);
+        }
         for capability in self.capabilities {
             plugin = plugin.capability(capability);
         }

@@ -1,5 +1,17 @@
 # Deriving a semantic mutation vocabulary for one artifact
 
+> ⚠️ **Never derive a verb from `📓️taxonomy.md` alone. The shape rules below are more specific and
+> win over its general axis.**
+>
+> `📓️taxonomy.md` holds the general axis (what each verb means; scalar vs structured; addressed vs
+> root). **This** file holds the shape rules — id-keyed collection, ordered collection, edge
+> collection, hierarchy. When both seem to apply, the shape rule governs.
+>
+> Worked example of the trap, from a real peer-ticket derivation: tree re-parenting looks like a
+> single scalar link field with identity preserved, so the general axis says `change-folder-parent`.
+> Rule 5 below says `move-to-<container>{id,new_parent}`, and rule 5 wins. The peer's measurement
+> and reasoning were both correct — only their rulebook was incomplete.
+
 Applies to any of the 107 `🧬️mutations` facets under `✏️s/🔌️plugins/**`. Read the facet's
 `🧬️schema/📸️snapshot/🦀️component.rs` first — the vocabulary is derived from the SNAPSHOT shape, not
 invented. Use `📓️taxonomy.md` (same ticket folder) for the verb table and naming mechanics.

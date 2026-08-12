@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.kit.mutations/binary.json",
+  "title": "SemioKitMutationFrame",
+  "type": "object",
+  "properties": { "format": { "type": "integer" }, "tag": { "type": "integer" }, "payload": { "type": "string", "contentEncoding": "hex" } }
+}

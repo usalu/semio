@@ -1,0 +1,18 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.table/diff.json",
+  "title": "SemioTableDiff",
+  "description": "Sparse per-field diff over SemioTableSnapshot — two optional whole-list-replace slots, columns and rows.",
+  "type": "object",
+  "properties": {
+    "columns": {
+      "type": ["object", "null"],
+      "x-semio-state": "persistent",
+      "properties": { "values": { "type": "array", "items": { "type": "object" } } }
+    },
+    "rows": {
+      "type": ["object", "null"],
+      "x-semio-state": "persistent",
+      "properties": { "values": { "type": "array", "items": { "type": "object" } } }
+    }
+  }
+}

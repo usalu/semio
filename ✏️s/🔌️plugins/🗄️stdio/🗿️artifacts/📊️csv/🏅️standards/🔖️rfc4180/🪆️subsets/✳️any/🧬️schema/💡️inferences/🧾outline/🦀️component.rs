@@ -8,12 +8,18 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Csv` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CsvOutline {
     pub record_count: u32,
     pub column_count: u32,
     pub has_header: bool,
+}
+
+impl Default for CsvOutline {
+    fn default() -> Self {
+        Self { record_count: 0, column_count: 0, has_header: true }
+    }
 }
 
 impl CsvOutline {

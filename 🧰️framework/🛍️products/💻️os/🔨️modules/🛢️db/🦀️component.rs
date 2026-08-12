@@ -27,7 +27,7 @@
 /// `db_engine` — see the module doc's "Design choice (layout)" note. This is the primary entry
 /// point: `db::Database::open_at(root, db::Profile::Dev)` is the zero-touch way to stand up a
 /// document database over `FsStorage`.
-pub use db_engine::{
+pub use crate::db_engine::{
     CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbCapabilities, DbConfig, DbHealth, DbStorage, ArtifactHandle, ArtifactSpec, DurabilityClass, Frontier, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle,
     Profile, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
@@ -36,11 +36,11 @@ pub use db_engine::{
 /// allowed to depend on `vcs` (hard dependency rule). Present exactly when this crate's own `vcs`
 /// feature (default-on) is enabled, mirroring `db_engine`'s identically-named feature it forwards.
 #[cfg(feature = "vcs")]
-pub use db_engine::vcs_integration;
+pub use crate::db_engine::vcs_integration;
 
 /// 🗄️ The single error type every `db_*` crate returns — re-exported at the root too (not just
 /// via `db::core::DbError`) since it appears in the signature of virtually every facade-level call.
-pub use db_ids::DbError;
+pub use crate::db_ids::DbError;
 
 /// 🗄️#⃣ `CommandReceipt.state_hash`'s type — hashing is pack-style `ContentHash` throughout the
 /// `db` family per the contract, so it is nameable at the facade root without reaching past this
@@ -51,116 +51,116 @@ pub use pack::ContentHash;
 //#region 🔖️Family
 /// 🗄️#⃣ Former `db_core` surface — ids, durability, policy, and version-graph seams.
 pub mod ids {
-    pub use db_ids::*;
+    pub use crate::db_ids::*;
 }
 
 pub mod durability {
-    pub use db_durability::*;
+    pub use crate::db_durability::*;
 }
 
 pub mod policy {
-    pub use db_policy::*;
+    pub use crate::db_policy::*;
 }
 
 pub mod version_graph {
-    pub use db_version_graph::*;
+    pub use crate::db_version_graph::*;
 }
 
 /// 🗄️🎭️ `db_actor` — the six-lane bounded-priority mailbox actor runtime every document/catalog
 /// actor in the family runs on.
 pub mod actor {
-    pub use db_actor::*;
+    pub use crate::db_actor::*;
 }
 
 /// 🗄️🌲️ `db_state` — hand-rolled persistent (structurally-shared) diff-state overlays: `PMap`,
 /// `PVec`, `PText`, `PTree`, `PGraph`, plus `TouchedRegion`/`TouchedSet`.
 pub mod state {
-    pub use db_state::*;
+    pub use crate::db_state::*;
 }
 
 /// 🗄️🔌️ `db_storage` — the pluggable storage substrate trait family (`DbStorage`, `WalStorage`,
 /// `SnapshotStorage`, `PayloadStorage`, `CatalogStorage`, `IndexStorage`, `LeaseStorage`) plus the
 /// zero-touch `MemoryStorage`/`FsStorage` backends.
 pub mod storage {
-    pub use db_storage::*;
+    pub use crate::db_storage::*;
 }
 
 /// 🗄️📝️ `db_wal` — the family's write-ahead log: a `.spr`-container-based per-document,
 /// per-segment log reusing `protocol`'s framing directly.
 pub mod wal {
-    pub use db_wal::*;
+    pub use crate::db_wal::*;
 }
 
 /// 🗄️📸️ `db_snapshot` — pack-file-based document snapshots (`KIND_CHUNK` pages, the
 /// `KIND_SNAPSHOT` descriptor segment, incremental generations via the footer chain).
 pub mod snapshot {
-    pub use db_snapshot::*;
+    pub use crate::db_snapshot::*;
 }
 
 /// 🗄️🔎️ `db_index` — the secondary-index engine: LSM-lite sorted runs underneath ten typed
 /// per-kind index builders.
 pub mod index {
-    pub use db_index::*;
+    pub use crate::db_index::*;
 }
 
 /// 🗄️🤝️ `db_conflict` — conflict detection for concurrent commands against the same document
 /// frontier (touched-region intersection, bloom pre-filter, command-kind matrix, constraints).
 pub mod conflict {
-    pub use db_conflict::*;
+    pub use crate::db_conflict::*;
 }
 
 /// 🗄️📽️ `db_projection` — the typed, versioned, dependency-DAG projection engine.
 pub mod projection {
-    pub use db_projection::*;
+    pub use crate::db_projection::*;
 }
 
 /// 🗄️🔍️ `db_query` — consistency-mode resolution, the dynamic `Value` tree, and the
 /// `Predicate`/`Select`/`Query` IR plus its planner/executor.
 pub mod query {
-    pub use db_query::*;
+    pub use crate::db_query::*;
 }
 
 /// 🗄️🌫️ `db_preview` — ephemeral, speculative document overlays: identity, lifecycle,
 /// coalescing, TTL, and reconciliation on frontier advance.
 pub mod preview {
-    pub use db_preview::*;
+    pub use crate::db_preview::*;
 }
 
 /// 🗄️🛂️ `db_security` — multi-granularity authz, the signing bridge, replay guard, DoS budgets,
 /// and field redaction.
 pub mod security {
-    pub use db_security::*;
+    pub use crate::db_security::*;
 }
 
 /// 🗄️🏛️ `db_artifact` — the document authority actor: admit → dedupe → base-resolve → authz →
 /// deps → validate → conflict → execute → WAL append → durability → publish → project → vcs →
 /// preview-reconcile → receipt.
 pub mod document {
-    pub use db_artifact::*;
+    pub use crate::db_artifact::*;
 }
 
 /// 🗄️🧹️ `db_compact` — WAL segment retention, payload GC, index compaction, and snapshot chain
 /// consolidation.
 pub mod compact {
-    pub use db_compact::*;
+    pub use crate::db_compact::*;
 }
 
 /// 🗄️🔁️ `db_sync` — server side of `protocol_wire`: frontier exchange, missing-command transfer,
 /// snapshot bootstrap, and resume tokens.
 pub mod sync {
-    pub use db_sync::*;
+    pub use crate::db_sync::*;
 }
 
 /// 🗄️🕸️ `db_cluster` — sharding, ownership leases with epoch failover, follower replication,
 /// quorum durability, and read/preview routing.
 pub mod cluster {
-    pub use db_cluster::*;
+    pub use crate::db_cluster::*;
 }
 
 /// 🗄️📡️ `db_observe` — structured/audit event sinks, metrics, spans, health, and a determinism
 /// verifier.
 pub mod observe {
-    pub use db_observe::*;
+    pub use crate::db_observe::*;
 }
 
 /// 🗄️ `db_engine` — the `Database` supervisor/catalog actor, exposed here in full (beyond the
@@ -168,7 +168,7 @@ pub mod observe {
 /// non-primary items (e.g. `db::engine::CatalogEntry` reached through this path instead of the
 /// root — both resolve to the same type).
 pub mod engine {
-    pub use db_engine::*;
+    pub use crate::db_engine::*;
 }
 //#endregion 🔖️Family
 
@@ -177,21 +177,21 @@ pub mod engine {
 /// crate's `sqlite` feature), linking the same bundled `rusqlite` version `vcs` already uses.
 #[cfg(feature = "sqlite")]
 pub mod storage_sqlite {
-    pub use db_storage_sqlite::*;
+    pub use crate::db_storage_sqlite::*;
 }
 
 /// 🗄️🐘️ `db_storage_postgres` — the optional Postgres-backed `DbStorage` implementation (behind
 /// this crate's `postgres` feature).
 #[cfg(feature = "postgres")]
 pub mod storage_postgres {
-    pub use db_storage_postgres::*;
+    pub use crate::db_storage_postgres::*;
 }
 
 /// 🗄️🕸️ `db_storage_neo4j` — the optional Neo4j-backed `DbStorage` implementation (behind this
 /// crate's `neo4j` feature).
 #[cfg(feature = "neo4j")]
 pub mod storage_neo4j {
-    pub use db_storage_neo4j::*;
+    pub use crate::db_storage_neo4j::*;
 }
 //#endregion 🔖️StorageBackends
 
@@ -255,7 +255,7 @@ mod tests {
         let history = handle.history().unwrap();
         assert_eq!(history.entries.len(), 1);
 
-        assert_eq!(database.catalog().documents.len(), 1);
+        assert_eq!(database.catalog().artifacts.len(), 1);
         database.shutdown(std::time::Duration::from_secs(1)).unwrap();
     }
 

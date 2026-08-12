@@ -1,0 +1,12 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.object/diff.json",
+  "title": "SemioObjectDiff",
+  "description": "Sparse per-field diff over SemioObjectSnapshot — transform/brep/mesh/properties, each present only when touched.",
+  "type": "object",
+  "properties": {
+    "transform": { "type": "object" },
+    "brep": { "type": ["object", "null"] },
+    "mesh": { "type": ["object", "null"] },
+    "properties": { "type": ["object", "null"] }
+  }
+}

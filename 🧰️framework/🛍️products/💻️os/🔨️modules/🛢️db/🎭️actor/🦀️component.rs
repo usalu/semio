@@ -24,7 +24,8 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 
-use {DbError, GenerationId, MailboxCapacities, Priority};
+use crate::*;
+use crate::db_ids::GenerationId;
 
 //#region 🔖️Envelope
 /// @emoji ✉️ One message in flight through a `Mailbox`: its admitted lane, an ever-increasing

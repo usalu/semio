@@ -12,9 +12,9 @@ use crate::artifacts::block2d::Block2dSnapshot;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block2d` DSL —
 /// the `NodeKind` half of `s/plugin/puzzle/app/2d/manifest/🛂️manifest.jsonconcrete-forest.manifest.json`.
-pub const BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
+pub const BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
 /// 📄️ The `hexagonal-cut-concrete-forest-right` example fixture, handcrafted in the `.block2d` DSL.
-pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../📚️examples/🎬️hexagonal-cut-concrete-forest-right/🖼️assets/🗣️hexagonal-cut-concrete-forest-right.dsl.semio");
+pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️hexagonal-cut-concrete-forest-right/🖼️assets/🗣️hexagonal-cut-concrete-forest-right.dsl.semio");
 
 /// 📖️ Parses `.block2d` DSL text into a `Block2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Block2dSnapshot, store::TextError> {

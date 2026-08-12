@@ -1,0 +1,21 @@
+# 🧬️ SemioTableArtifact schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+enum SemioTableCellKind { NULL BOOL INT FLOAT STR BYTES }
+type SemioTableColumn {
+  name: String!
+  kind: SemioTableCellKind!
+}
+union SemioValue = SemioValueNull | SemioValueBool | SemioValueInt | SemioValueFloat | SemioValueStr | SemioValueBytes
+type SemioValueNull { _empty: Boolean }
+type SemioValueBool { value: Boolean! }
+type SemioValueInt { value: String! }
+type SemioValueFloat { lexeme: String! }
+type SemioValueStr { value: String! }
+type SemioValueBytes { value: String! }
+type SemioTableRow {
+  cells: [SemioValue!]!
+}
+type SemioTableArtifact {
+  schema: String! @state(class: PERSISTENT)
+  columns: [SemioTableColumn!]! @state(class: PERSISTENT)
+  rows: [SemioTableRow!]! @state(class: PERSISTENT)
+}

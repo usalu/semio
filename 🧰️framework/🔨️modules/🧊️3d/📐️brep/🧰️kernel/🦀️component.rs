@@ -140,7 +140,8 @@ impl Brep {
             }
             triangles.push(pts);
         }
-        let out = crate::brep::primitives::solid_from_triangle_soup(&mut self.body, &triangles).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = crate::brep::primitives::solid_from_triangle_soup(&mut self.body, &triangles, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
 }
@@ -247,28 +248,34 @@ fn entity_tag(e: &Entity) -> String {
 
 impl Brep {
     pub fn box_prim_sync(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = make_box(&mut self.body, width, depth, height).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut self.body, width, depth, height, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn sphere_prim_sync(&mut self, radius: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = make_sphere(&mut self.body, radius, 24).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = make_sphere(&mut self.body, radius, 24, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn cylinder_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = make_cylinder(&mut self.body, radius, height, 32).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = make_cylinder(&mut self.body, radius, height, 32, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn cone_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = make_cone(&mut self.body, radius, height, 32).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = make_cone(&mut self.body, radius, height, 32, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn torus_prim_sync(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = make_torus(&mut self.body, major, minor, 24).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = make_torus(&mut self.body, major, minor, 24, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn convex_hull_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
         let pts: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
-        let solid = make_convex_hull(&mut self.body, &pts).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = make_convex_hull(&mut self.body, &pts, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn line_curve_sync(&mut self, start: EVec3, end: EVec3) -> Result<GeometryHandle, BrepError> {
@@ -303,15 +310,18 @@ impl Brep {
     }
     pub fn polyline_wire_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
         let pts: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
-        let wire = make_polyline_wire(&mut self.body, &pts, false).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let wire = make_polyline_wire(&mut self.body, &pts, false, &mut rec).map_err(map_err)?;
         Ok(self.register_wire(wire))
     }
     pub fn rectangle_wire_sync(&mut self, width: f64, height: f64) -> Result<GeometryHandle, BrepError> {
-        let wire = make_rectangle_wire(&mut self.body, width, height).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let wire = make_rectangle_wire(&mut self.body, width, height, &mut rec).map_err(map_err)?;
         Ok(self.register_wire(wire))
     }
     pub fn regular_polygon_wire_sync(&mut self, radius: f64, sides: usize) -> Result<GeometryHandle, BrepError> {
-        let wire = make_regular_polygon_wire(&mut self.body, radius, sides).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let wire = make_regular_polygon_wire(&mut self.body, radius, sides, &mut rec).map_err(map_err)?;
         Ok(self.register_wire(wire))
     }
     pub fn interpolate_curve_sync(&mut self, points: &[EVec3], degree: usize) -> Result<GeometryHandle, BrepError> {
@@ -359,13 +369,15 @@ impl Brep {
     }
     pub fn planar_face_from_points_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
         let pts: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
-        let face = make_planar_face_from_points(&mut self.body, &pts).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let face = make_planar_face_from_points(&mut self.body, &pts, &mut rec).map_err(map_err)?;
         Ok(self.register_face(face))
     }
     pub fn planar_face_from_wire_sync(&mut self, wire: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let w = self.wire_ref(wire)?.clone();
         let origin = self.body.vertices.get(w.vertices[0]).map(|v| v.position).unwrap_or(Pnt3::new(0.0,0.0,0.0));
-        let face = make_planar_face_from_wire(&mut self.body, &w, origin, NativeVec3::Z).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let face = make_planar_face_from_wire(&mut self.body, &w, origin, NativeVec3::Z, &mut rec).map_err(map_err)?;
         Ok(self.register_face(face))
     }
     pub fn nurbs_surface_from_grid_sync(&mut self, points: &[Vec<EVec3>], degree_u: usize, degree_v: usize) -> Result<GeometryHandle, BrepError> {
@@ -440,12 +452,14 @@ impl Brep {
     }
     pub fn offset_face_sync(&mut self, face: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
-        let out = offset_face(&mut self.body, id, distance).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = offset_face(&mut self.body, id, distance, &mut rec).map_err(map_err)?;
         Ok(self.register_face(out))
     }
     pub fn thicken_face_sync(&mut self, face: &GeometryHandle, thickness: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
-        let solid = thicken_face(&mut self.body, id, thickness).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = thicken_face(&mut self.body, id, thickness, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn extrude_wire_sync(&mut self, wire: &GeometryHandle, vector: EVec3) -> Result<GeometryHandle, BrepError> {
@@ -456,12 +470,14 @@ impl Brep {
     }
     pub fn extrude_sync(&mut self, face: &GeometryHandle, direction: EVec3, distance: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
-        let solid = extrude_face(&mut self.body, id, vec3(direction), distance).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = extrude_face(&mut self.body, id, vec3(direction), distance, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn revolve_sync(&mut self, face: &GeometryHandle, axis_origin: EVec3, axis_direction: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
-        let solid = revolve_face(&mut self.body, id, pnt(axis_origin), vec3(axis_direction), angle).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = revolve_face(&mut self.body, id, pnt(axis_origin), vec3(axis_direction), angle, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn loft_sync(&mut self, profiles: &[GeometryHandle], smooth: bool) -> Result<GeometryHandle, BrepError> {
@@ -469,13 +485,15 @@ impl Brep {
         for p in profiles {
             faces.push(self.face_id(p)?);
         }
-        let solid = loft_profiles(&mut self.body, &faces, smooth).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = loft_profiles(&mut self.body, &faces, smooth, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn sweep_sync(&mut self, profile: &GeometryHandle, path: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let face = self.face_id(profile)?;
         let wire = self.wire_ref(path)?.clone();
-        let solid = sweep_along_path(&mut self.body, face, &wire).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = sweep_along_path(&mut self.body, face, &wire, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn pipe_sync(&mut self, profile: &GeometryHandle, path: &GeometryHandle, guide: Option<&GeometryHandle>) -> Result<GeometryHandle, BrepError> {
@@ -485,37 +503,43 @@ impl Brep {
             Some(h) => Some(self.wire_ref(h)?.clone()),
             None => None,
         };
-        let solid = pipe(&mut self.body, face, &wire, g.as_ref()).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = pipe(&mut self.body, face, &wire, g.as_ref(), &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn helical_sweep_sync(&mut self, profile: &GeometryHandle, axis_origin: EVec3, axis_dir: EVec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
         let face = self.face_id(profile)?;
-        let solid = helical_sweep(&mut self.body, face, pnt(axis_origin), vec3(axis_dir), radius, pitch, turns).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = helical_sweep(&mut self.body, face, pnt(axis_origin), vec3(axis_dir), radius, pitch, turns, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn fuse_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let sa = self.solid_id(a)?;
         let sb = self.solid_id(b)?;
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Unite, 1e-6).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Unite, 1e-6, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn cut_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let sa = self.solid_id(a)?;
         let sb = self.solid_id(b)?;
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Cut, 1e-6).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Cut, 1e-6, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let sa = self.solid_id(a)?;
         let sb = self.solid_id(b)?;
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Intersect, 1e-6).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Intersect, 1e-6, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn compound_cut_sync(&mut self, target: &GeometryHandle, tools: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         let t = self.solid_id(target)?;
         let mut ids = Vec::new();
         for tool in tools { ids.push(self.solid_id(tool)?); }
-        let solid = compound_cut(&mut self.body, t, &ids, 1e-6).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = compound_cut(&mut self.body, t, &ids, 1e-6, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn translate_sync(&mut self, shape: &GeometryHandle, offset: EVec3) -> Result<GeometryHandle, BrepError> {
@@ -586,14 +610,16 @@ impl Brep {
     pub fn fillet_sync(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = all_edges(&self.body, solid);
-        let out = fillet_edges(&mut self.body, solid, &edges, radius).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = fillet_edges(&mut self.body, solid, &edges, radius, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn fillet_variable_sync(&mut self, shape: &GeometryHandle, radius_start: f64, radius_end: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = all_edges(&self.body, solid);
         let e = *edges.first().ok_or_else(|| BrepError::InvalidInput("no edges".into()))?;
-        let out = fillet_variable(&mut self.body, solid, e, radius_start, radius_end).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = fillet_variable(&mut self.body, solid, e, radius_start, radius_end, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn fillet_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError> {
@@ -601,13 +627,15 @@ impl Brep {
         let mut eids = Vec::new();
         for e in edges { eids.push(self.edge_id(e)?); }
         if eids.is_empty() { eids = all_edges(&self.body, solid); }
-        let out = fillet_edges(&mut self.body, solid, &eids, radius).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = fillet_edges(&mut self.body, solid, &eids, radius, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn chamfer_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = all_edges(&self.body, solid);
-        let out = chamfer_edges(&mut self.body, solid, &edges, distance).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = chamfer_edges(&mut self.body, solid, &edges, distance, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn chamfer_asymmetric_sync(&mut self, shape: &GeometryHandle, d1: f64, _d2: f64) -> Result<GeometryHandle, BrepError> {
@@ -618,13 +646,15 @@ impl Brep {
         let mut eids = Vec::new();
         for e in edges { eids.push(self.edge_id(e)?); }
         if eids.is_empty() { eids = all_edges(&self.body, solid); }
-        let out = chamfer_edges(&mut self.body, solid, &eids, distance).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = chamfer_edges(&mut self.body, solid, &eids, distance, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn shell_sync(&mut self, shape: &GeometryHandle, thickness: f64, open_faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let open_ids: Vec<_> = open_faces.iter().filter_map(|h| self.face_id(h).ok()).collect();
-        let out = shell_solid_with_open_faces(&mut self.body, solid, thickness.abs(), &open_ids).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = shell_solid_with_open_faces(&mut self.body, solid, thickness.abs(), &open_ids, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn draft_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: EVec3, _neutral_point: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
@@ -632,29 +662,34 @@ impl Brep {
         let face = if let Some(f) = faces.first() { self.face_id(f)? } else {
             *self.body.solid_faces(solid).first().ok_or_else(|| BrepError::InvalidInput("no face".into()))?
         };
-        let out = draft_angle(&mut self.body, solid, face, angle, vec3(pull_direction)).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = draft_angle(&mut self.body, solid, face, angle, vec3(pull_direction), &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn offset_solid_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
-        let out = offset_solid(&mut self.body, solid, distance).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = offset_solid(&mut self.body, solid, distance, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn defeature_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut fids = Vec::new();
         for f in faces { fids.push(self.face_id(f)?); }
-        let out = defeature(&mut self.body, solid, &fids).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let out = defeature(&mut self.body, solid, &fids, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
     pub fn section_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<Vec<GeometryHandle>, BrepError> {
         let id = self.solid_id(solid)?;
-        let faces = section_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let faces = section_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6, &mut rec).map_err(map_err)?;
         Ok(faces.into_iter().map(|f| self.register_face(f)).collect())
     }
     pub fn split_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<(GeometryHandle, GeometryHandle), BrepError> {
         let id = self.solid_id(solid)?;
-        let (a, b) = split_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let (a, b) = split_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6, &mut rec).map_err(map_err)?;
         Ok((self.register_solid(a), self.register_solid(b)))
     }
     pub fn curve_curve_intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle, tolerance: f64) -> Result<Vec<EVec3>, BrepError> {
@@ -771,17 +806,20 @@ impl Brep {
     pub fn sew_faces_sync(&mut self, faces: &[GeometryHandle], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let mut fids = Vec::new();
         for f in faces { fids.push(self.face_id(f)?); }
-        let solid = sew_faces(&mut self.body, &fids, tolerance).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let solid = sew_faces(&mut self.body, &fids, tolerance, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     pub fn heal_solid_sync(&mut self, shape: &GeometryHandle, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
-        let _ = heal_solid(&mut self.body, solid, tolerance).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let _ = heal_solid(&mut self.body, solid, tolerance, &mut rec).map_err(map_err)?;
         Ok(shape.clone())
     }
     pub fn convert_to_nurbs_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
-        let _ = convert_to_nurbs(&mut self.body, solid).map_err(map_err)?;
+        let mut rec = OpRecorder::new();
+        let _ = convert_to_nurbs(&mut self.body, solid, &mut rec).map_err(map_err)?;
         Ok(shape.clone())
     }
     pub fn deconstruct_sync(&mut self, shape: &GeometryHandle) -> Result<BrepTopology, BrepError> {
@@ -822,9 +860,6 @@ impl Brep {
     }
     pub fn export_gltf_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         self.export_glb_sync(shapes, deflection)
-    }
-    pub fn tessellate_to_mesh_data_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<MeshTransfer, BrepError> {
-        self.tessellate_sync(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?, deflection)
     }
     pub fn export_glb_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
@@ -924,11 +959,6 @@ impl Brep {
     }
     pub fn dispose_sync(&mut self, shape: &GeometryHandle) -> usize {
         usize::from(self.live.remove(shape.as_str()).is_some())
-    }
-    pub fn retain_sync(&mut self, shapes: &[GeometryHandle]) -> Result<(), BrepError> {
-        let keep: std::collections::HashSet<_> = shapes.iter().map(|h| h.as_str().to_string()).collect();
-        self.live.retain(|k, _| keep.contains(k));
-        Ok(())
     }
 }
 

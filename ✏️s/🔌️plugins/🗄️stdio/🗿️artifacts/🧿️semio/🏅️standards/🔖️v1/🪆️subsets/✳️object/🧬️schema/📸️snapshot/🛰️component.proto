@@ -1,0 +1,29 @@
+syntax = "proto3";
+// 🧬️ SemioObjectSnapshot schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+package semio.s_stdio_semio_object.snapshot;
+
+message SemioTransform {
+  double translation_x = 1;
+  double translation_y = 2;
+  double translation_z = 3;
+  double rotation_x = 4;
+  double rotation_y = 5;
+  double rotation_z = 6;
+  double rotation_w = 7;
+  double scale_x = 8;
+  double scale_y = 9;
+  double scale_z = 10;
+}
+
+message ArtifactChildHandle {
+  string child_id = 1;
+  string target = 2;
+}
+
+message SemioObjectSnapshot {
+  string schema = 1;
+  SemioTransform transform = 2;
+  ArtifactChildHandle brep = 3;
+  ArtifactChildHandle mesh = 4;
+  ArtifactChildHandle properties = 5;
+}

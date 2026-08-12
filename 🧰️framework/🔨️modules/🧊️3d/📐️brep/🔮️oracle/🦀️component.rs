@@ -316,9 +316,11 @@ mod tests {
 
     #[test]
     fn watertightness_of_box_is_watertight() {
+        use crate::brep::history::OpRecorder;
         use crate::brep::primitives::make_box;
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let _ = solid;
         let report = watertightness_of_body(&body);
         assert_eq!(report.verdict, WatertightnessVerdict::Watertight);

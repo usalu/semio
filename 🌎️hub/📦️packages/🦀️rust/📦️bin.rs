@@ -67,8 +67,8 @@ fn db_artifact_id(space_id: &str, document_id: &str) -> ProtocolArtifactId {
     ProtocolArtifactId(scope_key(space_id, document_id))
 }
 
-fn db_core_document_id(id: &ProtocolArtifactId) -> db::core::ArtifactId {
-    db::core::ArtifactId(id.0.clone())
+fn db_core_document_id(id: &ProtocolArtifactId) -> db::ArtifactId {
+    db::ArtifactId(id.0.clone())
 }
 
 #[derive(Clone)]
@@ -354,7 +354,7 @@ fn best_effort_frontier(handle: &db::ArtifactHandle) -> RuntimeFrontierSummary {
     }
 }
 
-fn engine_frontier_to_wire(frontier: &db::Frontier, head_edit_id: String) -> RuntimeFrontierSummary {
+fn engine_frontier_to_wire(frontier: &db::db_engine::Frontier, head_edit_id: String) -> RuntimeFrontierSummary {
     RuntimeFrontierSummary { document_id: frontier.document.clone(), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
@@ -393,7 +393,7 @@ async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id:
 /// `db_security`'s own module doc — payload interpretation stays out of this layer), so command-kind
 /// granularity inside one document is not this wave's concern.
 fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolArtifactId, envelopes: &[MutationEnvelope], physical_ms: u64) -> Option<String> {
-    envelopes.iter().find_map(|envelope| gate.admit_command(principal, tenant, document, "write", &envelope.actor, &envelope.operation_id, physical_ms).err().map(|error| error.to_string()))
+    envelopes.iter().find_map(|envelope| gate.admit_command(principal, tenant, document, "write", &envelope.actor, &envelope.mutation_id, physical_ms).err().map(|error| error.to_string()))
 }
 
 /// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated, already-`Hello`'d
@@ -495,7 +495,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sta
     // scope this gate ever evaluates already belongs to exactly this one space/document connection.
     let space_kind = state.directory.get_space(&space_id).await.ok().flatten().map_or_else(|| "studio".to_string(), |space| space.kind);
     let policy = db::security::space_grants(&space_id, &space_kind).into_iter().fold(db::security::RoleBasedPolicy::new(), db::security::RoleBasedPolicy::with_grant);
-    let gate = db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(240, 60), Arc::new(db::core::NullEmit));
+    let gate = db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(240, 60), Arc::new(db::NullEmit));
     let tenant = db::security::TenantId::from(space_id.clone());
     // 🎯️ Role mapping: a resolved membership uses its own `SpaceRole`; `AuthOutcome::Public` (the
     // NEW implicit-anonymous-spectator fallback for `visibility == "public"`, per the design
@@ -808,10 +808,11 @@ mod tests {
     }
 
     async fn test_state() -> HubState {
-        let database = db::Database::open_at(&tempdir("db"), db::Profile::Test).expect("open db");
+        let dir = tempdir("db");
+        let database = db::Database::open_at(&dir, db::Profile::Test).expect("open db");
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed");
-        HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()), extensions_root: dir.path().join("extension-modules") }
+        HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()), extensions_root: dir.join("extension-modules") }
     }
 
     fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelope {
@@ -886,7 +887,7 @@ mod tests {
             match next_server_frame(&mut b).await {
                 ServerFrame::Commands { envelopes, origin, .. } => {
                     assert_eq!(envelopes.len(), 1);
-                    assert_eq!(envelopes[0].operation_id.0, "op-1");
+                    assert_eq!(envelopes[0].mutation_id.0, "op-1");
                     assert_eq!(origin, ActorId("A".to_string()));
                     break;
                 }
@@ -916,7 +917,7 @@ mod tests {
         c.send(client_binary(&hello("C"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { bootstrap: Bootstrap::Tail, .. }));
         match next_server_frame(&mut c).await {
-            ServerFrame::Commands { envelopes, .. } => assert_eq!(envelopes[0].operation_id.0, "op-1"),
+            ServerFrame::Commands { envelopes, .. } => assert_eq!(envelopes[0].mutation_id.0, "op-1"),
             other => panic!("expected the Tail bootstrap's Commands follow-up, got {other:?}"),
         }
     }

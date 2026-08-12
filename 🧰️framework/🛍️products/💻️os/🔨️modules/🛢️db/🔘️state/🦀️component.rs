@@ -20,7 +20,7 @@
 //! addressing (dedup/identity across snapshots) is the separate, deliberately blake3-based
 //! `ContentAddressed`/`PageStore` mechanism in the `📇️Pages` region below.
 
-use DbError;
+use crate::db_ids::DbError;
 use std::rc::Rc;
 
 //#region 🔖️Pages

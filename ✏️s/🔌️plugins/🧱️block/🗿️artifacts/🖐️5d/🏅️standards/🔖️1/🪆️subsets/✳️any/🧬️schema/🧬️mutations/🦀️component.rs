@@ -134,6 +134,7 @@ mod tests {
     use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
     use protocol::MutationDiff;
 
     fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {

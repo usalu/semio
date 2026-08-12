@@ -1,0 +1,7 @@
+syntax = "proto3";
+// 📝️ SemioTableSnapshot text body — descriptive twin of 📖️component.grammar.semio.
+package semio.s_stdio_semio_table.snapshot.text;
+
+message SemioTableSnapshotTextBody {
+  string body = 1; // "schema=<hex>\ncolumns=[<col>,...]\nrows=[<row>,...]"
+}

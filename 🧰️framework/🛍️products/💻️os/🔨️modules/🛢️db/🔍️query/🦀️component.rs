@@ -29,7 +29,9 @@
 //! owns envelope interpretation, has both) — so the layer that calls `state_at`/`preview_augmented`
 //! hands this crate only the resulting bytes, never the engine or the envelope.
 
-use {check_len, DbError, Frontier};
+use crate::*;
+use crate::db_ids::{check_len, DbError};
+use crate::db_durability::Frontier;
 use db_index::{CommitIndex, FrontierIndex, FullTextIndex};
 use db_projection::ProjectionState;
 use db_state::PVec;

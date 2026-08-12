@@ -1,0 +1,2 @@
+# 📝️ Text-facet grammar mirror (descriptive) for s.stdio.semio.object.diff's DSL text encoding.
+type SemioObjectDiffDsl { line: String! }

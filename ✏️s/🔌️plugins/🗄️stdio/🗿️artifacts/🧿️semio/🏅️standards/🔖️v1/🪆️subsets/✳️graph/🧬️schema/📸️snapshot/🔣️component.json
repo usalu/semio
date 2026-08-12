@@ -1,0 +1,49 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.graph/snapshot.json",
+  "title": "SemioGraphSnapshot",
+  "description": "The neutral typed property graph: id-keyed nodes and edges with ports and properties.",
+  "type": "object",
+  "required": ["schema", "nodes", "edges"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "nodes": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "object", "properties": { "value": { "type": "string" } } },
+          "kind": { "type": "string", "description": "freeform node-type tag" },
+          "label": { "type": "string" },
+          "position": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+          "ports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "name": { "type": "string" }, "kind": { "enum": ["in", "out", "inOut"] } }
+            }
+          },
+          "properties": {
+            "type": "array",
+            "items": { "type": "object", "properties": { "key": { "type": "string" }, "value": {} } }
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "x-semio-state": "persistent",
+      "description": "id-keyed ENTITIES; source/target are ordinary data fields, not an attach handle",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "object", "properties": { "value": { "type": "string" } } },
+          "source": { "type": "object", "properties": { "value": { "type": "string" } } },
+          "target": { "type": "object", "properties": { "value": { "type": "string" } } },
+          "kind": { "type": "string" },
+          "label": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -26,6 +26,10 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::presentation::io::SemioPresentationValidator;
     use crate::artifacts::semio::standards::v1::subsets::flow::io::SemioFlowValidator;
     use crate::artifacts::semio::standards::v1::subsets::text::io::SemioTextValidator;
+    use crate::artifacts::semio::standards::v1::subsets::table::io::SemioTableValidator;
+    use crate::artifacts::semio::standards::v1::subsets::graph::io::SemioGraphValidator;
+    use crate::artifacts::semio::standards::v1::subsets::object::io::SemioObjectValidator;
+    use crate::artifacts::semio::standards::v1::subsets::kit::io::SemioKitValidator;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("*") };
 
@@ -89,6 +93,10 @@ pub mod derived_composition {
             SemioSubsetSnapshot::Presentation(s) => SemioPresentationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s))),
             SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot as store::ArtifactPack>::encode_pack(s))),
+            SemioSubsetSnapshot::Table(s) => SemioTableValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::encode_pack(s))),
+            SemioSubsetSnapshot::Graph(s) => SemioGraphValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot as store::ArtifactPack>::encode_pack(s))),
+            SemioSubsetSnapshot::Object(s) => SemioObjectValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s))),
+            SemioSubsetSnapshot::Kit(s) => SemioKitValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot as store::ArtifactPack>::encode_pack(s))),
         }
     }
 

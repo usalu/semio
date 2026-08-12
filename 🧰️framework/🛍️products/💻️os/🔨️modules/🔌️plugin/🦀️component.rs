@@ -97,6 +97,15 @@ pub mod component {
         semio::framework::host::io_compose(key, sources).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
     }
 
+    /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): resolves an `io::ArtifactLink`'s encoded bytes
+    /// into the linked artifact's current pack via the host `resolve-artifact-link` import — the
+    /// ONE seam a WASI guest ever touches for link resolution; it must never resolve a link itself
+    /// (no guest has host-store access). The WIT error is already a plain `string` (unlike every
+    /// other `host::` import here), so no `decode_fault_bytes` step is needed.
+    pub fn host_resolve_artifact_link(link: &[u8]) -> Result<Vec<u8>, String> {
+        semio::framework::host::resolve_artifact_link(link)
+    }
+
     /// 🌉️ Installs the guest-side `io_dispatch` fallback hook: a local registry miss is retried via
     /// the host's `io-compose` import, which routes to whichever OTHER loaded plugin owns the key.
     /// Called once from `ensure_plugin_initialized` — see that function's own doc comment for why
@@ -671,6 +680,52 @@ pub mod app {
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
     }
 
+    /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1, Task 5): schema-owned child-composition hook —
+    /// the derived analogue of `ArtifactComposition` for an artifact whose snapshot is assembled
+    /// from OTHER artifacts' packs via declared `#[child(kind = "…")]` slots
+    /// (`semio_framework_schema::ArtifactCompositionFields`), rather than only foreign-dialect IO
+    /// sources. `Snapshot` deliberately repeats `DerivedArtifactSpec::Snapshot` instead of being
+    /// read off it — a bare `type Children: ArtifactChildren` on `DerivedArtifactSpec` cannot itself
+    /// constrain `Children::Snapshot == Self::Snapshot` without a where-clause at every use site, so
+    /// `DerivedArtifactSpec::Children`'s own bound (below) restates the equality once, centrally.
+    pub trait ArtifactChildren {
+        type Snapshot;
+        /// 🪆️ This artifact's declared child slots — `&[]` for a leaf with no `#[child(...)]`
+        /// fields (see `NoChildren`).
+        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec];
+        /// 🏗️ Assembles `Self::Snapshot` from resolver-supplied child packs, one `(dialect, pack
+        /// bytes)` pair per slot instance (`many` slots contribute more than one pair for the SAME
+        /// `ChildSlotSpec.kind`) — the composition-side counterpart to `decompose_to_children`.
+        fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError>;
+        /// 📤️ Inverse of `compose_from_children`: the child packs `Self::Snapshot` currently owns,
+        /// keyed by their own dialect — the seam `ArtifactChildren`'s own decompose side of the
+        /// contract needs so a child's pack can be re-derived/re-exported without re-deriving the
+        /// whole parent.
+        fn decompose_to_children(snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)>;
+    }
+
+    /// 🍃️ `DerivedArtifactSpec::Children` default for a leaf artifact with zero composition slots —
+    /// `slots()` is empty, `decompose_to_children` is always empty, and `compose_from_children`
+    /// unconditionally errors (a leaf has nothing to compose FROM children; the derived composer
+    /// below never even calls it when `slots()` is empty — see `DerivedArtifactComposer::compose`).
+    pub struct NoChildren<S>(std::marker::PhantomData<S>);
+
+    impl<S> ArtifactChildren for NoChildren<S> {
+        type Snapshot = S;
+
+        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+            &[]
+        }
+
+        fn compose_from_children(_parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError> {
+            Err(ComposeError { message: "this artifact declares no #[child(...)] slots — NoChildren::compose_from_children is unreachable via the derived composer".into(), diagnostics: Vec::new() })
+        }
+
+        fn decompose_to_children(_snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)> {
+            Vec::new()
+        }
+    }
+
     /// 🧬️ Hook bundle from which all public artifact lifecycle types are derived.
     pub trait DerivedArtifactSpec: Sized + 'static {
         type Snapshot;
@@ -679,6 +734,12 @@ pub mod app {
         type Construction: ArtifactBuilder<Snapshot = Self::Snapshot, Mutation = Self::Mutation, Diff = Self::Diff>;
         type Analysis: ArtifactAnalysis;
         type Composition: ArtifactComposition<Snapshot = Self::Snapshot>;
+        /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1, Task 5): defaults to `NoChildren<Self::Snapshot>`
+        /// for every spec built through `derive_artifact_facets!` without a `children: $ty` arm — see
+        /// that macro's own doc comment. Stable Rust has no language-level default associated type, so
+        /// the "default" lives at the MACRO level (it always emits a concrete `type Children = …;`),
+        /// not here; a hand-written `impl DerivedArtifactSpec` must supply one explicitly.
+        type Children: ArtifactChildren<Snapshot = Self::Snapshot>;
     }
 
     /// 📦️ Analyzer output derived from the artifact snapshot codec.
@@ -782,18 +843,63 @@ pub mod app {
         }
     }
 
-    /// 🎹️ Composer derived from native snapshot codecs plus directed foreign IO hooks.
+    /// 🎹️ Composer derived from native snapshot codecs plus directed foreign IO hooks — and, when
+    /// `Spec::Children` declares real slots (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM C1, Task 5), from
+    /// this artifact's own composed children too. Living HERE (rather than duplicated per macro arm
+    /// in `derive_artifact_facets!`) means every `DerivedArtifactSpec` — hand-written or
+    /// macro-generated — gets child-slot-aware `reads()`/`compose()` automatically, for free, the
+    /// moment its `Children` associated type names real slots.
     pub struct DerivedArtifactComposer<Spec: DerivedArtifactSpec>(std::marker::PhantomData<Spec>);
 
     impl<Spec: DerivedArtifactSpec> ArtifactComposer for DerivedArtifactComposer<Spec> {
         type Snapshot = Spec::Snapshot;
         const WRITES: Dialect = <Spec::Composition as ArtifactComposition>::WRITES;
 
+        /// 🪆️ `Spec::Composition`'s own native/foreign reads, UNION each child slot's kind as an
+        /// unconstrained-standard/unconstrained-subset `Dialect` (`StandardId("*")`/`SubsetId::ANY`
+        /// — a child slot names only a `kind`, per `ChildSlotSpec.kind: &'static str`, never a
+        /// specific standard/subset, so "any standard, any subset of this kind" is the literal
+        /// reading of "this slot accepts the kind's dialect family"). Memoized per-`Spec`
+        /// monomorphization via a generic-fn-local `OnceLock` — `ArtifactComposer::reads()`'s
+        /// signature is fixed to `&'static [Dialect]` by the pre-existing (non-composition) trait,
+        /// and `Spec::Children::slots()` is only knowable at runtime (a trait associated fn call,
+        /// not a `const`), so the union must be computed once and leaked into a `'static` lifetime
+        /// rather than built as a `const`. A leaf `Spec::Children = NoChildren<_>` (`slots()` = `&[]`)
+        /// degrades to exactly `Spec::Composition::reads()`, byte-identical to the pre-C1 behavior.
         fn reads() -> &'static [Dialect] {
-            <Spec::Composition as ArtifactComposition>::reads()
+            static UNION: std::sync::OnceLock<Vec<Dialect>> = std::sync::OnceLock::new();
+            UNION.get_or_init(|| {
+                let mut reads: Vec<Dialect> = <Spec::Composition as ArtifactComposition>::reads().to_vec();
+                for slot in <Spec::Children as ArtifactChildren>::slots() {
+                    reads.push(Dialect { artifact_kind: slot.kind, standard: StandardId("*"), subset: SubsetId::ANY });
+                }
+                reads
+            })
         }
 
+        /// 🪆️ Routes through `Spec::Children::compose_from_children` when `Spec::Children` declares
+        /// real slots AND every source's dialect kind matches one of them (never for a leaf artifact
+        /// — `slots()` empty short-circuits straight to the unchanged `Spec::Composition::compose`
+        /// path, so nothing about a non-composing artifact's behavior changes); falls through to
+        /// `Spec::Composition::compose` otherwise (a mixed/foreign-dialect source set, or no
+        /// declared slots at all).
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let slots = <Spec::Children as ArtifactChildren>::slots();
+            let all_child_sources = !slots.is_empty() && !sources.is_empty() && sources.iter().all(|source| slots.iter().any(|slot| slot.kind == source.dialect.artifact_kind));
+            if all_child_sources {
+                let parts: Vec<(ArtifactDialect, Vec<u8>)> = sources
+                    .iter()
+                    .map(|source| {
+                        let bytes = match &source.payload {
+                            AnalyzeSource::Binary(bytes) => bytes.to_vec(),
+                            AnalyzeSource::Text(text) => text.as_bytes().to_vec(),
+                        };
+                        (ArtifactDialect::from(source.dialect), bytes)
+                    })
+                    .collect();
+                let snapshot = <Spec::Children as ArtifactChildren>::compose_from_children(&parts)?;
+                return Ok(Composition { snapshot, confidence: IoConfidence::High, diagnostics: Vec::new() });
+            }
             <Spec::Composition as ArtifactComposition>::compose(sources)
         }
     }
@@ -820,6 +926,319 @@ pub mod app {
         }
     }
     //#endregion 🔖️ArtifactBuilder
+
+    //#region 🔖️ArtifactDeclaration
+    /// 🔖️ Everything an artifact currently registers by CALLING free functions, expressed instead as
+    /// DATA the framework walks in `PluginBuilder::build()` — see
+    /// `.🦑️repo/🎫️tickets/26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w1-mechanism-design.md`. Every
+    /// field mirrors exactly one global registration function reachable from plugin code (census:
+    /// `📓️w0-d-sdk-surface.md` §6); the two §6 functions that are NOT artifact-scoped
+    /// (`register_app_schema_descriptor` — app config/presence schema, not an artifact concern;
+    /// `register_linked_flow_extension_installer` — flow's own extension registry) have no field
+    /// here on purpose, called out loudly rather than silently dropped — see the W1 report. Built
+    /// only through `ArtifactDeclaration::builder(kind)`, a consuming typestate builder mirroring
+    /// `PluginBuilder`'s own shape, so a declaration missing its mandatory `schema` is a compile
+    /// error rather than a runtime panic. Every field is module-private — a plugin crate can
+    /// describe a declaration through the builder's methods but never read or hand-assemble one;
+    /// only `register_all` (called exactly once, from `PluginBuilder::build()`) ever walks it.
+    pub struct ArtifactDeclaration {
+        // 🏷️ Deliberately a raw `String`, not `ArtifactKindId`: `ArtifactKindId::parse` enforces the
+        // canonical `s.<plugin>.<artifact>` grammar, and renaming EXISTING artifact kind strings
+        // (today's note is `"s.note"`, raster's own `ArtifactKindSpec.id` is `"2d.raster"` — neither
+        // canonical) to that grammar is its own later wave, not this one's (see `ArtifactKindId`'s
+        // own doc at `🚪️io/🦀️component.rs:91-93`). `register_all` upgrades to the strict
+        // plugin-segment check automatically the moment a given `kind` DOES parse as canonical, so
+        // this tightens itself as that migration lands — no second pass needed here.
+        kind: String,
+        schema: Option<::semio_framework_schema::ArtifactSchemaDescriptor>,
+        inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+        composers: &'static [ComposerEntry],
+        formats: Vec<semio_framework::FormatDescriptor>,
+        subset_validators: &'static [SubsetValidatorEntry],
+        languages: &'static [dsl::LanguageSpec],
+        document_codec: Option<DocumentCodecSpec>,
+        migrations: Vec<store::DialectMigration>,
+        // 🧒️🔗️ Pulled from `<Snapshot as ArtifactCompositionFields>::{child_slots,link_slots}` via
+        // `.composition::<Snapshot>()` — never settable directly (UCAS review, 2026-08-12): the
+        // derive-emitted trait impl IS the truth, so a hand-written list would be unwritable rather
+        // than merely discouraged. No registration function consumes these yet (UCAS's composition
+        // runtime reads `ArtifactCompositionFields` straight off the snapshot type on demand); they
+        // are captured here so the declaration is a complete, single-source manifest of the
+        // artifact's shape, not because `register_all` calls anything with them today.
+        child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+        link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+        capabilities: Vec<CapabilityRequirement>,
+    }
+
+    /// 🏷️ Declaration builder has a `kind` only — next call must be `.schema(...)`.
+    pub struct NeedsSchema;
+    /// ✅️ Declaration builder has `kind` + `schema` — ready for every other facet plus `.build()`.
+    pub struct DeclarationReady;
+
+    /// 🏗️ Consuming typestate builder for [`ArtifactDeclaration`] — mirrors [`PluginBuilder`]'s own
+    /// missing-mandatory-field-is-a-compile-error shape.
+    pub struct ArtifactDeclarationBuilder<State> {
+        kind: String,
+        schema: Option<::semio_framework_schema::ArtifactSchemaDescriptor>,
+        inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+        composers: &'static [ComposerEntry],
+        formats: Vec<semio_framework::FormatDescriptor>,
+        subset_validators: &'static [SubsetValidatorEntry],
+        languages: &'static [dsl::LanguageSpec],
+        document_codec: Option<DocumentCodecSpec>,
+        migrations: Vec<store::DialectMigration>,
+        child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+        link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+        capabilities: Vec<CapabilityRequirement>,
+        _state: std::marker::PhantomData<State>,
+    }
+
+    impl ArtifactDeclaration {
+        /// 🪪️ Starts a declaration from this artifact's kind id — canonical `s.<plugin>.<artifact>`
+        /// where that migration has already landed, today's pre-migration grammar otherwise (see the
+        /// field doc on `ArtifactDeclaration::kind`).
+        pub fn builder(kind: impl Into<String>) -> ArtifactDeclarationBuilder<NeedsSchema> {
+            ArtifactDeclarationBuilder {
+                kind: kind.into(),
+                schema: None,
+                inferences: Vec::new(),
+                composers: &[],
+                formats: Vec::new(),
+                subset_validators: &[],
+                languages: &[],
+                document_codec: None,
+                migrations: Vec::new(),
+                child_slots: &[],
+                link_slots: &[],
+                capabilities: Vec::new(),
+                _state: std::marker::PhantomData,
+            }
+        }
+    }
+
+    impl ArtifactDeclarationBuilder<NeedsSchema> {
+        /// 🧬️ Sets the artifact's four-facet schema descriptor — mandatory, so this is the one call
+        /// that unlocks every other declaration method.
+        pub fn schema(self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
+            ArtifactDeclarationBuilder {
+                kind: self.kind,
+                schema: Some(descriptor),
+                inferences: self.inferences,
+                composers: self.composers,
+                formats: self.formats,
+                subset_validators: self.subset_validators,
+                languages: self.languages,
+                document_codec: self.document_codec,
+                migrations: self.migrations,
+                child_slots: self.child_slots,
+                link_slots: self.link_slots,
+                capabilities: self.capabilities,
+                _state: std::marker::PhantomData,
+            }
+        }
+    }
+
+    impl ArtifactDeclarationBuilder<DeclarationReady> {
+        /// 💡️ Appends inference descriptors (`register_artifact_inference_descriptor`, one call per
+        /// item at `build()` time). Repeatable.
+        pub fn inferences(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
+            self.inferences.extend(items);
+            self
+        }
+
+        /// 🎹️ Sets this artifact's composer table (`register_composer_entries`). Every entry's
+        /// `writes.artifact_kind` must equal this declaration's `kind` — checked at `build()` time,
+        /// not here, since only `PluginBuilder::build()` knows the plugin id to check `kind` itself against.
+        pub fn composers(mut self, entries: &'static [ComposerEntry]) -> Self {
+            self.composers = entries;
+            self
+        }
+
+        /// 🗂️ Appends format rows (`register_format_descriptors`).
+        pub fn formats(mut self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
+            self.formats.extend(rows);
+            self
+        }
+
+        /// 🧾️ Sets this artifact's subset-validator table (`register_subset_validator`, one call per entry).
+        pub fn subset_validators(mut self, entries: &'static [SubsetValidatorEntry]) -> Self {
+            self.subset_validators = entries;
+            self
+        }
+
+        /// 📖️ Sets this artifact's grammar table (`register_language`, one call per entry).
+        pub fn languages(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
+            self.languages = specs;
+            self
+        }
+
+        /// 🗂️ Declares the document codec for one document-owning `ArtifactApp`
+        /// (`register_document_codec_for_app::<A>`, keyed by `A::DOCUMENT_SCHEMA`). At most one per
+        /// artifact — a second call overwrites the first, matching every other declaration field's
+        /// last-write-wins builder convention.
+        pub fn document_codec<A: ArtifactApp>(mut self) -> Self {
+            self.document_codec = Some(DocumentCodecSpec::of::<A>());
+            self
+        }
+
+        /// 🧭️ Appends dialect migrations (`register_dialect_migration`). Both `from.artifact_kind`
+        /// and `to.artifact_kind` must equal this declaration's `kind` — checked at `build()` time.
+        pub fn migrations(mut self, items: impl IntoIterator<Item = store::DialectMigration>) -> Self {
+            self.migrations.extend(items);
+            self
+        }
+
+        /// 🧒️🔗️ Pulls `child_slots`/`link_slots` from `<Snapshot as ArtifactCompositionFields>` — the
+        /// ONLY way to set them (UCAS review, 2026-08-12: a hand-written list could silently disagree
+        /// with the `#[derive(ArtifactSchema)]`-emitted impl the composition runtime actually reads,
+        /// so there is deliberately no other setter).
+        pub fn composition<Snapshot: ::semio_framework_schema::ArtifactCompositionFields>(mut self) -> Self {
+            self.child_slots = Snapshot::child_slots();
+            self.link_slots = Snapshot::link_slots();
+            self
+        }
+
+        /// 🔒️ Declares a capability requirement owned by this artifact (unioned into
+        /// `PluginManifest.capabilities` at `build()` time) — IO is artifact-owned, so an artifact
+        /// that reads assets declares this on itself, not on the plugin.
+        pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
+            if !self.capabilities.contains(&capability) {
+                self.capabilities.push(capability);
+            }
+            self
+        }
+
+        /// ✅️ Finishes the declaration.
+        pub fn build(self) -> ArtifactDeclaration {
+            ArtifactDeclaration {
+                kind: self.kind,
+                schema: self.schema,
+                inferences: self.inferences,
+                composers: self.composers,
+                formats: self.formats,
+                subset_validators: self.subset_validators,
+                languages: self.languages,
+                document_codec: self.document_codec,
+                migrations: self.migrations,
+                child_slots: self.child_slots,
+                link_slots: self.link_slots,
+                capabilities: self.capabilities,
+            }
+        }
+    }
+
+    /// 🗂️ A monomorphized, non-capturing thunk for `register_document_codec_for_app::<A>` — lets
+    /// `.document_codec::<A>()` store the registration as inert data (a bare `fn()`) instead of
+    /// performing it immediately, matching every other declaration field's "described now, run once
+    /// at `PluginBuilder::build()`" contract.
+    pub struct DocumentCodecSpec {
+        register: fn(),
+    }
+
+    impl DocumentCodecSpec {
+        fn of<A: ArtifactApp>() -> Self {
+            fn register_thunk<A: ArtifactApp>() {
+                super::plugin_runtime::register_document_codec_for_app::<A>(A::DOCUMENT_SCHEMA);
+            }
+            DocumentCodecSpec { register: register_thunk::<A> }
+        }
+    }
+
+    impl ArtifactDeclaration {
+        /// 🏗️ Performs every registration this declaration carries, in the fixed deterministic order
+        /// schema → inferences → formats → subset validators → composers → languages → document
+        /// codec → migrations (ordering was implicit in call order inside 33 hand-written `setup`
+        /// functions; this is where it becomes explicit and uniform). Called exactly once per
+        /// declared artifact, from `PluginBuilder::build()` — never `pub`, so a plugin crate can
+        /// describe a declaration but never trigger its own registration.
+        ///
+        /// **Ownership check** — the single most important line in this change, and the direct
+        /// countermeasure to the named violation this ticket opened against (lowpoly's
+        /// `register_mesh_exporter("3d.mesh", …)`: an IO registration naming a kind that call had no
+        /// connection to at all). Two layers, since today's on-disk kind strings are pre-migration
+        /// (see the `kind` field doc):
+        ///   1. **Always enforced**: every composer must ACTUALLY BE ABOUT this declaration's `kind`
+        ///      — either producing it (`writes.artifact_kind == kind`, the import direction) or
+        ///      consuming it (`kind` appears in `reads`, the export direction — an artifact's own
+        ///      composer legitimately writes a FOREIGN format when exporting, e.g. note→svg, so only
+        ///      `writes`-must-equal would reject every real export entry). Every subset validator's
+        ///      `dialect.artifact_kind` and every migration's `from`/`to` `.artifact_kind` must equal
+        ///      `kind` exactly — those are always about this artifact's own dialect, never a foreign one.
+        ///   2. **Enforced once `kind` is canonical**: if `kind` parses as `s.<plugin>.<artifact>`,
+        ///      its plugin segment must equal the builder's `plugin_id` — the precise, structural
+        ///      form of "a plugin may only declare artifacts it owns." This tightens itself
+        ///      automatically as kind strings migrate to the canonical grammar; no second pass here.
+        pub(crate) fn register_all(self, plugin_id: &str, plugin: Plugin) -> Plugin {
+            if let Ok(canonical) = ArtifactKindId::parse(&self.kind) {
+                assert!(
+                    canonical.plugin() == plugin_id,
+                    "plugin {plugin_id:?} declared artifact {:?} but its canonical kind names owning plugin {:?} — a plugin may only declare artifacts it owns",
+                    self.kind,
+                    canonical.plugin()
+                );
+            }
+            for entry in self.composers {
+                let writes_it = entry.writes.artifact_kind == self.kind;
+                let reads_it = entry.reads.iter().any(|dialect| dialect.artifact_kind == self.kind);
+                assert!(
+                    writes_it || reads_it,
+                    "plugin {plugin_id:?}'s composer for artifact {:?} writes {} reading {:?} — neither touches the kind this declaration owns; a declaration's composers must produce or consume the kind it declares",
+                    self.kind,
+                    entry.writes.artifact_kind,
+                    entry.reads.iter().map(|dialect| dialect.artifact_kind).collect::<Vec<_>>()
+                );
+            }
+            for entry in self.subset_validators {
+                assert!(
+                    entry.dialect.artifact_kind == self.kind,
+                    "plugin {plugin_id:?}'s subset validator for artifact {:?} validates {} — ownership mismatch",
+                    self.kind,
+                    entry.dialect.artifact_kind
+                );
+            }
+            for migration in &self.migrations {
+                assert!(
+                    migration.from.artifact_kind == self.kind && migration.to.artifact_kind == self.kind,
+                    "plugin {plugin_id:?}'s dialect migration for artifact {:?} names {}→{} — ownership mismatch",
+                    self.kind,
+                    migration.from.artifact_kind,
+                    migration.to.artifact_kind
+                );
+            }
+
+            if let Some(schema) = self.schema {
+                ::semio_framework_schema::register_artifact_schema_descriptor(schema);
+            }
+            for inference in self.inferences {
+                ::semio_framework_schema::register_artifact_inference_descriptor(inference);
+            }
+            if !self.formats.is_empty() {
+                semio_framework::register_format_descriptors(self.formats);
+            }
+            for entry in self.subset_validators {
+                semio_framework::register_subset_validator(entry);
+            }
+            if !self.composers.is_empty() {
+                semio_framework::register_composer_entries(self.composers);
+            }
+            for spec in self.languages {
+                dsl::register_language(*spec);
+            }
+            if let Some(codec) = self.document_codec {
+                (codec.register)();
+            }
+            for migration in self.migrations {
+                store::register_dialect_migration(migration);
+            }
+
+            let mut plugin = plugin;
+            for capability in self.capabilities {
+                plugin = plugin.capability(capability);
+            }
+            plugin
+        }
+    }
+    //#endregion 🔖️ArtifactDeclaration
 
     pub struct AppBuilder {
         id: String,
@@ -4678,12 +5097,16 @@ pub mod app {
         fn context_menu( _request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
-        /// 🌱️ One-time hook for seeding the store's history (checkpoints/alternatives) beyond the bare
-        /// `initial_snapshot` — called once from `VcsArtifactApp::new`, right after the store is
-        /// constructed, via direct `store.dispatch(...)` calls. Default no-operation; only apps whose fixture is
-        /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every program driven purely
-        /// by user actions leaves it untouched.
-        fn seed( _store: &mut ArtifactStore<Self::Snapshot, Self::Mutation>) {}
+        /// 🌱️ Initial mutations applied through normal dispatch right after the store is constructed —
+        /// replaces the old `seed(&mut ArtifactStore)` direct-store-touch hook (ticket
+        /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M4: this was the only place an app touched a
+        /// store directly; routing genesis mutations through the same `ArtifactCommand::Apply` path
+        /// every user edit takes removes that exception). Default: no mutations — only apps whose
+        /// fixture is itself a rich history (e.g. a history-UI demo/exerciser) need this — every
+        /// program driven purely by user actions leaves it untouched.
+        fn genesis() -> Vec<Self::Mutation> {
+            Vec::new()
+        }
 
         /// 🔌️ This app's typed media I/O surface — `None` (the default) means "declares no ports beyond
         /// the implicit document ports" (`media_ports` below still returns those two). Override to return
@@ -5198,7 +5621,7 @@ pub mod app {
     /// remain guest-owned until `AppCommand::PureCommand` returns `AppFrame::Emit` for host apply.
     pub struct VcsArtifactApp<A: ArtifactApp> {
         app: A,
-        store: ArtifactStore<A::Snapshot, A::Mutation>,
+        pub(crate) store: ArtifactStore<A::Snapshot, A::Mutation>,
         config_store: ConfigStore<A::Config, A::ConfigMutation>,
         /// @emoji 📝️ Volatile draft lane — never checkpoints; prune via `ArtifactCommand::PruneDrafts`.
         /// Moves to host `ArtifactSession` when CHANNEL_VERSION 5 exchange lands.
@@ -5224,12 +5647,12 @@ pub mod app {
         /// entry also carries the dialect captured at open/genesis time (`SpaceMember` itself has no
         /// object-safe dialect getter — see `dispatch_emit_group`'s own doc comment), so a
         /// `store::ChildDispatch`/`store::ArtifactRef` can be rebuilt for it without re-deriving one.
-        children: HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>,
+        pub(crate) children: HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>,
         /// 🧩️ STATEFUL by design (owns the incrementally-maintained `store::CompositionGraph`) — see
         /// `store::CompositionCoordinator`'s own doc comment. One coordinator per `VcsArtifactApp`
         /// instance (i.e. per document), exactly like `store`/`config_store`/`draft_store` are
         /// per-instance rather than global.
-        composition: CompositionCoordinator,
+        pub(crate) composition: CompositionCoordinator,
     }
 
     /// 🆔️ Deterministic session-local `ArtifactHandle` for a CHILD's real (string) artifact id.
@@ -5241,7 +5664,7 @@ pub mod app {
     /// (128-bit, two interleaved 64-bit lanes) rather than `std::collections::hash_map::DefaultHasher`
     /// — the latter's hash is only guaranteed stable for one process/compiler invocation, not the
     /// byte-identical value the SAME child id must always map to.
-    fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
+    pub(crate) fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
         const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
         const PRIME: u64 = 0x0000_0100_0000_01b3;
         let mut lane0 = OFFSET;
@@ -5275,7 +5698,12 @@ pub mod app {
             let mut store = ArtifactStore::new(envelope);
             let config_store = ConfigStore::new(config_envelope);
             let draft_store = store::DraftStore::new(draft_envelope);
-            A::seed(&mut store);
+            let genesis_mutations = A::genesis();
+            if !genesis_mutations.is_empty() {
+                store
+                    .dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) })
+                    .expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
+            }
             Self {
                 app,
                 store,
@@ -5327,8 +5755,19 @@ pub mod app {
         /// entry (a `ChildGenesis`-minted member has no prior caller-held reference an `open_child`
         /// call could have produced it from) and the general escape hatch for a caller that already
         /// holds a constructed member from elsewhere (e.g. a host-level `SpaceHost`).
-        pub fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, member: Box<dyn SpaceMember>) {
-            self.children.insert((slot.into(), child_id.into()), (dialect, member));
+        /// 🌱️ Adopts an already-built child store under `(slot, child_id)`. Like [`Self::open_child`]
+        /// it MUST seed the ownership edge into `self.composition`'s graph: `dispatch_group`'s phase 1
+        /// ownership check (`CompositionGraph::owner_of`) is fail-closed, so a child present in
+        /// `self.children` but absent from the graph is rejected as an `OwnershipViolation` the first
+        /// time anything dispatches against it. Registering in one place and validating from the other
+        /// is precisely the inconsistency this seeds away.
+        pub fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, member: Box<dyn SpaceMember>) -> Result<(), Fault> {
+            let slot = slot.into();
+            let child_id = child_id.into();
+            let parent_id = self.store.envelope().id.clone();
+            self.composition.graph_mut().insert_owns(&parent_id, &slot, &child_id).map_err(plugin_sdk_fault)?;
+            self.children.insert((slot, child_id), (dialect, member));
+            Ok(())
         }
 
         #[cfg(test)]
@@ -5741,6 +6180,23 @@ pub mod app {
             Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope, tail_offset))
         }
 
+        /// @emoji 🌱️ Absorbs every `store::GroupReceipt::created_children` entry into the live
+        /// `self.children` map — B2 flagged that a `ChildGenesis`-created member has no pre-existing
+        /// caller-held reference the way an already-registered child does, so without this it would
+        /// be silently dropped the moment `dispatch_group` returns, making `ChildGenesis` pointless
+        /// (see `GroupReceipt::created_children`'s own doc comment). The slot name is recovered from
+        /// `self.composition`'s own graph (`dispatch_group`'s phase 2 already called `insert_owns`
+        /// for every genesis child before returning the receipt, so `slot_of` is always populated
+        /// here). A free-standing method (not inlined into `dispatch_emit_group`) so it is directly
+        /// unit-testable against a synthetic `created_children` list, independent of the `ChildEmit`
+        /// wire path (which never emits a `ChildGenesis` itself today).
+        pub(crate) fn absorb_created_children(&mut self, created_children: Vec<(ArtifactRef, Box<dyn SpaceMember>)>) {
+            for (target, member) in created_children {
+                let slot = self.composition.graph().slot_of(&target.artifact_id).unwrap_or_default().to_string();
+                self.children.insert((slot, target.artifact_id.clone()), (target.dialect.clone(), member));
+            }
+        }
+
         /// @emoji 🧩️ `dispatch_emit`'s composite-gesture branch, taken whenever `emit.child_emits` is
         /// non-empty. Routes `artifact_mutations` (the parent's own ops) plus every `ChildEmit`
         /// through `store::CompositionCoordinator::dispatch_group` as ONE atomic multi-document
@@ -5824,20 +6280,27 @@ pub mod app {
             drop(dispatches);
             self.cache = None;
 
-            // 🌱️ Absorb any freshly-created children into the live map — B2 flagged that a
-            // `ChildGenesis`-created member is otherwise silently dropped, making genesis pointless
-            // (`GroupReceipt::created_children`'s own doc comment). Defensive here specifically:
-            // `genesis` is always `Vec::new()` on THIS call (a `ChildEmit` only ever targets an
-            // ALREADY-live child; genesis authoring is a later wave's constructor), but the absorb
-            // logic is written for real regardless, not stubbed, so it needs no revisiting once a
-            // genesis-emitting `Emit` constructor lands.
-            for (target, member) in receipt.created_children {
-                let slot = self.composition.graph().slot_of(&target.artifact_id).unwrap_or_default().to_string();
-                self.children.insert((slot, target.artifact_id.clone()), (target.dialect.clone(), member));
-            }
+            // 🌱️ Absorb any freshly-created children into the live map — extracted into its own
+            // method (below) both so it is directly unit-testable and so it needs no revisiting once
+            // a genesis-emitting `Emit` constructor lands (`genesis` is always `Vec::new()` on THIS
+            // call today — a `ChildEmit` only ever targets an ALREADY-live child).
+            self.absorb_created_children(receipt.created_children);
 
             let invocation_id = InvocationId(receipt.invocation_id.clone());
-            let member_edits: Vec<EditRef> = receipt.member_edits.iter().map(|(reference, edit_id)| EditRef { document: artifact_handle_of(&reference.artifact_id), edit_id: edit_id.clone() }).collect();
+            // 🪪️ The PARENT's handle must be the same value its own `KernelMutation.document` carries
+            // (`ArtifactHandle(meta.instance_id)`), not `artifact_handle_of(parent_id)` — otherwise one
+            // `InvocationResult` identifies the same document two different ways and any consumer
+            // correlating `mutations` with `member_edits` by handle silently fails to match the parent.
+            // Children keep the content-addressed `artifact_handle_of`, which is what their own
+            // `KernelMutation.document` uses.
+            let member_edits: Vec<EditRef> = receipt
+                .member_edits
+                .iter()
+                .map(|(reference, edit_id)| {
+                    let document = if reference.artifact_id == parent_id { ArtifactHandle(meta.instance_id as u128) } else { artifact_handle_of(&reference.artifact_id) };
+                    EditRef { document, edit_id: edit_id.clone() }
+                })
+                .collect();
 
             let mut mutations: Vec<KernelMutation> = Vec::new();
 
@@ -6029,7 +6492,7 @@ pub mod app {
         /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). B1:
         /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard) — an app's own
         /// behavior is dispatched exclusively through `dispatch_typed_command` now.
-        fn dispatch_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        pub(crate) fn dispatch_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             if HISTORY_ACTION_IDS.contains(&action) {
                 // 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): when the tail edit (undo) / redo-tail
                 // edit (redo) carries a `MutationMeta.group_id`, this history action must reverse the
@@ -7840,7 +8303,8 @@ pub mod plugin_runtime {
         use ui_wgpu::wgpu::{Label, LocalizedLabel};
 
         use super::ContextMenuWireRequest;
-        use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, VcsArtifactApp};
+        use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, ChildEmit, CommandView, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, VcsArtifactApp};
+        use semio_framework::kernel::ArtifactHandle;
         use crate::app::{ArtifactSerializer, ArtifactDeserializer, serializer_entry_of, deserializer_entry_of, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload};
         use store::EngineHandles;
         use semio_framework::Fault;
@@ -8034,6 +8498,35 @@ pub mod plugin_runtime {
             }
         }
 
+        /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): `ChildEmit::of` requires `SemanticMutation<S>`
+        /// — this fixture lets both the PARENT (`TestApp`) and a CHILD (a bare `ArtifactStore<TestSnapshot,
+        /// TestMutation>` registered via `VcsArtifactApp::register_child`) share the identical
+        /// `TestSnapshot`/`TestMutation` pair, so the composition tests below need no second mutation enum.
+        impl protocol::SemanticMutation<TestSnapshot> for TestMutation {
+            fn kinds() -> &'static [protocol::SemanticDescriptor] {
+                const KINDS: &[protocol::SemanticDescriptor] = &[
+                    protocol::SemanticDescriptor { verb: "set", entity: "count", kind: "set-count", record: "SetCount" },
+                    protocol::SemanticDescriptor { verb: "set", entity: "label", kind: "set-label", record: "SetLabel" },
+                ];
+                KINDS
+            }
+            fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+                match self {
+                    TestMutation::SetCount { .. } => &Self::kinds()[0],
+                    TestMutation::SetLabel { .. } => &Self::kinds()[1],
+                }
+            }
+            fn label(&self) -> String {
+                match self {
+                    TestMutation::SetCount { value } => format!("Set count to {value}"),
+                    TestMutation::SetLabel { value } => format!("Set label to {value}"),
+                }
+            }
+            fn target(&self) -> Vec<String> {
+                Vec::new()
+            }
+        }
+
         /// 🧪️ B1: `TestApp`'s config — `selected` moved out of an app-struct `RefCell` into a real config
         /// artifact (was ephemeral view state demonstrated via `ActionEmit::view_with_inverse`; now a
         /// config operation with a real `inverse`, proving the B1 replacement end to end).
@@ -8173,6 +8666,11 @@ pub mod plugin_runtime {
             SetLabelViaCommand { value: String },
             #[dsl(key = "set-active-utility")]
             SetActiveUtility { utility_id: String },
+            /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): exercises `Emit.child_emits` — emits a
+            /// parent-document op alongside a `ChildEmit` targeting whichever `(slot, child_id)` the
+            /// test registered via `VcsArtifactApp::register_child` beforehand.
+            #[dsl(key = "composite-edit")]
+            CompositeEdit { slot: String, child_id: String, child_value: i32 },
         }
 
         impl ::protocol::OpText for TestCommand {
@@ -8254,6 +8752,7 @@ pub mod plugin_runtime {
                     TestCommand::IncrementViaCommand => "incrementViaCommand",
                     TestCommand::SetLabelViaCommand { .. } => "setLabelViaCommand",
                     TestCommand::SetActiveUtility { .. } => "setActiveUtility",
+                    TestCommand::CompositeEdit { .. } => "compositeEdit",
                 }
             }
 
@@ -8273,6 +8772,11 @@ pub mod plugin_runtime {
                     TestCommand::ViewNoScope => Ok(Emit { ui_scope: UiDirtyScope::None, ..Default::default() }),
                     TestCommand::ViewPartialScope => Ok(Emit {
                         ui_scope: UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
+                        ..Default::default()
+                    }),
+                    TestCommand::CompositeEdit { slot, child_id, child_value } => Ok(Emit {
+                        artifact_mutations: vec![TestMutation::SetLabel { value: "composite".into() }],
+                        child_emits: vec![ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), vec![TestMutation::SetCount { value: *child_value }])],
                         ..Default::default()
                     }),
                 }
@@ -8417,6 +8921,104 @@ pub mod plugin_runtime {
             assert_eq!(result.inverse_group.mutations.len(), 1);
             assert_eq!(app.test_snapshot().count, 1);
         }
+
+        //#region 🔖️CompositionTests
+        /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, boxed as `Box<dyn
+        /// SpaceMember>` — the shape `VcsArtifactApp::register_child`/`open_child` expect. Built
+        /// directly (no real `ChildStoreFactory` registration needed for these in-process tests) —
+        /// the SAME `TestSnapshot`/`TestMutation` pair `TestApp` itself uses, so a "child" here is
+        /// just a second, independently-owned instance of the identical document shape.
+        fn new_test_child(id: &str) -> Box<dyn store::SpaceMember> {
+            let envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
+            Box::new(store::ArtifactStore::new(envelope))
+        }
+
+        fn test_child_dialect() -> store::os_io::ArtifactDialect {
+            store::os_io::ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() }
+        }
+
+        #[test]
+        fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1")).expect("register child seeds ownership");
+
+            let result = app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("composite edit");
+
+            // 🧾️ One `KernelMutation` for the parent's own op, one for the child's — each carrying
+            // its OWN document handle, never the parent's, for the child entry (Task 3's "REAL
+            // target" requirement).
+            assert_eq!(result.mutations.len(), 2);
+            let parent_handle = ArtifactHandle(meta().instance_id as u128);
+            let child_handle = crate::app::artifact_handle_of("child-1");
+            assert_ne!(parent_handle, child_handle);
+            let mutation_documents: std::collections::HashSet<ArtifactHandle> = result.mutations.iter().map(|mutation| mutation.document).collect();
+            assert!(mutation_documents.contains(&parent_handle), "the parent's own edit must carry the parent's handle");
+            assert!(mutation_documents.contains(&child_handle), "the child's edit must carry the CHILD's handle, not the parent's");
+
+            // 🧾️ ONE `UndoGroup` names BOTH documents via `member_edits`.
+            assert_eq!(result.inverse_group.member_edits.len(), 2);
+            let member_documents: std::collections::HashSet<ArtifactHandle> = result.inverse_group.member_edits.iter().map(|edit_ref| edit_ref.document).collect();
+            assert!(member_documents.contains(&parent_handle));
+            assert!(member_documents.contains(&child_handle));
+
+            // The child store actually applied its own op.
+            let (dialect, child_member) = app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered after dispatch");
+            assert_eq!(dialect.artifact_kind, "s.test.child");
+            let child_store = child_member.as_any_mut().downcast_mut::<store::ArtifactStore<TestSnapshot, TestMutation>>().expect("concrete child store type");
+            assert_eq!(child_store.snapshot().expect("child snapshot").count, 7);
+
+            // And the command log recorded the child's edit id under the `config_edit_ids` precedent.
+            let history = app.test_history();
+            let row = history.commands.iter().find(|entry| entry.action_id == "compositeEdit").expect("composite edit logged");
+            assert_eq!(row.child_edit_ids.len(), 1);
+        }
+
+        #[test]
+        fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            app.register_child("slot", "child-a", test_child_dialect(), new_test_child("child-a")).expect("register child seeds ownership");
+            // `child-b` is registered but NEVER targeted by the composite gesture below — its
+            // `tail_group_id()` stays `None`, the textbook "foreign tail" `GroupUndoReport` must
+            // skip rather than abort the whole group over.
+            app.register_child("slot", "child-b", test_child_dialect(), new_test_child("child-b")).expect("register child seeds ownership");
+
+            let before = app.test_snapshot();
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-a".into(), child_value: 5 }, &meta()).expect("composite edit");
+            assert_eq!(app.test_snapshot().label, "composite");
+
+            let result = app.dispatch_action("undo", None, &meta()).expect("group undo");
+
+            // The parent reverted...
+            assert_eq!(app.test_snapshot(), before);
+            // ...child-a (the real group member) reverted too...
+            let (_, child_a) = app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a");
+            let child_a_store = child_a.as_any_mut().downcast_mut::<store::ArtifactStore<TestSnapshot, TestMutation>>().expect("concrete child store type");
+            assert_eq!(child_a_store.snapshot().expect("child-a snapshot").count, 0);
+            // ...and child-b — a genuine foreign tail, never touched by this group — is reported as
+            // SKIPPED, not silently dropped nor allowed to abort the rest of the group.
+            assert!(!result.diagnostics.is_empty(), "child-b's foreign tail must surface a diagnostic, not vanish silently");
+            assert!(result.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("child-b")), "the skip diagnostic must name the actual skipped member");
+        }
+
+        #[test]
+        fn created_children_survive_absorb_into_the_child_store_map() {
+            // 🌱️ Proves `VcsArtifactApp::absorb_created_children` — the mechanism a
+            // `ChildGenesis`-authoring `Emit` constructor (a later wave) will rely on to make a
+            // freshly-minted child reachable at all; per B2's own `GroupReceipt::created_children`
+            // doc comment, skipping this step would make `ChildGenesis` pointless.
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            let parent_id = app.store.envelope().id.clone();
+            app.composition.graph_mut().insert_owns(&parent_id, "genesisSlot", "genesis-child").expect("seed ownership so absorb's slot_of lookup resolves");
+            let target = store::os_io::ArtifactRef { artifact_id: "genesis-child".into(), dialect: test_child_dialect() };
+            let created: Vec<(store::os_io::ArtifactRef, Box<dyn store::SpaceMember>)> = vec![(target, new_test_child("genesis-child"))];
+
+            app.absorb_created_children(created);
+
+            let (dialect, member) = app.children.get_mut(&("genesisSlot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under its real slot");
+            assert_eq!(dialect.artifact_kind, "s.test.child");
+            assert_eq!(member.document_id(), "genesis-child");
+        }
+        //#endregion 🔖️CompositionTests
 
         #[test]
         fn view_action_emits_no_operations() {
@@ -10096,9 +10698,9 @@ pub mod engagement {
 pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
-    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactAnalysis, ArtifactComposition, ArtifactInferrer, ArtifactSerializer, ArtifactDeserializer, DerivedArtifactSpec, DerivedArtifactParts, DerivedArtifactBuilder, DerivedArtifactAnalyzer, DerivedArtifactComposer, composer_entry_of, deserializer_entry_of, serializer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
-    KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsArtifactApp,
-    WindowKindSpec,
+    node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactAnalysis, ArtifactChildren, ArtifactComposition, ArtifactInferrer, ArtifactSerializer, ArtifactDeserializer, DerivedArtifactSpec, DerivedArtifactParts, DerivedArtifactBuilder, DerivedArtifactAnalyzer, DerivedArtifactComposer, composer_entry_of, deserializer_entry_of, serializer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
+    KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoChildren, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsArtifactApp,
+    WindowKindSpec, ArtifactDeclaration,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
@@ -10126,14 +10728,23 @@ macro_rules! register_plugin {
     };
 }
 
-/// 🧬️ Declares uniform artifact lifecycle types from schema and IO hooks.
+/// 🧬️ Declares uniform artifact lifecycle types from schema and IO hooks. UNIFIED-COMPOSABLE-
+/// ARTIFACT-SYSTEM (C1, Task 5): accepts an optional trailing `children: $ty` field naming a real
+/// `ArtifactChildren` impl (`$ty::Snapshot` must equal `<$construction as ArtifactBuilder>::Snapshot`,
+/// enforced by `DerivedArtifactSpec::Children`'s own bound) — when present, `$composer`'s `reads()`
+/// gains each declared slot's dialect and `compose()` routes matching sources through
+/// `$ty::compose_from_children` (see `DerivedArtifactComposer`'s own doc comment for the mechanism;
+/// this macro only has to name the type, the behavior lives centrally there). Omitting `children`
+/// (every pre-C1 invocation) defaults `type Children` to `NoChildren<Snapshot>` — a leaf artifact
+/// needs zero changes to keep compiling.
 #[macro_export]
 macro_rules! derive_artifact_facets {
     (
         $visibility:vis spec $spec:ident {
             construction: $construction:ty,
             analysis: $analysis:ty,
-            composition: $composition:ty $(,)?
+            composition: $composition:ty
+            $(, children: $children:ty)? $(,)?
         }
         builder: $builder:ident,
         analyzer: $analyzer:ident,
@@ -10148,6 +10759,7 @@ macro_rules! derive_artifact_facets {
             type Construction = $construction;
             type Analysis = $analysis;
             type Composition = $composition;
+            type Children = $crate::derive_artifact_facets!(@children_ty <$construction as $crate::ArtifactBuilder>::Snapshot $(, $children)?);
         }
 
         #[derive(Clone, Debug, Default)]
@@ -10183,17 +10795,208 @@ macro_rules! derive_artifact_facets {
 
         $visibility struct $composer;
 
+        // 🧩️ `reads()`/`compose()` delegate to `DerivedArtifactComposer<$spec>` (NOT `$composition`
+        // directly, as before C1) so the child-slot union/routing logic lives in exactly ONE place
+        // (`DerivedArtifactComposer`'s own `impl ArtifactComposer` — see its doc comment) rather than
+        // being re-derived per macro expansion; `WRITES` is unaffected by children and stays a
+        // direct read of `$composition::WRITES`.
         impl $crate::ArtifactComposer for $composer {
             type Snapshot = <$spec as $crate::DerivedArtifactSpec>::Snapshot;
             const WRITES: $crate::Dialect = <$composition as $crate::ArtifactComposition>::WRITES;
-            fn reads() -> &'static [$crate::Dialect] { <$composition as $crate::ArtifactComposition>::reads() }
-            fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<Self::Snapshot>, $crate::ComposeError> { <$composition as $crate::ArtifactComposition>::compose(sources) }
+            fn reads() -> &'static [$crate::Dialect] { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::reads() }
+            fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<Self::Snapshot>, $crate::ComposeError> { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::compose(sources) }
         }
 
         impl $composer {
             pub fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources) }
         }
     };
+    // 🧩️ Internal dispatch arm (Task 5): resolves `DerivedArtifactSpec::Children` — `$children` if
+    // the caller supplied one, else `NoChildren<$snapshot>`. Never invoked directly by a caller (the
+    // leading `@children_ty` token is not part of the public macro grammar above).
+    (@children_ty $snapshot:ty) => { $crate::app::NoChildren<$snapshot> };
+    (@children_ty $snapshot:ty, $children:ty) => { $children };
+}
+
+/// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1, Task 5) — `ArtifactChildren`/`DerivedArtifactSpec::Children`
+/// tests. Placed here (rather than beside `🧬️DerivedArtifactFacets` near the top of the file) so
+/// `derive_artifact_facets!` is already in scope textually — `macro_rules!` visibility is
+/// definition-order-sensitive within a crate for a bare (non-`$crate`-qualified) invocation.
+#[cfg(test)]
+mod derived_artifact_children_tests {
+    use super::*;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    struct ChildrenTestSnapshot;
+
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    struct ChildrenTestDiff;
+
+    impl protocol::MutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {
+        fn apply(&self, snapshot: &ChildrenTestSnapshot) -> ChildrenTestSnapshot {
+            snapshot.clone()
+        }
+        fn absorb(&mut self, _other: Self) {}
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    struct ChildrenTestMutation;
+
+    impl protocol::Mutation<ChildrenTestSnapshot> for ChildrenTestMutation {
+        type Diff = ChildrenTestDiff;
+        fn diff(&self, _snapshot: &ChildrenTestSnapshot) -> ChildrenTestDiff {
+            ChildrenTestDiff
+        }
+        fn inverse(&self, _snapshot: &ChildrenTestSnapshot) -> Vec<Self> {
+            Vec::new()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    struct ChildrenTestConstruction(ChildrenTestSnapshot);
+
+    impl ArtifactBuilder for ChildrenTestConstruction {
+        type Snapshot = ChildrenTestSnapshot;
+        type Mutation = ChildrenTestMutation;
+        type Diff = ChildrenTestDiff;
+        fn empty() -> Self {
+            Self(ChildrenTestSnapshot)
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self(snapshot)
+        }
+        fn from_text(_text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::empty())
+        }
+        fn from_binary(_bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::empty())
+        }
+        fn mutate(self, _mutation: Self::Mutation) -> (Self, Self::Diff) {
+            (self, ChildrenTestDiff)
+        }
+        fn absorb(self, _diff: Self::Diff) -> Self {
+            self
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            Ok(self.0)
+        }
+    }
+
+    struct ChildrenTestAnalysis;
+
+    impl ArtifactAnalysis for ChildrenTestAnalysis {
+        type Parts = ();
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.test.children-parent", standard: StandardId("1"), subset: SubsetId::ANY };
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Low
+        }
+        fn analyze(_sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            Analysis { parts: (), dialect: Self::DIALECT, confidence: IoConfidence::Low, diagnostics: Vec::new() }
+        }
+    }
+
+    struct ChildrenTestComposition;
+
+    impl ArtifactComposition for ChildrenTestComposition {
+        type Snapshot = ChildrenTestSnapshot;
+        const WRITES: Dialect = ChildrenTestAnalysis::DIALECT;
+        fn reads() -> &'static [Dialect] {
+            &[]
+        }
+        fn compose(_sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            Err(ComposeError { message: "ChildrenTestComposition::compose is unreachable in this test — only reads()/child routing is exercised".into(), diagnostics: Vec::new() })
+        }
+    }
+
+    const CHILD_SLOTS: &[::semio_framework_schema::ChildSlotSpec] = &[::semio_framework_schema::ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false }];
+
+    struct ChildrenTestChildren;
+
+    impl ArtifactChildren for ChildrenTestChildren {
+        type Snapshot = ChildrenTestSnapshot;
+        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+            CHILD_SLOTS
+        }
+        fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError> {
+            if parts.iter().all(|(dialect, _)| dialect.artifact_kind == "s.stdio.mesh") {
+                Ok(ChildrenTestSnapshot)
+            } else {
+                Err(ComposeError { message: "unexpected child dialect".into(), diagnostics: Vec::new() })
+            }
+        }
+        fn decompose_to_children(_snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)> {
+            Vec::new()
+        }
+    }
+
+    struct ChildrenTestSpec;
+
+    impl DerivedArtifactSpec for ChildrenTestSpec {
+        type Snapshot = ChildrenTestSnapshot;
+        type Mutation = ChildrenTestMutation;
+        type Diff = ChildrenTestDiff;
+        type Construction = ChildrenTestConstruction;
+        type Analysis = ChildrenTestAnalysis;
+        type Composition = ChildrenTestComposition;
+        type Children = ChildrenTestChildren;
+    }
+
+    #[test]
+    fn derived_composer_reads_includes_child_slot_dialects() {
+        let reads = <DerivedArtifactComposer<ChildrenTestSpec> as ArtifactComposer>::reads();
+        assert_eq!(reads.len(), 1, "Composition::reads() is empty here — the ONE entry must be the child slot's synthesized dialect");
+        assert_eq!(reads[0].artifact_kind, "s.stdio.mesh");
+        assert_eq!(reads[0].standard, StandardId("*"));
+        assert_eq!(reads[0].subset, SubsetId::ANY);
+    }
+
+    #[test]
+    fn derived_composer_reads_defaults_to_composition_reads_for_a_leaf_with_no_children() {
+        // 🍃️ `NoChildren<S>::slots()` is `&[]` — proves the pre-C1 behavior is byte-identical for
+        // any spec that never names a `children: $ty` (every macro invocation before this wave).
+        struct LeafSpec;
+        impl DerivedArtifactSpec for LeafSpec {
+            type Snapshot = ChildrenTestSnapshot;
+            type Mutation = ChildrenTestMutation;
+            type Diff = ChildrenTestDiff;
+            type Construction = ChildrenTestConstruction;
+            type Analysis = ChildrenTestAnalysis;
+            type Composition = ChildrenTestComposition;
+            type Children = NoChildren<ChildrenTestSnapshot>;
+        }
+        let reads = <DerivedArtifactComposer<LeafSpec> as ArtifactComposer>::reads();
+        assert!(reads.is_empty(), "a leaf spec's reads() must equal Composition::reads() (empty here) exactly");
+    }
+
+    #[test]
+    fn derived_composer_compose_routes_matching_sources_through_compose_from_children() {
+        let sources = vec![ComposeSource { dialect: Dialect { artifact_kind: "s.stdio.mesh", standard: StandardId("1"), subset: SubsetId::ANY }, payload: AnalyzeSource::Binary(&[1, 2, 3]) }];
+        let composed = <DerivedArtifactComposer<ChildrenTestSpec> as ArtifactComposer>::compose(&sources).expect("child-slot-matching sources route through compose_from_children");
+        assert_eq!(composed.snapshot, ChildrenTestSnapshot);
+    }
+
+    /// 🧬️ Smoke-tests the macro's own `children: $ty` grammar (not just the underlying
+    /// `DerivedArtifactComposer` mechanism above) — proves `derive_artifact_facets!` actually parses
+    /// and wires the optional field end to end.
+    derive_artifact_facets! {
+        spec ChildrenMacroSpec {
+            construction: ChildrenTestConstruction,
+            analysis: ChildrenTestAnalysis,
+            composition: ChildrenTestComposition,
+            children: ChildrenTestChildren,
+        }
+        builder: ChildrenMacroBuilder,
+        analyzer: ChildrenMacroAnalyzer,
+        composer: ChildrenMacroComposer,
+    }
+
+    #[test]
+    fn derive_artifact_facets_children_arm_wires_the_macro_generated_composer() {
+        let reads = <ChildrenMacroComposer as ArtifactComposer>::reads();
+        assert_eq!(reads.len(), 1);
+        assert_eq!(reads[0].artifact_kind, "s.stdio.mesh");
+    }
 }
 
 /// 🪆️ Whether a subset owns snapshot/diff/mutation types or derives behavior from a base dialect.

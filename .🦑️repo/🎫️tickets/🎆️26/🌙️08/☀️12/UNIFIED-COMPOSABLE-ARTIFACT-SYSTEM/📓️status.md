@@ -1,5 +1,77 @@
 # Status
 
+## 📡️ AUTHORITATIVE CROSS-SESSION STATE (read this instead of messaging me)
+
+Peer session *names* rotate after session-limit restarts and I have misrouted messages three times today. **This section is the single source of truth**; any session may read it.
+
+# 🧊️ ROSTER FROZEN — 2026-08-12. stdio `🧿️semio` v1 is 18 subsets + `✳️any`. SMO / APA / IIF / DKM / #2553 may start.
+
+**Verified independently by the orchestrator, not taken from an agent report:**
+```
+subsets on disk                                        → 19 entries = 18 + ✳️any ✓
+cargo nextest --profile long -p semio-s-plugin-stdio   → 2174 run: 2168 passed, 6 failed, 5 skipped
+cargo nextest -p semio-framework-plugin                → 150 run:  150 passed, 0 failed
+```
+The 6 stdio failures are the **pre-existing, non-UCAS baseline** and are NOT a reason to hold: `dwg` + `ifc` `fixture_honesty_law` (unowned), `html`/`json`/`pdf` `inference_default_law` and `md` outline (IIF's, being fixed — `csv` already passes).
+
+**Final roster** — `animation audio brep cad document drawing flow graph image kit mesh model object presentation table text value video` + `✳️any` (18-arm union).
+
+⚠️ **Two names changed meaning — do not author against the old ones:**
+- `workflow` → **`flow`** (rename).
+- the old value-tree `object` → **`value`**; **`object` now means a *spatial* thing** (transform + owned brep/mesh/value children). Anything written against the old `object` semantics belongs to `value`.
+
+New since the start: `text`, `table`, `graph` (leaves) and `object`, `kit` (the first **composite** subsets, carrying real `ArtifactChild`/`ArtifactLink` slots — `kit` is the first user of the link-slot verbs `bind`/`unbind`/`change-link-pin`).
+
+**Directory structure is final.** Composition child/link slots on the *pre-existing* subsets (`mesh` gaining image children for textures, `drawing` composing text/image, `model` composing objects, `cad` composing models) are a **later wave** and will not move or rename any directory.
+
+### ⚠️ W1's "signed off" was PREMATURE — two real mechanism bugs found by running its tests
+
+W1 was declared signed off on `cargo check --all-targets` being clean. **Compiling is not passing.** APA flagged failures in `semio-framework-plugin`'s test surface; running it showed **2 failed / 150**, and both were the *core* of this ticket — the composite-gesture and group-undo tests. Two genuine mechanism defects, now fixed:
+
+1. **`register_child` did not seed the ownership edge.** Its sibling `open_child` does, and `dispatch_group`'s phase-1 check (`CompositionGraph::owner_of`) is **fail-closed** — so any child adopted via `register_child` was rejected as an `OwnershipViolation` the first time anything dispatched against it. Two public entry points, only one maintaining the invariant the validator depends on. Fixed: `register_child` now seeds the edge and returns `Result<(), Fault>` (3 in-crate call sites updated).
+2. **One `InvocationResult` identified the parent document two different ways.** Its `KernelMutation.document` used `ArtifactHandle(meta.instance_id)` while its `member_edits` entry used `artifact_handle_of(parent_id)`. Any consumer correlating `mutations` with `member_edits` by handle would silently fail to match the parent — i.e. group undo could not find the parent's own edit. Fixed: parent keeps the instance handle, children keep the content-addressed one.
+
+**Now: `cargo nextest run -p semio-framework-plugin` → 150 passed, 0 failed.** W1 is signed off *on evidence* this time.
+
+**Lesson, third instance today**: `cargo check` — even `--all-targets` — proves compilation, never behaviour. Every W1/W2 sign-off must run the tests. Both of these defects were invisible to a clean `--all-targets`.
+
+### ✅ ROOT CAUSE CONFIRMED — and it was NOT the diff shape
+
+The 6 UCAS failures are **fixed**. Current: **2066 tests, 2060 passed, 6 failed, 5 skipped** — and **none of the 6 remaining are UCAS's** (4 are IIF's pre-existing inference tests, 2 are unowned `dwg`/`ifc` `fixture_honesty_law`).
+
+Actual causes, found by the `✳️text` agent on resume:
+1. **`✳️any`'s two hand-maintained grammar `.semio` files were missing `| "text"` in their tag alternation.** Invisible to `cargo check`; only the grammar-conformance tests catch it. That was both `any::…::diff_grammar_conformance_law` and `ops_grammar_conformance_law`.
+2. **A `din4108`-derived test helper computed inverses against a stale base** — fixed in `text`'s copy, and confirmed as a **latent bug in the reference pattern itself** (flagged to SMO, not ours to fix). That was the three `text` round-trip laws.
+
+**The earlier "whole-list diffs are apply-then-capture" diagnosis was wrong, and retracting it was correct.** Neither cause has anything to do with diff shape. Had that retraction not happened, the "fix" would have reworked `✳️text` + `✳️table` (120 files) + `✳️graph` (142 files) onto DiffKit — ~380 files of churn — and left both real bugs in place. **Prove the cause before changing the design.**
+
+| stdio `🧿️semio` subset | state |
+|---|---|
+| `✳️text` | authored; **6 failing law tests**, root cause under investigation |
+| `✳️table` | authored (120 files); placeholder fixtures, not mounted |
+| `✳️graph` | authored (142 files); placeholder fixtures, not mounted |
+| spatial `object`, `kit` | **not started** |
+| renames `workflow`→`flow`, `object`→`value` | done, clean |
+
+**Grants and queues (all live):**
+- `🔌️plugin/🦀️component.rs` — **RELEASED to APA (#2549)**, acknowledged by them, in progress. **#2553 is next.** UCAS re-enters only to repair `ArtifactChildren`/`ChildEmit`/`dispatch_group`/`SpaceMember`.
+- `🔣️taxonomy.json` (at `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`, **NOT repo root** — my earlier "repo-root" wording was wrong and was propagated widely) — **#2553 next**, then UCAS W6. Their `⚙️engine` mandate repeal is verified sound: `trait ArtifactEngine` has **0 hits** repo-wide; both rules to delete are `policySubsetEnginePresenceBreaches` (`📜️script.ts:5626`, aggregated `:5807`) and `policyArtifactEnginePresenceBreaches` (`:6418`, aggregated `:7066`) — each has a second registration site, delete both halves.
+- `📜️script.ts` (repo root) — APA done; queue UCAS-W6 → SMO → IIF → DKM.
+- stdio `✳️brep` / `✳️drawing` / `✳️mesh` — **mutation vocabulary handed to DKM (#2550)**. UCAS retains *composition slots only* (`ArtifactChild`/`ArtifactLink` fields in `📸️snapshot/`, later). DKM pings before entering `📸️snapshot/` on mesh/drawing.
+- `schemaChildDirs` missing `💡️inferences` — **IIF's (#2546)**, land with or after their fan-out, never before.
+
+**Current stdio baseline**: 2066 tests, **2054 passed, 12 failed, 5 skipped**. Of the 12: 4 are IIF's pre-existing inference failures (csv now passes — they are fixing them), 6 are UCAS's (text ×4, any ×2), 2 are `dwg`/`ifc` `fixture_honesty_law` which are **unowned**.
+
+**✅ RESOLVED — UCAS vs DKM engine question.** The halfedge `Body` is **not** a snapshot and must never become one: it is an ephemeral working representation derived from the authoritative `SemioBrepSnapshot` via `EngineRep::build(&seed)` and dropped when the call returns. Our carve-out was **right about the types, wrong about the lifetime** — "behind traits, never serialized" permits a long-lived host-owned kernel session, which is hidden authoritative state. `EngineRep` is strictly stronger: `build(&P)` is the only constructor, it may not outlive the call, and it must be wholly derived. `BrepEngineHost` and `📐️cad`'s `static OnceLock` pass every *mutability* test and still fail all three — ambient **reach**, not ambient mutability.
+
+Corrected rule: *engine types survive as ephemeral `EngineRep`s rebuilt from the snapshot; host-owned kernel sessions do not.* Recorded in `📓️design-full-plan.md`. #2553 already verified compatible. APA's ownership check constrains registration, not representation, so it never added a third constraint.
+
+**Coupling finding worth keeping**: DKM flagged spatial `object` as downstream of brep/mesh. It is far weaker than that — `ArtifactChild<S>` is `{child_id, target, PhantomData<S>}`, a two-string handle carrying no snapshot content. Internal churn in `SemioBrepSnapshot`/`SemioMeshSnapshot` cannot propagate to `object`; only renaming/deleting those types or changing the kind strings would. **This is the child-as-own-document decision paying off directly: the parent holds two strings, not a subtree.**
+
+**Known gap DKM will leave flagged, correctly**: `create-loop`/`delete-loop` go unauthored — `Loop`/`Coedge` carry no `PersistentLabel`, and arena ids are generational and reused after deletion, so those verbs have no valid stable address. SMO approved them before that was known and has wound down. Leaving them empty and flagged is the sanctioned outcome; inventing an address would not be.
+
+**Rule adopted after three failures today**: *a release is not released until acknowledged.* Facts true when sent were consumed as if still true, with no ack closing the loop — that was the actual defect behind the `🔄️fsm` misreport, the `📓️status.md` clearance confusion, and the unacknowledged W1 release.
+
 ## W0 — Recon: DONE
 
 - Ticket opened, goal `🎯aioptimizedrepo`.
@@ -134,6 +206,91 @@ md                 …/💡️inferences/outline/…::collects_headings_and_coun
 (Transient blocker cleared: `semio-framework-os-kernel` briefly went red with 29× `E0753 expected outer doc comment` from a stray `//!` at `🏪️store:179` written by our own in-flight B2 agent. SMO pinpointed it to the exact line; B2 corrected it itself before intervention. Note for future one-character "helpful" fixes in a live region: the correct repair was `//`, and guessing `///` would have silently attached a doc comment to whatever item landed next — compiling cleanly while being wrong.)
 
 Prep agent runs the two mechanical subset renames only (`✳️workflow`→`✳️flow`, `✳️object`→`✳️value`), which are independent of the kernel primitives and unblock the rest of W2. New subsets (`text`, `table`, the spatial `object`, `graph`, `kit`) and child/link slots come in the main W2 agent after Round 3 lands.
+
+## Session-limit interruption + orchestrator repairs (2026-08-12 ~17:30-18:15)
+
+Both in-flight agents (C1, W2a) were killed mid-edit by an API session limit. With agents unavailable, the orchestrator stabilised the tree directly:
+
+1. **Repo-wide test-build blocker CLEARED.** C1's child-store map made `VcsArtifactApp` non-`Send` (`PluginApp` requires it), producing 57× `E0277 dyn SpaceMember cannot be sent between threads safely` and blocking test builds for **all five concurrent sessions**. C1 had chosen and documented the right fix before dying — `pub trait SpaceMember: Send` (`🏪️store:3902`) over widening `Box<dyn SpaceMember + Send>`. Four residual errors fixed by the orchestrator:
+   - `🔌️plugin:3152` `TutorialBase { document_dsl }` → `artifact_dsl`; `:3439` `definition.document_json` → `artifact_json`. Stale references to fields renamed by the **closed** ticket `26/08/10/RENAME-DOCUMENT-TO-ARTIFACT-THROUGHOUT-CODEBASE` — same orphaned debt that left the panel mounts. (Trap avoided: `source.document_json()` one line above is a *method* that still exists.)
+   - `🔌️plugin:10326`/`:10368` `IoPayload::Text("")` → `String::new()` inside the `subset!` macro.
+   - Result: `cargo check -p semio-framework-plugin --all-targets` **clean**.
+2. **`tempfile` dev-dependency added** to `💻️os/📦️packages/🦀️rust/Cargo.toml`, target-gated `cfg(not(target_arch = "wasm32"))` to match the test gating. The crate had **no `[dev-dependencies]` section at all** while `🏪️store/🔄️sync` used `tempfile::tempdir()` at 3 sites. This unblocked `cargo check -p semio-framework-os-kernel --tests` and with it the triad law harness that four sessions were gated on.
+3. **Nine stale panel mounts repointed** `📌️panels/📄️document` → `📄️artifact` in `📦️glue.rs` for writer, flow, imperative, dag, forms, reasoning, sequence, vcs, lowpoly. Traced to commit `c31024cc6c` (flag 480, 1801 files) from the same closed rename ticket. Fix direction was settled by measurement, not guesswork: **0 of 33** plugins retained a `📄️document` panel while 9 glue files still mounted it.
+
+### ⚠️ ENVIRONMENT BLOCKER — disk at 98%
+
+`df`: 18 GiB free of 926 GiB. Repo is 458 G, of which the default `./target` is **428 G**. Symptoms already seen: corrupt dep-info (`could not parse/generate dep info`), spurious third-party failures (`futures-executor`, `icu_*`, `schemars`, `libc` build script). These are environment artifacts, **not code** — do not chase them, do not `cargo clean`, do not delete any target dir.
+
+**Near-miss worth recording**: `./target` read as stale (mtime 17h old, zero recent activity) and deletion was approved on that basis — but a re-check immediately before acting showed `.rustc_info.json` and `wasm32-wasip2/` touched minutes earlier, and `ps` showed **18 live rustc processes** (os_kernel, stdio, compose_rs, framework_math, framework_ui) from other sessions. Deletion was aborted. Third instance today of an observation of this tree ageing out between reading and acting — and the first where acting on it would have been destructive. **Re-verify immediately before any irreversible action, not merely before deciding on one.**
+
+## W1 SIGNED OFF (2026-08-12 ~19:30) — `🔌️plugin/🦀️component.rs` released to APA
+
+`cargo check -p semio-framework-plugin --all-targets` → **Finished, 0 errors**, 47 warnings (pre-existing). Disk recovered to 51% used / 429 GiB free, so builds complete again.
+
+**Near-miss worth recording.** A reply was drafted telling APA the file was released *and green*. It was not — C1's own final output reported a failed check, and a re-run showed **10 errors**. Had that draft gone out, APA would have started work on a red file and reasonably attributed the breakage to itself. **Always re-verify before asserting a state to another session, especially when the assertion unblocks them.**
+
+All 10 were in C1's new **test** code while the library compiled — the same hiding place as both earlier repo-wide blockers. Fixed by the orchestrator:
+- `VcsArtifactApp.{store, children, composition}` (`:5307`, `:5333`, `:5338`) and `absorb_created_children` (`:5860`), `dispatch_action` (`:6149`) → `pub(crate)`. Deliberately **not** `pub`: the public API is unchanged, and the widening exists solely so the in-crate test module can reach them. Flagged to APA in case their purity/SDK-surface lint counts crate-visible items.
+- `ChildrenTestConstruction` (`:10510`) gained `#[derive(Clone, Debug)]`.
+- A test called `super::artifact_handle_of(…)`; the helper lives in `crate::app` and `super` from `plugin_builder_contract_tests` does not reach it — path corrected.
+
+**Standing lesson, now three-for-three today**: a green `cargo check` proves nothing about `--all-targets` in this repo. Every blocker found today (`📌️panels` mounts, `SpaceMember: Send`, `tempfile` dev-dep, these 10) lived in `#[cfg(test)]` code.
+
+## 🚨 W2 VERIFICATION FOUND A REAL DEFECT (D2) — roster further from frozen than reported
+
+First full stdio run since the subsets landed: **2066 tests, 2054 passed, 12 failed, 5 skipped.**
+
+| failures | owner |
+|---|---|
+| `text::…::insert_remove_run_round_trips`, `add_remove_mark_round_trips`, `reorder_runs_round_trips`, `text::io::…::fixture_honesty_law` | **OURS** |
+| `any::io::derived_composition::…::diff_grammar_conformance_law`, `ops_grammar_conformance_law` | **OURS** |
+| html/json/md/pdf `inference_default_law` + outline | pre-existing (IIF) — note csv now passes, so IIF is fixing them |
+| `dwg`/`ifc` `fixture_honesty_law` | neither ours nor SMO's — unowned, likely the DWG schema-id ticket |
+
+**Root cause: NOT YET ESTABLISHED. An earlier entry here blamed whole-list diffs; that was retracted as unproven.**
+
+The retracted claim was that `✳️text`'s whole-list collection diff is apply-then-capture and therefore the cause. Evidence against it, found on closer inspection: `SemioTextDiff::apply` is correct (`next.runs = list.values.clone()`), and the failing assertion (`restored == ["hello"]` against a 2-run fixture) is only reachable if **the forward mutation had no effect at all** — `InsertRun.diff(base).apply(base) == base`. Whole-list-vs-sparse cannot produce that; an **empty diff** can. Prime suspect is therefore the dispatch enum failing to route a variant to its triad leaves. The `🔺️diff` file also argues in place that whole-list is honest for `text` because its snapshot has exactly one mutable field — a reasonable argument that was dismissed too quickly.
+
+A debug agent is on it under explicit instruction to **prove the cause before changing any design**, because `✳️table` (120 files, 8 triads) and `✳️graph` came from the same template and a wrong fix multiplies by three. First diagnostic: assert `forward != base` inside `round_trip`.
+
+SMO was told the wrong diagnosis and has been sent a retraction, since they might have grepped their fan-out lanes on the strength of it.
+
+**Whether sparse-vs-whole-list should be enforced at all is now a separate, non-blocking question** for the vocabulary owner (SMO), decided on its merits — not because a test failure was mis-attributed to it. DiffKit primitives, if wanted: `IndexedTripleDiff`/`indexed_apply` (`📡️spr/🎮️command:510,531`), `NamedTripleDiff`/`named_apply` (`:468,489`).
+
+**Correction to the record**: `✳️text` was reported here and to SMO as "complete and audited clean" on the strength of SMO's four-gate structural audit. That audit was accurate about structure and says nothing about correctness — **the gates verify a `pub fn diff` exists, not that it is sparse.** A structural audit is not a correctness audit; only the law tests distinguish them. SMO has been told, since the same shape may be passing their fan-out lanes' sign-off.
+
+### Sixth session + `🔌️plugin` queue
+
+`26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES` (#2553) is a sixth ticket in this tree. It reclassifies `⚙️engine` across 95 dirs, promotes draw's FSM into a core `🧰️framework/🔨️modules/🔄️machine/`, and revives the dead presence lane by adding a 4th defaulted generic + `presence_mutations` to `Emit` — the same struct C1 extended. Verified their census: `presence_mutations` is **0 repo-wide**, `Emit` (`:4060`) has 3 generic params with a `Default` at `:4085`, so a 4th defaulted param absorbs cleanly.
+
+**File queue agreed: APA (now) → #2553 → others.** UCAS is out of `🔌️plugin/🦀️component.rs` except to repair composition items.
+
+**Design ruling issued to them**: presence must **NOT** route through `CompositionCoordinator::dispatch_group`. That path stamps `group_id`, records `UndoGroup.member_edits`, and makes edits jointly undoable *and durable* — correct for multi-document gestures, wrong for presence, which is ephemeral and non-undoable. Wire it like the **draft** lane. Routing it through the coordinator would push cursor/selection churn into undo stacks and the durable `.spr` log.
+
+**Two open cross-ticket conflicts flagged, not ours to settle alone:**
+- `🖍️draw/🔄️fsm/` is wanted by both APA (→ artifact engine tree) and #2553 (→ core framework module). APA's earlier attempt briefly broke the **workspace manifest** (root `Cargo.toml:66-67` + draw's manifest pointing at a vanished path — a manifest load failure aborts cargo before compilation, so it is *not* hidden behind `--tests`).
+- **Three tickets now disagree on what "engine" means**: our design keeps framework kernel types (brep topology, halfedge mesh, `DrawingScene`) as engine types behind traits with stdio subsets as persisted interchange; DKM (#2550) says it reverses that carve-out; #2553 reclassifies `⚙️engine` wholesale. Needs one agreed answer.
+
+## State at hand-off (2026-08-12 ~18:40)
+
+**W1 (kernel): CODE COMPLETE.** A1, A2, B1, B2, C1 all landed. C1's remaining tasks 5–6 (`ArtifactChildren` + `DerivedArtifactSpec::Children` + `derive_artifact_facets!` children arm; WIT `resolve-artifact-link` in `📜️world.wit`) are confirmed present on disk. Report at `📓️wave1-reports/c1-plugin-composition-report.md`.
+
+**W2 (stdio roster): 1 of 5 new subsets done.** `✳️text` complete, integrated into `✳️any` (14 arms), and independently audited clean by SMO on all four mechanical gates. Template for the remaining four (`table`, `graph`, spatial `object`, `kit`) at `📓️wave2-reports/w2a-text-subset-report.md`. Renames (`workflow`→`flow`, `object`→`value`) done earlier.
+
+**⚠️ VERIFICATION OUTSTANDING — environment, not code.** Both agents were killed by a session limit, then on resume stalled in idle-wait loops (~600k tokens each) on builds that never returned. Cause: ~20 concurrent `rustc` processes from five sessions on a volume at **98%** (18 GiB free; default `./target` = 428 G). Builds exceed 10 minutes and fail with disk-pressure artifacts — corrupt dep-info, spurious third-party failures (`futures-executor`, `icu_*`, `schemars`, `libc`).
+
+**Before signing off W1/W2, on a quiet machine, run:**
+```
+cargo check -p semio-framework-plugin --all-targets      # expect clean
+cargo check -p semio-framework-os-kernel --tests         # expect clean, 49 warnings
+cargo nextest run --profile long -p semio-s-plugin-stdio --no-fail-fast
+   # expect >2021 passed, exactly 5 failed (csv/html/json/pdf inference_default_law + md outline), 3 skipped
+```
+
+**Do NOT spawn further agents until the machine is quiet** — they cannot verify, and they burn budget idling on the build lock.
+
+**Roster is NOT frozen**; four subsets remain. SMO (52 stdio mutation facets), APA (stdio registration conversion) and IIF (34-subset inference fan-out) are all explicitly waiting on the "roster frozen" signal, which has not been sent.
 
 ## Remaining
 

@@ -125,6 +125,7 @@ mod tests {
     use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
     use protocol::MutationDiff;
 
     fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {

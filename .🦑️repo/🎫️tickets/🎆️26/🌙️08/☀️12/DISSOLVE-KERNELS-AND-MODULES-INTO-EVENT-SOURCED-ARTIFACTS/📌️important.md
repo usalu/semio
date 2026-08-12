@@ -44,6 +44,33 @@ The governing test, in SMO's words: **`change` sets one scalar field; `replace` 
 
 **Standing lesson SMO has now issued to three sessions in one day:** `update` is not a generic "modify". It survives only where ≥2 fields are genuinely inseparable and never meaningfully set one at a time. **Measure the fields that actually move before choosing it.** A `Patch` with all-optional fields is proof they are set one at a time.
 
+### ⚠️ Before deriving a verb, read BOTH rule documents
+
+The general rule and the specific rule live in **different files**, and the specific one wins:
+
+- `../SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md` — the **verb table**: the general axis (scalar vs structured, addressed vs root, authored body vs setting).
+- `../SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the **shape rules**: id-keyed collection, ordered collection, edge collection, hierarchy. Rule 5 is the hierarchy rule: `move-to-<container>{id, new_parent}`.
+
+This is not hypothetical. DKM derived `change-folder-parent` for tree re-parenting by applying the verb table correctly — one scalar link field, identity and contents preserved, therefore `change` — and was still wrong, because derivation rule 5 already covered that shape. **The measurement was right; the rulebook was incomplete.** That is a different failure from reasoning-from-memory and it does not respond to the same fix: measuring harder would not have helped. The mitigation is procedural — **check whether a specific rule already covers this shape before deriving from the general one.**
+
+Related discipline, same root: **a bare identifier grep is a *search*, not a *census*.** "Referenced 70 times" and "70 things to fix" are different claims and must never be quoted interchangeably. A grep for `CollectionMutation` returned 9 framework files and was reported as one surface; it was two unrelated types sharing a name. The same trap recurred twice more the same day: `🧊️3d`/`◻2d`/`🌿️vcs`/`🪐️space` name several different things each, and `Vec3` is **three** unrelated types (math `f32`, brep `f64`, engine `[f64;3]` alias) whose references were being quoted as one 1117-strong blast radius.
+
+### ⚠️ The evidentiary-bar rule (adopted from APA, who reached it the hard way)
+
+> **When a conclusion would license an action you would otherwise consider off-limits, that is precisely when the evidentiary bar goes up, not down.**
+
+APA twice concluded that a blocking file was unowned — first as "orphaned debt from a closed ticket", then as "an abandoned session" — and each conclusion would have licensed editing another session's live file. Both were disproved by a single `stat` in one step, and the evidence was available before the claim was made each time. The specific error the second time: **treating absence of a reply as evidence.** It is only absence of evidence. *A peer that is heads-down looks exactly like a peer that is gone, and the two are distinguished by the file, not by the channel.*
+
+Corollary, binding here: **DKM has no procedure for adopting another session's file on the strength of silence, and will not acquire one.** If a file you need is owned and its owner is unresponsive, the answer is to work on something else and say so — never to define a threshold past which taking it becomes acceptable.
+
+Why the *absence* of a procedure beats a carefully calibrated one: a threshold is a thing you can be argued down. Any criteria for "when it becomes acceptable to take someone's file" will eventually be met by a session that is merely busy, because **the evidence available over a channel cannot distinguish busy from gone.** Removing the procedure removes the failure mode.
+
+**Not all wrong beliefs are equal — sort yours by what they would license.** Five sessions made comparable measurement errors in one day, but they divide sharply:
+- **Inert**: a stale error count, a sequencing problem that didn't exist. Wrong beliefs that cost some time and nothing else.
+- **Action-licensing**: "this file is orphaned debt", "that session is gone". Each would have authorised writing to another session's live file.
+
+The second kind is what the evidentiary-bar rule exists for. Before acting on a conclusion, ask which kind it is; if it would unlock something you'd otherwise refuse, treat that as a reason to measure again rather than as permission.
+
 ## Hard rules (non-negotiable)
 
 1. **No git-modifying commands, ever** — no `commit`, `stash`, `checkout`, `reset`, `rebase`, no worktrees. `isolation: "worktree"` is forbidden on every Agent/Workflow call. The tree is shared with four other live agent sessions plus a human.
@@ -93,6 +120,7 @@ These glyphs name **different things** in different places. Every report, messag
 | `💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️component.rs` | W3c flow agent | read-only |
 | `💻️os/🔨️modules/🪐️space/🦀️component.rs` | W3c space agent | read-only |
 | `💻️os/🔨️modules/🛢️db/**` | W3c db agent | read-only |
+| `🧰️framework/🔨️modules/🧮️math/**` | DKM (**claimed late**, announced to IIF + APA, no objection) | read-only |
 | repo-root `📜️script.ts`, `🔣️taxonomy.json` | W6 ratchet agent ONLY (queue position 5) | read-only, even for allowlist entries — request it |
 | `✏️s/🔌️plugins/🗄️stdio/**` | **UCAS, not us** — pending handoff | do not enter without the coordinator's explicit go |
 | `✏️s/🔌️plugins/🌊️flow/**`, `✏️s/🔌️plugins/🪐️space/**` | **SMO** | do not enter; file a `sharedFileRequests` entry |
@@ -107,17 +135,52 @@ These glyphs name **different things** in different places. Every report, messag
 | SMO | `SEMANTIC-MUTATIONS-OVERHAUL` #2545 | `semio-9f [edf593]` |
 | IIF | `INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING` | `uds:/tmp/cc-socks/64627.sock` |
 
-Names drift — re-run `ListAgents` before every handshake; never cache an address across waves. **Never infer a live session's state from static files it wrote** — that oracle has been proven unreliable in both directions in this tree. Ask the session.
+Names drift — re-run `ListAgents` before every handshake; never cache an address across waves.
+
+### ⚠️ A document written by a session is a derived artifact of that session, not a live predicate about it
+
+That oracle has been proven unreliable in both directions in this tree. Ask the session.
+
+The worked example that makes this bite, rather than sound obvious: UCAS's `📓️status.md` is **their own authoritative record, minutes old, written by the owner**, and it says *"W1 (kernel): CODE COMPLETE."* It is still **not a release** — because another line of the same document says *"Signal APA when C1 unfreezes the file"*, deferring to a signal that had not been sent. **"Complete" and "released to you" are different claims, and only the owner can make the second.**
+
+Without that distinction the rule collapses into "don't trust documents", which is both wrong and unusable. The point is not that documents lie; it is that a document answers the question its author was asking, which is rarely the question you are asking of it.
+
+**Count your gates, and say the count out loud.** DKM holds SMO's verb approval and IIF's deferral for the three stdio subsets, and has entered zero files there, because UCAS's handoff is a third gate. Two of three open is not open. When you are tempted to proceed, state which gates are open and which is not — the tempting reading is almost always the one that quietly drops a gate from the list.
 
 **Standing agreements (coordinator maintains; agents obey):**
 - **We build ON UCAS's primitives** (`ArtifactRef`, Composition regions, `MutationMeta.group_id`, `UndoGroup.member_edits`) — never a parallel mechanism.
 - **SMO owns the verb vocabulary.** Every verb above was submitted for their review before authoring. Four mechanical gates apply to every facet we write: triad dirs ↔ dispatch variants 1:1 in both directions; unique emoji per sibling dir within a facet; real leaves (a genuine `impl MutationKind<`, a real `pub fn diff` built from `(payload, base)`, a real `pub fn inverse` from `base` returning `Vec::new()` when the target is absent); a non-stub `🟦️component.ts` beside every triad `🦀️component.rs`. **If a facet cannot be authored conformingly, leave the enum EMPTY with no triad dirs and flag it** — never invent vocabulary.
+
+  ### ⚠️ The four gates are NECESSARY, NOT SUFFICIENT — a structural audit is not a correctness audit
+
+  The gates verify that a `pub fn diff` **exists**. They cannot verify that it **behaves**. A facet can satisfy all four and still fail its own round-trip laws.
+
+  This is not hypothetical. UCAS's `✳️text` facet was audited against all four gates by the vocabulary owner, passed with zero rework, was relayed as "done and audited clean" — and then produced **6 real failures** when the long suite was actually run (`insert_remove_run_round_trips`, `add_remove_mark_round_trips`, `reorder_runs_round_trips`, plus three composition laws). Two further subsets, `✳️table` and `✳️graph`, had already been authored from it as a template before anyone ran the tests.
+
+  **Binding consequence for DKM: no facet this ticket authors is "done" on a gate pass.** Every triad requires its law tests actually executed — inverse round-trip, diff-consistency, determinism — and the real output pasted into the wave report. This matters most for the brep and drawing lanes, which will author ~30 triads between them; signing those off structurally would reproduce exactly the above at ten times the scale.
+
+  Corollary worth remembering separately: **a fragile test harness is a defect announcing itself.** UCAS's `✳️text` harness needed a special case with a comment explaining why the inverse had to be diffed against current state rather than `base`. That comment was the bug, written down, months before it was recognised. If a law test needs an exception to pass, the exception is the finding.
 - **SMO handed us `💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️component.rs` explicitly** — it is a kernel bridge that makes their plugin-side elimination impossible. Their `✏️s/🔌️plugins/🌊️flow/**` dispatch has `from_framework_mutation`/`to_framework_mutation` converting into that kernel enum. **Send SMO the target enum shape BEFORE authoring** so they can update or delete the bridge. Same for `🪐️space`.
 - **APA owns escape-hatch deletion** (`register_mesh_*`/`register_solid_*`/`register_dwg_*`/`register_app_io`) and the declarative registration shape. We don't touch them.
 - **IIF owns the `💡️inference` fan-out** for ~31 stdio subsets. They have explicitly excluded `✳️brep`/`✳️drawing`/`✳️mesh` and deferred them to DKM.
 - **`📜️script.ts` order: APA → UCAS-W6 → SMO → IIF → DKM (position 5).** Announce on all channels before and after. Report-mode first, always; a rule that gates before the tree is clean blocks four other sessions for a violation they did not create.
 - **Never "fix" another session's file.** On a red compile outside your boundary: retry the scoped check 3× at 60s intervals; if it persists, grep the cargo output to prove zero errors originate in your own paths, record it under `## Concurrent-churn observations`, report `blocked-churn`, and stop.
 - **SMO's plugin release status is a live file, not a cached fact**: `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️plugin-release-status.md`. Read it, don't remember it.
+
+## ⚠️ For W6's policy authoring: measure REACH, not MUTABILITY
+
+Discovered by APA when DKM's brep design surfaced `📐️cad`'s `static HOST: OnceLock<BrepEngineHost>`. Their `PolicyRulePluginPurity` **does not catch it**, deliberately: the rule exempts bare `OnceLock`/`OnceCell`/`LazyLock` as write-once-by-type, because every artifact's `io_registry` uses `static ENTRIES: OnceLock<Vec<ComposerEntry>>` and flagging those would drown the signal.
+
+The rule is measuring the wrong property:
+
+| Site | Mutability | What it actually is |
+|---|---|---|
+| `OnceLock<Vec<ComposerEntry>>` | write-once | a plugin caching **its own immutable data** — fine |
+| `OnceLock<BrepEngineHost>` | write-once | a plugin holding a **handle to host-owned engine state** for the process lifetime — the exact anti-pattern this ticket exists to remove |
+
+Identical by mutability, entirely different violations. In APA's phrasing: **it isn't ambient *mutability*, it's ambient *reach*.** A `OnceLock` makes the handle unforgeable after init and does nothing about the fact that a plugin has one at all.
+
+**Binding consequence for DKM's W6 rules.** `policyEngineCacheScopeBreaches`, `policyEngineRepEscapeBreaches` and `policyEngineConsumptionOutsideFacetBreaches` must be written to detect **what a construct reaches**, not whether it mutates. A rule keyed on `&mut`/`static mut` will pass every handle-shaped violation. And widening a mutability rule to cover reach produces false positives against sanctioned tables — the two need **separate** checks, not one broadened one.
 
 ## Report shape (every agent, every wave)
 

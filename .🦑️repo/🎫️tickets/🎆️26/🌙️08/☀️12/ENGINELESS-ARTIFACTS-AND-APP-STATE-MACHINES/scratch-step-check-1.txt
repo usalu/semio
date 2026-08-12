@@ -1,0 +1,29 @@
+    Checking memchr v2.8.0
+    Checking itoa v1.0.18
+    Checking serde_core v1.0.228
+    Checking zmij v1.0.21
+    Checking thiserror v2.0.18
+    Checking serde v1.0.228
+    Checking serde_json v1.0.149
+    Checking semio-framework-machine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust)
+error[E0432]: unresolved imports `crate::kernel`, `crate::persist`
+    --> 🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/../../🦀️component.rs:1626:9
+     |
+1626 |         kernel::{self, Command, Snapshot, StepReport},
+     |         ^^^^^^ unresolved import
+1627 |         persist::{self, Migration, PersistedSnapshot, RestoreError},
+     |         ^^^^^^^ unresolved import
+     |
+help: a similar path exists
+     |
+1626 |         component::kernel::{self, Command, Snapshot, StepReport},
+     |         +++++++++++
+help: a similar path exists
+     |
+1627 |         component::persist::{self, Migration, PersistedSnapshot, RestoreError},
+     |         +++++++++++
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-machine` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `semio-framework-machine` (lib test) due to 1 previous error

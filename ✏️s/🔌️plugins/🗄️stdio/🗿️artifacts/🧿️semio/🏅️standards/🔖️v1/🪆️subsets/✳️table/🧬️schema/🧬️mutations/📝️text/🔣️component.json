@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.table/mutations.text.json",
+  "title": "SemioTableMutationTextOp",
+  "description": "Descriptive twin of 📖️component.grammar.semio — one line: 'keyword:arg1,arg2,...'.",
+  "type": "string"
+}

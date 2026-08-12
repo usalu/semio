@@ -2181,7 +2181,7 @@ mod tests {
     use super::{ear_clip_polygon, mesh_content_version, DrawList, ScissorRect, WORLD_GLOBALS_SLOT_SIZE};
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::theme::Rgba;
-    use super::kernel_3d_scene::ScenePass3d;
+    use crate::wgpu::kernel_3d_scene::ScenePass3d;
 
     #[test]
     fn scissor_intersects_child() {

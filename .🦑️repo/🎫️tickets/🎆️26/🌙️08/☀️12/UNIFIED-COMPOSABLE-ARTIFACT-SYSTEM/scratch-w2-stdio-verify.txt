@@ -1,0 +1,12 @@
+        FAIL [   0.076s] ( 418/2066) semio-s-plugin-stdio artifacts::html::standards::v5::subsets::any::schema::inferences::component::tests::inference_default_law
+        FAIL [   0.042s] ( 448/2066) semio-s-plugin-stdio artifacts::ifc::standards::v2x3::engine::tests::conformance_laws::fixture_honesty_law
+        FAIL [   0.071s] ( 598/2066) semio-s-plugin-stdio artifacts::json::standards::v_rfc8259::subsets::any::schema::inferences::component::tests::inference_default_law
+        FAIL [   0.062s] ( 702/2066) semio-s-plugin-stdio artifacts::md::standards::v_commonmark::subsets::any::schema::inferences::outline::component::tests::collects_headings_and_counts_words_and_blocks
+        FAIL [   0.056s] ( 802/2066) semio-s-plugin-stdio artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::component::tests::inference_default_law
+        FAIL [   0.064s] (1109/2066) semio-s-plugin-stdio artifacts::semio::standards::v1::subsets::any::io::derived_composition::tests::conformance_laws::diff_grammar_conformance_law
+        FAIL [   0.066s] (1113/2066) semio-s-plugin-stdio artifacts::semio::standards::v1::subsets::any::io::derived_composition::tests::conformance_laws::ops_grammar_conformance_law
+        FAIL [   0.093s] (1495/2066) semio-s-plugin-stdio artifacts::semio::standards::v1::subsets::text::io::derived_composition::tests::conformance_laws::fixture_honesty_law
+        FAIL [   0.050s] (1508/2066) semio-s-plugin-stdio artifacts::semio::standards::v1::subsets::text::schema::mutations::component::tests::add_remove_mark_round_trips
+        FAIL [   0.080s] (1510/2066) semio-s-plugin-stdio artifacts::semio::standards::v1::subsets::text::schema::mutations::component::tests::insert_remove_run_round_trips
+        FAIL [   0.083s] (1512/2066) semio-s-plugin-stdio artifacts::semio::standards::v1::subsets::text::schema::mutations::component::tests::reorder_runs_round_trips
+error: test run failed

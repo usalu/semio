@@ -63,6 +63,7 @@ mod tests {
     use crate::artifacts::playbook::{PlaybookBlock, PlaybookStep};
     use protocol::MutationKind;
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
 
     fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
         PlaybookBlock {

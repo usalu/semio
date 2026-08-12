@@ -1,0 +1,11 @@
+# Zeek Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
+# ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the s.stdio.semio.graph
+# snapshot binary pack, past the shared `.semio` envelope.
+module StdioSemioGraphSnapshot;
+
+public type SnapshotPack = unit {
+    format: uint8;
+    schema_len: bytes &size=1 &convert=$$.to_uint(spicy::ByteOrder::Little);
+    schema_bytes: bytes &size=self.schema_len;
+    payload: bytes &eod;
+};

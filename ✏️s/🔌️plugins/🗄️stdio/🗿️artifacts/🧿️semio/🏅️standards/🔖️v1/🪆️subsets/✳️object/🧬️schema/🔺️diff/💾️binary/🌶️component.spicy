@@ -1,0 +1,6 @@
+module StdioSemioObjectDiff;
+public type DiffFrame = unit {
+    format: uint8;
+    presence: uint8;
+    payload: bytes &eod;
+};

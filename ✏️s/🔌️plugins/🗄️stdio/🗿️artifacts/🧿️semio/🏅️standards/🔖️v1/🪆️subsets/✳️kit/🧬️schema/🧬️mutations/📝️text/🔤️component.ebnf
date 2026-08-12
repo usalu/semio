@@ -1,0 +1,23 @@
+(* Descriptive, not test-parsed. *)
+op = create object | delete object | create model | delete model | create properties | delete properties
+   | bind representation | unbind representation | change representation pin
+   | add type | remove type | rename type | add design | remove design | edit design ;
+create object = "createObject", ":", hex, ",", hex ;
+delete object = "deleteObject", ":", hex ;
+create model = "createModel", ":", hex, ",", hex ;
+delete model = "deleteModel", ":", hex ;
+create properties = "createProperties", ":", hex, ",", hex ;
+delete properties = "deleteProperties" ;
+bind representation = "bindRepresentation", ":", hex, ",", pin, ",", hex ;
+unbind representation = "unbindRepresentation", ":", integer ;
+change representation pin = "changeRepresentationPin", ":", integer, ",", pin ;
+pin = "any pin encoding" ;
+add type = "addType", ":", hex, ",", hex, ",", hex ;
+remove type = "removeType", ":", hex ;
+rename type = "renameType", ":", hex, ",", hex ;
+add design = "addDesign", ":", hex, ",", hex ;
+remove design = "removeDesign", ":", hex ;
+edit design = "editDesign", ":", hex, ",", "any pieces/connections encoding" ;
+integer = [ "-" ], digit, { digit } ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+hex = { digit | "a" | "b" | "c" | "d" | "e" | "f" } ;

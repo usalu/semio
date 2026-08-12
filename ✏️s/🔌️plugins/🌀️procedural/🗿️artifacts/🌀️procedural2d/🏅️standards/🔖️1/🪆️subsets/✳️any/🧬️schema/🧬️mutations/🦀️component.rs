@@ -27,7 +27,7 @@ use store::{ArtifactEnvelope, ArtifactStore};
 /// directory slots — their directory/module names are leftovers of the generic slots each was
 /// repurposed from (`sharedFileRequests` in this ticket's wave2 report has the glue.rs rename that
 /// would align them; not editable here — glue.rs is shared with the sibling `procedural3d` artifact).
-use super::{remove_layout, remove_synapse, remove_widget, set_camera, set_layout, set_schema, set_synapse, set_widget};
+use super::{change_schema, clear_widget_layout, connect_synapse, create_widget, delete_widget, disconnect_synapse, move_widget, set_camera};
 
 //#region 🔖️Addressing
 /// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
@@ -341,16 +341,16 @@ pub mod change_generation_value {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = Procedural2dSnapshot, diff = Procedural2dDiff, schema = "procedural.2d")]
 pub enum Procedural2dMutation {
-    CreateWidget(set_widget::mutation::CreateWidget),
+    CreateWidget(create_widget::mutation::CreateWidget),
     ReplaceWidget(replace_widget::ReplaceWidget),
-    DeleteWidget(remove_widget::mutation::DeleteWidget),
-    ConnectSynapse(set_synapse::mutation::ConnectSynapse),
+    DeleteWidget(delete_widget::mutation::DeleteWidget),
+    ConnectSynapse(connect_synapse::mutation::ConnectSynapse),
     ReplaceSynapse(replace_synapse::ReplaceSynapse),
-    DisconnectSynapse(remove_synapse::mutation::DisconnectSynapse),
-    MoveWidget(set_layout::mutation::MoveWidget),
-    ClearWidgetLayout(remove_layout::mutation::ClearWidgetLayout),
+    DisconnectSynapse(disconnect_synapse::mutation::DisconnectSynapse),
+    MoveWidget(move_widget::mutation::MoveWidget),
+    ClearWidgetLayout(clear_widget_layout::mutation::ClearWidgetLayout),
     UpdateCamera(set_camera::mutation::UpdateCamera),
-    ChangeSchema(set_schema::mutation::ChangeSchema),
+    ChangeSchema(change_schema::mutation::ChangeSchema),
     CreateGeneration(create_generation::CreateGeneration),
     DeleteGeneration(delete_generation::DeleteGeneration),
     RenameGeneration(rename_generation::RenameGeneration),
@@ -365,14 +365,14 @@ pub use rename_generation::rename_generation;
 pub use change_generation_value::change_generation_value;
 pub use replace_widget::replace_widget;
 pub use replace_synapse::replace_synapse;
-pub use set_widget::mutation::create_widget;
-pub use remove_widget::mutation::delete_widget;
-pub use set_synapse::mutation::connect_synapse;
-pub use remove_synapse::mutation::disconnect_synapse;
-pub use set_layout::mutation::move_widget;
-pub use remove_layout::mutation::clear_widget_layout;
+pub use create_widget::mutation::create_widget;
+pub use delete_widget::mutation::delete_widget;
+pub use connect_synapse::mutation::connect_synapse;
+pub use disconnect_synapse::mutation::disconnect_synapse;
+pub use move_widget::mutation::move_widget;
+pub use clear_widget_layout::mutation::clear_widget_layout;
 pub use set_camera::mutation::update_camera;
-pub use set_schema::mutation::change_schema;
+pub use change_schema::mutation::change_schema;
 //#endregion 🔖️Builders
 
 //#region 🔖️FixtureOperations

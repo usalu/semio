@@ -1,11 +1,25 @@
-error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust`
-referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+test os_vcs::tests::content_addressed_checkpoint_id_is_deterministic_and_content_sensitive ... ok
+test os_vcs::tests::content_addressed_entity_and_mint_helpers_are_deterministic ... ok
+test os_store::component::tests::space_vcs_host_meta_document_is_backbone_attachable_and_detachable ... ok
+test os_dsl::fixture_sweep::m5_handcrafted_protocol_conformance::all_discovered_snapshot_protocols_walk_their_shipped_fixtures ... ok
 
-Caused by:
-  failed to load manifest for dependency `semio-s-plugin-draw-fsm`
+failures:
 
-Caused by:
-  failed to read `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml`
+---- os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures stdout ----
+[DEBUG] soft-skip 🏗️fem::◻2d::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 💠️lowpoly::💠️lowpoly::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 📐️cad::📐️cad::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 📕️norm::📘️en1992::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 🕸️dag::🕸️dag::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 🗒️note::🗒️note::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
 
-Caused by:
-  No such file or directory (os error 2)
+thread 'os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures' (236188203) panicked at 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:1397:9:
+need at least 2 usable non-stdio grammar+fixture pairs for cross-rejection, found 0
+
+
+failures:
+    os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures
+
+test result: FAILED. 828 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.21s
+
+error: test failed, to rerun pass `-p semio-framework-os-kernel --lib`

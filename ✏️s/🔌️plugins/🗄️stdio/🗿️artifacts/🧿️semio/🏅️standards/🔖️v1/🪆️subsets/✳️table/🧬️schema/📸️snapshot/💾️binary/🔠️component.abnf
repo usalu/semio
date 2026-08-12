@@ -1,0 +1,8 @@
+; RFC 5234 ABNF mirror (descriptive, not test-walked — the real byte-level walker is
+; ../📡️component.protocol.semio, walked by dsl::walk_protocol) for the shared `.semio` binary
+; envelope wrapping the REAL varint-length-prefixed SemioTableSnapshot binary pack.
+snapshot-pack   = format schema-len schema-bytes payload
+format          = OCTET                 ; PACK_BINARY_FORMAT, currently 1
+schema-len      = 1*OCTET               ; LEB128 varint
+schema-bytes    = *OCTET                ; UTF-8 schema id, length = schema-len
+payload         = *OCTET                ; columns: varint count + per-column name/kind; rows: varint count + per-row cell count + recursive SemioValue

@@ -33,6 +33,16 @@ Add a fourth schema family — `💡️inferences` (plural, slug-dir shape mirro
 
 Contact peers via `ListAgents` (peer sessions show as "Peer sessions"); use `SendMessage` to their session names. Coordinate before entering trinity, puzzle, or stdio. Never "fix" another session's file — treat red plugin crates as churn: retry `-p <crate>` up to 3× at 60s intervals, then record under `## Concurrent-churn observations`.
 
+> ⚠️ **This table is stale in two ways — see `📓️status.md`, which is the live record.** There are **five** peer sessions, not three (add DKM #2550 and SUBSET-CONFORMANCE). Session names rotate whenever a session hits a usage limit, so any name written here will go stale; re-discover them rather than trusting a written name. Ownership has also moved: trinity and puzzle were released by SMO and migrated by APA; APA is done with `📜️script.ts`.
+
+## ⚖️ Two rules learned the hard way today — apply them before amending any record
+
+1. **Content evidence attributes; timing evidence does not.** The repo auto-commits the **whole tree on a timer**, so every flag bundles every session's in-flight work. Use `R100` rename records, diff contents, which symbols a change touches, a peer's own claim of authorship. **Never** use which flag a change landed in, what else shares that commit, or mtime proximity. *(Violated twice in one session before it stuck.)*
+
+2. **Verify a live predicate before acting on any report — including your own agents'.** Reports, audits, `📓️status.md` files and commits are all **derived artifacts** and go stale within minutes in this tree. Four separate times today a report was already obsolete when it arrived; once, acting on it would have written a false blocker into this file and stalled a finished lane. Re-run the check yourself, then amend.
+
+**Corollary — `cargo check` is not a gate.** It does not compile `#[cfg(test)]` code. Five separate issues today hid behind that blind spot, including breakage that landed unverified. **Always `--all-targets`**, and note that a lib-only check can pass while `--all-targets` fails on a *dependency* rebuilt with dev-dependency feature unification.
+
 ## Repo gotchas that cost other sessions real time
 
 - `🧰️framework/🔨️modules/🚪️io/🦀️component.rs` is dual-mounted into two crates via `#[path]` — one edit, two crates.

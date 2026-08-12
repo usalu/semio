@@ -108,6 +108,7 @@ pub fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMutation
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::SemanticMutation;
     use crate::artifacts::fem3d::{element_id, load_id, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport, FemAnalysisSettings, FemCombination};
     use protocol::MutationDiff;
     use std::collections::BTreeMap;

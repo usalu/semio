@@ -582,7 +582,6 @@ impl TrinityBridge {
     // single `.zip()` range captures all three, so the explicit-counter-loop suggestion doesn't apply.
     #[allow(clippy::explicit_counter_loop)]
     fn rebuild_engine(&mut self) {
-        self.graph.recompute_derived();
         self.engine = TrinityBoardEngine::new();
         self.node_id_map.clear();
         self.handle_key_map.clear();
@@ -757,7 +756,7 @@ mod wasm_session {
     impl TrinitySession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            let dsl = include_str!("../../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            let dsl = include_str!("../../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             let host = JackSnapshot::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityBridge::from_graph(&g)).unwrap_or_else(|| {
                 let empty =
                     JackSnapshot { schema: JackSnapshot::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
@@ -967,10 +966,8 @@ mod tests {
     use store::ArtifactDsl;
 
     fn nakagin_graph() -> Graph {
-        let dsl = include_str!("../../../🗿️artifacts/🔌️jack/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
-        let mut g = Graph::from_fixture(JackSnapshot::parse_dsl(dsl).unwrap()).unwrap();
-        g.recompute_derived();
-        g
+        let dsl = include_str!("../../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+        Graph::from_fixture(JackSnapshot::parse_dsl(dsl).unwrap()).unwrap()
     }
 
     #[test]
@@ -983,12 +980,11 @@ mod tests {
     #[test]
     fn nakagin_flat_position_derived() {
         let g = nakagin_graph();
-        let root = g.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
-        let flat = root.properties.get("flatPosition").unwrap().as_object().unwrap();
-        assert_eq!(flat.get("u").and_then(PropertyValue::as_f64), Some(0.0));
-        let capsule = g.node("6947a41b-8c6d-4291-bdd8-96cd535c78fc").unwrap();
-        let cflat = capsule.properties.get("flatPosition").unwrap().as_object().unwrap();
-        assert!(cflat.get("v").and_then(PropertyValue::as_f64).unwrap_or(0.0) > 0.0);
+        let flat = crate::artifacts::jack::schema::inferences::flat_position::compute_flat_position(&g.to_fixture());
+        let root_uv = flat.positions.get("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
+        assert_eq!(root_uv.u, 0.0);
+        let capsule_uv = flat.positions.get("6947a41b-8c6d-4291-bdd8-96cd535c78fc").unwrap();
+        assert!(capsule_uv.v > 0.0);
     }
 
     #[test]

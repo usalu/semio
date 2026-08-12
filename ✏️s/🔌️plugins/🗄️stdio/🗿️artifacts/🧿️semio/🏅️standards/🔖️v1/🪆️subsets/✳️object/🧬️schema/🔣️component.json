@@ -1,0 +1,14 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.object/artifact.json",
+  "title": "SemioObjectArtifact",
+  "description": "Full artifact state for s.stdio.semio.object — mirrors SemioObjectSnapshot field for field. First COMPOSITE subset.",
+  "type": "object",
+  "required": ["schema", "transform"],
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "transform": { "type": "object", "x-semio-state": "persistent" },
+    "brep": { "type": "object", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.brep" },
+    "mesh": { "type": "object", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.mesh" },
+    "properties": { "type": "object", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.value" }
+  }
+}

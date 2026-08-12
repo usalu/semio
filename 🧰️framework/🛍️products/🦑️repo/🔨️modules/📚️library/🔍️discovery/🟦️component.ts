@@ -402,12 +402,17 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactComponentDirs member "${dir}" is missing from artifactChildDirs — the structural set must be a superset of the completeness set.`);
   }
   //#region MutationFacetContract
-  for (const required of ["🧬️schema", "⚙️engine", "🚪️io"] as const) {
+  for (const required of ["🧬️schema", "🚪️io"] as const) {
     if (!taxonomy.artifactComponentDirs.includes(required)) {
       problems.push(`artifactComponentDirs must include "${required}".`);
     }
     if (!taxonomy.artifactChildDirs.includes(required)) {
       problems.push(`artifactChildDirs must include "${required}".`);
+    }
+  }
+  for (const dirs of [taxonomy.artifactComponentDirs, taxonomy.artifactChildDirs, taxonomy.subsetComponentDirs, taxonomy.subsetChildDirs]) {
+    if (dirs.includes("⚙️engine")) {
+      problems.push(`artifact/subset dir vocabularies must not include "⚙️engine" — an artifact is a schema (snapshot, diff, mutations, inferences) plus an io system, never an engine. Behaviour belongs to the app that edits the artifact (🎛️apps/<app>/⚙️engine); pure algorithms belong one level up, in a module's ⚙️engine, which taxonomyLeafParentDirs keeps globally legal.`);
     }
   }
   for (const banned of ["🗣️dsl", "🔧️op", "📡️spr", "🔺️diff", "📸️snapshot", "🧬️mutations"] as const) {

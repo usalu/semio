@@ -27,21 +27,21 @@ extern crate semio_framework_os_kernel as vcs;
 #[allow(clippy::result_large_err)]
 
 //#region 🏗️Kernel modules
-#[path = "../../🏗️model/🦀️component.rs"]
+#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏗️model/🦀️component.rs"]
 pub mod model;
-#[path = "../../🧮️analyses/🦀️component.rs"]
+#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧮️analyses/🦀️component.rs"]
 pub mod analyses;
-#[path = "../../📏️elements2d/🦀️component.rs"]
+#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/📏️elements2d/🦀️component.rs"]
 pub mod elements2d;
-#[path = "../../🧊️elements3d/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧊️elements3d/🦀️component.rs"]
 pub mod elements3d;
-#[path = "../../➗️formulation/🦀️component.rs"]
+#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/➗️formulation/🦀️component.rs"]
 pub mod formulation;
-#[path = "../../🕸️mesh/🦀️component.rs"]
+#[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🕸️mesh/🦀️component.rs"]
 pub mod mesh;
-#[path = "../../🔢️sparse/🦀️component.rs"]
+#[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔢️sparse/🦀️component.rs"]
 pub mod sparse;
-#[path = "../../🖥️app-surface/🦀️component.rs"]
+#[path = "../../🎛️apps/◻2d/⚙️engine/🖥️app-surface/🦀️component.rs"]
 pub mod app_surface;
 
 /// 🗂️ Registers both artifacts' engines with the host.

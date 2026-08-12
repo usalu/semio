@@ -22,7 +22,7 @@ use crate::brep::vec::{Pnt3, Vec3};
 // #region 🔖️Api
 
 /// ↔️ Offset a planar face along its outward normal by `distance`.
-pub fn offset_face(body: &mut Body, face: FaceId, distance: f64) -> Result<FaceId, KernelError> {
+pub fn offset_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     if !distance.is_finite() {
         return Err(KernelError::InvalidInput("offset distance must be finite".into()));
     }
@@ -48,11 +48,11 @@ pub fn offset_face(body: &mut Body, face: FaceId, distance: f64) -> Result<FaceI
         .iter()
         .map(|p| Pnt3::new(p.x + normal.x * distance, p.y + normal.y * distance, p.z + normal.z * distance))
         .collect();
-    make_planar_face_from_points(body, &offset_pts)
+    make_planar_face_from_points(body, &offset_pts, rec)
 }
 
 /// ↔️ Thicken a planar face into a solid prism of thickness `distance`.
-pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64) -> Result<SolidId, KernelError> {
+pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if !distance.is_finite() || distance.abs() <= 1e-15 {
         return Err(KernelError::InvalidInput("thicken distance must be non-zero".into()));
     }
@@ -67,18 +67,18 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64) -> Result<Soli
         .ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?
         .clone();
     let Surface::Plane { frame } = surface else {
-        return thicken_face_hull(body, face, distance);
+        return thicken_face_hull(body, face, distance, rec);
     };
     let mut normal = frame.z;
     if face_data.flipped {
         normal = -normal;
     }
-    extrude_face(body, face, normal, distance.abs())
-        .or_else(|_| thicken_face_hull(body, face, distance))
+    extrude_face(body, face, normal, distance.abs(), rec)
+        .or_else(|_| thicken_face_hull(body, face, distance, rec))
 }
 
 /// ↔️ Uniform solid offset (positive expands, negative shrinks).
-pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64) -> Result<SolidId, KernelError> {
+pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if !distance.is_finite() {
         return Err(KernelError::InvalidInput("offset distance must be finite".into()));
     }
@@ -86,7 +86,7 @@ pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64) -> Result<So
         return Err(KernelError::MissingEntity(format!("solid {solid}")));
     }
     if distance.abs() <= 1e-15 {
-        return shell_copy_solid(body, solid);
+        return shell_copy_solid(body, solid, rec);
     }
     let tol = 1e-6;
     if looks_like_box(body, solid)? {
@@ -95,7 +95,7 @@ pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64) -> Result<So
         if aabb_volume(&inflated) <= tol {
             return Err(KernelError::Operation("offset collapsed the solid".into()));
         }
-        return make_box_from_aabb(body, &inflated);
+        return make_box_from_aabb(body, &inflated, rec);
     }
     let bb = solid_bounding_box(body, solid)?;
     let mut points = mesh_offset_points(body, solid, distance, tol)?;
@@ -103,11 +103,11 @@ pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64) -> Result<So
     if points.len() < 4 {
         return Err(KernelError::Operation("offset produced insufficient points".into()));
     }
-    make_convex_hull(body, &points)
+    make_convex_hull(body, &points, rec)
 }
 
 /// ↔️ Hollow shell of `solid` with wall thickness `thickness`.
-pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64) -> Result<SolidId, KernelError> {
+pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if !thickness.is_finite() || thickness <= 1e-15 {
         return Err(KernelError::InvalidInput("shell thickness must be positive".into()));
     }
@@ -115,10 +115,10 @@ pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64) -> Result<So
         return Err(KernelError::MissingEntity(format!("solid {solid}")));
     }
     let tol = 1e-6;
-    let inner = offset_solid(body, solid, -thickness)?;
-    match boolean_solid(body, solid, inner, BooleanOp::Cut, tol) {
+    let inner = offset_solid(body, solid, -thickness, rec)?;
+    match boolean_solid(body, solid, inner, BooleanOp::Cut, tol, rec) {
         Ok(id) => Ok(id),
-        Err(_) => solid_with_void_shell(body, solid, inner),
+        Err(_) => solid_with_void_shell(body, solid, inner, rec),
     }
 }
 
@@ -129,8 +129,9 @@ pub fn shell_solid_with_open_faces(
     solid: SolidId,
     thickness: f64,
     open_faces: &[FaceId],
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
-    let shelled = shell_solid(body, solid, thickness)?;
+    let shelled = shell_solid(body, solid, thickness, rec)?;
     if open_faces.is_empty() {
         return Ok(shelled);
     }
@@ -148,8 +149,8 @@ pub fn shell_solid_with_open_faces(
             .iter()
             .flat_map(|p| [*p + n * half, *p - n * half])
             .collect();
-        if let Ok(cutter) = make_convex_hull(body, &extruded) {
-            if let Ok(cut) = boolean_solid(body, result, cutter, BooleanOp::Cut, tol) {
+        if let Ok(cutter) = make_convex_hull(body, &extruded, rec) {
+            if let Ok(cut) = boolean_solid(body, result, cutter, BooleanOp::Cut, tol, rec) {
                 result = cut;
             }
         }
@@ -195,6 +196,7 @@ pub fn draft_angle(
     _face: FaceId,
     angle_rad: f64,
     pull_dir: Vec3,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     if body.solids.get(solid).is_none() {
         return Err(KernelError::MissingEntity(format!("solid {solid}")));
@@ -211,9 +213,9 @@ pub fn draft_angle(
     if looks_like_box(body, solid)? {
         let bb = solid_bounding_box(body, solid)?;
         let sheared = shear_aabb_corners(&bb, pull, angle_rad);
-        return make_convex_hull(body, &sheared);
+        return make_convex_hull(body, &sheared, rec);
     }
-    shell_copy_solid(body, solid)
+    shell_copy_solid(body, solid, rec)
 }
 
 // #endregion 🔖️Api
@@ -257,14 +259,14 @@ fn aabb_corners(bb: &AxisAlignedBox) -> [Pnt3; 8] {
     ]
 }
 
-fn make_box_from_aabb(body: &mut Body, bb: &AxisAlignedBox) -> Result<SolidId, KernelError> {
+fn make_box_from_aabb(body: &mut Body, bb: &AxisAlignedBox, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let w = (bb.max.x - bb.min.x).max(0.0);
     let d = (bb.max.y - bb.min.y).max(0.0);
     let h = (bb.max.z - bb.min.z).max(0.0);
     if w <= 1e-15 || d <= 1e-15 || h <= 1e-15 {
         return Err(KernelError::Operation("degenerate box".into()));
     }
-    make_convex_hull(body, &aabb_corners(bb))
+    make_convex_hull(body, &aabb_corners(bb), rec)
 }
 
 fn shear_aabb_corners(bb: &AxisAlignedBox, pull: Vec3, angle_rad: f64) -> Vec<Pnt3> {
@@ -419,29 +421,27 @@ fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelErro
     Ok(points)
 }
 
-fn thicken_face_hull(body: &mut Body, face: FaceId, distance: f64) -> Result<SolidId, KernelError> {
+fn thicken_face_hull(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let polygon = face_outer_polygon(body, face)?;
-    let offset_face_id = offset_face(body, face, distance)?;
+    let offset_face_id = offset_face(body, face, distance, rec)?;
     let offset_poly = face_outer_polygon(body, offset_face_id)?;
     let mut pts = polygon;
     pts.extend(offset_poly);
-    make_convex_hull(body, &pts)
+    make_convex_hull(body, &pts, rec)
 }
 
-fn shell_copy_solid(body: &mut Body, solid: SolidId) -> Result<SolidId, KernelError> {
+fn shell_copy_solid(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let faces = body.solid_faces(solid);
-    let mut rec = OpRecorder::new();
-    let shell = add_shell(body, faces, &mut rec);
-    Ok(add_solid(body, shell, Vec::new(), &mut rec))
+    let shell = add_shell(body, faces, rec);
+    Ok(add_solid(body, shell, Vec::new(), rec))
 }
 
-fn solid_with_void_shell(body: &mut Body, outer: SolidId, inner: SolidId) -> Result<SolidId, KernelError> {
+fn solid_with_void_shell(body: &mut Body, outer: SolidId, inner: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let outer_faces = body.solid_faces(outer);
     let inner_faces = body.solid_faces(inner);
-    let mut rec = OpRecorder::new();
-    let outer_shell = add_shell(body, outer_faces, &mut rec);
-    let inner_shell = add_shell(body, inner_faces, &mut rec);
-    Ok(add_solid(body, outer_shell, vec![inner_shell], &mut rec))
+    let outer_shell = add_shell(body, outer_faces, rec);
+    let inner_shell = add_shell(body, inner_faces, rec);
+    Ok(add_solid(body, outer_shell, vec![inner_shell], rec))
 }
 
 // #endregion 🧮Face
@@ -456,9 +456,10 @@ mod tests {
     #[test]
     fn offset_solid_box_grows_volume() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let v0 = solid_volume(&body, solid, 1e-4).unwrap();
-        let grown = offset_solid(&mut body, solid, 0.2).unwrap();
+        let grown = offset_solid(&mut body, solid, 0.2, &mut rec).unwrap();
         let v1 = solid_volume(&body, grown, 1e-4).unwrap();
         assert!(v1 > v0, "v0={v0} v1={v1}");
     }
@@ -466,6 +467,7 @@ mod tests {
     #[test]
     fn thicken_rectangle_positive_volume() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let face = make_planar_face_from_points(
             &mut body,
             &[
@@ -474,9 +476,10 @@ mod tests {
                 Pnt3::new(2.0, 1.0, 0.0),
                 Pnt3::new(0.0, 1.0, 0.0),
             ],
+            &mut rec,
         )
         .unwrap();
-        let solid = thicken_face(&mut body, face, 0.5).unwrap();
+        let solid = thicken_face(&mut body, face, 0.5, &mut rec).unwrap();
         let v = solid_volume(&body, solid, 1e-4).unwrap();
         assert!(v > 0.0, "volume {v}");
     }
@@ -484,8 +487,9 @@ mod tests {
     #[test]
     fn shell_box_has_faces() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 2.0, 2.0, 2.0).unwrap();
-        let shelled = shell_solid(&mut body, solid, 0.2).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
+        let shelled = shell_solid(&mut body, solid, 0.2, &mut rec).unwrap();
         let faces = body.solid_faces(shelled);
         assert!(!faces.is_empty(), "shell should have faces");
         assert!(faces.len() >= 6, "face count {}", faces.len());
@@ -494,18 +498,20 @@ mod tests {
     #[test]
     fn offset_determinism_face_count() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
-        let a = offset_solid(&mut body, solid, 0.1).unwrap();
-        let b = offset_solid(&mut body, solid, 0.1).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let a = offset_solid(&mut body, solid, 0.1, &mut rec).unwrap();
+        let b = offset_solid(&mut body, solid, 0.1, &mut rec).unwrap();
         assert_eq!(body.solid_faces(a).len(), body.solid_faces(b).len());
     }
 
     #[test]
     fn draft_zero_angle_errors() {
         let mut body = Body::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let face = body.solid_faces(solid)[0];
-        let err = draft_angle(&mut body, solid, face, 0.0, Vec3::Z).unwrap_err();
+        let err = draft_angle(&mut body, solid, face, 0.0, Vec3::Z, &mut rec).unwrap_err();
         assert!(matches!(err, KernelError::Operation(_)));
     }
 }

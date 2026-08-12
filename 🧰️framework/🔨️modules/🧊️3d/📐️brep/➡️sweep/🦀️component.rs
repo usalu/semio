@@ -150,7 +150,7 @@ fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelErro
 }
 
 /// ➡️ Prism solid from a closed polygon extruded by `offset` (bottom + top + planar sides).
-fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3) -> Result<SolidId, KernelError> {
+fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let n = bottom.len();
     if n < 3 {
         return Err(KernelError::InvalidInput("prism needs ≥3 bottom points".into()));
@@ -165,27 +165,26 @@ fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3) -> Result<So
     };
     let outward_top = -outward_bottom;
 
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
-    let v_bot: Vec<VertexId> = bottom.iter().map(|&p| make_vertex(body, p, tol, &mut rec)).collect();
-    let v_top: Vec<VertexId> = top.iter().map(|&p| make_vertex(body, p, tol, &mut rec)).collect();
+    let v_bot: Vec<VertexId> = bottom.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
+    let v_top: Vec<VertexId> = top.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
 
     let mut e_bot = Vec::with_capacity(n);
     let mut e_top = Vec::with_capacity(n);
     let mut e_vert = Vec::with_capacity(n);
     for i in 0..n {
         let j = (i + 1) % n;
-        e_bot.push(line_edge(body, bottom[i], bottom[j], v_bot[i], v_bot[j], tol, &mut rec));
-        e_top.push(line_edge(body, top[i], top[j], v_top[i], v_top[j], tol, &mut rec));
-        e_vert.push(line_edge(body, bottom[i], top[i], v_bot[i], v_top[i], tol, &mut rec));
+        e_bot.push(line_edge(body, bottom[i], bottom[j], v_bot[i], v_bot[j], tol, rec));
+        e_top.push(line_edge(body, top[i], top[j], v_top[i], v_top[j], tol, rec));
+        e_vert.push(line_edge(body, bottom[i], top[i], v_bot[i], v_top[i], tol, rec));
     }
 
     let s_bottom = body.surfaces.insert(plane_at(bottom[0], outward_bottom));
     let s_top = body.surfaces.insert(plane_at(top[0], outward_top));
     let bottom_members: Vec<(EdgeId, bool)> = e_bot.iter().rev().map(|&e| (e, false)).collect();
     let top_members: Vec<(EdgeId, bool)> = e_top.iter().map(|&e| (e, true)).collect();
-    let bottom_face = attach_face(body, s_bottom, &bottom_members, false, tol, &mut rec);
-    let top_face = attach_face(body, s_top, &top_members, false, tol, &mut rec);
+    let bottom_face = attach_face(body, s_bottom, &bottom_members, false, tol, rec);
+    let top_face = attach_face(body, s_top, &top_members, false, tol, rec);
 
     let mut faces = vec![bottom_face, top_face];
     for i in 0..n {
@@ -226,9 +225,9 @@ fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3) -> Result<So
             (e_top[i], false),
             (e_vert[i], false),
         ];
-        faces.push(attach_face(body, s_side, &members, false, tol, &mut rec));
+        faces.push(attach_face(body, s_side, &members, false, tol, rec));
     }
-    Ok(finish_solid(body, faces, &mut rec))
+    Ok(finish_solid(body, faces, rec))
 }
 
 /// ➡️ Cylinder solid when extruding a single closed circular edge along its plane normal.
@@ -237,6 +236,7 @@ fn try_extrude_circle_cylinder(
     face: FaceId,
     direction: Vec3,
     distance: f64,
+    rec: &mut OpRecorder,
 ) -> Result<Option<SolidId>, KernelError> {
     let face_data = body
         .faces
@@ -266,14 +266,13 @@ fn try_extrude_circle_cylinder(
     }
     let abs_h = height.abs();
     let z_sign = height.signum();
-    let mut rec = OpRecorder::new();
     let tol = Tol::DEFAULT;
     let bot_center = frame.origin;
     let top_center = bot_center + frame.z * (abs_h * z_sign);
     let bot_pt = frame.to_world(Pnt3::new(radius, 0.0, 0.0));
     let top_pt = bot_pt + frame.z * (abs_h * z_sign);
-    let v_bot = make_vertex(body, bot_pt, tol, &mut rec);
-    let v_top = make_vertex(body, top_pt, tol, &mut rec);
+    let v_bot = make_vertex(body, bot_pt, tol, rec);
+    let v_top = make_vertex(body, top_pt, tol, rec);
     let e_bot = {
         let curve = body.curves3.insert(Curve3::Circle {
             frame: Frame3 {
@@ -284,7 +283,7 @@ fn try_extrude_circle_cylinder(
             },
             radius,
         });
-        make_edge(body, curve, (0.0, TAU), v_bot, v_bot, tol, &mut rec)
+        make_edge(body, curve, (0.0, TAU), v_bot, v_bot, tol, rec)
     };
     let e_top = {
         let curve = body.curves3.insert(Curve3::Circle {
@@ -296,9 +295,9 @@ fn try_extrude_circle_cylinder(
             },
             radius,
         });
-        make_edge(body, curve, (0.0, TAU), v_top, v_top, tol, &mut rec)
+        make_edge(body, curve, (0.0, TAU), v_top, v_top, tol, rec)
     };
-    let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, &mut rec);
+    let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, rec);
     let cyl_frame = Frame3 {
         origin: if z_sign >= 0.0 { bot_center } else { top_center },
         x: frame.x,
@@ -315,13 +314,13 @@ fn try_extrude_circle_cylinder(
         &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)],
         false,
         tol,
-        &mut rec,
+        rec,
     );
     let s_bottom = body.surfaces.insert(plane_at(bot_center, -frame.z * z_sign));
     let s_top = body.surfaces.insert(plane_at(top_center, frame.z * z_sign));
-    let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, &mut rec);
-    let top = attach_face(body, s_top, &[(e_top, true)], false, tol, &mut rec);
-    Ok(Some(finish_solid(body, vec![lateral, bottom, top], &mut rec)))
+    let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, rec);
+    let top = attach_face(body, s_top, &[(e_top, true)], false, tol, rec);
+    Ok(Some(finish_solid(body, vec![lateral, bottom, top], rec)))
 }
 
 // #endregion 🔖️Helpers
@@ -337,17 +336,18 @@ pub fn extrude_face(
     face: FaceId,
     direction: Vec3,
     distance: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     require_positive("extrude distance", distance.abs())?;
     let dir = direction
         .normalized()
         .ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
     let offset = dir * distance;
-    if let Some(solid) = try_extrude_circle_cylinder(body, face, dir, distance)? {
+    if let Some(solid) = try_extrude_circle_cylinder(body, face, dir, distance, rec)? {
         return Ok(solid);
     }
     let polygon = face_outer_polygon(body, face)?;
-    solid_from_prism(body, &polygon, offset)
+    solid_from_prism(body, &polygon, offset, rec)
 }
 
 /// ➡️ Revolves a planar face about an axis by sampling section polygons into a solid.
@@ -357,6 +357,7 @@ pub fn revolve_face(
     axis_origin: Pnt3,
     axis_direction: Vec3,
     angle: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     let axis = axis_direction
         .normalized()
@@ -376,7 +377,7 @@ pub fn revolve_face(
             .collect();
         sections.push(section);
     }
-    solid_from_lofted_sections(body, &sections)
+    solid_from_lofted_sections(body, &sections, rec)
 }
 
 /// ➡️ Lofts profile faces into a solid by connecting successive outer polygons.
@@ -384,6 +385,7 @@ pub fn loft_profiles(
     body: &mut Body,
     profiles: &[FaceId],
     _smooth: bool,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     if profiles.len() < 2 {
         return Err(KernelError::InvalidInput("loft requires at least two profiles".into()));
@@ -392,7 +394,7 @@ pub fn loft_profiles(
     for &face in profiles {
         sections.push(face_outer_polygon(body, face)?);
     }
-    solid_from_lofted_sections(body, &sections)
+    solid_from_lofted_sections(body, &sections, rec)
 }
 
 /// ➡️ Sweeps a profile face along a wire path.
@@ -400,6 +402,7 @@ pub fn sweep_along_path(
     body: &mut Body,
     profile: FaceId,
     path: &Wire,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     let polygon = face_outer_polygon(body, profile)?;
     let samples = sample_wire_points(body, path, 16)?;
@@ -426,7 +429,7 @@ pub fn sweep_along_path(
             .collect::<Vec<_>>();
         sections.push(section);
     }
-    solid_from_lofted_sections(body, &sections)
+    solid_from_lofted_sections(body, &sections, rec)
 }
 
 /// ➡️ Pipes a profile along a path (guide currently ignored — constant scale).
@@ -435,8 +438,9 @@ pub fn pipe(
     profile: FaceId,
     path: &Wire,
     _guide: Option<&Wire>,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
-    sweep_along_path(body, profile, path)
+    sweep_along_path(body, profile, path, rec)
 }
 
 /// ➡️ Helical sweep of a profile about an axis.
@@ -448,6 +452,7 @@ pub fn helical_sweep(
     radius: f64,
     pitch: f64,
     turns: f64,
+    rec: &mut OpRecorder,
 ) -> Result<SolidId, KernelError> {
     require_positive("helical radius", radius)?;
     if !turns.is_finite() || turns.abs() <= 1e-12 {
@@ -483,7 +488,7 @@ pub fn helical_sweep(
             .collect::<Vec<_>>();
         sections.push(section);
     }
-    solid_from_lofted_sections(body, &sections)
+    solid_from_lofted_sections(body, &sections, rec)
 }
 
 fn rotate_around_axis(point: Pnt3, origin: Pnt3, axis: Vec3, angle: f64) -> Pnt3 {
@@ -542,7 +547,7 @@ fn curve_point(curve: &crate::brep::curve::Curve3, u: f64) -> Pnt3 {
     }
 }
 
-fn solid_from_lofted_sections(body: &mut Body, sections: &[Vec<Pnt3>]) -> Result<SolidId, KernelError> {
+fn solid_from_lofted_sections(body: &mut Body, sections: &[Vec<Pnt3>], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if sections.len() < 2 {
         return Err(KernelError::InvalidInput("loft/sweep needs at least two sections".into()));
     }
@@ -573,7 +578,7 @@ fn solid_from_lofted_sections(body: &mut Body, sections: &[Vec<Pnt3>]) -> Result
         triangles.push([bottom[0], bottom[i], bottom[i + 1]]);
         triangles.push([top[0], top[i + 1], top[i]]);
     }
-    crate::brep::primitives::solid_from_triangle_soup(body, &triangles)
+    crate::brep::primitives::solid_from_triangle_soup(body, &triangles, rec)
 }
 
 // #endregion 🔖️Api
@@ -604,6 +609,7 @@ mod tests {
     #[test]
     fn extrude_rectangle_matches_box_topology_and_volume() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let face = make_planar_face_from_points(
             &mut body,
             &[
@@ -612,9 +618,10 @@ mod tests {
                 Pnt3::new(2.0, 3.0, 0.0),
                 Pnt3::new(0.0, 3.0, 0.0),
             ],
+            &mut rec,
         )
         .unwrap();
-        let solid = extrude_face(&mut body, face, Vec3::Z, 4.0).unwrap();
+        let solid = extrude_face(&mut body, face, Vec3::Z, 4.0, &mut rec).unwrap();
         let (v, e, f) = solid_counts(&body, solid);
         assert_eq!((v, e, f), (8, 12, 6));
         assert_eq!(v as i64 - e as i64 + f as i64, 2);
@@ -622,7 +629,8 @@ mod tests {
         assert!((vol - 24.0).abs() < 1e-6, "expected volume 24, got {vol}");
 
         let mut ref_body = Body::new();
-        let ref_solid = make_box(&mut ref_body, 2.0, 3.0, 4.0).unwrap();
+        let mut ref_rec = OpRecorder::new();
+        let ref_solid = make_box(&mut ref_body, 2.0, 3.0, 4.0, &mut ref_rec).unwrap();
         let ref_vol = solid_volume(&ref_body, ref_solid, 0.1).unwrap();
         assert!((vol - ref_vol).abs() < 1e-6, "extrude vol {vol} vs make_box {ref_vol}");
         let issues = validate_body(&body);
@@ -636,6 +644,7 @@ mod tests {
     #[test]
     fn extrude_rejects_zero_direction_and_distance() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let face = make_planar_face_from_points(
             &mut body,
             &[
@@ -643,15 +652,17 @@ mod tests {
                 Pnt3::new(1.0, 0.0, 0.0),
                 Pnt3::new(0.0, 1.0, 0.0),
             ],
+            &mut rec,
         )
         .unwrap();
-        assert!(extrude_face(&mut body, face, Vec3::ZERO, 1.0).is_err());
-        assert!(extrude_face(&mut body, face, Vec3::Z, 0.0).is_err());
+        assert!(extrude_face(&mut body, face, Vec3::ZERO, 1.0, &mut rec).is_err());
+        assert!(extrude_face(&mut body, face, Vec3::Z, 0.0, &mut rec).is_err());
     }
 
     #[test]
     fn revolve_face_produces_solid() {
         let mut body = Body::new();
+        let mut rec = OpRecorder::new();
         let face = make_planar_face_from_points(
             &mut body,
             &[
@@ -660,19 +671,21 @@ mod tests {
                 Pnt3::new(2.0, 0.0, 1.0),
                 Pnt3::new(1.0, 0.0, 1.0),
             ],
+            &mut rec,
         )
         .unwrap();
-        let solid = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, TAU).expect("revolve");
+        let solid = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, TAU, &mut rec).expect("revolve");
         assert!(solid_volume(&body, solid, 1e-3).unwrap() > 0.0);
     }
 
     #[test]
     fn extrude_uses_rectangle_wire_helper() {
         let mut body = Body::new();
-        let wire = make_rectangle_wire(&mut body, 1.0, 1.0).unwrap();
-        let face = crate::brep::primitives::make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z)
+        let mut rec = OpRecorder::new();
+        let wire = make_rectangle_wire(&mut body, 1.0, 1.0, &mut rec).unwrap();
+        let face = crate::brep::primitives::make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec)
             .unwrap();
-        let solid = extrude_face(&mut body, face, Vec3::Z, 1.0).unwrap();
+        let solid = extrude_face(&mut body, face, Vec3::Z, 1.0, &mut rec).unwrap();
         let vol = solid_volume(&body, solid, 0.1).unwrap();
         assert!((vol - 1.0).abs() < 1e-6, "got {vol}");
     }

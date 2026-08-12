@@ -1,0 +1,10 @@
+test mesh::tests::decimate_no_op_when_ratio_at_max_and_clamps_below_min ... ok
+test brep::curve_ops::tests::quick::closest_point_matches_brute_force_dense_sampling_oracle ... ok
+test brep::predicates::tests::quick::orient2d_filtered_agrees_with_exact_on_random_and_near_degenerate_triples ... ok
+test brep::surface_ops::tests::quick::closest_point_on_cylinder_matches_brute_force_grid_oracle ... ok
+test brep::predicates::tests::quick::orient3d_filtered_agrees_with_exact_on_random_and_near_degenerate_quadruples ... ok
+test brep::predicates::tests::quick::in_circle2d_filtered_agrees_with_exact_on_random_configurations ... ok
+test brep::kernel::tests::sphere_torus_cut_produces_preview_mesh ... ok
+
+test result: ok. 407 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.52s
+

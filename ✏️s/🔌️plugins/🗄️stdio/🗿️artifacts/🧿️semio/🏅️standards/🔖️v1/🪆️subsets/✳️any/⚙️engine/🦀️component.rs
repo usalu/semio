@@ -21,6 +21,10 @@ pub fn register() {
     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
     crate::artifacts::semio::standards::v1::subsets::flow::io::register();
     crate::artifacts::semio::standards::v1::subsets::text::io::register();
+    crate::artifacts::semio::standards::v1::subsets::table::io::register();
+    crate::artifacts::semio::standards::v1::subsets::graph::io::register();
+    crate::artifacts::semio::standards::v1::subsets::object::io::register();
+    crate::artifacts::semio::standards::v1::subsets::kit::io::register();
     crate::artifacts::semio::standards::v1::subsets::any::io::register();
 }
 //#region 🚪️DerivedIoRegistry
@@ -41,6 +45,10 @@ pub mod io_registry {
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::SemioPresentationComposer;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::SemioFlowComposer;
     use crate::artifacts::semio::standards::v1::subsets::text::schema::SemioTextComposer;
+    use crate::artifacts::semio::standards::v1::subsets::table::schema::SemioTableComposer;
+    use crate::artifacts::semio::standards::v1::subsets::graph::schema::SemioGraphComposer;
+    use crate::artifacts::semio::standards::v1::subsets::object::schema::SemioObjectComposer;
+    use crate::artifacts::semio::standards::v1::subsets::kit::schema::SemioKitComposer;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::SemioComposer as SemioRawAnyComposer;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -61,6 +69,10 @@ pub mod io_registry {
             composer_entry_of::<SemioPresentationComposer>(),
             composer_entry_of::<SemioFlowComposer>(),
             composer_entry_of::<SemioTextComposer>(),
+            composer_entry_of::<SemioTableComposer>(),
+            composer_entry_of::<SemioGraphComposer>(),
+            composer_entry_of::<SemioObjectComposer>(),
+            composer_entry_of::<SemioKitComposer>(),
             composer_entry_of::<SemioRawAnyComposer>(),
         ]).as_slice()
     }

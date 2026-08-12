@@ -199,7 +199,7 @@ macro_rules! entity_input {
         }
     ) => {
         $(#[$sm])*
-        #[derive(Clone, Debug, Default, PartialEq, async_graphql::InputObject, dsl::DslRecord)]
+        #[derive(Clone, Debug, Default, PartialEq, async_graphql::InputObject, semio_framework_os_kernel::os_dsl::DslRecord)]
         #[graphql(name = $gql)]
         $vis struct $Name {
             $($(#[$fm])* $fvis $field : $ftype),*
@@ -713,16 +713,16 @@ pub mod id {
     /// `dsl::DslField` bridge — binds as `Shape::Text`, mirroring `String`'s own blanket impl — rather
     /// than a derive, exactly like the `HashMap`/`Box` bridges other converted crates hand-write at
     /// their derive engine boundary.
-    impl dsl::DslField for Id {
-        fn shape() -> dsl::Shape {
-            dsl::Shape::Text
+    impl semio_framework_os_kernel::os_dsl::DslField for Id {
+        fn shape() -> semio_framework_os_kernel::os_dsl::Shape {
+            semio_framework_os_kernel::os_dsl::Shape::Text
         }
-        fn to_value(&self) -> dsl::FieldValue {
-            dsl::FieldValue::Text(self.0.clone())
+        fn to_value(&self) -> semio_framework_os_kernel::os_dsl::FieldValue {
+            semio_framework_os_kernel::os_dsl::FieldValue::Text(self.0.clone())
         }
-        fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        fn from_value(value: &semio_framework_os_kernel::os_dsl::FieldValue) -> Result<Self, String> {
             match value {
-                dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
+                semio_framework_os_kernel::os_dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
                 other => Err(format!("expected Text, found {other:?}")),
             }
         }
@@ -847,6 +847,7 @@ pub mod error {
 pub mod geom {
     //! 📐️ Geometry: wire [`VectorInput`], [`PositionInput`], … for GraphQL kit inputs; canonical live weak entities live in [`entity`] as `Arc` graph nodes with one Rust kind per SDL weak entity.
     use crate::external_adapters::async_graphql::InputObject;
+    use semio_framework_os_kernel::{os_dsl as dsl, os_vcs as vcs};
 
     #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject, dsl::DslRecord)]
     #[graphql(name = "VectorInput")]
@@ -7812,8 +7813,8 @@ pub mod vcs {
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
         #[cfg(test)]
-        use vcs::ArtifactVcsCommand;
-        use vcs::{create_document_vcs_envelope, materialize_document_projection, ArtifactVcsEnvelope, ArtifactVcsStore, Operation as VcsOperation, OperationDiff};
+        use semio_framework_os_kernel::os_vcs::ArtifactVcsCommand;
+        use semio_framework_os_kernel::os_vcs::{create_document_vcs_envelope, materialize_document_projection, ArtifactVcsEnvelope, ArtifactVcsStore, Operation as VcsOperation, OperationDiff};
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
 
@@ -7916,7 +7917,7 @@ pub mod vcs {
             ArtifactVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
         }
 
-        pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, vcs::VcsError> {
+        pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, semio_framework_os_kernel::os_vcs::VcsError> {
             materialize_document_projection(envelope, applied)
         }
 
@@ -8225,7 +8226,7 @@ pub mod vcs {
                 self.the_kit_snapshot_store
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner())
-                    .dispatch(vcs::ArtifactVcsCommand::Apply { operations: vec![wire], description: None })
+                    .dispatch(semio_framework_os_kernel::os_vcs::ArtifactVcsCommand::Apply { operations: vec![wire], description: None })
                     .map_err(|e| ComposeError::invalid(e.to_string()))?;
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);

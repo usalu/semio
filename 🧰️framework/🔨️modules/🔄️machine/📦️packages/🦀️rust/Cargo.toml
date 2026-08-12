@@ -1,0 +1,41 @@
+[package]
+name = "semio-framework-machine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Statechart kernel, actor runtime and hosts — the core state machine every app engine is built on"
+
+[package.metadata.semio]
+role = "framework"
+id = "machine"
+
+[lints]
+workspace = true
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "📦️glue.rs"
+
+[features]
+default = ["macros", "serde"]
+macros = ["dep:machine_derive"]
+serde = ["dep:serde", "dep:serde_json"]
+testing = []
+
+[dependencies]
+machine_derive = { path = "../../✨️derive/📦️packages/🦀️rust", optional = true, package = "semio-framework-machine-derive" }
+serde = { version = "1.0.219", features = ["derive"], optional = true }
+serde_json = { version = "1.0.140", optional = true }
+thiserror = "2.0.12"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+js-sys = "0.3.83"
+
+[dev-dependencies]

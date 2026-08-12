@@ -1,9 +1,16 @@
 //! 🗄️ Db facade — Shape V2 #[path] glue.
 
 extern crate semio_framework_os_kernel as pack;
+pub use semio_framework_os_kernel::os_pack::testkit as pack_testkit;
 extern crate semio_framework_os_kernel as protocol;
+pub use semio_framework_os_kernel::os_spr::format as protocol_format;
+pub use semio_framework_os_kernel::os_spr::wire as protocol_core;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as vcs;
+
+pub use crate as db_core;
+pub use crate as db;
 
 #[path = "../../🦀️component.rs"]
 mod db_facade;
@@ -42,7 +49,9 @@ pub mod db_policy;
 #[path = "../../🕸️version-graph/🦀️component.rs"]
 pub mod db_version_graph;
 
-pub use db_ids::*;
+pub use db_durability::Frontier;
+pub use db_ids::{check_len, ActorId, ArtifactId, DbError, DbLimits, GenerationId};
+pub use db_policy::{DbCapabilities, DbConfig, Priority, Profile};
 pub use db_durability::*;
 pub use db_policy::*;
 pub use db_version_graph::*;

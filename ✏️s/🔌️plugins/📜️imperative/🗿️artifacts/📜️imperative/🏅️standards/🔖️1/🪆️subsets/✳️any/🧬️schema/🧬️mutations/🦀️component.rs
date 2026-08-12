@@ -56,6 +56,7 @@ mod tests {
     use crate::artifacts::imperative::Dictionary;
     use neural_engine::{Atom, Value};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
     use std::collections::BTreeMap;
 
     fn step(id: &str, kind: &str) -> Step {

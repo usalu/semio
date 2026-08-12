@@ -1,0 +1,25 @@
+syntax = "proto3";
+// 🧬️ SemioTableMutation schema — real facet mirror of the Rust `🦀️component.rs` sibling.
+package semio.s_stdio_semio_table.mutations;
+
+message CreateColumn { string name = 1; uint32 kind = 2; optional uint64 index = 3; }
+message DeleteColumn { string name = 1; }
+message RenameColumn { string name = 1; string new_name = 2; }
+message ReorderColumns { string name = 1; uint64 to_index = 2; }
+message InsertRow { uint64 index = 1; bytes row = 2; }
+message RemoveRow { uint64 index = 1; }
+message ReorderRows { uint64 from = 1; uint64 to = 2; }
+message EditCell { uint64 row_index = 1; string column_name = 2; bytes new_value = 3; }
+
+message SemioTableMutation {
+  oneof variant {
+    CreateColumn create_column = 1;
+    DeleteColumn delete_column = 2;
+    RenameColumn rename_column = 3;
+    ReorderColumns reorder_columns = 4;
+    InsertRow insert_row = 5;
+    RemoveRow remove_row = 6;
+    ReorderRows reorder_rows = 7;
+    EditCell edit_cell = 8;
+  }
+}

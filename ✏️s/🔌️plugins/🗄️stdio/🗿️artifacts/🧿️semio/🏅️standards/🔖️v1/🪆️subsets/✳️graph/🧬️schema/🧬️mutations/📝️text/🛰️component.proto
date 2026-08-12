@@ -1,0 +1,9 @@
+syntax = "proto3";
+// 📝️ Text-facet grammar mirror (descriptive) — see ../🛰️component.proto for the canonical facet
+// schema; this file describes the OP-TEXT ENCODING of the same shape.
+package semio.s_stdio_semio_graph_mutations.text;
+
+message SemioGraphOpDsl {
+  string keyword = 1;
+  string args = 2;
+}

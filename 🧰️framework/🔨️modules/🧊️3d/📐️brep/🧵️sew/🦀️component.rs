@@ -17,7 +17,7 @@ use crate::brep::vec::{Pnt3, Vec3};
 // #region 🔖️Api
 
 /// 🧵 Sew loose faces into one solid by merging coincident boundary edges within `tolerance`.
-pub fn sew_faces(body: &mut Body, faces: &[FaceId], tolerance: f64) -> Result<SolidId, KernelError> {
+pub fn sew_faces(body: &mut Body, faces: &[FaceId], tolerance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if faces.len() < 2 {
         return Err(KernelError::InvalidInput("sewing requires at least 2 faces".into()));
     }
@@ -27,7 +27,6 @@ pub fn sew_faces(body: &mut Body, faces: &[FaceId], tolerance: f64) -> Result<So
         Tol::DEFAULT
     };
     let linear = tol.value();
-    let mut rec = OpRecorder::new();
     let snapshots = snapshot_faces(body, faces)?;
     let resolution = 1.0 / linear;
     let mut vertex_map: HashMap<(i64, i64, i64), VertexId> = HashMap::new();
@@ -36,26 +35,26 @@ pub fn sew_faces(body: &mut Body, faces: &[FaceId], tolerance: f64) -> Result<So
     for snap in &snapshots {
         let mut members = Vec::with_capacity(snap.edge_endpoints.len());
         for &(start_pt, end_pt) in &snap.edge_endpoints {
-            let v_start = get_or_create_vertex(body, start_pt, resolution, tol, &mut vertex_map, &mut rec);
-            let v_end = get_or_create_vertex(body, end_pt, resolution, tol, &mut vertex_map, &mut rec);
+            let v_start = get_or_create_vertex(body, start_pt, resolution, tol, &mut vertex_map, rec);
+            let v_end = get_or_create_vertex(body, end_pt, resolution, tol, &mut vertex_map, rec);
             let (v_lo, v_hi) = if v_start <= v_end { (v_start, v_end) } else { (v_end, v_start) };
             let forward = v_start == v_lo;
             let edge = *edge_map.entry((v_lo, v_hi)).or_insert_with(|| {
                 let p0 = body.vertices.get(v_lo).expect("vertex").position;
                 let p1 = body.vertices.get(v_hi).expect("vertex").position;
                 let curve = body.curves3.insert(Curve3::Line { origin: p0, dir: p1 - p0 });
-                make_edge(body, curve, (0.0, 1.0), v_lo, v_hi, tol, &mut rec)
+                make_edge(body, curve, (0.0, 1.0), v_lo, v_hi, tol, rec)
             });
             members.push((edge, forward));
         }
         let placeholder = FaceId::from_raw(0, 0);
         let outer = make_loop(body, placeholder, &members);
-        let face = add_face(body, snap.surface, Some(outer), vec![], snap.flipped, snap.tol, &mut rec);
+        let face = add_face(body, snap.surface, Some(outer), vec![], snap.flipped, snap.tol, rec);
         body.loops.get_mut(outer).expect("loop").face = face;
         new_faces.push(face);
     }
-    let shell = add_shell(body, new_faces, &mut rec);
-    Ok(add_solid(body, shell, vec![], &mut rec))
+    let shell = add_shell(body, new_faces, rec);
+    Ok(add_solid(body, shell, vec![], rec))
 }
 
 // #endregion 🔖️Api
@@ -181,7 +180,8 @@ mod tests {
             Pnt3::new(1.0, 1.0, 0.0),
             Vec3::Z,
         );
-        let solid = sew_faces(&mut body, &[f0, f1], 1e-6).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = sew_faces(&mut body, &[f0, f1], 1e-6, &mut rec).unwrap();
         assert_eq!(body.solid_faces(solid).len(), 2);
         assert_eq!(unique_edges_on_solid(&body, solid), 7);
     }
@@ -237,7 +237,8 @@ mod tests {
             Pnt3::new(1.0, 0.0, 1.0),
             Vec3::X,
         );
-        let solid = sew_faces(&mut body, &[bottom, top, front, back, left, right], 1e-6).unwrap();
+        let mut rec = OpRecorder::new();
+        let solid = sew_faces(&mut body, &[bottom, top, front, back, left, right], 1e-6, &mut rec).unwrap();
         assert_eq!(body.solid_faces(solid).len(), 6);
         assert_eq!(unique_edges_on_solid(&body, solid), 12);
     }
@@ -253,7 +254,8 @@ mod tests {
             Pnt3::new(0.0, 1.0, 0.0),
             Vec3::Z,
         );
-        assert!(sew_faces(&mut body, &[f], 1e-6).is_err());
+        let mut rec = OpRecorder::new();
+        assert!(sew_faces(&mut body, &[f], 1e-6, &mut rec).is_err());
     }
 }
 

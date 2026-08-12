@@ -39,7 +39,6 @@ fn run_main() -> Result<(), TrinityJackShellError> {
     let text = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
     let fixture = JackSnapshot::parse_dsl(&text).map_err(|source| TrinityJackShellError::Dsl { path: fixture_path.to_string(), source })?;
     let mut graph = Graph::from_fixture(fixture)?;
-    graph.recompute_derived();
     println!("[DEBUG] trinity jack shell loaded {} nodes, {} edges from {fixture_path}", graph.nodes.len(), graph.edges.len());
     if args.len() > 2 {
         let query = args[2..].join(" ");
@@ -124,7 +123,6 @@ mod tests {
     #[test]
     fn shell_loads_fixture() {
         let mut graph = Graph::load_json(&mini_json()).unwrap();
-        graph.recompute_derived();
         let result = run(&mut graph, "MATCH (a:Piece) RETURN a.name").unwrap();
         assert_eq!(result.rows.len(), 1);
     }

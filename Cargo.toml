@@ -88,6 +88,8 @@ members = [
     # not run any cargo command standalone. Adoption fixes real breakage.
     "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
     "🌎️hub/📦️packages/🦀️rust",
     "compose/client/lib/rs",
     "compose/client/lib/query/rs",

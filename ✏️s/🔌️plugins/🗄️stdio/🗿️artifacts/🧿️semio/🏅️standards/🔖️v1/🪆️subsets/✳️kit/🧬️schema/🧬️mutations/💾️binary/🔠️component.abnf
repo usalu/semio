@@ -1,0 +1,4 @@
+op-frame = format tag payload
+format = OCTET
+tag = OCTET
+payload = *OCTET
