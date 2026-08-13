@@ -700,9 +700,12 @@ class TestScript extends BundleScript {
     const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
     const componentsSource = readFileSync(join(texDir, "semio-components.sty"), "utf8");
     const classSource = readFileSync(join(texDir, "semio.cls"), "utf8");
+    const headingTrackSource = windowSource.slice(windowSource.indexOf("\\newcount\\semio@chrome@heading@level"), windowSource.indexOf("\\newsavebox{\\semio@window@cap@slot}"));
     assert.match(classSource, /\\RequirePackage\[style=\\semio@citestyle,backend=bibtex,sorting=nyt,backref=true\]\{biblatex\}/);
     assert.match(componentsSource, /\\NewDocumentCommand\{\\makecoverpages\}\{\}\{%[\s\S]*?\\newgeometry\{[^}]+\}\s*\\thispagestyle\{empty\}/);
-    assert.match(windowSource, /\\newcommand\{\\semio@chrome@heading@track\}\[2\]\{%\s*\\semio@chrome@heading@set\{#2\}%\s*\}/);
+    assert.match(headingTrackSource, /\\semio@chrome@heading@level=99\\relax/);
+    assert.match(headingTrackSource, /\\ifnum\\semio@chrome@heading@candidate@level<\\semio@chrome@heading@level[\s\S]*?\\global\\semio@chrome@heading@level=\\semio@chrome@heading@candidate@level/);
+    assert.match(headingTrackSource, /\\ifnum\\semio@chrome@heading@candidate@level=\\semio@chrome@heading@level[\s\S]*?\\semio@chrome@heading@set\{#2\}%[\s\S]*?\\else[\s\S]*?\\global\\let\\semio@nav@short@pending\\relax[\s\S]*?\\expandafter\\markright\\expandafter\{\\semio@chrome@heading\}/);
     assert.match(tableSource, /\\newcommand\{\\semio@table@long@head@copy\}\{%[\s\S]*?\\ifsemio@table@long@pageparts[\s\S]*?\\global\\advance\\semio@table@long@part\\@ne[\s\S]*?\\semio@table@long@part@overlay[\s\S]*?\\copy\\LT@head/);
     assert.match(tableSource, /\\patchcmd\{\\LT@start\}[\s\S]*?\{\\copy\\LT@head\}[\s\S]*?\{\\semio@table@long@head@copy\}/);
     assert.match(tableSource, /\\end\{longtable\}%\s*\\semio@table@long@parts@record/);

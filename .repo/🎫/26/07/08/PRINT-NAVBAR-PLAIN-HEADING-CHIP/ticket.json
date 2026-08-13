@@ -3,13 +3,15 @@
   "emoji": "🧭",
   "status": "closed",
   "description": "Navbar top right should show the current chapter name inside the chip. Currently empty in zwischenbericht and other templates.",
-  "summary": "Made the print navbar name chip consistent across all heading levels. Every heading now writes its supplied plain title to the running mark, preventing KOMA's numbered fallback from producing labels such as `1.2.1 AP-Erfahrung`; active chips render only names such as `Arbeitspakete` and `Recherche`. Added a source regression assertion. Rebuilt the real Entwerfen mit Bestand Zwischenbericht in light and dark, visually inspected the AP-Erfahrung and continuation pages, and audited all 127 pages in each PDF with zero numbered header prefixes. The print unit suite and the complete 12-PDF light/dark template matrix pass.",
+  "summary": "Changed print running-header selection to retain the highest heading tier encountered. In the Zwischenbericht, part names now own the outer header chip; lower headings repeat the retained part mark to supersede KOMA numbered marks without replacing the part label. SemioNavShort is consumed on ignored lower levels so it cannot leak. Added focused regression assertions, a retained debug probe, and rendered verification captures. The print quick suite passed; the real Zwischenbericht built in light and dark; pages 10-27 were audited and visually checked for Ergebnisse, Projektstand, Mittelverwendung, and Ergebnisverwertung; report, paper, and kompaktbericht light/dark fallback builds also passed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1865"
   },
   "goal": "🎯r2602",
   "sessions": [
     "⚪04c06dec0f2a4edd841dd40f772ea1e3",
-    "⚪3220b15eaf6a45d692f0a9024246a365"
+    "⚪3220b15eaf6a45d692f0a9024246a365",
+    "⚪330118432b3542c9b03ee1555a856e43",
+    "⚪63a91f76080e4dcc8121debe18dd9bae"
   ]
 }

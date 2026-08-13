@@ -1,0 +1,30 @@
+\documentclass[type=zwischenbericht]{zukunftbau}
+
+\title{Header Part Probe}
+\author{Semio}
+
+\makeatletter
+\let\semio@debug@heading@track\semio@chrome@heading@track
+\renewcommand{\semio@chrome@heading@track}[2]{%
+  \typeout{[DEBUG] header before kind=#1 root=\the\semio@chrome@heading@level}%
+  \semio@debug@heading@track{#1}{#2}%
+  \typeout{[DEBUG] header after kind=#1 root=\the\semio@chrome@heading@level value=\semio@chrome@heading}%
+}
+\makeatother
+
+\begin{document}
+\part{Ergebnisse}
+Ergebnisse.
+\newpage
+\section{Forschungsfragen und Vorgehen}
+Forschungsfragen und Vorgehen.
+\newpage
+\subsubsection{Externe Softwareentwicklung}
+Externe Softwareentwicklung.
+\newpage
+\part{Projektstand}
+Projektstand.
+\newpage
+\section{Arbeitspakete}
+Arbeitspakete.
+\end{document}
