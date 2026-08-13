@@ -17,6 +17,13 @@
 % being pre-baked into a second unrelated literal.
 \providecommand{\semio@graph@node@radius}{2.275mm}
 \providecommand{\semio@graph@node@radius@emphasis}{0.3mm}
+% 🔒 Deckkraft des Knotenlogos. Die Assets tragen bereits 50 % aus der
+% Bildprüfung, aber im gebauten PDF liegt das Logo unter der ID im selben
+% 4,55-mm-Kreis: bei 50 % waren beide unlesbar (gemessen an FR/NL, Seite 96).
+% 0.2 lässt das Logo als Farbton stehen und gibt die ID wieder frei. Der Wert
+% wirkt nur auf die Zeichnung, nicht auf die Datei — die Bildprüfung bleibt
+% die Quelle dafür, WELCHES Logo erscheint, nicht wie kräftig.
+\providecommand{\semio@graph@node@image@opacity}{0.2}
 % 🔠 Node label face. Deliberately smaller than \semio@chrome@font@chip: a
 % graph label sits inside a ~4.5mm circle, not in a window tab.
 \providecommand{\semio@graph@label@size}{5.2pt}
@@ -131,7 +138,13 @@
   { }
 
 \semio_graph_edge_kind_define:nn { plain } { }
-\semio_graph_edge_kind_define:nn { muted } { draw=semio-chrome-border-normal }
+% muted must NOT reuse semio-chrome-border-normal: that is also the default
+% node-circle border (semio~graph~node, line ~65), so a muted edge and a
+% plain-state node outline drew in the identical tone and blurred together in
+% dense panels. Opacity (not a new named color) keeps this self-contained --
+% no light/dark token pair to add in semio-core.sty for a single edge kind.
+\semio_graph_edge_kind_define:nn { muted }
+  { draw=semio-chrome-border-normal, draw~opacity=0.5 }
 \semio_graph_edge_kind_define:nn { synth }
   { dash~pattern=on~\semio@stroke@focus~off~\semio@stroke@default }
 \semio_graph_edge_kind_define:nn { hypo }
@@ -271,7 +284,8 @@
   \exp_args:NV \file_if_exist:nT \l_semio_graph_image_path_tl {
     \begin{scope}
       \clip (#1) circle [ radius=\semio@graph@node@radius ] ;
-      \node [ inner~sep=0pt , outer~sep=0pt , fill=none , draw=none ] at (#1) {
+      \node [ inner~sep=0pt , outer~sep=0pt , fill=none , draw=none ,
+              opacity=\semio@graph@node@image@opacity ] at (#1) {
         \includegraphics
           [ width=\dim_eval:n { \semio@graph@node@radius * 2 } ]
           { \tl_use:N \l_semio_graph_image_path_tl }

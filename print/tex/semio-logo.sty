@@ -75,6 +75,15 @@
   \end{minipage}%
 }
 
+% 🏷 Public wrapper around \semio_logo_fit:nnn, for callers that are not
+% preamble code and cannot say \makeatletter -- generated fragments above all.
+% Goes through the same resolver as every other logo, so a `-dark` sibling is
+% picked up automatically in the dark build and a missing file degrades to a
+% blank rule of the right size instead of a TeX error.
+\NewDocumentCommand{\SemioLogoFit}{m m m}{%
+  \semio_logo_fit:nnn {#1} {#2} {#3}%
+}
+
 \ExplSyntaxOff
 
 \newcommand{\semio@emblem@unit}{0.005cm}
