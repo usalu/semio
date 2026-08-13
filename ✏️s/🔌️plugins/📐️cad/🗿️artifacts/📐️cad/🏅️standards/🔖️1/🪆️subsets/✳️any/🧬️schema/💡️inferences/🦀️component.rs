@@ -556,7 +556,7 @@ pub use derive_transformation::*;
 // inference-shaped derived compute).
 mod construct_query {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry;
-    use math::graph::dsl::{QueryableEdge, QueryableGraph};
+    use graph::dsl::{QueryableEdge, QueryableGraph};
     use graph::manifest::PropertyValue;
     use std::collections::BTreeSet;
 
@@ -682,11 +682,11 @@ mod construct_query {
 
     /// @emoji 🔍️ Runs a Jack query against one `CadGeometry` pane and returns its JSON result —
     /// the single entry point `cad-ui`/an MCP tool calls for topology queries (`saved selections`,
-    /// non-manifold-edge checks, adjacency lookups), reusing `math::graph::dsl::run_query_json`
+    /// non-manifold-edge checks, adjacency lookups), reusing `graph::dsl::run_query_json`
     /// unchanged.
-    pub fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, math::graph::dsl::GraphDslError> {
+    pub fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, graph::dsl::GraphDslError> {
         let graph = CadTopologyGraph::new(geometry);
-        math::graph::dsl::run_query_json(&graph, source)
+        graph::dsl::run_query_json(&graph, source)
     }
 
     #[cfg(test)]

@@ -1,0 +1,35 @@
+//! 🗂️ 🗂️ Forms play app commands command — `set-selection`.
+
+use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[dsl(keyword = "selection")]
+pub struct SetSelection {
+    pub ids: Vec<String>,
+}
+
+pub fn handle(payload: &SetSelection, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    Ok(Emit::config(vec![FormsConfigMutation::SetSelection { ids: payload.ids.clone() }]))
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::apps::forms::testkit::{dispatch, forms_app, render};
+    use crate::apps::forms::{FormsCommand, FORMS_PLAY_BODY_BLUEPRINT};
+    use crate::artifacts::forms::forms_steps;
+
+    #[test]
+    fn set_selection_reflects_in_the_blueprint_builder_render() {
+        let mut app = forms_app();
+        let first_question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
+        dispatch(&mut app, FormsCommand::SetSelection(SetSelection { ids: vec![first_question_id.clone()] }));
+        let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT);
+        assert!(json.contains(&format!(r#""selectedId":"{first_question_id}""#)));
+    }
+}
+//#endregion 🧪️Tests

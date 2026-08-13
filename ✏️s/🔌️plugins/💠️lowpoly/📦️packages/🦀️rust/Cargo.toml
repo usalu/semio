@@ -42,3 +42,8 @@ cad-fixtures = ["dep:cad_plugin"]
 path = "../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust"
 package = "semio-s-plugin-cad"
 optional = true
+# 🔌️ Embeds cad as a LIBRARY, so cad's WASM component entry point must stay off: both crates call
+# `plugin_exports!`, which emits `#[no_mangle] semio_plugin_install_bundle`, and two definitions in
+# one component is a `rust-lld: duplicate symbol` link error. Only surfaces at link time — never in
+# `cargo check`/`cargo test` — so it stays invisible until something actually builds the component.
+default-features = false

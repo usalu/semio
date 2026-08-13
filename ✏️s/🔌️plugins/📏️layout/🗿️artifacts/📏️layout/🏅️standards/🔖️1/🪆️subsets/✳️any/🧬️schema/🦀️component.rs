@@ -478,7 +478,7 @@ pub fn layout_sample_document_json() -> String {
 }
 
 /// 🎨️ Formats an optional RGBA color as a comma-separated text field value; two consumers
-/// (`📌️panels/🔍️inspection` reads it, `🎮️commands/✏️author` parses it back via `text_to_rgba`).
+/// (`📌️panels/🔍️inspection` reads it, `🎮️commands/✏️add-frame` parses it back via `text_to_rgba`).
 pub fn rgba_to_text(color: &Option<[f32; 4]>) -> String {
     color.map(|channels| channels.iter().map(|channel| channel.to_string()).collect::<Vec<_>>().join(", ")).unwrap_or_default()
 }

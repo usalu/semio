@@ -218,8 +218,13 @@ pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event,
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
 
+// 🎬️ Relocated verbatim from `🧰️framework/🔨️modules/🧊️3d/🎬️scene/🦀️component.rs` (ticket
+// 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH): its inputs are a
+// camera and a screen rectangle, not a document, so nothing about it is derivable from an artifact
+// snapshot — it stays renderer infrastructure and lives beside its only real mount point instead of
+// a s-module `🧊️3d` grab-bag. `🧊️3d` no longer mounts it at all.
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../../🧊️3d/🎬️scene/🦀️component.rs"]
+#[path = "../../../../🎬️scene/🦀️component.rs"]
 pub mod kernel_3d_scene;
 
 #[cfg(feature = "wgpu-engine")]

@@ -1,5 +1,5 @@
 //! ⇥️ Main-window option — the tab-size slider. Its command handler lives in
-//! `🎮️commands/⚙️editor-settings::set_tab_size`.
+//! `🎮️commands/⚙️toggle-line-numbers::set_tab_size`.
 
 use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::terminology::WriterPlayLabels;

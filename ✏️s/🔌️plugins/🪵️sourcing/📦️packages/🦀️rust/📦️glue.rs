@@ -358,18 +358,40 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curation/🦀️component.rs"]
-            pub mod curation;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️filter/🦀️component.rs"]
-            pub mod filter;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗣️locale/🦀️component.rs"]
-            pub mod locale;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧩️contribution/🦀️component.rs"]
-            pub mod contribution;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️set-artifact-json/🦀️component.rs"]
+            pub mod set_artifact_json;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️stock-from-catalogue/🦀️component.rs"]
+            pub mod stock_from_catalogue;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curate-add/🦀️component.rs"]
+            pub mod curate_add;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curate-set-count/🦀️component.rs"]
+            pub mod curate_set_count;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curate-remove/🦀️component.rs"]
+            pub mod curate_remove;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️drop-on-pool/🦀️component.rs"]
+            pub mod drop_on_pool;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️drop-on-curated/🦀️component.rs"]
+            pub mod drop_on_curated;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️set-filter-query/🦀️component.rs"]
+            pub mod set_filter_query;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️set-filter-module/🦀️component.rs"]
+            pub mod set_filter_module;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️set-filter-typology/🦀️component.rs"]
+            pub mod set_filter_typology;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️set-filter-min-availability/🦀️component.rs"]
+            pub mod set_filter_min_availability;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️sort-table/🦀️component.rs"]
+            pub mod sort_table;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗂️select-row/🦀️component.rs"]
+            pub mod select_row;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗂️world-select/🦀️component.rs"]
+            pub mod world_select;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧩️set-contributions/🦀️component.rs"]
+            pub mod set_contributions;
         }
 
         #[path = "."]

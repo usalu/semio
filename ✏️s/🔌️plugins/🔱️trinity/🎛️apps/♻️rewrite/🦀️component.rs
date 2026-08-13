@@ -596,22 +596,22 @@ impl ArtifactApp for TrinityRewritePlayApp {
         let state = doc.snapshot;
         let config = cfg.snapshot;
         match command {
-            TrinityRewriteCommand::NodeGraphEdit { surface_id, operations_json } => crate::apps::rewrite::commands::rule::node_graph_edit(state, &config.selected_node_ids, surface_id, operations_json),
-            TrinityRewriteCommand::SetLhsJson { value } => crate::apps::rewrite::commands::rule::set_lhs_json(state, value),
-            TrinityRewriteCommand::SetRhsJson { value } => crate::apps::rewrite::commands::rule::set_rhs_json(state, value),
-            TrinityRewriteCommand::SetParameter { name, value } => crate::apps::rewrite::commands::rule::set_parameter(state, name, value),
-            TrinityRewriteCommand::AddRuleClause { kind } => crate::apps::rewrite::commands::rule::add_rule_clause_command(state, kind),
-            TrinityRewriteCommand::ResetRule => crate::apps::rewrite::commands::rule::reset_rule(state),
-            TrinityRewriteCommand::PatchNodes { node_ids, field, value } => crate::apps::rewrite::commands::rule::patch_nodes(state, node_ids, field, value),
-            TrinityRewriteCommand::SetSelection { ids, surface_id } => crate::apps::rewrite::commands::view::set_selection(state, ids, surface_id, config.select_epoch),
-            TrinityRewriteCommand::NodeGraphHover { surface_id, node_id } => crate::apps::rewrite::commands::view::node_graph_hover(state, surface_id, node_id, config.hover_epoch),
-            TrinityRewriteCommand::SetViewport { surface_id, viewport_json } => crate::apps::rewrite::commands::view::set_viewport(surface_id, viewport_json),
-            TrinityRewriteCommand::GraphPointerDown { node_id } => crate::apps::rewrite::commands::view::graph_pointer_down(node_id),
-            TrinityRewriteCommand::TextSelect { var, start } => crate::apps::rewrite::commands::view::text_select(state, var, start, config.select_epoch),
-            TrinityRewriteCommand::TextHover { var, offset } => crate::apps::rewrite::commands::view::text_hover(state, var, offset, config.hover_epoch),
-            TrinityRewriteCommand::Reorganize => crate::apps::rewrite::commands::view::reorganize(config.reorganize_epoch),
-            TrinityRewriteCommand::SetLodMode { window_id, value } => crate::apps::rewrite::commands::view::set_lod_mode(window_id, value),
-            TrinityRewriteCommand::SetLocale { value } => crate::apps::rewrite::commands::view::set_locale(value),
+            TrinityRewriteCommand::NodeGraphEdit { surface_id, operations_json } => crate::apps::rewrite::commands::node_graph_edit(state, &config.selected_node_ids, surface_id, operations_json),
+            TrinityRewriteCommand::SetLhsJson { value } => crate::apps::rewrite::commands::set_lhs_json(state, value),
+            TrinityRewriteCommand::SetRhsJson { value } => crate::apps::rewrite::commands::set_rhs_json(state, value),
+            TrinityRewriteCommand::SetParameter { name, value } => crate::apps::rewrite::commands::set_parameter(state, name, value),
+            TrinityRewriteCommand::AddRuleClause { kind } => crate::apps::rewrite::commands::add_rule_clause_command(state, kind),
+            TrinityRewriteCommand::ResetRule => crate::apps::rewrite::commands::reset_rule(state),
+            TrinityRewriteCommand::PatchNodes { node_ids, field, value } => crate::apps::rewrite::commands::patch_nodes(state, node_ids, field, value),
+            TrinityRewriteCommand::SetSelection { ids, surface_id } => crate::apps::rewrite::commands::set_selection(state, ids, surface_id, config.select_epoch),
+            TrinityRewriteCommand::NodeGraphHover { surface_id, node_id } => crate::apps::rewrite::commands::node_graph_hover(state, surface_id, node_id, config.hover_epoch),
+            TrinityRewriteCommand::SetViewport { surface_id, viewport_json } => crate::apps::rewrite::commands::set_viewport(surface_id, viewport_json),
+            TrinityRewriteCommand::GraphPointerDown { node_id } => crate::apps::rewrite::commands::graph_pointer_down(node_id),
+            TrinityRewriteCommand::TextSelect { var, start } => crate::apps::rewrite::commands::text_select(state, var, start, config.select_epoch),
+            TrinityRewriteCommand::TextHover { var, offset } => crate::apps::rewrite::commands::text_hover(state, var, offset, config.hover_epoch),
+            TrinityRewriteCommand::Reorganize => crate::apps::rewrite::commands::reorganize(config.reorganize_epoch),
+            TrinityRewriteCommand::SetLodMode { window_id, value } => crate::apps::rewrite::commands::set_lod_mode(window_id, value),
+            TrinityRewriteCommand::SetLocale { value } => crate::apps::rewrite::commands::set_locale(value),
         }
     }
 

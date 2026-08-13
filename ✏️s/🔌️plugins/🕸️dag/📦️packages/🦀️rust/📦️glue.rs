@@ -447,14 +447,40 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️nodes/🦀️component.rs"]
-            pub mod nodes;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️graph/🦀️component.rs"]
-            pub mod graph;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗣️locale/🦀️component.rs"]
-            pub mod locale;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️add-node/🦀️component.rs"]
+            pub mod add_node;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️remove-node/🦀️component.rs"]
+            pub mod remove_node;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️rename-dag-node/🦀️component.rs"]
+            pub mod rename_dag_node;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🔧️patch-dag-nodes/🦀️component.rs"]
+            pub mod patch_dag_nodes;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️delete-selection/🦀️component.rs"]
+            pub mod delete_selection;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
+            pub mod node_graph_edit;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️connect-media-ports/🦀️component.rs"]
+            pub mod connect_media_ports;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️disconnect/🦀️component.rs"]
+            pub mod disconnect;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️move-media-node/🦀️component.rs"]
+            pub mod move_media_node;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️reorganize/🦀️component.rs"]
+            pub mod reorganize;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️select-node/🦀️component.rs"]
+            pub mod select_node;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️node-graph-select/🦀️component.rs"]
+            pub mod node_graph_select;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️node-graph-hover/🦀️component.rs"]
+            pub mod node_graph_hover;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️node-graph-viewport/🦀️component.rs"]
+            pub mod node_graph_viewport;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️graph-pointer-down/🦀️component.rs"]
+            pub mod graph_pointer_down;
+            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
         }
 
         #[path = "."]

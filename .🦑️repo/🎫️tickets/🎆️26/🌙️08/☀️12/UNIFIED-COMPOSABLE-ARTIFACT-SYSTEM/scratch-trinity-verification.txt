@@ -1,0 +1,28 @@
+=== trinity fan-out verification transcript ===
+--- final cargo check -p semio-s-plugin-trinity --all-targets ---
+278 |     use protocol::MutationDiff;
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-trinity` (lib) generated 39 warnings (run `cargo fix --lib -p semio-s-plugin-trinity` to apply 35 suggestions)
+warning: `semio-s-plugin-trinity` (lib test) generated 40 warnings (33 duplicates) (run `cargo fix --lib -p semio-s-plugin-trinity --tests` to apply 6 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1.31s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, semio-s-plugin-trinity v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 36`
+--- final cargo nextest run -p semio-s-plugin-trinity (run A) ---
+        PASS [   0.021s] (194/196) semio-s-plugin-trinity executor::tests::tokenize_unterminated_string_is_error
+        PASS [   0.033s] (195/196) semio-s-plugin-trinity executor::tests::run_set
+        PASS [   0.049s] (196/196) semio-s-plugin-trinity executor::tests::run_create_edge
+────────────
+     Summary [   0.568s] 196 tests run: 196 passed, 0 skipped
+--- final cargo nextest run -p semio-s-plugin-trinity (run B) ---
+        PASS [   0.027s] (194/196) semio-s-plugin-trinity executor::tests::run_merge_creates_disconnected_pattern
+        PASS [   0.014s] (195/196) semio-s-plugin-trinity executor::tests::tokenize_unterminated_string_is_error
+        PASS [   0.047s] (196/196) semio-s-plugin-trinity executor::tests::run_create_edge
+────────────
+     Summary [   0.543s] 196 tests run: 196 passed, 0 skipped
+--- shell + lsp ---
+ Nextest run ID af7cd1ba-2b6d-4d81-9ffb-fa413537128a with nextest profile: default
+    Starting 1 test across 2 binaries
+        PASS [   0.015s] (1/1) semio-s-plugin-trinity-jack-shell::bin/semio-s-plugin-trinity-jack-shell tests::shell_loads_fixture
+────────────
+     Summary [   0.015s] 1 test run: 1 passed, 0 skipped

@@ -3,7 +3,7 @@
 
 use crate::artifacts::jack::{port_node_id, port_port_id, Camera, Edge, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue, port_key};
 use crate::lexer::{lex, lex_spanned, tokenize, Token, TokenClass, TokenSpan, SpannedToken};
-use math::graph::dsl::{QueryableEdge, QueryableGraph};
+use graph::dsl::{QueryableEdge, QueryableGraph};
 use std::collections::BTreeSet;
 
 pub mod queryable {
@@ -116,7 +116,7 @@ pub mod queryable {
 
 pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
 use crate::ast::{Assignment, Clause, Expr, Pattern, PatternEdge, PatternNode, Query, QueryResult, QueryResultKind, ReturnItem};
-use math::graph::dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken};
+use graph::dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -267,7 +267,7 @@ fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Opti
 
 /// 🔎️ Context-aware jack completions for the editor.
 pub fn complete(graph: &Graph, source: &str, cursor: usize) -> Vec<Completion> {
-    math::graph::dsl::complete(&TrinityQueryableGraph(graph), source, cursor)
+    graph::dsl::complete(&TrinityQueryableGraph(graph), source, cursor)
 }
 // #endregion 🔖️Language
 fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
@@ -411,7 +411,7 @@ fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
 
 /// 🩺️ Lint jack source with syntax and semantic diagnostics.
 pub fn lint(graph: &Graph, source: &str) -> Vec<Diagnostic> {
-    math::graph::dsl::lint(&TrinityQueryableGraph(graph), source)
+    graph::dsl::lint(&TrinityQueryableGraph(graph), source)
 }
 
 #[allow(dead_code)]
@@ -452,7 +452,7 @@ fn format_token(tok: &Token) -> String {
 
 /// 🪞️ Format jack source canonically (idempotent).
 pub fn format(source: &str) -> Result<String, String> {
-    math::graph::dsl::format(source).map_err(|err| err.to_string())
+    graph::dsl::format(source).map_err(|err| err.to_string())
 }
 
 #[allow(dead_code)]
@@ -488,12 +488,12 @@ fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> 
 
 /// 💬️ Hover information at cursor.
 pub fn hover(graph: &Graph, source: &str, cursor: usize) -> Option<Hover> {
-    math::graph::dsl::hover(&TrinityQueryableGraph(graph), source, cursor)
+    graph::dsl::hover(&TrinityQueryableGraph(graph), source, cursor)
 }
 
 /// 🎨️ Semantic token classes for LSP highlighting.
 pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
-    math::graph::dsl::semantic_tokens(source)
+    graph::dsl::semantic_tokens(source)
 }
 // #endregion 🔖️LanguageService
 /// 🧩️ Demo `Piece`/`Connection` fixture shared by the jack language server default session

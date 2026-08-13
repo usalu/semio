@@ -12,7 +12,7 @@
 //! the new one.
 
 use crate::apps::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
-use crate::apps::puzzle2d::commands::{board, brush, camera, engagement, example, grid, locale, lod, node, selection as selection_commands, utility};
+use crate::apps::puzzle2d::commands::{set_grid_snap_enabled, set_grid_factor, set_camera, focus_selection, apply_board_events, set_lod_mode_for_pane, lod_scale_json, add_node, patch_inspector, redraw_handles, force_layout, set_brush_kind_weights, set_brush_node_size, set_suggestion_offset, cycle_candidate, set_candidate_index, open_slot, commit_slot, cancel_slot, set_fill_count, fill_session_begin, fill_session_step, fill_session_clear, set_selection, select_all, clear_selection, select_same_kind, delete_selection, duplicate_selection, set_selection_flag, set_selection_method, set_locale, set_terminology, set_active_example, engagement_input, engagement_submit, engagement_abort, engagement_control_select, set_active_utility};
 use crate::apps::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
 use crate::apps::puzzle2d::modes::edit;
 use crate::apps::puzzle2d::modes::edit::tools::fill;
@@ -46,7 +46,7 @@ pub const PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID: &str = crate::examples::puzz
 pub const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = crate::examples::puzzle2d::nakagin_capsule_tower::ID;
 
 /// 🪟️ The three canvas pane KIND ids — a different id space from the window body keys (see
-/// `🎮️commands/🎲️board`'s `PUZZLE2D_WINDOW_BODY_KEYS`): these key utilities, engagements and measures.
+/// `🎮️commands/🎲️apply-board-events`'s `PUZZLE2D_WINDOW_BODY_KEYS`): these key utilities, engagements and measures.
 pub const PUZZLE2D_PANES: [&str; 3] = [overview::WINDOW_KIND_ID, detail::WINDOW_KIND_ID, selection::WINDOW_KIND_ID];
 pub const PUZZLE2D_LOD_MODE_AUTOMATIC: &str = "automatic";
 
@@ -113,7 +113,7 @@ fn window_instance_ids(pane: &str) -> Vec<String> {
 }
 
 /// 🧰️ B1: the host-owned active utility for `window_id`'s pane, now real VCS'd config — see
-/// `🎮️commands/🧰️utility`, the only writer.
+/// `🎮️commands/🧰️set-active-utility`, the only writer.
 pub fn puzzle2d_active_utility(config: &Puzzle2dConfig, window_id: Option<&str>) -> String {
     if let Some(wid) = window_id {
         if let Some(utility) = config.active_utility_by_window_id.get(wid) {
@@ -575,7 +575,7 @@ fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 /// `host.camera` here used to blindly overwrite that write with the *pre-action* host camera.
 pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
     let events_raw = host.drain_events_json();
-    board::apply_board_events_from_json(&events_raw, envelope);
+    apply_board_events::apply_board_events_from_json(&events_raw, envelope);
     envelope.runtime.selected_ids = host.selection.iter().cloned().collect();
 }
 //#endregion 🔖️BoardHostSync
@@ -584,26 +584,26 @@ pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
 /// 🐢️ Narrow `UiDirtyScope` shared by pure view/selection/camera actions that only touch the 3
 /// canvas panes (never a panel or engagement/measure/utility refresh).
 pub fn puzzle2d_window_only_scope() -> UiDirtyScope {
-    UiDirtyScope::Partial { window_bodies: board::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
+    UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for actions that additionally change the engagement bar (active utility,
 /// brush weights, LOD/grid settings, engagement text input) but never touch document content.
 pub fn puzzle2d_window_and_engagements_scope() -> UiDirtyScope {
-    UiDirtyScope::Partial { window_bodies: board::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: true, measures: false, labels: false }
+    UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: true, measures: false, labels: false }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for settings surfaced in the measures sidebar (LOD mode, grid, brush
 /// weights, suggestion offset) but that never touch document content or the engagement bar.
 pub fn puzzle2d_window_and_measures_scope() -> UiDirtyScope {
-    UiDirtyScope::Partial { window_bodies: board::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
+    UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for a runtime-only selection change: the 3 canvas panes plus the
 /// layers/properties panels (which highlight the selection) and the engagement bar.
 pub fn puzzle2d_select_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
-        window_bodies: board::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
+        window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
         panel_bodies: vec![document::PUZZLE2D_PLAY_BODY_LAYERS.to_string(), inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
         utilities: false,
         tools: false,
@@ -897,45 +897,45 @@ impl ArtifactApp for Puzzle2dPlayApp {
         {
             let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, active_utility, effects: &mut effects, ui_scope: &mut ui_scope };
             match action {
-                "setSelection" | "documentSelect" => selection_commands::set_selection(ctx, args),
-                "selectAll" => selection_commands::select_all(ctx),
-                "clearSelection" => selection_commands::clear_selection(ctx),
-                "selectSameKind" => selection_commands::select_same_kind(ctx),
-                "deleteSelection" => selection_commands::delete_selection(ctx),
-                "duplicateSelection" => selection_commands::duplicate_selection(ctx),
-                "setSelectionFlag" => selection_commands::set_selection_flag(ctx, args),
-                "setSelectionMethod" => selection_commands::set_selection_method(ctx, args),
-                "addNode" => node::add_node(ctx, args),
-                "patchInspectorNodes" => node::patch_inspector(ctx, args),
-                "redrawHandles" => node::redraw_handles(ctx),
-                "forceLayout" | "reorganize" => node::force_layout(ctx),
-                "setCamera" => camera::set_camera(ctx, args),
-                "focusSelection" => camera::focus_selection(ctx),
-                "setActiveExample" => example::set_active_example(ctx, args),
-                SET_ACTIVE_UTILITY_ACTION_ID => utility::set_active_utility(ctx, args),
-                "engagementInput" => engagement::engagement_input(ctx, args),
-                "engagementSubmit" => engagement::engagement_submit(ctx, args),
-                "engagementAbort" => engagement::engagement_abort(ctx, args),
-                "engagementControlSelect" => engagement::engagement_control_select(ctx, args),
-                "setLodModeForPane" => lod::set_lod_mode_for_pane(ctx, args),
-                "lodScaleJson" => lod::lod_scale_json(ctx),
-                "setGridSnapEnabled" => grid::set_grid_snap_enabled(ctx, args),
-                "setGridFactor" => grid::set_grid_factor(ctx, args),
-                "setBrushKindWeights" => brush::set_brush_kind_weights(ctx, args),
-                "setBrushNodeSize" => brush::set_brush_node_size(ctx, args),
-                "setSuggestionOffset" => brush::set_suggestion_offset(ctx, args),
-                "brushCycleCandidate" => brush::cycle_candidate(ctx, args),
-                "brushSetCandidateIndex" => brush::set_candidate_index(ctx, args),
-                "brushOpenSlot" => brush::open_slot(ctx, args),
-                "brushCommitSlot" => brush::commit_slot(ctx),
-                "brushCancelSlot" => brush::cancel_slot(ctx),
-                "setFillCount" => brush::set_fill_count(ctx, args),
-                "brushFillSessionBegin" => brush::fill_session_begin(ctx, args),
-                "brushFillSessionStep" => brush::fill_session_step(ctx, args),
-                "brushFillSessionClear" => brush::fill_session_clear(ctx),
-                "applyBoardEvents" => board::apply_board_events(ctx, args),
-                "setLocale" => locale::set_locale(ctx, args),
-                "setTerminology" => locale::set_terminology(ctx, args),
+                "setSelection" | "documentSelect" => set_selection::set_selection(ctx, args),
+                "selectAll" => select_all::select_all(ctx),
+                "clearSelection" => clear_selection::clear_selection(ctx),
+                "selectSameKind" => select_same_kind::select_same_kind(ctx),
+                "deleteSelection" => delete_selection::delete_selection(ctx),
+                "duplicateSelection" => duplicate_selection::duplicate_selection(ctx),
+                "setSelectionFlag" => set_selection_flag::set_selection_flag(ctx, args),
+                "setSelectionMethod" => set_selection_method::set_selection_method(ctx, args),
+                "addNode" => add_node::add_node(ctx, args),
+                "patchInspectorNodes" => patch_inspector::patch_inspector(ctx, args),
+                "redrawHandles" => redraw_handles::redraw_handles(ctx),
+                "forceLayout" | "reorganize" => force_layout::force_layout(ctx),
+                "setCamera" => set_camera::set_camera(ctx, args),
+                "focusSelection" => focus_selection::focus_selection(ctx),
+                "setActiveExample" => set_active_example::set_active_example(ctx, args),
+                SET_ACTIVE_UTILITY_ACTION_ID => set_active_utility::set_active_utility(ctx, args),
+                "engagementInput" => engagement_input::engagement_input(ctx, args),
+                "engagementSubmit" => engagement_submit::engagement_submit(ctx, args),
+                "engagementAbort" => engagement_abort::engagement_abort(ctx, args),
+                "engagementControlSelect" => engagement_control_select::engagement_control_select(ctx, args),
+                "setLodModeForPane" => set_lod_mode_for_pane::set_lod_mode_for_pane(ctx, args),
+                "lodScaleJson" => lod_scale_json::lod_scale_json(ctx),
+                "setGridSnapEnabled" => set_grid_snap_enabled::set_grid_snap_enabled(ctx, args),
+                "setGridFactor" => set_grid_factor::set_grid_factor(ctx, args),
+                "setBrushKindWeights" => set_brush_kind_weights::set_brush_kind_weights(ctx, args),
+                "setBrushNodeSize" => set_brush_node_size::set_brush_node_size(ctx, args),
+                "setSuggestionOffset" => set_suggestion_offset::set_suggestion_offset(ctx, args),
+                "brushCycleCandidate" => cycle_candidate::cycle_candidate(ctx, args),
+                "brushSetCandidateIndex" => set_candidate_index::set_candidate_index(ctx, args),
+                "brushOpenSlot" => open_slot::open_slot(ctx, args),
+                "brushCommitSlot" => commit_slot::commit_slot(ctx),
+                "brushCancelSlot" => cancel_slot::cancel_slot(ctx),
+                "setFillCount" => set_fill_count::set_fill_count(ctx, args),
+                "brushFillSessionBegin" => fill_session_begin::fill_session_begin(ctx, args),
+                "brushFillSessionStep" => fill_session_step::fill_session_step(ctx, args),
+                "brushFillSessionClear" => fill_session_clear::fill_session_clear(ctx),
+                "applyBoardEvents" => apply_board_events::apply_board_events(ctx, args),
+                "setLocale" => set_locale::set_locale(ctx, args),
+                "setTerminology" => set_terminology::set_terminology(ctx, args),
                 _ => {}
             }
         }

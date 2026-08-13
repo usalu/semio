@@ -14,10 +14,10 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
-// 📌️ Command-group handler functions (`🎮️commands/<group>/component.rs`) are decomposed out of a
+// 📌️ Command handler functions (`🎮️commands/<verb-noun>/component.rs`) are decomposed out of a
 // single `ArtifactApp::handle` match, one function per command — the uniform `Result<Emit<_, _>,
-// Fault>` signature is dictated by the dispatch call site (some commands in the same group DO fail;
-// others never do), so per-function `Ok(...)`-only bodies are intentional, not a mistake to unwrap.
+// Fault>` signature is dictated by the dispatch call site (some commands DO fail; others never do),
+// so per-function `Ok(...)`-only bodies are intentional, not a mistake to unwrap.
 #[allow(clippy::unnecessary_wraps)]
 
 //#region 🔤️Jack kernel
@@ -743,21 +743,21 @@ pub mod apps {
         pub mod commands {
             #[path = "."]
             pub(crate) mod fixture {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️fixture/🦀️component.rs"]
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️set-fixture-json/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod query {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️query/🦀️component.rs"]
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️run-query/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod view {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️view/🦀️component.rs"]
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️set-selection/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -856,14 +856,14 @@ pub mod apps {
         pub mod commands {
             #[path = "."]
             pub(crate) mod rule {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️rule/🦀️component.rs"]
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️delete-rule-clause/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
 
             #[path = "."]
             pub(crate) mod view {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️view/🦀️component.rs"]
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️set-selection/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
@@ -945,6 +945,7 @@ pub mod apps {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
+#[cfg(feature = "plugin-entry")]
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 
 //#region 📚️Examples

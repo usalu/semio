@@ -5,7 +5,12 @@
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
-use crate::apps::procedural3d::commands::{eval, example, generation, graph, gumball, locale, selection, sun, view, widget};
+use crate::apps::procedural3d::commands::{
+    add_generation, add_widget, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, graph_pointer_down, move_media_node, node_graph_edit, node_graph_hover,
+    node_graph_select, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection, scale_selection, select_generation,
+    select_node, set_active_example, set_active_utility, set_camera, set_contributions, set_hover, set_locale, set_lod_mode, set_selection, set_selection_method, set_show_mode,
+    set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values, world_hover, world_pointer_down, world_select,
+};
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::apps::procedural3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
 use crate::apps::procedural3d::modes::generate::windows::{form, generations, preview as generate_preview};
@@ -79,17 +84,8 @@ semio_framework_plugin::app_commands! {
         "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve}
 }
 
-// 🧷️ `app_commands!` addresses each payload module by a single identifier.
-use eval::{flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve};
-use example::set_active_example;
-use generation::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
-use graph::{graph_pointer_down, move_media_node, node_graph_edit, node_graph_hover, node_graph_select, node_graph_viewport, reorganize};
-use gumball::{rotate_selection, scale_selection, translate_selection};
-use locale::{set_contributions, set_locale};
-use selection::{select_node, set_hover, set_selection, set_selection_method, world_hover, world_pointer_down, world_select};
-use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use view::{set_active_utility, set_camera, set_lod_mode, set_show_mode};
-use widget::{add_widget, delete_selection, patch_flow_widgets, remove_widget};
+// 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
+// payload module is imported at file top under its own flat name.
 //#endregion 🔖️Commands
 
 //#region 🔖️Procedural3dPlayApp
@@ -1225,7 +1221,7 @@ mod tests {
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — these tests exercise
     /// `PreviewPipeline`/`MeshBridge`/`ExtensionContributions` functions above, all of which are app
     /// behavior (they construct or take a [`Procedural3dConfig`]), so the tests travel with them.
-    use semio_framework_3d::scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
+    use ui_wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
     use std::sync::MutexGuard;
 
     fn test_serial() -> MutexGuard<'static, ()> {

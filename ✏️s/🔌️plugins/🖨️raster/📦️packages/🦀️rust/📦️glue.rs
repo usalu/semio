@@ -511,18 +511,44 @@ pub mod apps {
         pub mod commands {
             #[path = "../../🎛️apps/🖨️raster/🎮️commands/📄️document/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs"]
-            pub mod layer;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖌️brush/🦀️component.rs"]
-            pub mod brush;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🎥️camera/🦀️component.rs"]
-            pub mod camera;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🧰️utility/🦀️component.rs"]
-            pub mod utility;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗣️locale/🦀️component.rs"]
-            pub mod locale;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️add-layer/🦀️component.rs"]
+            pub mod add_layer;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️drop-layer-kind/🦀️component.rs"]
+            pub mod drop_layer_kind;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️set-layer-visible/🦀️component.rs"]
+            pub mod set_layer_visible;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️toggle-layer-visible/🦀️component.rs"]
+            pub mod toggle_layer_visible;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️delete-layer/🦀️component.rs"]
+            pub mod delete_layer;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️duplicate-layer/🦀️component.rs"]
+            pub mod duplicate_layer;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️patch-layer/🦀️component.rs"]
+            pub mod patch_layer;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️patch-layers/🦀️component.rs"]
+            pub mod patch_layers;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️move-layer/🦀️component.rs"]
+            pub mod move_layer;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗂️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗂️set-hover/🦀️component.rs"]
+            pub mod set_hover;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗂️select-all/🦀️component.rs"]
+            pub mod select_all;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-size/🦀️component.rs"]
+            pub mod set_brush_size;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-opacity/🦀️component.rs"]
+            pub mod set_brush_opacity;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🎥️set-composite-viewport/🦀️component.rs"]
+            pub mod set_composite_viewport;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🎥️set-camera/🦀️component.rs"]
+            pub mod set_camera;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🎥️set-camera-zoom/🦀️component.rs"]
+            pub mod set_camera_zoom;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🧰️set-active-utility/🦀️component.rs"]
+            pub mod set_active_utility;
+            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
         }
 
         #[path = "."]

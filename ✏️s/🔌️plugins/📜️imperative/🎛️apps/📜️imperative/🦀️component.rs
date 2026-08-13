@@ -63,9 +63,9 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::apps::imperative::commands::contribution::set_contributions;
-use crate::apps::imperative::commands::step::{add_step, add_step_at, move_step, move_step_at, remove_step, remove_step_at, set_step_params, set_step_params_at};
-use crate::apps::imperative::commands::view::{run, set_locale, set_selection};
+use crate::apps::imperative::commands::set_contributions;
+use crate::apps::imperative::commands::{add_step, add_step_at, move_step, move_step_at, remove_step, remove_step_at, set_step_params, set_step_params_at};
+use crate::apps::imperative::commands::{run, set_locale, set_selection};
 //#endregion 🔖️Commands
 
 //#region 🔖️ImperativePlayApp

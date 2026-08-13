@@ -281,7 +281,7 @@ mod tests {
     use crate::apps::fem2d::Fem2dCommand;
 
     fn load_default_example(app: &mut crate::apps::fem2d::testkit::Fem2dApp) {
-        dispatch(app, Fem2dCommand::SetActiveExample(crate::apps::fem2d::commands::example::set_active_example::SetActiveExample { example_id: "default".into() }));
+        dispatch(app, Fem2dCommand::SetActiveExample(crate::apps::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
     }
 
     #[test]
@@ -310,7 +310,7 @@ mod tests {
     fn results_window_renders_contour_for_region() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::apps::fem2d::commands::results::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::apps::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
         let json = render_body(&mut app, BODY_KEY);
         // `layers_json` is itself a JSON string embedded inside `UiNode`'s own serialization, so its
         // quotes come out backslash-escaped in `json` — match on the unescaped substrings instead.
@@ -322,7 +322,7 @@ mod tests {
     fn results_window_renders_reaction_labels_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::apps::fem2d::commands::results::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::apps::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
         let json = render_body(&mut app, BODY_KEY);
         assert!(json.contains("reaction-"), "expected reaction-prefixed text label layers: {json}");
     }
@@ -331,7 +331,7 @@ mod tests {
     fn results_window_renders_modal_mode_shape_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::apps::fem2d::commands::results::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::apps::fem2d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
         let json = render_body(&mut app, BODY_KEY);
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
         assert!(!json.contains("Modal analysis error"), "unexpected modal error: {json}");
@@ -341,7 +341,7 @@ mod tests {
     fn results_window_renders_buckling_mode_shape_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::apps::fem2d::commands::results::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::apps::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
         let json = render_body(&mut app, BODY_KEY);
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
         assert!(!json.contains("Buckling analysis error"), "unexpected buckling error: {json}");

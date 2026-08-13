@@ -1,6 +1,6 @@
 //! 🛍️ Flow play app panel — the catalogue: draggable widget/operator palette plus the extension sections.
 
-use crate::apps::flow::commands::extension::FLOW_AUTOMATIONS;
+use crate::apps::flow::commands::run_extension_action::FLOW_AUTOMATIONS;
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::flow_action;
 use crate::apps::flow::host_from_snapshot;

@@ -7,6 +7,15 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_plugin;
+// 🚚 Wave MATHEND (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS):
+// `graph_core` aliases `semio_framework_graph` so `✳️graph/🧬️schema/🚶️traversal-internals`/
+// `🔧️operators-internals`/`➕️normal-internals`/`🔌️ports-internals` — relocated verbatim from
+// `🧰️framework/🔨️modules/🧮️math/🕸️graph/{🚶️traversal,🔧️operators,➕️normal,🔌️ports}` (ZERO consumers
+// anywhere in the repo, migrated anyway under the "nothing deleted" rule) — compile unedited; those
+// files already say `graph_core::…` throughout (their original alias, set by `🧮️math`'s own
+// `📦️glue.rs`), so aliasing here instead of a repo-wide `semio_framework_graph::` rewrite preserves
+// them byte-for-byte.
+extern crate semio_framework_graph as graph_core;
 
 //#region Plugin
 #[path = "../../🦀️component.rs"]
@@ -8325,6 +8334,27 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🚶️traversal-internals/🦀️component.rs"]
+                            pub mod traversal_internals;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🔧️operators-internals/🦀️component.rs"]
+                            pub mod operators_internals;
+                            #[path = "."]
+                            pub mod normal_internals {
+                                #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/➕️normal-internals/↔️undirected/🦀️component.rs"]
+                                pub mod undirected;
+                                #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/➕️normal-internals/➡️directed/🦀️component.rs"]
+                                pub mod directed;
+                            }
+                            #[path = "."]
+                            pub mod ports_internals {
+                                #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🔌️ports-internals/↔️undirected/🦀️component.rs"]
+                                pub mod undirected;
+                                #[path = "."]
+                                pub mod directed {
+                                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🔌️ports-internals/➡️directed/➕️normal/🦀️component.rs"]
+                                    pub mod normal;
+                                }
+                            }
                             #[path = "."]
                             pub mod snapshot {
                                 #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/📸️snapshot/🦀️component.rs"]
@@ -8357,6 +8387,12 @@ pub mod artifacts {
                                 #[path = "."]
                                 pub mod topology {
                                     #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                                #[path = "."]
+                                pub mod connectivity {
+                                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/💡️inferences/🔗connectivity/🦀️component.rs"]
                                     mod component;
                                     pub use component::*;
                                 }

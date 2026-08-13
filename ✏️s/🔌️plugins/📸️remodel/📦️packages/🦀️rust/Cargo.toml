@@ -24,11 +24,15 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
-# 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d narrowed this to
-# `math::number` only (used by the moved-in `➕️algebra-internals`'s VecG/MatG/lll_reduce region) —
-# `algebra`/`optimize`/`lie`/`signal`/`spatial` all moved wholesale into this crate's own artifact
-# schema as `crate::algebra`/`crate::optimize`/`crate::lie`/`crate::signal`/`crate::spatial`.
-math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
+# 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d moved
+# `algebra`/`optimize`/`lie`/`signal`/`spatial` wholesale into this crate's own artifact schema as
+# `crate::algebra`/`crate::optimize`/`crate::lie`/`crate::signal`/`crate::spatial`. Wave FIXALG (same
+# ticket) then relocated `➕️algebra-internals`'s generic `VecG`/`MatG` types out to
+# `semio-framework-number`'s own `algebra` module (a second, framework-tier consumer had appeared —
+# see that wave's report) — this dependency, renamed `number`, replaces the old `math` dependency
+# that `math::number::…` used to resolve through; the only survivor still needing it is
+# `➕️algebra-internals`'s own `lll_reduce`, now built on `number::VecG`/`number::Rational` directly.
+number = { path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

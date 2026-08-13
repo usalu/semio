@@ -4,7 +4,7 @@
 //! patches it.
 //!
 //! 🎥️ The camera lives here, not on the document: moving it is an `ActionKind::View` action and must
-//! never create a VCS edit (see `setCamera`'s arm in `🎮️commands/🎥️camera`).
+//! never create a VCS edit (see `setCamera`'s arm in `🎮️commands/🎥️set-camera`).
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -92,7 +92,7 @@ pub struct Puzzle2dConfig {
     #[serde(default)]
     pub handle_kind_weights: BTreeMap<String, f64>,
     /// 🧰️ B1: host-owned active utility per pane — was host-pushed `view_state.active_utility_by_window_id`;
-    /// now the app itself persists it (see `🎮️commands/🧰️utility`, the only writer).
+    /// now the app itself persists it (see `🎮️commands/🧰️set-active-utility`, the only writer).
     #[serde(default)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
     /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale` (read via the deleted

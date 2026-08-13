@@ -35,7 +35,7 @@ pub const REMODEL_PLAY_APP_ID: &str = "remodel-play";
 /// 🔌️ Well-known stream id every `photos:in` import lands on — a stable identity so successive workflow
 /// imports keep appending frames to the SAME stream (a pure `import_media` call has no runtime scratch
 /// to remember which stream the last call used, unlike a UI drag-drop batch's `index == 0`/`> 0`
-/// convention — see `🎮️commands/📥️ingest` for that one).
+/// convention — see `🎮️commands/📥️import-frame-payload` for that one).
 const REMODEL_WORKFLOW_PHOTOS_STREAM_ID: &str = "workflow-photos";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -105,7 +105,7 @@ pub fn remodel_mesh_out_port() -> MediaPortSpec {
 //#region 🔖️Payloads
 /// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")`/`RequestMediaFrames` payload into `(mime, bytes)`.
 /// Relocated from the artifact's `⚙️engine/🦀️component.rs` (#2553): its only three consumers are all
-/// app-side (`🎮️commands/📥️ingest`, `🎮️commands/🚀️reconstruction`, this app's own `import_media`).
+/// app-side (`🎮️commands/📥️import-frame-payload`, `🎮️commands/🚀️run-reconstruction`, this app's own `import_media`).
 pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
     let (header, encoded) = data_url.split_once(',')?;
     let mime = header.strip_prefix("data:")?.split(';').next().unwrap_or("application/octet-stream").to_string();
@@ -113,8 +113,8 @@ pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
     Some((mime, bytes))
 }
 
-/// 🖼️ Decodes a still-image payload by mime — three consumers (`🎮️commands/📥️ingest`,
-/// `🎮️commands/🚀️reconstruction`, this app's own `import_media`), and it takes no artifact-schema
+/// 🖼️ Decodes a still-image payload by mime — three consumers (`🎮️commands/📥️import-frame-payload`,
+/// `🎮️commands/🚀️run-reconstruction`, this app's own `import_media`), and it takes no artifact-schema
 /// type, so it stays app-side (relocated from `⚙️engine/🦀️component.rs`, #2553).
 pub fn decode_still_image(mime: &str, bytes: &[u8]) -> Result<remodel_image::ImageRgba8, remodel_image::ImageError> {
     if mime.contains("jpeg") || mime.contains("jpg") {
@@ -187,7 +187,7 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::apps::remodel::commands::reconstruction::{retry_stage, run_reconstruction, run_stage};
+use crate::apps::remodel::commands::{retry_stage, run_reconstruction, run_stage};
 use calibration::{add_gcp, calibrate_cameras, edit_calibration, place_gcp_observation, remove_gcp};
 use ingest::{add_stream, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
 use params::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};

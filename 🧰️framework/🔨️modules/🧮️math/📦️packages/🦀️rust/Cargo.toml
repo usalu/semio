@@ -3,7 +3,7 @@ name = "semio-framework-math"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Semio math framework — algebra, number theory, entropy, fuzzy logic, WFC, LLM sampling, signal and spatial domains in one crate. Geometry/random live in semio-framework-geometry; the graph vocabulary, algorithms, drawing and manifest live in semio-framework-graph; symbolic algebra (CAS) and polynomials live in the ➗️mathematical plugin's own artifact tree (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, wave M3a); tabular/probability/statistics/causal live as ✳️table inference compute internals in the 🗄️stdio plugin's 🧿️semio artifact (same ticket, wave M3c)."
+description = "Semio math framework — an LLM token-sampling/diffusion-noise engine (misfiled here; domain-specific, no plugin owner found — see ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MATHEND's report), the sole remaining content. Number theory lives in semio-framework-number; geometry/random live in semio-framework-geometry; the graph vocabulary, algorithms, drawing, manifest and Jack query language live in semio-framework-graph; symbolic algebra (CAS) and polynomials live in the ➗️mathematical plugin's own artifact tree (wave M3a); tabular/probability/statistics/causal live as ✳️table inference compute internals in the 🗄️stdio plugin's 🧿️semio artifact (wave M3c); graph traversal/operators/normal/ports live as ✳️graph inference compute internals in the same artifact (wave MATHEND)."
 
 [package.metadata.semio]
 role = "framework"
@@ -18,12 +18,12 @@ crate-type = ["rlib", "cdylib"]
 path = "📦️glue.rs"
 
 [dependencies]
-semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+# 🃏️ wave MATHEND: `semio-framework-os-kernel`/`semio-framework-graph`/`serde`/`serde_json`/
+# `thiserror` removed — they existed only for `graph::dsl` (Jack, relocated to
+# `semio-framework-graph`) and dead code; `sampling`, the only content left, only needs
+# `semio-framework-geometry`'s `random` module (verified: zero `serde`/`serde_json`/`thiserror`
+# usage anywhere in this crate after the relocation).
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-semio-framework-graph = { path = "../../../🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-thiserror = "2.0.12"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

@@ -1,5 +1,5 @@
 //! 🔭️ Main-window option — the level-of-detail select.
-//! Its command handler lives in `🎮️commands/🔭️lod`.
+//! Its command handler lives in `🎮️commands/🔭️set-lod-mode`.
 
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::terminology::FlowPlayLabels;

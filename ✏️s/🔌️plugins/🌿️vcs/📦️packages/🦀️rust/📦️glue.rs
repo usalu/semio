@@ -8,7 +8,6 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-extern crate semio_framework_os_kernel as vcs_kernel;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
@@ -363,16 +362,28 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/📈️counter/🦀️component.rs"]
-            pub mod counter;
-            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🩹️patch/🦀️component.rs"]
-            pub mod patch;
-            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🗣️locale/🦀️component.rs"]
-            pub mod locale;
-            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🖱️canvas/🦀️component.rs"]
-            pub mod canvas;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/📈️increment-counter/🦀️component.rs"]
+            pub mod increment_counter;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🩹️patch-snapshot/🦀️component.rs"]
+            pub mod patch_snapshot;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🩹️text-edit/🦀️component.rs"]
+            pub mod text_edit;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🩹️edit/🦀️component.rs"]
+            pub mod edit;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🗂️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🖱️no-operation/🦀️component.rs"]
+            pub mod no_operation;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
+            pub mod canvas_pointer_down;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
+            pub mod canvas_pointer_move;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
+            pub mod canvas_pointer_up;
+            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🖱️canvas-wheel/🦀️component.rs"]
+            pub mod canvas_wheel;
         }
 
         #[path = "."]

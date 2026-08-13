@@ -1,0 +1,1121 @@
+{
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️question/🦀️component.rs": [
+    {
+      "old_mod": "question",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️add-question/🦀️component.rs",
+      "new_mod": "add_question",
+      "kebab": "add-question",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️question/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️add-question",
+      "delete_old": true
+    },
+    {
+      "old_mod": "question",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️remove-question/🦀️component.rs",
+      "new_mod": "remove_question",
+      "kebab": "remove-question",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️question/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️remove-question",
+      "delete_old": true
+    },
+    {
+      "old_mod": "question",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️patch-questions/🦀️component.rs",
+      "new_mod": "patch_questions",
+      "kebab": "patch-questions",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️question/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️patch-questions",
+      "delete_old": true
+    },
+    {
+      "old_mod": "question",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️move-question/🦀️component.rs",
+      "new_mod": "move_question",
+      "kebab": "move-question",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️question/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️move-question",
+      "delete_old": true
+    },
+    {
+      "old_mod": "question",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️drop-question-kind/🦀️component.rs",
+      "new_mod": "drop_question_kind",
+      "kebab": "drop-question-kind",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️question/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/❓️drop-question-kind",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️step/🦀️component.rs": [
+    {
+      "old_mod": "step",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️add-step/🦀️component.rs",
+      "new_mod": "add_step",
+      "kebab": "add-step",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️step/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️add-step",
+      "delete_old": true
+    },
+    {
+      "old_mod": "step",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️patch-step/🦀️component.rs",
+      "new_mod": "patch_step",
+      "kebab": "patch-step",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️step/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️patch-step",
+      "delete_old": true
+    },
+    {
+      "old_mod": "step",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️remove-step/🦀️component.rs",
+      "new_mod": "remove_step",
+      "kebab": "remove-step",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️step/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️remove-step",
+      "delete_old": true
+    },
+    {
+      "old_mod": "step",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️move-step/🦀️component.rs",
+      "new_mod": "move_step",
+      "kebab": "move-step",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️step/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️move-step",
+      "delete_old": true
+    },
+    {
+      "old_mod": "step",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️update-form/🦀️component.rs",
+      "new_mod": "update_form",
+      "kebab": "update-form",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️step/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📃️update-form",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️vector/🦀️component.rs": [
+    {
+      "old_mod": "vector",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️patch-vector-field/🦀️component.rs",
+      "new_mod": "patch_vector_field",
+      "kebab": "patch-vector-field",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️vector/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️patch-vector-field",
+      "delete_old": true
+    },
+    {
+      "old_mod": "vector",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️add-vector-field/🦀️component.rs",
+      "new_mod": "add_vector_field",
+      "kebab": "add-vector-field",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️vector/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️add-vector-field",
+      "delete_old": true
+    },
+    {
+      "old_mod": "vector",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️remove-vector-field/🦀️component.rs",
+      "new_mod": "remove_vector_field",
+      "kebab": "remove-vector-field",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️vector/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📐️remove-vector-field",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📤️export/🦀️component.rs": [
+    {
+      "old_mod": "export",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📤️export-fixture/🦀️component.rs",
+      "new_mod": "export_fixture",
+      "kebab": "export-fixture",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📤️export/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📤️export-fixture",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📥️import/🦀️component.rs": [
+    {
+      "old_mod": "import",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📥️set-spec-json/🦀️component.rs",
+      "new_mod": "set_spec_json",
+      "kebab": "set-spec-json",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📥️import/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📥️set-spec-json",
+      "delete_old": true
+    },
+    {
+      "old_mod": "import",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📥️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📥️import/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/📥️set-active-example",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️option/🦀️component.rs": [
+    {
+      "old_mod": "option",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️patch-question-options/🦀️component.rs",
+      "new_mod": "patch_question_options",
+      "kebab": "patch-question-options",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️option/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️patch-question-options",
+      "delete_old": true
+    },
+    {
+      "old_mod": "option",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️add-question-option/🦀️component.rs",
+      "new_mod": "add_question_option",
+      "kebab": "add-question-option",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️option/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️add-question-option",
+      "delete_old": true
+    },
+    {
+      "old_mod": "option",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️remove-question-option/🦀️component.rs",
+      "new_mod": "remove_question_option",
+      "kebab": "remove-question-option",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️option/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🔘️remove-question-option",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🗣️locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🗣️set-locale",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧩️contribution/🦀️component.rs": [
+    {
+      "old_mod": "contribution",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧩️set-contributions/🦀️component.rs",
+      "new_mod": "set_contributions",
+      "kebab": "set-contributions",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧩️contribution/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧩️set-contributions",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️try/🦀️component.rs": [
+    {
+      "old_mod": "try",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️set-try-value/🦀️component.rs",
+      "new_mod": "set_try_value",
+      "kebab": "set-try-value",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️try/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️set-try-value",
+      "delete_old": true
+    },
+    {
+      "old_mod": "try",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️set-try-values/🦀️component.rs",
+      "new_mod": "set_try_values",
+      "kebab": "set-try-values",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️try/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️set-try-values",
+      "delete_old": true
+    },
+    {
+      "old_mod": "try",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️reset-try/🦀️component.rs",
+      "new_mod": "reset_try",
+      "kebab": "reset-try",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️try/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️reset-try",
+      "delete_old": true
+    },
+    {
+      "old_mod": "try",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️previous-step/🦀️component.rs",
+      "new_mod": "previous_step",
+      "kebab": "previous-step",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️try/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️previous-step",
+      "delete_old": true
+    },
+    {
+      "old_mod": "try",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️next-step/🦀️component.rs",
+      "new_mod": "next_step",
+      "kebab": "next-step",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️try/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️next-step",
+      "delete_old": true
+    },
+    {
+      "old_mod": "try",
+      "new_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️submit/🦀️component.rs",
+      "new_mod": "submit",
+      "kebab": "submit",
+      "old_rel": "✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️try/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/🎮️commands/🧪️submit",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs": [
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️engagement-submit/🦀️component.rs",
+      "new_mod": "engagement_submit",
+      "kebab": "engagement-submit",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️engagement-submit",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-active-utility/🦀️component.rs",
+      "new_mod": "set_active_utility",
+      "kebab": "set-active-utility",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-active-utility",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-camera/🦀️component.rs",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-camera",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-camera-zoom/🦀️component.rs",
+      "new_mod": "set_camera_zoom",
+      "kebab": "set-camera-zoom",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-camera-zoom",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-hover/🦀️component.rs",
+      "new_mod": "set_hover",
+      "kebab": "set-hover",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-hover",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️select-all/🦀️component.rs",
+      "new_mod": "select_all",
+      "kebab": "select-all",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️select-all",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️clear-selection/🦀️component.rs",
+      "new_mod": "clear_selection",
+      "kebab": "clear-selection",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️clear-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️engagement-input/🦀️component.rs",
+      "new_mod": "engagement_input",
+      "kebab": "engagement-input",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️engagement-input",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-locale/🦀️component.rs",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/👁️set-locale",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs": [
+    {
+      "old_mod": "artifact",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️set-snapshot/🦀️component.rs",
+      "new_mod": "set_snapshot",
+      "kebab": "set-snapshot",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️set-snapshot",
+      "delete_old": true
+    },
+    {
+      "old_mod": "artifact",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️commit-document/🦀️component.rs",
+      "new_mod": "commit_document",
+      "kebab": "commit-document",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️commit-document",
+      "delete_old": true
+    },
+    {
+      "old_mod": "artifact",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️set-fixture-json/🦀️component.rs",
+      "new_mod": "set_fixture_json",
+      "kebab": "set-fixture-json",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️set-fixture-json",
+      "delete_old": true
+    },
+    {
+      "old_mod": "artifact",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️set-active-example",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs": [
+    {
+      "old_mod": "canvas",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
+      "new_mod": "canvas_pointer_down",
+      "kebab": "canvas-pointer-down",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-down",
+      "delete_old": true
+    },
+    {
+      "old_mod": "canvas",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs",
+      "new_mod": "canvas_pointer_move",
+      "kebab": "canvas-pointer-move",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-move",
+      "delete_old": true
+    },
+    {
+      "old_mod": "canvas",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs",
+      "new_mod": "canvas_pointer_up",
+      "kebab": "canvas-pointer-up",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-up",
+      "delete_old": true
+    },
+    {
+      "old_mod": "canvas",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-double-click/🦀️component.rs",
+      "new_mod": "canvas_double_click",
+      "kebab": "canvas-double-click",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-double-click",
+      "delete_old": true
+    },
+    {
+      "old_mod": "canvas",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-commit-draft/🦀️component.rs",
+      "new_mod": "canvas_commit_draft",
+      "kebab": "canvas-commit-draft",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-commit-draft",
+      "delete_old": true
+    },
+    {
+      "old_mod": "canvas",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-escape/🦀️component.rs",
+      "new_mod": "canvas_escape",
+      "kebab": "canvas-escape",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🖱️canvas-escape",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs": [
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️add-layer/🦀️component.rs",
+      "new_mod": "add_layer",
+      "kebab": "add-layer",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️add-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️drop-layer-kind/🦀️component.rs",
+      "new_mod": "drop_layer_kind",
+      "kebab": "drop-layer-kind",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️drop-layer-kind",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️move-layer/🦀️component.rs",
+      "new_mod": "move_layer",
+      "kebab": "move-layer",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️move-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️delete-layer/🦀️component.rs",
+      "new_mod": "delete_layer",
+      "kebab": "delete-layer",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️delete-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️duplicate-layer/🦀️component.rs",
+      "new_mod": "duplicate_layer",
+      "kebab": "duplicate-layer",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️duplicate-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️toggle-layer-visible/🦀️component.rs",
+      "new_mod": "toggle_layer_visible",
+      "kebab": "toggle-layer-visible",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️toggle-layer-visible",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️combine-boolean/🦀️component.rs",
+      "new_mod": "combine_boolean",
+      "kebab": "combine-boolean",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️combine-boolean",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️patch-layer/🦀️component.rs",
+      "new_mod": "patch_layer",
+      "kebab": "patch-layer",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️patch-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️patch-layers/🦀️component.rs",
+      "new_mod": "patch_layers",
+      "kebab": "patch-layers",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️patch-layers",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️set-selected-opacity/🦀️component.rs",
+      "new_mod": "set_selected_opacity",
+      "kebab": "set-selected-opacity",
+      "old_rel": "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/🗂️set-selected-opacity",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️camera/🦀️component.rs": [
+    {
+      "old_mod": "camera",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️set-composite-viewport/🦀️component.rs",
+      "new_mod": "set_composite_viewport",
+      "kebab": "set-composite-viewport",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️set-composite-viewport",
+      "delete_old": true
+    },
+    {
+      "old_mod": "camera",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️set-camera/🦀️component.rs",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️set-camera",
+      "delete_old": true
+    },
+    {
+      "old_mod": "camera",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️set-camera-zoom/🦀️component.rs",
+      "new_mod": "set_camera_zoom",
+      "kebab": "set-camera-zoom",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🎥️set-camera-zoom",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖌️brush/🦀️component.rs": [
+    {
+      "old_mod": "brush",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-size/🦀️component.rs",
+      "new_mod": "set_brush_size",
+      "kebab": "set-brush-size",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖌️brush/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-size",
+      "delete_old": true
+    },
+    {
+      "old_mod": "brush",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-opacity/🦀️component.rs",
+      "new_mod": "set_brush_opacity",
+      "kebab": "set-brush-opacity",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖌️brush/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-opacity",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs": [
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️add-layer/🦀️component.rs",
+      "new_mod": "add_layer",
+      "kebab": "add-layer",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️add-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️drop-layer-kind/🦀️component.rs",
+      "new_mod": "drop_layer_kind",
+      "kebab": "drop-layer-kind",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️drop-layer-kind",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️set-layer-visible/🦀️component.rs",
+      "new_mod": "set_layer_visible",
+      "kebab": "set-layer-visible",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️set-layer-visible",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️toggle-layer-visible/🦀️component.rs",
+      "new_mod": "toggle_layer_visible",
+      "kebab": "toggle-layer-visible",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️toggle-layer-visible",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️delete-layer/🦀️component.rs",
+      "new_mod": "delete_layer",
+      "kebab": "delete-layer",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️delete-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️duplicate-layer/🦀️component.rs",
+      "new_mod": "duplicate_layer",
+      "kebab": "duplicate-layer",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️duplicate-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️patch-layer/🦀️component.rs",
+      "new_mod": "patch_layer",
+      "kebab": "patch-layer",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️patch-layer",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️patch-layers/🦀️component.rs",
+      "new_mod": "patch_layers",
+      "kebab": "patch-layers",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️patch-layers",
+      "delete_old": true
+    },
+    {
+      "old_mod": "layer",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️move-layer/🦀️component.rs",
+      "new_mod": "move_layer",
+      "kebab": "move-layer",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️layer/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🖼️move-layer",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️set-hover/🦀️component.rs",
+      "new_mod": "set_hover",
+      "kebab": "set-hover",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️set-hover",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️select-all/🦀️component.rs",
+      "new_mod": "select_all",
+      "kebab": "select-all",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️select-all",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗣️locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗣️set-locale",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🧰️utility/🦀️component.rs": [
+    {
+      "old_mod": "utility",
+      "new_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🧰️set-active-utility/🦀️component.rs",
+      "new_mod": "set_active_utility",
+      "kebab": "set-active-utility",
+      "old_rel": "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🧰️utility/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🧰️set-active-utility",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/✏️drawing/🦀️component.rs": [
+    {
+      "old_mod": "drawing",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/✏️set-pencil-width/🦀️component.rs",
+      "new_mod": "set_pencil_width",
+      "kebab": "set-pencil-width",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/✏️drawing/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/✏️set-pencil-width",
+      "delete_old": true
+    },
+    {
+      "old_mod": "drawing",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/✏️set-eraser-radius/🦀️component.rs",
+      "new_mod": "set_eraser_radius",
+      "kebab": "set-eraser-radius",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/✏️drawing/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/✏️set-eraser-radius",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🎥️camera/🦀️component.rs": [
+    {
+      "old_mod": "camera",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🎥️set-camera/🦀️component.rs",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🎥️camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🎥️set-camera",
+      "delete_old": true
+    },
+    {
+      "old_mod": "camera",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🎥️set-camera-zoom/🦀️component.rs",
+      "new_mod": "set_camera_zoom",
+      "kebab": "set-camera-zoom",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🎥️camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🎥️set-camera-zoom",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️export/🦀️component.rs": [
+    {
+      "old_mod": "export",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️save-download/🦀️component.rs",
+      "new_mod": "save_download",
+      "kebab": "save-download",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️export/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️save-download",
+      "delete_old": true
+    },
+    {
+      "old_mod": "export",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️load-request/🦀️component.rs",
+      "new_mod": "load_request",
+      "kebab": "load-request",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️export/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🐚️load-request",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement/🦀️component.rs": [
+    {
+      "old_mod": "engagement",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement-input/🦀️component.rs",
+      "new_mod": "engagement_input",
+      "kebab": "engagement-input",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement-input",
+      "delete_old": true
+    },
+    {
+      "old_mod": "engagement",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement-submit/🦀️component.rs",
+      "new_mod": "engagement_submit",
+      "kebab": "engagement-submit",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement-submit",
+      "delete_old": true
+    },
+    {
+      "old_mod": "engagement",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️navigator-engagement-input/🦀️component.rs",
+      "new_mod": "navigator_engagement_input",
+      "kebab": "navigator-engagement-input",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️engagement/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/💬️navigator-engagement-input",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️grid/🦀️component.rs": [
+    {
+      "old_mod": "grid",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️set-grid-visible/🦀️component.rs",
+      "new_mod": "set_grid_visible",
+      "kebab": "set-grid-visible",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️grid/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️set-grid-visible",
+      "delete_old": true
+    },
+    {
+      "old_mod": "grid",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️set-grid-spacing/🦀️component.rs",
+      "new_mod": "set_grid_spacing",
+      "kebab": "set-grid-spacing",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️grid/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️set-grid-spacing",
+      "delete_old": true
+    },
+    {
+      "old_mod": "grid",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️set-grid-subdivisions/🦀️component.rs",
+      "new_mod": "set_grid_subdivisions",
+      "kebab": "set-grid-subdivisions",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️grid/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️set-grid-subdivisions",
+      "delete_old": true
+    },
+    {
+      "old_mod": "grid",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️set-grid-opacity/🦀️component.rs",
+      "new_mod": "set_grid_opacity",
+      "kebab": "set-grid-opacity",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️grid/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🔲️set-grid-opacity",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs": [
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection/🦀️component.rs",
+      "new_mod": "nudge_selection",
+      "kebab": "nudge-selection",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-up/🦀️component.rs",
+      "new_mod": "nudge_selection_up",
+      "kebab": "nudge-selection-up",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-up",
+      "delete_old": true
+    },
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-down/🦀️component.rs",
+      "new_mod": "nudge_selection_down",
+      "kebab": "nudge-selection-down",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-down",
+      "delete_old": true
+    },
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-left/🦀️component.rs",
+      "new_mod": "nudge_selection_left",
+      "kebab": "nudge-selection-left",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-left",
+      "delete_old": true
+    },
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-right/🦀️component.rs",
+      "new_mod": "nudge_selection_right",
+      "kebab": "nudge-selection-right",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-right",
+      "delete_old": true
+    },
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-up-fast/🦀️component.rs",
+      "new_mod": "nudge_selection_up_fast",
+      "kebab": "nudge-selection-up-fast",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-up-fast",
+      "delete_old": true
+    },
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-down-fast/🦀️component.rs",
+      "new_mod": "nudge_selection_down_fast",
+      "kebab": "nudge-selection-down-fast",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-down-fast",
+      "delete_old": true
+    },
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-left-fast/🦀️component.rs",
+      "new_mod": "nudge_selection_left_fast",
+      "kebab": "nudge-selection-left-fast",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-left-fast",
+      "delete_old": true
+    },
+    {
+      "old_mod": "nudge",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-right-fast/🦀️component.rs",
+      "new_mod": "nudge_selection_right_fast",
+      "kebab": "nudge-selection-right-fast",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🕹️nudge-selection-right-fast",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🖊️ink/🦀️component.rs": [
+    {
+      "old_mod": "ink",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🖊️ink-apply-events/🦀️component.rs",
+      "new_mod": "ink_apply_events",
+      "kebab": "ink-apply-events",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🖊️ink/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🖊️ink-apply-events",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️select-all/🦀️component.rs",
+      "new_mod": "select_all",
+      "kebab": "select-all",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️select-all",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️clear-selection/🦀️component.rs",
+      "new_mod": "clear_selection",
+      "kebab": "clear-selection",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️clear-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️set-hover/🦀️component.rs",
+      "new_mod": "set_hover",
+      "kebab": "set-hover",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗂️set-hover",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs": [
+    {
+      "old_mod": "fixture",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️set-active-example",
+      "delete_old": true
+    },
+    {
+      "old_mod": "fixture",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️set-fixture-json/🦀️component.rs",
+      "new_mod": "set_fixture_json",
+      "kebab": "set-fixture-json",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️set-fixture-json",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗣️locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗣️set-locale",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧰️utility/🦀️component.rs": [
+    {
+      "old_mod": "utility",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧰️set-active-utility/🦀️component.rs",
+      "new_mod": "set_active_utility",
+      "kebab": "set-active-utility",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧰️utility/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧰️set-active-utility",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs": [
+    {
+      "old_mod": "block",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️add-block/🦀️component.rs",
+      "new_mod": "add_block",
+      "kebab": "add-block",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️add-block",
+      "delete_old": true
+    },
+    {
+      "old_mod": "block",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️move-block/🦀️component.rs",
+      "new_mod": "move_block",
+      "kebab": "move-block",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️move-block",
+      "delete_old": true
+    },
+    {
+      "old_mod": "block",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️delete-block/🦀️component.rs",
+      "new_mod": "delete_block",
+      "kebab": "delete-block",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️delete-block",
+      "delete_old": true
+    },
+    {
+      "old_mod": "block",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️delete-selection/🦀️component.rs",
+      "new_mod": "delete_selection",
+      "kebab": "delete-selection",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️delete-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "block",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️duplicate-block/🦀️component.rs",
+      "new_mod": "duplicate_block",
+      "kebab": "duplicate-block",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️duplicate-block",
+      "delete_old": true
+    },
+    {
+      "old_mod": "block",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️duplicate-selection/🦀️component.rs",
+      "new_mod": "duplicate_selection",
+      "kebab": "duplicate-selection",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️duplicate-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "block",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️patch-blocks/🦀️component.rs",
+      "new_mod": "patch_blocks",
+      "kebab": "patch-blocks",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️block/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧱️patch-blocks",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧲️snap/🦀️component.rs": [
+    {
+      "old_mod": "snap",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧲️set-snap-enabled/🦀️component.rs",
+      "new_mod": "set_snap_enabled",
+      "kebab": "set-snap-enabled",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧲️snap/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧲️set-snap-enabled",
+      "delete_old": true
+    },
+    {
+      "old_mod": "snap",
+      "new_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧲️set-snap-grid-spacing/🦀️component.rs",
+      "new_mod": "set_snap_grid_spacing",
+      "kebab": "set-snap-grid-spacing",
+      "old_rel": "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧲️snap/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🧲️set-snap-grid-spacing",
+      "delete_old": true
+    }
+  ]
+}

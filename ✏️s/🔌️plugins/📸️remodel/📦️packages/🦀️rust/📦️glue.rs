@@ -705,6 +705,8 @@ pub mod artifacts {
                 #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
+                #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+                mod tests;
             }
         }
     }
@@ -771,20 +773,86 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️calibration/🦀️component.rs"]
-            pub mod calibration;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️ingest/🦀️component.rs"]
-            pub mod ingest;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️params/🦀️component.rs"]
-            pub mod params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🚀️reconstruction/🦀️component.rs"]
-            pub mod reconstruction;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️reset/🦀️component.rs"]
-            pub mod reset;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🐚️shell/🦀️component.rs"]
-            pub mod shell;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️view/🦀️component.rs"]
-            pub mod view;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️edit-calibration/🦀️component.rs"]
+            pub mod edit_calibration;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️calibrate-cameras/🦀️component.rs"]
+            pub mod calibrate_cameras;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️add-gcp/🦀️component.rs"]
+            pub mod add_gcp;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️remove-gcp/🦀️component.rs"]
+            pub mod remove_gcp;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️place-gcp-observation/🦀️component.rs"]
+            pub mod place_gcp_observation;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️import-frame-payload/🦀️component.rs"]
+            pub mod import_frame_payload;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️import-video-frame-payload/🦀️component.rs"]
+            pub mod import_video_frame_payload;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️import-video-done/🦀️component.rs"]
+            pub mod import_video_done;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️import-video-bytes-payload/🦀️component.rs"]
+            pub mod import_video_bytes_payload;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️add-stream/🦀️component.rs"]
+            pub mod add_stream;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️remove-stream/🦀️component.rs"]
+            pub mod remove_stream;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️set-stream-sync/🦀️component.rs"]
+            pub mod set_stream_sync;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-ingest-params/🦀️component.rs"]
+            pub mod set_ingest_params;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-feature-params/🦀️component.rs"]
+            pub mod set_feature_params;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-match-params/🦀️component.rs"]
+            pub mod set_match_params;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-sfm-params/🦀️component.rs"]
+            pub mod set_sfm_params;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-dense-params/🦀️component.rs"]
+            pub mod set_dense_params;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-mesh-params/🦀️component.rs"]
+            pub mod set_mesh_params;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-motion-params/🦀️component.rs"]
+            pub mod set_motion_params;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-geo-params/🦀️component.rs"]
+            pub mod set_geo_params;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🚀️run-reconstruction/🦀️component.rs"]
+            pub mod run_reconstruction;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🚀️retry-stage/🦀️component.rs"]
+            pub mod retry_stage;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🚀️run-stage/🦀️component.rs"]
+            pub mod run_stage;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️reset-placeholder-mesh/🦀️component.rs"]
+            pub mod reset_placeholder_mesh;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-sparse/🦀️component.rs"]
+            pub mod clear_sparse;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-dense/🦀️component.rs"]
+            pub mod clear_dense;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-mesh-result/🦀️component.rs"]
+            pub mod clear_mesh_result;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-tracks/🦀️component.rs"]
+            pub mod clear_tracks;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-geo-products/🦀️component.rs"]
+            pub mod clear_geo_products;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-result/🦀️component.rs"]
+            pub mod clear_result;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🐚️import-frames/🦀️component.rs"]
+            pub mod import_frames;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🐚️import-video/🦀️component.rs"]
+            pub mod import_video;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🐚️export-qc-report/🦀️component.rs"]
+            pub mod export_qc_report;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-camera/🦀️component.rs"]
+            pub mod set_camera;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-layer-visibility/🦀️component.rs"]
+            pub mod set_layer_visibility;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-frame-cursor/🦀️component.rs"]
+            pub mod set_frame_cursor;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-report-table/🦀️component.rs"]
+            pub mod set_report_table;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-active-utility/🦀️component.rs"]
+            pub mod set_active_utility;
+            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-locale/🦀️component.rs"]
+            pub mod set_locale;
         }
 
         #[path = "."]

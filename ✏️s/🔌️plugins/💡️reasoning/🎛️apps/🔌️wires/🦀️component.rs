@@ -14,14 +14,14 @@
 //! `crate::apps::wires::config::WiresConfigMutation`s (real `backwards`, no ad hoc runtime `RefCell`);
 //! every action dispatches through the single typed `WiresCommand` channel via `ArtifactApp::handle`.
 
-use crate::apps::wires::commands::delete::delete_selection;
-use crate::apps::wires::commands::example::{set_active_example, WIRES_PLAY_EXAMPLE_METABOLISM_ID};
-use crate::apps::wires::commands::layout::{force_layout, reorganize};
-use crate::apps::wires::commands::locale::set_locale;
-use crate::apps::wires::commands::node::add_node;
-use crate::apps::wires::commands::pointer::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
-use crate::apps::wires::commands::relationship::add_relationship;
-use crate::apps::wires::commands::selection::{document_select, set_selection};
+use crate::apps::wires::commands::delete_selection;
+use crate::apps::wires::commands::{set_active_example, WIRES_PLAY_EXAMPLE_METABOLISM_ID};
+use crate::apps::wires::commands::{force_layout, reorganize};
+use crate::apps::wires::commands::set_locale;
+use crate::apps::wires::commands::add_node;
+use crate::apps::wires::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
+use crate::apps::wires::commands::add_relationship;
+use crate::apps::wires::commands::{document_select, set_selection};
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::apps::wires::modes::edit;
 use crate::apps::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -47,7 +47,7 @@ pub fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 
 /// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "replace the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
-/// `🎮️commands/🧬️example::set_active_example` uses instead of a banned whole-snapshot mutation. The
+/// `🎮️commands/🧬️set-active-example::set_active_example` uses instead of a banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_wires_document_effect(document: &WiresSnapshot) -> HostEffect {
     let pack = <WiresSnapshot as store::ArtifactPack>::encode_pack(document);

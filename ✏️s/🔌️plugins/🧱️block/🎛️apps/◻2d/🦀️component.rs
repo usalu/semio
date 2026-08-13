@@ -7,13 +7,12 @@
 //! app's own typed media I/O surface + plugin registration (below — constitutional: general, an
 //! artifact must never depend on an app, so both live here rather than under `🗿️artifacts`).
 
-use crate::apps::block2d::commands::compatibility::{add_compatibility_rule, remove_compatibility_rule};
-use crate::apps::block2d::commands::example;
-use crate::apps::block2d::commands::example::{edit, set_active_example};
-use crate::apps::block2d::commands::handle::{add_handle, remove_handle};
-use crate::apps::block2d::commands::handle_kind::{add_handle_kind, remove_handle_kind};
-use crate::apps::block2d::commands::kind::patch_node_kind;
-use crate::apps::block2d::commands::selection::set_selection;
+use crate::apps::block2d::commands::{add_compatibility_rule, remove_compatibility_rule};
+use crate::apps::block2d::commands::{edit, set_active_example};
+use crate::apps::block2d::commands::{add_handle, remove_handle};
+use crate::apps::block2d::commands::{add_handle_kind, remove_handle_kind};
+use crate::apps::block2d::commands::patch_node_kind;
+use crate::apps::block2d::commands::set_selection;
 use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use crate::apps::block2d::modes::edit as edit_mode;
 use crate::apps::block2d::modes::edit::windows::board;
@@ -243,13 +242,13 @@ pub fn create_block2d_app() -> App {
             .io(block2d_io()),
     )
     .example(
-        example::BLOCK2D_EXAMPLE_LEFT,
+        set_active_example::BLOCK2D_EXAMPLE_LEFT,
         LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"),
         serde_json::to_string(&crate::artifacts::block2d::dsl::parse_dsl(crate::artifacts::block2d::dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
         "list-tree",
     )
     .example(
-        example::BLOCK2D_EXAMPLE_RIGHT,
+        set_active_example::BLOCK2D_EXAMPLE_RIGHT,
         LocalizedLabel::native("Hexagonal Cut Concrete Forest Right", "Hexagonal Cut Concrete Forest Right"),
         serde_json::to_string(&crate::artifacts::block2d::dsl::parse_dsl(crate::artifacts::block2d::dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
         "list-tree",
@@ -408,7 +407,7 @@ mod tests {
     #[test]
     fn set_active_example_loads_left_fixture() {
         let mut app = new_app();
-        testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: example::BLOCK2D_EXAMPLE_LEFT.into() }));
+        testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() }));
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.node_kind.id, "Hexagonal Cut Concrete Forest Left");
         assert_eq!(projection.handles.len(), 11);
@@ -436,7 +435,7 @@ mod tests {
     #[test]
     fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
         let mut app = new_app();
-        testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: example::BLOCK2D_EXAMPLE_LEFT.into() }));
+        testkit::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() }));
         let media = app.export_media("catalog:out").expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {

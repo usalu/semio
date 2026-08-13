@@ -770,6 +770,81 @@ The agent correctly **refused** step 3 (remove `MeshData` from the SDK's public 
 
 **Consequence for the mesh wave: `MeshData`'s blast radius is not the ~30 direct importers previously counted — it is those plus everything reaching it through this glob.** Recorded as the real gate on deleting `MeshData`.
 
+## ✅ MATHEND — `🧮️math` 21,258 → 9,848 LOC. Three placements, one framework bug found.
+
+- **`🔢️number` (3,456) → new framework module** `🧰️framework/🔨️modules/🔢️number/`, taking the user's domain-neutral exemption. The case, made rather than assumed: `🧊️3d/📐️brep/⚖️predicates` is a **framework-tier** consumer that structurally cannot depend on a plugin, so `Rational` had to live in framework tier. 79/79 tests, exact parity.
+- **`🕸️graph` remainder (4,993, verified zero consumers anywhere) → stdio's `✳️graph`** as compute-internals, plus a genuine new `💡️inferences/🔗connectivity` `InferredField` (per-node degree + weakly-connected-component id) that actually exercises the migrated code rather than parking it.
+- **Jack DSL (2,937) → kept whole in framework `🕸️graph`.** My hypothesised parser/language-service split was **measured and rejected**: `DslIdiom`'s self-registration seam calls `format`/`complete` directly, and `complete`/`hover` share private helpers — splitting needs new public API or forbidden duplication. It also independently passes the domain-neutral test (a generic graph query language, analogous to the already-framework-tier `os_dsl`).
+- **`🎯️sampling` (9,809) — honestly reported UNPLACEABLE.** All 32 plugins and the `🧠️neural` OS module checked; no owner exists. Left in `🧮️math`, crate deliberately **not** removed from the workspace since it still holds real content. Naming it beats inventing a home.
+
+Verified: math **191/0** · number **79/0** · graph **188/2** (2 pre-existing dsl failures, unchanged) · stdio **3259/5** (same 5 baseline names) · brep predicates **11/11**.
+
+### 🎁 It found a real `DepHash` bug in the framework spine
+
+Building the `🔗connectivity` inference surfaced it: **the driver does not fold the field key into the hash for parentless steps, so identical `dep_input` across different keys silently collides.** Documented and regression-tested. That is a correctness defect in the inference mechanism this whole ticket has been migrating *onto* — found only by writing a real `InferredField` rather than relocating a library and calling it an inference.
+
+## 🛑 A REGRESSION THIS TICKET CAUSED — cross-wave census invalidation
+
+`semio-s-plugin-mathematical`: **15 errors**, 10 of them `E0433: cannot find 'algebra' in 'math'`.
+
+**Both waves were individually correct and the pair was wrong.** M3a migrated `🧮️cas` into `➗️mathematical`, rewriting its internals to `math::algebra::…`. M3d then moved `➕️algebra` out of `🧮️math` **after verifying `📸️remodel` was its sole consumer** — a verification that was true when taken and false when acted on, because M3a had created a new consumer in between.
+
+This is the sharpest instance of the session's recurring lesson: **a census is a timestamp.** It has bitten via stale test baselines, a disk-poisoned error count, a phantom dangling mount, and now a sole-consumership check outrun by a sibling wave. Parallel waves make the window between measuring and acting into a place where facts change.
+
+**Fix dispatched (FIXALG), scoped to relocate not duplicate:** `MatG`/`VecG` (the only two symbols needed, 10 call sites) move into the new `🔢️number` framework module beside `Rational` — a generic matrix over a field is a numeric primitive, its primary field here *is* `Rational`, and it now has three plugin consumers. Explicitly instructed **not** to leave a copy in remodel, since trading a compile error for a duplicate would undo the property the user asked for.
+
+## MESH — 1 of 3 pieces landed, 2 named remainders, and two more corrections to MY brief
+
+**`🎬️scene` → `🖱️ui`: DONE.** Moved **verbatim via `cp` + `diff` + `rm`, not retyped** (the right method for a 1,671-line move — it makes "did anything change in transit" a checkable question rather than a matter of trust). 77 tests, `kernel_3d_scene` mount repointed in ui's wgpu glue, 3d-side mount + re-export deleted in the same change. `🧊️3d/🎬️scene` gone from disk with zero remaining references.
+
+### ⚠️ Two claims in my brief were wrong, both caught by measurement
+
+1. **"a repo-wide grep for `semio_framework_3d::scene` finds zero external users"** — false. `🌀️procedural`'s **test** code used it. The agent found it, fixed it with a scoped `[dev-dependencies]` feature bump, and confirmed the alternative was impossible via Cargo's own error (two different crate names for one dependency). My grep had missed a dev-dependency path — the same class as the `🖱️ui` regression earlier today, where a crate's real inputs weren't visible from its directory.
+2. **"`MeshData` reaches ~11 plugin files"** — the real count is **30**. My figure came from grepping one glob re-export's consumers, not from enumerating `MeshData` itself.
+
+### The two unlanded pieces, with reasons that are about safety rather than effort
+
+- **`🔺️mesh-engine` (1,129 LOC)**: its Obj/Glb/Stl codecs are **confirmed fully redundant** with `✳️mesh/🚪️io`'s already-complete, already-tested `SemioMeshSnapshot`-native codecs (read and compared, not assumed). But two of `MeshData`'s 30 consumers — `✳️brep/🧬️schema/⚙️engine/{🦀️component.rs,📦️mesh-io/🦀️component.rs}` — sit inside the **sibling PEEL wave's actively-churning territory** (verified by `git status` showing live deletes in `📐️brep` from a concurrent session). Correctly declined to delete under another wave's hands.
+- **`🧊️3d/🥽️mesh` (2,769 LOC)**: consumer footprint is genuinely small as briefed (`💠️lowpoly` 8 files, `📸️remodel` 1, no sibling overlap), **but it is not a mechanical move** — it needs `EngineRep`-mirroring scaffolding in `✳️mesh` that doesn't exist yet, plus a real architectural split into engine-construction vs `🔺️diff` compute. Declined to start it uncheckpointed after piece 3 alone burned six build attempts on foreign churn. Landing plan recorded.
+
+### `semio-framework-ui`'s test target: 90 pre-existing errors, proven unrelated
+
+The agent didn't just assert this — it **reproduced them identically with `wgpu-engine` inactive**, which rules out the relocated scene as the cause. (I had measured 5 earlier under `--features wgpu`; the count differs by feature set, which is itself the "a green build of one target is not a green crate" lesson.) So the 77 relocated scene tests are present and correct but **cannot run** until a foreign fix lands.
+
+## 📉 PEEL batch 1 + MESH — `🔺️mesh` Rust GONE, `🎬️scene` relocated, ops batch peeled
+
+Coordinator-measured (both waves died in polling loops before reporting; state established directly):
+
+```
+🔺️mesh          0 LOC rust   ← the DWG codec file is gone; only the TS file remains (correctly)
+🔺️mesh-engine   1,129        (MESH wave still working)
+🧊️3d           23,014 → 13,921     📐️brep 17,910 → 10,827     🎬️scene GONE
+🧮️math         21,258        (MATHEND still working)
+```
+`✳️brep`'s compute subdirs are filling: `💡️inferences/🧩tessellation` 783 · `🔺️diff/🔀️boolean` 704 · `🔺️diff/➡️sweep` 695 · `💡️inferences/🏷classification` 624 · `🔺️diff/🧵️sew` 580.
+
+### The −123 test drop reconciles EXACTLY
+
+`semio-framework-3d` fell 396 → **273** while stdio rose 2957 → **3003** (+46). A 77-test gap, which is precisely the kind of thing that hides lost coverage. Traced:
+
+| | |
+|---|---|
+| ops batch → stdio | **+46** ✅ |
+| `🎬️scene` → `🖱️ui/🎬️scene/🦀️component.rs` | **77 `#[test]` fns**, and `git show <baseline>:🧊️3d/🎬️scene/🦀️component.rs` → **77**. Exact match. |
+| **46 + 77** | **= 123** ✅ |
+
+**Nothing lost.** The scene tests are physically present at the new path with an identical count to the session baseline.
+
+⚠️ **They cannot currently RUN**, and that is not this ticket's doing: `semio-framework-ui`'s lib-**test** target has 5 pre-existing errors in `🎯️targets/🧊️wgpu/🦀️component.rs` (`Label: From<&str>`), last committed **2026-08-11** — two days before this session, and **zero** of them in the relocated `🎬️scene`. So the destination crate's test target was already red before the tests arrived. Recorded as: relocated and verified-present, unrunnable pending a foreign fix.
+
+### `🎬️scene`'s exemption, exercised
+
+Relocated to `🖱️ui` under the user's *domain-neutral framework functionality* carve-out rather than forced into an artifact. The justification is that its **inputs are a camera and a screen rectangle, not a document** — there is no snapshot from which `frustum_planes`/`ray_pick_instance`/`gumball_extent` could be derived, so no artifact could own them as an inference. Corroborated by measurement: a repo-wide grep for `semio_framework_3d::scene` finds **zero** external users; every real consumer already reached it through `ui_wgpu`.
+
+### ⚠️ Dispatch failure mode, now explicit in briefs
+
+**Three waves in a row (M3d, M3e, PEEL) died in polling loops** — repeatedly reporting "waiting for the build" until their budget was gone. The cause is structural: agents gate on a `cargo` run that contends for the single shared target-dir lock, and the wait is unbounded. **New standing rule, now in every brief: run each verification ONCE; if it blocks, write the report and STOP — the coordinator owns the target dir and finishes verification.** A wave that lands two clean batches and reports honestly beats one that lands three and dies mid-verify. PEEL2 dispatched with that rule leading the prompt.
+
 ## ✅ FINAL AUDIT — nothing lost, nothing duplicated. All three windows CLOSED.
 
 Answering the user's requirement (*"no old code is lost or duplicated, just cleanly migrated"*) by measurement, with every apparent exception chased to ground rather than explained away.

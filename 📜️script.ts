@@ -7055,7 +7055,7 @@ const POLICY_SEMANTIC_VOCABULARY_ALLOWLIST = new Set<string>([
   "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
   "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸set-snapshot/🔺️diff/🦀️component.rs",
   "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🎥️camera/🦀️component.rs",
+  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🎥️set-camera/🦀️component.rs",
   "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📦️asset/🦀️component.rs",
   "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📷️shot/🦀️component.rs",
   "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🗃️fixture/🦀️component.rs",
@@ -7534,6 +7534,57 @@ function policyMutationTsMirrorBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
+/**
+ * 🎮️App command folders must be one semantically named command (verb-noun kebab), matching
+ * `🧬️mutations/<emoji><verb>-<noun>/`. Noun buckets (`✍️text`, `🗂️selection`, `🗣️locale`) are
+ * architecture violations. Held at `"medium"` while ticket `26/08/13/SEMANTIC-COMMAND-NAMES`
+ * fans out; graduate to `"high"` once every plugin leaf is 1:1.
+ */
+const POLICY_COMMAND_VERBS = new Set<string>([
+  "create", "delete", "insert", "remove", "add", "rename", "change", "update", "move",
+  "drag", "resize", "rotate", "scale", "reorder", "edit", "replace", "duplicate",
+  "connect", "disconnect", "bind", "unbind", "group", "ungroup", "flatten", "unflatten",
+  "split", "merge", "extract", "inline", "clear", "fix", "toggle", "apply", "set",
+  "format", "open", "load", "save", "import", "export", "lint", "request", "select",
+  "hover", "evaluate", "run", "retry", "calibrate", "place", "commit", "input",
+  "submit", "abort", "patch", "paint", "nudge", "reset", "focus", "step", "query",
+  "fill", "snap", "ingest", "evaluate",
+]);
+
+function policyCommandFolderSemanticBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const walk = (relDir: string): void => {
+    for (const ent of policyReaddirSafe(repoRoot, relDir)) {
+      if (!ent.isDirectory || ent.name.startsWith(".")) continue;
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.name === "🎮️commands") {
+        for (const cmd of policyReaddirSafe(repoRoot, childRel)) {
+          if (!cmd.isDirectory) continue;
+          const folder = cmd.name;
+          const emoji = policyLeadingEmojiPrefix(folder);
+          const slug = emoji ? folder.slice(emoji.length) : folder;
+          const verb = slug.split("-")[0] ?? slug;
+          if (POLICY_COMMAND_VERBS.has(verb)) continue;
+          breaches.push({
+            id: `command-folder-semantic-${childRel}/${folder}`,
+            summary: `"${childRel}/${folder}" is a noun bucket, not a semantic command`,
+            kind: "taxonomy/command-folder-semantic",
+            scope: childRel,
+            priority: "medium",
+            reason: "Each 🎮️commands/ leaf must be one command named like a mutation (verb-noun kebab, e.g. ✍️text-edit). Grouping under domain nouns (text, selection, locale, camera) is banned.",
+            solution: `Split ${childRel}/${folder} into one folder per command using an approved verb prefix (${[...POLICY_COMMAND_VERBS].slice(0, 8).join(", ")}, …).`,
+          });
+        }
+        continue;
+      }
+      if (ent.name === "target" || ent.name === "node_modules") continue;
+      walk(childRel);
+    }
+  };
+  walk("✏️s");
+  return breaches;
+}
+
 /** ⚖️Aggregates Wave 2b mutation / ArtifactEngine / op-grammar scanners. */
 function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] {
   return [
@@ -7544,6 +7595,7 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
     ...policyMutationDispatchCoverageBreaches(repoRoot),
     ...policySemanticVocabularyBreaches(repoRoot),
     ...policyMutationTsMirrorBreaches(repoRoot),
+    ...policyCommandFolderSemanticBreaches(repoRoot),
   ];
 }
 //#endregion 🔧️PolicyRuleMutationArtifactEngines
@@ -12541,6 +12593,261 @@ export function policyDissolvedKernelsBreaches(repoRoot: string): BreachRecord[]
 }
 //#endregion 🔧️PolicyRuleDissolvedKernels
 
+//#region 🔧️PolicyRuleComposition
+/** 🪪️ Canonical artifact-kind grammar mirror of `ArtifactKindId::parse`/`is_canonical_artifact_kind`
+ * (🧰️framework/🔨️modules/🚪️io/🦀️component.rs:101-153, ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
+ * W1): exactly three dot-separated ASCII segments, the first literally `s`, the remaining two
+ * lowercase-kebab (`[a-z0-9-]`, no leading/trailing/doubled hyphen). */
+function policyIsCanonicalArtifactKind(kind: string): boolean {
+  const segments = kind.split(".");
+  if (segments.length !== 3 || segments[0] !== "s") return false;
+  const isKebabSegment = (segment: string): boolean =>
+    segment.length > 0 && !segment.startsWith("-") && !segment.endsWith("-") && !segment.includes("--") && /^[a-z0-9-]+$/.test(segment);
+  return isKebabSegment(segments[1]!) && isKebabSegment(segments[2]!);
+}
+
+/** 🔎️True when a regex match's own source line (from the preceding newline up to the match) already
+ * contains a `//` — i.e. the "hit" is doc-comment prose (`///`/`//!` quoting the pattern as an
+ * example), not real code. Cheap same-line guard against the exact false-positive class flagged in
+ * this ticket's `📌️important.md` ("the sweep rule… strip comments, check the target"). */
+function policyMatchIsCommentedOut(content: string, matchIndex: number): boolean {
+  const lineStart = content.lastIndexOf("\n", matchIndex - 1) + 1;
+  return content.slice(lineStart, matchIndex).includes("//");
+}
+
+const POLICY_ARTIFACT_KIND_SPEC_ID_RE = /ArtifactKindSpec\s*\{\s*id:\s*"((?:[^"\\]|\\.)*)"/g;
+
+/** 🗿️ `ArtifactKindSpec { id: "…", … }` construction sites — the pre-migration legacy-registration
+ * shape (`pub fn artifact_kind() -> ArtifactKindSpec`) still declaring an artifact's own kind identity
+ * across dozens of plugin `artifact_kind()` functions. Only LITERAL string ids are checked here:
+ * `#[child(kind = "…")]` reference values legitimately carry a 4th subset segment
+ * (`s.stdio.semio.<subset>`, since stdio's single `semio` artifact hosts all 18 subsets under one
+ * 3-segment kind) and are references to an already-declared kind, not declaration sites themselves —
+ * out of this rule's scope by design (see design doc: "only actual ArtifactKindSpec/kind-declaration
+ * sites… are breaches"). Non-literal ids (`format!(...)`, a delegating helper fn call) are skipped
+ * rather than guessed at. Renaming these ids to canonical grammar is explicitly a later/APA
+ * registration-macro wave (io/component.rs's own doc comment: "renaming existing artifact ids to this
+ * grammar is a later wave") — `medium` priority so this known, deferred debt does not gate the build;
+ * the rule's job is to stop the count growing, not to burn it down itself. */
+export function policyCanonicalArtifactKindBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    const content = policyReadFileSafe(repoRoot, relPath);
+    if (!content.includes("ArtifactKindSpec")) continue;
+    POLICY_ARTIFACT_KIND_SPEC_ID_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = POLICY_ARTIFACT_KIND_SPEC_ID_RE.exec(content))) {
+      if (policyMatchIsCommentedOut(content, m.index)) continue;
+      const kind = m[1]!;
+      if (policyIsCanonicalArtifactKind(kind)) continue;
+      const line = content.slice(0, m.index).split("\n").length;
+      breaches.push({
+        id: `canonical-artifact-kind-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" declares ArtifactKindSpec.id "${kind}", not canonical grammar s.<plugin>.<artifact>`,
+        kind: "composition/canonical-artifact-kind",
+        scope: relPath,
+        line,
+        priority: "medium",
+        reason:
+          "Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's ArtifactKindId::parse (🚪️io/🦀️component.rs) is now the ONLY sanctioned artifact-kind grammar: three dot-separated ASCII segments, s.<plugin>.<artifact>, kebab-case. This is pre-migration legacy debt — renaming existing ids is a later/APA registration-macro wave, not this rule's job — flagged so nothing NEW regresses further from canonical grammar while that wave is pending.",
+        solution: `Rename this ArtifactKindSpec.id to s.<plugin>.<artifact> when ${relPath} migrates to the declarative registration macro (ticket ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE), or if this is a genuinely new declaration, use canonical grammar from the start.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+type PolicyChildSlotOwner = { ownerKey: string; kindCandidates: string[] };
+
+/** 🧩️Derives a composition-graph node identity from a schema file's path: `<plugin>/<artifact>` or,
+ * under a multi-subset artifact, `<plugin>/<artifact>/<subset>` (the `🪆️subsets/✳️<subset>/` segment),
+ * plus the `s.<plugin>.<artifact>[.<subset>]` kind string(s) a `#[child(kind = "…")]` elsewhere in the
+ * repo would use to target this owner. Mirrors the real convention confirmed by grepping the migrated
+ * plugins: `s.stdio.semio.<subset>` for stdio's multi-subset `semio` artifact, plain
+ * `s.<plugin>.<artifact>` for a single-subset (`✳️any`) artifact. */
+function policyChildSlotOwner(relPath: string): PolicyChildSlotOwner | null {
+  const segments = relPath.split("/");
+  const pluginsIdx = segments.indexOf("🔌️plugins");
+  const artifactsIdx = segments.indexOf("🗿️artifacts");
+  if (pluginsIdx < 0 || artifactsIdx < 0 || artifactsIdx <= pluginsIdx) return null;
+  const pluginSlug = policyStripEmoji(segments[pluginsIdx + 1] ?? "");
+  const artifactSlug = policyStripEmoji(segments[artifactsIdx + 1] ?? "");
+  if (!pluginSlug || !artifactSlug) return null;
+  const subsetsIdx = segments.indexOf("🪆️subsets");
+  const subsetSlug = subsetsIdx >= 0 && segments.length > subsetsIdx + 1 ? policyStripEmoji(segments[subsetsIdx + 1] ?? "") : "";
+  const ownerKey = subsetSlug ? `${pluginSlug}/${artifactSlug}/${subsetSlug}` : `${pluginSlug}/${artifactSlug}`;
+  const kindCandidates: string[] = [];
+  if (subsetSlug && subsetSlug !== "any") kindCandidates.push(`s.${pluginSlug}.${artifactSlug}.${subsetSlug}`);
+  kindCandidates.push(`s.${pluginSlug}.${artifactSlug}`);
+  return { ownerKey, kindCandidates };
+}
+
+const POLICY_CHILD_KIND_RE = /#\[child\(kind\s*=\s*"([^"]+)"\)\]/g;
+
+/** 🔁️`#[child(kind = "…")]` composition-slot declarations must form an acyclic ownership graph — no
+ * artifact may (transitively) compose itself as a child (design doc: `CompositionGraph{Owns: forest}`;
+ * `VcsError::CompositionCycle` is the runtime backstop this rule catches statically, at author time).
+ * Builds a directed graph over every schema file's derived owner key (`policyChildSlotOwner`), with an
+ * edge for every `#[child(kind = "…")]` attribute whose target resolves to another declared owner, then
+ * runs DFS cycle detection. Unresolvable targets (kind strings that don't match any declared owner —
+ * a referential-integrity concern, not an acyclicity one) are silently skipped, not guessed at. */
+export function policyChildSlotKindDagBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const schemaFiles = policyAllRustFiles(repoRoot).filter((f) => f.includes("🔌️plugins/") && f.includes("🧬️schema"));
+
+  const kindToOwner = new Map<string, string>();
+  for (const relPath of schemaFiles) {
+    const owner = policyChildSlotOwner(relPath);
+    if (!owner) continue;
+    for (const kind of owner.kindCandidates) if (!kindToOwner.has(kind)) kindToOwner.set(kind, owner.ownerKey);
+  }
+
+  const edges = new Map<string, Set<string>>();
+  const edgeSites = new Map<string, string>();
+  for (const relPath of schemaFiles) {
+    const owner = policyChildSlotOwner(relPath);
+    if (!owner) continue;
+    const content = policyReadFileSafe(repoRoot, relPath);
+    if (!content.includes("#[child(")) continue;
+    POLICY_CHILD_KIND_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = POLICY_CHILD_KIND_RE.exec(content))) {
+      if (policyMatchIsCommentedOut(content, m.index)) continue;
+      const targetOwner = kindToOwner.get(m[1]!);
+      if (!targetOwner) continue;
+      if (!edges.has(owner.ownerKey)) edges.set(owner.ownerKey, new Set());
+      edges.get(owner.ownerKey)!.add(targetOwner);
+      edgeSites.set(`${owner.ownerKey}->${targetOwner}`, relPath);
+    }
+  }
+
+  const WHITE = 0,
+    GRAY = 1,
+    BLACK = 2;
+  const color = new Map<string, number>();
+  const reportedCycles = new Set<string>();
+  const dfs = (node: string, path: string[]): string[] | null => {
+    color.set(node, GRAY);
+    path.push(node);
+    for (const next of edges.get(node) ?? []) {
+      const c = color.get(next) ?? WHITE;
+      if (c === GRAY) return [...path, next];
+      if (c === WHITE) {
+        const found = dfs(next, path);
+        if (found) return found;
+      }
+    }
+    path.pop();
+    color.set(node, BLACK);
+    return null;
+  };
+  for (const node of edges.keys()) {
+    if ((color.get(node) ?? WHITE) !== WHITE) continue;
+    const cycle = dfs(node, []);
+    if (!cycle) continue;
+    const key = [...cycle].sort().join(">");
+    if (reportedCycles.has(key)) continue;
+    reportedCycles.add(key);
+    const chain = cycle.join(" -> ");
+    breaches.push({
+      id: `child-slot-kind-dag-cycle-${key}`,
+      summary: `Composition ownership cycle: ${chain}`,
+      kind: "composition/child-slot-kind-dag",
+      scope: edgeSites.get(`${cycle[0]}->${cycle[1]}`) ?? cycle[0]!,
+      priority: "high",
+      reason:
+        "Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's composition model requires the ownership graph to be a forest (CompositionGraph{Owns: forest}); a #[child(kind = …)] cycle means an artifact transitively composes itself, which CompositionCoordinator would reject at dispatch time (VcsError::CompositionCycle) — better caught here, statically, before it ever reaches a running app.",
+      solution: `Break the cycle ${chain} by removing or re-pointing one of the #[child(kind = …)] slots along this chain.`,
+    });
+  }
+  return breaches;
+}
+
+/** 🧊️ Shrink-only. Confirmed, justified exceptions to the dissolved-kind redefinition ban below, keyed
+ * `<relPath>:<TypeName>` (mirrors `POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST`'s shape). Empty at seed time —
+ * the ~25-plugin migration wave that authored this ticket's frozen stdio roster already eliminated
+ * every known duplicate of these 18 shapes; this allowlist exists only for a future, deliberately-
+ * justified exception, never as a place to launder new debt. */
+const POLICY_DISSOLVED_KIND_REDEFINITION_ALLOWLIST = new Set<string>([]);
+
+/** 🧊️ The 18 canonical stdio `🧿️semio` subset snapshot types (ticket
+ * 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's frozen roster, `📓️status.md` "ROSTER FROZEN") — the
+ * ONE shape each of these content kinds may take repo-wide. */
+const POLICY_DISSOLVED_KIND_CANONICAL_TYPES = [
+  "SemioAnimationSnapshot",
+  "SemioAudioSnapshot",
+  "SemioBrepSnapshot",
+  "SemioCadSnapshot",
+  "SemioDocumentSnapshot",
+  "SemioDrawingSnapshot",
+  "SemioFlowSnapshot",
+  "SemioGraphSnapshot",
+  "SemioImageSnapshot",
+  "SemioKitSnapshot",
+  "SemioMeshSnapshot",
+  "SemioModelSnapshot",
+  "SemioObjectSnapshot",
+  "SemioPresentationSnapshot",
+  "SemioTableSnapshot",
+  "SemioTextSnapshot",
+  "SemioValueSnapshot",
+  "SemioVideoSnapshot",
+] as const;
+
+/** 🚫️ Dissolved-kind redefinition ban — seeded allowlist ratchet (design doc "W6 ratchet" scope,
+ * corrigendum-narrowed to composition-specific predicates only). A plugin outside `🗄️stdio` redeclaring
+ * one of the 18 frozen `🧿️semio` subset snapshot types by name is exactly the duplicated-content-type
+ * failure this ticket's migration wave exists to eliminate (design doc: "9+ mesh types, 4 brep
+ * topologies… duplicate kind ids"). Deliberately narrow — an EXACT canonical struct/enum name
+ * collision only, never a fuzzy shape-similarity heuristic — because the ~25-plugin migration already
+ * burned this down to zero known duplicates: this rule's job is to catch a NEW one being reintroduced,
+ * not to re-litigate settled debt (a broad heuristic here would drown real signal, exactly the trap
+ * `📌️important.md` warns against). */
+export function policyDissolvedKindRedefinitionBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (!relPath.includes("🔌️plugins/") || relPath.includes("🔌️plugins/🗄️stdio/")) continue;
+    const content = policyReadFileSafe(repoRoot, relPath);
+    for (const typeName of POLICY_DISSOLVED_KIND_CANONICAL_TYPES) {
+      if (!content.includes(typeName)) continue;
+      const re = new RegExp(`^[ \\t]*(?:pub(?:\\([^)]*\\))?\\s+)?(?:struct|enum)\\s+${typeName}\\b`, "m");
+      const match = re.exec(content);
+      if (!match) continue;
+      if (policyMatchIsCommentedOut(content, match.index)) continue;
+      const line = content.slice(0, match.index).split("\n").length;
+      const key = `${relPath}:${typeName}`;
+      if (POLICY_DISSOLVED_KIND_REDEFINITION_ALLOWLIST.has(key)) continue;
+      breaches.push({
+        id: `dissolved-kind-redefinition-${relPath}-${typeName}`,
+        summary: `"${relPath}:${line}" redefines "${typeName}", one of the 18 frozen stdio 🧿️semio subset snapshot types, outside 🗄️stdio`,
+        kind: "composition/dissolved-kind-redefinition",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason:
+          "Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM dissolved every plugin-local duplicate of these 18 neutral content shapes into stdio's frozen 🧿️semio roster; a plugin redeclaring the same type name is the exact regression the migration wave eliminated (design doc: '9+ mesh types, 4 brep topologies… duplicate kind ids').",
+        solution: `Import store::ArtifactChild<${typeName}> from stdio instead of redefining ${typeName} in ${relPath}, or if this is a deliberate, justified exception, add "${key}" to POLICY_DISSOLVED_KIND_REDEFINITION_ALLOWLIST citing why.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/** ⚖️ Aggregates the composition-specific policy rules (ticket
+ * 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W6 ratchet, corrigendum-narrowed scope: canonical
+ * artifact-kind grammar, child-slot composition-graph acyclicity, dissolved-kind redefinition ban).
+ * `declare_artifact!` registration collapsing, `MeshExporter`/`MeshImporter` deletion, and
+ * `📇️catalog.json` generation are explicitly CEDED to ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE — not this
+ * function's scope; see the design doc's corrigendum. */
+export function policyCompositionBreaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policyCanonicalArtifactKindBreaches(repoRoot),
+    ...policyChildSlotKindDagBreaches(repoRoot),
+    ...policyDissolvedKindRedefinitionBreaches(repoRoot),
+  ];
+}
+//#endregion 🔧️PolicyRuleComposition
+
 //#region 🔖️PolicyExport
 /**
  * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
@@ -12603,6 +12910,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policySchemaOverhaulS2Breaches(repoRoot));
   breaches.push(...policySchemaOverhaulPCBreaches(repoRoot));
   breaches.push(...policyDissolvedKernelsBreaches(repoRoot));
+  breaches.push(...policyCompositionBreaches(repoRoot));
   breaches.push(...policyHandcraftedSpecP3Breaches(repoRoot));
   breaches.push(...policyArtifactSchemaBreaches(repoRoot));
   breaches.push(...policyAppSchemaBreaches(repoRoot));

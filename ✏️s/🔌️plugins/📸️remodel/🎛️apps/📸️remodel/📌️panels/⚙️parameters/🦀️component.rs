@@ -63,7 +63,7 @@ pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::remodel::commands::params::set_ingest_params::SetIngestParams;
+    use crate::apps::remodel::commands::set_ingest_params::SetIngestParams;
     use crate::apps::remodel::testkit::{app, dispatch, render as render_body};
     use crate::apps::remodel::RemodelCommand;
 

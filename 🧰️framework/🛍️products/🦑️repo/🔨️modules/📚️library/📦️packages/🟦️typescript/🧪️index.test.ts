@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
+import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -148,6 +148,81 @@ describe("window completeness policy", () => {
   });
 });
 //#endregion 🪟️WindowCompletenessPolicy
+
+//#region 🧪️CompositionPolicy
+describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W6)", () => {
+  test("canonical-artifact-kind rejects legacy ArtifactKindSpec.id grammar but accepts s.<plugin>.<artifact>", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-composition-kind-policy-"));
+    const artifact = join(root, "✏️s", "🔌️plugins", "🧪️probe", "🗿️artifacts", "🧪️probe");
+    try {
+      mkdirSync(artifact, { recursive: true });
+      writeFileSync(
+        join(artifact, "🦀️component.rs"),
+        ['pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {', '    semio_framework_plugin::ArtifactKindSpec {', '        id: "3d.mesh".into(),', "    }", "}"].join("\n"),
+      );
+      const legacy = policyCanonicalArtifactKindBreaches(root);
+      expect(legacy.map((breach) => breach.kind)).toEqual(["composition/canonical-artifact-kind"]);
+      expect(legacy[0]?.priority).toBe("medium");
+
+      writeFileSync(
+        join(artifact, "🦀️component.rs"),
+        ['pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {', '    semio_framework_plugin::ArtifactKindSpec {', '        id: "s.probe.probe".into(),', "    }", "}"].join("\n"),
+      );
+      expect(policyCanonicalArtifactKindBreaches(root)).toEqual([]);
+
+      // 🩹 Doc-comment prose quoting the pattern must not trip the rule (the exact false-positive
+      // class flagged in the UCAS ticket's own 📌️important.md sweep-the-pattern lesson).
+      writeFileSync(join(artifact, "🦀️component.rs"), '/// see `ArtifactKindSpec { id: "3d.mesh" }` for the old shape\n');
+      expect(policyCanonicalArtifactKindBreaches(root)).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("child-slot-kind-dag accepts an acyclic composition graph and rejects a cycle", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-composition-dag-policy-"));
+    const schemaA = join(root, "✏️s", "🔌️plugins", "🧪️probe", "🗿️artifacts", "🧪️probea", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧬️schema");
+    const schemaB = join(root, "✏️s", "🔌️plugins", "🧪️probe", "🗿️artifacts", "🧪️probeb", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧬️schema");
+    try {
+      mkdirSync(schemaA, { recursive: true });
+      mkdirSync(schemaB, { recursive: true });
+      writeFileSync(join(schemaA, "🦀️component.rs"), '#[child(kind = "s.probe.probeb")] pub content: store::ArtifactChild<ProbeB>,\n');
+      writeFileSync(join(schemaB, "🦀️component.rs"), "pub other: i32,\n");
+      expect(policyChildSlotKindDagBreaches(root)).toEqual([]);
+
+      writeFileSync(join(schemaB, "🦀️component.rs"), '#[child(kind = "s.probe.probea")] pub back: store::ArtifactChild<ProbeA>,\n');
+      const cycles = policyChildSlotKindDagBreaches(root);
+      expect(cycles).toHaveLength(1);
+      expect(cycles[0]?.kind).toBe("composition/child-slot-kind-dag");
+      expect(cycles[0]?.priority).toBe("high");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("dissolved-kind-redefinition bans redeclaring a frozen 🧿️semio subset type outside 🗄️stdio", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-composition-dissolved-policy-"));
+    const plugin = join(root, "✏️s", "🔌️plugins", "🧪️probe", "🗿️artifacts", "🧪️probe");
+    const stdio = join(root, "✏️s", "🔌️plugins", "🗄️stdio", "🗿️artifacts", "🧿️semio");
+    try {
+      mkdirSync(plugin, { recursive: true });
+      mkdirSync(stdio, { recursive: true });
+      writeFileSync(join(plugin, "🦀️component.rs"), "pub struct SemioMeshSnapshot { pub vertices: Vec<f64> }\n");
+      writeFileSync(join(stdio, "🦀️component.rs"), "pub struct SemioMeshSnapshot { pub vertices: Vec<f64> }\n");
+      const breaches = policyDissolvedKindRedefinitionBreaches(root);
+      expect(breaches).toHaveLength(1);
+      expect(breaches[0]?.kind).toBe("composition/dissolved-kind-redefinition");
+      expect(breaches[0]?.scope).toBe("✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️probe/🦀️component.rs");
+
+      rmSync(join(plugin, "🦀️component.rs"));
+      writeFileSync(join(plugin, "🦀️component.rs"), "pub struct ProbeOwnType { pub vertices: Vec<f64> }\n");
+      expect(policyDissolvedKindRedefinitionBreaches(root)).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+//#endregion 🧪️CompositionPolicy
 
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {

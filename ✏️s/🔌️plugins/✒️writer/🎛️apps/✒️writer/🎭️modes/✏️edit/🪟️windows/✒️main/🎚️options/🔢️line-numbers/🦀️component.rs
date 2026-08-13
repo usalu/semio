@@ -1,5 +1,5 @@
 //! 🔢️ Main-window option — the line-numbers toggle. Its command handler lives in
-//! `🎮️commands/⚙️editor-settings::toggle_line_numbers`.
+//! `🎮️commands/⚙️toggle-line-numbers::toggle_line_numbers`.
 
 use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::terminology::WriterPlayLabels;

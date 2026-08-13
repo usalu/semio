@@ -14,9 +14,9 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::mathematical::commands::document::set_artifact;
-use crate::apps::mathematical::commands::geometry::set_points;
-use crate::apps::mathematical::commands::graph::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
-use crate::apps::mathematical::commands::locale::set_locale;
+use crate::apps::mathematical::commands::set_points;
+use crate::apps::mathematical::commands::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
+use crate::apps::mathematical::commands::set_locale;
 use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::apps::mathematical::presence::{MathematicalPresence, MathematicalPresenceMutation};
 use crate::apps::mathematical::modes::edit;
@@ -396,7 +396,7 @@ mod tests {
     /// (an undeclared host-pushed command) and `setDocument` → `set-artifact` (the `app_commands!`
     /// row's own `"setDocument" as "set-artifact" => set_artifact::SetArtifact` explicitly pins a
     /// non-kebab wire keyword, matching `SetArtifact`'s own `#[dsl(keyword = "set-artifact")]`).
-    /// **Pre-existing bug, independently traced**: `git log -1 --date=iso -- 🎮️commands/📄️artifact/
+    /// **Pre-existing bug, independently traced**: `git log -1 --date=iso -- 🎮️commands/📄️set-artifact/
     /// 🦀️component.rs` shows `SetArtifact`'s explicit `set-artifact` keyword predates this ticket's
     /// own edits to this file (which only touched `render`/`export_media`); this test's hardcoded
     /// exception list simply never accounted for the second declared divergence. Fixed outright

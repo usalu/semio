@@ -564,14 +564,50 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️view/🦀️component.rs"]
-            pub mod view;
-            #[path = "../../🎛️apps/📏️layout/🎮️commands/🖱️pointer/🦀️component.rs"]
-            pub mod pointer;
-            #[path = "../../🎛️apps/📏️layout/🎮️commands/✏️author/🦀️component.rs"]
-            pub mod author;
-            #[path = "../../🎛️apps/📏️layout/🎮️commands/🐚️export/🦀️component.rs"]
-            pub mod export;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️set-active-page/🦀️component.rs"]
+            pub mod set_active_page;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️set-hover/🦀️component.rs"]
+            pub mod set_hover;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️focus-preflight-issue/🦀️component.rs"]
+            pub mod focus_preflight_issue;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️engagement-input/🦀️component.rs"]
+            pub mod engagement_input;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
+            pub mod canvas_pointer_down;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
+            pub mod canvas_pointer_move;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
+            pub mod canvas_pointer_up;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🖱️canvas-drag-over/🦀️component.rs"]
+            pub mod canvas_drag_over;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🖱️canvas-drag-leave/🦀️component.rs"]
+            pub mod canvas_drag_leave;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🖱️set-camera/🦀️component.rs"]
+            pub mod set_camera;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🖱️canvas-drop/🦀️component.rs"]
+            pub mod canvas_drop;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/✏️add-frame/🦀️component.rs"]
+            pub mod add_frame;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/✏️add-page/🦀️component.rs"]
+            pub mod add_page;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/✏️patch-page/🦀️component.rs"]
+            pub mod patch_page;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/✏️patch-frame/🦀️component.rs"]
+            pub mod patch_frame;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🐚️export-png/🦀️component.rs"]
+            pub mod export_png;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🐚️export-svg/🦀️component.rs"]
+            pub mod export_svg;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🐚️export-pdf/🦀️component.rs"]
+            pub mod export_pdf;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🐚️export-package/🦀️component.rs"]
+            pub mod export_package;
+            #[path = "../../🎛️apps/📏️layout/🎮️commands/🐚️engagement-submit/🦀️component.rs"]
+            pub mod engagement_submit;
         }
 
         #[path = "."]

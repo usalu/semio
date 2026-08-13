@@ -71,6 +71,12 @@ serde_json.workspace = true
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]
-semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+# 🎬️ `EngineComputeTests` (below, in 🎛️apps/🧊️3d/🦀️component.rs) exercises frustum-cull/AABB scene
+# math that now lives at `ui_wgpu`'s `kernel_3d_scene` mount (ticket
+# 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH — `semio-framework-3d`
+# no longer has a `scene` module to depend on). Same crate-rename as the normal `["wgpu"]` dependency
+# above (Cargo rejects depending on one crate under two different names) with the extra
+# `wgpu-engine` features cargo's resolver unifies in for dev/test builds only.
+ui_wgpu = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu-engine"] }
 
 

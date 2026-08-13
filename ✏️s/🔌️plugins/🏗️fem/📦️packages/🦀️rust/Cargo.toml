@@ -30,6 +30,14 @@ ports = { react = 6087, wgpu = 6187 }
 crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
+[features]
+# 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
+# `semio_plugin_install_bundle`). Default-on so this plugin builds as its own component, and
+# switched OFF by any crate that EMBEDS it: two crates defining that symbol in one component is a
+# `rust-lld: duplicate symbol` link error, and the embedder must own the entry point.
+default = ["plugin-entry"]
+plugin-entry = []
+
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

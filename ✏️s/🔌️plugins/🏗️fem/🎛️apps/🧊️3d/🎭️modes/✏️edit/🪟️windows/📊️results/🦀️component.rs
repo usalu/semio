@@ -175,7 +175,7 @@ mod tests {
 
     fn app_with_example() -> Fem3dApp {
         let mut app = fem3d_app();
-        dispatch(&mut app, Fem3dCommand::SetActiveExample(crate::apps::fem3d::commands::example::set_active_example::SetActiveExample { example_id: "default".into() }));
+        dispatch(&mut app, Fem3dCommand::SetActiveExample(crate::apps::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
         app
     }
 
@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn results_window_renders_modal_mode_shape_3d() {
         let mut app = app_with_example();
-        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::results::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
         let json = render_body(&mut app, FEM3D_BODY_RESULTS);
         assert!(json.contains("world-3d"), "expected a valid world-3d scene, got: {json}");
         assert!(!json.contains("Modal analysis error"), "unexpected modal error: {json}");
@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn results_window_renders_buckling_mode_shape_3d() {
         let mut app = app_with_example();
-        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::results::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
         let json = render_body(&mut app, FEM3D_BODY_RESULTS);
         assert!(json.contains("world-3d"), "expected a valid world-3d scene, got: {json}");
         assert!(!json.contains("Buckling analysis error"), "unexpected buckling error: {json}");
@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn results_scene_includes_solid_vertex_colors_3d() {
         let mut app = app_with_example();
-        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::results::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
         let json = render_body(&mut app, FEM3D_BODY_RESULTS);
         assert!(json.contains("solid-sol1"), "expected the solid mesh in the results scene: {json}");
         assert!(json.contains("\\\"colors\\\""), "expected a vertex colors array on the solid mesh data: {json}");
@@ -223,11 +223,11 @@ mod tests {
     #[test]
     fn results_scene_captions_name_mode_and_factor_3d() {
         let mut app = app_with_example();
-        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::results::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
         let json_modal = render_body(&mut app, FEM3D_BODY_RESULTS);
         assert!(json_modal.contains("Hz"), "expected a frequency caption: {json_modal}");
 
-        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::results::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
+        dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::apps::fem3d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
         let json_buckling = render_body(&mut app, FEM3D_BODY_RESULTS);
         assert!(json_buckling.contains("factor"), "expected a load-factor caption: {json_buckling}");
     }

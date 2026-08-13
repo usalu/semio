@@ -22,6 +22,26 @@ taxonomyLeafParentDirs contains ⚙️engine                          ← module
 
 IIF's flip was the strongest available proof the inference fan-out is real: `policySchemaRepresentationBreaches` is allowlist-free and hard-gating, so the instant it landed it demanded the full inference tree on all 112 owning subsets — and high breaches went **24802 → 24801 (down by one)**, with zero new representation breaches.
 
+## Precise closing framing — 0 pre-existing, 1 transitional (not owned by this ticket)
+
+**Correction to the headline below, made by DKM (#owner of `DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS`) and adopted verbatim because it's more accurate than my own first framing:**
+
+> *"That directory was created during your dissolution and is genuinely new, so your census was accurate when you took it and is accurate now — but the count is a moving target while my ticket is live... it may be worth phrasing as '0 pre-existing, 1 transitional owned by #DKM with a stated dissolution path', so a later reader doesn't see the number go 0 → 1 and conclude your work regressed."*
+
+`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/` exists (created during, not before, this ticket's work) — a deliberate, documented, correctly-mounted temporary forward edge (`stdio → semio-framework-3d`) for DKM's "brep flip", explicitly scoped to let ~35 framework-3d brep subdirs migrate one at a time without an atomic cross-crate change. **Investigated, not dissolved**: reading its own docstring before acting is what distinguished it from the 95 genuine fossils this ticket cleared — those were abandoned rushed relocations; this is live, owned, in-flight architecture from a different ticket's mandate.
+
+DKM's stated end state is stronger than "dissolves as subdirs peel": the `BrepKernel` trait itself is slated to stop existing once its ~16,000 LOC of algorithms land in `📸️snapshot/💡️inferences` compute subdirs — "the correct outcome is not move `⚙️engine` somewhere legal, it's the trait stops existing." My forbidding rule (`policyArtifactEngineFacetForbiddenBreaches`, at `low`) will correctly report it until then; DKM has committed to treating a surviving `⚙️engine` at their own close time as a failure state, not a resting one.
+
+**A second finding from the same exchange, worth recording for whoever next touches the taxonomy walker**: `policyTaxonomyDirsBreaches`'s `NestedFacetWalk` (📜️script.ts:4076+) only descends when an artifact's direct child is literally `🧬️schema` or `🚪️io` — but `artifactChildDirs` doesn't include `🏅️standards`, and every artifact in this repo is new-shape (child = `🏅️standards`). **Measured: 0 hits for "not a recognized artifact/representation dir" repo-wide** — not because the tree is clean, but because the walker's else-branch at `🏅️standards` never descends to subset facets at all. This ticket's own forbidding rule may be reached via a different code path (confirmed reporting 95, then correctly tracking the burn-down to 0, so it does NOT share this blind spot) — but the general shape (a rule that looks installed and never fires) is the same failure class as an earlier finding tonight about the artifact-io dispatch bridge. UCAS is retargeting `artifactChildDirs` at `🏅️standards` in their own W6.
+
+## Re-verification after a 9.5-hour gap and a reported disk-full incident
+
+My last "stdio compiles clean" check before this section was taken at **11:23**, clustered tightly with three other checks from the same sweep (11:12–11:24). A peer session reported the machine hit 100% disk (257 MB free) later that evening (~19:30), producing `No space left on device` errors that read exactly like real compile failures — they watched one plugin's error count swing 94 → 16 → 116 before diagnosing it, and 202 GB was freed to fix it.
+
+**Given nearly 10 hours and a disk incident between my claim and this record, the claim was re-verified fresh rather than trusted**: `RUSTC_WRAPPER="" cargo check -p semio-s-plugin-stdio --all-targets` against a brand-new `CARGO_TARGET_DIR`, disk confirmed healthy (168 GB free) immediately before running. **Result: `Finished` in 4m25s, exit 0, zero errors — reconfirmed.**
+
+**11 cross-plugin consumer crates were checked directly** (not merely grep-verified, per the wave-2 media/semio agent's own flagged gap): `fem`, `cad`, `layout`, `puzzle`, `raster`, `shooting`, `gis` all compile clean. `draw` and `lowpoly` each show one error — both confirmed **out of scope**, not this ticket's: draw's is an `E0716` borrow-lifetime issue in a file last touched by another session at 18:52, unrelated to engine dissolution; lowpoly's is `semio_framework_number` unresolved inside DKM's own in-flight `semio_framework_3d::brep` work, the same live dissolution flagged above. `trinity` timed out on build-lock contention after 6m40s — no verdict claimed either way.
+
 ## FINAL STATE — 95 → 0
 
 ```

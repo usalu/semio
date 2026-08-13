@@ -1,0 +1,3 @@
+command files: 17 filter='🌀️procedural/' dry=True
+planned rewrites from 17 old files
+DRY run — no writes

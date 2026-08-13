@@ -15,6 +15,14 @@
 //! (now-deleted) `semio_framework::mesh_to_dwg_drawing`/`dwg_from_bytes`/`dwg_to_bytes` re-exports —
 //! moving it here (instead of pointing framework-3d at stdio's real `dwg` artifact, which would be
 //! an actual crate cycle given the forward edge above) dissolves that dependency entirely.
+//!
+//! 📄️ `📄️step` (below) moved IN wave PEEL3: framework-3d's hand-rolled ISO 10303-21 Part-21
+//! reader/writer, the last thing this file's `export_step`/`import_step` needed from the
+//! framework side. Known pre-existing duplicate of stdio's own, separately-complete AP214
+//! `SemioBrepToStep`/`SemioBrepFromStep` walk (`✳️brep/🚪️io`) — reconciling the two requires
+//! rewiring this file's `BrepKernel` impl, which is out of scope here (see `📌️important.md`,
+//! "BrepKernel — do NOT attempt"). Relocated verbatim only, to satisfy the crate-direction law
+//! now that arena/topo/euler/history/primitives moved into this same crate too.
 
 use std::collections::HashMap;
 
@@ -24,22 +32,28 @@ use serde::{Deserialize, Serialize};
 #[path = "📦️mesh-io/🦀️component.rs"]
 mod mesh_io;
 
-use semio_framework_3d::brep::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use semio_framework_3d::brep::blend::{chamfer_edges, fillet_edges, fillet_variable};
-use semio_framework_3d::brep::boolean::{boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanOp};
+#[path = "📄️step/🦀️component.rs"]
+mod step;
+
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::blend::{chamfer_edges, fillet_edges, fillet_variable};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanOp};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::offset::{draft_angle, offset_face, offset_solid, shell_solid_with_open_faces, thicken_face};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sew::{convert_to_nurbs, defeature, heal_solid, sew_faces};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_face, tessellate_solid, tessellate_wire};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
 use semio_framework_3d::brep::bspline::KnotVector;
-use semio_framework_3d::brep::classify::point_in_solid;
 use semio_framework_3d::brep::curve::Curve3;
 use semio_framework_3d::brep::engine::{MeshTransfer, ParamDomain, PointClassification, Vec3, Vec3 as EVec3};
 use semio_framework_3d::brep::error::KernelError;
-use semio_framework_3d::brep::euler::make_vertex;
-use semio_framework_3d::brep::heal::{convert_to_nurbs, defeature, heal_solid};
-use semio_framework_3d::brep::history::OpRecorder;
-use semio_framework_3d::brep::int_cc::intersect_curve_curve;
-use semio_framework_3d::brep::int_cs::intersect_curve_surface;
-use semio_framework_3d::brep::int_ss::intersect_surface_surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_curve;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_surface_surface;
 use semio_framework_3d::brep::mat::Frame3;
-use semio_framework_3d::brep::measure::{
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{
     closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box,
     solid_center_of_mass, solid_surface_area, solid_volume,
 };
@@ -48,19 +62,16 @@ use mesh_io::{
     import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data,
     triangle_mesh_from_transfer, StlFormat,
 };
-use semio_framework_3d::brep::offset::{draft_angle, offset_face, offset_solid, shell_solid_with_open_faces, thicken_face};
-use semio_framework_3d::brep::primitives::{
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{
     make_box, make_cone, make_convex_hull, make_cylinder, make_planar_face_from_points,
     make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire,
     make_sphere, make_torus, Wire,
 };
-use semio_framework_3d::brep::sew::sew_faces;
-use semio_framework_3d::brep::step::{read_step, write_step};
+use step::{read_step, write_step};
 use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
 use semio_framework_3d::brep::tolerance::Tol;
-use semio_framework_3d::brep::topo::Body;
-use semio_framework_3d::brep::validate::validate_body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 use semio_framework_3d::brep::vec::{Pnt3, Vec3 as NativeVec3};
 
 // #region 🔖️ContractTypes
@@ -346,7 +357,7 @@ impl Brep {
     where
         F: Fn(Pnt3) -> Pnt3,
     {
-        let transfer = semio_framework_3d::brep::tessellate::tessellate_solid(&self.body, solid, 0.05).map_err(map_err)?;
+        let transfer = tessellate_solid(&self.body, solid, 0.05).map_err(map_err)?;
         let n = transfer.position.len() / 3;
         if n == 0 || transfer.index.len() < 3 {
             return Err(BrepError::InvalidInput("cannot transform empty solid mesh".into()));
@@ -366,7 +377,7 @@ impl Brep {
             triangles.push(pts);
         }
         let mut rec = OpRecorder::new();
-        let out = semio_framework_3d::brep::primitives::solid_from_triangle_soup(&mut self.body, &triangles, &mut rec).map_err(map_err)?;
+        let out = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::solid_from_triangle_soup(&mut self.body, &triangles, &mut rec).map_err(map_err)?;
         Ok(self.register_solid(out))
     }
 }
@@ -1176,9 +1187,9 @@ impl Brep {
     }
     pub fn tessellate_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<MeshTransfer, BrepError> {
         match self.entity(shape)? {
-            Entity::Solid(id) => semio_framework_3d::brep::tessellate::tessellate_solid(&self.body, *id, deflection).map_err(map_err),
-            Entity::Face(id) => semio_framework_3d::brep::tessellate::tessellate_face(&self.body, *id, deflection).map_err(map_err),
-            Entity::Wire(wire) => semio_framework_3d::brep::tessellate::tessellate_wire(&self.body, wire, deflection).map_err(map_err),
+            Entity::Solid(id) => tessellate_solid(&self.body, *id, deflection).map_err(map_err),
+            Entity::Face(id) => tessellate_face(&self.body, *id, deflection).map_err(map_err),
+            Entity::Wire(wire) => tessellate_wire(&self.body, wire, deflection).map_err(map_err),
             other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
         }
     }

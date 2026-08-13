@@ -13,7 +13,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as schema;
-extern crate semio_framework_math as math;
+extern crate semio_framework_number as number;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -30,8 +30,15 @@ extern crate semio_framework_math as math;
 // `crate::cas::…`/`crate::polynomial::…` self-reference inside those two files (including references
 // to non-`pub` inner modules, e.g. `crate::cas::canon`) is untouched, and privacy is structural in
 // Rust: a re-export/alias layer (`pub use … as cas`) does NOT leak private inner items back out, so
-// only a direct mount preserves them. `crate::number`/`crate::algebra` (which stay in `🧮️math` for
-// now) became `math::number`/`math::algebra` against the `semio_framework_math` dependency above.
+// only a direct mount preserves them. `crate::algebra`'s two call sites became `math::algebra::MatG`/
+// `math::algebra::VecG` against a since-removed `semio_framework_math as math` dependency — briefly a
+// genuine pre-existing breakage (wave M3d had moved `algebra` out of `semio_framework_math` into
+// `📸️remodel`, not knowing this wave had just created a second consumer here). Wave FIXALG (same
+// ticket) relocated `VecG`/`MatG` out of `📸️remodel` into `semio_framework_number`'s own `algebra`
+// module and repointed both sites at `number::MatG`/`number::VecG`, so `math` is no longer a
+// dependency of this crate at all. `crate::number` became `number::` (wave MATHEND) against the
+// `semio_framework_number` dependency below — `number` was relocated out of `🧮️math` into its own
+// framework module, so it is a real top-level extern crate now, not a submodule of `math`.
 #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌿️cas-internals/🦀️component.rs"]
 pub mod cas;
 #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📈️polynomial-internals/🦀️component.rs"]
@@ -457,14 +464,20 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️graph/🦀️component.rs"]
-            pub mod graph;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/📐️geometry/🦀️component.rs"]
-            pub mod geometry;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🗣️locale/🦀️component.rs"]
-            pub mod locale;
+            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/📄️set-artifact/🦀️component.rs"]
+            pub mod set_artifact;
+            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️set-algorithm/🦀️component.rs"]
+            pub mod set_algorithm;
+            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️set-directed/🦀️component.rs"]
+            pub mod set_directed;
+            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
+            pub mod node_graph_edit;
+            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
+            pub mod node_graph_viewport;
+            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/📐️set-points/🦀️component.rs"]
+            pub mod set_points;
+            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
         }
 
         #[path = "."]

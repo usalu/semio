@@ -1068,22 +1068,44 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs"]
-            pub mod model;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🏋️loads/🦀️component.rs"]
-            pub mod loads;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧮️analysis/🦀️component.rs"]
-            pub mod analysis;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs"]
-            pub mod example;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🎥️camera/🦀️component.rs"]
-            pub mod camera;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/👁️results/🦀️component.rs"]
-            pub mod results;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs"]
-            pub mod locale;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🧱️add-node/🦀️component.rs"]
+            pub mod add_node;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🧱️add-bar/🦀️component.rs"]
+            pub mod add_bar;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🧱️add-beam/🦀️component.rs"]
+            pub mod add_beam;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🧱️add-material/🦀️component.rs"]
+            pub mod add_material;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🧱️add-section/🦀️component.rs"]
+            pub mod add_section;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🧱️add-support/🦀️component.rs"]
+            pub mod add_support;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🧱️add-region/🦀️component.rs"]
+            pub mod add_region;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🏋️add-nodal-load/🦀️component.rs"]
+            pub mod add_nodal_load;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🏋️add-member-udl/🦀️component.rs"]
+            pub mod add_member_udl;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🏋️add-area-load/🦀️component.rs"]
+            pub mod add_area_load;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🏋️add-load-case/🦀️component.rs"]
+            pub mod add_load_case;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🏋️add-combination/🦀️component.rs"]
+            pub mod add_combination;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🏋️set-self-weight/🦀️component.rs"]
+            pub mod set_self_weight;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🧮️set-analysis-settings/🦀️component.rs"]
+            pub mod set_analysis_settings;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️remove-selection/🦀️component.rs"]
+            pub mod remove_selection;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/📚️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🎥️set-camera/🦀️component.rs"]
+            pub mod set_camera;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/👁️set-result-display/🦀️component.rs"]
+            pub mod set_result_display;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
         }
 
         #[path = "."]
@@ -1136,20 +1158,42 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs"]
-            pub mod model;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs"]
-            pub mod loads;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧮️analysis/🦀️component.rs"]
-            pub mod analysis;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs"]
-            pub mod example;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs"]
-            pub mod camera;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️results/🦀️component.rs"]
-            pub mod results;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-node/🦀️component.rs"]
+            pub mod add_node;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-bar/🦀️component.rs"]
+            pub mod add_bar;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-frame/🦀️component.rs"]
+            pub mod add_frame;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-material/🦀️component.rs"]
+            pub mod add_material;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-section/🦀️component.rs"]
+            pub mod add_section;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-support/🦀️component.rs"]
+            pub mod add_support;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-solid/🦀️component.rs"]
+            pub mod add_solid;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏋️add-nodal-load/🦀️component.rs"]
+            pub mod add_nodal_load;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏋️add-member-udl/🦀️component.rs"]
+            pub mod add_member_udl;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏋️add-area-load/🦀️component.rs"]
+            pub mod add_area_load;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏋️add-load-case/🦀️component.rs"]
+            pub mod add_load_case;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏋️add-combination/🦀️component.rs"]
+            pub mod add_combination;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏋️set-self-weight/🦀️component.rs"]
+            pub mod set_self_weight;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧮️set-analysis-settings/🦀️component.rs"]
+            pub mod set_analysis_settings;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️remove-selection/🦀️component.rs"]
+            pub mod remove_selection;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/📚️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎥️set-camera/🦀️component.rs"]
+            pub mod set_camera;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️set-result-display/🦀️component.rs"]
+            pub mod set_result_display;
         }
 
         #[path = "."]
@@ -1176,6 +1220,7 @@ pub mod apps {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
+#[cfg(feature = "plugin-entry")]
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 
 //#region 📚️Examples

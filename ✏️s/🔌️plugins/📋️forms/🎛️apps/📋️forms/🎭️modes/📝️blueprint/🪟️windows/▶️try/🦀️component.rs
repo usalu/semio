@@ -308,7 +308,7 @@ mod tests {
     #[test]
     fn renders_try_wizard() {
         let mut app = forms_app();
-        crate::apps::forms::testkit::dispatch(&mut app, crate::apps::forms::FormsCommand::SetActiveExample(crate::apps::forms::commands::import::set_active_example::SetActiveExample { example_id: "default".into() }));
+        crate::apps::forms::testkit::dispatch(&mut app, crate::apps::forms::FormsCommand::SetActiveExample(crate::apps::forms::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
         let json = render_body(&mut app, BODY_TRY);
         assert!(json.contains("forms-try"));
         assert!(json.contains("Step 1"));
@@ -316,7 +316,7 @@ mod tests {
 
     #[test]
     fn image_question_with_url_src_emits_image_node() {
-        let question = FormQuestion { src: Some("https://example.com/picture.png".into()), ..crate::apps::forms::commands::question::question_shell("q-image".into(), "Picture".into(), "image".into()) };
+        let question = FormQuestion { src: Some("https://example.com/picture.png".into()), ..crate::apps::forms::commands::add_question::question_shell("q-image".into(), "Picture".into(), "image".into()) };
         let node = render_try_question(&question, &Map::new(), &[], None, crate::apps::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#""type":"image""#));

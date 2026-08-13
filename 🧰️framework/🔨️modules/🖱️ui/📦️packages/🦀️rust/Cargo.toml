@@ -49,9 +49,9 @@ typegen = ["wgpu", "dep:ts-rs"]
 
 [dependencies]
 ui_styling = { path = "../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-# ⛓️ Consumed NOT by any file under `🖱️ui/` but by `🧊️3d/🎬️scene/🦀️component.rs`, which the wgpu
+# ⛓️ Consumed by `🖱️ui/🎬️scene/🦀️component.rs` (relocated here from `🧊️3d/🎬️scene/` — ticket
+# 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH), which the wgpu
 # target `#[path]`-mounts as `kernel_3d_scene` and which re-exports `geometry::{Mat4, Vec3}`.
-# A crate here is composed across directories, so a directory-scoped grep cannot see this edge.
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry", optional = true }
 unicode-width = { version = "0.2.2", optional = true }
 dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }

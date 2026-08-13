@@ -25,8 +25,8 @@ use std::collections::BTreeMap;
 /// 🌉 Structural walk of `EquationNode` → `(variable name, degree -> integer coefficient)` — `None`
 /// the instant the tree leaves this wave's scope (rational coefficient, second variable, non-integer
 /// exponent, or any `Fn`/`Piecewise`/etc node — `EquationNode` can't even represent those yet).
-fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u32, math::number::Integer>)> {
-    fn walk(node: &EquationNode, var: &mut Option<String>) -> Option<BTreeMap<u32, math::number::Integer>> {
+fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u32, number::Integer>)> {
+    fn walk(node: &EquationNode, var: &mut Option<String>) -> Option<BTreeMap<u32, number::Integer>> {
         match &node.kind {
             EquationNodeKind::Integer { lexeme } => Some(BTreeMap::from([(0u32, lexeme.parse().ok()?)])),
             EquationNodeKind::Rational { numer, denom } => {
@@ -42,26 +42,26 @@ fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u
                     Some(existing) if existing != name => return None,
                     Some(_) => {}
                 }
-                Some(BTreeMap::from([(1u32, math::number::Integer::one())]))
+                Some(BTreeMap::from([(1u32, number::Integer::one())]))
             }
             EquationNodeKind::Add { terms } => {
-                let mut acc: BTreeMap<u32, math::number::Integer> = BTreeMap::new();
+                let mut acc: BTreeMap<u32, number::Integer> = BTreeMap::new();
                 for term in terms {
                     for (degree, coeff) in walk(term, var)? {
-                        let entry = acc.entry(degree).or_insert_with(math::number::Integer::zero);
+                        let entry = acc.entry(degree).or_insert_with(number::Integer::zero);
                         *entry = entry.add(&coeff);
                     }
                 }
                 Some(acc)
             }
             EquationNodeKind::Mul { factors } => {
-                let mut acc: BTreeMap<u32, math::number::Integer> = BTreeMap::from([(0u32, math::number::Integer::one())]);
+                let mut acc: BTreeMap<u32, number::Integer> = BTreeMap::from([(0u32, number::Integer::one())]);
                 for factor in factors {
                     let rhs = walk(factor, var)?;
-                    let mut next: BTreeMap<u32, math::number::Integer> = BTreeMap::new();
+                    let mut next: BTreeMap<u32, number::Integer> = BTreeMap::new();
                     for (deg_a, coeff_a) in &acc {
                         for (deg_b, coeff_b) in &rhs {
-                            let entry = next.entry(deg_a + deg_b).or_insert_with(math::number::Integer::zero);
+                            let entry = next.entry(deg_a + deg_b).or_insert_with(number::Integer::zero);
                             *entry = entry.add(&coeff_a.mul(coeff_b));
                         }
                     }
@@ -78,7 +78,7 @@ fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u
                     Some(existing) if existing != name => return None,
                     Some(_) => {}
                 }
-                Some(BTreeMap::from([(exp, math::number::Integer::one())]))
+                Some(BTreeMap::from([(exp, number::Integer::one())]))
             }
         }
     }
@@ -87,7 +87,7 @@ fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u
     Some((var.unwrap_or_else(|| "x".to_string()), coeffs))
 }
 
-fn to_poly_u(coeffs: &BTreeMap<u32, math::number::Integer>) -> crate::polynomial::univariate::PolyU<math::number::Integer> {
+fn to_poly_u(coeffs: &BTreeMap<u32, number::Integer>) -> crate::polynomial::univariate::PolyU<number::Integer> {
     let mut poly = crate::polynomial::univariate::PolyU::zero();
     for (degree, coeff) in coeffs {
         poly = poly.add(&crate::polynomial::univariate::PolyU::monomial(coeff.clone(), *degree as usize));
@@ -97,7 +97,7 @@ fn to_poly_u(coeffs: &BTreeMap<u32, math::number::Integer>) -> crate::polynomial
 
 /// 🌉 `None` when `equation` is outside this wave's scope (see module doc) — the ONE place
 /// `plan`/`dep_input`/`compute` all funnel through, so all three always agree on scope.
-fn equation_integer_polynomial(equation: &EquationSnapshot) -> Option<crate::polynomial::univariate::PolyU<math::number::Integer>> {
+fn equation_integer_polynomial(equation: &EquationSnapshot) -> Option<crate::polynomial::univariate::PolyU<number::Integer>> {
     let (_, coeffs) = extract_integer_polynomial(&equation.expr)?;
     if coeffs.is_empty() {
         return None;
@@ -120,8 +120,8 @@ pub struct MathematicalRoot {
 /// 🌱️ The bisection target width every `compute()` call refines to — `1 / 10^9`, matching the
 /// precision the migrated `polynomial::algebraic` tests already assert against (`1e-6`/`1e-9`
 /// tolerances), so `roots`' output is at least as precise as what those tests already trust.
-fn refine_width() -> math::number::Rational {
-    math::number::Rational::new(math::number::Integer::one(), math::number::Integer::from_i64(1_000_000_000)).expect("1/10^9 is a valid rational")
+fn refine_width() -> number::Rational {
+    number::Rational::new(number::Integer::one(), number::Integer::from_i64(1_000_000_000)).expect("1/10^9 is a valid rational")
 }
 
 pub struct MathematicalRootsField;
@@ -173,7 +173,7 @@ impl protocol::InferredField<MathematicalSnapshot> for MathematicalRootsField {
         let intervals = crate::polynomial::roots::isolate_real_roots(&poly);
         let Some((lo, hi)) = intervals.get(*key) else { return MathematicalRoot::default() };
         let (lo, hi) = crate::polynomial::roots::refine_root(&poly, lo, hi, &refine_width());
-        let midpoint = lo.add(&hi).div(&math::number::Rational::from_i64(2, 1).expect("2/1 is valid")).unwrap_or_else(math::number::Rational::zero);
+        let midpoint = lo.add(&hi).div(&number::Rational::from_i64(2, 1).expect("2/1 is valid")).unwrap_or_else(number::Rational::zero);
         MathematicalRoot { approx: midpoint.to_f64() }
     }
 }

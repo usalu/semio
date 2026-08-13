@@ -73,7 +73,7 @@ pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> V
 /// 🔀️ Diffs two snapshots into a minimal typed semantic mutation set — the re-expression the
 /// former whole-collection and whole-document replacement call sites (whole-fixture paste,
 /// auto-reorganize) now go through instead of a snapshot swap. Doesn't detect node id renames
-/// (shows as a delete+create pair); `🎮️commands/🔧️nodes::rename_dag_node` uses the dedicated
+/// (shows as a delete+create pair); `🎮️commands/🔧️add-node::rename_dag_node` uses the dedicated
 /// `rename-node` mutation directly for that gesture instead of this generic differ.
 pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<DagMutation> {
     let before_nodes = before.nodes();

@@ -1,4 +1,8 @@
-//! 🌐️ Shared 3D s-module: B-Rep kernel, half-edge mesh, scene math, and BVH spatial index.
+//! 🌐️ Shared 3D s-module: B-Rep kernel, half-edge mesh, and BVH spatial index. Scene math
+//! (camera/frustum/picking) relocated to `semio-framework-ui`'s `kernel_3d_scene` mount (ticket
+//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH) — it has zero
+//! artifact-document inputs (a camera and a screen rect, not a snapshot), so it stays renderer
+//! infrastructure rather than dissolving into an artifact, and this crate no longer mounts it.
 
 //#region 🔖️Brep
 /// @emoji 📐️ Boundary-representation kernel (native modules + native backend + engine contracts).
@@ -15,8 +19,6 @@ pub mod brep {
     pub mod tolerance;
     #[path = "../../📐️brep/⚖️predicates/🦀️component.rs"]
     pub mod predicates;
-    #[path = "../../📐️brep/🔮️oracle/🦀️component.rs"]
-    pub mod oracle;
     #[path = "../../📐️brep/〰️polynomial/🦀️component.rs"]
     pub mod poly;
     #[path = "../../📐️brep/🎢️bezier/🦀️component.rs"]
@@ -31,48 +33,6 @@ pub mod brep {
     pub mod surface;
     #[path = "../../📐️brep/🪡️surface-ops/🦀️component.rs"]
     pub mod surface_ops;
-    #[path = "../../📐️brep/🏟️arena/🦀️component.rs"]
-    pub mod arena;
-    #[path = "../../📐️brep/📜️history/🦀️component.rs"]
-    pub mod history;
-    #[path = "../../📐️brep/🕸️topology/🦀️component.rs"]
-    pub mod topo;
-    #[path = "../../📐️brep/🔺️euler/🦀️component.rs"]
-    pub mod euler;
-    #[path = "../../📐️brep/✅️validate/🦀️component.rs"]
-    pub mod validate;
-    #[path = "../../📐️brep/🌳️bvh/🦀️component.rs"]
-    pub mod bvh;
-    #[path = "../../📐️brep/🧱️primitives/🦀️component.rs"]
-    pub mod primitives;
-    #[path = "../../📐️brep/📏️measure/🦀️component.rs"]
-    pub mod measure;
-    #[path = "../../📐️brep/🧩️tessellate/🦀️component.rs"]
-    pub mod tessellate;
-    #[path = "../../📐️brep/✂️int-cc/🦀️component.rs"]
-    pub mod int_cc;
-    #[path = "../../📐️brep/✂️int-cs/🦀️component.rs"]
-    pub mod int_cs;
-    #[path = "../../📐️brep/✂️int-ss/🦀️component.rs"]
-    pub mod int_ss;
-    #[path = "../../📐️brep/🏷️classify/🦀️component.rs"]
-    pub mod classify;
-    #[path = "../../📐️brep/🖋️imprint/🦀️component.rs"]
-    pub mod imprint;
-    #[path = "../../📐️brep/🔀️boolean/🦀️component.rs"]
-    pub mod boolean;
-    #[path = "../../📐️brep/🧵️sew/🦀️component.rs"]
-    pub mod sew;
-    #[path = "../../📐️brep/🩹️heal/🦀️component.rs"]
-    pub mod heal;
-    #[path = "../../📐️brep/➡️sweep/🦀️component.rs"]
-    pub mod sweep;
-    #[path = "../../📐️brep/↔️offset/🦀️component.rs"]
-    pub mod offset;
-    #[path = "../../📐️brep/🎨️blend/🦀️component.rs"]
-    pub mod blend;
-    #[path = "../../📐️brep/📄️step/🦀️component.rs"]
-    pub mod step;
     #[path = "../../📐️brep/⚙️engine/🦀️component.rs"]
     pub mod engine;
 }
@@ -84,17 +44,3 @@ pub mod brep {
 pub mod mesh;
 //#endregion 🔖️Mesh
 
-//#region 🔖️Scene
-/// @emoji 🎬️ Generic 3D scene math: orbit camera, mesh instances, screen picking, draw descriptors.
-#[path = "../../🎬️scene/🦀️component.rs"]
-pub mod scene;
-
-pub use scene::{project_point, ray_segment_distance, screen_segment_distance};
-//#endregion 🔖️Scene
-
-//#region 🔖️Spatial
-/// @emoji 🗺️ BVH spatial index (AABB overlap, nearest point, ray queries).
-#[cfg(feature = "brep")]
-#[path = "../../🗺️spatial/🦀️component.rs"]
-pub mod spatial;
-//#endregion 🔖️Spatial

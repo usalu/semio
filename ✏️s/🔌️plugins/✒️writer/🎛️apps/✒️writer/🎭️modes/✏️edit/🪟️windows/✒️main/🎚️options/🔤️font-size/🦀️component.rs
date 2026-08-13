@@ -1,5 +1,5 @@
 //! 🔤️ Main-window option — the font-size slider. Its command handler lives in
-//! `🎮️commands/⚙️editor-settings::set_font_px`.
+//! `🎮️commands/⚙️toggle-line-numbers::set_font_px`.
 
 use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::terminology::WriterPlayLabels;

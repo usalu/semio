@@ -397,16 +397,26 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️step/🦀️component.rs"]
-            pub mod step;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧱️block/🦀️component.rs"]
-            pub mod block;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🗣️locale/🦀️component.rs"]
-            pub mod locale;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧩️contribution/🦀️component.rs"]
-            pub mod contribution;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️add-step/🦀️component.rs"]
+            pub mod add_step;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️remove-step/🦀️component.rs"]
+            pub mod remove_step;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️move-step/🦀️component.rs"]
+            pub mod move_step;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🪜️update-playbook/🦀️component.rs"]
+            pub mod update_playbook;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧱️add-block/🦀️component.rs"]
+            pub mod add_block;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧱️remove-block/🦀️component.rs"]
+            pub mod remove_block;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧱️move-block/🦀️component.rs"]
+            pub mod move_block;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🗂️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧩️set-contributions/🦀️component.rs"]
+            pub mod set_contributions;
         }
 
         #[path = "."]

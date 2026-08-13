@@ -66,8 +66,8 @@ pub struct RemodelFrameCursor {
 /// The live `engine::reconstruction::ReconstructionEngine` (now `crate::apps::remodel::engine::reconstruction::ReconstructionEngine`) and the video-import blur-gate rolling
 /// window are deliberately NOT here: neither is `Clone + Serialize + Deserialize` in a way that
 /// round-trips through a pure `&self` `handle()`. Both are rebuilt from already-persisted document
-/// state instead of carried as hidden interior-mutable scratch — see `🎮️commands/🚀️reconstruction`
-/// and `🎮️commands/📥️ingest` for how.
+/// state instead of carried as hidden interior-mutable scratch — see `🎮️commands/🚀️run-reconstruction`
+/// and `🎮️commands/📥️import-frame-payload` for how.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(id = "remodel.config", extension = "remodelcfg")]

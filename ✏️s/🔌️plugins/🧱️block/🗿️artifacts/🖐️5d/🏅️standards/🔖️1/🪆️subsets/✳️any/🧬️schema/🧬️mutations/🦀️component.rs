@@ -25,7 +25,7 @@ pub type Block5dStore = store::ArtifactStore<Block5dSnapshot, Block5dMutation>;
 /// grip is placed in both projections at once), set-like compatibility-rule/attribute/author
 /// add/remove, both cameras' pan/zoom, and the session meta description. The old whole-document-
 /// replace and no-op sentinel variants are gone — whole-document loads now decompose into this
-/// vocabulary (see `🎛️apps/🖐️5d/🎮️commands/🎨️example/🦀️component.rs`'s
+/// vocabulary (see `🎛️apps/🖐️5d/🎮️commands/🎨️set-active-example/🦀️component.rs`'s
 /// `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]

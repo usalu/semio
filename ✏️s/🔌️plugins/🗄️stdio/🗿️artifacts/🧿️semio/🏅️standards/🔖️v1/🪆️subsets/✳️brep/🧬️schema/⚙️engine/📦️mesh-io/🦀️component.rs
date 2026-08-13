@@ -1,8 +1,8 @@
 //! 📦 STL/OBJ/GLB/DWG mesh import/export bridged to native B-Rep.
 //!
 //! Triangle soups interchange through `semio_framework_mesh_engine`/`crate::artifacts::dwg` codecs
-//! where available; solids tessellate via [`semio_framework_3d::brep::tessellate`] and import as
-//! one planar face per triangle (shell assembly until [`semio_framework_3d::brep::sew`] can weld
+//! where available; solids tessellate via [`crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation`] and import as
+//! one planar face per triangle (shell assembly until [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sew`] can weld
 //! shared edges).
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/📦️mesh-io` in ticket 26/08/12/
@@ -18,15 +18,15 @@
 //! external `semio_framework_3d::brep::*` forward-edge pattern the parent `engine/component.rs`
 //! already uses.
 
-use semio_framework_3d::brep::arena::SolidId;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId;
 use semio_framework_3d::brep::engine::MeshTransfer;
 use semio_framework_3d::brep::error::KernelError;
-use semio_framework_3d::brep::euler::{add_shell, add_solid};
-use semio_framework_3d::brep::history::OpRecorder;
-use semio_framework_3d::brep::primitives::make_planar_face_from_points;
-use semio_framework_3d::brep::tessellate::tessellate_solid;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
 use semio_framework_3d::brep::tolerance::Tol;
-use semio_framework_3d::brep::topo::Body;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use semio_framework_3d::brep::vec::{Pnt3, Vec3};
 use semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter};
 use crate::artifacts::dwg::{dwg_drawing_to_mesh, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing};
@@ -372,7 +372,7 @@ fn should_flip_winding(mesh: &TriangleMesh) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_3d::brep::primitives::make_box;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
 
     #[test]
     fn export_box_mesh_stl_nonempty() {

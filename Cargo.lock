@@ -6513,6 +6513,7 @@ dependencies = [
  "js-sys",
  "pin-project-lite",
  "semio-compose-rs",
+ "semio-framework-graph",
  "semio-framework-math",
  "serde",
  "serde-wasm-bindgen",
@@ -6601,7 +6602,7 @@ dependencies = [
  "futures",
  "rayon",
  "semio-framework-geometry",
- "semio-framework-math",
+ "semio-framework-number",
  "semio-framework-os-kernel",
  "serde",
  "serde_json",
@@ -6686,11 +6687,6 @@ name = "semio-framework-math"
 version = "0.1.0"
 dependencies = [
  "semio-framework-geometry",
- "semio-framework-graph",
- "semio-framework-os-kernel",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
  "wasm-bindgen",
 ]
 
@@ -6701,6 +6697,10 @@ dependencies = [
  "gltf",
  "serde",
 ]
+
+[[package]]
+name = "semio-framework-number"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-os"
@@ -7587,7 +7587,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-geometry",
  "semio-framework-graph",
- "semio-framework-math",
+ "semio-framework-number",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7659,7 +7659,6 @@ name = "semio-s-plugin-procedural"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-3d",
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-os",
@@ -7814,7 +7813,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-geometry",
  "semio-framework-graph",
- "semio-framework-math",
+ "semio-framework-number",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",

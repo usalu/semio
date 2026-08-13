@@ -24,7 +24,7 @@ pub type Block2dStore = store::ArtifactStore<Block2dSnapshot, Block2dMutation>;
 /// create/delete/rename/change/move, set-like compatibility-rule/attribute/author add/remove, the
 /// board camera's pan/zoom, and the session meta description. The old whole-document-replace and
 /// no-op sentinel variants are gone — whole-document loads (examples, DSL text edit) now decompose
-/// into this vocabulary (see `🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs`'s
+/// into this vocabulary (see `🎛️apps/◻2d/🎮️commands/🎨️set-active-example/🦀️component.rs`'s
 /// `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]

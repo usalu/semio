@@ -9,13 +9,13 @@
 //! than under `🗿️artifacts`). This file is a routing table: `handle` → `WriterCommand::dispatch`,
 //! `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::apps::writer::commands::camera::set_camera;
-use crate::apps::writer::commands::editor_settings::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
-use crate::apps::writer::commands::engagement::{engagement_input, engagement_submit};
-use crate::apps::writer::commands::inspect::{lint_document, request_completions};
-use crate::apps::writer::commands::locale::set_locale;
-use crate::apps::writer::commands::selection::{select_ast_node, set_ast_hover, set_ast_selection, set_editor_selection, text_hover, text_select};
-use crate::apps::writer::commands::text::{commit_rename, format_document, open_document, set_active_example, set_snapshot, set_snapshot_json, set_fixture_json, set_text, text_edit};
+use crate::apps::writer::commands::set_camera;
+use crate::apps::writer::commands::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
+use crate::apps::writer::commands::{engagement_input, engagement_submit};
+use crate::apps::writer::commands::{lint_document, request_completions};
+use crate::apps::writer::commands::set_locale;
+use crate::apps::writer::commands::{select_ast_node, set_ast_hover, set_ast_selection, set_editor_selection, text_hover, text_select};
+use crate::apps::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_snapshot, set_snapshot_json, set_fixture_json, set_text, text_edit};
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::apps::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::apps::writer::modes::edit;

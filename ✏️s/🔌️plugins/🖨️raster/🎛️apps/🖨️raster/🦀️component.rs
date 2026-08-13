@@ -141,12 +141,12 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::apps::raster::commands::brush::{set_brush_opacity, set_brush_size};
-use crate::apps::raster::commands::camera::{set_camera, set_camera_zoom, set_composite_viewport};
-use crate::apps::raster::commands::layer::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
-use crate::apps::raster::commands::locale::set_locale;
-use crate::apps::raster::commands::selection::{select_all, set_hover, set_selection};
-use crate::apps::raster::commands::utility::set_active_utility;
+use crate::apps::raster::commands::{set_brush_opacity, set_brush_size};
+use crate::apps::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
+use crate::apps::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
+use crate::apps::raster::commands::set_locale;
+use crate::apps::raster::commands::{select_all, set_hover, set_selection};
+use crate::apps::raster::commands::set_active_utility;
 //#endregion 🔖️Commands
 
 //#region 🔖️RasterPlayApp

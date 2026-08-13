@@ -14,7 +14,7 @@
 //! back. So `ValueDsl` is its own typed record instead: exactly one of its mutually-exclusive `Option`
 //! fields is ever `Some`, each keyed so the ACTUAL Rust variant (not a text heuristic) decides which one,
 //! which is exactly as precise as the old hand-rolled `Atom` match. `ValueDsl` also derives
-//! `serde::Serialize`/`Deserialize` (on top of `dsl::DslRecord`) so it can nest inside `🎮️commands/🔧️step`
+//! `serde::Serialize`/`Deserialize` (on top of `dsl::DslRecord`) so it can nest inside `🎮️commands/🔧️add-step`
 //! payload structs — `app_commands!` forces those derives onto the generated `ImperativeCommand` enum.
 
 

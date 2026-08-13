@@ -5,9 +5,9 @@
 //! infrastructure used by 2+ command groups (and, `pub`, by `apps::space` — the Studio app resolves/
 //! loads studio documents through this Home launcher's own catalog port).
 
-use crate::apps::home::commands::settings::set_active_panel_tab;
-use crate::apps::home::commands::studio::{bind_space_file, create_studio, import_space, open_space};
-use crate::apps::home::commands::vfs::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
+use crate::apps::home::commands::set_active_panel_tab;
+use crate::apps::home::commands::{bind_space_file, create_studio, import_space, open_space};
+use crate::apps::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::apps::home::config::HomeConfig;
 use crate::apps::home::presence::{HomePresence, HomePresenceMutation};
 use crate::apps::home::terminology::SHomeLabels;

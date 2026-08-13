@@ -1,0 +1,2177 @@
+{
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🌐️grid/🦀️component.rs": [
+    {
+      "old_mod": "grid",
+      "old_folder": "🌐️grid",
+      "new_mod": "set_grid_snap_enabled",
+      "kebab": "set-grid-snap-enabled",
+      "fn": "set_grid_snap_enabled",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🌐️set-grid-snap-enabled/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🌐️set-grid-snap-enabled",
+      "idents": [
+        "set_grid_snap_enabled"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "grid",
+      "old_folder": "🌐️grid",
+      "new_mod": "set_grid_factor",
+      "kebab": "set-grid-factor",
+      "fn": "set_grid_factor",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🌐️set-grid-factor/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🌐️set-grid-factor",
+      "idents": [
+        "set_grid_factor"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🎥️camera/🦀️component.rs": [
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "fn": "set_camera",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🎥️set-camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🎥️set-camera",
+      "idents": [
+        "set_camera"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "focus_selection",
+      "kebab": "focus-selection",
+      "fn": "focus_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🎥️focus-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🎥️focus-selection",
+      "idents": [
+        "focus_selection"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🎲️board/🦀️component.rs": [
+    {
+      "old_mod": "board",
+      "old_folder": "🎲️board",
+      "new_mod": "apply_board_events",
+      "kebab": "apply-board-events",
+      "fn": "apply_board_events",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🎲️apply-board-events/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🎲️apply-board-events",
+      "idents": [
+        "apply_board_events",
+        "puzzle2d_board_events_scope",
+        "apply_board_events_from_json",
+        "PUZZLE2D_WINDOW_BODY_KEYS"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🔭️lod/🦀️component.rs": [
+    {
+      "old_mod": "lod",
+      "old_folder": "🔭️lod",
+      "new_mod": "set_lod_mode_for_pane",
+      "kebab": "set-lod-mode-for-pane",
+      "fn": "set_lod_mode_for_pane",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🔭️set-lod-mode-for-pane/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🔭️set-lod-mode-for-pane",
+      "idents": [
+        "set_lod_mode_for_pane"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "lod",
+      "old_folder": "🔭️lod",
+      "new_mod": "lod_scale_json",
+      "kebab": "lod-scale-json",
+      "fn": "lod_scale_json",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🔭️lod-scale-json/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🔭️lod-scale-json",
+      "idents": [
+        "lod_scale_json"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️node/🦀️component.rs": [
+    {
+      "old_mod": "node",
+      "old_folder": "🕸️node",
+      "new_mod": "add_node",
+      "kebab": "add-node",
+      "fn": "add_node",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️add-node/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️add-node",
+      "idents": [
+        "add_node"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "node",
+      "old_folder": "🕸️node",
+      "new_mod": "patch_inspector",
+      "kebab": "patch-inspector",
+      "fn": "patch_inspector",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️patch-inspector/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️patch-inspector",
+      "idents": [
+        "patch_inspector"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "node",
+      "old_folder": "🕸️node",
+      "new_mod": "redraw_handles",
+      "kebab": "redraw-handles",
+      "fn": "redraw_handles",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️redraw-handles/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️redraw-handles",
+      "idents": [
+        "redraw_handles"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "node",
+      "old_folder": "🕸️node",
+      "new_mod": "force_layout",
+      "kebab": "force-layout",
+      "fn": "force_layout",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️force-layout/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🕸️force-layout",
+      "idents": [
+        "force_layout"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️brush/🦀️component.rs": [
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "set_brush_kind_weights",
+      "kebab": "set-brush-kind-weights",
+      "fn": "set_brush_kind_weights",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-brush-kind-weights/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-brush-kind-weights",
+      "idents": [
+        "set_brush_kind_weights",
+        "puzzle2d_uniform_kind_weights",
+        "puzzle2d_normalize_kind_weight_group",
+        "puzzle2d_ensure_catalog_kind_weights"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "set_brush_node_size",
+      "kebab": "set-brush-node-size",
+      "fn": "set_brush_node_size",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-brush-node-size/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-brush-node-size",
+      "idents": [
+        "set_brush_node_size"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "set_suggestion_offset",
+      "kebab": "set-suggestion-offset",
+      "fn": "set_suggestion_offset",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-suggestion-offset/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-suggestion-offset",
+      "idents": [
+        "set_suggestion_offset"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "cycle_candidate",
+      "kebab": "cycle-candidate",
+      "fn": "cycle_candidate",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️cycle-candidate/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️cycle-candidate",
+      "idents": [
+        "cycle_candidate"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "set_candidate_index",
+      "kebab": "set-candidate-index",
+      "fn": "set_candidate_index",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-candidate-index/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-candidate-index",
+      "idents": [
+        "set_candidate_index"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "open_slot",
+      "kebab": "open-slot",
+      "fn": "open_slot",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️open-slot/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️open-slot",
+      "idents": [
+        "open_slot"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "commit_slot",
+      "kebab": "commit-slot",
+      "fn": "commit_slot",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️commit-slot/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️commit-slot",
+      "idents": [
+        "commit_slot"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "cancel_slot",
+      "kebab": "cancel-slot",
+      "fn": "cancel_slot",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️cancel-slot/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️cancel-slot",
+      "idents": [
+        "cancel_slot"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "set_fill_count",
+      "kebab": "set-fill-count",
+      "fn": "set_fill_count",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-fill-count/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️set-fill-count",
+      "idents": [
+        "set_fill_count",
+        "apply_fill_placements"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "fill_session_begin",
+      "kebab": "fill-session-begin",
+      "fn": "fill_session_begin",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️fill-session-begin/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️fill-session-begin",
+      "idents": [
+        "fill_session_begin"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "fill_session_step",
+      "kebab": "fill-session-step",
+      "fn": "fill_session_step",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️fill-session-step/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️fill-session-step",
+      "idents": [
+        "fill_session_step",
+        "apply_fill_placements"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "fill_session_clear",
+      "kebab": "fill-session-clear",
+      "fn": "fill_session_clear",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️fill-session-clear/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🖌️fill-session-clear",
+      "idents": [
+        "fill_session_clear"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "fn": "set_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️set-selection",
+      "idents": [
+        "set_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "select_all",
+      "kebab": "select-all",
+      "fn": "select_all",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️select-all/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️select-all",
+      "idents": [
+        "select_all"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "clear_selection",
+      "kebab": "clear-selection",
+      "fn": "clear_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️clear-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️clear-selection",
+      "idents": [
+        "clear_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "select_same_kind",
+      "kebab": "select-same-kind",
+      "fn": "select_same_kind",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️select-same-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️select-same-kind",
+      "idents": [
+        "select_same_kind"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "delete_selection",
+      "kebab": "delete-selection",
+      "fn": "delete_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️delete-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️delete-selection",
+      "idents": [
+        "delete_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "duplicate_selection",
+      "kebab": "duplicate-selection",
+      "fn": "duplicate_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️duplicate-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️duplicate-selection",
+      "idents": [
+        "duplicate_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selection_flag",
+      "kebab": "set-selection-flag",
+      "fn": "set_selection_flag",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️set-selection-flag/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️set-selection-flag",
+      "idents": [
+        "set_selection_flag"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selection_method",
+      "kebab": "set-selection-method",
+      "fn": "set_selection_method",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️set-selection-method/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗂️set-selection-method",
+      "idents": [
+        "set_selection_method"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "old_folder": "🗣️locale",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "fn": "set_locale",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗣️set-locale",
+      "idents": [
+        "set_locale"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "locale",
+      "old_folder": "🗣️locale",
+      "new_mod": "set_terminology",
+      "kebab": "set-terminology",
+      "fn": "set_terminology",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗣️set-terminology/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🗣️set-terminology",
+      "idents": [
+        "set_terminology"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🛍️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "old_folder": "🛍️example",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "fn": "set_active_example",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🛍️set-active-example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🛍️set-active-example",
+      "idents": [
+        "set_active_example"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement/🦀️component.rs": [
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_input",
+      "kebab": "engagement-input",
+      "fn": "engagement_input",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement-input/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement-input",
+      "idents": [
+        "engagement_input"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_submit",
+      "kebab": "engagement-submit",
+      "fn": "engagement_submit",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement-submit/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement-submit",
+      "idents": [
+        "engagement_submit"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_abort",
+      "kebab": "engagement-abort",
+      "fn": "engagement_abort",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement-abort/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement-abort",
+      "idents": [
+        "engagement_abort"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_control_select",
+      "kebab": "engagement-control-select",
+      "fn": "engagement_control_select",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement-control-select/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🤝️engagement-control-select",
+      "idents": [
+        "engagement_control_select"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🧰️utility/🦀️component.rs": [
+    {
+      "old_mod": "utility",
+      "old_folder": "🧰️utility",
+      "new_mod": "set_active_utility",
+      "kebab": "set-active-utility",
+      "fn": "set_active_utility",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🧰️set-active-utility/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🎮️commands/🧰️set-active-utility",
+      "idents": [
+        "set_active_utility"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/☀️sun/🦀️component.rs": [
+    {
+      "old_mod": "sun",
+      "old_folder": "☀️sun",
+      "new_mod": "apply_sun",
+      "kebab": "apply-sun",
+      "fn": "apply",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/☀️apply-sun/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/☀️apply-sun",
+      "idents": [
+        "apply"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/✏️patch/🦀️component.rs": [
+    {
+      "old_mod": "patch",
+      "old_folder": "✏️patch",
+      "new_mod": "patch_part",
+      "kebab": "patch-part",
+      "fn": "patch_part",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/✏️patch-part/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/✏️patch-part",
+      "idents": [
+        "patch_part",
+        "arg_id_set"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "patch",
+      "old_folder": "✏️patch",
+      "new_mod": "patch_grip",
+      "kebab": "patch-grip",
+      "fn": "patch_grip",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/✏️patch-grip/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/✏️patch-grip",
+      "idents": [
+        "patch_grip",
+        "arg_id_set"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "patch",
+      "old_folder": "✏️patch",
+      "new_mod": "patch_fastener",
+      "kebab": "patch-fastener",
+      "fn": "patch_fastener",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/✏️patch-fastener/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/✏️patch-fastener",
+      "idents": [
+        "patch_fastener",
+        "arg_id_set"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🌐️grid/🦀️component.rs": [
+    {
+      "old_mod": "grid",
+      "old_folder": "🌐️grid",
+      "new_mod": "set_grid_snap_enabled",
+      "kebab": "set-grid-snap-enabled",
+      "fn": "set_grid_snap_enabled",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🌐️set-grid-snap-enabled/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🌐️set-grid-snap-enabled",
+      "idents": [
+        "set_grid_snap_enabled"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "grid",
+      "old_folder": "🌐️grid",
+      "new_mod": "set_grid_factor",
+      "kebab": "set-grid-factor",
+      "fn": "set_grid_factor",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🌐️set-grid-factor/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🌐️set-grid-factor",
+      "idents": [
+        "set_grid_factor"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️camera/🦀️component.rs": [
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "fn": "set_camera",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️set-camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️set-camera",
+      "idents": [
+        "set_camera"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "set_camera_2d",
+      "kebab": "set-camera-2d",
+      "fn": "set_camera_2d",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️set-camera-2d/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️set-camera-2d",
+      "idents": [
+        "set_camera_2d"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "set_camera_3d",
+      "kebab": "set-camera-3d",
+      "fn": "set_camera_3d",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️set-camera-3d/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️set-camera-3d",
+      "idents": [
+        "set_camera_3d"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "zoom_to_selection",
+      "kebab": "zoom-to-selection",
+      "fn": "zoom_to_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️zoom-to-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎥️zoom-to-selection",
+      "idents": [
+        "zoom_to_selection"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎲️board/🦀️component.rs": [
+    {
+      "old_mod": "board",
+      "old_folder": "🎲️board",
+      "new_mod": "apply_board_events",
+      "kebab": "apply-board-events",
+      "fn": "apply_board_events",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎲️apply-board-events/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🎲️apply-board-events",
+      "idents": [
+        "apply_board_events"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️hover/🦀️component.rs": [
+    {
+      "old_mod": "hover",
+      "old_folder": "👆️hover",
+      "new_mod": "world_hover",
+      "kebab": "world-hover",
+      "fn": "world_hover",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️world-hover/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️world-hover",
+      "idents": [
+        "world_hover"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "hover",
+      "old_folder": "👆️hover",
+      "new_mod": "set_hover",
+      "kebab": "set-hover",
+      "fn": "set_hover",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️set-hover/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️set-hover",
+      "idents": [
+        "set_hover"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "hover",
+      "old_folder": "👆️hover",
+      "new_mod": "world_vortex_hover",
+      "kebab": "world-vortex-hover",
+      "fn": "world_vortex_hover",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️world-vortex-hover/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️world-vortex-hover",
+      "idents": [
+        "world_vortex_hover"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "hover",
+      "old_folder": "👆️hover",
+      "new_mod": "world_vortex_select",
+      "kebab": "world-vortex-select",
+      "fn": "world_vortex_select",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️world-vortex-select/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/👆️world-vortex-select",
+      "idents": [
+        "world_vortex_select"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️transform/🦀️component.rs": [
+    {
+      "old_mod": "transform",
+      "old_folder": "🔄️transform",
+      "new_mod": "translate_selection",
+      "kebab": "translate-selection",
+      "fn": "translate_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️translate-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️translate-selection",
+      "idents": [
+        "translate_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "transform",
+      "old_folder": "🔄️transform",
+      "new_mod": "rotate_selection",
+      "kebab": "rotate-selection",
+      "fn": "rotate_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️rotate-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️rotate-selection",
+      "idents": [
+        "rotate_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "transform",
+      "old_folder": "🔄️transform",
+      "new_mod": "scale_selection",
+      "kebab": "scale-selection",
+      "fn": "scale_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️scale-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️scale-selection",
+      "idents": [
+        "scale_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "transform",
+      "old_folder": "🔄️transform",
+      "new_mod": "world_relocate",
+      "kebab": "world-relocate",
+      "fn": "world_relocate",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️world-relocate/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔄️world-relocate",
+      "idents": [
+        "world_relocate"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️fastener/🦀️component.rs": [
+    {
+      "old_mod": "fastener",
+      "old_folder": "🔗️fastener",
+      "new_mod": "create_fastener",
+      "kebab": "create-fastener",
+      "fn": "create_fastener",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️create-fastener/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️create-fastener",
+      "idents": [
+        "create_fastener",
+        "arg_str",
+        "resolve_grip_kind",
+        "puzzle5d_kinds_compatible",
+        "fasteners_already_connected",
+        "fastener_from_args",
+        "arg_f64"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "fastener",
+      "old_folder": "🔗️fastener",
+      "new_mod": "delete_fastener",
+      "kebab": "delete-fastener",
+      "fn": "delete_fastener",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️delete-fastener/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️delete-fastener",
+      "idents": [
+        "delete_fastener",
+        "arg_str"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "fastener",
+      "old_folder": "🔗️fastener",
+      "new_mod": "retarget_fastener",
+      "kebab": "retarget-fastener",
+      "fn": "retarget_fastener",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️retarget-fastener/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️retarget-fastener",
+      "idents": [
+        "retarget_fastener",
+        "arg_str",
+        "resolve_grip_kind",
+        "puzzle5d_kinds_compatible"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "fastener",
+      "old_folder": "🔗️fastener",
+      "new_mod": "edit_fastener",
+      "kebab": "edit-fastener",
+      "fn": "edit_fastener",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️edit-fastener/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️edit-fastener",
+      "idents": [
+        "edit_fastener",
+        "arg_str",
+        "apply_fastener_number",
+        "apply_fastener_batch"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "fastener",
+      "old_folder": "🔗️fastener",
+      "new_mod": "proximity_connect",
+      "kebab": "proximity-connect",
+      "fn": "proximity_connect",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️proximity-connect/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔗️proximity-connect",
+      "idents": [
+        "proximity_connect",
+        "arg_str",
+        "arg_f64",
+        "resolve_grip_kind",
+        "puzzle5d_kinds_compatible",
+        "fasteners_already_connected",
+        "fastener_from_args"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔭️lod/🦀️component.rs": [
+    {
+      "old_mod": "lod",
+      "old_folder": "🔭️lod",
+      "new_mod": "set_lod_mode",
+      "kebab": "set-lod-mode",
+      "fn": "set_lod_mode",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔭️set-lod-mode/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🔭️set-lod-mode",
+      "idents": [
+        "set_lod_mode"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️brush/🦀️component.rs": [
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "add_brush_part",
+      "kebab": "add-brush-part",
+      "fn": "add_brush_part",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️add-brush-part/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️add-brush-part",
+      "idents": [
+        "add_brush_part"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "cycle_brush_candidate",
+      "kebab": "cycle-brush-candidate",
+      "fn": "cycle_brush_candidate",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️cycle-brush-candidate/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️cycle-brush-candidate",
+      "idents": [
+        "cycle_brush_candidate"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "register_brush_mesh",
+      "kebab": "register-brush-mesh",
+      "fn": "register_brush_mesh",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️register-brush-mesh/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️register-brush-mesh",
+      "idents": [
+        "register_brush_mesh"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "set_brush_placement_overlap_budget",
+      "kebab": "set-brush-placement-overlap-budget",
+      "fn": "set_brush_placement_overlap_budget",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️set-brush-placement-overlap-budget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️set-brush-placement-overlap-budget",
+      "idents": [
+        "set_brush_placement_overlap_budget"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "set_kind_weight",
+      "kebab": "set-kind-weight",
+      "fn": "set_kind_weight",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️set-kind-weight/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️set-kind-weight",
+      "idents": [
+        "set_kind_weight"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "engagement_control_select",
+      "kebab": "engagement-control-select",
+      "fn": "engagement_control_select",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️engagement-control-select/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️engagement-control-select",
+      "idents": [
+        "engagement_control_select"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "set_suggestion_offset",
+      "kebab": "set-suggestion-offset",
+      "fn": "set_suggestion_offset",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️set-suggestion-offset/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🖌️set-suggestion-offset",
+      "idents": [
+        "set_suggestion_offset"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "fn": "set_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️set-selection",
+      "idents": [
+        "set_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "clear_selection",
+      "kebab": "clear-selection",
+      "fn": "clear_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️clear-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️clear-selection",
+      "idents": [
+        "clear_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "select_all",
+      "kebab": "select-all",
+      "fn": "select_all",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️select-all/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️select-all",
+      "idents": [
+        "select_all"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "select_same_kind",
+      "kebab": "select-same-kind",
+      "fn": "select_same_kind",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️select-same-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️select-same-kind",
+      "idents": [
+        "select_same_kind"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selection_method",
+      "kebab": "set-selection-method",
+      "fn": "set_selection_method",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️set-selection-method/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️set-selection-method",
+      "idents": [
+        "set_selection_method"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "world_select",
+      "kebab": "world-select",
+      "fn": "world_select",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️world-select/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️world-select",
+      "idents": [
+        "world_select"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "world_pick",
+      "kebab": "world-pick",
+      "fn": "world_pick",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️world-pick/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🗂️world-pick",
+      "idents": [
+        "world_pick"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🛍️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "old_folder": "🛍️example",
+      "new_mod": "set_fixture_json",
+      "kebab": "set-fixture-json",
+      "fn": "set_fixture_json",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🛍️set-fixture-json/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🛍️set-fixture-json",
+      "idents": [
+        "set_fixture_json"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "example",
+      "old_folder": "🛍️example",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "fn": "set_active_example",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🛍️set-active-example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🛍️set-active-example",
+      "idents": [
+        "set_active_example"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🤝️engagement/🦀️component.rs": [
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_input",
+      "kebab": "engagement-input",
+      "fn": "engagement_input",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🤝️engagement-input/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🤝️engagement-input",
+      "idents": [
+        "engagement_input"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_submit",
+      "kebab": "engagement-submit",
+      "fn": "engagement_submit",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🤝️engagement-submit/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🤝️engagement-submit",
+      "idents": [
+        "engagement_submit"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_abort",
+      "kebab": "engagement-abort",
+      "fn": "engagement_abort",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🤝️engagement-abort/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🤝️engagement-abort",
+      "idents": [
+        "engagement_abort"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️part/🦀️component.rs": [
+    {
+      "old_mod": "part",
+      "old_folder": "🧩️part",
+      "new_mod": "add_node",
+      "kebab": "add-node",
+      "fn": "add_node",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️add-node/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️add-node",
+      "idents": [
+        "add_node"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "part",
+      "old_folder": "🧩️part",
+      "new_mod": "add_part_kind",
+      "kebab": "add-part-kind",
+      "fn": "add_part_kind",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️add-part-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️add-part-kind",
+      "idents": [
+        "add_part_kind"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "part",
+      "old_folder": "🧩️part",
+      "new_mod": "delete_selection",
+      "kebab": "delete-selection",
+      "fn": "delete_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️delete-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️delete-selection",
+      "idents": [
+        "delete_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "part",
+      "old_folder": "🧩️part",
+      "new_mod": "duplicate_selection",
+      "kebab": "duplicate-selection",
+      "fn": "duplicate_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️duplicate-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️duplicate-selection",
+      "idents": [
+        "duplicate_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "part",
+      "old_folder": "🧩️part",
+      "new_mod": "set_selection_flag",
+      "kebab": "set-selection-flag",
+      "fn": "set_selection_flag",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️set-selection-flag/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧩️set-selection-flag",
+      "idents": [
+        "set_selection_flag"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧰️utility/🦀️component.rs": [
+    {
+      "old_mod": "utility",
+      "old_folder": "🧰️utility",
+      "new_mod": "set_active",
+      "kebab": "set-active",
+      "fn": "set_active",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧰️set-active/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🧰️set-active",
+      "idents": [
+        "set_active"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🪣️fill/🦀️component.rs": [
+    {
+      "old_mod": "fill",
+      "old_folder": "🪣️fill",
+      "new_mod": "set_fill_count",
+      "kebab": "set-fill-count",
+      "fn": "set_fill_count",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🪣️set-fill-count/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🎮️commands/🪣️set-fill-count",
+      "idents": [
+        "set_fill_count"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/☀️sun/🦀️component.rs": [
+    {
+      "old_mod": "sun",
+      "old_folder": "☀️sun",
+      "new_mod": "apply_sun",
+      "kebab": "apply-sun",
+      "fn": "apply",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/☀️apply-sun/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/☀️apply-sun",
+      "idents": [
+        "apply"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️settings/🦀️component.rs": [
+    {
+      "old_mod": "settings",
+      "old_folder": "⚙️settings",
+      "new_mod": "set_proximity_radius",
+      "kebab": "set-proximity-radius",
+      "fn": "set_proximity_radius",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-proximity-radius/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-proximity-radius",
+      "idents": [
+        "set_proximity_radius"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "settings",
+      "old_folder": "⚙️settings",
+      "new_mod": "set_chunk_size",
+      "kebab": "set-chunk-size",
+      "fn": "set_chunk_size",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-chunk-size/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-chunk-size",
+      "idents": [
+        "set_chunk_size"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "settings",
+      "old_folder": "⚙️settings",
+      "new_mod": "set_brush_placement_overlap_budget",
+      "kebab": "set-brush-placement-overlap-budget",
+      "fn": "set_brush_placement_overlap_budget",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-brush-placement-overlap-budget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-brush-placement-overlap-budget",
+      "idents": [
+        "set_brush_placement_overlap_budget"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "settings",
+      "old_folder": "⚙️settings",
+      "new_mod": "set_voxel_dims",
+      "kebab": "set-voxel-dims",
+      "fn": "set_voxel_dims",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-voxel-dims/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-voxel-dims",
+      "idents": [
+        "set_voxel_dims"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "settings",
+      "old_folder": "⚙️settings",
+      "new_mod": "set_transform_gumball_flag",
+      "kebab": "set-transform-gumball-flag",
+      "fn": "set_transform_gumball_flag",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-transform-gumball-flag/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-transform-gumball-flag",
+      "idents": [
+        "set_transform_gumball_flag"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "settings",
+      "old_folder": "⚙️settings",
+      "new_mod": "set_vortex_show",
+      "kebab": "set-vortex-show",
+      "fn": "set_vortex_show",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-vortex-show/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-vortex-show",
+      "idents": [
+        "set_vortex_show"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "settings",
+      "old_folder": "⚙️settings",
+      "new_mod": "set_vortex_direction",
+      "kebab": "set-vortex-direction",
+      "fn": "set_vortex_direction",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-vortex-direction/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/⚙️set-vortex-direction",
+      "idents": [
+        "set_vortex_direction"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🌐️grid/🦀️component.rs": [
+    {
+      "old_mod": "grid",
+      "old_folder": "🌐️grid",
+      "new_mod": "set_visible",
+      "kebab": "set-visible",
+      "fn": "set_visible",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🌐️set-visible/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🌐️set-visible",
+      "idents": [
+        "set_visible"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "grid",
+      "old_folder": "🌐️grid",
+      "new_mod": "set_snap_enabled",
+      "kebab": "set-snap-enabled",
+      "fn": "set_snap_enabled",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🌐️set-snap-enabled/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🌐️set-snap-enabled",
+      "idents": [
+        "set_snap_enabled"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "grid",
+      "old_folder": "🌐️grid",
+      "new_mod": "set_spacing",
+      "kebab": "set-spacing",
+      "fn": "set_spacing",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🌐️set-spacing/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🌐️set-spacing",
+      "idents": [
+        "set_spacing"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs": [
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "fn": "set_camera",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🎥️set-camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🎥️set-camera",
+      "idents": [
+        "set_camera"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "set_projection",
+      "kebab": "set-projection",
+      "fn": "set_projection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🎥️set-projection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🎥️set-projection",
+      "idents": [
+        "set_projection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "camera",
+      "old_folder": "🎥️camera",
+      "new_mod": "focus_selection",
+      "kebab": "focus-selection",
+      "fn": "focus_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🎥️focus-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🎥️focus-selection",
+      "idents": [
+        "focus_selection"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️hover/🦀️component.rs": [
+    {
+      "old_mod": "hover",
+      "old_folder": "👆️hover",
+      "new_mod": "world_hover",
+      "kebab": "world-hover",
+      "fn": "world_hover",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️world-hover/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️world-hover",
+      "idents": [
+        "world_hover"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "hover",
+      "old_folder": "👆️hover",
+      "new_mod": "set_hover",
+      "kebab": "set-hover",
+      "fn": "set_hover",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️set-hover/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️set-hover",
+      "idents": [
+        "set_hover"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "hover",
+      "old_folder": "👆️hover",
+      "new_mod": "world_vortex_hover",
+      "kebab": "world-vortex-hover",
+      "fn": "world_vortex_hover",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️world-vortex-hover/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️world-vortex-hover",
+      "idents": [
+        "world_vortex_hover"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "hover",
+      "old_folder": "👆️hover",
+      "new_mod": "set_kind_hover",
+      "kebab": "set-kind-hover",
+      "fn": "set_kind_hover",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️set-kind-hover/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/👆️set-kind-hover",
+      "idents": [
+        "set_kind_hover"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️volume/🦀️component.rs": [
+    {
+      "old_mod": "volume",
+      "old_folder": "📦️volume",
+      "new_mod": "add_target_volume",
+      "kebab": "add-target-volume",
+      "fn": "add_target_volume",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️add-target-volume/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️add-target-volume",
+      "idents": [
+        "add_target_volume"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "volume",
+      "old_folder": "📦️volume",
+      "new_mod": "delete_target_volume",
+      "kebab": "delete-target-volume",
+      "fn": "delete_target_volume",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️delete-target-volume/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️delete-target-volume",
+      "idents": [
+        "delete_target_volume"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "volume",
+      "old_folder": "📦️volume",
+      "new_mod": "set_target_volume_flag",
+      "kebab": "set-target-volume-flag",
+      "fn": "set_target_volume_flag",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️set-target-volume-flag/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️set-target-volume-flag",
+      "idents": [
+        "set_target_volume_flag"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "volume",
+      "old_folder": "📦️volume",
+      "new_mod": "relocate_target_volume",
+      "kebab": "relocate-target-volume",
+      "fn": "relocate_target_volume",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️relocate-target-volume/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/📦️relocate-target-volume",
+      "idents": [
+        "relocate_target_volume"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️transform/🦀️component.rs": [
+    {
+      "old_mod": "transform",
+      "old_folder": "🔄️transform",
+      "new_mod": "translate_selection",
+      "kebab": "translate-selection",
+      "fn": "translate_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️translate-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️translate-selection",
+      "idents": [
+        "translate_selection",
+        "axis_arg"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "transform",
+      "old_folder": "🔄️transform",
+      "new_mod": "rotate_selection",
+      "kebab": "rotate-selection",
+      "fn": "rotate_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️rotate-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️rotate-selection",
+      "idents": [
+        "rotate_selection",
+        "axis_arg"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "transform",
+      "old_folder": "🔄️transform",
+      "new_mod": "scale_selection",
+      "kebab": "scale-selection",
+      "fn": "scale_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️scale-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️scale-selection",
+      "idents": [
+        "scale_selection",
+        "axis_arg"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "transform",
+      "old_folder": "🔄️transform",
+      "new_mod": "world_relocate",
+      "kebab": "world-relocate",
+      "fn": "world_relocate",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️world-relocate/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔄️world-relocate",
+      "idents": [
+        "world_relocate"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔗️attraction/🦀️component.rs": [
+    {
+      "old_mod": "attraction",
+      "old_folder": "🔗️attraction",
+      "new_mod": "create_attraction",
+      "kebab": "create-attraction",
+      "fn": "create_attraction",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔗️create-attraction/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔗️create-attraction",
+      "idents": [
+        "create_attraction"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "attraction",
+      "old_folder": "🔗️attraction",
+      "new_mod": "delete_attraction",
+      "kebab": "delete-attraction",
+      "fn": "delete_attraction",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔗️delete-attraction/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔗️delete-attraction",
+      "idents": [
+        "delete_attraction"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔭️lod/🦀️component.rs": [
+    {
+      "old_mod": "lod",
+      "old_folder": "🔭️lod",
+      "new_mod": "set_automatic",
+      "kebab": "set-automatic",
+      "fn": "set_automatic",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔭️set-automatic/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔭️set-automatic",
+      "idents": [
+        "set_automatic"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "lod",
+      "old_folder": "🔭️lod",
+      "new_mod": "set_depth_variable",
+      "kebab": "set-depth-variable",
+      "fn": "set_depth_variable",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔭️set-depth-variable/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔭️set-depth-variable",
+      "idents": [
+        "set_depth_variable"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "lod",
+      "old_folder": "🔭️lod",
+      "new_mod": "set_manual",
+      "kebab": "set-manual",
+      "fn": "set_manual",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔭️set-manual/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🔭️set-manual",
+      "idents": [
+        "set_manual"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs": [
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "add_brush_object",
+      "kebab": "add-brush-object",
+      "fn": "add_brush_object",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️add-brush-object/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️add-brush-object",
+      "idents": [
+        "add_brush_object"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "cycle_candidate",
+      "kebab": "cycle-candidate",
+      "fn": "cycle_candidate",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️cycle-candidate/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️cycle-candidate",
+      "idents": [
+        "cycle_candidate"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "open_vortex_suggestions",
+      "kebab": "open-vortex-suggestions",
+      "fn": "open_vortex_suggestions",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️open-vortex-suggestions/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️open-vortex-suggestions",
+      "idents": [
+        "open_vortex_suggestions"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "close_vortex_suggestions",
+      "kebab": "close-vortex-suggestions",
+      "fn": "close_vortex_suggestions",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️close-vortex-suggestions/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️close-vortex-suggestions",
+      "idents": [
+        "close_vortex_suggestions"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "hover_suggestion",
+      "kebab": "hover-suggestion",
+      "fn": "hover_suggestion",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️hover-suggestion/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️hover-suggestion",
+      "idents": [
+        "hover_suggestion"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "accept_suggestion",
+      "kebab": "accept-suggestion",
+      "fn": "accept_suggestion",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️accept-suggestion/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️accept-suggestion",
+      "idents": [
+        "accept_suggestion"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "suggestions_tick",
+      "kebab": "suggestions-tick",
+      "fn": "suggestions_tick",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️suggestions-tick/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️suggestions-tick",
+      "idents": [
+        "suggestions_tick"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "register_brush_mesh",
+      "kebab": "register-brush-mesh",
+      "fn": "register_brush_mesh",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️register-brush-mesh/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️register-brush-mesh",
+      "idents": [
+        "register_brush_mesh"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "brush",
+      "old_folder": "🖌️brush",
+      "new_mod": "engagement_control_select",
+      "kebab": "engagement-control-select",
+      "fn": "engagement_control_select",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️engagement-control-select/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🖌️engagement-control-select",
+      "idents": [
+        "engagement_control_select"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "fn": "set_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection",
+      "idents": [
+        "set_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "world_select",
+      "kebab": "world-select",
+      "fn": "world_select",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️world-select/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️world-select",
+      "idents": [
+        "world_select"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "world_pick",
+      "kebab": "world-pick",
+      "fn": "world_pick",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️world-pick/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️world-pick",
+      "idents": [
+        "world_pick"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "world_vortex_select",
+      "kebab": "world-vortex-select",
+      "fn": "world_vortex_select",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️world-vortex-select/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️world-vortex-select",
+      "idents": [
+        "world_vortex_select"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "select_all",
+      "kebab": "select-all",
+      "fn": "select_all",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️select-all/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️select-all",
+      "idents": [
+        "select_all"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "clear_selection",
+      "kebab": "clear-selection",
+      "fn": "clear_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️clear-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️clear-selection",
+      "idents": [
+        "clear_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "select_same_kind",
+      "kebab": "select-same-kind",
+      "fn": "select_same_kind",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️select-same-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️select-same-kind",
+      "idents": [
+        "select_same_kind"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "context_menu_at",
+      "kebab": "context-menu-at",
+      "fn": "context_menu_at",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️context-menu-at/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️context-menu-at",
+      "idents": [
+        "context_menu_at"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selection_method",
+      "kebab": "set-selection-method",
+      "fn": "set_selection_method",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-method/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-method",
+      "idents": [
+        "set_selection_method"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selection_mode_default",
+      "kebab": "set-selection-mode-default",
+      "fn": "set_selection_mode_default",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-mode-default/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-mode-default",
+      "idents": [
+        "set_selection_mode_default"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "selection",
+      "old_folder": "🗂️selection",
+      "new_mod": "set_selectable_kind",
+      "kebab": "set-selectable-kind",
+      "fn": "set_selectable_kind",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️set-selectable-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗂️set-selectable-kind",
+      "idents": [
+        "set_selectable_kind"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "old_folder": "🗣️locale",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "fn": "set_locale",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗣️set-locale",
+      "idents": [
+        "set_locale"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "locale",
+      "old_folder": "🗣️locale",
+      "new_mod": "set_terminology",
+      "kebab": "set-terminology",
+      "fn": "set_terminology",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗣️set-terminology/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🗣️set-terminology",
+      "idents": [
+        "set_terminology"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🛍️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "old_folder": "🛍️example",
+      "new_mod": "set_fixture_json",
+      "kebab": "set-fixture-json",
+      "fn": "set_fixture_json",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🛍️set-fixture-json/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🛍️set-fixture-json",
+      "idents": [
+        "set_fixture_json"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "example",
+      "old_folder": "🛍️example",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "fn": "set_active_example",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🛍️set-active-example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🛍️set-active-example",
+      "idents": [
+        "set_active_example"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement/🦀️component.rs": [
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_input",
+      "kebab": "engagement-input",
+      "fn": "engagement_input",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement-input/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement-input",
+      "idents": [
+        "engagement_input"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_submit",
+      "kebab": "engagement-submit",
+      "fn": "engagement_submit",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement-submit/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement-submit",
+      "idents": [
+        "engagement_submit"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_repeat_last",
+      "kebab": "engagement-repeat-last",
+      "fn": "engagement_repeat_last",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement-repeat-last/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement-repeat-last",
+      "idents": [
+        "engagement_repeat_last"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "engagement",
+      "old_folder": "🤝️engagement",
+      "new_mod": "engagement_abort",
+      "kebab": "engagement-abort",
+      "fn": "engagement_abort",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement-abort/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🤝️engagement-abort",
+      "idents": [
+        "engagement_abort"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️object/🦀️component.rs": [
+    {
+      "old_mod": "object",
+      "old_folder": "🧊️object",
+      "new_mod": "add_object_kind",
+      "kebab": "add-object-kind",
+      "fn": "add_object_kind",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️add-object-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️add-object-kind",
+      "idents": [
+        "add_object_kind"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "object",
+      "old_folder": "🧊️object",
+      "new_mod": "delete_selection",
+      "kebab": "delete-selection",
+      "fn": "delete_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️delete-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️delete-selection",
+      "idents": [
+        "delete_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "object",
+      "old_folder": "🧊️object",
+      "new_mod": "duplicate_selection",
+      "kebab": "duplicate-selection",
+      "fn": "duplicate_selection",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️duplicate-selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️duplicate-selection",
+      "idents": [
+        "duplicate_selection"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "object",
+      "old_folder": "🧊️object",
+      "new_mod": "set_selection_flag",
+      "kebab": "set-selection-flag",
+      "fn": "set_selection_flag",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️set-selection-flag/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️set-selection-flag",
+      "idents": [
+        "set_selection_flag"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "object",
+      "old_folder": "🧊️object",
+      "new_mod": "patch_inspector",
+      "kebab": "patch-inspector",
+      "fn": "patch_inspector",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️patch-inspector/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧊️patch-inspector",
+      "idents": [
+        "patch_inspector"
+      ],
+      "rename_only": false
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧰️utility/🦀️component.rs": [
+    {
+      "old_mod": "utility",
+      "old_folder": "🧰️utility",
+      "new_mod": "set_active",
+      "kebab": "set-active",
+      "fn": "set_active",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧰️set-active/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🧰️set-active",
+      "idents": [
+        "set_active"
+      ],
+      "rename_only": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🪣️fill/🦀️component.rs": [
+    {
+      "old_mod": "fill",
+      "old_folder": "🪣️fill",
+      "new_mod": "set_fill_count",
+      "kebab": "set-fill-count",
+      "fn": "set_fill_count",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🪣️set-fill-count/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🪣️set-fill-count",
+      "idents": [
+        "set_fill_count"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "fill",
+      "old_folder": "🪣️fill",
+      "new_mod": "fill_build_tick",
+      "kebab": "fill-build-tick",
+      "fn": "fill_build_tick",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🪣️fill-build-tick/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🪣️fill-build-tick",
+      "idents": [
+        "fill_build_tick"
+      ],
+      "rename_only": false
+    },
+    {
+      "old_mod": "fill",
+      "old_folder": "🪣️fill",
+      "new_mod": "set_kind_weight",
+      "kebab": "set-kind-weight",
+      "fn": "set_kind_weight",
+      "new_rel": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🪣️set-kind-weight/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🎮️commands/🪣️set-kind-weight",
+      "idents": [
+        "set_kind_weight"
+      ],
+      "rename_only": false
+    }
+  ]
+}

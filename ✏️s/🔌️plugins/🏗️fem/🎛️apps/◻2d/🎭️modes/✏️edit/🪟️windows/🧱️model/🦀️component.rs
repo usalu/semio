@@ -190,7 +190,7 @@ mod tests {
     #[test]
     fn mesh_preview_renders_region_edges() {
         let mut app = fem2d_app();
-        crate::apps::fem2d::testkit::dispatch(&mut app, crate::apps::fem2d::Fem2dCommand::SetActiveExample(crate::apps::fem2d::commands::example::set_active_example::SetActiveExample { example_id: "default".into() }));
+        crate::apps::fem2d::testkit::dispatch(&mut app, crate::apps::fem2d::Fem2dCommand::SetActiveExample(crate::apps::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
         let json = render_body(&mut app, BODY_KEY);
         assert!(json.contains("mesh-edge-"), "expected mesh-edge preview layers in the model scene");
     }

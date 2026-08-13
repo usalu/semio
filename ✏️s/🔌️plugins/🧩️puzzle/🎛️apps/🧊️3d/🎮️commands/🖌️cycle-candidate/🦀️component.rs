@@ -1,0 +1,27 @@
+//! 🖌️ `cycle-candidate` command.
+
+use crate::apps::puzzle3d::config::Puzzle3dSuggestionMenu;
+use crate::artifacts::puzzle3d::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+use semio_framework_plugin::SelectionSet;
+use serde_json::Value;
+use crate::apps::puzzle3d::Puzzle3dActionCtx;
+use crate::apps::puzzle3d::drive_precompute;
+use crate::apps::puzzle3d::puzzle3d_brush_target_vortex;
+
+/// 🔁️ `cycleBrushCandidate`/`cycleBrushCandidateBack` share one arm — the default step is the
+/// direction the action id names, and an explicit `delta` overrides it.
+pub fn cycle_candidate(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
+    drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
+    let default_delta = if action == "cycleBrushCandidateBack" { -1 } else { 1 };
+    let delta = args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(default_delta);
+    if let Some(vortex_id) = puzzle3d_brush_target_vortex(ctx.scene) {
+        let free_count = ctx.app.precompute.borrow().brush_candidates(&vortex_id).free.len();
+        if free_count > 0 {
+            let current = ctx.scene.runtime.brush_candidate_index as i64;
+            let next = (current + delta).rem_euclid(free_count as i64);
+            ctx.scene.runtime.brush_candidate_index = next as usize;
+        }
+    } else {
+        ctx.scene.runtime.brush_candidate_index = ctx.scene.runtime.brush_candidate_index.saturating_add_signed(delta as isize);
+    }
+}

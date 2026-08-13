@@ -7,7 +7,10 @@
 //! `🔖️Manifest` region that calls one passthrough per node (fem2d's mode/window declarations stay
 //! scalar/inline — no `mode_def`/`window_kind_def` object is built anywhere in the pre-migration code).
 
-use crate::apps::fem2d::commands::{analysis, camera, example, loads, locale, model, results, selection};
+use crate::apps::fem2d::commands::{
+    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection,
+    set_active_example, set_analysis_settings, set_camera, set_locale, set_result_display, set_self_weight,
+};
 use crate::apps::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::apps::fem2d::modes::edit;
 use crate::apps::fem2d::modes::edit::windows::model as model_window;
@@ -28,7 +31,7 @@ use std::collections::HashMap;
 pub const FEM2D_APP_ID: &str = "fem2d-play";
 
 /// 📦️ The `fem2d-play` "default" example — shared by the manifest's `.example(...)` registration, the
-/// `setActiveExample` handler (`crate::apps::fem2d::commands::example`), and every test fixture.
+/// `setActiveExample` handler (`crate::apps::fem2d::commands::set_active_example`), and every test fixture.
 pub const FEM2D_EXAMPLE_DSL: &str = crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT;
 //#endregion 🔖️Constants
 
@@ -64,15 +67,7 @@ semio_framework_plugin::app_commands! {
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
-// payload module is imported here under its own flat name.
-use model::{add_bar, add_beam, add_material, add_node, add_region, add_section, add_support};
-use loads::{add_area_load, add_combination, add_load_case, add_member_udl, add_nodal_load, set_self_weight};
-use analysis::set_analysis_settings;
-use selection::remove_selection;
-use example::set_active_example;
-use camera::set_camera;
-use results::set_result_display;
-use locale::set_locale;
+// payload module is imported at file top under its own flat name.
 //#endregion 🔖️Commands
 
 //#region 🔖️ExportImportHelpers
@@ -319,7 +314,7 @@ impl ArtifactApp for Fem2dPlayApp {
 /// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
 /// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
 /// former "replace the whole document" gesture in this package (`import_media`'s `"document:in"`,
-/// `commands::example::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
+/// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::HostEffect {
     let pack = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(scene);

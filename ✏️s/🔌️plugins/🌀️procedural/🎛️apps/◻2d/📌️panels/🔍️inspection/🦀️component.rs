@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn procedural2d_labels_translate_catalogue_and_inspector_in_german() {
         let mut app = app();
-        dispatch(&mut app, Procedural2dCommand::SetLocale(crate::apps::procedural2d::commands::locale::set_locale::SetLocale { value: "de".into() }));
+        dispatch(&mut app, Procedural2dCommand::SetLocale(crate::apps::procedural2d::commands::set_locale::SetLocale { value: "de".into() }));
         let inspector_json = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_INSPECTION);
         assert!(inspector_json.contains("Elemente:"));
     }

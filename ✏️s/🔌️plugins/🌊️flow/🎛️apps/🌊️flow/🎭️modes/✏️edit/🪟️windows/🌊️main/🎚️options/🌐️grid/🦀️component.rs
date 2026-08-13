@@ -1,5 +1,5 @@
 //! 🔳️ Main-window option — the canvas grid group (visibility toggle, snap toggle, factor slider).
-//! Its command handlers live in `🎮️commands/🌐️grid`.
+//! Its command handlers live in `🎮️commands/🌐️set-grid-visible`.
 
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::flow_action;
@@ -49,7 +49,7 @@ mod tests {
     use super::*;
     use crate::apps::flow::terminology::flow_play_labels;
 
-    /// 🔳️ The factor slider's `min`/`max` are the contract `🎮️commands/🌐️grid`'s handler clamps to —
+    /// 🔳️ The factor slider's `min`/`max` are the contract `🎮️commands/🌐️set-grid-visible`'s handler clamps to —
     /// pinned here so the two can't drift apart.
     #[test]
     fn the_factor_slider_range_matches_the_command_handler_clamp() {

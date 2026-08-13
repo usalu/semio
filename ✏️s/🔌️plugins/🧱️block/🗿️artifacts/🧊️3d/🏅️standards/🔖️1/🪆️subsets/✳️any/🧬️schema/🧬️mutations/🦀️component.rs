@@ -25,7 +25,7 @@ pub type Block3dStore = store::ArtifactStore<Block3dSnapshot, Block3dMutation>;
 /// attribute/author add/remove, the world camera's pan/zoom, and the session meta description. The
 /// old whole-document-replace and no-op sentinel variants are gone — whole-document loads (examples,
 /// DSL text edit) now decompose into this vocabulary (see
-/// `🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs`'s `replace_document_operations`).
+/// `🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example/🦀️component.rs`'s `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Block3dSnapshot, diff = Block3dDiff, schema = "block.block3d")]

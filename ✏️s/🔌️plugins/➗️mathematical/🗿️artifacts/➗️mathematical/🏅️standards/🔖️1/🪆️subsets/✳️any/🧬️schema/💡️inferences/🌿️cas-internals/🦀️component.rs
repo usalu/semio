@@ -8,11 +8,20 @@
 //! this crate's `➗️mathematical` plugin is where equation content actually lives. This module is the
 //! Rust-only compute internals a `💡️inferences/<slug>/` facet's `compute()` delegates into (mirroring
 //! stdio's `📐️step` io facet's `🪜️ladder`/`📐️part21`/`🧱️brep` precedent for deep Rust-only helper
-//! dirs under a facet); `crate::number`/`crate::algebra` (which stay in `🧮️math` for now) became
-//! `math::number`/`math::algebra` against the new `extern crate semio_framework_math as math;`
-//! dependency, and every `crate::cas`/`crate::polynomial` self-reference is preserved unedited via a
-//! crate-root `pub use … as cas;` / `pub use … as polynomial;` alias in `📦️glue.rs` — the physical
-//! file moved, the module's internal wiring did not.
+//! dirs under a facet); `crate::algebra`'s two call sites (`MatG`/`VecG` for exact linear-system
+//! solving in `apart`'s partial-fraction decomposition, and in `matrix::SymMatrix`'s numeric paths)
+//! became `math::algebra::MatG`/`math::algebra::VecG` against the `extern crate semio_framework_math
+//! as math;` dependency — briefly a genuine pre-existing breakage (`E0433: cannot find algebra in
+//! math`), since wave M3d had moved `algebra` out of `semio_framework_math` into `📸️remodel` on the
+//! belief that `📸️remodel` was its sole consumer, not knowing this wave had just created a second one.
+//! Wave FIXALG (same ticket) resolved it by relocating `VecG`/`MatG` out of `📸️remodel` into
+//! `semio_framework_number`'s own `algebra` module — these two sites now read `number::MatG`/
+//! `number::VecG`, and the now-unused `semio_framework_math` dependency is gone from this crate's
+//! `Cargo.toml`. `crate::number` became `number::` (wave MATHEND) — `number` was relocated out of
+//! `🧮️math` into its own framework module.
+//! Every `crate::cas`/`crate::polynomial` self-reference is preserved unedited via a crate-root
+//! `pub use … as cas;` / `pub use … as polynomial;` alias in `📦️glue.rs` — the physical file moved,
+//! the module's internal wiring did not.
 // #region 🔖️Fnkind
 pub mod fnkind {
     //! ✨️ The closed set of named functions the kernel understands, plus the small amount of per-kind
@@ -180,7 +189,7 @@ pub mod expr {
 
     use crate::cas::assume::AssumeSet;
     use crate::cas::fnkind::FnKind;
-    use math::number::{Integer, Rational};
+    use number::{Integer, Rational};
     use std::rc::Rc;
 
     // #region 🔖️Symbol
@@ -707,7 +716,7 @@ mod canon {
     use crate::cas::assume::{is_positive, AssumeSet};
     use crate::cas::expr::{Constant, Expr, Kind, Symbol};
     use crate::cas::fnkind::FnKind;
-    use math::number::{primes, Integer, Natural, Rational};
+    use number::{primes, Integer, Natural, Rational};
     use std::collections::BTreeMap;
 
     // #region 🔖️Leaves
@@ -1381,7 +1390,7 @@ pub mod assume {
     /// entry points. First-pass scope: direct `symbol <operation> rational` bounds only.
     #[derive(Clone, Debug, Default)]
     pub struct Assumptions {
-        facts: Vec<(String, RelationalOperator, math::number::Rational)>,
+        facts: Vec<(String, RelationalOperator, number::Rational)>,
     }
 
     #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1399,7 +1408,7 @@ pub mod assume {
             Self::default()
         }
 
-        pub fn assume_bound(&mut self, symbol: &str, operator: RelationalOperator, bound: math::number::Rational) {
+        pub fn assume_bound(&mut self, symbol: &str, operator: RelationalOperator, bound: number::Rational) {
             self.facts.push((symbol.to_string(), operator, bound));
         }
 
@@ -1408,7 +1417,7 @@ pub mod assume {
                 if name != symbol {
                     continue;
                 }
-                use math::number::Rational;
+                use number::Rational;
                 let zero = Rational::zero();
                 let is_positive = match operation {
                     RelationalOperator::Gt if *bound >= zero => Some(true),
@@ -1647,7 +1656,7 @@ pub mod assume {
 
         #[test]
         fn bound_for_deduces_sign_from_assumption_store() {
-            use math::number::Rational;
+            use number::Rational;
             let mut assumptions = Assumptions::new();
             assumptions.assume_bound("x", RelationalOperator::Gt, Rational::from_i64(2, 1).unwrap());
             assert_eq!(assumptions.bound_for("x"), Some(true));
@@ -1920,7 +1929,7 @@ pub mod fmt {
                 if let Some(Kind::Integer(n)) = factors.first().map(|f| f.kind()) {
                     if n.is_negative() {
                         let mut rest = factors[1..].to_vec();
-                        if *n != math::number::Integer::from_i64(-1) {
+                        if *n != number::Integer::from_i64(-1) {
                             rest.insert(0, Expr::from(n.abs_integer()));
                         }
                         return (true, Expr::mul(rest));
@@ -1945,13 +1954,13 @@ pub mod fmt {
                 }
             }
             if let Kind::Rational(r) = f.kind() {
-                if r.numer().abs_integer() != math::number::Integer::one() {
+                if r.numer().abs_integer() != number::Integer::one() {
                     numer.push(Expr::from(r.numer().abs_integer()));
                 }
                 if r.numer().is_negative() {
                     numer.insert(0, Expr::integer(-1));
                 }
-                denom.push(Expr::from(math::number::Integer::from_natural(r.denom().clone())));
+                denom.push(Expr::from(number::Integer::from_natural(r.denom().clone())));
                 continue;
             }
             numer.push(f.clone());
@@ -2632,7 +2641,7 @@ pub mod polybridge {
     //! types over those generators, and reconstruct canonical `Expr`s from the result.
 
     use crate::cas::expr::{Expr, Kind};
-    use math::number::{Integer, Natural, Rational};
+    use number::{Integer, Natural, Rational};
     use crate::polynomial::{MonomialOrder, PolyM, PolyU};
 
     // #region 🔖️PolyMap
@@ -3020,7 +3029,7 @@ pub mod simplify {
 
     use crate::cas::expr::{Expr, Kind};
     use crate::cas::polybridge;
-    use math::number::Rational;
+    use number::Rational;
     use crate::polynomial::PolyU;
 
     // #region 🔖️Expand
@@ -3219,7 +3228,7 @@ pub mod simplify {
 
     // #region 🔖️Apart
     /// 🧩️ Univariate partial-fraction decomposition over `Q`: factors the denominator, then solves the
-    /// linear system (via `math::algebra`'s exact `MatG::solve`) for each factor's numerator
+    /// linear system (via `number`'s exact `MatG::solve`) for each factor's numerator
     /// coefficients — handles repeated factors, not just squarefree denominators.
     pub fn apart(e: &Expr, x: &Expr) -> Expr {
         let Some((num_m, den_m, map)) = polybridge::as_ratfunc_auto(e) else { return e.clone() };
@@ -3286,12 +3295,12 @@ pub mod simplify {
                 cells[col] = basis.coeff(row);
             }
         }
-        let matrix = math::algebra::MatG::from_rows(rows);
+        let matrix = number::MatG::from_rows(rows);
         let mut b_data = vec![Rational::zero(); deg_den];
         for (row, slot) in b_data.iter_mut().enumerate() {
             *slot = remainder.coeff(row);
         }
-        let b = math::algebra::VecG::from_vec(b_data);
+        let b = number::VecG::from_vec(b_data);
         let Some(solution) = matrix.solve(&b) else {
             return together_fallback(&poly_part, &remainder, den, x);
         };
@@ -3742,7 +3751,7 @@ pub mod diff {
 
     use crate::cas::expr::{Constant, Expr, Kind};
     use crate::cas::fnkind::FnKind;
-    use math::number::Rational;
+    use number::Rational;
 
     // #region 🔖️Diff
     /// 📉️ `d(e)/d(x)`, treating every other symbol as a constant (partial derivative).
@@ -4103,7 +4112,7 @@ pub mod series {
     //! correct, and it reuses `diff` directly rather than duplicating a second derivative table.
 
     use crate::cas::expr::{Constant, Expr, Kind};
-    use math::number::Integer;
+    use number::Integer;
 
     // #region 🔖️Series
     /// 📶️ A truncated Taylor expansion of some expression in `x` around `at`: `sum coeffs[k] * (x-at)^k`,
@@ -4193,8 +4202,8 @@ pub mod series {
             // exp(x) = 1 + x + x^2/2 + x^3/6 + x^4/24
             assert_eq!(s.coeffs[0], Expr::integer(1));
             assert_eq!(s.coeffs[1], Expr::integer(1));
-            assert_eq!(s.coeffs[2], Expr::from(math::number::Rational::from_i64(1, 2).unwrap()));
-            assert_eq!(s.coeffs[3], Expr::from(math::number::Rational::from_i64(1, 6).unwrap()));
+            assert_eq!(s.coeffs[2], Expr::from(number::Rational::from_i64(1, 2).unwrap()));
+            assert_eq!(s.coeffs[3], Expr::from(number::Rational::from_i64(1, 6).unwrap()));
         }
 
         #[test]
@@ -4392,7 +4401,7 @@ pub mod limits {
             let num = Expr::integer(1) - Expr::func(FnKind::Cos, vec![x.clone()]);
             let den = Expr::pow(x.clone(), Expr::integer(2));
             let e = num * Expr::pow(den, Expr::integer(-1));
-            assert_eq!(limit(&e, &x, &Expr::integer(0), Direction::Both), Some(Expr::from(math::number::Rational::from_i64(1, 2).unwrap())));
+            assert_eq!(limit(&e, &x, &Expr::integer(0), Direction::Both), Some(Expr::from(number::Rational::from_i64(1, 2).unwrap())));
         }
     }
     // #endregion 🔖️Tests
@@ -4406,7 +4415,7 @@ pub mod rootof {
     //! numeric queries (sign, refinement, `f64` approximation) that need real algebra to answer.
 
     use crate::cas::expr::{Expr, Kind};
-    use math::number::{Integer, Natural, Rational};
+    use number::{Integer, Natural, Rational};
     use crate::polynomial::{AlgebraicReal, PolyU};
 
     // #region 🔖️Conversion
@@ -4499,7 +4508,7 @@ pub mod solve {
 
     use crate::cas::expr::{Constant, Expr, Kind, RelationalOperator};
     use crate::cas::fnkind::FnKind;
-    use math::number::{Integer, Natural, Rational};
+    use number::{Integer, Natural, Rational};
     use crate::polynomial::PolyU;
 
     // #region 🔖️SolutionSet
@@ -4936,12 +4945,12 @@ pub mod matrix {
     //! 🧮️ Symbolic matrices: entries are plain `Expr` (which already behaves like a field under its own
     //! `+`/`-`/`*`/`Pow(-1)` encoding, so no generic `Ring`/`Field` newtype over `Expr` is needed for
     //! cofactor-expansion algorithms). Purely-numeric-`Rational` matrices additionally delegate to
-    //! `math::algebra`'s exact `MatG<Rational>` for rank/nullspace/RREF, which do need a real field
+    //! `number`'s exact `MatG<Rational>` for rank/nullspace/RREF, which do need a real field
     //! implementation to pivot correctly.
 
     use crate::cas::expr::{Expr, Kind};
     use crate::cas::solve::{det_expr, SolutionSet};
-    use math::number::Rational;
+    use number::Rational;
 
     // #region 🔖️SymMatrix
     #[derive(Clone, Debug, PartialEq)]
@@ -5082,12 +5091,12 @@ pub mod matrix {
         }
 
         /// 🔢️ `true` if every entry is a plain numeric literal (`Integer`/`Rational`), enabling the
-        /// `math::algebra`-backed numeric paths below.
+        /// `number`-backed numeric paths below.
         fn is_numeric(&self) -> bool {
             self.data.iter().all(|e| matches!(e.kind(), Kind::Integer(_) | Kind::Rational(_)))
         }
 
-        fn to_numeric(&self) -> Option<math::algebra::MatG<Rational>> {
+        fn to_numeric(&self) -> Option<number::MatG<Rational>> {
             if !self.is_numeric() {
                 return None;
             }
@@ -5104,10 +5113,10 @@ pub mod matrix {
                         .collect()
                 })
                 .collect();
-            Some(math::algebra::MatG::from_rows(rows))
+            Some(number::MatG::from_rows(rows))
         }
 
-        fn from_numeric(m: &math::algebra::MatG<Rational>) -> Self {
+        fn from_numeric(m: &number::MatG<Rational>) -> Self {
             let rows: Vec<Vec<Expr>> = (0..m.rows).map(|r| (0..m.cols).map(|c| Expr::from(m.get(r, c).clone())).collect()).collect();
             Self::from_rows(rows)
         }
@@ -5146,7 +5155,7 @@ pub mod matrix {
                     _ => unreachable!(),
                 })
                 .collect();
-            let v = math::algebra::VecG::from_vec(b_rat);
+            let v = number::VecG::from_vec(b_rat);
             let x = m.solve(&v)?;
             Some((0..x.len()).map(|i| Expr::from(x.get(i).clone())).collect())
         }
@@ -5259,7 +5268,7 @@ pub mod integrate {
 
     use crate::cas::expr::{Constant, Expr, Kind};
     use crate::cas::fnkind::FnKind;
-    use math::number::{Integer, Rational};
+    use number::{Integer, Rational};
     use crate::polynomial::PolyU;
 
     // #region 🔖️Integrate
@@ -5690,7 +5699,7 @@ pub mod sums {
 
     use crate::cas::expr::{Constant, Expr, Kind};
     use crate::cas::fnkind::FnKind;
-    use math::number::Rational;
+    use number::Rational;
     use crate::polynomial::PolyU;
 
     // #region 🔖️ClosedForm
@@ -5832,7 +5841,7 @@ pub mod ode {
 
     use crate::cas::expr::{Expr, Kind, RelationalOperator};
     use crate::cas::fnkind::FnKind;
-    use math::number::{Integer, Rational};
+    use number::{Integer, Rational};
     use crate::polynomial::PolyU;
 
     // #region 🔖️OdeSolution
@@ -6139,7 +6148,7 @@ pub mod transforms {
 
     use crate::cas::expr::{Expr, Kind};
     use crate::cas::fnkind::FnKind;
-    use math::number::Integer;
+    use number::Integer;
 
     // #region 🔖️Laplace
     pub fn laplace_transform(f: &Expr, t: &Expr, s: &Expr) -> Option<Expr> {

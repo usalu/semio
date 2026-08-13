@@ -1,0 +1,15 @@
+//! 🛍️ `set-fixture-json` command.
+
+use crate::apps::puzzle5d::config::{Puzzle5dRuntime, Puzzle5dSelection};
+use serde_json::Value;
+use crate::apps::puzzle5d::Puzzle5dActionCtx;
+use crate::apps::puzzle5d::Puzzle5dDocument;
+
+/// 🧾️ Replaces the whole document from a raw JSON payload; an unparseable payload is a no-op.
+pub fn set_fixture_json(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+    if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
+        if let Ok(document) = serde_json::from_str::<Puzzle5dDocument>(json_text) {
+            ctx.scene.document = document;
+        }
+    }
+}

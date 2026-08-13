@@ -8,7 +8,10 @@
 //! `.window_kind(..)` calls stay inline — fem3d builds neither a `ModeDefinition` nor a
 //! `WindowKindDefinition` object anywhere, see `modes::edit`'s and the window nodes' own doc comments).
 
-use crate::apps::fem3d::commands::{analysis, camera, example, loads, model, results, selection};
+use crate::apps::fem3d::commands::{
+    add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, remove_selection,
+    set_active_example, set_analysis_settings, set_camera, set_result_display, set_self_weight,
+};
 use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::apps::fem3d::modes::edit;
 use crate::apps::fem3d::modes::edit::windows::{model as window_model, results as window_results};
@@ -63,14 +66,7 @@ semio_framework_plugin::app_commands! {
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
-// payload module is imported here under its own flat name.
-use example::set_active_example;
-use loads::{add_area_load, add_combination, add_load_case, add_member_udl, add_nodal_load, set_self_weight};
-use model::{add_bar, add_frame, add_material, add_node, add_section, add_solid, add_support};
-use analysis::set_analysis_settings;
-use camera::set_camera;
-use results::set_result_display;
-use selection::remove_selection;
+// payload module is imported at file top under its own flat name.
 //#endregion 🔖️Commands
 
 //#region 🔖️Fem3dResultsJson
@@ -505,7 +501,7 @@ impl ArtifactApp for Fem3dPlayApp {
 /// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
 /// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
 /// former "replace the whole document" gesture in this package (`import_media`'s `"document:in"`,
-/// `commands::example::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
+/// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::HostEffect {
     let pack = <Fem3dSnapshot as store::ArtifactPack>::encode_pack(scene);

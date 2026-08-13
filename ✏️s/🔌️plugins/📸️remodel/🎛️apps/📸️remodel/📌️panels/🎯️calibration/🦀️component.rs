@@ -40,7 +40,7 @@ pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::remodel::commands::calibration::add_gcp::AddGcp;
+    use crate::apps::remodel::commands::add_gcp::AddGcp;
     use crate::apps::remodel::testkit::{app, dispatch, render as render_body};
     use crate::apps::remodel::RemodelCommand;
 

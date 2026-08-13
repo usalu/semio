@@ -305,8 +305,8 @@ impl ArtifactApp for TrinityJackPlayApp {
     // `📓️taxonomy.md`'s forbidden vocabulary), so this intentionally falls back to the trait
     // default (`None`) rather than overriding — the `"document:in"` media port therefore reports
     // `MediaError::NotImplemented`; a real whole-fixture load goes through `reset_document_effect`
-    // (`HostEffect::LoadDocument`, outside undo history), see `apps::jack::commands::query::set_active_example`
-    // and `apps::jack::commands::fixture::set_fixture_json`.
+    // (`HostEffect::LoadDocument`, outside undo history), see `apps::jack::commands::set_active_example`
+    // and `apps::jack::commands::set_fixture_json`.
 
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
     /// nodes, in addition to the implicit `"document:out"` — both encode the same `JackSnapshot` pack.
@@ -350,25 +350,25 @@ impl ArtifactApp for TrinityJackPlayApp {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         match command {
-            TrinityJackCommand::SetFixtureJson { json } => crate::apps::jack::commands::fixture::set_fixture_json(json),
-            TrinityJackCommand::DeleteSelection => crate::apps::jack::commands::fixture::delete_selection(fixture, &config.selected_node_ids),
-            TrinityJackCommand::PatchNodes { node_ids, field, value } => crate::apps::jack::commands::fixture::patch_nodes(fixture, node_ids, field, value),
-            TrinityJackCommand::Reorganize => crate::apps::jack::commands::fixture::reorganize(fixture, config.reorganize_epoch),
-            TrinityJackCommand::RunQuery { query } => crate::apps::jack::commands::query::run_query(fixture, query, &config.jack_query),
-            TrinityJackCommand::LoadExampleQuery { query } => crate::apps::jack::commands::query::load_example_query(fixture, query),
-            TrinityJackCommand::SetActiveExample { example_id } => crate::apps::jack::commands::query::set_active_example(example_id),
-            TrinityJackCommand::SetViewport { viewport_json } => crate::apps::jack::commands::view::set_viewport(viewport_json),
-            TrinityJackCommand::TextEdit { text } => crate::apps::jack::commands::view::text_edit(text),
-            TrinityJackCommand::TextSelect { start, end } => crate::apps::jack::commands::view::text_select(*start, *end),
-            TrinityJackCommand::RequestCompletions => crate::apps::jack::commands::query::request_completions(config.revision),
-            TrinityJackCommand::FormatDocument => crate::apps::jack::commands::query::format_document(&config.jack_query),
-            TrinityJackCommand::SetLodMode { window_id, value } => crate::apps::jack::commands::view::set_lod_mode(window_id, value),
-            TrinityJackCommand::EditorEngagementInput { value } => crate::apps::jack::commands::view::editor_engagement_input(value),
-            TrinityJackCommand::GraphEngagementInput { value } => crate::apps::jack::commands::view::graph_engagement_input(value),
-            TrinityJackCommand::ResultsEngagementInput { value } => crate::apps::jack::commands::view::results_engagement_input(value),
-            TrinityJackCommand::GraphPointerDown { node_id } => crate::apps::jack::commands::view::graph_pointer_down(node_id),
-            TrinityJackCommand::SetSelection { ids } => crate::apps::jack::commands::view::set_selection(ids),
-            TrinityJackCommand::SetLocale { value } => crate::apps::jack::commands::view::set_locale(value),
+            TrinityJackCommand::SetFixtureJson { json } => crate::apps::jack::commands::set_fixture_json(json),
+            TrinityJackCommand::DeleteSelection => crate::apps::jack::commands::delete_selection(fixture, &config.selected_node_ids),
+            TrinityJackCommand::PatchNodes { node_ids, field, value } => crate::apps::jack::commands::patch_nodes(fixture, node_ids, field, value),
+            TrinityJackCommand::Reorganize => crate::apps::jack::commands::reorganize(fixture, config.reorganize_epoch),
+            TrinityJackCommand::RunQuery { query } => crate::apps::jack::commands::run_query(fixture, query, &config.jack_query),
+            TrinityJackCommand::LoadExampleQuery { query } => crate::apps::jack::commands::load_example_query(fixture, query),
+            TrinityJackCommand::SetActiveExample { example_id } => crate::apps::jack::commands::set_active_example(example_id),
+            TrinityJackCommand::SetViewport { viewport_json } => crate::apps::jack::commands::set_viewport(viewport_json),
+            TrinityJackCommand::TextEdit { text } => crate::apps::jack::commands::text_edit(text),
+            TrinityJackCommand::TextSelect { start, end } => crate::apps::jack::commands::text_select(*start, *end),
+            TrinityJackCommand::RequestCompletions => crate::apps::jack::commands::request_completions(config.revision),
+            TrinityJackCommand::FormatDocument => crate::apps::jack::commands::format_document(&config.jack_query),
+            TrinityJackCommand::SetLodMode { window_id, value } => crate::apps::jack::commands::set_lod_mode(window_id, value),
+            TrinityJackCommand::EditorEngagementInput { value } => crate::apps::jack::commands::editor_engagement_input(value),
+            TrinityJackCommand::GraphEngagementInput { value } => crate::apps::jack::commands::graph_engagement_input(value),
+            TrinityJackCommand::ResultsEngagementInput { value } => crate::apps::jack::commands::results_engagement_input(value),
+            TrinityJackCommand::GraphPointerDown { node_id } => crate::apps::jack::commands::graph_pointer_down(node_id),
+            TrinityJackCommand::SetSelection { ids } => crate::apps::jack::commands::set_selection(ids),
+            TrinityJackCommand::SetLocale { value } => crate::apps::jack::commands::set_locale(value),
         }
     }
 

@@ -1,0 +1,3 @@
+command files: 15 filter='🏗️fem/' dry=True
+planned rewrites from 15 old files
+DRY run — no writes

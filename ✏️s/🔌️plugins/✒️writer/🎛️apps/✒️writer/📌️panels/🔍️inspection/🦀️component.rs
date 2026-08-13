@@ -92,7 +92,7 @@ mod tests {
     #[test]
     fn writer_labels_resolve_german_locale() {
         let mut app = new_app();
-        dispatch(&mut app, WriterCommand::SetLocale(crate::apps::writer::commands::locale::set_locale::SetLocale { value: "de".into() }));
+        dispatch(&mut app, WriterCommand::SetLocale(crate::apps::writer::commands::set_locale::SetLocale { value: "de".into() }));
         let inspection = render_body(&mut app, WRITER_PLAY_BODY_INSPECTION);
         assert!(inspection.contains("Dokument"));
         assert!(inspection.contains("Kamera"));

@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn catalogue_resolves_native_german_from_the_config_locale() {
-        use crate::apps::imperative::commands::view::set_locale;
+        use crate::apps::imperative::commands::set_locale;
         use crate::apps::imperative::testkit::dispatch;
         use crate::apps::imperative::ImperativeCommand;
         let mut app = imperative_app();

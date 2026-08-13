@@ -317,7 +317,7 @@ pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::layout::commands::view::set_selection;
+    use crate::apps::layout::commands::set_selection;
     use crate::apps::layout::testkit::{dispatch, layout_app, render as render_body};
     use crate::apps::layout::LayoutCommand;
 

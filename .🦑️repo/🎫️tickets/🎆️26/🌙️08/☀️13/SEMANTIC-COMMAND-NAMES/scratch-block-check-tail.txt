@@ -1,0 +1,60 @@
+   |            ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `BlockAttribute` is never constructed
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/../../🦀️component.rs:35:12
+   |
+35 | pub struct BlockAttribute {
+   |            ^^^^^^^^^^^^^^
+
+warning: struct `BlockAuthor` is never constructed
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/../../🦀️component.rs:45:12
+   |
+45 | pub struct BlockAuthor {
+   |            ^^^^^^^^^^^
+
+warning: struct `BlockCompatibilityRule` is never constructed
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/../../🦀️component.rs:56:12
+   |
+56 | pub struct BlockCompatibilityRule {
+   |            ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `BlockRepresentation` is never constructed
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/../../🦀️component.rs:67:12
+   |
+67 | pub struct BlockRepresentation {
+   |            ^^^^^^^^^^^^^^^^^^^
+
+warning: struct `BlockCamera2d` is never constructed
+  --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/../../🦀️component.rs:87:12
+   |
+87 | pub struct BlockCamera2d {
+   |            ^^^^^^^^^^^^^
+
+warning: struct `BlockCamera3d` is never constructed
+   --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/../../🦀️component.rs:104:12
+    |
+104 | pub struct BlockCamera3d {
+    |            ^^^^^^^^^^^^^
+
+warning: function `block_one_f64` is never used
+   --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/../../🦀️component.rs:121:4
+    |
+121 | fn block_one_f64() -> f64 {
+    |    ^^^^^^^^^^^^^
+
+warning: struct `BlockMeta` is never constructed
+   --> ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/../../🦀️component.rs:131:12
+    |
+131 | pub struct BlockMeta {
+    |            ^^^^^^^^^
+
+warning: `semio-s-plugin-block` (lib) generated 169 warnings (run `cargo fix --lib -p semio-s-plugin-block` to apply 152 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 3m 45s
+
+---
+exit_code: 0
+elapsed_ms: 226140
+ended_at: 2026-08-13T19:27:10.347Z
+---

@@ -8,11 +8,11 @@
 //! constitutional: general, an artifact must never depend on an app, so it lives here rather than under
 //! `🗿️artifacts`).
 
-use crate::apps::block5d::commands::example::{edit, set_active_example};
-use crate::apps::block5d::commands::grip::{add_grip, remove_grip};
-use crate::apps::block5d::commands::grip_kind::{add_grip_kind, remove_grip_kind};
-use crate::apps::block5d::commands::kind::patch_part_kind;
-use crate::apps::block5d::commands::selection::set_selection;
+use crate::apps::block5d::commands::{edit, set_active_example};
+use crate::apps::block5d::commands::{add_grip, remove_grip};
+use crate::apps::block5d::commands::{add_grip_kind, remove_grip_kind};
+use crate::apps::block5d::commands::patch_part_kind;
+use crate::apps::block5d::commands::set_selection;
 use crate::apps::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use crate::apps::block5d::modes::edit as edit_mode;
 use crate::apps::block5d::modes::edit::windows::{board, world};
@@ -226,13 +226,13 @@ pub fn create_block5d_app() -> App {
             .io(block5d_io()),
     )
     .example(
-        crate::apps::block5d::commands::example::BLOCK5D_EXAMPLE_FOREST_LEFT,
+        crate::apps::block5d::commands::set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT,
         LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"),
         serde_json::to_string(&crate::artifacts::block5d::dsl::parse_dsl(crate::artifacts::block5d::dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
         "list-tree",
     )
     .example(
-        crate::apps::block5d::commands::example::BLOCK5D_EXAMPLE_CAPSULE,
+        crate::apps::block5d::commands::set_active_example::BLOCK5D_EXAMPLE_CAPSULE,
         LocalizedLabel::native("Nakagin Capsule", "Nakagin Capsule"),
         serde_json::to_string(&crate::artifacts::block5d::dsl::parse_dsl(crate::artifacts::block5d::dsl::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
         "building",
@@ -381,7 +381,7 @@ mod tests {
     #[test]
     fn set_active_example_loads_forest_left_fixture() {
         let mut app: Block5dApp = new_app();
-        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block5d::commands::example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
+        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block5d::commands::set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.part_kind.id, "Hexagonal Cut Concrete Forest Left");
         assert_eq!(projection.grips.len(), 1);
@@ -409,7 +409,7 @@ mod tests {
     #[test]
     fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
         let mut app: Block5dApp = new_app();
-        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block5d::commands::example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
+        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block5d::commands::set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
         let media = app.export_media("catalog:out").expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {

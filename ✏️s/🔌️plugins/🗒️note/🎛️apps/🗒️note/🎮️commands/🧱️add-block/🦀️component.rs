@@ -1,0 +1,87 @@
+//! 🧱️ 🧱️ Note play app commands command — `add-block`.
+
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
+use crate::artifacts::note::schema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+use crate::artifacts::note::op::NoteMutation;
+use crate::artifacts::note::schema::mutations::{
+    change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+    duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+    move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[dsl(keyword = "add-block")]
+pub struct AddBlock {
+    pub kind: String,
+    pub x: f64,
+    pub y: f64,
+}
+
+pub fn handle(payload: &AddBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    let block = create_block_by_kind(&payload.kind, payload.x, payload.y);
+    let new_id = block_id(&block).to_string();
+    Ok(Emit { artifact_mutations: vec![crate::artifacts::note::schema::mutations::create_block(block, None, None)], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: vec![new_id] }], ..Default::default() })
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::apps::note::testkit::{dispatch, note_app};
+    use crate::apps::note::NoteCommand;
+
+    #[test]
+    fn add_block_action_emits_one_op_and_grows_projection() {
+        let mut app = note_app();
+        let result = dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 80.0, y: 80.0 }));
+        assert_eq!(result.mutations.len(), 1);
+        let projection = app.snapshot().expect("snapshot");
+        assert_eq!(projection.blocks.len(), 1);
+        assert_eq!(crate::artifacts::note::schema::block_kind(&projection.blocks[0]), "text");
+    }
+
+    #[test]
+    fn add_block_then_undo_round_trip() {
+        use semio_framework_plugin::testkit;
+        let mut app = note_app();
+        testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1);
+    }
+
+    #[test]
+    fn patch_blocks_table_row_and_column_ops_clamp_at_one() {
+        let mut app = note_app();
+        dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "table".into(), x: 0.0, y: 0.0 }));
+        let table_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
+
+        for (field, expected_rows, expected_columns) in [("tableAddRow", 3, 3), ("tableAddColumn", 3, 4), ("tableRemoveRow", 2, 4), ("tableRemoveRow", 1, 4), ("tableRemoveRow", 1, 4), ("tableRemoveColumn", 1, 3)] {
+            dispatch(&mut app, NoteCommand::PatchBlocks(crate::apps::note::commands::patch_blocks::PatchBlocks { block_ids: vec![table_id.clone()], field: field.into(), value: String::new() }));
+            let projection = app.snapshot().expect("snapshot");
+            let block = find_block(&projection.blocks, &table_id).unwrap();
+            if let NoteBlockNode::Table { rows, columns, .. } = block {
+                assert_eq!(rows.len(), expected_rows, "field {field}");
+                assert_eq!(columns.len(), expected_columns, "field {field}");
+            } else {
+                panic!("expected table block");
+            }
+        }
+    }
+
+    #[test]
+    fn duplicate_selection_clones_with_offset_and_selects_clones() {
+        let mut app = note_app();
+        dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 10.0, y: 10.0 }));
+        let source_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
+
+        let result = dispatch(&mut app, NoteCommand::DuplicateSelection(crate::apps::note::commands::duplicate_selection::DuplicateSelection {}));
+        assert_eq!(result.mutations.len(), 1);
+        let projection = app.snapshot().expect("snapshot");
+        assert_eq!(projection.blocks.len(), 2);
+        let clone = projection.blocks.iter().find(|block| block_id(block) != source_id).expect("clone block");
+        let (x, y, ..) = crate::artifacts::note::schema::block_bounds(clone);
+        assert_eq!((x, y), (34.0, 34.0));
+    }
+}
+//#endregion 🧪️Tests

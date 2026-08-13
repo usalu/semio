@@ -22,7 +22,7 @@ extern crate semio_framework_schema as schema;
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
-// 🎭️ `fsm::statechart!` (used by `apps::draw::commands::canvas`'s gesture machine) generates code
+// 🎭️ `fsm::statechart!` (used by `apps::draw::commands::canvas_pointer_down`'s gesture machine) generates code
 // containing `#[cfg(feature = "serde")]` gates meant for `fsm`'s OWN crate; macro hygiene splices
 // that cfg check into the CALLING crate's feature list instead (a `fsm`/rustc macro-expansion
 // limitation, not a real conditional-compilation bug here) — this crate declares no `serde` feature
@@ -464,18 +464,66 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            // 🔁️ `#[path]` corrected to the post-rename directory (ticket 26/08/10's document→artifact
-            // terminology migration renamed `📄️document/` to `📄️artifact/` on disk but missed this raw
-            // string literal, opaque to identifier-based codemods) — module NAME kept as `document`
-            // since `🎛️apps/🖍️draw/🦀️component.rs` still imports `commands::document` by that name.
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs"]
-            pub mod document;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️layer/🦀️component.rs"]
-            pub mod layer;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️view/🦀️component.rs"]
-            pub mod view;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas/🦀️component.rs"]
-            pub mod canvas;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️set-snapshot/🦀️component.rs"]
+            pub mod set_snapshot;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️commit-document/🦀️component.rs"]
+            pub mod commit_document;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️set-fixture-json/🦀️component.rs"]
+            pub mod set_fixture_json;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/📄️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️add-layer/🦀️component.rs"]
+            pub mod add_layer;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️drop-layer-kind/🦀️component.rs"]
+            pub mod drop_layer_kind;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️move-layer/🦀️component.rs"]
+            pub mod move_layer;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️delete-layer/🦀️component.rs"]
+            pub mod delete_layer;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️duplicate-layer/🦀️component.rs"]
+            pub mod duplicate_layer;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️toggle-layer-visible/🦀️component.rs"]
+            pub mod toggle_layer_visible;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️combine-boolean/🦀️component.rs"]
+            pub mod combine_boolean;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️patch-layer/🦀️component.rs"]
+            pub mod patch_layer;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️patch-layers/🦀️component.rs"]
+            pub mod patch_layers;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🗂️set-selected-opacity/🦀️component.rs"]
+            pub mod set_selected_opacity;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️engagement-submit/🦀️component.rs"]
+            pub mod engagement_submit;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-active-utility/🦀️component.rs"]
+            pub mod set_active_utility;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-camera/🦀️component.rs"]
+            pub mod set_camera;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-camera-zoom/🦀️component.rs"]
+            pub mod set_camera_zoom;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-hover/🦀️component.rs"]
+            pub mod set_hover;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️select-all/🦀️component.rs"]
+            pub mod select_all;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️clear-selection/🦀️component.rs"]
+            pub mod clear_selection;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️engagement-input/🦀️component.rs"]
+            pub mod engagement_input;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
+            pub mod canvas_pointer_down;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
+            pub mod canvas_pointer_move;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
+            pub mod canvas_pointer_up;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-double-click/🦀️component.rs"]
+            pub mod canvas_double_click;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-commit-draft/🦀️component.rs"]
+            pub mod canvas_commit_draft;
+            #[path = "../../🎛️apps/🖍️draw/🎮️commands/🖱️canvas-escape/🦀️component.rs"]
+            pub mod canvas_escape;
         }
 
         #[path = "."]

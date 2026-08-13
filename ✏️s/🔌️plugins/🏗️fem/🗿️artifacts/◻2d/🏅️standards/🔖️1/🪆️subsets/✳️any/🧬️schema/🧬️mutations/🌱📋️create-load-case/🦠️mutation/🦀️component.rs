@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🌱️ Brings a new [`FemLoadCase`] into existence (empty or pre-seeded with one load — the
-/// resolve-or-create gesture in `🎮️commands/🏋️loads` builds this when no matching case exists yet).
+/// resolve-or-create gesture in `🎮️commands/🏋️add-nodal-load` builds this when no matching case exists yet).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "create-load-case")]

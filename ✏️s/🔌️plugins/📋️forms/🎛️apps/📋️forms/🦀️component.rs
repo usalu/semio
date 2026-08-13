@@ -12,7 +12,11 @@
 //! `ProgramContributionEntry`, so per the DocumentHelpers placement rule they stay here rather than in the
 //! artifact's `🧬️schema`.
 
-use crate::apps::forms::commands::{contribution, export, import, locale, option, question, selection, step, try_wizard, vector};
+use crate::apps::forms::commands::{
+    add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options,
+    patch_questions, patch_step, patch_vector_field, previous_step, remove_question, remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example,
+    set_contributions, set_locale, set_selection, set_spec_json, set_try_value, set_try_values, submit, update_form,
+};
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::presence::{FormsPresence, FormsPresenceMutation};
 use crate::apps::forms::modes::blueprint;
@@ -247,16 +251,7 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use contribution::set_contributions;
-use export::export_fixture;
-use import::{set_active_example, set_spec_json};
-use locale::set_locale;
-use option::{add_question_option, patch_question_options, remove_question_option};
-use question::{add_question, drop_question_kind, move_question, patch_questions, remove_question};
-use selection::set_selection;
-use step::{add_step, move_step, patch_step, remove_step, update_form};
-use try_wizard::{next_step, previous_step, reset_try, set_try_value, set_try_values, submit};
-use vector::{add_vector_field, patch_vector_field, remove_vector_field};
+
 //#endregion 🔖️Commands
 
 //#region 🔖️Io

@@ -418,22 +418,30 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🧬️example/🦀️component.rs"]
-            pub mod example;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔵️node/🦀️component.rs"]
-            pub mod node;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔗️relationship/🦀️component.rs"]
-            pub mod relationship;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗑️delete/🦀️component.rs"]
-            pub mod delete;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔄️layout/🦀️component.rs"]
-            pub mod layout;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🖱️pointer/🦀️component.rs"]
-            pub mod pointer;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗣️locale/🦀️component.rs"]
-            pub mod locale;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🧬️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔵️add-node/🦀️component.rs"]
+            pub mod add_node;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔗️add-relationship/🦀️component.rs"]
+            pub mod add_relationship;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗑️delete-selection/🦀️component.rs"]
+            pub mod delete_selection;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔄️force-layout/🦀️component.rs"]
+            pub mod force_layout;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🔄️reorganize/🦀️component.rs"]
+            pub mod reorganize;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
+            pub mod canvas_pointer_down;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
+            pub mod canvas_pointer_move;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
+            pub mod canvas_pointer_up;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗂️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗂️document-select/🦀️component.rs"]
+            pub mod document_select;
+            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
         }
 
         #[path = "."]

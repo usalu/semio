@@ -965,7 +965,7 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::schema::{AssignmentJson, Lhs, PatternJson, Rhs};
-    use crate::lexer::{TokenSpan as JackTokenSpan}; use math::graph::dsl::Completion as JackCompletion;
+    use crate::lexer::{TokenSpan as JackTokenSpan}; use graph::dsl::Completion as JackCompletion;
     use store::ArtifactDsl;
 
     fn nakagin_graph() -> Graph {

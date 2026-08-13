@@ -7,8 +7,12 @@
 //! This file is a routing table: `handle` → `DrawCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::apps::draw::commands::canvas::DrawSession;
-use crate::apps::draw::commands::{canvas, document, layer, view};
+use crate::apps::draw::commands::canvas_pointer_down::DrawSession;
+use crate::apps::draw::commands::{
+    add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, clear_selection, combine_boolean,
+    commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, move_layer, patch_layer, patch_layers, select_all, set_active_example,
+    set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_hover, set_locale, set_selected_opacity, set_selection, set_snapshot, toggle_layer_visible,
+};
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::apps::draw::presence::{DrawPresence, DrawPresenceMutation};
 use crate::apps::draw::modes::edit;
@@ -96,10 +100,7 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use document::{commit_document, set_active_example, set_snapshot, set_fixture_json};
-use layer::{add_layer, combine_boolean, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_selected_opacity, toggle_layer_visible};
-use view::{clear_selection, engagement_input, engagement_submit, select_all, set_active_utility, set_camera, set_camera_zoom, set_hover, set_locale, set_selection};
-use canvas::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
+
 //#endregion 🔖️Commands
 
 //#region 🔖️DrawPlayApp

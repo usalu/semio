@@ -41,7 +41,7 @@ mod tests {
     #[test]
     fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
         let mut app = fem3d_app();
-        crate::apps::fem3d::testkit::dispatch(&mut app, crate::apps::fem3d::Fem3dCommand::SetActiveExample(crate::apps::fem3d::commands::example::set_active_example::SetActiveExample { example_id: "default".into() }));
+        crate::apps::fem3d::testkit::dispatch(&mut app, crate::apps::fem3d::Fem3dCommand::SetActiveExample(crate::apps::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
         let json = render_body(&mut app, FEM3D_BODY_MODEL);
         assert!(json.contains("solid-sol1"), "expected a solid- mesh/instance id for the example fixture's solid: {json}");
         assert!(json.contains("el-e1"), "expected a single oriented box instance per member (no -{{i}} sphere chain): {json}");

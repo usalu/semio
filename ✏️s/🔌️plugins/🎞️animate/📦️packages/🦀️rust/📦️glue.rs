@@ -462,18 +462,44 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🎬️present/🎮️commands/🀄️tile/🦀️component.rs"]
-            pub mod tile;
-            #[path = "../../🎛️apps/🎬️present/🎮️commands/🌐️grid/🦀️component.rs"]
-            pub mod grid;
-            #[path = "../../🎛️apps/🎬️present/🎮️commands/🖼️source/🦀️component.rs"]
-            pub mod source;
-            #[path = "../../🎛️apps/🎬️present/🎮️commands/⌨️engagement/🦀️component.rs"]
-            pub mod engagement;
-            #[path = "../../🎛️apps/🎬️present/🎮️commands/👁️view/🦀️component.rs"]
-            pub mod view;
-            #[path = "../../🎛️apps/🎬️present/🎮️commands/🐚️shell/🦀️component.rs"]
-            pub mod shell;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🀄️add-tile/🦀️component.rs"]
+            pub mod add_tile;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🀄️delete-tile/🦀️component.rs"]
+            pub mod delete_tile;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🀄️delete-selection/🦀️component.rs"]
+            pub mod delete_selection;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🀄️rename-tiles/🦀️component.rs"]
+            pub mod rename_tiles;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🀄️patch-tile-crops/🦀️component.rs"]
+            pub mod patch_tile_crops;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🌐️seed-grid/🦀️component.rs"]
+            pub mod seed_grid;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🌐️reset-grid/🦀️component.rs"]
+            pub mod reset_grid;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🌐️clear-tiles/🦀️component.rs"]
+            pub mod clear_tiles;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🖼️set-source/🦀️component.rs"]
+            pub mod set_source;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🖼️set-frame/🦀️component.rs"]
+            pub mod set_frame;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🖼️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/⌨️engagement-submit/🦀️component.rs"]
+            pub mod engagement_submit;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/⌨️engagement-input/🦀️component.rs"]
+            pub mod engagement_input;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/👁️set-selected-ids/🦀️component.rs"]
+            pub mod set_selected_ids;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/👁️canvas-pointer-down/🦀️component.rs"]
+            pub mod canvas_pointer_down;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/👁️no-operation/🦀️component.rs"]
+            pub mod no_operation;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/👁️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🐚️copy-prompt/🦀️component.rs"]
+            pub mod copy_prompt;
+            #[path = "../../🎛️apps/🎬️present/🎮️commands/🐚️export-video-from-deck/🦀️component.rs"]
+            pub mod export_video_from_deck;
         }
 
         #[path = "."]

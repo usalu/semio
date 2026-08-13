@@ -336,13 +336,13 @@ pub fn render(spec: &FormsSnapshot, config: &FormsConfig, term_labels: &FormsLab
 mod tests {
     use super::*;
     use crate::apps::forms::testkit::{building_component_contributions, building_component_question, dispatch, forms_app, render as render_body};
-    use crate::apps::forms::commands::selection::set_selection::SetSelection;
+    use crate::apps::forms::commands::set_selection::SetSelection;
     use crate::apps::forms::FORMS_PLAY_BODY_INSPECTION as BODY_INSPECTION;
     use crate::apps::forms::FormsCommand;
 
     #[test]
     fn kind_editor_fields_are_editable_when_unset() {
-        let question = crate::apps::forms::commands::question::question_shell("q-num".into(), "Amount".into(), "number".into());
+        let question = crate::apps::forms::commands::add_question::question_shell("q-num".into(), "Amount".into(), "number".into());
         let fields = question_kind_editor_fields(&question, &["q-num".into()], &[], "forms-blueprint.q-num", crate::apps::forms::terminology::forms_play_labels(&FormsConfig::default()));
         let json = serde_json::to_string(&fields).unwrap();
         assert!(json.contains("forms-blueprint.q-num.min"));

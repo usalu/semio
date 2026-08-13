@@ -162,7 +162,7 @@ fn placeholder_tree(id: &str, child: UiNode) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::flow::commands::selection::set_selection::SetSelection;
+    use crate::apps::flow::commands::set_selection::SetSelection;
     use crate::apps::flow::testkit::{dispatch, flow_app, render as render_body};
     use crate::apps::flow::FlowCommand;
 

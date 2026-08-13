@@ -9,11 +9,16 @@
 //! This file is a routing table: `handle` → `FlowCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::apps::flow::commands::{catalogue, eval, extension, grid, layout, locale, lod, node_graph, selection, synapse, view, widget};
+use crate::apps::flow::commands::{
+    add_widget, clear_selection, connect_media_ports, context_menu_at, delete_selection, disconnect, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, graph_pointer_down,
+    move_media_node, node_graph_edit, node_graph_hover, node_graph_select, node_graph_viewport, open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, replace_image,
+    reorganize, run_extension_action, select_all, select_node, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale,
+    set_lod_mode, set_preview_off, set_proximity_distance, set_selection, spotlight_commit, toggle_extension,
+};
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::apps::flow::presence::{FlowPresence, FlowPresenceMutation};
 use crate::apps::flow::modes::edit::windows::{compiled, main};
-use crate::apps::flow::modes::generate::commands::generation;
+use crate::apps::flow::modes::generate::commands::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 use crate::apps::flow::modes::generate::windows::{form, generations, preview};
 use crate::apps::flow::modes::{edit, generate};
 use crate::apps::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -183,21 +188,7 @@ semio_framework_plugin::app_commands! {
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
-// payload module is imported here under its own flat name. `reorganize`/`evaluate` collide with their
-// containing command-group modules and are aliased.
-use catalogue::set_catalogue_sections;
-use eval::{evaluate, flow_eval_resolve, flow_eval_tick};
-use extension::{run_extension_action, set_contributions, toggle_extension};
-use generation::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
-use grid::{set_grid_factor, set_grid_snap_enabled, set_grid_visible};
-use locale::set_locale;
-use lod::{set_lod_mode, set_proximity_distance};
-use node_graph::{node_graph_edit, spotlight_commit};
-use layout::reorganize;
-use selection::{clear_selection, context_menu_at, delete_selection, focus_selection, graph_pointer_down, node_graph_select, select_all, select_node, set_selection};
-use synapse::{connect_media_ports, disconnect};
-use view::{node_graph_hover, node_graph_viewport, open_spotlight, replace_image, set_preview_off};
-use widget::{add_widget, move_media_node, patch_flow_widgets, remove_widget, rename_flow_widget};
+// payload module is imported at file top under its own flat name.
 //#endregion 🔖️Commands
 
 //#region 🔖️ContextMenu
@@ -321,7 +312,7 @@ impl ArtifactApp for FlowPlayApp {
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
     fn pending_effects(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
-        with_process_flow_eval_session(|session| eval::evaluate_result(doc.snapshot, cfg.snapshot, session).effects)
+        with_process_flow_eval_session(|session| evaluate::evaluate_result(doc.snapshot, cfg.snapshot, session).effects)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> UiNode {

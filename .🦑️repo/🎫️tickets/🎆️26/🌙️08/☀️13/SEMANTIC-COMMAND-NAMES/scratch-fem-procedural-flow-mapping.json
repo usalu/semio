@@ -1,0 +1,1388 @@
+{
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs": [
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️set-show-mode/🦀️component.rs",
+      "new_mod": "set_show_mode",
+      "kebab": "set-show-mode",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️set-show-mode",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-down/🦀️component.rs",
+      "new_mod": "canvas_pointer_down",
+      "kebab": "canvas-pointer-down",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-down",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-move/🦀️component.rs",
+      "new_mod": "canvas_pointer_move",
+      "kebab": "canvas-pointer-move",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-move",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-up/🦀️component.rs",
+      "new_mod": "canvas_pointer_up",
+      "kebab": "canvas-pointer-up",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-up",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️canvas-wheel/🦀️component.rs",
+      "new_mod": "canvas_wheel",
+      "kebab": "canvas-wheel",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/👁️canvas-wheel",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs": [
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️node-graph-edit/🦀️component.rs",
+      "new_mod": "node_graph_edit",
+      "kebab": "node-graph-edit",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️node-graph-edit",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️move-media-node/🦀️component.rs",
+      "new_mod": "move_media_node",
+      "kebab": "move-media-node",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️move-media-node",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️connect-media-ports/🦀️component.rs",
+      "new_mod": "connect_media_ports",
+      "kebab": "connect-media-ports",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️connect-media-ports",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️reorganize/🦀️component.rs",
+      "new_mod": "reorganize",
+      "kebab": "reorganize",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️reorganize",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️node-graph-viewport/🦀️component.rs",
+      "new_mod": "node_graph_viewport",
+      "kebab": "node-graph-viewport",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️node-graph-viewport",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️node-graph-select/🦀️component.rs",
+      "new_mod": "node_graph_select",
+      "kebab": "node-graph-select",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️node-graph-select",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️node-graph-hover/🦀️component.rs",
+      "new_mod": "node_graph_hover",
+      "kebab": "node-graph-hover",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🕸️node-graph-hover",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗂️select-node/🦀️component.rs",
+      "new_mod": "select_node",
+      "kebab": "select-node",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗂️select-node",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🗣️set-locale",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧩️widget/🦀️component.rs": [
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧩️add-widget/🦀️component.rs",
+      "new_mod": "add_widget",
+      "kebab": "add-widget",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧩️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧩️add-widget",
+      "delete_old": true
+    },
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧩️remove-widget/🦀️component.rs",
+      "new_mod": "remove_widget",
+      "kebab": "remove-widget",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧩️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧩️remove-widget",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs": [
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️add-generation/🦀️component.rs",
+      "new_mod": "add_generation",
+      "kebab": "add-generation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️add-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️remove-generation/🦀️component.rs",
+      "new_mod": "remove_generation",
+      "kebab": "remove-generation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️remove-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️rename-generation/🦀️component.rs",
+      "new_mod": "rename_generation",
+      "kebab": "rename-generation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️rename-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️update-generation-values/🦀️component.rs",
+      "new_mod": "update_generation_values",
+      "kebab": "update-generation-values",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️update-generation-values",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️select-generation/🦀️component.rs",
+      "new_mod": "select_generation",
+      "kebab": "select-generation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️select-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️enter-generate/🦀️component.rs",
+      "new_mod": "enter_generate",
+      "kebab": "enter-generate",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧬️enter-generate",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️eval/🦀️component.rs": [
+    {
+      "old_mod": "eval",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️set-eval-outputs/🦀️component.rs",
+      "new_mod": "set_eval_outputs",
+      "kebab": "set-eval-outputs",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️eval/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️set-eval-outputs",
+      "delete_old": true
+    },
+    {
+      "old_mod": "eval",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️flow-eval-tick/🦀️component.rs",
+      "new_mod": "flow_eval_tick",
+      "kebab": "flow-eval-tick",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️eval/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🎮️commands/🧮️flow-eval-tick",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️sun/🦀️component.rs": [
+    {
+      "old_mod": "sun",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️toggle-sun/🦀️component.rs",
+      "new_mod": "toggle_sun",
+      "kebab": "toggle-sun",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️sun/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️toggle-sun",
+      "delete_old": true
+    },
+    {
+      "old_mod": "sun",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-azimuth/🦀️component.rs",
+      "new_mod": "set_sun_azimuth",
+      "kebab": "set-sun-azimuth",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️sun/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-azimuth",
+      "delete_old": true
+    },
+    {
+      "old_mod": "sun",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-elevation/🦀️component.rs",
+      "new_mod": "set_sun_elevation",
+      "kebab": "set-sun-elevation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️sun/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-elevation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "sun",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-intensity/🦀️component.rs",
+      "new_mod": "set_sun_intensity",
+      "kebab": "set-sun-intensity",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️sun/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-intensity",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs": [
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️set-lod-mode/🦀️component.rs",
+      "new_mod": "set_lod_mode",
+      "kebab": "set-lod-mode",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️set-lod-mode",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️set-show-mode/🦀️component.rs",
+      "new_mod": "set_show_mode",
+      "kebab": "set-show-mode",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️set-show-mode",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️set-camera/🦀️component.rs",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️set-camera",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️set-active-utility/🦀️component.rs",
+      "new_mod": "set_active_utility",
+      "kebab": "set-active-utility",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/👁️set-active-utility",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs": [
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-edit/🦀️component.rs",
+      "new_mod": "node_graph_edit",
+      "kebab": "node-graph-edit",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-edit",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️move-media-node/🦀️component.rs",
+      "new_mod": "move_media_node",
+      "kebab": "move-media-node",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️move-media-node",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️reorganize/🦀️component.rs",
+      "new_mod": "reorganize",
+      "kebab": "reorganize",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️reorganize",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-viewport/🦀️component.rs",
+      "new_mod": "node_graph_viewport",
+      "kebab": "node-graph-viewport",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-viewport",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-select/🦀️component.rs",
+      "new_mod": "node_graph_select",
+      "kebab": "node-graph-select",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-select",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-hover/🦀️component.rs",
+      "new_mod": "node_graph_hover",
+      "kebab": "node-graph-hover",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-hover",
+      "delete_old": true
+    },
+    {
+      "old_mod": "graph",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph-pointer-down/🦀️component.rs",
+      "new_mod": "graph_pointer_down",
+      "kebab": "graph-pointer-down",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🕸️graph-pointer-down",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️select-node/🦀️component.rs",
+      "new_mod": "select_node",
+      "kebab": "select-node",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️select-node",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️set-hover/🦀️component.rs",
+      "new_mod": "set_hover",
+      "kebab": "set-hover",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️set-hover",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️world-pointer-down/🦀️component.rs",
+      "new_mod": "world_pointer_down",
+      "kebab": "world-pointer-down",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️world-pointer-down",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️world-select/🦀️component.rs",
+      "new_mod": "world_select",
+      "kebab": "world-select",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️world-select",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️world-hover/🦀️component.rs",
+      "new_mod": "world_hover",
+      "kebab": "world-hover",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️world-hover",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-method/🦀️component.rs",
+      "new_mod": "set_selection_method",
+      "kebab": "set-selection-method",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-method",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗣️set-locale",
+      "delete_old": true
+    },
+    {
+      "old_mod": "locale",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗣️set-contributions/🦀️component.rs",
+      "new_mod": "set_contributions",
+      "kebab": "set-contributions",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🗣️set-contributions",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️widget/🦀️component.rs": [
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️delete-selection/🦀️component.rs",
+      "new_mod": "delete_selection",
+      "kebab": "delete-selection",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️delete-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️remove-widget/🦀️component.rs",
+      "new_mod": "remove_widget",
+      "kebab": "remove-widget",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️remove-widget",
+      "delete_old": true
+    },
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️add-widget/🦀️component.rs",
+      "new_mod": "add_widget",
+      "kebab": "add-widget",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️add-widget",
+      "delete_old": true
+    },
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️patch-flow-widgets/🦀️component.rs",
+      "new_mod": "patch_flow_widgets",
+      "kebab": "patch-flow-widgets",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧩️patch-flow-widgets",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️generation/🦀️component.rs": [
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️add-generation/🦀️component.rs",
+      "new_mod": "add_generation",
+      "kebab": "add-generation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️add-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️remove-generation/🦀️component.rs",
+      "new_mod": "remove_generation",
+      "kebab": "remove-generation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️remove-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️rename-generation/🦀️component.rs",
+      "new_mod": "rename_generation",
+      "kebab": "rename-generation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️rename-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️update-generation-values/🦀️component.rs",
+      "new_mod": "update_generation_values",
+      "kebab": "update-generation-values",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️update-generation-values",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️select-generation/🦀️component.rs",
+      "new_mod": "select_generation",
+      "kebab": "select-generation",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧬️select-generation",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️gumball/🦀️component.rs": [
+    {
+      "old_mod": "gumball",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️translate-selection/🦀️component.rs",
+      "new_mod": "translate_selection",
+      "kebab": "translate-selection",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️gumball/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️translate-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "gumball",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️rotate-selection/🦀️component.rs",
+      "new_mod": "rotate_selection",
+      "kebab": "rotate-selection",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️gumball/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️rotate-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "gumball",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️scale-selection/🦀️component.rs",
+      "new_mod": "scale_selection",
+      "kebab": "scale-selection",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️gumball/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧭️scale-selection",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs": [
+    {
+      "old_mod": "eval",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️flow-eval-tick/🦀️component.rs",
+      "new_mod": "flow_eval_tick",
+      "kebab": "flow-eval-tick",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️flow-eval-tick",
+      "delete_old": true
+    },
+    {
+      "old_mod": "eval",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️flow-eval-resolve/🦀️component.rs",
+      "new_mod": "flow_eval_resolve",
+      "kebab": "flow-eval-resolve",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️flow-eval-resolve",
+      "delete_old": true
+    },
+    {
+      "old_mod": "eval",
+      "new_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️flow-tessellate-resolve/🦀️component.rs",
+      "new_mod": "flow_tessellate_resolve",
+      "kebab": "flow-tessellate-resolve",
+      "old_rel": "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️eval/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🎮️commands/🧮️flow-tessellate-resolve",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️generation/🦀️component.rs": [
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️add-generation/🦀️component.rs",
+      "new_mod": "add_generation",
+      "kebab": "add-generation",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️add-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️remove-generation/🦀️component.rs",
+      "new_mod": "remove_generation",
+      "kebab": "remove-generation",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️remove-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️select-generation/🦀️component.rs",
+      "new_mod": "select_generation",
+      "kebab": "select-generation",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️select-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️rename-generation/🦀️component.rs",
+      "new_mod": "rename_generation",
+      "kebab": "rename-generation",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️rename-generation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "generation",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️update-generation-values/🦀️component.rs",
+      "new_mod": "update_generation_values",
+      "kebab": "update-generation-values",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️generation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️update-generation-values",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️grid/🦀️component.rs": [
+    {
+      "old_mod": "grid",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️set-grid-visible/🦀️component.rs",
+      "new_mod": "set_grid_visible",
+      "kebab": "set-grid-visible",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️grid/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️set-grid-visible",
+      "delete_old": true
+    },
+    {
+      "old_mod": "grid",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️set-grid-snap-enabled/🦀️component.rs",
+      "new_mod": "set_grid_snap_enabled",
+      "kebab": "set-grid-snap-enabled",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️grid/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️set-grid-snap-enabled",
+      "delete_old": true
+    },
+    {
+      "old_mod": "grid",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️set-grid-factor/🦀️component.rs",
+      "new_mod": "set_grid_factor",
+      "kebab": "set-grid-factor",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️grid/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🌐️set-grid-factor",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️view/🦀️component.rs": [
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️node-graph-viewport/🦀️component.rs",
+      "new_mod": "node_graph_viewport",
+      "kebab": "node-graph-viewport",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️node-graph-viewport",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️node-graph-hover/🦀️component.rs",
+      "new_mod": "node_graph_hover",
+      "kebab": "node-graph-hover",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️node-graph-hover",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️open-spotlight/🦀️component.rs",
+      "new_mod": "open_spotlight",
+      "kebab": "open-spotlight",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️open-spotlight",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️replace-image/🦀️component.rs",
+      "new_mod": "replace_image",
+      "kebab": "replace-image",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️replace-image",
+      "delete_old": true
+    },
+    {
+      "old_mod": "view",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️set-preview-off/🦀️component.rs",
+      "new_mod": "set_preview_off",
+      "kebab": "set-preview-off",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️view/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/👁️set-preview-off",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔄️layout/🦀️component.rs": [
+    {
+      "old_mod": "layout",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔄️reorganize/🦀️component.rs",
+      "new_mod": "reorganize",
+      "kebab": "reorganize",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔄️layout/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔄️reorganize",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔗️synapse/🦀️component.rs": [
+    {
+      "old_mod": "synapse",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔗️disconnect/🦀️component.rs",
+      "new_mod": "disconnect",
+      "kebab": "disconnect",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔗️synapse/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔗️disconnect",
+      "delete_old": true
+    },
+    {
+      "old_mod": "synapse",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔗️connect-media-ports/🦀️component.rs",
+      "new_mod": "connect_media_ports",
+      "kebab": "connect-media-ports",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔗️synapse/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔗️connect-media-ports",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔭️lod/🦀️component.rs": [
+    {
+      "old_mod": "lod",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔭️set-lod-mode/🦀️component.rs",
+      "new_mod": "set_lod_mode",
+      "kebab": "set-lod-mode",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔭️lod/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔭️set-lod-mode",
+      "delete_old": true
+    },
+    {
+      "old_mod": "lod",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔭️set-proximity-distance/🦀️component.rs",
+      "new_mod": "set_proximity_distance",
+      "kebab": "set-proximity-distance",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔭️lod/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🔭️set-proximity-distance",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️node-graph/🦀️component.rs": [
+    {
+      "old_mod": "node_graph",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️node-graph-edit/🦀️component.rs",
+      "new_mod": "node_graph_edit",
+      "kebab": "node-graph-edit",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️node-graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️node-graph-edit",
+      "delete_old": true
+    },
+    {
+      "old_mod": "node_graph",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️spotlight-commit/🦀️component.rs",
+      "new_mod": "spotlight_commit",
+      "kebab": "spotlight-commit",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️node-graph/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️spotlight-commit",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️delete-selection/🦀️component.rs",
+      "new_mod": "delete_selection",
+      "kebab": "delete-selection",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️delete-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️select-all/🦀️component.rs",
+      "new_mod": "select_all",
+      "kebab": "select-all",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️select-all",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️focus-selection/🦀️component.rs",
+      "new_mod": "focus_selection",
+      "kebab": "focus-selection",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️focus-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️select-node/🦀️component.rs",
+      "new_mod": "select_node",
+      "kebab": "select-node",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️select-node",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️node-graph-select/🦀️component.rs",
+      "new_mod": "node_graph_select",
+      "kebab": "node-graph-select",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️node-graph-select",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️clear-selection/🦀️component.rs",
+      "new_mod": "clear_selection",
+      "kebab": "clear-selection",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️clear-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️graph-pointer-down/🦀️component.rs",
+      "new_mod": "graph_pointer_down",
+      "kebab": "graph-pointer-down",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️graph-pointer-down",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️context-menu-at/🦀️component.rs",
+      "new_mod": "context_menu_at",
+      "kebab": "context-menu-at",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗂️context-menu-at",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗣️locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🗣️set-locale",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🛍️catalogue/🦀️component.rs": [
+    {
+      "old_mod": "catalogue",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🛍️set-catalogue-sections/🦀️component.rs",
+      "new_mod": "set_catalogue_sections",
+      "kebab": "set-catalogue-sections",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🛍️catalogue/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🛍️set-catalogue-sections",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️extension/🦀️component.rs": [
+    {
+      "old_mod": "extension",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️toggle-extension/🦀️component.rs",
+      "new_mod": "toggle_extension",
+      "kebab": "toggle-extension",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️extension/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️toggle-extension",
+      "delete_old": true
+    },
+    {
+      "old_mod": "extension",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️run-extension-action/🦀️component.rs",
+      "new_mod": "run_extension_action",
+      "kebab": "run-extension-action",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️extension/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️run-extension-action",
+      "delete_old": true
+    },
+    {
+      "old_mod": "extension",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️set-contributions/🦀️component.rs",
+      "new_mod": "set_contributions",
+      "kebab": "set-contributions",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️extension/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧩️set-contributions",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️eval/🦀️component.rs": [
+    {
+      "old_mod": "eval",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️evaluate/🦀️component.rs",
+      "new_mod": "evaluate",
+      "kebab": "evaluate",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️eval/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️evaluate",
+      "delete_old": true
+    },
+    {
+      "old_mod": "eval",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️flow-eval-tick/🦀️component.rs",
+      "new_mod": "flow_eval_tick",
+      "kebab": "flow-eval-tick",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️eval/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️flow-eval-tick",
+      "delete_old": true
+    },
+    {
+      "old_mod": "eval",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️flow-eval-resolve/🦀️component.rs",
+      "new_mod": "flow_eval_resolve",
+      "kebab": "flow-eval-resolve",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️eval/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🧮️flow-eval-resolve",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️widget/🦀️component.rs": [
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️add-widget/🦀️component.rs",
+      "new_mod": "add_widget",
+      "kebab": "add-widget",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️add-widget",
+      "delete_old": true
+    },
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️remove-widget/🦀️component.rs",
+      "new_mod": "remove_widget",
+      "kebab": "remove-widget",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️remove-widget",
+      "delete_old": true
+    },
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️rename-flow-widget/🦀️component.rs",
+      "new_mod": "rename_flow_widget",
+      "kebab": "rename-flow-widget",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️rename-flow-widget",
+      "delete_old": true
+    },
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️patch-flow-widgets/🦀️component.rs",
+      "new_mod": "patch_flow_widgets",
+      "kebab": "patch-flow-widgets",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️patch-flow-widgets",
+      "delete_old": true
+    },
+    {
+      "old_mod": "widget",
+      "new_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️move-media-node/🦀️component.rs",
+      "new_mod": "move_media_node",
+      "kebab": "move-media-node",
+      "old_rel": "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️widget/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🪟️move-media-node",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🎥️camera/🦀️component.rs": [
+    {
+      "old_mod": "camera",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🎥️set-camera/🦀️component.rs",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🎥️camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🎥️set-camera",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️loads/🦀️component.rs": [
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-nodal-load/🦀️component.rs",
+      "new_mod": "add_nodal_load",
+      "kebab": "add-nodal-load",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-nodal-load",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-member-udl/🦀️component.rs",
+      "new_mod": "add_member_udl",
+      "kebab": "add-member-udl",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-member-udl",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-area-load/🦀️component.rs",
+      "new_mod": "add_area_load",
+      "kebab": "add-area-load",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-area-load",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-load-case/🦀️component.rs",
+      "new_mod": "add_load_case",
+      "kebab": "add-load-case",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-load-case",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-combination/🦀️component.rs",
+      "new_mod": "add_combination",
+      "kebab": "add-combination",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️add-combination",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️set-self-weight/🦀️component.rs",
+      "new_mod": "set_self_weight",
+      "kebab": "set-self-weight",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🏋️set-self-weight",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/👁️results/🦀️component.rs": [
+    {
+      "old_mod": "results",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/👁️set-result-display/🦀️component.rs",
+      "new_mod": "set_result_display",
+      "kebab": "set-result-display",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/👁️results/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/👁️set-result-display",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️set-active-example",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🗂️remove-selection/🦀️component.rs",
+      "new_mod": "remove_selection",
+      "kebab": "remove-selection",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🗂️remove-selection",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs": [
+    {
+      "old_mod": "locale",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🗣️set-locale/🦀️component.rs",
+      "new_mod": "set_locale",
+      "kebab": "set-locale",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🗣️set-locale",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧮️analysis/🦀️component.rs": [
+    {
+      "old_mod": "analysis",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧮️set-analysis-settings/🦀️component.rs",
+      "new_mod": "set_analysis_settings",
+      "kebab": "set-analysis-settings",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧮️analysis/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧮️set-analysis-settings",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs": [
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-node/🦀️component.rs",
+      "new_mod": "add_node",
+      "kebab": "add-node",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-node",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-bar/🦀️component.rs",
+      "new_mod": "add_bar",
+      "kebab": "add-bar",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-bar",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-beam/🦀️component.rs",
+      "new_mod": "add_beam",
+      "kebab": "add-beam",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-beam",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-material/🦀️component.rs",
+      "new_mod": "add_material",
+      "kebab": "add-material",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-material",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-section/🦀️component.rs",
+      "new_mod": "add_section",
+      "kebab": "add-section",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-section",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-support/🦀️component.rs",
+      "new_mod": "add_support",
+      "kebab": "add-support",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-support",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-region/🦀️component.rs",
+      "new_mod": "add_region",
+      "kebab": "add-region",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/🧱️add-region",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs": [
+    {
+      "old_mod": "camera",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🎥️set-camera/🦀️component.rs",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🎥️set-camera",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs": [
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-nodal-load/🦀️component.rs",
+      "new_mod": "add_nodal_load",
+      "kebab": "add-nodal-load",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-nodal-load",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-member-udl/🦀️component.rs",
+      "new_mod": "add_member_udl",
+      "kebab": "add-member-udl",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-member-udl",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-area-load/🦀️component.rs",
+      "new_mod": "add_area_load",
+      "kebab": "add-area-load",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-area-load",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-load-case/🦀️component.rs",
+      "new_mod": "add_load_case",
+      "kebab": "add-load-case",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-load-case",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-combination/🦀️component.rs",
+      "new_mod": "add_combination",
+      "kebab": "add-combination",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️add-combination",
+      "delete_old": true
+    },
+    {
+      "old_mod": "loads",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️set-self-weight/🦀️component.rs",
+      "new_mod": "set_self_weight",
+      "kebab": "set-self-weight",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️loads/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🏋️set-self-weight",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/👁️results/🦀️component.rs": [
+    {
+      "old_mod": "results",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/👁️set-result-display/🦀️component.rs",
+      "new_mod": "set_result_display",
+      "kebab": "set-result-display",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/👁️results/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/👁️set-result-display",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️set-active-example",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🗂️remove-selection/🦀️component.rs",
+      "new_mod": "remove_selection",
+      "kebab": "remove-selection",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🗂️remove-selection",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧮️analysis/🦀️component.rs": [
+    {
+      "old_mod": "analysis",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧮️set-analysis-settings/🦀️component.rs",
+      "new_mod": "set_analysis_settings",
+      "kebab": "set-analysis-settings",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧮️analysis/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧮️set-analysis-settings",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs": [
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-node/🦀️component.rs",
+      "new_mod": "add_node",
+      "kebab": "add-node",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-node",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-bar/🦀️component.rs",
+      "new_mod": "add_bar",
+      "kebab": "add-bar",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-bar",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-frame/🦀️component.rs",
+      "new_mod": "add_frame",
+      "kebab": "add-frame",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-frame",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-material/🦀️component.rs",
+      "new_mod": "add_material",
+      "kebab": "add-material",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-material",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-section/🦀️component.rs",
+      "new_mod": "add_section",
+      "kebab": "add-section",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-section",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-support/🦀️component.rs",
+      "new_mod": "add_support",
+      "kebab": "add-support",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-support",
+      "delete_old": true
+    },
+    {
+      "old_mod": "model",
+      "new_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-solid/🦀️component.rs",
+      "new_mod": "add_solid",
+      "kebab": "add-solid",
+      "old_rel": "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️model/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/🧱️add-solid",
+      "delete_old": true
+    }
+  ]
+}

@@ -3,7 +3,7 @@ name = "semio-framework-3d"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Generic 3D geometry kernel - native B-Rep kernel, half-edge mesh, scene math, and BVH spatial index"
+description = "Generic 3D geometry kernel - native B-Rep kernel, half-edge mesh, and BVH spatial index"
 
 [lints]
 workspace = true
@@ -32,6 +32,6 @@ rayon = { version = "1.10.0", optional = true }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-semio-framework-math = { workspace = true }
+semio-framework-number = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-os-kernel = { workspace = true, optional = true }

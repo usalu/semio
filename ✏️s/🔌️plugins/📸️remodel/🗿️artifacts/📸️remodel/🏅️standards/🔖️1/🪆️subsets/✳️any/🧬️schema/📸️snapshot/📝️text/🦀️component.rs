@@ -127,12 +127,5 @@ mod tests {
     fn populated_scene_roundtrips_through_dsl() {
         store::os_store::test_support::assert_dsl_round_trip(&populated_scene_fixture());
     }
-
-    #[test]
-    fn debug_verify_example_dsl_semio_fixture_parses() {
-        let text = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
-        let parsed = <RemodelSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("regenerated fixture parses");
-        assert_eq!(parsed.results.mesh.source, crate::artifacts::remodel::MeshSource::Placeholder);
-    }
 }
 //#endregion 🧪️Tests

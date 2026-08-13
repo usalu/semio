@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-number"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Arbitrary-precision integers/rationals, modular arithmetic, primality/factorization, certified interval arithmetic, and the Ring-through-Field abstract-algebra trait hierarchy — the framework-internal exact-numeric vocabulary every framework crate may name without reaching a plugin."
+
+[package.metadata.semio]
+role = "framework"
+id = "number"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_number"
+path = "📦️glue.rs"
+
+[dependencies]

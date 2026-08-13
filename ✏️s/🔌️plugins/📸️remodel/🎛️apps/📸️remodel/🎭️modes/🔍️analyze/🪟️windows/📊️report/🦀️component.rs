@@ -76,7 +76,7 @@ pub fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::remodel::commands::view::set_report_table::SetReportTable;
+    use crate::apps::remodel::commands::set_report_table::SetReportTable;
     use crate::apps::remodel::testkit::{app, dispatch, render as render_body};
     use crate::apps::remodel::RemodelCommand;
     use crate::artifacts::remodel::default_remodel_scene;

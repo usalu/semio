@@ -243,7 +243,7 @@ mod tests {
     #[test]
     fn layout_labels_translate_document_tree_in_german() {
         use crate::apps::layout::testkit::dispatch;
-        use crate::apps::layout::commands::view::set_locale;
+        use crate::apps::layout::commands::set_locale;
         use crate::apps::layout::LayoutCommand;
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));

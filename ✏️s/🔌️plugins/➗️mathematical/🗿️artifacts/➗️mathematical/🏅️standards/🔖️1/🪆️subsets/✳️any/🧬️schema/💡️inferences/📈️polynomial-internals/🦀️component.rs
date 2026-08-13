@@ -1,4 +1,4 @@
-//! 📈️ Generic univariate and multivariate polynomials over the `math::number` algebraic trait
+//! 📈️ Generic univariate and multivariate polynomials over the `number::` algebraic trait
 //! hierarchy: arithmetic, GCD, resultants, factorization over `Z`/`Q`/`GF(p)`, Groebner bases, real
 //! root isolation via Sturm sequences, and real algebraic numbers.
 //!
@@ -6,16 +6,17 @@
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, wave M3a) — see
 //! `🌿️cas-internals/🦀️component.rs`'s doc header (its sibling in this move) for the full rationale.
 //! `crate::polynomial` self-references are preserved unedited via a crate-root `pub use … as
-//! polynomial;` alias in `📦️glue.rs`; `crate::number`/`crate::algebra` became `math::number`/
-//! `math::algebra`. Unlike `🌿️cas-internals`, nothing here references `cas` (verified one-directional
-//! in the wave M3a coupling map: `cas → polynomial`, never the reverse).
+//! polynomial;` alias in `📦️glue.rs`; `crate::number` became `number::` (wave MATHEND). Unlike
+//! `🌿️cas-internals`, this module has no `algebra` dependency at all — nothing here references `cas`
+//! either (verified one-directional in the wave M3a coupling map: `cas → polynomial`, never the
+//! reverse).
 // #region 🔖️Univariate
 pub mod univariate {
-    //! 📈️ Dense univariate polynomials, generic over the `math::number` ring hierarchy: arithmetic,
+    //! 📈️ Dense univariate polynomials, generic over the `number::` ring hierarchy: arithmetic,
     //! pseudo-division, resultants/discriminants, GCD, and (over a field) squarefree decomposition and
     //! Newton interpolation.
 
-    use math::number::{CommutativeRing, Field, GcdDomain, IntegralDomain, Ring};
+    use number::{CommutativeRing, Field, GcdDomain, IntegralDomain, Ring};
 
     // #region 🔖️PolyU
     /// 📈️ Little-endian coefficients (`coeffs[i]` is the coefficient of `x^i`); invariant: no trailing
@@ -208,8 +209,8 @@ pub mod univariate {
     impl<C: IntegralDomain> PolyU<C> {
         // #region 🔖️Resultant
         /// 🧮️ Fraction-free (Bareiss) determinant of a matrix over any integral domain — duplicated here
-        /// (rather than depending on `math::algebra`) to keep `crate::polynomial` free of a
-        /// dependency on the linear-algebra crate.
+        /// (rather than depending on `number`'s generic `MatG::det_bareiss`) to keep `crate::polynomial`
+        /// free of a dependency on the linear-algebra module.
         fn det_bareiss(mut m: Vec<Vec<C>>) -> C {
             let n = m.len();
             if n == 0 {
@@ -523,7 +524,7 @@ pub mod univariate {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use math::number::Rational;
+        use number::Rational;
 
         fn r(n: i64, d: i64) -> Rational {
             Rational::from_i64(n, d).unwrap()
@@ -628,10 +629,10 @@ pub mod univariate {
 
 // #region 🔖️Multivariate
 pub mod multivariate {
-    //! 🕸️ Sparse multivariate polynomials over the `math::number` ring hierarchy: monomial orders,
+    //! 🕸️ Sparse multivariate polynomials over the `number::` ring hierarchy: monomial orders,
     //! multivariate division, and Buchberger's Groebner-basis algorithm.
 
-    use math::number::{Field, Ring};
+    use number::{Field, Ring};
 
     // #region 🔖️MonomialOrder
     #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -992,7 +993,7 @@ pub mod multivariate {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use math::number::Rational;
+        use number::Rational;
 
         fn r(n: i64) -> Rational {
             Rational::from_i64(n, 1).unwrap()
@@ -1082,7 +1083,7 @@ pub mod finite {
     //! the modular layer that `factor.rs` lifts via Hensel's lemma to factor over `Z`/`Q`.
 
     use crate::polynomial::univariate::PolyU;
-    use math::number::ModInt;
+    use number::ModInt;
     use geometry::random::Rng;
 
     // #region 🔖️PolyModPow
@@ -1335,7 +1336,7 @@ pub mod factor {
 
     use crate::polynomial::finite::factor_mod_p;
     use crate::polynomial::univariate::PolyU;
-    use math::number::{primes, Integer, IntegralDomain, ModInt, Natural, Rational};
+    use number::{primes, Integer, IntegralDomain, ModInt, Natural, Rational};
     use geometry::random::Rng;
 
     // #region 🔖️Conversions
@@ -1792,7 +1793,7 @@ pub mod roots {
     //! rigorous isolating rational intervals for every real root, refined by bisection.
 
     use crate::polynomial::univariate::PolyU;
-    use math::number::{Integer, Rational};
+    use number::{Integer, Rational};
 
     // #region 🔖️RootBounds
     /// 📏️ Cauchy's bound: every real root of `f` has absolute value `<= 1 + max(|a_i|)/|lc|`.
@@ -1896,7 +1897,7 @@ pub mod roots {
         for (part, _) in parts {
             result = result.mul(&part);
         }
-        let denom_lcm = result.coeffs().iter().fold(math::number::Natural::one(), |acc, c| acc.mul(c.denom()).div_rem(&acc.gcd(c.denom())).0);
+        let denom_lcm = result.coeffs().iter().fold(number::Natural::one(), |acc, c| acc.mul(c.denom()).div_rem(&acc.gcd(c.denom())).0);
         PolyU::from_coeffs(result.coeffs().iter().map(|c| c.mul(&Rational::from_integer(Integer::from_natural(denom_lcm.clone()))).trunc()).collect()).primitive_part()
     }
 
@@ -1990,7 +1991,7 @@ pub mod algebraic {
     use crate::polynomial::factor::factor_integer_poly;
     use crate::polynomial::roots::{count_roots_in, isolate_real_roots, refine_root, sturm_sequence};
     use crate::polynomial::univariate::PolyU;
-    use math::number::{Integer, Rational};
+    use number::{Integer, Rational};
 
     // #region 🔖️AlgebraicReal
     /// 🌱️ A real root of `poly` (not necessarily irreducible at construction, though the constructors here
@@ -2165,7 +2166,7 @@ pub mod algebraic {
                 coeffs.push(scaled);
             }
             let rational_poly = PolyU::from_coeffs(coeffs);
-            let denom_lcm = rational_poly.coeffs().iter().fold(math::number::Natural::one(), |acc, c| {
+            let denom_lcm = rational_poly.coeffs().iter().fold(number::Natural::one(), |acc, c| {
                 let g = acc.gcd(c.denom());
                 acc.mul(c.denom()).div_rem(&g).0
             });

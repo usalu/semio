@@ -1,6 +1,6 @@
 //! 🖼️ Draw play app — the canvas window's render() (constitutional: was `ui`'s `Render` region).
 
-use crate::apps::draw::commands::canvas::{draft_preview_segments, draw_gesture, shape_preview_segments};
+use crate::apps::draw::commands::canvas_pointer_down::{draft_preview_segments, draw_gesture, shape_preview_segments};
 use crate::apps::draw::config::DrawConfig;
 use crate::artifacts::draw::schema::{draw_layer_descendant_leaf_ids, find_draw_layer, flatten_draw_document_to_scene_nodes, resolve_draw_artboard, DrawSceneNode};
 use crate::artifacts::draw::{DrawArtboard, DrawSnapshot, PathSegment};

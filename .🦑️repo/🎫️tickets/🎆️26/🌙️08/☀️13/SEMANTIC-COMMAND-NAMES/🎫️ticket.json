@@ -1,0 +1,8 @@
+{
+  "title": "Semantic Command Names",
+  "emoji": "🎮️",
+  "status": "open",
+  "description": "Refactor every app 🎮️commands/ folder so each command is its own semantically named leaf, matching 🧬️mutations/ (one verb-noun folder per operation, payload at file top level per module_inception). Noun buckets such as ✍️text that group many commands are wrong. Repo MCP was unavailable in this session (only cursor-app-control connected); ticket folder created locally.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": []
+}

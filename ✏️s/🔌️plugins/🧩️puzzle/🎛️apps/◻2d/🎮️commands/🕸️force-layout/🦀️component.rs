@@ -1,0 +1,14 @@
+//! 🕸️ `force-layout` command.
+
+use crate::apps::puzzle2d::{add_node_to_fixture, patch_inspector_nodes, Puzzle2dActionCtx};
+use serde_json::Value;
+
+/// 🌀️ Re-runs the force-graph layout over the whole fixture — shared by `forceLayout` and `reorganize`.
+pub fn force_layout(ctx: &mut Puzzle2dActionCtx<'_>) {
+    let Ok(layout_json) = crate::apps::puzzle2d::engine::apply_force_graph_layout_to_fixture_v1_json(&ctx.scene.fixture.to_string(), r#"{"mode":"force-graph"}"#) else {
+        return;
+    };
+    if let Ok(parsed) = serde_json::from_str(&layout_json) {
+        ctx.scene.fixture = parsed;
+    }
+}

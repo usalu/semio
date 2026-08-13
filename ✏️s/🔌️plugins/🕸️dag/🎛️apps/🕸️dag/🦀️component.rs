@@ -14,10 +14,10 @@
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #![allow(clippy::result_large_err)]
 
-use crate::apps::dag::commands::graph::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
-use crate::apps::dag::commands::locale::set_locale;
-use crate::apps::dag::commands::nodes::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
-use crate::apps::dag::commands::selection::{graph_pointer_down, node_graph_hover, node_graph_select, node_graph_viewport, select_node, set_selection};
+use crate::apps::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
+use crate::apps::dag::commands::set_locale;
+use crate::apps::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
+use crate::apps::dag::commands::{graph_pointer_down, node_graph_hover, node_graph_select, node_graph_viewport, select_node, set_selection};
 use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::apps::dag::modes::edit;
 use crate::apps::dag::modes::edit::windows::{compiled, main};

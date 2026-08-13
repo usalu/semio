@@ -89,6 +89,7 @@ members = [
     # not run any cargo command standalone. Adoption fixes real breakage.
     "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust",
@@ -118,6 +119,7 @@ rust-version = "1.88"
 
 [workspace.dependencies]
 semio-framework-math = { path = "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust" }
+semio-framework-number = { path = "🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust" }
 semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust" }
 semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
 # 🌐️ Canonical versions for the highest-fanout external deps, chosen as the newest

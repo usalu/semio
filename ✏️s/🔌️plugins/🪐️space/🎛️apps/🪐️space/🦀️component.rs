@@ -14,18 +14,18 @@
 //! WIRING + DISPATCH ONLY beyond that: every command's real body lives in its own
 //! `🎮️commands/<group>/🦀️component.rs` payload module (see `app_commands!` below).
 
-use crate::apps::space::commands::connections::{connect_media_ports, disconnect_media_edge};
-use crate::apps::space::commands::engagement::{compiled_dag_engagement_input, compiled_dag_engagement_submit, workflow_engagement_input, workflow_engagement_submit};
-use crate::apps::space::commands::graph_edit::node_graph_edit;
-use crate::apps::space::commands::instance_nav::{close_focused_instance, open_instance};
-use crate::apps::space::commands::media::{export_media, import_media, import_media_payload};
-use crate::apps::space::commands::navigation::{go_home, navigate_virtual_file_system_node, set_active_panel_tab, set_app_registrations};
-use crate::apps::space::commands::nodes::{copy_app_instance, delete_selection, duplicate_app_instance, move_media_node, patch_app_instances, patch_media_nodes, paste_app_instance, remove_app_instance, rename_app_instance, reorganize_workflow, spawn_app};
-use crate::apps::space::commands::parameters::{add_parameter, bind_parameter_field, patch_parameter, remove_parameter, unbind_parameter_field};
-use crate::apps::space::commands::presence::presence_heartbeat;
-use crate::apps::space::commands::selection::{node_graph_select, select_instance, set_app_instance_selection, set_media_node_selection};
-use crate::apps::space::commands::studio_io::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
-use crate::apps::space::commands::viewport::{node_graph_hover, node_graph_viewport, text_hover};
+use crate::apps::space::commands::{connect_media_ports, disconnect_media_edge};
+use crate::apps::space::commands::{compiled_dag_engagement_input, compiled_dag_engagement_submit, workflow_engagement_input, workflow_engagement_submit};
+use crate::apps::space::commands::node_graph_edit;
+use crate::apps::space::commands::{close_focused_instance, open_instance};
+use crate::apps::space::commands::{export_media, import_media, import_media_payload};
+use crate::apps::space::commands::{go_home, navigate_virtual_file_system_node, set_active_panel_tab, set_app_registrations};
+use crate::apps::space::commands::{copy_app_instance, delete_selection, duplicate_app_instance, move_media_node, patch_app_instances, patch_media_nodes, paste_app_instance, remove_app_instance, rename_app_instance, reorganize_workflow, spawn_app};
+use crate::apps::space::commands::{add_parameter, bind_parameter_field, patch_parameter, remove_parameter, unbind_parameter_field};
+use crate::apps::space::commands::presence_heartbeat;
+use crate::apps::space::commands::{node_graph_select, select_instance, set_app_instance_selection, set_media_node_selection};
+use crate::apps::space::commands::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
+use crate::apps::space::commands::{node_graph_hover, node_graph_viewport, text_hover};
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::presence::{SpacePresence, SpacePresenceMutation};
 use crate::apps::space::terminology::SStudioLabels;
@@ -710,7 +710,7 @@ mod tests {
 
     #[test]
     fn checkout_checkpoint_restores_projection() {
-        use crate::apps::space::commands::nodes::spawn_app;
+        use crate::apps::space::commands::spawn_app;
         use serde_json::json;
         testkit::seed_draw_plugin();
         let mut app = VcsArtifactApp::new(SpaceApp::default());
@@ -735,7 +735,7 @@ mod tests {
     /// would clobber the other's.
     #[test]
     fn two_instances_converge_on_disjoint_edits_via_backbone() {
-        use crate::apps::space::commands::nodes::{patch_app_instances, spawn_app};
+        use crate::apps::space::commands::{patch_app_instances, spawn_app};
         testkit::seed_draw_plugin();
         let node_id = demo_space_projection().graph.nodes.first().expect("node").id.clone();
         let rename_id = node_id.clone();

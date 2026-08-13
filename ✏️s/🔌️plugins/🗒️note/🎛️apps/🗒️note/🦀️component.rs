@@ -7,19 +7,19 @@
 //! artifact's `⚙️engine`. This file is a routing table: `handle` → `NoteCommand::dispatch`, `render` →
 //! body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::apps::note::commands::block::{add_block, delete_block, delete_selection, duplicate_block, duplicate_selection, move_block, patch_blocks};
-use crate::apps::note::commands::camera::{set_camera, set_camera_zoom};
-use crate::apps::note::commands::drawing::{set_eraser_radius, set_pencil_width};
-use crate::apps::note::commands::engagement::{engagement_input, engagement_submit, navigator_engagement_input};
-use crate::apps::note::commands::export::{load_request, save_download};
-use crate::apps::note::commands::fixture::{set_active_example, set_fixture_json};
-use crate::apps::note::commands::grid::{set_grid_opacity, set_grid_spacing, set_grid_subdivisions, set_grid_visible};
-use crate::apps::note::commands::ink::ink_apply_events;
-use crate::apps::note::commands::locale::set_locale;
-use crate::apps::note::commands::nudge::{nudge_selection, nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
-use crate::apps::note::commands::selection::{clear_selection, select_all, set_hover, set_selection};
-use crate::apps::note::commands::snap::{set_snap_enabled, set_snap_grid_spacing};
-use crate::apps::note::commands::utility::set_active_utility;
+use crate::apps::note::commands::{add_block, delete_block, delete_selection, duplicate_block, duplicate_selection, move_block, patch_blocks};
+use crate::apps::note::commands::{set_camera, set_camera_zoom};
+use crate::apps::note::commands::{set_eraser_radius, set_pencil_width};
+use crate::apps::note::commands::{engagement_input, engagement_submit, navigator_engagement_input};
+use crate::apps::note::commands::{load_request, save_download};
+use crate::apps::note::commands::{set_active_example, set_fixture_json};
+use crate::apps::note::commands::{set_grid_opacity, set_grid_spacing, set_grid_subdivisions, set_grid_visible};
+use crate::apps::note::commands::ink_apply_events;
+use crate::apps::note::commands::set_locale;
+use crate::apps::note::commands::{nudge_selection, nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
+use crate::apps::note::commands::{clear_selection, select_all, set_hover, set_selection};
+use crate::apps::note::commands::{set_snap_enabled, set_snap_grid_spacing};
+use crate::apps::note::commands::set_active_utility;
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
 use crate::apps::note::presence::{NotePresence, NotePresenceMutation};
 use crate::apps::note::modes::edit;

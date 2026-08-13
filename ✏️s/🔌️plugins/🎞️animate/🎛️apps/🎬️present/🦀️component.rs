@@ -72,7 +72,7 @@ pub fn present_io() -> AppIo {
 /// `source` image with named crop-`tiles` over it; there is no per-tile independent raster payload in
 /// this schema, so an incoming `2d.image` frame becomes a new tile positioned in a deterministic
 /// contact-sheet grid (4 columns) rather than replacing `source` — exactly the surface `seedGrid`/
-/// `addTile` (see the app's `🎮️commands/🀄️tile`/`🎮️commands/🌐️grid`) already let a user crop/arrange
+/// `addTile` (see the app's `🎮️commands/🀄️add-tile`/`🎮️commands/🌐️seed-grid`) already let a user crop/arrange
 /// candidate frames on. Pure: both functions depend only on the current tile COUNT, so repeated imports
 /// land in distinct, stable cells without needing a live host/counter.
 const FRAME_IMPORT_GRID_COLUMNS: usize = 4;
@@ -171,7 +171,7 @@ pub fn register_artifact_inferences() {
 //#endregion 🔌️Registration
 
 //#region 🔖️Helpers
-/// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️tile::add_tile` and
+/// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️add-tile::add_tile` and
 /// `🎮️commands/⌨️engagement::engagement_submit`'s `"add"` keyword.
 pub(crate) fn new_tile_id(prefix: &str) -> String {
     let serial = {
@@ -204,7 +204,7 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
 /// 📋️ Host effect delivering the generated tile-morph prompt to the user as a downloadable markdown
 /// file — the genuine shell side-effect that replaces the retired ephemeral clipboard scratch (the
 /// landed `HostEffect` contract carries no clipboard variant, so the prompt is exported as media).
-/// Shared by `🎮️commands/🐚️shell::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
+/// Shared by `🎮️commands/🐚️copy-prompt::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
 /// `"copy"`/`"copy prompt"` keywords.
 pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> HostEffect {
     let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
@@ -213,7 +213,7 @@ pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> HostEffect {
 
 /// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "reset the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
-/// `🎮️commands/🖼️source::set_active_example` uses instead of the banned whole-snapshot mutation. The
+/// `🎮️commands/🖼️set-source::set_active_example` uses instead of the banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_present_document_effect(document: &PresentSnapshot) -> HostEffect {
     let pack = <PresentSnapshot as store::ArtifactPack>::encode_pack(document);
@@ -299,7 +299,7 @@ impl ArtifactApp for AnimatePresentPlayApp {
 
     /// 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
     /// document replace has no in-history mutation at all (there is no import mutation by locked
-    /// decision — see `🎮️commands/🖼️source::set_active_example`'s `HostEffect::LoadDocument` instead).
+    /// decision — see `🎮️commands/🖼️set-source::set_active_example`'s `HostEffect::LoadDocument` instead).
 
     /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
     /// deterministic contact-sheet grid (see `next_frame_tile_crop`'s doc comment below for why this
@@ -394,7 +394,7 @@ pub fn create_animate_present_app() -> App {
                     .required()
                     .default_value("demo"),
             ])
-            // 🎛️ App-scope command — see `🎮️commands/🌐️grid::reset_grid`'s doc comment for why this
+            // 🎛️ App-scope command — see `🎮️commands/🌐️seed-grid::reset_grid`'s doc comment for why this
             // isn't `seedGrid`/`clearTiles`.
             .app_command("animate.resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document")
             .config(AnimatePresentPlayApp::config_spec())

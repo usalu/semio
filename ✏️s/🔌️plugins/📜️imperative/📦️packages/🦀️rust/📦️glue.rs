@@ -321,12 +321,30 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️step/🦀️component.rs"]
-            pub mod step;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️view/🦀️component.rs"]
-            pub mod view;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🧩️contribution/🦀️component.rs"]
-            pub mod contribution;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️add-step/🦀️component.rs"]
+            pub mod add_step;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️add-step-at/🦀️component.rs"]
+            pub mod add_step_at;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️remove-step/🦀️component.rs"]
+            pub mod remove_step;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️remove-step-at/🦀️component.rs"]
+            pub mod remove_step_at;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️move-step/🦀️component.rs"]
+            pub mod move_step;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️move-step-at/🦀️component.rs"]
+            pub mod move_step_at;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️set-step-params/🦀️component.rs"]
+            pub mod set_step_params;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️set-step-params-at/🦀️component.rs"]
+            pub mod set_step_params_at;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️run/🦀️component.rs"]
+            pub mod run;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🎛️apps/📜️imperative/🎮️commands/🧩️set-contributions/🦀️component.rs"]
+            pub mod set_contributions;
         }
 
         #[path = "."]

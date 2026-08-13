@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 }
 
 /// 🎯️ The ids one inspector `entity` group patches when an action carries no explicit `ids` — the
-/// live selection bag for that entity kind. Shared with `🎮️commands/🧊️object`'s `patch_inspector`.
+/// live selection bag for that entity kind. Shared with `🎮️commands/🧊️add-object-kind`'s `patch_inspector`.
 pub fn target_ids(entity: &str, selection: &Puzzle3dSelection) -> Vec<String> {
     match entity {
         "object" => selection.object_ids.to_vec(),

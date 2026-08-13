@@ -198,7 +198,7 @@ pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabel
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::dag::commands::selection::set_selection;
+    use crate::apps::dag::commands::set_selection;
     use crate::apps::dag::testkit::{dispatch, new_app, render as render_body};
     use crate::apps::dag::DagCommand;
 

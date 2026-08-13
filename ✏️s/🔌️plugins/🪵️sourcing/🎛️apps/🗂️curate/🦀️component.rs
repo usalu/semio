@@ -91,12 +91,12 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::apps::curate::commands::curation::{curate_add, curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
-use crate::apps::curate::commands::contribution::set_contributions;
-use crate::apps::curate::commands::document::{set_active_example, set_artifact_json, stock_from_catalogue};
-use crate::apps::curate::commands::filter::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
-use crate::apps::curate::commands::locale::set_locale;
-use crate::apps::curate::commands::selection::{select_row, world_select};
+use crate::apps::curate::commands::{curate_add, curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
+use crate::apps::curate::commands::set_contributions;
+use crate::apps::curate::commands::{set_active_example, set_artifact_json, stock_from_catalogue};
+use crate::apps::curate::commands::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
+use crate::apps::curate::commands::set_locale;
+use crate::apps::curate::commands::{select_row, world_select};
 //#endregion 🔖️Commands
 
 //#region 🔖️SourcingCurateApp

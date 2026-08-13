@@ -367,7 +367,7 @@ pub fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&
 }
 
 /// 🗑️ Operations removing `node_ids`, for delete-node / delete-selection. Two app-level consumers
-/// (`🎮️commands/🔧️nodes::remove_node` and `🎮️commands/🕸️graph::{delete_selection, node_graph_edit}`)
+/// (`🎮️commands/🔧️add-node::remove_node` and `🎮️commands/🕸️set-algorithm::{delete_selection, node_graph_edit}`)
 /// — takes only `DagSnapshot`, no app-only config type, so per the DocumentHelpers placement rule it
 /// lives here rather than being duplicated per consumer. `delete-node`'s own diff/inverse already
 /// captures the cascade (every edge touching the node), so this is one mutation per node, not one

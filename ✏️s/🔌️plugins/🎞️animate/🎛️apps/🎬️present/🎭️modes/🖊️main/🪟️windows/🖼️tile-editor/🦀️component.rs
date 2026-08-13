@@ -110,7 +110,7 @@ mod tests {
     #[test]
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let mut app = present_app();
-        app.dispatch_typed(PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
+        app.dispatch_typed(PresentCommand::SeedGrid(crate::apps::present::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
         let deck = app.snapshot().expect("projection");
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();

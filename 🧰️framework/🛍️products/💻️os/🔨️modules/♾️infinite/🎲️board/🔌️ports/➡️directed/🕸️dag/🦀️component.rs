@@ -1915,7 +1915,7 @@ fn dag_visual_kind(node: &DagNodeSpec) -> String {
 
 /// 📝️ Render a DAG fixture as wire-literal compiled text.
 pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
-    use math::graph::dsl::{wire_literal_from_dag, WireEdge, WireNode};
+    use ::graph::dsl::{wire_literal_from_dag, WireEdge, WireNode};
     let nodes = fixture.nodes.iter().map(|node| WireNode { id: node.id.clone(), kind: dag_visual_kind(node), port: None, properties: node.properties.clone() }).collect::<Vec<_>>();
     let edges = fixture
         .edges
@@ -1930,8 +1930,8 @@ pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
 }
 
 /// 🧵️ Build execution wire rows from an enriched DAG fixture.
-pub fn dag_fixture_execution_rows(fixture: &DagFixture) -> (Vec<math::graph::dsl::WireNode>, Vec<math::graph::dsl::WireEdge>) {
-    use math::graph::dsl::{WireEdge, WireNode};
+pub fn dag_fixture_execution_rows(fixture: &DagFixture) -> (Vec<::graph::dsl::WireNode>, Vec<::graph::dsl::WireEdge>) {
+    use ::graph::dsl::{WireEdge, WireNode};
     use std::collections::HashSet;
     let executable: HashSet<String> = fixture.nodes.iter().filter_map(|node| node.operator_kind.as_ref().map(|_| node.id.clone())).collect();
     let nodes = fixture
@@ -7860,7 +7860,7 @@ pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 // `dsl::Dsl*` macro directly or, where the real Rust field shape can't satisfy the derive engine
 // (a bare tagged-enum field where the engine requires `Box<T>`), converts through a small local
 // mirror type at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary. This replaces the old
-// hand-rolled `math::graph::dsl` wire-literal-based printer/parser that used to live in this
+// hand-rolled `graph::dsl` wire-literal-based printer/parser that used to live in this
 // region (deleted; `dag_fixture_to_wire_literal`/`dag_fixture_execution_rows` near {@link DagHost}
 // still use the wire-literal grammar directly for their own, unrelated purpose and are untouched).
 

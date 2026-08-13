@@ -1,0 +1,160 @@
+//! 💾️ 💾️ S Studio app command — `set-active-example`.
+
+use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
+
+use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[dsl(keyword = "set-active-example")]
+pub struct SetActiveExample {
+    pub example_id: String,
+}
+
+pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    if payload.example_id.is_empty() {
+        Ok(Emit::default())
+    } else {
+        Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.example_id) }))
+    }
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::apps::space::testkit::studio_emit;
+    use crate::apps::space::SpaceCommand;
+    use semio_framework_os::empty_workflow_snapshot;
+
+    #[test]
+    fn space_command_op_text_round_trips_every_variant() {
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(SetActiveExample { example_id: "demo".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(crate::apps::space::commands::export_studio_pack::ExportStudioPack {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(crate::apps::space::commands::export_studio_dsl::ExportStudioDsl {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(crate::apps::space::commands::import_space_pack::ImportSpacePack {}));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(crate::apps::space::commands::import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(crate::apps::space::commands::open_space::OpenSpace { space_id: "demo".into() }));
+    }
+
+    #[test]
+    fn open_studio_loads_created_empty_catalog_studio() {
+        use semio_framework_os::{create_os_space, MemoryBackbonePort, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
+        use std::sync::Arc;
+        let port: Arc<dyn semio_framework_os::OsBackbonePort> = Arc::new(MemoryBackbonePort::new());
+        let owner = SpaceUser { id: "tester".into(), name: "Tester".into(), avatar: None, role: SpaceRole::Author };
+        let entry = create_os_space("Opened Empty", SpaceKind::Atelier, SpaceVisibility::Private, owner, port.clone()).expect("create");
+        crate::apps::home::register_studio_port_for_test(&entry.id, port);
+        let empty = empty_workflow_snapshot();
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::apps::space::commands::open_space::OpenSpace { space_id: entry.id.clone() })).expect("handle");
+        assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId { space_id: Some(entry.id) }));
+        assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetActiveNode { node_id: None }));
+        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })));
+        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+    }
+
+    #[test]
+    fn open_studio_unknown_id_returns_not_found() {
+        let empty = empty_workflow_snapshot();
+        let config = SpaceConfig::default();
+        let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::apps::space::commands::open_space::OpenSpace { space_id: "unknown-studio-id".into() })).err().expect("not found");
+        assert_eq!(err.code.0, "s.space.not-found");
+    }
+
+    fn load_document_snapshot(emit: &Emit<WorkflowMutation, SpaceConfigMutation>) -> (WorkflowSnapshot, String) {
+        let (pack, spr) = emit
+            .effects
+            .iter()
+            .find_map(|effect| match effect {
+                HostEffect::LoadDocument { pack, spr } => Some((pack.as_slice(), spr.as_slice())),
+                _ => None,
+            })
+            .expect("load document");
+        let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(pack, spr).expect("parse document pack");
+        let id = parsed.envelope.id.clone();
+        (parsed.snapshot, id)
+    }
+
+    #[test]
+    fn open_studio_demo_explicit_loads_demo_fixture() {
+        let empty = empty_workflow_snapshot();
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::apps::space::commands::open_space::OpenSpace { space_id: "demo".into() })).expect("handle");
+        let (projection, id) = load_document_snapshot(&emit);
+        assert!(id.contains("demo-studio"));
+        assert!(!projection.graph.nodes.is_empty());
+    }
+
+    #[test]
+    fn open_studio_loads_ephemeral_created_studio() {
+        use crate::apps::home::commands::create_studio;
+        use semio_framework_plugin::{ArtifactApp, ArtifactView, ConfigView, HistoryView};
+        let home = crate::apps::home::HomeApp;
+        let home_projection = crate::apps::home::HomeApp::initial_snapshot();
+        let history = HistoryView::empty();
+        let doc = ArtifactView::new(&home_projection, &history);
+        let home_config = crate::apps::home::config::HomeConfig::default();
+        let home_cfg = ConfigView { snapshot: &home_config };
+        let create = create_studio::handle(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
+        let space_id = create
+            .effects
+            .iter()
+            .find_map(|effect| match effect {
+                HostEffect::Navigate { uri } => Some(uri.trim_start_matches("/spaces/").to_string()),
+                _ => None,
+            })
+            .expect("navigate");
+        let empty = empty_workflow_snapshot();
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::apps::space::commands::open_space::OpenSpace { space_id: space_id.clone() })).expect("handle");
+        let (projection, id) = load_document_snapshot(&emit);
+        assert_eq!(id, space_id);
+        assert!(projection.graph.nodes.is_empty());
+    }
+
+    /// 🌉️ Exercises BOTH apps together (Home's `createStudio` followed by Space's `openSpace`).
+    #[test]
+    fn create_space_navigates_without_download_and_opens_empty() {
+        use crate::apps::home::commands::create_studio;
+        use semio_framework_plugin::{ArtifactApp, ArtifactView, ConfigView, HistoryView};
+        let home = crate::apps::home::HomeApp;
+        let home_projection = crate::apps::home::HomeApp::initial_snapshot();
+        let history = HistoryView::empty();
+        let doc = ArtifactView::new(&home_projection, &history);
+        let home_config = crate::apps::home::config::HomeConfig::default();
+        let home_cfg = ConfigView { snapshot: &home_config };
+        let emit = create_studio::handle(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
+        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "create must not download a file");
+        let uri = emit
+            .effects
+            .iter()
+            .find_map(|effect| match effect {
+                HostEffect::Navigate { uri } => Some(uri.as_str()),
+                _ => None,
+            })
+            .expect("navigate");
+        assert!(uri.starts_with("/spaces/"), "uri={uri}");
+        assert!(!uri.ends_with("/demo") && !uri.ends_with("/default"), "uri={uri}");
+        let space_id = uri.trim_start_matches("/spaces/");
+        let document = crate::apps::home::resolve_studio_document(space_id).expect("created studio");
+        assert_eq!(document.name, "Fresh Studio");
+        assert!(document.backbone.is_none(), "ephemeral studio must not attach backbone");
+        assert!(document.vcs.initial_snapshot.collections.is_empty());
+
+        let empty = empty_workflow_snapshot();
+        let studio_doc = ArtifactView::new(&empty, &history);
+        let studio_config = SpaceConfig::default();
+        let studio_cfg = ConfigView { snapshot: &studio_config };
+        let studio = crate::apps::space::SpaceApp::default();
+        let draft = semio_framework_plugin::DraftView { snapshot: &semio_framework_plugin::NoDraft::default() };
+        let engines = store::EngineHandles::empty();
+        let open = crate::apps::space::SpaceApp::handle(&SpaceCommand::OpenSpace(crate::apps::space::commands::open_space::OpenSpace { space_id: space_id.to_string() }), &studio_doc, &studio_cfg, &draft, &engines).expect("handle");
+        assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
+        assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+        assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));
+    }
+}
+//#endregion 🧪️Tests

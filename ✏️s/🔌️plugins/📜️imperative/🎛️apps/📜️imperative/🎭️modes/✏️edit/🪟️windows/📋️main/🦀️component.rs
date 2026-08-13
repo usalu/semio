@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn run_command_expands_scope_into_readable_rows_without_truncation() {
         use crate::apps::imperative::testkit::dispatch;
-        use crate::apps::imperative::commands::view::run;
+        use crate::apps::imperative::commands::run;
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::Run(run::Run {}));
         let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN);

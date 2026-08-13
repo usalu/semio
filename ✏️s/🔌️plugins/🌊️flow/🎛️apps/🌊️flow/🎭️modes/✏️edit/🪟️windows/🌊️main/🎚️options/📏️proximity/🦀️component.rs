@@ -1,5 +1,5 @@
 //! 📏️ Main-window option — the proximity-select distance slider.
-//! Its command handler lives in `🎮️commands/🔭️lod`.
+//! Its command handler lives in `🎮️commands/🔭️set-lod-mode`.
 
 use crate::apps::flow::config::FlowConfig;
 use crate::apps::flow::flow_action;

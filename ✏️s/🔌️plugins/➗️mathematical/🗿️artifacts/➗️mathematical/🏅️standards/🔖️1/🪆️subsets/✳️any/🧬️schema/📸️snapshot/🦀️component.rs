@@ -73,7 +73,7 @@ pub struct EquationNode {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum EquationNodeKind {
-    /// 🔢️ Arbitrary-precision integer, round-tripped through `math::number::Integer`'s own
+    /// 🔢️ Arbitrary-precision integer, round-tripped through `number::Integer`'s own
     /// `Display`/`FromStr` (decimal, sign-prefixed) — never `i64`, which would silently truncate.
     Integer { lexeme: String },
     /// ➗️ `numer/denom`, each an `Integer` decimal lexeme (same round-trip as above).
@@ -149,13 +149,13 @@ pub fn equation_node_to_expr(node: &EquationNode) -> crate::cas::expr::Expr {
     use crate::cas::expr::Expr;
     match &node.kind {
         EquationNodeKind::Integer { lexeme } => {
-            let value: math::number::Integer = lexeme.parse().unwrap_or_else(|_| math::number::Integer::zero());
+            let value: number::Integer = lexeme.parse().unwrap_or_else(|_| number::Integer::zero());
             Expr::from(value)
         }
         EquationNodeKind::Rational { numer, denom } => {
-            let n: math::number::Integer = numer.parse().unwrap_or_else(|_| math::number::Integer::zero());
-            let d: math::number::Integer = denom.parse().unwrap_or_else(|_| math::number::Integer::one());
-            match math::number::Rational::new(n, d) {
+            let n: number::Integer = numer.parse().unwrap_or_else(|_| number::Integer::zero());
+            let d: number::Integer = denom.parse().unwrap_or_else(|_| number::Integer::one());
+            match number::Rational::new(n, d) {
                 Some(r) => Expr::from(r),
                 None => Expr::integer(0),
             }

@@ -1779,18 +1779,26 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🏷️kind/🦀️component.rs"]
-            pub mod kind;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🔘️handle-kind/🦀️component.rs"]
-            pub mod handle_kind;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🌱️handle/🦀️component.rs"]
-            pub mod handle;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🔗️compatibility/🦀️component.rs"]
-            pub mod compatibility;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs"]
-            pub mod example;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🏷️patch-node-kind/🦀️component.rs"]
+            pub mod patch_node_kind;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🔘️add-handle-kind/🦀️component.rs"]
+            pub mod add_handle_kind;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🔘️remove-handle-kind/🦀️component.rs"]
+            pub mod remove_handle_kind;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🌱️add-handle/🦀️component.rs"]
+            pub mod add_handle;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🌱️remove-handle/🦀️component.rs"]
+            pub mod remove_handle;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🔗️add-compatibility-rule/🦀️component.rs"]
+            pub mod add_compatibility_rule;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🔗️remove-compatibility-rule/🦀️component.rs"]
+            pub mod remove_compatibility_rule;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️edit/🦀️component.rs"]
+            pub mod edit;
+            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️set-selection/🦀️component.rs"]
+            pub mod set_selection;
         }
 
         #[path = "."]
@@ -1851,24 +1859,58 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏷️kind/🦀️component.rs"]
-            pub mod kind;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️representation/🦀️component.rs"]
-            pub mod representation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🔘️vortex-kind/🦀️component.rs"]
-            pub mod vortex_kind;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌀️vortex/🦀️component.rs"]
-            pub mod vortex;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs"]
-            pub mod example;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs"]
-            pub mod window;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs"]
-            pub mod brush;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs"]
-            pub mod camera;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏷️patch-object-kind/🦀️component.rs"]
+            pub mod patch_object_kind;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️add-representation/🦀️component.rs"]
+            pub mod add_representation;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️remove-representation/🦀️component.rs"]
+            pub mod remove_representation;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧱️patch-representation/🦀️component.rs"]
+            pub mod patch_representation;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🔘️add-vortex-kind/🦀️component.rs"]
+            pub mod add_vortex_kind;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🔘️remove-vortex-kind/🦀️component.rs"]
+            pub mod remove_vortex_kind;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌀️add-vortex/🦀️component.rs"]
+            pub mod add_vortex;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌀️remove-vortex/🦀️component.rs"]
+            pub mod remove_vortex;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎨️edit/🦀️component.rs"]
+            pub mod edit;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-selection/🦀️component.rs"]
+            pub mod set_selection;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️select-vortex/🦀️component.rs"]
+            pub mod select_vortex;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️hover-vortex/🦀️component.rs"]
+            pub mod hover_vortex;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-active-representation/🦀️component.rs"]
+            pub mod set_active_representation;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-window-representations/🦀️component.rs"]
+            pub mod set_window_representations;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️toggle-window-representation/🦀️component.rs"]
+            pub mod toggle_window_representation;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-window-arrangement/🦀️component.rs"]
+            pub mod set_window_arrangement;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-window-spacing/🦀️component.rs"]
+            pub mod set_window_spacing;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-active-utility/🦀️component.rs"]
+            pub mod set_active_utility;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-vortex-kind/🦀️component.rs"]
+            pub mod set_brush_vortex_kind;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-radius/🦀️component.rs"]
+            pub mod set_brush_radius;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-flip/🦀️component.rs"]
+            pub mod set_brush_flip;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️hover-surface/🦀️component.rs"]
+            pub mod hover_surface;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️leave-surface/🦀️component.rs"]
+            pub mod leave_surface;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🖌️place-vortex/🦀️component.rs"]
+            pub mod place_vortex;
+            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎥️set-camera/🦀️component.rs"]
+            pub mod set_camera;
         }
 
         #[path = "."]
@@ -1945,16 +1987,22 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🏷️kind/🦀️component.rs"]
-            pub mod kind;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🔘️grip-kind/🦀️component.rs"]
-            pub mod grip_kind;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🌱️grip/🦀️component.rs"]
-            pub mod grip;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎨️example/🦀️component.rs"]
-            pub mod example;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🏷️patch-part-kind/🦀️component.rs"]
+            pub mod patch_part_kind;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🔘️add-grip-kind/🦀️component.rs"]
+            pub mod add_grip_kind;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🔘️remove-grip-kind/🦀️component.rs"]
+            pub mod remove_grip_kind;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🌱️add-grip/🦀️component.rs"]
+            pub mod add_grip;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🌱️remove-grip/🦀️component.rs"]
+            pub mod remove_grip;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎨️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎨️edit/🦀️component.rs"]
+            pub mod edit;
+            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️set-selection/🦀️component.rs"]
+            pub mod set_selection;
         }
 
         #[path = "."]

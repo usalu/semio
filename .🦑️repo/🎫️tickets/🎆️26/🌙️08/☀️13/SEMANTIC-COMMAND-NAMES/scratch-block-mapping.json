@@ -1,0 +1,438 @@
+{
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🌱️handle/🦀️component.rs": [
+    {
+      "old_mod": "handle",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🌱️add-handle/🦀️component.rs",
+      "new_mod": "add_handle",
+      "kebab": "add-handle",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🌱️handle/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🌱️add-handle",
+      "delete_old": true
+    },
+    {
+      "old_mod": "handle",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🌱️remove-handle/🦀️component.rs",
+      "new_mod": "remove_handle",
+      "kebab": "remove-handle",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🌱️handle/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🌱️remove-handle",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️set-active-example",
+      "delete_old": true
+    },
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️edit/🦀️component.rs",
+      "new_mod": "edit",
+      "kebab": "edit",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️edit",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🏷️kind/🦀️component.rs": [
+    {
+      "old_mod": "kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🏷️patch-node-kind/🦀️component.rs",
+      "new_mod": "patch_node_kind",
+      "kebab": "patch-node-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🏷️kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🏷️patch-node-kind",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔗️compatibility/🦀️component.rs": [
+    {
+      "old_mod": "compatibility",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔗️add-compatibility-rule/🦀️component.rs",
+      "new_mod": "add_compatibility_rule",
+      "kebab": "add-compatibility-rule",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔗️compatibility/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔗️add-compatibility-rule",
+      "delete_old": true
+    },
+    {
+      "old_mod": "compatibility",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔗️remove-compatibility-rule/🦀️component.rs",
+      "new_mod": "remove_compatibility_rule",
+      "kebab": "remove-compatibility-rule",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔗️compatibility/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔗️remove-compatibility-rule",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔘️handle-kind/🦀️component.rs": [
+    {
+      "old_mod": "handle_kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔘️add-handle-kind/🦀️component.rs",
+      "new_mod": "add_handle_kind",
+      "kebab": "add-handle-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔘️handle-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔘️add-handle-kind",
+      "delete_old": true
+    },
+    {
+      "old_mod": "handle_kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔘️remove-handle-kind/🦀️component.rs",
+      "new_mod": "remove_handle_kind",
+      "kebab": "remove-handle-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔘️handle-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🔘️remove-handle-kind",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🌱️grip/🦀️component.rs": [
+    {
+      "old_mod": "grip",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🌱️add-grip/🦀️component.rs",
+      "new_mod": "add_grip",
+      "kebab": "add-grip",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🌱️grip/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🌱️add-grip",
+      "delete_old": true
+    },
+    {
+      "old_mod": "grip",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🌱️remove-grip/🦀️component.rs",
+      "new_mod": "remove_grip",
+      "kebab": "remove-grip",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🌱️grip/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🌱️remove-grip",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️set-active-example",
+      "delete_old": true
+    },
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️edit/🦀️component.rs",
+      "new_mod": "edit",
+      "kebab": "edit",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️edit",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🏷️kind/🦀️component.rs": [
+    {
+      "old_mod": "kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🏷️patch-part-kind/🦀️component.rs",
+      "new_mod": "patch_part_kind",
+      "kebab": "patch-part-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🏷️kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🏷️patch-part-kind",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🔘️grip-kind/🦀️component.rs": [
+    {
+      "old_mod": "grip_kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🔘️add-grip-kind/🦀️component.rs",
+      "new_mod": "add_grip_kind",
+      "kebab": "add-grip-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🔘️grip-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🔘️add-grip-kind",
+      "delete_old": true
+    },
+    {
+      "old_mod": "grip_kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🔘️remove-grip-kind/🦀️component.rs",
+      "new_mod": "remove_grip_kind",
+      "kebab": "remove-grip-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🔘️grip-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🔘️remove-grip-kind",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🌀️vortex/🦀️component.rs": [
+    {
+      "old_mod": "vortex",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🌀️add-vortex/🦀️component.rs",
+      "new_mod": "add_vortex",
+      "kebab": "add-vortex",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🌀️vortex/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🌀️add-vortex",
+      "delete_old": true
+    },
+    {
+      "old_mod": "vortex",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🌀️remove-vortex/🦀️component.rs",
+      "new_mod": "remove_vortex",
+      "kebab": "remove-vortex",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🌀️vortex/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🌀️remove-vortex",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs": [
+    {
+      "old_mod": "camera",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎥️set-camera/🦀️component.rs",
+      "new_mod": "set_camera",
+      "kebab": "set-camera",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎥️camera/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎥️set-camera",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs": [
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example/🦀️component.rs",
+      "new_mod": "set_active_example",
+      "kebab": "set-active-example",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example",
+      "delete_old": true
+    },
+    {
+      "old_mod": "example",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️edit/🦀️component.rs",
+      "new_mod": "edit",
+      "kebab": "edit",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️edit",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🏷️kind/🦀️component.rs": [
+    {
+      "old_mod": "kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🏷️patch-object-kind/🦀️component.rs",
+      "new_mod": "patch_object_kind",
+      "kebab": "patch-object-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🏷️kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🏷️patch-object-kind",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🔘️vortex-kind/🦀️component.rs": [
+    {
+      "old_mod": "vortex_kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🔘️add-vortex-kind/🦀️component.rs",
+      "new_mod": "add_vortex_kind",
+      "kebab": "add-vortex-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🔘️vortex-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🔘️add-vortex-kind",
+      "delete_old": true
+    },
+    {
+      "old_mod": "vortex_kind",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🔘️remove-vortex-kind/🦀️component.rs",
+      "new_mod": "remove_vortex_kind",
+      "kebab": "remove-vortex-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🔘️vortex-kind/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🔘️remove-vortex-kind",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs": [
+    {
+      "old_mod": "brush",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-vortex-kind/🦀️component.rs",
+      "new_mod": "set_brush_vortex_kind",
+      "kebab": "set-brush-vortex-kind",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-vortex-kind",
+      "delete_old": true
+    },
+    {
+      "old_mod": "brush",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-radius/🦀️component.rs",
+      "new_mod": "set_brush_radius",
+      "kebab": "set-brush-radius",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-radius",
+      "delete_old": true
+    },
+    {
+      "old_mod": "brush",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-flip/🦀️component.rs",
+      "new_mod": "set_brush_flip",
+      "kebab": "set-brush-flip",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️set-brush-flip",
+      "delete_old": true
+    },
+    {
+      "old_mod": "brush",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️hover-surface/🦀️component.rs",
+      "new_mod": "hover_surface",
+      "kebab": "hover-surface",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️hover-surface",
+      "delete_old": true
+    },
+    {
+      "old_mod": "brush",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️leave-surface/🦀️component.rs",
+      "new_mod": "leave_surface",
+      "kebab": "leave-surface",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️leave-surface",
+      "delete_old": true
+    },
+    {
+      "old_mod": "brush",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️place-vortex/🦀️component.rs",
+      "new_mod": "place_vortex",
+      "kebab": "place-vortex",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️brush/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🖌️place-vortex",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs": [
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection/🦀️component.rs",
+      "new_mod": "set_selection",
+      "kebab": "set-selection",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️set-selection",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️select-vortex/🦀️component.rs",
+      "new_mod": "select_vortex",
+      "kebab": "select-vortex",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️select-vortex",
+      "delete_old": true
+    },
+    {
+      "old_mod": "selection",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️hover-vortex/🦀️component.rs",
+      "new_mod": "hover_vortex",
+      "kebab": "hover-vortex",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🗂️hover-vortex",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️representation/🦀️component.rs": [
+    {
+      "old_mod": "representation",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️add-representation/🦀️component.rs",
+      "new_mod": "add_representation",
+      "kebab": "add-representation",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️representation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️add-representation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "representation",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️remove-representation/🦀️component.rs",
+      "new_mod": "remove_representation",
+      "kebab": "remove-representation",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️representation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️remove-representation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "representation",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️patch-representation/🦀️component.rs",
+      "new_mod": "patch_representation",
+      "kebab": "patch-representation",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️representation/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🧱️patch-representation",
+      "delete_old": true
+    }
+  ],
+  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs": [
+    {
+      "old_mod": "window",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-active-representation/🦀️component.rs",
+      "new_mod": "set_active_representation",
+      "kebab": "set-active-representation",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-active-representation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "window",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-window-representations/🦀️component.rs",
+      "new_mod": "set_window_representations",
+      "kebab": "set-window-representations",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-window-representations",
+      "delete_old": true
+    },
+    {
+      "old_mod": "window",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️toggle-window-representation/🦀️component.rs",
+      "new_mod": "toggle_window_representation",
+      "kebab": "toggle-window-representation",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️toggle-window-representation",
+      "delete_old": true
+    },
+    {
+      "old_mod": "window",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-window-arrangement/🦀️component.rs",
+      "new_mod": "set_window_arrangement",
+      "kebab": "set-window-arrangement",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-window-arrangement",
+      "delete_old": true
+    },
+    {
+      "old_mod": "window",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-window-spacing/🦀️component.rs",
+      "new_mod": "set_window_spacing",
+      "kebab": "set-window-spacing",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-window-spacing",
+      "delete_old": true
+    },
+    {
+      "old_mod": "window",
+      "new_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-active-utility/🦀️component.rs",
+      "new_mod": "set_active_utility",
+      "kebab": "set-active-utility",
+      "old_rel": "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️window/🦀️component.rs",
+      "new_dir": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🪟️set-active-utility",
+      "delete_old": true
+    }
+  ]
+}

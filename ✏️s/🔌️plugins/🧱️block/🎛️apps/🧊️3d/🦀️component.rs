@@ -9,15 +9,15 @@
 //! constitutional: general, an artifact must never depend on an app, so it lives here rather than under
 //! `🗿️artifacts`).
 
-use crate::apps::block3d::commands::brush::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
-use crate::apps::block3d::commands::camera::set_camera;
-use crate::apps::block3d::commands::example::{edit, set_active_example};
-use crate::apps::block3d::commands::kind::patch_object_kind;
-use crate::apps::block3d::commands::representation::{add_representation, patch_representation, remove_representation};
-use crate::apps::block3d::commands::selection::{hover_vortex, select_vortex, set_selection};
-use crate::apps::block3d::commands::vortex::{add_vortex, remove_vortex};
-use crate::apps::block3d::commands::vortex_kind::{add_vortex_kind, remove_vortex_kind};
-use crate::apps::block3d::commands::window::{set_active_representation, set_active_utility, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
+use crate::apps::block3d::commands::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
+use crate::apps::block3d::commands::set_camera;
+use crate::apps::block3d::commands::{edit, set_active_example};
+use crate::apps::block3d::commands::patch_object_kind;
+use crate::apps::block3d::commands::{add_representation, patch_representation, remove_representation};
+use crate::apps::block3d::commands::{hover_vortex, select_vortex, set_selection};
+use crate::apps::block3d::commands::{add_vortex, remove_vortex};
+use crate::apps::block3d::commands::{add_vortex_kind, remove_vortex_kind};
+use crate::apps::block3d::commands::{set_active_representation, set_active_utility, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
 use crate::apps::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use crate::apps::block3d::modes::edit as edit_mode;
 use crate::apps::block3d::modes::edit::windows::world;
@@ -365,13 +365,13 @@ pub fn create_block3d_app() -> App {
             .io(block3d_io()),
     )
     .example(
-        crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE,
+        crate::apps::block3d::commands::set_active_example::BLOCK3D_EXAMPLE_CAPSULE,
         LocalizedLabel::native("Nakagin Capsule", "Nakagin Capsule"),
         serde_json::to_string(&crate::artifacts::block3d::dsl::parse_dsl(crate::artifacts::block3d::dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
         "building",
     )
     .example(
-        crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_FOREST_LEFT,
+        crate::apps::block3d::commands::set_active_example::BLOCK3D_EXAMPLE_FOREST_LEFT,
         LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"),
         serde_json::to_string(&crate::artifacts::block3d::dsl::parse_dsl(crate::artifacts::block3d::dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
         "list-tree",
@@ -548,7 +548,7 @@ mod tests {
     #[test]
     fn set_active_example_loads_capsule_fixture() {
         let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.object_kind.id, "Capsule J");
         assert_eq!(projection.representations.len(), 2);
@@ -575,7 +575,7 @@ mod tests {
     #[test]
     fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
         let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         let media = app.export_media("catalog:out").expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {
@@ -591,7 +591,7 @@ mod tests {
     #[test]
     fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
         let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::apps::block3d::commands::set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         testkit::dispatch(
             &mut app,
             Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }),

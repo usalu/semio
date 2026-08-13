@@ -7,7 +7,11 @@
 //! `Procedural2dCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! passthrough per node.
 
-use crate::apps::procedural2d::commands::{eval, generation, graph, locale, selection, view, widget};
+use crate::apps::procedural2d::commands::{
+    add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_tick, move_media_node,
+    node_graph_edit, node_graph_hover, node_graph_select, node_graph_viewport, remove_generation, remove_widget, rename_generation, reorganize, select_generation, select_node,
+    set_eval_outputs, set_locale, set_selection, set_show_mode, update_generation_values,
+};
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::apps::procedural2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
 use crate::apps::procedural2d::modes::generate::windows::{form, generations, preview as generate_preview};
@@ -99,14 +103,7 @@ semio_framework_plugin::app_commands! {
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
-// payload module is imported here under its own flat name.
-use eval::{flow_eval_tick, set_eval_outputs};
-use generation::{add_generation, enter_generate, remove_generation, rename_generation, select_generation, update_generation_values};
-use graph::{connect_media_ports, move_media_node, node_graph_edit, node_graph_hover, node_graph_select, node_graph_viewport, reorganize};
-use locale::set_locale;
-use selection::{select_node, set_selection};
-use view::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, set_show_mode};
-use widget::{add_widget, remove_widget};
+// payload module is imported at file top under its own flat name.
 //#endregion 🔖️Commands
 
 //#region 🔖️Procedural2dPlayApp

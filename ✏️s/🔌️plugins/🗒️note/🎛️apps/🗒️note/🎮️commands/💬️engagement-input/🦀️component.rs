@@ -1,0 +1,17 @@
+//! 💬️ 💬️ Note play app commands command — `engagement-input`.
+
+use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
+use crate::artifacts::note::op::NoteMutation;
+use crate::artifacts::note::NoteSnapshot;
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[dsl(keyword = "engagement-input")]
+pub struct EngagementInput {
+    pub value: String,
+}
+
+pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    Ok(Emit::config(vec![NoteConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
+}

@@ -1,0 +1,654 @@
+{
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🏠️home/🎮️commands/🏙️bind-space-file/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 5,
+      "col_end": 65,
+      "snippet": "crate::artifacts::home::mutations::change_catalog_generation",
+      "message": "unused import: `crate::artifacts::home::mutations::change_catalog_generation`"
+    },
+    {
+      "line_start": 7,
+      "line_end": 7,
+      "col_start": 69,
+      "col_end": 79,
+      "snippet": "HostEffect",
+      "message": "unused import: `HostEffect`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🏠️home/🎮️commands/🏙️open-space/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 5,
+      "col_end": 65,
+      "snippet": "crate::artifacts::home::mutations::change_catalog_generation",
+      "message": "unused import: `crate::artifacts::home::mutations::change_catalog_generation`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🏠️home/🎮️commands/🗂️navigate-virtual-file-system-node/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 5,
+      "col_end": 65,
+      "snippet": "crate::artifacts::home::mutations::change_catalog_generation",
+      "message": "unused import: `crate::artifacts::home::mutations::change_catalog_generation`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🏠️home/🎮️commands/🗂️delete-virtual-file-system-node/🦀️component.rs": [
+    {
+      "line_start": 7,
+      "line_end": 7,
+      "col_start": 69,
+      "col_end": 79,
+      "snippet": "HostEffect",
+      "message": "unused import: `HostEffect`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🏠️home/🎮️commands/🗂️go-home/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 5,
+      "col_end": 65,
+      "snippet": "crate::artifacts::home::mutations::change_catalog_generation",
+      "message": "unused import: `crate::artifacts::home::mutations::change_catalog_generation`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🔢️patch-parameter/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 63,
+      "col_end": 87,
+      "snippet": "WorkflowParameterBinding",
+      "message": "unused imports: `WorkflowParameterBinding` and `WorkflowParameterType`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 89,
+      "col_end": 110,
+      "snippet": "WorkflowParameterType",
+      "message": "unused imports: `WorkflowParameterBinding` and `WorkflowParameterType`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🔢️add-parameter/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 44,
+      "col_end": 61,
+      "snippet": "WorkflowParameter",
+      "message": "unused imports: `WorkflowParameterBinding` and `WorkflowParameter`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 63,
+      "col_end": 87,
+      "snippet": "WorkflowParameterBinding",
+      "message": "unused imports: `WorkflowParameterBinding` and `WorkflowParameter`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🔢️remove-parameter/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 44,
+      "col_end": 61,
+      "snippet": "WorkflowParameter",
+      "message": "unused imports: `WorkflowParameterBinding`, `WorkflowParameterType`, and `WorkflowParameter`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 63,
+      "col_end": 87,
+      "snippet": "WorkflowParameterBinding",
+      "message": "unused imports: `WorkflowParameterBinding`, `WorkflowParameterType`, and `WorkflowParameter`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 89,
+      "col_end": 110,
+      "snippet": "WorkflowParameterType",
+      "message": "unused imports: `WorkflowParameterBinding`, `WorkflowParameterType`, and `WorkflowParameter`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🔢️bind-parameter-field/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 44,
+      "col_end": 61,
+      "snippet": "WorkflowParameter",
+      "message": "unused imports: `WorkflowParameterType` and `WorkflowParameter`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 89,
+      "col_end": 110,
+      "snippet": "WorkflowParameterType",
+      "message": "unused imports: `WorkflowParameterType` and `WorkflowParameter`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🔢️unbind-parameter-field/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 44,
+      "col_end": 61,
+      "snippet": "WorkflowParameter",
+      "message": "unused imports: `WorkflowParameterBinding`, `WorkflowParameterType`, and `WorkflowParameter`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 63,
+      "col_end": 87,
+      "snippet": "WorkflowParameterBinding",
+      "message": "unused imports: `WorkflowParameterBinding`, `WorkflowParameterType`, and `WorkflowParameter`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 89,
+      "col_end": 110,
+      "snippet": "WorkflowParameterType",
+      "message": "unused imports: `WorkflowParameterBinding`, `WorkflowParameterType`, and `WorkflowParameter`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🖱️text-hover/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 26,
+      "col_end": 42,
+      "snippet": "OsWorkflowCamera",
+      "message": "unused import: `OsWorkflowCamera`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🖼️import-media/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 34,
+      "col_end": 67,
+      "snippet": "workflow_parameter_bindings_to_os",
+      "message": "unused imports: `workflow_parameter_bindings_to_os` and `workflow_parameters_to_os`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 69,
+      "col_end": 94,
+      "snippet": "workflow_parameters_to_os",
+      "message": "unused imports: `workflow_parameter_bindings_to_os` and `workflow_parameters_to_os`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 26,
+      "col_end": 67,
+      "snippet": "materialize_os_app_instance_document_json",
+      "message": "unused imports: `materialize_os_app_instance_document_json` and `os_app_registration`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 69,
+      "col_end": 88,
+      "snippet": "os_app_registration",
+      "message": "unused imports: `materialize_os_app_instance_document_json` and `os_app_registration`"
+    },
+    {
+      "line_start": 7,
+      "line_end": 7,
+      "col_start": 18,
+      "col_end": 22,
+      "snippet": "json",
+      "message": "unused imports: `Value` and `json`"
+    },
+    {
+      "line_start": 7,
+      "line_end": 7,
+      "col_start": 24,
+      "col_end": 29,
+      "snippet": "Value",
+      "message": "unused imports: `Value` and `json`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🖼️import-media-payload/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 34,
+      "col_end": 67,
+      "snippet": "workflow_parameter_bindings_to_os",
+      "message": "unused imports: `workflow_parameter_bindings_to_os` and `workflow_parameters_to_os`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 69,
+      "col_end": 94,
+      "snippet": "workflow_parameters_to_os",
+      "message": "unused imports: `workflow_parameter_bindings_to_os` and `workflow_parameters_to_os`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 26,
+      "col_end": 67,
+      "snippet": "materialize_os_app_instance_document_json",
+      "message": "unused imports: `materialize_os_app_instance_document_json` and `os_app_registration`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 69,
+      "col_end": 88,
+      "snippet": "os_app_registration",
+      "message": "unused imports: `materialize_os_app_instance_document_json` and `os_app_registration`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 69,
+      "col_end": 79,
+      "snippet": "HostEffect",
+      "message": "unused import: `HostEffect`"
+    },
+    {
+      "line_start": 7,
+      "line_end": 7,
+      "col_start": 18,
+      "col_end": 22,
+      "snippet": "json",
+      "message": "unused imports: `Value` and `json`"
+    },
+    {
+      "line_start": 7,
+      "line_end": 7,
+      "col_start": 24,
+      "col_end": 29,
+      "snippet": "Value",
+      "message": "unused imports: `Value` and `json`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/💾️set-active-example/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 32,
+      "col_end": 51,
+      "snippet": "export_os_space_dsl",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 53,
+      "col_end": 73,
+      "snippet": "export_os_space_pack",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 75,
+      "col_end": 100,
+      "snippet": "import_os_space_from_pack",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 26,
+      "col_end": 50,
+      "snippet": "create_backbone_document",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 88,
+      "col_end": 103,
+      "snippet": "OS_SPACE_SCHEMA",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 105,
+      "col_end": 119,
+      "snippet": "S_SPACE_SCHEMA",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 69,
+      "col_end": 78,
+      "snippet": "FaultCode",
+      "message": "unused imports: `FaultCode` and `FaultOrigin`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 80,
+      "col_end": 91,
+      "snippet": "FaultOrigin",
+      "message": "unused imports: `FaultCode` and `FaultOrigin`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/💾️export-studio-pack/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 32,
+      "col_end": 51,
+      "snippet": "export_os_space_dsl",
+      "message": "unused imports: `export_os_space_dsl` and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 75,
+      "col_end": 100,
+      "snippet": "import_os_space_from_pack",
+      "message": "unused imports: `export_os_space_dsl` and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 26,
+      "col_end": 50,
+      "snippet": "create_backbone_document",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 88,
+      "col_end": 103,
+      "snippet": "OS_SPACE_SCHEMA",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 105,
+      "col_end": 119,
+      "snippet": "S_SPACE_SCHEMA",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 69,
+      "col_end": 78,
+      "snippet": "FaultCode",
+      "message": "unused imports: `FaultCode` and `FaultOrigin`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 80,
+      "col_end": 91,
+      "snippet": "FaultOrigin",
+      "message": "unused imports: `FaultCode` and `FaultOrigin`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/💾️export-studio-dsl/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 53,
+      "col_end": 73,
+      "snippet": "export_os_space_pack",
+      "message": "unused imports: `export_os_space_pack` and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 75,
+      "col_end": 100,
+      "snippet": "import_os_space_from_pack",
+      "message": "unused imports: `export_os_space_pack` and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 26,
+      "col_end": 50,
+      "snippet": "create_backbone_document",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 88,
+      "col_end": 103,
+      "snippet": "OS_SPACE_SCHEMA",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 105,
+      "col_end": 119,
+      "snippet": "S_SPACE_SCHEMA",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 69,
+      "col_end": 78,
+      "snippet": "FaultCode",
+      "message": "unused imports: `FaultCode` and `FaultOrigin`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 80,
+      "col_end": 91,
+      "snippet": "FaultOrigin",
+      "message": "unused imports: `FaultCode` and `FaultOrigin`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/💾️import-space-pack/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 32,
+      "col_end": 51,
+      "snippet": "export_os_space_dsl",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 53,
+      "col_end": 73,
+      "snippet": "export_os_space_pack",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 75,
+      "col_end": 100,
+      "snippet": "import_os_space_from_pack",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 26,
+      "col_end": 50,
+      "snippet": "create_backbone_document",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 88,
+      "col_end": 103,
+      "snippet": "OS_SPACE_SCHEMA",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 105,
+      "col_end": 119,
+      "snippet": "S_SPACE_SCHEMA",
+      "message": "unused imports: `OS_SPACE_SCHEMA`, `S_SPACE_SCHEMA`, and `create_backbone_document`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 69,
+      "col_end": 78,
+      "snippet": "FaultCode",
+      "message": "unused imports: `FaultCode` and `FaultOrigin`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 80,
+      "col_end": 91,
+      "snippet": "FaultOrigin",
+      "message": "unused imports: `FaultCode` and `FaultOrigin`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/💾️import-space-pack-payload/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 32,
+      "col_end": 51,
+      "snippet": "export_os_space_dsl",
+      "message": "unused imports: `export_os_space_dsl` and `export_os_space_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 53,
+      "col_end": 73,
+      "snippet": "export_os_space_pack",
+      "message": "unused imports: `export_os_space_dsl` and `export_os_space_pack`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 26,
+      "col_end": 50,
+      "snippet": "create_backbone_document",
+      "message": "unused imports: `S_SPACE_SCHEMA` and `create_backbone_document`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 105,
+      "col_end": 119,
+      "snippet": "S_SPACE_SCHEMA",
+      "message": "unused imports: `S_SPACE_SCHEMA` and `create_backbone_document`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 69,
+      "col_end": 78,
+      "snippet": "FaultCode",
+      "message": "unused imports: `FaultCode`, `FaultOrigin`, and `HostEffect`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 80,
+      "col_end": 91,
+      "snippet": "FaultOrigin",
+      "message": "unused imports: `FaultCode`, `FaultOrigin`, and `HostEffect`"
+    },
+    {
+      "line_start": 6,
+      "line_end": 6,
+      "col_start": 93,
+      "col_end": 103,
+      "snippet": "HostEffect",
+      "message": "unused imports: `FaultCode`, `FaultOrigin`, and `HostEffect`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/💾️open-space/🦀️component.rs": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 32,
+      "col_end": 51,
+      "snippet": "export_os_space_dsl",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 53,
+      "col_end": 73,
+      "snippet": "export_os_space_pack",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "col_start": 75,
+      "col_end": 100,
+      "snippet": "import_os_space_from_pack",
+      "message": "unused imports: `export_os_space_dsl`, `export_os_space_pack`, and `import_os_space_from_pack`"
+    },
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 88,
+      "col_end": 103,
+      "snippet": "OS_SPACE_SCHEMA",
+      "message": "unused import: `OS_SPACE_SCHEMA`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🔍️close-focused-instance/🦀️component.rs": [
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 69,
+      "col_end": 79,
+      "snippet": "HostEffect",
+      "message": "unused import: `HostEffect`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🧭️set-active-panel-tab/🦀️component.rs": [
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 69,
+      "col_end": 79,
+      "snippet": "HostEffect",
+      "message": "unused import: `HostEffect`"
+    }
+  ],
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/./././../../🎛️apps/🪐️space/🎮️commands/🧭️set-app-registrations/🦀️component.rs": [
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "col_start": 69,
+      "col_end": 79,
+      "snippet": "HostEffect",
+      "message": "unused import: `HostEffect`"
+    }
+  ]
+}

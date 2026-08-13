@@ -42,7 +42,7 @@ mod tests {
 
     #[test]
     fn catalogue_resolves_german_locale() {
-        use crate::apps::note::commands::locale::set_locale::SetLocale;
+        use crate::apps::note::commands::set_locale::SetLocale;
         use crate::apps::note::testkit::dispatch;
         use crate::apps::note::NoteCommand;
 

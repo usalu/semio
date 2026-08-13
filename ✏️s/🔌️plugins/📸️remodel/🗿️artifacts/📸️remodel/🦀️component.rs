@@ -207,7 +207,7 @@ fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> Rem
 // exactly one real mime (`image/png`, its own doc comment), so a decode failure there is anomalous
 // input worth leaving uncached. `remodel`'s `assets` legitimately carry TWO real mimes in normal
 // operation — `image/png` (textures/DSM/DTM/ortho) AND `image/jpeg` (`MediaStream.frames`, sampled
-// video frames, `🎛️apps/📸️remodel/🎮️commands/📥️ingest`'s own real call sites) — so a jpeg asset
+// video frames, `🎛️apps/📸️remodel/🎮️commands/📥️import-frame-payload`'s own real call sites) — so a jpeg asset
 // failing `semio_image_snapshot_from_image_asset` (jpeg bridge not wired yet, see that function's
 // doc comment) is an EXPECTED, common, correct case, not bad data; leaving the cache slot empty for
 // it would make every jpeg-sourced `create-asset`'s inverse silently lossy. Caching the real asset

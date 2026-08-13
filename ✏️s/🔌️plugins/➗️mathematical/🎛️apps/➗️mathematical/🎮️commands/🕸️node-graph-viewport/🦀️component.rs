@@ -1,0 +1,21 @@
+//! 🕸️ 🕸️ Mathematical play app commands command — `node-graph-viewport`.
+
+use crate::apps::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use crate::artifacts::mathematical::op::MathematicalMutation;
+use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
+use crate::artifacts::mathematical::{MathematicalCamera, MathematicalEdge, MathematicalNode, MathematicalSnapshot};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+/// 👁️ Config-only: the node-graph viewport never touches the document — it's written into `cfg`,
+/// session-only, no VCS edit, no undo entry on the document store.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[dsl(keyword = "node-graph-viewport")]
+pub struct NodeGraphViewport {
+    #[dsl(block)]
+    pub camera: MathematicalCamera,
+}
+
+pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+    Ok(Emit::config(vec![MathematicalConfigMutation::SetCamera { camera: payload.camera.clone() }]))
+}

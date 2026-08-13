@@ -105,7 +105,7 @@ pub fn puzzle5d_clear_non_grip_selection(selection: &mut Puzzle5dSelection) {
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dConfig {
     /// 📷️ Camera pose — session-only view state (`ActionKind::View`), never a VCS document field:
-    /// see `setCamera`/`setCamera2d`/`setCamera3d` in `🎮️commands/🎥️camera`.
+    /// see `setCamera`/`setCamera2d`/`setCamera3d` in `🎮️commands/🎥️set-camera`.
     #[serde(default)]
     pub camera2d: Puzzle5dCamera2d,
     #[serde(default)]
@@ -140,7 +140,7 @@ pub struct Puzzle5dConfig {
     pub sun: WorldSunConfig,
     /// 🧰️ B1: per-window (kind-keyed — puzzle5d's two window KINDS are each single-instance, see
     /// `window_instance_ids`) active utility — was host-pushed `view_state.active_utility_by_window_id`,
-    /// now real VCS'd config (see `SET_ACTIVE_UTILITY_ACTION_ID` in `🎮️commands/🧰️utility`).
+    /// now real VCS'd config (see `SET_ACTIVE_UTILITY_ACTION_ID` in `🎮️commands/🧰️set-active`).
     #[serde(default)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
     /// 🗣️ B1: terminology overlay (native/reuse) — was host-pushed `view_state.terminology`.

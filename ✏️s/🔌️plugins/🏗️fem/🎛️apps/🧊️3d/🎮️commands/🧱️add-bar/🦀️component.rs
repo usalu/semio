@@ -1,0 +1,24 @@
+//! 🧱️ 🧱️ FEM 3D app commands command — `add-bar`.
+
+use crate::apps::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use crate::artifacts::fem3d::op::Fem3dMutation;
+use crate::artifacts::fem3d::Fem3dSnapshot;
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "add-bar")]
+pub struct AddBar {
+    pub start: String,
+    pub end: String,
+    pub material_id: String,
+    pub section_id: String,
+}
+
+pub fn handle(payload: &AddBar, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+    let snapshot = doc.snapshot;
+    let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| crate::artifacts::fem3d::element_id(e).to_string()), "e");
+    let element = crate::artifacts::fem3d::FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateElement(crate::artifacts::fem3d::mutations::create_element::mutation::CreateElement { element: Box::new(element) })]))
+}
