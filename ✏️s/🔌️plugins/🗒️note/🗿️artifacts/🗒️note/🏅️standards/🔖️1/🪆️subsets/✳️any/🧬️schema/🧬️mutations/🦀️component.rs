@@ -120,7 +120,7 @@ mod tests {
         let mut snapshot = crate::artifacts::note::schema::empty_note_snapshot();
         snapshot.blocks.push(NoteBlockNode::Text {
             id: "b1".into(), name: "Text".into(), x: 0.0, y: 0.0, width: 100.0, height: 40.0, rotation: 0.0, visible: true, locked: false,
-            paragraphs: Vec::new(), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b1", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
         });
         snapshot.blocks.push(NoteBlockNode::Ink {
             id: "b2".into(), name: "Ink".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0, visible: true, locked: false,
@@ -195,7 +195,7 @@ mod tests {
         let base = sample_snapshot();
         let new_block = NoteBlockNode::Text {
             id: "b99".into(), name: "New".into(), x: 5.0, y: 6.0, width: 80.0, height: 30.0, rotation: 0.0, visible: true, locked: false,
-            paragraphs: Vec::new(), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b99", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
         };
         assert_mutation_inverse_law(&base, &create_block(new_block.clone(), None, None));
         assert_mutation_inverse_law(&base, &delete_block("b1".into()));
@@ -241,7 +241,7 @@ mod tests {
         let base = sample_snapshot();
         let new_block = NoteBlockNode::Text {
             id: "b100".into(), name: "New".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
-            paragraphs: Vec::new(), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b100", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
         };
         let added = round_trip(&base, &create_block(new_block, None, None));
         assert_eq!(added.blocks.len(), base.blocks.len() + 1);

@@ -76,6 +76,7 @@ impl Puzzle5dDiff {
         if let Some(label) = &self.label { next.label = label.clone(); }
         if let Some(meta) = &self.meta { next.meta = meta.clone(); }
         if let Some(catalogs) = &self.kind_catalogs { next.kind_catalogs = catalogs.clone(); }
+        if let Some(extra) = &self.kind_catalogs_extra { next.kind_catalogs_extra = extra.clone(); }
         if let Some(list) = &self.kind_compatibility { next.kind_compatibility = list.values.clone(); }
         if let Some(delta) = &self.parts { next.parts = apply_parts_delta(&next.parts, delta); }
         if let Some(delta) = &self.fasteners { next.fasteners = apply_fasteners_delta(&next.fasteners, delta); }
@@ -120,6 +121,7 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
         if let Some(label) = &self.label { next.label = label.clone(); }
         if let Some(meta) = &self.meta { next.meta = meta.clone(); }
         if let Some(catalogs) = &self.kind_catalogs { next.kind_catalogs = catalogs.clone(); }
+        if let Some(extra) = &self.kind_catalogs_extra { next.kind_catalogs_extra = extra.clone(); }
         if let Some(list) = &self.kind_compatibility { next.kind_compatibility = list.values.clone(); }
         if let Some(delta) = &self.parts { next.parts = apply_parts_delta(&next.parts, delta); }
         if let Some(delta) = &self.fasteners { next.fasteners = apply_fasteners_delta(&next.fasteners, delta); }
@@ -129,7 +131,7 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() { *self = other; return; }
         macro_rules! take { ($f:ident) => { if other.$f.is_some() { self.$f = other.$f; } }; }
-        take!(schema); take!(domain); take!(label); take!(meta); take!(kind_catalogs); take!(kind_compatibility);
+        take!(schema); take!(domain); take!(label); take!(meta); take!(kind_catalogs); take!(kind_catalogs_extra); take!(kind_compatibility);
         take!(selected_part_ids); take!(selected_grip_ids); take!(selected_fastener_ids); take!(active_utility_id);
         take!(camera2d_x); take!(camera2d_y); take!(camera2d_zoom);
         take!(camera3d_position_x); take!(camera3d_position_y); take!(camera3d_position_z);

@@ -337,21 +337,21 @@ mod tests {
         new_stakeholder.header.id = new_id.clone();
         new_stakeholder.header.name = "New Stakeholder".into();
 
-        let create = ProgramMutation::CreateStakeholder(super::create_stakeholder::mutation::CreateStakeholder { stakeholder: new_stakeholder });
+        let create = ProgramMutation::CreateStakeholder(super::super::create_stakeholder::mutation::CreateStakeholder { stakeholder: new_stakeholder });
         let with_new = round_trip(&snapshot, &create);
         assert_eq!(with_new.stakeholders.len(), snapshot.stakeholders.len() + 1);
 
-        let rename = ProgramMutation::RenameStakeholder(super::rename_stakeholder::mutation::RenameStakeholder { id: new_id.clone(), new_name: "Renamed".into() });
+        let rename = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::mutation::RenameStakeholder { id: new_id.clone(), new_name: "Renamed".into() });
         let renamed = round_trip(&with_new, &rename);
         assert_eq!(renamed.stakeholders.iter().find(|s| s.header.id == new_id).unwrap().header.name, "Renamed");
 
         let mut replacement = renamed.stakeholders.iter().find(|s| s.header.id == new_id).unwrap().clone();
         replacement.role = "Sponsor".into();
-        let replace = ProgramMutation::ReplaceStakeholder(super::replace_stakeholder::mutation::ReplaceStakeholder { stakeholder: replacement });
+        let replace = ProgramMutation::ReplaceStakeholder(super::super::replace_stakeholder::mutation::ReplaceStakeholder { stakeholder: replacement });
         let replaced = round_trip(&renamed, &replace);
         assert_eq!(replaced.stakeholders.iter().find(|s| s.header.id == new_id).unwrap().role, "Sponsor");
 
-        let delete = ProgramMutation::DeleteStakeholder(super::delete_stakeholder::mutation::DeleteStakeholder { id: new_id });
+        let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::mutation::DeleteStakeholder { id: new_id });
         let deleted = round_trip(&replaced, &delete);
         assert_eq!(deleted.stakeholders.len(), snapshot.stakeholders.len());
     }
@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn delete_stakeholder_of_a_missing_id_has_an_empty_inverse() {
         let snapshot = sample_plugin();
-        let delete = ProgramMutation::DeleteStakeholder(super::delete_stakeholder::mutation::DeleteStakeholder { id: EntityId("nope".into()) });
+        let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::mutation::DeleteStakeholder { id: EntityId("nope".into()) });
         assert!(delete.inverse(&snapshot).is_empty(), "deleting an absent id has nothing to undo");
     }
     //#endregion 👥stakeholders
@@ -373,21 +373,21 @@ mod tests {
         new_element.header.id = new_id.clone();
         new_element.header.name = "Storage".into();
 
-        let create = ProgramMutation::CreateProgramElement(super::create_program_element::mutation::CreateProgramElement { program_element: new_element });
+        let create = ProgramMutation::CreateProgramElement(super::super::create_program_element::mutation::CreateProgramElement { program_element: new_element });
         let with_new = round_trip(&snapshot, &create);
         assert_eq!(with_new.elements.len(), snapshot.elements.len() + 1);
 
-        let rename = ProgramMutation::RenameProgramElement(super::rename_program_element::mutation::RenameProgramElement { id: new_id.clone(), new_name: "Storage Room".into() });
+        let rename = ProgramMutation::RenameProgramElement(super::super::rename_program_element::mutation::RenameProgramElement { id: new_id.clone(), new_name: "Storage Room".into() });
         let renamed = round_trip(&with_new, &rename);
         assert_eq!(renamed.elements.iter().find(|e| e.header.id == new_id).unwrap().header.name, "Storage Room");
 
         let mut replacement = renamed.elements.iter().find(|e| e.header.id == new_id).unwrap().clone();
         replacement.code = "STO".into();
-        let replace = ProgramMutation::ReplaceProgramElement(super::replace_program_element::mutation::ReplaceProgramElement { program_element: replacement });
+        let replace = ProgramMutation::ReplaceProgramElement(super::super::replace_program_element::mutation::ReplaceProgramElement { program_element: replacement });
         let replaced = round_trip(&renamed, &replace);
         assert_eq!(replaced.elements.iter().find(|e| e.header.id == new_id).unwrap().code, "STO");
 
-        let delete = ProgramMutation::DeleteProgramElement(super::delete_program_element::mutation::DeleteProgramElement { id: new_id });
+        let delete = ProgramMutation::DeleteProgramElement(super::super::delete_program_element::mutation::DeleteProgramElement { id: new_id });
         let deleted = round_trip(&replaced, &delete);
         assert_eq!(deleted.elements.len(), snapshot.elements.len());
     }
@@ -397,13 +397,13 @@ mod tests {
     #[test]
     fn update_meta_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
-        let rename = ProgramMutation::RenameMeta(super::rename_meta::mutation::RenameMeta { new_title: "Clinic".into() });
+        let rename = ProgramMutation::RenameMeta(super::super::rename_meta::mutation::RenameMeta { new_title: "Clinic".into() });
         let renamed = round_trip(&snapshot, &rename);
         assert_eq!(renamed.meta.title, "Clinic");
 
         let mut new_meta = renamed.meta.clone();
         new_meta.industry_sector = "healthcare".into();
-        let replace = ProgramMutation::ReplaceMeta(super::replace_meta::mutation::ReplaceMeta { new_meta });
+        let replace = ProgramMutation::ReplaceMeta(super::super::replace_meta::mutation::ReplaceMeta { new_meta });
         let replaced = round_trip(&renamed, &replace);
         assert_eq!(replaced.meta.industry_sector, "healthcare");
     }
@@ -411,13 +411,13 @@ mod tests {
     #[test]
     fn update_project_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
-        let rename = ProgramMutation::RenameProject(super::rename_project::mutation::RenameProject { new_code: "CLN-001".into() });
+        let rename = ProgramMutation::RenameProject(super::super::rename_project::mutation::RenameProject { new_code: "CLN-001".into() });
         let renamed = round_trip(&snapshot, &rename);
         assert_eq!(renamed.project.code, "CLN-001");
 
         let mut new_project = renamed.project.clone();
         new_project.client_name = "Sample Health".into();
-        let replace = ProgramMutation::ReplaceProject(super::replace_project::mutation::ReplaceProject { new_project });
+        let replace = ProgramMutation::ReplaceProject(super::super::replace_project::mutation::ReplaceProject { new_project });
         let replaced = round_trip(&renamed, &replace);
         assert_eq!(replaced.project.client_name, "Sample Health");
     }
@@ -425,13 +425,13 @@ mod tests {
     #[test]
     fn update_governance_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
-        let rename = ProgramMutation::RenameGovernance(super::rename_governance::mutation::RenameGovernance { new_framework: "ISO 41001".into() });
+        let rename = ProgramMutation::RenameGovernance(super::super::rename_governance::mutation::RenameGovernance { new_framework: "ISO 41001".into() });
         let renamed = round_trip(&snapshot, &rename);
         assert_eq!(renamed.governance.framework, "ISO 41001");
 
         let mut new_governance = renamed.governance.clone();
         new_governance.risk_appetite = Some("Low".into());
-        let replace = ProgramMutation::ReplaceGovernance(super::replace_governance::mutation::ReplaceGovernance { new_governance });
+        let replace = ProgramMutation::ReplaceGovernance(super::super::replace_governance::mutation::ReplaceGovernance { new_governance });
         let replaced = round_trip(&renamed, &replace);
         assert_eq!(replaced.governance.risk_appetite, Some("Low".into()));
     }
@@ -467,11 +467,11 @@ mod tests {
             internal_external_access: None,
         };
         let new_id = new_adjacency.header.id.clone();
-        let connect = ProgramMutation::ConnectAdjacency(super::connect_adjacency::mutation::ConnectAdjacency { adjacency: new_adjacency });
+        let connect = ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::mutation::ConnectAdjacency { adjacency: new_adjacency });
         let connected = round_trip(&snapshot, &connect);
         assert_eq!(connected.adjacencies.len(), snapshot.adjacencies.len() + 1);
 
-        let disconnect = ProgramMutation::DisconnectAdjacency(super::disconnect_adjacency::mutation::DisconnectAdjacency { id: new_id });
+        let disconnect = ProgramMutation::DisconnectAdjacency(super::super::disconnect_adjacency::mutation::DisconnectAdjacency { id: new_id });
         let disconnected = round_trip(&connected, &disconnect);
         assert_eq!(disconnected.adjacencies.len(), snapshot.adjacencies.len());
     }
@@ -483,7 +483,7 @@ mod tests {
         let mut updated = existing.clone();
         updated.header.id = EntityId::new_serial("adjacency", "adjacency");
         updated.weight = 5.0;
-        let connect = ProgramMutation::ConnectAdjacency(super::connect_adjacency::mutation::ConnectAdjacency { adjacency: updated });
+        let connect = ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::mutation::ConnectAdjacency { adjacency: updated });
         let connected = round_trip(&snapshot, &connect);
         assert_eq!(connected.adjacencies.len(), snapshot.adjacencies.len(), "same-pair connect patches in place, it does not add a row");
         assert_eq!(connected.adjacencies[0].weight, 5.0);
@@ -497,11 +497,11 @@ mod tests {
         let snapshot = sample_plugin();
         let trace = TraceLink::new(snapshot.elements[0].header.id.clone(), snapshot.elements[1].header.id.clone(), TraceKind::FullAuditTrail);
         let id = trace.id.clone();
-        let connect = ProgramMutation::ConnectTrace(super::connect_trace::mutation::ConnectTrace { trace });
+        let connect = ProgramMutation::ConnectTrace(super::super::connect_trace::mutation::ConnectTrace { trace });
         let connected = round_trip(&snapshot, &connect);
         assert_eq!(connected.traces.len(), 1);
 
-        let disconnect = ProgramMutation::DisconnectTrace(super::disconnect_trace::mutation::DisconnectTrace { id });
+        let disconnect = ProgramMutation::DisconnectTrace(super::super::disconnect_trace::mutation::DisconnectTrace { id });
         let disconnected = round_trip(&connected, &disconnect);
         assert!(disconnected.traces.is_empty());
     }
@@ -511,12 +511,12 @@ mod tests {
     #[test]
     fn program_mutation_op_text_round_trips_a_sample_of_variants() {
         let stakeholder = sample_plugin().stakeholders[0].clone();
-        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::CreateStakeholder(super::create_stakeholder::mutation::CreateStakeholder { stakeholder: stakeholder.clone() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DeleteStakeholder(super::delete_stakeholder::mutation::DeleteStakeholder { id: stakeholder.header.id.clone() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameStakeholder(super::rename_stakeholder::mutation::RenameStakeholder { id: stakeholder.header.id.clone(), new_name: "X".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::ReplaceStakeholder(super::replace_stakeholder::mutation::ReplaceStakeholder { stakeholder }));
-        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameMeta(super::rename_meta::mutation::RenameMeta { new_title: "Clinic".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DisconnectAdjacency(super::disconnect_adjacency::mutation::DisconnectAdjacency { id: EntityId("a1".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::CreateStakeholder(super::super::create_stakeholder::mutation::CreateStakeholder { stakeholder: stakeholder.clone() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::mutation::DeleteStakeholder { id: stakeholder.header.id.clone() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::mutation::RenameStakeholder { id: stakeholder.header.id.clone(), new_name: "X".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::ReplaceStakeholder(super::super::replace_stakeholder::mutation::ReplaceStakeholder { stakeholder }));
+        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameMeta(super::super::rename_meta::mutation::RenameMeta { new_title: "Clinic".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DisconnectAdjacency(super::super::disconnect_adjacency::mutation::DisconnectAdjacency { id: EntityId("a1".into()) }));
     }
     //#endregion 🗣️OpText
 
@@ -530,18 +530,18 @@ mod tests {
         let base = sample_plugin();
         let mut new_stakeholder = base.stakeholders[0].clone();
         new_stakeholder.header.id = EntityId::new_serial("stakeholder", "stakeholder");
-        let create = ProgramMutation::CreateStakeholder(super::create_stakeholder::mutation::CreateStakeholder { stakeholder: new_stakeholder.clone() });
+        let create = ProgramMutation::CreateStakeholder(super::super::create_stakeholder::mutation::CreateStakeholder { stakeholder: new_stakeholder.clone() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
         let d1 = create.diff(&base);
         let after = d1.apply(&base);
-        let d2 = ProgramMutation::RenameStakeholder(super::rename_stakeholder::mutation::RenameStakeholder { id: new_stakeholder.header.id, new_name: "Renamed".into() }).diff(&after);
+        let d2 = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::mutation::RenameStakeholder { id: new_stakeholder.header.id, new_name: "Renamed".into() }).diff(&after);
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
     #[test]
     fn rename_meta_obeys_the_inverse_law() {
         let base = sample_plugin();
-        let rename = ProgramMutation::RenameMeta(super::rename_meta::mutation::RenameMeta { new_title: "Renamed Program".into() });
+        let rename = ProgramMutation::RenameMeta(super::super::rename_meta::mutation::RenameMeta { new_title: "Renamed Program".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &rename);
     }
 
@@ -550,7 +550,7 @@ mod tests {
         let base = sample_plugin();
         let mut updated = base.adjacencies[0].clone();
         updated.weight = 9.0;
-        let connect = ProgramMutation::ConnectAdjacency(super::connect_adjacency::mutation::ConnectAdjacency { adjacency: updated });
+        let connect = ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::mutation::ConnectAdjacency { adjacency: updated });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &connect);
     }
     //#endregion ⚖️SemanticLaws
@@ -560,7 +560,7 @@ mod tests {
     fn semantic_kinds_cover_every_variant() {
         assert_eq!(ProgramMutation::kinds().len(), 266);
         let stakeholder = sample_plugin().stakeholders[0].clone();
-        let mutation = ProgramMutation::RenameStakeholder(super::rename_stakeholder::mutation::RenameStakeholder { id: stakeholder.header.id, new_name: "X".into() });
+        let mutation = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::mutation::RenameStakeholder { id: stakeholder.header.id, new_name: "X".into() });
         assert_eq!(mutation.semantics().kind, "rename-stakeholder");
         assert_eq!(mutation.semantics().record, "RenamedStakeholder");
     }

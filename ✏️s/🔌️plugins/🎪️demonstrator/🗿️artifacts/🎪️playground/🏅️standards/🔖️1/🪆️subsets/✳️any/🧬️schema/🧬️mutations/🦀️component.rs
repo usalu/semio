@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = PlaygroundSnapshot, diff = PlaygroundDiff, schema = "s.demonstrator.playground")]
 pub enum PlaygroundMutation {
-    ChangeSchema(change_schema::mutation::ChangeSchema),
+    ChangeSchema(super::change_schema::mutation::ChangeSchema),
 }
 //#endregion 🔖️Mutations
 
@@ -40,7 +40,7 @@ mod tests {
         ));
         store
             .dispatch(store::ArtifactCommand::Apply {
-                mutations: vec![PlaygroundMutation::ChangeSchema(change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() })],
+                mutations: vec![PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() })],
                 description: None,
             })
             .expect("apply");
@@ -50,12 +50,12 @@ mod tests {
     #[test]
     fn change_schema_inverse_round_trips() {
         let base = PlaygroundSnapshot::default();
-        let mutation = PlaygroundMutation::ChangeSchema(change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() });
+        let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() });
         let after = mutation.diff(&base).apply(&base);
         assert_eq!(after.schema, "playground.custom");
 
         let undo = mutation.inverse(&base);
-        assert_eq!(undo, vec![PlaygroundMutation::ChangeSchema(change_schema::mutation::ChangeSchema { new_schema: base.schema.clone() })]);
+        assert_eq!(undo, vec![PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: base.schema.clone() })]);
         let mut state = after;
         for step in &undo {
             state = step.diff(&base).apply(&state);
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn semantic_kinds_cover_every_variant() {
         assert_eq!(PlaygroundMutation::kinds().len(), 1);
-        let mutation = PlaygroundMutation::ChangeSchema(change_schema::mutation::ChangeSchema { new_schema: "x".into() });
+        let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "x".into() });
         assert_eq!(mutation.semantics().kind, "change-schema");
         assert_eq!(mutation.semantics().record, "ChangedSchema");
     }
@@ -78,11 +78,11 @@ mod tests {
     #[test]
     fn change_schema_obeys_the_inverse_and_absorb_laws() {
         let base = PlaygroundSnapshot { schema: "playground.base".into() };
-        let change = PlaygroundMutation::ChangeSchema(change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
+        let change = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &change);
         let d1 = change.diff(&base);
         let after = d1.apply(&base);
-        let d2 = PlaygroundMutation::ChangeSchema(change_schema::mutation::ChangeSchema { new_schema: "playground.changed-again".into() }).diff(&after);
+        let d2 = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed-again".into() }).diff(&after);
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion ⚖️SemanticLaws

@@ -1,6 +1,9 @@
 //! 🧬️ Jack artifact schema — every field of the artifact with its state class.
+//!
+//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` replaced by a single
+//! composed `content: JackContentChild` slot, matching `DagArtifact`'s own field swap exactly.
 
-use crate::artifacts::jack::{Camera, Edge, Manifest, Node};
+use crate::artifacts::jack::{Camera, JackContentChild, Manifest};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -16,8 +19,9 @@ pub struct JackArtifact {
     #[state(artifact)] pub manifest_id: Option<String>,
     #[state(artifact)] pub manifest: Manifest,
     #[state(artifact)] pub camera: Camera,
-    #[state(artifact)] pub nodes: Vec<Node>,
-    #[state(artifact)] pub edges: Vec<Edge>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.graph")]
+    pub content: JackContentChild,
     #[state(artifact)] pub root_node_id: Option<String>,
     #[state(presence)] pub selected_node_ids: Vec<String>,
     #[state(presence)] pub active_fixture_id: String,
@@ -54,8 +58,7 @@ impl Default for JackArtifact {
             manifest_id: None,
             manifest: Manifest::default(),
             camera: Camera::default(),
-            nodes: Vec::new(),
-            edges: Vec::new(),
+            content: crate::artifacts::jack::jack_content_child_handle_and_cache(Vec::new(), Vec::new()),
             root_node_id: None,
             selected_node_ids: Vec::new(),
             active_fixture_id: String::new(),
@@ -83,8 +86,7 @@ impl JackArtifact {
             manifest_id: self.manifest_id.clone(),
             manifest: self.manifest.clone(),
             camera: self.camera.clone(),
-            nodes: self.nodes.clone(),
-            edges: self.edges.clone(),
+            content: self.content.clone(),
             root_node_id: self.root_node_id.clone(),
         }
     }
@@ -98,8 +100,7 @@ impl JackArtifact {
             manifest_id: snapshot.manifest_id,
             manifest: snapshot.manifest,
             camera: snapshot.camera,
-            nodes: snapshot.nodes,
-            edges: snapshot.edges,
+            content: snapshot.content,
             root_node_id: snapshot.root_node_id,
             viewport_camera,
             ..Self::default()
@@ -113,9 +114,18 @@ impl JackArtifact {
         self.manifest_id = snapshot.manifest_id;
         self.manifest = snapshot.manifest;
         self.camera = snapshot.camera;
-        self.nodes = snapshot.nodes;
-        self.edges = snapshot.edges;
+        self.content = snapshot.content;
         self.root_node_id = snapshot.root_node_id;
+    }
+
+    /// 🔎 Live node list, read through the working-scene cache.
+    pub fn nodes(&self) -> Vec<crate::artifacts::jack::Node> {
+        crate::artifacts::jack::jack_working_scene_for_handle(&self.content).nodes
+    }
+
+    /// 🔎 Live edge list, read through the working-scene cache.
+    pub fn edges(&self) -> Vec<crate::artifacts::jack::Edge> {
+        crate::artifacts::jack::jack_working_scene_for_handle(&self.content).edges
     }
 }
 //#endregion 🔖️Conversions
@@ -172,8 +182,8 @@ mod empty_document_tests {
     #[test]
     fn empty_jack_document_has_no_nodes_or_edges() {
         let fixture = empty_jack_document();
-        assert!(fixture.nodes.is_empty());
-        assert!(fixture.edges.is_empty());
+        assert!(fixture.nodes().is_empty());
+        assert!(fixture.edges().is_empty());
     }
 }
 //#endregion 🧪️EmptyDocumentTests

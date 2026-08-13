@@ -112,16 +112,16 @@ mod tests {
     }
 
     fn chain_snapshot() -> JackSnapshot {
-        JackSnapshot {
-            schema: "trinity.graph".into(),
-            name: "chain".into(),
-            manifest_id: None,
-            manifest: Default::default(),
-            camera: Default::default(),
-            nodes: vec![node("root"), node("mid"), node("leaf")],
-            edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")],
-            root_node_id: Some("root".into()),
-        }
+        JackSnapshot::with_content(
+            "trinity.graph".into(),
+            "chain".into(),
+            None,
+            Default::default(),
+            Default::default(),
+            vec![node("root"), node("mid"), node("leaf")],
+            vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")],
+            Some("root".into()),
+        )
     }
     //#endregion 🧸️Fixtures
 

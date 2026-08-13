@@ -244,7 +244,8 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
 }
 
 fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
-    let node = fixture.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
+    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+    let node = scene.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
     match prop {
         "name" => {
             let PropertyValue::String(name) = value else {
@@ -265,21 +266,22 @@ fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: 
 }
 
 fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
+    let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
-    let left_id = format!("{}-{}", left.var, fixture.nodes.len());
+    let left_id = format!("{}-{}", left.var, scene.nodes.len());
     let mut operations = Vec::new();
     let mut left_ports = Vec::new();
     if pattern.edge.is_some() {
         left_ports.push(Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
     }
-    operations.push(create_node(Node { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: fixture.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: left_ports }));
+    operations.push(create_node(Node { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: scene.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: left_ports }));
     if let Some(edge_pat) = &pattern.edge {
-        let right_id = format!("{}-{}", edge_pat.right.var, fixture.nodes.len() + 1);
+        let right_id = format!("{}-{}", edge_pat.right.var, scene.nodes.len() + 1);
         operations.push(create_node(Node {
             id: right_id.clone(),
             kind: edge_pat.right.kind.clone(),
             name: edge_pat.right.var.clone(),
-            x: (fixture.nodes.len() + 1) as f64 * 120.0,
+            x: (scene.nodes.len() + 1) as f64 * 120.0,
             y: 80.0,
             width: 80.0,
             height: 40.0,
@@ -287,7 +289,7 @@ fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<V
             ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
         }));
         operations.push(create_edge(Edge {
-            id: format!("e-{}", fixture.edges.len()),
+            id: format!("e-{}", scene.edges.len()),
             kind: edge_pat.kind.clone().unwrap_or_else(|| "Connection".into()),
             source: port_key(&left_id, "out"),
             target: port_key(&right_id, "in"),
@@ -305,14 +307,13 @@ mod tests {
     use crate::lexer::{lex, tokenize, TokenClass};
 
     fn mini_graph() -> Graph {
-        let fixture = JackSnapshot {
-            schema: JackSnapshot::SCHEMA.into(),
-            name: "mini".into(),
-            manifest_id: Some("nakagin".into()),
-            manifest: Manifest::nakagin_default(),
-            camera: Camera::default(),
-            root_node_id: Some("root".into()),
-            nodes: vec![
+        let fixture = JackSnapshot::with_content(
+            JackSnapshot::SCHEMA.into(),
+            "mini".into(),
+            Some("nakagin".into()),
+            Manifest::nakagin_default(),
+            Camera::default(),
+            vec![
                 Node {
                     id: "root".into(),
                     kind: "Piece".into(),
@@ -336,7 +337,7 @@ mod tests {
                     ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
                 },
             ],
-            edges: vec![Edge {
+            vec![Edge {
                 id: "e1".into(),
                 kind: "Connection".into(),
                 source: "root@out".into(),
@@ -348,7 +349,8 @@ mod tests {
                     p
                 },
             }],
-        };
+            Some("root".into()),
+        );
         Graph::from_fixture(fixture).unwrap()
     }
 
@@ -373,8 +375,8 @@ mod tests {
         let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b").unwrap();
         assert_eq!(result.kind, QueryResultKind::Graph);
         let fixture = result.graph_fixture.expect("graph fixture");
-        assert_eq!(fixture.nodes.len(), 2);
-        assert_eq!(fixture.edges.len(), 1);
+        assert_eq!(fixture.nodes().len(), 2);
+        assert_eq!(fixture.edges().len(), 1);
     }
 
     #[test]

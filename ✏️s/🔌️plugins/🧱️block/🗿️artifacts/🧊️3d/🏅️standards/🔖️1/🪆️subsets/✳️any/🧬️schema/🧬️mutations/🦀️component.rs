@@ -143,7 +143,7 @@ mod tests {
     fn seeded_snapshot() -> Block3dSnapshot {
         let mut base = empty_block3d_snapshot();
         base.representations.push(BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: vec!["lod0".into()], lod: None, description: String::new(), attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }] });
-        base.vortex_kinds.push(Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() });
+        crate::artifacts::block3d::set_vortex_kinds(&mut base, vec![Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
         base.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });
         base.compatibility.push(BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true });
         base.attributes.push(BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None });
@@ -184,11 +184,11 @@ mod tests {
         let base = empty_block3d_snapshot();
         let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() };
         let created = round_trip(&base, &create_vortex_kind(vortex_kind));
-        assert_eq!(created.vortex_kinds.len(), 1);
+        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&created).len(), 1);
         let renamed = round_trip(&created, &rename_vortex_kind("vk0".into(), "renamed".into()));
-        assert_eq!(renamed.vortex_kinds[0].name, "renamed");
+        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&renamed)[0].name, "renamed");
         let deleted = round_trip(&renamed, &delete_vortex_kind("vk0".into()));
-        assert!(deleted.vortex_kinds.is_empty());
+        assert!(crate::artifacts::block3d::vortex_kinds_of(&deleted).is_empty());
     }
 
     #[test]

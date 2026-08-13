@@ -80,7 +80,7 @@ pub fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&s
         "meshUrl": resolve_active_mesh_url(definition, wanted_tags),
         "vortices": vortices,
     });
-    let vortex_kinds: Vec<Value> = definition.vortex_kinds.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultCableKind": kind.default_cable_kind })).collect();
+    let vortex_kinds: Vec<Value> = crate::artifacts::block3d::vortex_kinds_of(definition).iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultCableKind": kind.default_cable_kind })).collect();
     let kind_compatibility: Vec<Value> = definition.compatibility.iter().map(|rule| json!({ "source": rule.source, "target": rule.target, "bidirectional": rule.bidirectional })).collect();
     json!({
         "schema": "manifest",
@@ -149,7 +149,7 @@ mod tests {
         let snapshot = snapshot_with_vortices(vec![vortex("v0", [1.0, 2.0, 3.0], 0.5), vortex("v1", [-1.0, 0.0, 4.0], 0.25)]);
         let inferred = Block3dInference::infer(&snapshot);
         let bounds = inferred.bounds.bounding_box.expect("non-empty vortices produce a bounding box");
-        assert_eq!(bounds.min, [-1.25, -0.5, 2.5]);
+        assert_eq!(bounds.min, [-1.25, -0.25, 2.5]);
         assert_eq!(bounds.max, [1.5, 2.5, 4.25]);
         assert_eq!(inferred.bounds.vertex_count, 2);
     }

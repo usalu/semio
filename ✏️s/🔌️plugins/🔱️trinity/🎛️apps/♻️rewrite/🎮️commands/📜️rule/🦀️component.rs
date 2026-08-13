@@ -24,8 +24,10 @@ fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<Strin
         return false;
     };
     let mut changed = false;
-    for node in &edited.nodes {
-        let Some(prev) = current.nodes.iter().find(|entry| entry.id == node.id) else {
+    let edited_nodes = edited.nodes();
+    let current_nodes = current.nodes();
+    for node in &edited_nodes {
+        let Some(prev) = current_nodes.iter().find(|entry| entry.id == node.id) else {
             continue;
         };
         if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
@@ -187,13 +189,16 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
                     continue;
                 }
                 if surface_id == crate::apps::rewrite::TRINITY_REWRITE_PLAY_SURFACE_BEFORE {
-                    if let Some(mut fixture) = parse_fixture_json(&state.before_fixture_json) {
-                        fixture.nodes.retain(|node| !selected_node_ids.contains(&node.id));
-                        fixture.edges.retain(|edge| {
+                    if let Some(fixture) = parse_fixture_json(&state.before_fixture_json) {
+                        let mut nodes = fixture.nodes();
+                        nodes.retain(|node| !selected_node_ids.contains(&node.id));
+                        let mut edges = fixture.edges();
+                        edges.retain(|edge| {
                             let from = crate::artifacts::jack::port_node_id(&edge.source).unwrap_or(&edge.source);
                             let to = crate::artifacts::jack::port_node_id(&edge.target).unwrap_or(&edge.target);
                             !selected_node_ids.iter().any(|id| id == from || id == to)
                         });
+                        let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, edges, fixture.root_node_id.clone());
                         if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
                             state.before_fixture_json = json;
                             clear_selection = true;
@@ -218,8 +223,9 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
 }
 
 fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
-    let mut fixture = JackSnapshot::from_json(fixture_json).ok()?;
-    for node in fixture.nodes.iter_mut() {
+    let fixture = JackSnapshot::from_json(fixture_json).ok()?;
+    let mut nodes = fixture.nodes();
+    for node in nodes.iter_mut() {
         if !node_ids.iter().any(|id| id == &node.id) {
             continue;
         }
@@ -229,6 +235,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
             _ => {}
         }
     }
+    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 

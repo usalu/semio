@@ -81,8 +81,9 @@ pub(crate) fn split_endpoint(endpoint: &str) -> (String, String) {
 }
 
 pub(crate) fn fixture_to_workflow(fixture: &JackSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, NodeGraphViewport) {
-    let nodes: Vec<NodeGraphNodeRecord> = fixture.nodes.iter().map(node_to_workflow_record).collect();
-    let edges: Vec<NodeGraphEdgeRecord> = fixture
+    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+    let nodes: Vec<NodeGraphNodeRecord> = scene.nodes.iter().map(node_to_workflow_record).collect();
+    let edges: Vec<NodeGraphEdgeRecord> = scene
         .edges
         .iter()
         .map(|edge| {
@@ -573,7 +574,7 @@ mod tests {
     }
 
     fn node_id_at(app: &VcsArtifactApp<TrinityJackPlayApp>, index: usize) -> String {
-        app.snapshot().expect("projection").nodes[index].id.clone()
+        app.snapshot().expect("projection").nodes()[index].id.clone()
     }
 
     #[test]
@@ -599,7 +600,11 @@ mod tests {
         let result = app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local")).expect("run");
         assert!(!result.mutations.is_empty(), "a SET query emits operations");
         let projection = app.snapshot().expect("projection");
-        assert!(serde_json::to_string(&projection).unwrap().contains("ran-label"));
+        // 🔬 `content` is now an opaque composed-child handle — `serde_json::to_string(&projection)`
+        // no longer surfaces node property data directly (ticket
+        // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); inspect through the working-scene
+        // accessor instead of the raw derived JSON serialization.
+        assert!(projection.nodes().iter().any(|node| node.properties.get("label") == Some(&crate::artifacts::jack::PropertyValue::String("ran-label".into()))));
     }
 
     #[test]
@@ -614,7 +619,7 @@ mod tests {
 
     #[test]
     fn nakagin_fixture_has_nodes() {
-        assert!(!default_fixture().nodes.is_empty());
+        assert!(!default_fixture().nodes().is_empty());
     }
 
     #[test]
@@ -681,7 +686,13 @@ mod tests {
     fn set_active_example_swaps_fixture_and_seeds_query() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).expect("set active example");
-        assert!(!result.mutations.is_empty());
+        // 🩹 Pre-existing test/implementation mismatch (traced to commit `a445617c`, 2026-08-12
+        // 15:50:51 +0200 — predates this migration, not introduced by it): `set_active_example`
+        // routes the fixture swap through `HostEffect::LoadDocument` (whole-document replace is
+        // banned from the `Mutation` enum outright), never through `artifact_mutations`, so
+        // `InvocationResult.mutations` is always empty for this command — `requested_effects` is
+        // the field that actually carries the swap.
+        assert!(!result.requested_effects.is_empty());
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("RETURN a, r, b"));
     }
@@ -694,7 +705,7 @@ mod tests {
         let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local")).expect("delete");
         assert!(!result.mutations.is_empty());
         let projection = app.snapshot().expect("projection");
-        assert!(!projection.nodes.iter().any(|node| node.id == node_id));
+        assert!(!projection.nodes().iter().any(|node| node.id == node_id));
     }
 
     #[test]

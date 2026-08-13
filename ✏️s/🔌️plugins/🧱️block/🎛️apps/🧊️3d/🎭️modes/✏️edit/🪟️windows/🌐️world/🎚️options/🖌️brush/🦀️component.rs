@@ -26,7 +26,7 @@ pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Bl
                 id: "block3d-brush-kind".into(),
                 label: Some(labels.vortex_kinds.as_str().to_string()),
                 value: resolve_brush_vortex_kind_id(definition, config),
-                items: definition.vortex_kinds.iter().map(|kind| MeasureSelectItem { id: kind.id.clone(), value: kind.id.clone(), label: kind.label.clone() }).collect(),
+                items: crate::artifacts::block3d::vortex_kinds_of(definition).iter().map(|kind| MeasureSelectItem { id: kind.id.clone(), value: kind.id.clone(), label: kind.label.clone() }).collect(),
                 on_change: crate::apps::block3d::block3d_action("setBrushVortexKind", None),
             },
             WindowMeasure::Slider {

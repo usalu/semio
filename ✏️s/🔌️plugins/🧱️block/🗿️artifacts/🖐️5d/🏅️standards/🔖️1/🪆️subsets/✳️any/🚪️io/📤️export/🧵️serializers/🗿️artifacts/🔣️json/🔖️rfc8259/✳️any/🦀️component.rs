@@ -8,7 +8,7 @@ pub fn serialize(snapshot: &Block5dSnapshot) -> Result<JsonSnapshot, store::Text
     Ok(JsonSnapshot {
         schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
         value: serde_json::to_value(snapshot)
-            .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?,
+            .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?.into(),
     })
 }
 

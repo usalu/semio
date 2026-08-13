@@ -1,9 +1,0 @@
-{
-  "extensionId": "flow-extension-list",
-  "version": "0.0.0-dev",
-  "label": "flow-extension-list",
-  "extends": "flow",
-  "moduleUrl": "/extensions/flow-extension-list/semio_s_plugin_flow_extension_list.js",
-  "packageHash": "dev:1786546640505",
-  "installedAt": 1786546640505
-}

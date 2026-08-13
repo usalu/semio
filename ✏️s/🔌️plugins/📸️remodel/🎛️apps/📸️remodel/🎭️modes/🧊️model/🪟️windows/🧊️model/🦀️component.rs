@@ -44,8 +44,15 @@ pub fn window_measures(config: &RemodelConfig, labels: &RemodelLabels) -> Vec<Wi
 //#endregion 🔖️Definition
 
 //#region 🔖️Scene
+/// 🧩️ `results.mesh.mesh` is now a composed `s.stdio.semio/v1/mesh` CHILD handle (ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) — reads the real `MeshData` through
+/// `remodel_mesh_workspace`'s working-scene cache; a cold cache renders no mesh entity (empty scene
+/// list) rather than serializing the handle's two opaque strings as if they were geometry.
 fn world_meshes_json(scene: &RemodelSnapshot) -> String {
-    serde_json::to_string(&vec![json!({ "id": REMODEL_MESH_ID, "data": scene.results.mesh.mesh })]).unwrap_or_else(|_| "[]".into())
+    let Some(mesh) = crate::artifacts::remodel::remodel_mesh_workspace(&scene.results.mesh.mesh) else {
+        return "[]".into();
+    };
+    serde_json::to_string(&vec![json!({ "id": REMODEL_MESH_ID, "data": mesh })]).unwrap_or_else(|_| "[]".into())
 }
 
 fn world_instances_json(config: &RemodelConfig) -> String {

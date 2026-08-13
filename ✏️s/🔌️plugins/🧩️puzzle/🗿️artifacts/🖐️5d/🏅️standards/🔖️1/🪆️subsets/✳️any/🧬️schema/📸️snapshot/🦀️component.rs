@@ -1,7 +1,8 @@
 //! 🧬️ Puzzle5d snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, PUZZLE_5D_SCHEMA};
+use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, PUZZLE_5D_SCHEMA};
 use artifact_schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
@@ -23,9 +24,19 @@ pub struct Puzzle5dSnapshot {
     #[dsl(block)]
     #[state(artifact)]
     pub meta: Puzzle5dMeta,
+    /// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4d: composed `s.stdio.semio.kit`
+    /// child handle — the shared (`SemioKitType` id/name/category) half of what was the inline
+    /// `Puzzle5dKindCatalogs` field. See `🗿️artifacts/🖐️5d/🦀️component.rs`'s `🔖️KindCatalogComposition`
+    /// region for the split/join contract and `kind_catalogs_of` accessor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[child(kind = "s.stdio.semio.kit")]
+    #[state(artifact)]
+    pub kind_catalogs: Option<store::ArtifactChild<SemioKitSnapshot>>,
+    /// 🧩️ The puzzle5d-owned overflow half `SemioKitType` cannot represent — sibling to
+    /// `kind_catalogs`, id-joined back together by `kind_catalogs_of`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[state(artifact)]
-    pub kind_catalogs: Option<Puzzle5dKindCatalogs>,
+    pub kind_catalogs_extra: Option<Puzzle5dKindCatalogsExtra>,
     #[serde(default)]
     #[dsl(table)]
     #[state(artifact)]
@@ -104,6 +115,7 @@ impl Default for Puzzle5dSnapshot {
             label: None,
             meta: Default::default(),
             kind_catalogs: None,
+            kind_catalogs_extra: None,
             kind_compatibility: Vec::new(),
             parts: Vec::new(),
             fasteners: Vec::new(),

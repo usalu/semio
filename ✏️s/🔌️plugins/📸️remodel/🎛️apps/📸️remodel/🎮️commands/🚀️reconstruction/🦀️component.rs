@@ -42,7 +42,7 @@ pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emi
     let mut pushed = 0u32;
     for stream in &scene.streams {
         for frame_ref in &stream.frames {
-            let Some(asset) = scene.assets.get(&frame_ref.asset_id) else { continue };
+            let Some(asset) = crate::artifacts::remodel::remodel_asset(&scene.assets, &frame_ref.asset_id) else { continue };
             let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&asset.data) else { continue };
             if let Ok(image) = decode_still_image(&asset.mime, &bytes) {
                 engine.push_frame(frame_ref.index, image, frame_ref.timestamp_ms);
@@ -112,7 +112,7 @@ pub fn run_whole_pipeline(doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Emi
                         operations.push(create_asset(asset_id.clone(), ImageAsset { mime: "image/png".into(), data: texture.clone(), width: texture_size, height: texture_size }));
                         texture_asset_id = Some(asset_id);
                     }
-                    operations.push(replace_mesh_result(Box::new(RemodelMesh { mesh: mesh_data, source: MeshSource::Reconstructed, texture_asset_id, watertight })));
+                    operations.push(replace_mesh_result(Box::new(RemodelMesh { mesh: crate::artifacts::remodel::mint_and_stash_mesh(mesh_data), source: MeshSource::Reconstructed, texture_asset_id, watertight })));
                 }
                 if let Some(quality) = &quality {
                     operations.push(replace_qc(Some(build_qc_snapshot(quality, registered_count, accepted_count, scene.gcps.len()))));

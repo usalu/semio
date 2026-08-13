@@ -9,11 +9,20 @@
 //! subdirs one at a time without ever touching a consumer. `MeshTransfer`/`Vec3`/`Aabb`/
 //! `ParamDomain` stayed behind in `semio_framework_3d::brep::engine` — those algorithm modules
 //! still return/accept them directly, so this file imports them back across the new edge.
+//!
+//! `📦️mesh-io` (below) moved IN wave DEDUP: it was brep↔mesh bridging/IO code whose only real
+//! consumer was already this file, and its DWG calls were the last framework-tier caller of the
+//! (now-deleted) `semio_framework::mesh_to_dwg_drawing`/`dwg_from_bytes`/`dwg_to_bytes` re-exports —
+//! moving it here (instead of pointing framework-3d at stdio's real `dwg` artifact, which would be
+//! an actual crate cycle given the forward edge above) dissolves that dependency entirely.
 
 use std::collections::HashMap;
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+
+#[path = "📦️mesh-io/🦀️component.rs"]
+mod mesh_io;
 
 use semio_framework_3d::brep::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
 use semio_framework_3d::brep::blend::{chamfer_edges, fillet_edges, fillet_variable};
@@ -34,7 +43,7 @@ use semio_framework_3d::brep::measure::{
     closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box,
     solid_center_of_mass, solid_surface_area, solid_volume,
 };
-use semio_framework_3d::brep::mesh_io::{
+use mesh_io::{
     export_solid_dwg, export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body,
     import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data,
     triangle_mesh_from_transfer, StlFormat,

@@ -18,7 +18,11 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
     let results = &scene.results;
-    let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, results.mesh.mesh.vertex_count(), labels.vertices.as_str(), results.mesh.mesh.triangle_count(), labels.triangles.as_str());
+    // 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads real vertex/triangle counts
+    // through `remodel_mesh_workspace`'s working-scene cache; a cold cache reports 0/0 rather than
+    // panicking or fabricating a count.
+    let mesh = crate::artifacts::remodel::remodel_mesh_workspace(&results.mesh.mesh).unwrap_or_default();
+    let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, mesh.vertex_count(), labels.vertices.as_str(), mesh.triangle_count(), labels.triangles.as_str());
     let sparse_label = results.sparse.as_ref().map_or_else(|| format!("{}: {}", labels.sparse_cloud.as_str(), labels.results_none.as_str()), |sparse| format!("{}: {}", labels.sparse_cloud.as_str(), sparse.points.to_f32_vec().len() / 3));
     let dense_label = results.dense.as_ref().map_or_else(|| format!("{}: {}", labels.dense_cloud.as_str(), labels.results_none.as_str()), |dense| format!("{}: {}", labels.dense_cloud.as_str(), dense.positions.to_f32_vec().len() / 3));
     let trajectory_label =

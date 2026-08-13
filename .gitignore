@@ -86,7 +86,12 @@ test-results
 **/🤖️generated/
 **/🤖️generated.*
 **/🔌️plugin-modules/
+**/🔌️extension-modules/
 **/*.wasm
+**/*.cwasm
+**/*_component.js
+**/*_component.d.ts
+**/*_component.core.wasm
 **/*.map
 **/pkg/
 **/🟨️boot.js

@@ -57,7 +57,7 @@ mod tests {
             description: String::new(),
             attributes: Vec::new(),
         });
-        definition.vortex_kinds.push(Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() });
+        crate::artifacts::block3d::set_vortex_kinds(&mut definition, vec![Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() }]);
         definition.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "door".into(), position: [0.0, -1.6, 1.2], direction: [0.0, -1.0, 0.0], radius: 0.3, label: Some("door".into()) });
         definition
     }

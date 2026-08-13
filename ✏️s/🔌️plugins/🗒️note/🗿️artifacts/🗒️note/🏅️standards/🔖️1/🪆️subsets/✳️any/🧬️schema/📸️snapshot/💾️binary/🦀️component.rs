@@ -52,8 +52,13 @@ mod tests {
             pencil_width: Some(3.0),
             eraser_radius: None,
             assets,
+            linked_artifact: None,
             blocks: vec![
                 NoteBlockNode::Text {
+                    content: crate::artifacts::note::note_text_child_handle_and_cache(
+                        "text-1",
+                        &[NoteTextParagraph { runs: vec![NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None }] }],
+                    ),
                     id: "text-1".into(),
                     name: "Text".into(),
                     x: 0.0,
@@ -63,7 +68,6 @@ mod tests {
                     rotation: 0.0,
                     visible: true,
                     locked: false,
-                    paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None }] }],
                     font_size: 16.0,
                     font_weight: "bold".into(),
                     align: "center".into(),

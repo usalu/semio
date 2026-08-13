@@ -1,8 +1,9 @@
 //! 🧬️ Block3d snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
+use crate::artifacts::block3d::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
@@ -21,10 +22,13 @@ pub struct Block3dSnapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub representations: Vec<BlockRepresentation>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.kit")]
+    pub catalog: store::ArtifactChild<SemioKitSnapshot>,
     #[serde(default)]
     #[dsl(table)]
     #[state(artifact)]
-    pub vortex_kinds: Vec<Block3dVortexKind>,
+    pub vortex_kind_extra: Vec<Block3dVortexKindExtra>,
     #[serde(default)]
     #[dsl(table)]
     #[state(artifact)]
@@ -113,7 +117,8 @@ impl Default for Block3dSnapshot {
             schema: BLOCK_3D_SCHEMA.to_string(),
             object_kind: BlockKindIdentity::default(),
             representations: Vec::new(),
-            vortex_kinds: Vec::new(),
+            catalog: crate::artifacts::block3d::catalog_child_handle(&[]),
+            vortex_kind_extra: Vec::new(),
             vortices: Vec::new(),
             compatibility: Vec::new(),
             attributes: Vec::new(),

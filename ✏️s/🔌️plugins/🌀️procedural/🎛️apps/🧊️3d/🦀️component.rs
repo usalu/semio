@@ -176,7 +176,7 @@ impl ArtifactApp for Procedural3dPlayApp {
                     let Some(number) = value.as_f64() else { continue };
                     let Some((index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
                     if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
-                        operations.push(Procedural3dMutation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
+                        operations.push(Procedural3dMutation::UpdateWidget(crate::artifacts::procedural3d::schema::mutations::update_widget::mutation::UpdateWidget { widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } }));
                     }
                 }
                 Ok(Emit::mutations(operations))

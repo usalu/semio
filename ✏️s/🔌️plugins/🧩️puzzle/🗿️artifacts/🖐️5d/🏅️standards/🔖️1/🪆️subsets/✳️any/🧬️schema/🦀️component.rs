@@ -1,7 +1,8 @@
 //! 🧬️ Puzzle5d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot, PUZZLE_5D_SCHEMA};
+use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot, PUZZLE_5D_SCHEMA};
 use artifact_schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -15,7 +16,9 @@ pub struct Puzzle5dArtifact {
     #[state(artifact)] pub domain: String,
     #[state(artifact)] pub label: Option<String>,
     #[state(artifact)] pub meta: Puzzle5dMeta,
-    #[state(artifact)] pub kind_catalogs: Option<Puzzle5dKindCatalogs>,
+    #[child(kind = "s.stdio.semio.kit")]
+    #[state(artifact)] pub kind_catalogs: Option<store::ArtifactChild<SemioKitSnapshot>>,
+    #[state(artifact)] pub kind_catalogs_extra: Option<Puzzle5dKindCatalogsExtra>,
     #[state(artifact)] pub kind_compatibility: Vec<Puzzle5dKindCompatibility>,
     #[state(artifact)] pub parts: Vec<Puzzle5dPart>,
     #[state(artifact)] pub fasteners: Vec<Puzzle5dFastener>,
@@ -64,6 +67,7 @@ impl Puzzle5dArtifact {
             label: self.label.clone(),
             meta: self.meta.clone(),
             kind_catalogs: self.kind_catalogs.clone(),
+            kind_catalogs_extra: self.kind_catalogs_extra.clone(),
             kind_compatibility: self.kind_compatibility.clone(),
             parts: self.parts.clone(),
             fasteners: self.fasteners.clone(),
@@ -78,6 +82,7 @@ impl Puzzle5dArtifact {
             label: snapshot.label,
             meta: snapshot.meta,
             kind_catalogs: snapshot.kind_catalogs,
+            kind_catalogs_extra: snapshot.kind_catalogs_extra,
             kind_compatibility: snapshot.kind_compatibility,
             parts: snapshot.parts,
             fasteners: snapshot.fasteners,
@@ -117,6 +122,7 @@ impl Puzzle5dArtifact {
         self.label = snapshot.label;
         self.meta = snapshot.meta;
         self.kind_catalogs = snapshot.kind_catalogs;
+        self.kind_catalogs_extra = snapshot.kind_catalogs_extra;
         self.kind_compatibility = snapshot.kind_compatibility;
         self.parts = snapshot.parts;
         self.fasteners = snapshot.fasteners;

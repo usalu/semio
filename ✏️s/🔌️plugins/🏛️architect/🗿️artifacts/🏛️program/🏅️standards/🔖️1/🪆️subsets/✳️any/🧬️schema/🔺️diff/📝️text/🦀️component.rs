@@ -594,23 +594,11 @@ impl ProgramDiff {
                 &delta.reordered,
             );
         }
-        if let Some(delta) = &self.knowledge {
-            apply_collection_delta(
-                &mut next.knowledge,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+        if let Some(child) = &self.knowledge {
+            next.knowledge = child.clone();
         }
-        if let Some(delta) = &self.benchmarks {
-            apply_collection_delta(
-                &mut next.benchmarks,
-                &delta.added,
-                &delta.removed,
-                &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(),
-                &delta.reordered,
-            );
+        if let Some(child) = &self.benchmarks {
+            next.benchmarks = child.clone();
         }
         if let Some(delta) = &self.traces {
             apply_collection_delta(
@@ -1344,28 +1332,8 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                 None => self.templates = Some(delta),
             }
         }
-        if let Some(delta) = other.knowledge {
-            match &mut self.knowledge {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
-                }
-                None => self.knowledge = Some(delta),
-            }
-        }
-        if let Some(delta) = other.benchmarks {
-            match &mut self.benchmarks {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
-                }
-                None => self.benchmarks = Some(delta),
-            }
-        }
+        if other.knowledge.is_some() { self.knowledge = other.knowledge; }
+        if other.benchmarks.is_some() { self.benchmarks = other.benchmarks; }
         if let Some(delta) = other.traces {
             match &mut self.traces {
                 Some(existing) => {

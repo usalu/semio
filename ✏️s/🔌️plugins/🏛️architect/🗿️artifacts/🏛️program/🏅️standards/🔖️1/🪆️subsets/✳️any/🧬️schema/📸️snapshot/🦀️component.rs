@@ -209,12 +209,14 @@ pub struct ProgramSnapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub templates: Vec<TemplateRecord>,
-    #[dsl(table)]
+    #[dsl(block)]
+    #[child(kind = "s.stdio.semio.table")]
     #[state(artifact)]
-    pub knowledge: Vec<KnowledgeRecord>,
-    #[dsl(table)]
+    pub knowledge: crate::artifacts::program::ProgramKnowledgeChild,
+    #[dsl(block)]
+    #[child(kind = "s.stdio.semio.table")]
     #[state(artifact)]
-    pub benchmarks: Vec<BenchmarkRecord>,
+    pub benchmarks: crate::artifacts::program::ProgramBenchmarksChild,
     #[dsl(table)]
     #[state(artifact)]
     pub traces: Vec<TraceLink>,

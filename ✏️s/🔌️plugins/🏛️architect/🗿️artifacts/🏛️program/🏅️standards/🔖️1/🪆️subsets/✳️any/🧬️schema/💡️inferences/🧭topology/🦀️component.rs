@@ -182,6 +182,18 @@ mod tests {
             user_profile_ids: Vec::new(),
             adjacency_ids: Vec::new(),
             quantity_ids: Vec::new(),
+            requirement_ids: Vec::new(),
+            location_hint: None,
+            orientation: None,
+            daylight_requirement: None,
+            acoustic_class: None,
+            security_zone: None,
+            flexibility_notes: Vec::new(),
+            growth_allocation: None,
+            circulation_role: None,
+            visibility_level: None,
+            adjacency_preferences: Vec::new(),
+            environmental_zone: None,
         }
     }
 

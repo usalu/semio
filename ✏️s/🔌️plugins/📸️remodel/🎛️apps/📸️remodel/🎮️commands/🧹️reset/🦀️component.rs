@@ -10,12 +10,12 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Results
 /// 📦️ The seeded stand-in mesh a fresh document (and `resetPlaceholderMesh`) carries.
 fn placeholder_result() -> RemodelMesh {
-    RemodelMesh { mesh: mesh_from_kind("box"), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
+    RemodelMesh { mesh: crate::artifacts::remodel::mint_and_stash_mesh(mesh_from_kind("box")), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
 }
 
 /// 🫙️ An empty mesh result — what `clearMeshResult`/`clearResult` leave behind.
 fn empty_result() -> RemodelMesh {
-    RemodelMesh { mesh: MeshData::default(), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
+    RemodelMesh { mesh: crate::artifacts::remodel::mint_and_stash_mesh(MeshData::default()), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
 }
 //#endregion 🔖️Results
 
@@ -134,23 +134,29 @@ mod tests {
     use crate::apps::remodel::RemodelCommand;
     use semio_framework_plugin::testkit;
 
+    /// 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads the real vertex count through
+    /// `remodel_mesh_workspace`'s working-scene cache (0 on a cold cache, matching an empty mesh).
+    fn mesh_vertex_count(snapshot: &RemodelSnapshot) -> usize {
+        crate::artifacts::remodel::remodel_mesh_workspace(&snapshot.results.mesh.mesh).map_or(0, |mesh| mesh.vertex_count())
+    }
+
     #[test]
     fn clear_result_resets_all_seven_result_fields_and_reset_placeholder_restores_the_box() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}));
         assert_eq!(result.mutations.len(), 7, "clearResult resets all 7 ReconstructionResults fields");
-        assert_eq!(app.snapshot().expect("materialize projection").results.mesh.mesh.vertex_count(), 0);
+        assert_eq!(mesh_vertex_count(&app.snapshot().expect("materialize projection")), 0);
         dispatch(&mut app, RemodelCommand::ResetPlaceholderMesh(reset_placeholder_mesh::ResetPlaceholderMesh {}));
         assert_eq!(app.snapshot().expect("materialize projection").results.mesh.source, MeshSource::Placeholder);
-        assert!(app.snapshot().expect("materialize projection").results.mesh.mesh.vertex_count() > 0);
+        assert!(mesh_vertex_count(&app.snapshot().expect("materialize projection")) > 0);
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = app();
-        let placeholder_vertex_count = app.snapshot().expect("materialize projection").results.mesh.mesh.vertex_count();
+        let placeholder_vertex_count = mesh_vertex_count(&app.snapshot().expect("materialize projection"));
         assert!(placeholder_vertex_count > 0, "the seeded placeholder box must have vertices");
-        testkit::assert_undo_redo_round_trip(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}), |app| app.snapshot().expect("materialize projection").results.mesh.mesh.vertex_count(), placeholder_vertex_count, 0);
+        testkit::assert_undo_redo_round_trip(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0);
     }
 
     #[test]

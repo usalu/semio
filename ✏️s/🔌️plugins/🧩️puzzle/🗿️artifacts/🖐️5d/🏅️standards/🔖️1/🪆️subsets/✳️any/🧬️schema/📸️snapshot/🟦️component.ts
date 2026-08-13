@@ -1,5 +1,8 @@
 /** 🧬️ Puzzle5d snapshot schema — artifact-lane fields only. */
 
+/** 🪪️ Composed-child handle — mirrors stdio's `s.stdio.semio.kit` cross-language convention. */
+export interface ArtifactChildHandle { childId: string; target: string; }
+
 export interface Puzzle5dSnapshot {
   /** @state artifact */
   schema: string;
@@ -9,8 +12,10 @@ export interface Puzzle5dSnapshot {
   label?: string;
   /** @state artifact */
   meta: Puzzle5dMeta;
+  /** @state artifact @child kind=s.stdio.semio.kit */
+  kindCatalogs?: ArtifactChildHandle;
   /** @state artifact */
-  kindCatalogs?: Puzzle5dKindCatalogs;
+  kindCatalogsExtra?: Puzzle5dKindCatalogsExtra;
   /** @state artifact */
   kindCompatibility: Puzzle5dKindCompatibility[];
   /** @state artifact */
@@ -115,12 +120,65 @@ export interface Puzzle5dCatalogRopeKind {
   defaultFastenerKind?: string;
 }
 
-/** 🗂️ Kind catalogs bundle. */
+/** 🗂️ Kind catalogs bundle — still the `replace-kind-catalogs` mutation payload shape; the snapshot
+ * itself now carries the composed `kindCatalogs`/`kindCatalogsExtra` pair below instead. */
 export interface Puzzle5dKindCatalogs {
   parts?: Puzzle5dCatalogPartKind[];
   grips?: Puzzle5dCatalogGripKind[];
   fasteners?: Puzzle5dCatalogFastenerKind[];
   ropes?: Puzzle5dCatalogRopeKind[];
+}
+
+/** 🧩️ Puzzle5d-owned overflow for one part-kind row — everything the composed `SemioKitType`
+ * (`id`/`name`/`category`) cannot represent. */
+export interface Puzzle5dCatalogPartKindExtra {
+  id: string;
+  label?: string;
+  description?: string;
+  icon?: string;
+  image?: string;
+  unit?: string;
+  abstract?: boolean;
+  baseKinds?: string[];
+  representations?: Puzzle5dRepresentation[];
+  grips?: Puzzle5dGripTemplate[];
+  attributes?: Puzzle5dAttribute[];
+  authors?: Puzzle5dAuthor[];
+}
+
+/** 🧩️ Puzzle5d-owned overflow for one grip-kind row. */
+export interface Puzzle5dCatalogGripKindExtra {
+  id: string;
+  code?: string;
+  label?: string;
+  order?: number;
+  compatibleWith?: string[];
+  description?: string;
+  icon?: string;
+  color?: string;
+  defaultRopeKind?: string;
+}
+
+/** 🧩️ Puzzle5d-owned overflow for one fastener-kind row. */
+export interface Puzzle5dCatalogFastenerKindExtra {
+  id: string;
+  label?: string;
+}
+
+/** 🧩️ Puzzle5d-owned overflow for one rope-kind row. */
+export interface Puzzle5dCatalogRopeKindExtra {
+  id: string;
+  label?: string;
+  defaultFastenerKind?: string;
+}
+
+/** 🗂️ Puzzle5d-owned overflow half of the kind-catalogs bundle, sibling to the composed
+ * `kindCatalogs` child. */
+export interface Puzzle5dKindCatalogsExtra {
+  parts?: Puzzle5dCatalogPartKindExtra[];
+  grips?: Puzzle5dCatalogGripKindExtra[];
+  fasteners?: Puzzle5dCatalogFastenerKindExtra[];
+  ropes?: Puzzle5dCatalogRopeKindExtra[];
 }
 
 /** 🔗️ Kind compatibility row. */

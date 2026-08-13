@@ -7,7 +7,8 @@ use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::mutation::DeleteKnowledgeRecord, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
-    match base.knowledge.iter().find(|row| row.header.id == payload.id) {
+    let records = crate::artifacts::program::program_knowledge(base);
+    match records.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateKnowledgeRecord(super::super::create_knowledge_record::mutation::CreateKnowledgeRecord { knowledge_record: existing.clone() })],
         None => Vec::new(),
     }

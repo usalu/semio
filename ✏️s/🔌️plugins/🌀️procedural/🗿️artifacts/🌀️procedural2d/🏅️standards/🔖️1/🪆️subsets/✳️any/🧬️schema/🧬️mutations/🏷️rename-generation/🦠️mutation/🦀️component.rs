@@ -29,10 +29,10 @@ impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for RenameGenerati
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Rename generation \"{}\" to \"{}\"", payload.id, payload.name)
+        format!("Rename generation \"{}\" to \"{}\"", self.id, self.name)
     }
     fn target(&self) -> Vec<String> {
-        vec![payload.id.clone()]
+        vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation

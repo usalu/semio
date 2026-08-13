@@ -29,8 +29,8 @@ fn flatten_blocks<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteBlockNo
 
 fn block_word_count(block: &NoteBlockNode) -> u32 {
     match block {
-        NoteBlockNode::Text { paragraphs, .. } => {
-            paragraphs.iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.split_whitespace().count()).sum::<usize>()).sum::<usize>() as u32
+        NoteBlockNode::Text { content, .. } => {
+            crate::artifacts::note::note_block_text(content).iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.split_whitespace().count()).sum::<usize>()).sum::<usize>() as u32
         }
         _ => 0,
     }
@@ -64,7 +64,9 @@ mod tests {
     use crate::artifacts::note::{NoteTextParagraph, NoteTextRun};
 
     fn text_block(id: &str, name: &str, text: &str) -> NoteBlockNode {
+        let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }];
         NoteBlockNode::Text {
+            content: crate::artifacts::note::note_text_child_handle_and_cache(id, &paragraphs),
             id: id.into(),
             name: name.into(),
             x: 0.0,
@@ -74,7 +76,6 @@ mod tests {
             rotation: 0.0,
             visible: true,
             locked: false,
-            paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }],
             font_size: 18.0,
             font_weight: "normal".into(),
             align: "left".into(),

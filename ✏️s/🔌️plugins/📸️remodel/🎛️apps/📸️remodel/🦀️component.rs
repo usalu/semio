@@ -441,8 +441,14 @@ impl ArtifactApp for RemodelPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, RemodelSnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
-                let mesh = &doc.snapshot.results.mesh.mesh;
-                let bytes = MeshExporter::export(&GlbExporter, mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
+                // 🧩️ `results.mesh.mesh` is now a composed `s.stdio.semio/v1/mesh` CHILD handle
+                // (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) — the real `MeshData` reads
+                // through the working-scene cache, honestly `Err` on a cold cache (documented
+                // staleness gap, matches every prior exemplar in this ticket) rather than exporting a
+                // fabricated empty mesh.
+                let mesh = crate::artifacts::remodel::remodel_mesh_workspace(&doc.snapshot.results.mesh.mesh)
+                    .ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: composed mesh content not resolvable (cold working-scene cache)".into()))?;
+                let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64::engine::general_purpose::STANDARD.encode(bytes) } })
             }
             "document:out" => {
@@ -1063,7 +1069,8 @@ mod tests {
     fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
         let app = app();
         let projection = app.snapshot().expect("projection");
-        let doc = ArtifactView::new(&projection, &HistoryView::empty());
+        let history = HistoryView::empty();
+        let doc = ArtifactView::new(&projection, &history);
         let inner = RemodelPlayApp;
         let media = Media {
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
@@ -1079,7 +1086,8 @@ mod tests {
         assert_eq!(next.streams[0].id, REMODEL_WORKFLOW_PHOTOS_STREAM_ID);
         assert_eq!(next.streams[0].frames.len(), 1);
 
-        let doc2 = ArtifactView::new(&next, &HistoryView::empty());
+        let history2 = HistoryView::empty();
+        let doc2 = ArtifactView::new(&next, &history2);
         let emit2 = RemodelPlayApp::import_media("photos:in", &media, &doc2).expect("second photos:in import");
         let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
@@ -1091,7 +1099,8 @@ mod tests {
     fn export_media_mesh_out_exports_a_structured_3d_mesh() {
         let app = app();
         let projection = app.snapshot().expect("projection");
-        let doc = ArtifactView::new(&projection, &HistoryView::empty());
+        let history = HistoryView::empty();
+        let doc = ArtifactView::new(&projection, &history);
         let media = RemodelPlayApp::export_media("mesh:out", &doc).expect("mesh:out export");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Mesh);

@@ -1,0 +1,14 @@
+╔══ FINAL LOSS AUDIT ══
+║ distinctive symbols in the 4 dying modules at baseline : 5826
+║ still present somewhere in the tree                    : 5821
+║ LOST                                                  : 5
+║     BREP_ENGINE_ID
+║     BrepDocumentOpEngine
+║     BrepEngineHost
+║     host_derive_registers_brep_engine
+║     kernel_lock_runs_box_prim
+╚══
+
+=== REMAINING DUPLICATION (defined in BOTH a dying module AND an artifact) ===
+  shared distinctive symbols: 256
+  e.g. Assignment, Binding, Clause, Constraint, Diagnostic, DiagnosticSeverity, Edge, Expr, IDENTITY, JsonValue, Mat3, Node

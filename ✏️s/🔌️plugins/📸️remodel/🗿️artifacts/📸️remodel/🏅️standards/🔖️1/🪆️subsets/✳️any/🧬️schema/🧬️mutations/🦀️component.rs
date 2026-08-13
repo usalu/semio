@@ -136,7 +136,8 @@ mod tests {
             frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: "asset-1".into() }],
             source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
-        scene.assets.insert("asset-1".into(), ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 });
+        let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
+        scene.assets.insert("asset-1".into(), crate::artifacts::remodel::mint_and_stash_asset("asset-1", &asset_one));
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),
@@ -164,7 +165,7 @@ mod tests {
         scene.results.dense =
             Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
         scene.results.mesh = RemodelMesh {
-            mesh: semio_framework::mesh_from_kind("box"),
+            mesh: crate::artifacts::remodel::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
             source: MeshSource::Reconstructed,
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot {
@@ -339,8 +340,13 @@ mod tests {
         let b_then_a = apply_remodel_mutation(&apply_remodel_mutation(&base, &op_b), &op_a);
 
         assert_eq!(a_then_b, b_then_a, "concurrent create-asset on disjoint keys must converge regardless of order");
-        assert_eq!(a_then_b.assets.get("frame-a"), Some(&asset_a));
-        assert_eq!(a_then_b.assets.get("frame-b"), Some(&asset_b));
+        // 🎯️ Both assets are `image/jpeg` (unsupported by the real png bridge today, see
+        // `semio_image_snapshot_from_image_asset`'s doc comment), so `mint_and_stash_asset` falls back
+        // to the deterministic raw-bytes handle (`image_asset_child_handle`) — asserting on the HANDLE
+        // (content-addressed, so identical for identical `(mime,data)` regardless of who mints it) is
+        // the honest convergence check here, not a round-trip through the working-scene cache.
+        assert_eq!(a_then_b.assets.get("frame-a"), Some(&crate::artifacts::remodel::image_asset_child_handle("frame-a", &asset_a)));
+        assert_eq!(a_then_b.assets.get("frame-b"), Some(&crate::artifacts::remodel::image_asset_child_handle("frame-b", &asset_b)));
     }
 
     /// 🔀️ Same convergence contract across two disjoint operation families (feature params tuning vs.
@@ -374,7 +380,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&remove_stream_frame("stream-1".into(), 0));
         store::os_store::test_support::assert_op_line_round_trip(&replace_stream_source("stream-1".into(), scene.streams[0].source.clone()));
         store::os_store::test_support::assert_op_line_round_trip(&replace_stream_source("stream-1".into(), None));
-        store::os_store::test_support::assert_op_line_round_trip(&create_asset("asset-1".into(), scene.assets.get("asset-1").cloned().unwrap()));
+        store::os_store::test_support::assert_op_line_round_trip(&create_asset("asset-1".into(), ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 }));
         store::os_store::test_support::assert_op_line_round_trip(&delete_asset("asset-2".into()));
         store::os_store::test_support::assert_op_line_round_trip(&create_camera_calibration(scene.calibration.cameras[0].clone()));
         store::os_store::test_support::assert_op_line_round_trip(&update_camera_calibration(scene.calibration.cameras[0].clone()));

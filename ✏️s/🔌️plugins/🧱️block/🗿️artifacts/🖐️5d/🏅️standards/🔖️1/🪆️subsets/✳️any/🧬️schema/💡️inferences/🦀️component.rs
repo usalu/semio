@@ -148,7 +148,7 @@ mod tests {
         let snapshot = snapshot_with_grips(vec![grip("g0", [1.0, 2.0, 3.0], 0.5), grip("g1", [-1.0, 0.0, 4.0], 0.25)]);
         let inferred = Block5dInference::infer(&snapshot);
         let bounds = inferred.bounds.bounding_box.expect("non-empty grips produce a bounding box");
-        assert_eq!(bounds.min, [-1.25, -0.5, 2.5]);
+        assert_eq!(bounds.min, [-1.25, -0.25, 2.5]);
         assert_eq!(bounds.max, [1.5, 2.5, 4.25]);
         assert_eq!(inferred.bounds.vertex_count, 2);
     }

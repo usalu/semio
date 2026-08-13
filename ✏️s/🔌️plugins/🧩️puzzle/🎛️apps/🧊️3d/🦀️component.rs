@@ -2266,22 +2266,7 @@ impl ArtifactApp for Puzzle3dPlayApp {
     /// `kit:in` seam: an input port accepting `Kit×Type` media tagged `kit.catalog`, fanning IN from
     /// potentially many producers (`multiplicity: Many`).
     fn io() -> Option<AppIo> {
-        Some(
-            AppIo::from_document(
-                "puzzle.3d",
-                MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
-                semio_framework_plugin::ArtifactPresentation { id: "3d.puzzle".into(), name: "3D Puzzle".into(), dimension: "3d".into(), component_kind: "puzzle3d".into() },
-            )
-            .with_ports(vec![MediaPortSpec {
-                id: "kit:in".into(),
-                label: "Kit Catalog".into(),
-                direction: MediaPortDirection::In,
-                media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                kind_id: Some("kit.catalog".into()),
-                required: false,
-                multiplicity: PortMultiplicity::Many,
-            }]),
-        )
+        Some(puzzle3d_io())
     }
 
     /// 🎞️ `kit:in` seam: normalizes an incoming `kit.catalog` fragment (`objectKinds`/`vortexKinds`/
@@ -2419,6 +2404,32 @@ impl ArtifactApp for Puzzle3dPlayApp {
 //#endregion 🔖️PlayApp
 
 //#region 🔖️Manifest
+/// 🔌️ Declares puzzle3d's typed media I/O surface — the implicit document ports plus the flagship
+/// `kit:in` seam: an input port accepting `Kit×Type` media tagged `kit.catalog`, fanning IN from
+/// potentially many producers (`multiplicity: Many`).
+///
+/// 🎯️ A free function, not an inline `ArtifactApp::io()` body, because BOTH the trait method and the
+/// `AppBuilder` need it: the trait method serves the runtime, while `.io(..)` on the builder is what
+/// puts `document_schema` into the published `AppDefinition`. Inlining it in only the trait method
+/// left the manifest's `io` empty, so a host reading the manifest could not route a document to this
+/// surface at all — caught by the demonstrator bundle's `every_pane_declares_a_document_schema`.
+pub fn puzzle3d_io() -> AppIo {
+    AppIo::from_document(
+        "puzzle.3d",
+        MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
+        semio_framework_plugin::ArtifactPresentation { id: "3d.puzzle".into(), name: "3D Puzzle".into(), dimension: "3d".into(), component_kind: "puzzle3d".into() },
+    )
+    .with_ports(vec![MediaPortSpec {
+        id: "kit:in".into(),
+        label: "Kit Catalog".into(),
+        direction: MediaPortDirection::In,
+        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+        kind_id: Some("kit.catalog".into()),
+        required: false,
+        multiplicity: PortMultiplicity::Many,
+    }])
+}
+
 pub fn create_puzzle3d_app() -> App {
     let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     App::from_builder(
@@ -2431,6 +2442,7 @@ pub fn create_puzzle3d_app() -> App {
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
             .mode_def(edit::definition())
             .default_mode_id(edit::PUZZLE3D_PLAY_MODE_EDIT)
+            .io(puzzle3d_io())
             .window_kind_def(main::definition(&envelope, &Puzzle3dLabels::NATIVE_EN))
             .default_layout(edit::layout())
             .panel_tab_def(document::definition())

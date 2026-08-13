@@ -6,8 +6,8 @@ use crate::artifacts::jack::{EntityRef, JackSnapshot};
 //#region 🔖️Inverse
 fn base_property_value(base: &JackSnapshot, entity: &EntityRef, key: &str) -> Option<crate::artifacts::jack::PropertyValue> {
     match entity {
-        EntityRef::Node(id) => base.nodes.iter().find(|node| node.id == *id).and_then(|node| node.properties.get(key).cloned()),
-        EntityRef::Edge(id) => base.edges.iter().find(|edge| edge.id == *id).and_then(|edge| edge.properties.get(key).cloned()),
+        EntityRef::Node(id) => base.nodes().iter().find(|node| node.id == *id).and_then(|node| node.properties.get(key).cloned()),
+        EntityRef::Edge(id) => base.edges().iter().find(|edge| edge.id == *id).and_then(|edge| edge.properties.get(key).cloned()),
     }
 }
 

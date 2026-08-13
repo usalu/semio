@@ -1,8 +1,8 @@
 //! 🧬️ Remodel artifact schema — every field of the artifact with its state class.
 
 use crate::artifacts::remodel::{
-    CalibrationState, GroundControlPoint, ImageAsset, MediaStream, ReconstructionJob,
-    ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelSnapshot, VideoCodec,
+    CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob,
+    ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelAssetChild, RemodelSnapshot, VideoCodec,
 };
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -71,7 +71,7 @@ pub struct RemodelArtifact {
     #[state(artifact)] pub schema: String,
     #[state(artifact)] pub id: String,
     #[state(artifact)] pub streams: Vec<MediaStream>,
-    #[state(artifact)] pub assets: BTreeMap<String, ImageAsset>,
+    #[state(artifact)] pub assets: BTreeMap<String, RemodelAssetChild>,
     #[state(artifact)] pub calibration: CalibrationState,
     #[state(artifact)] pub params: ReconstructionParams,
     #[state(artifact)] pub gcps: Vec<GroundControlPoint>,

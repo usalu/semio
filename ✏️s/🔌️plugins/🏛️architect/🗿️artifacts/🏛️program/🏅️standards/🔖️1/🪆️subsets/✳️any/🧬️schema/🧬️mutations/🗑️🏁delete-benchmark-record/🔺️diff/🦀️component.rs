@@ -4,9 +4,11 @@
 use super::mutation::DeleteBenchmarkRecord;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramBenchmarksDelta};
 
-/// 🗑️ `removed = [id]`.
-pub fn diff(payload: &DeleteBenchmarkRecord, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { benchmarks: Some(ProgramBenchmarksDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() }
+/// 🗑️ Removes the target row from the working-scene cache, then re-mints a fresh
+/// content-addressed `table` child handle over the remaining rows.
+pub fn diff(payload: &DeleteBenchmarkRecord, base: &ProgramSnapshot) -> ProgramDiff {
+    let mut records = crate::artifacts::program::program_benchmarks(base);
+    records.retain(|row| row.header.id != payload.id);
+    ProgramDiff { benchmarks: Some(crate::artifacts::program::benchmarks_child_from_records(&records)), ..Default::default() }
 }

@@ -1,9 +1,0 @@
-{
-  "extensionId": "flow-extension-text",
-  "version": "0.0.0-dev",
-  "label": "flow-extension-text",
-  "extends": "flow",
-  "moduleUrl": "/extensions/flow-extension-text/semio_s_plugin_flow_extension_text.js",
-  "packageHash": "dev:1786546640541",
-  "installedAt": 1786546640541
-}

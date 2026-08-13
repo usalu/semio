@@ -437,10 +437,10 @@ fn build_entity_index(program: &ProgramSnapshot) -> EntityIndex {
     for e in &program.templates {
         register("templates", &e.header.id, &e.header.name);
     }
-    for e in &program.knowledge {
+    for e in &crate::artifacts::program::program_knowledge(program) {
         register("knowledge", &e.header.id, &e.header.name);
     }
-    for e in &program.benchmarks {
+    for e in &crate::artifacts::program::program_benchmarks(program) {
         register("benchmarks", &e.header.id, &e.header.name);
     }
     register("project", &program.project.id, &program.project.code);
@@ -1424,8 +1424,10 @@ pub fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
     collect("issues", program.issues.iter().map(|e| &e.header).collect());
     collect("audit_events", program.audit_events.iter().map(|e| &e.header).collect());
     collect("templates", program.templates.iter().map(|e| &e.header).collect());
-    collect("knowledge", program.knowledge.iter().map(|e| &e.header).collect());
-    collect("benchmarks", program.benchmarks.iter().map(|e| &e.header).collect());
+    let knowledge_records = crate::artifacts::program::program_knowledge(program);
+    collect("knowledge", knowledge_records.iter().map(|e| &e.header).collect());
+    let benchmark_records = crate::artifacts::program::program_benchmarks(program);
+    collect("benchmarks", benchmark_records.iter().map(|e| &e.header).collect());
 
     let mut compliance_status = Vec::new();
     for item in &program.regulatory {
@@ -1595,8 +1597,8 @@ pub fn search_plugin(program: &ProgramSnapshot, query: &SearchQuery, filter: Opt
     search_register!("issues", &program.issues);
     search_register!("audit_events", &program.audit_events);
     search_register!("templates", &program.templates);
-    search_register!("knowledge", &program.knowledge);
-    search_register!("benchmarks", &program.benchmarks);
+    search_register!("knowledge", &crate::artifacts::program::program_knowledge(program));
+    search_register!("benchmarks", &crate::artifacts::program::program_benchmarks(program));
     hits.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
     hits
 }
@@ -2281,8 +2283,8 @@ fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     push_rows!("issues", &program.issues);
     push_rows!("audit_events", &program.audit_events);
     push_rows!("templates", &program.templates);
-    push_rows!("knowledge", &program.knowledge);
-    push_rows!("benchmarks", &program.benchmarks);
+    push_rows!("knowledge", &crate::artifacts::program::program_knowledge(program));
+    push_rows!("benchmarks", &crate::artifacts::program::program_benchmarks(program));
     rows
 }
 

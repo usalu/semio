@@ -3,6 +3,7 @@ schema=block.3d
 object-kind {
   id="Hexagonal Cut Concrete Forest Left" name="Hexagonal Cut Concrete Forest Left" label="Hexagonal Cut Concrete Forest Left" description=""
 }
+catalog=child_id=catalog-3b18d1b44d9af6de target="catalog-3b18d1b44d9af6de!s.stdio.semio@v1/kit"
 camera3d {
   position=@4,-4,3 target=@0,0,0 zoom=1
 }
@@ -12,13 +13,13 @@ meta {
 representations [id:TEXT name:TEXT mesh-url:TEXT tags:LIST lod:TEXT description:TEXT attributes:TABLE] {
   r0 default "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb" [ ] _ "" [ ]
 }
-vortex-kinds [id:TEXT name:TEXT label:TEXT color:TEXT default-cable-kind:TEXT] {
-  b-l b-l b-l "hsl(206 52% 48%)" cable.link
-  b-l-m b-l-m b-l-m "hsl(290 52% 48%)" cable.link
-  b-s b-s b-s "hsl(55 52% 48%)" cable.link
-  b-s-m b-s-m b-s-m "hsl(124 52% 48%)" cable.link
-  c-b c-b c-b "hsl(37 52% 48%)" cable.link
-  c-t c-t c-t "hsl(169 52% 48%)" cable.link
+vortex-kind-extra [id:TEXT label:TEXT color:TEXT default-cable-kind:TEXT] {
+  b-l b-l "hsl(206 52% 48%)" cable.link
+  b-l-m b-l-m "hsl(290 52% 48%)" cable.link
+  b-s b-s "hsl(55 52% 48%)" cable.link
+  b-s-m b-s-m "hsl(124 52% 48%)" cable.link
+  c-b c-b "hsl(37 52% 48%)" cable.link
+  c-t c-t "hsl(169 52% 48%)" cable.link
 }
 vortices [id:TEXT vortex-kind:REF position:CRD direction:DIR radius:NUM label:TEXT] {
   v0 b-l @0,-0.36,0 ^0,-1,0 0.1 _

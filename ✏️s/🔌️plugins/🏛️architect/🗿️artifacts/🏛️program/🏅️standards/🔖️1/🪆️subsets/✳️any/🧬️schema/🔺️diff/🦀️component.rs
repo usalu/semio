@@ -79,8 +79,8 @@ pub struct ProgramDiff {
     #[state(artifact)] pub issues: Option<ProgramIssuesDelta>,
     #[state(artifact)] pub audit_events: Option<ProgramAuditEventsDelta>,
     #[state(artifact)] pub templates: Option<ProgramTemplatesDelta>,
-    #[state(artifact)] pub knowledge: Option<ProgramKnowledgeDelta>,
-    #[state(artifact)] pub benchmarks: Option<ProgramBenchmarksDelta>,
+    #[state(artifact)] pub knowledge: Option<crate::artifacts::program::ProgramKnowledgeChild>,
+    #[state(artifact)] pub benchmarks: Option<crate::artifacts::program::ProgramBenchmarksChild>,
     #[state(artifact)] pub traces: Option<ProgramTracesDelta>,
     #[state(artifact)] pub governance: Option<Governance>,
     #[state(presence)] pub selected_ids: Option<ProgramStringList>,
@@ -1237,41 +1237,19 @@ pub struct ProgramTemplatesPatchEntry {
     pub patch: TemplateRecordPatch,
 }
 
-/// 🧩 Identified-collection delta for `knowledge`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct ProgramKnowledgeDelta {
-    pub added: Vec<KnowledgeRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramKnowledgePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
+/// 🧩️ `knowledge` composes stdio's `table` subset (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4
+/// batch Db) — the former `ProgramKnowledgeDelta`/`ProgramKnowledgePatchEntry` identified-
+/// collection delta is gone; `ProgramDiff.knowledge` is now `Option<ProgramKnowledgeChild>`
+/// (single-Option, always-present-slot shape per `📓️migration-recipe.md` §9), re-minted whole by
+/// every triad's `🔺️diff` via the working-scene cache in `🗿️artifacts/🏛️program/🦀️component.rs`'s
+/// `🔖️Composition` region.
 
-/// 🩹 One patched `KnowledgeRecord` entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProgramKnowledgePatchEntry {
-    pub id: String,
-    pub patch: KnowledgeRecordPatch,
-}
-
-/// 🧩 Identified-collection delta for `benchmarks`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct ProgramBenchmarksDelta {
-    pub added: Vec<BenchmarkRecord>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ProgramBenchmarksPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `BenchmarkRecord` entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProgramBenchmarksPatchEntry {
-    pub id: String,
-    pub patch: BenchmarkRecordPatch,
-}
+/// 🧩️ `benchmarks` composes stdio's `table` subset (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4
+/// batch Db) — the former `ProgramBenchmarksDelta`/`ProgramBenchmarksPatchEntry` identified-
+/// collection delta is gone; `ProgramDiff.benchmarks` is now `Option<ProgramBenchmarksChild>`
+/// (single-Option, always-present-slot shape per `📓️migration-recipe.md` §9), re-minted whole by
+/// every triad's `🔺️diff` via the working-scene cache in `🗿️artifacts/🏛️program/🦀️component.rs`'s
+/// `🔖️Composition` region.
 
 /// 🧩 Identified-collection delta for `traces`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

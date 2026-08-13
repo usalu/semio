@@ -22,8 +22,8 @@ pub fn serialize(snapshot: &NoteSnapshot) -> Result<semio_s_plugin_stdio::artifa
     let mut text = String::new();
     if let Some(title) = &snapshot.title { text.push_str(title); text.push(' '); }
     for block in flatten_blocks(&snapshot.blocks) {
-        if let NoteBlockNode::Text { paragraphs, .. } = block {
-            for p in paragraphs { for r in &p.runs { text.push_str(&r.text); text.push(' '); } }
+        if let NoteBlockNode::Text { content, .. } = block {
+            for p in crate::artifacts::note::note_block_text(content) { for r in &p.runs { text.push_str(&r.text); text.push(' '); } }
         }
     }
     let mut snap = empty_pdf_snapshot();

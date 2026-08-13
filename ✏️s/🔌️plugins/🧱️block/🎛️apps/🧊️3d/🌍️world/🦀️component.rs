@@ -77,7 +77,7 @@ pub fn world_instances_json(definition: &Block3dSnapshot, visible: &[&BlockRepre
 }
 
 fn vortex_kind_color(definition: &Block3dSnapshot, vortex_kind_id: &str) -> String {
-    definition.vortex_kinds.iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
+    crate::artifacts::block3d::vortex_kinds_of(definition).iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
 }
 
 pub fn block3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
@@ -152,6 +152,6 @@ pub fn default_vortex_kind() -> Block3dVortexKind {
 }
 
 pub fn resolve_brush_vortex_kind_id(definition: &Block3dSnapshot, config: &Block3dConfig) -> String {
-    config.brush_vortex_kind_id.clone().or_else(|| definition.vortex_kinds.first().map(|kind| kind.id.clone())).unwrap_or_else(|| "vortex-kind-0".into())
+    config.brush_vortex_kind_id.clone().or_else(|| crate::artifacts::block3d::vortex_kinds_of(definition).first().map(|kind| kind.id.clone())).unwrap_or_else(|| "vortex-kind-0".into())
 }
 //#endregion 🔖️Brush

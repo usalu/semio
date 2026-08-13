@@ -8,9 +8,14 @@
 //! `plan()`/`compute()` off without inventing one) — this is an honest "parked, not wired" placement.
 //! If a plugin later owns fuzzy-rule-base content as authored data, THAT plugin should host the
 //! snapshot and call into these compute internals, not stdio.
+//!
+//! Depends on the sibling `➕️algebra-internals` (`VecD`/`MatD` only — see that file's own doc comment
+//! for why this duplicates rather than reuses `📸️remodel`'s copy of the same two types), not the
+//! original `semio_framework_math::algebra`, which a CONCURRENT wave (M3d) dissolved out of the math
+//! crate entirely before this file's dependency could be re-pointed at its new home.
 
-#![allow(clippy::needless_range_loop, reason = "index-based numerics loops mirror the semio_framework_math::algebra style for matrix and rule iteration")]
-use semio_framework_math::algebra::{MatD, VecD};
+#![allow(clippy::needless_range_loop, reason = "index-based numerics loops mirror the algebra_internals style for matrix and rule iteration")]
+use crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::{MatD, VecD};
 use semio_framework_geometry::random::Rng;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::E;

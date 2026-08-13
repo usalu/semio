@@ -203,6 +203,7 @@ mod tests {
             label: None,
             meta: Puzzle5dMeta { description: String::new() },
             kind_catalogs: None,
+            kind_catalogs_extra: None,
             kind_compatibility: Vec::new(),
             parts: vec![
                 Puzzle5dPart {

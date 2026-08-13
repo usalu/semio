@@ -3,9 +3,11 @@
 //! Moved verbatim from `🧰️framework/🔨️modules/🧮️math/📊️statistics` in ticket 26/08/12/
 //! DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3c: Rust-only compute internals
 //! backing `✳️table`'s inferences (no TS twin — this is algorithm, not boundary vocabulary). Depends
-//! on sibling `📋️tabular-internals`/`🎲️probability-internals` and framework `semio_framework_math::algebra`.
+//! on sibling `📋️tabular-internals`/`🎲️probability-internals` and (as of wave M3e, re-pointed after a
+//! CONCURRENT wave M3d dissolved `semio_framework_math::algebra` entirely) sibling-subset
+//! `✳️value/🧬️schema/➕️algebra-internals` for `MatD`/`VecD` — see that file's own doc comment.
 
-use semio_framework_math::algebra::{MatD, VecD};
+use crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::{MatD, VecD};
 use crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::{ChiSquared, Continuous, Normal, StudentT};
 use crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table;
 use std::collections::HashMap;
@@ -164,7 +166,7 @@ pub fn partial_correlation(corr: &MatD, i: usize, j: usize, given: &[usize]) -> 
 
 // #region 🔖️Ols
 /// 📐️ Ordinary least squares fit. Internally solved via normal equations `(XᵀX)β = Xᵀy` and
-/// `semio_framework_math::algebra::MatD::lu_solve` — adequate at causal-discovery scale (small `p`, modest
+/// `crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::lu_solve` — adequate at causal-discovery scale (small `p`, modest
 /// condition numbers); swap to Householder QR internally if that ever becomes a bottleneck, the
 /// public API here would not need to change.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]

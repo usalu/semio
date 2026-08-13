@@ -49,13 +49,50 @@ The 12 IO registrations the demonstrator made for kinds it does not own moved to
 (which also fixes standalone `cad-play` having had no solid/mesh IO at all). The six panes dissolved
 into `🎛️apps/🦀️component.rs`; `🎪️panes/` deleted; policy ratcheted from downgrade to ban.
 
-## Blocked — on other sessions, not on us
+## Demonstrator — BOOTS AGAIN ✅ (see `📓️d5-demonstrator-boot-report.md`)
 
-- **Demonstrator fresh build + boot proof (D5) cannot run.** `semio-s-plugin-procedural` does not
-  compile: a peer session's mutation-module refactor is actively in flight (measured 94 → 16 → 116
-  errors over this session). Per the coordinate-vs-fix rule, we wait. `semio-framework-os` was
-  blocked by DKM's brep dissolution earlier today and is **now clear (0 errors)**.
-- Consequence: the three migrated demonstrator bundle tests are compile-verified but not run.
+Verified in-browser on :6029 — six panes, **0 crashed**, 5 live canvases, Generator opens to a live
+node graph driving a 3D preview, guided tour runs. Three stacked causes, none of them the one the
+earlier waves predicted:
+
+1. **The disk was full** (257 MB free of 926 GB). That killed the dev server's esbuild service →
+   `📦️index.tsx` 500 → blank page, AND made `cargo` fail with `No space left on device` — which is
+   why procedural's error count appeared to swing 94 → 16 → 116. Freed **202 GB** from regenerable
+   caches only (`target/debug/incremental` 80 GB + the one closed ticket's `🎯️target`). The four
+   open peer tickets' `🎯️target` dirs (283 GB) were left alone deliberately.
+2. **`appBreadcrumb(breadcrumb.join(…))` on an optional field.** `AppDefinition.breadcrumb` is
+   declared optional; every consumer dereferenced it unguarded, inside `FrameworkOsShellInner`'s
+   render — so one app without a breadcrumb killed the whole shell and every pane with it. Fixed +
+   regression test.
+3. **A 5-day-old dev server.** Restarted.
+
+**Procedural + demonstrator crates repaired: 105 → 0 and 14 → 0** (see
+`📓️procedural-repair-report.md`). Nine defect classes, all with exactly one correct answer —
+namespace collision, stale slot names, missing path segments, `payload`→`self`, mis-scoped helper
+imports, a missing `SynapseSpec` import, an absent `generation_mutation_to_procedural2d` bridge, and
+the deleted `SetWidget`/`Generation` vocabularies migrated to their semantic replacements. Plus
+stdio's `CsvSnapshot` reshape carried into playground's CSV io (which had been silently dropping the
+schema on every round trip).
+
+`semio-s-plugin-demonstrator` **19/19**, including the three migrated bundle tests that had never
+been run-verified — one of which caught a **real bug**: `puzzle3d-play` published an empty manifest
+`io` because `create_puzzle3d_app()` never called `.io(..)` on the builder, so no host could route a
+document to that surface. Fixed by sharing one `puzzle3d_io()` between the trait method and builder.
+
+Forced fresh WASM build (`FORCE_PLUGIN_BUILD=1`) now unblocked and running.
+
+## Flagged for the user — a 4,400-line unmounted ghost
+
+`🧰️framework/🛍️products/💻️os/🦀️component.rs` holds ~110 `semio_framework::` references and a full
+copy of the escape-hatch registries (`register_solid_exporter`/`register_solid_importer`/
+`register_dwg_import_handler`) that were **deleted today**. The DKM session reports **nothing mounts
+it** — verified by realpath, not grep, so `#[path]` aliasing is accounted for.
+
+It is squarely in this ticket's lane: dead code carrying a duplicate of a removed mechanism is
+exactly what the state-architecture work exists to eliminate. **I did not delete it**, for two
+reasons: "unmounted" is a claim about the *current* mount graph, and three sessions rewrote `#[path]`
+mounts today (one file physically moved between trees mid-build); and deleting 4,400 lines is a
+call for the user, not an inference. Recorded here as a documented candidate — **needs a decision**.
 
 ## Not started
 

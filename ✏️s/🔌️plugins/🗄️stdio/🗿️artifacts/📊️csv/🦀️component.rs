@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::csv::schema::snapshot::CsvSnapshot;
+pub use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
 pub use crate::artifacts::csv::schema::CsvArtifact;
 pub use crate::artifacts::csv::schema::diff::CsvDiff;
 pub use crate::artifacts::csv::schema::mutations::CsvMutation;

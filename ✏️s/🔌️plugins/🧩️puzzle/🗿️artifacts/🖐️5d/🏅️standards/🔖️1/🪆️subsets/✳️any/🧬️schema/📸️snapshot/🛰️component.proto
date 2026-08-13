@@ -12,8 +12,10 @@ message Puzzle5dSnapshot {
   optional string label = 3;
   // @state artifact
   Puzzle5dMeta meta = 4;
+  // @state artifact @child(kind: "s.stdio.semio.kit")
+  optional ArtifactChildHandle kind_catalogs = 5;
   // @state artifact
-  optional Puzzle5dKindCatalogs kind_catalogs = 5;
+  optional Puzzle5dKindCatalogsExtra kind_catalogs_extra = 9;
   // @state artifact
   repeated Puzzle5dKindCompatibility kind_compatibility = 6;
   // @state artifact
@@ -21,6 +23,8 @@ message Puzzle5dSnapshot {
   // @state artifact
   repeated Puzzle5dFastener fasteners = 8;
 }
+
+message ArtifactChildHandle { string child_id = 1; string target = 2; }
 
 
 
@@ -61,6 +65,25 @@ message Puzzle5dKindCatalogs {
   repeated Puzzle5dCatalogGripKind grips = 2;
   repeated Puzzle5dCatalogFastenerKind fasteners = 3;
   repeated Puzzle5dCatalogRopeKind ropes = 4;
+}
+message Puzzle5dCatalogPartKindExtra {
+  string id = 1; string label = 2; string description = 3; string icon = 4;
+  string image = 5; string unit = 6; bool abstract = 7; repeated string base_kinds = 8;
+  repeated Puzzle5dRepresentation representations = 9; repeated Puzzle5dGripTemplate grips = 10;
+  repeated Puzzle5dAttribute attributes = 11; repeated Puzzle5dAuthor authors = 12;
+}
+message Puzzle5dCatalogGripKindExtra {
+  string id = 1; optional string code = 2; optional string label = 3; optional int32 order = 4;
+  repeated string compatible_with = 5; string description = 6; string icon = 7; string color = 8;
+  string default_rope_kind = 9;
+}
+message Puzzle5dCatalogFastenerKindExtra { string id = 1; optional string label = 2; }
+message Puzzle5dCatalogRopeKindExtra { string id = 1; string label = 2; string default_fastener_kind = 3; }
+message Puzzle5dKindCatalogsExtra {
+  repeated Puzzle5dCatalogPartKindExtra parts = 1;
+  repeated Puzzle5dCatalogGripKindExtra grips = 2;
+  repeated Puzzle5dCatalogFastenerKindExtra fasteners = 3;
+  repeated Puzzle5dCatalogRopeKindExtra ropes = 4;
 }
 message Puzzle5dKindCompatibility {
   string source = 1; string target = 2; bool bidirectional = 3; bool important = 4;

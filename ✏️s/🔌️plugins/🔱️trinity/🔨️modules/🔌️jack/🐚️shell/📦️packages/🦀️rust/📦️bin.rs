@@ -97,14 +97,13 @@ mod tests {
     use trinity::artifacts::jack::{Camera, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag};
 
     fn mini_json() -> String {
-        let fixture = JackSnapshot {
-            schema: JackSnapshot::SCHEMA.into(),
-            name: "mini".into(),
-            manifest_id: Some("nakagin".into()),
-            manifest: Manifest::nakagin_default(),
-            camera: Camera::default(),
-            root_node_id: Some("root".into()),
-            nodes: vec![Node {
+        let fixture = JackSnapshot::with_content(
+            JackSnapshot::SCHEMA.into(),
+            "mini".into(),
+            Some("nakagin".into()),
+            Manifest::nakagin_default(),
+            Camera::default(),
+            vec![Node {
                 id: "root".into(),
                 kind: "Piece".into(),
                 name: "core".into(),
@@ -115,8 +114,9 @@ mod tests {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
             }],
-            edges: vec![],
-        };
+            vec![],
+            Some("root".into()),
+        );
         fixture.to_json().unwrap()
     }
 

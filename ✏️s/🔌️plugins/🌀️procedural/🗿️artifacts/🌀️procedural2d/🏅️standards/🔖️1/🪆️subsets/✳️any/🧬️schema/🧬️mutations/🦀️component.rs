@@ -61,6 +61,24 @@ pub enum Procedural2dMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️GenerationBridge
+/// 🌉️ Bridges one `flow::playbook::GenerationMutation` (the framework's own generation-editing
+/// vocabulary — `Add`/`Remove`/`Rename`/`UpdateValues`) onto this facet's semantic
+/// `Procedural2dMutation` variants, so app-layer callers that already hold a `GenerationMutation`
+/// (from `flow::playbook::generation_operations`) need only swap the mapping function at the call
+/// site, not learn this facet's internal triad-leaf module paths. Twin of procedural3d's
+/// `generation_mutation_to_procedural3d` — the two facets' generation payloads differ only in field
+/// naming (`name`/`value` here, `new_name`/`new_value` there).
+pub fn generation_mutation_to_procedural2d(operation: GenerationMutation) -> Procedural2dMutation {
+    match operation {
+        GenerationMutation::Add { generation } => Procedural2dMutation::CreateGeneration(super::create_generation::mutation::CreateGeneration { generation }),
+        GenerationMutation::Remove { id } => Procedural2dMutation::DeleteGeneration(super::delete_generation::mutation::DeleteGeneration { id }),
+        GenerationMutation::Rename { id, name } => Procedural2dMutation::RenameGeneration(super::rename_generation::mutation::RenameGeneration { id, name }),
+        GenerationMutation::UpdateValues { id, question_id, value } => Procedural2dMutation::ChangeGenerationValue(super::change_generation_value::mutation::ChangeGenerationValue { id, question_id, value }),
+    }
+}
+//#endregion 🔖️GenerationBridge
+
 //#region 🔖️Builders
 pub use super::create_generation::mutation::create_generation;
 pub use super::delete_generation::mutation::delete_generation;

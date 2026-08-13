@@ -6,7 +6,7 @@
 //! payload fields — mirrors `procedural_3d`'s identical shape).
 
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
-use crate::artifacts::procedural2d::op::Procedural2dMutation;
+use crate::artifacts::procedural2d::op::{generation_mutation_to_procedural2d, Procedural2dMutation};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::FlowEvalSession;
@@ -64,7 +64,7 @@ fn handle_generation(action: &str, args: Option<&Value>, doc: &ArtifactView<'_, 
         session.set_eval_json(preview);
     }
     let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
-    Emit { artifact_mutations: operations.into_iter().map(Procedural2dMutation::Generation).collect(), config_mutations: vec![Procedural2dConfigMutation::Snapshot { config: next_config }], coalesce_key, ..Default::default() }
+    Emit { artifact_mutations: operations.into_iter().map(generation_mutation_to_procedural2d).collect(), config_mutations: vec![Procedural2dConfigMutation::Snapshot { config: next_config }], coalesce_key, ..Default::default() }
 }
 //#endregion 🔖️Shared
 

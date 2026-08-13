@@ -2,8 +2,12 @@
 //! (text/image/table/math/ink/group blocks).
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{
+    SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA,
+};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::cell::RefCell;
+use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
@@ -153,7 +157,11 @@ pub enum NoteBlockNode {
         visible: bool,
         #[serde(default)]
         locked: bool,
-        paragraphs: Vec<NoteTextParagraph>,
+        /// ✏️ Composed content — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→C:text`):
+        /// replaces the former inline `paragraphs: Vec<NoteTextParagraph>` (which duplicated stdio's
+        /// `s.stdio.semio.text` run/mark shape) with a content-addressed handle onto that composed
+        /// subset. See this file's `🔖️TextBridge`/`🔖️WorkingScene` regions for the converter/cache.
+        content: NoteTextChild,
         font_size: f64,
         font_weight: String,
         align: String,
@@ -247,6 +255,125 @@ pub enum NoteBlockNode {
     },
 }
 
+//#region 🔖️ComposedTypes
+/// 🕸️ Owned CHILD handle type for one text block's composed `s.stdio.semio.text` content.
+pub type NoteTextChild = store::ArtifactChild<SemioTextSnapshot>;
+//#endregion 🔖️ComposedTypes
+
+//#region 🔖️TextBridge
+/// 🌉 REAL bidirectional converter between one `NoteBlockNode::Text`'s paragraph/run working
+/// representation and the composed child's own `SemioTextSnapshot` (a flat run list — no paragraph
+/// grouping). Paragraph boundaries are honestly lossy in one edge case, documented here rather than
+/// silently dropped: a boundary is represented as a marks-free, language-free run whose `content` is
+/// exactly `"\n"`; this collapses "zero paragraphs" and "one paragraph containing zero runs" onto the
+/// same single empty paragraph on the way back (both are legitimate "no text yet" states,
+/// indistinguishable once flattened — [`paragraphs_from_text_snapshot`] always emits a trailing
+/// paragraph for whatever ran since the last separator, even an empty one). `NoteTextRun.underline`
+/// has no equivalent mark in stdio's closed
+/// bold/italic/code/link vocabulary and is dropped on the way in — real, honestly-lossy, not fabricated.
+pub fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> SemioTextSnapshot {
+    let mut runs = Vec::new();
+    for (index, paragraph) in paragraphs.iter().enumerate() {
+        if index > 0 {
+            runs.push(SemioTextRun { language: String::new(), content: "\n".into(), marks: Vec::new() });
+        }
+        for run in &paragraph.runs {
+            let mut marks = Vec::new();
+            if run.bold == Some(true) {
+                marks.push(SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() });
+            }
+            if run.italic == Some(true) {
+                marks.push(SemioTextMark { kind: SemioTextMarkKind::Italic, href: String::new() });
+            }
+            if let Some(href) = &run.link {
+                marks.push(SemioTextMark { kind: SemioTextMarkKind::Link, href: href.clone() });
+            }
+            runs.push(SemioTextRun { language: String::new(), content: run.text.clone(), marks });
+        }
+    }
+    SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs }
+}
+
+/// 🌉 Inverse of [`text_snapshot_from_paragraphs`] — splits the flat run list back into paragraphs on
+/// every marks-free/language-free `"\n"` separator run. See that function's doc comment for the one
+/// honestly-lossy edge case (empty paragraph list vs. one paragraph with zero runs).
+pub fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTextParagraph> {
+    let mut paragraphs = Vec::new();
+    let mut current = Vec::new();
+    for run in &snapshot.runs {
+        if run.content == "\n" && run.marks.is_empty() && run.language.is_empty() {
+            paragraphs.push(NoteTextParagraph { runs: std::mem::take(&mut current) });
+            continue;
+        }
+        let bold = run.marks.iter().any(|mark| mark.kind == SemioTextMarkKind::Bold).then_some(true);
+        let italic = run.marks.iter().any(|mark| mark.kind == SemioTextMarkKind::Italic).then_some(true);
+        let link = run.marks.iter().find(|mark| mark.kind == SemioTextMarkKind::Link).map(|mark| mark.href.clone());
+        current.push(NoteTextRun { text: run.content.clone(), bold, italic, underline: None, link });
+    }
+    paragraphs.push(NoteTextParagraph { runs: current });
+    paragraphs
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle for one text block's composed content — same
+/// `(child_id, target)` for identical `(block_id, paragraphs)`, a different pair once either changes;
+/// mirrors writer's `document_child_handle`/cad's `cad_model_child_handle`, keyed by `block_id` (not
+/// content alone) so two distinct blocks never collide on the same child slot.
+pub fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+    use std::hash::{Hash, Hasher};
+    let content_json = serde_json::to_string(paragraphs).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    block_id.hash(&mut hasher);
+    content_json.hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let child_id = format!("note-text-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: format!("{block_id}-text"), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+//#endregion 🔖️TextBridge
+
+//#region 🔖️WorkingScene
+/// 🌱 Ephemeral, session-side cache of every text block's live paragraphs, keyed by
+/// `NoteTextChild::child_id` — NEVER persisted, NEVER a durable field on `NoteSnapshot`/`NoteBlockNode`
+/// (matches the `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base).
+/// Exists because no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet
+/// (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only here — same standing gap
+/// writer/cad/lowpoly's reports document) and `ArtifactView::with_children` has zero live content
+/// behind it for any plugin as of this ticket's own wave-4 notes; until a real seam exists, this cache
+/// is the only way a persisted content-addressed handle round-trips to real paragraphs within one
+/// process — mirrors writer's `WRITER_SCRATCH: RefCell<HashMap<child_id, text>>`.
+///
+/// ⚠️ Same documented staleness gap as lowpoly's `StaleMeshWorkspace`/writer's `WriterWorkingScene`:
+/// store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a handle can in principle go
+/// uncached — [`note_block_text`] fails soft (empty `Vec`) rather than panicking.
+thread_local! {
+    static NOTE_TEXT_SCRATCH: RefCell<HashMap<String, Vec<NoteTextParagraph>>> = RefCell::new(HashMap::new());
+}
+
+/// 📝 Seeds the scratch cache for a handle — call whenever new paragraph content is about to become a
+/// text block's `content` field (every mutation-diff/fixture builder in this plugin does, via
+/// [`note_text_child_handle_and_cache`]).
+pub fn cache_note_block_text(child_id: &str, paragraphs: &[NoteTextParagraph]) {
+    NOTE_TEXT_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), paragraphs.to_vec()));
+}
+
+/// 🔎 Reads the cached live paragraphs for a text child handle — empty `Vec` (never a panic) when
+/// nothing has cached it yet (see this region's module doc comment for why that can happen).
+pub fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
+    NOTE_TEXT_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned().unwrap_or_default())
+}
+
+/// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its paragraphs in one
+/// call — the standard way every mutation-diff/fixture/converter builder in this plugin creates a
+/// text block's `content` field value; never construct a handle without also caching, or
+/// [`note_block_text`] will read back empty.
+pub fn note_text_child_handle_and_cache(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+    let handle = note_text_child_handle(block_id, paragraphs);
+    cache_note_block_text(&handle.child_id, paragraphs);
+    handle
+}
+//#endregion 🔖️WorkingScene
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "r")]
@@ -310,6 +437,66 @@ mod tests {
         assert_eq!(artifact_kind().schema, NOTE_DOCUMENT_SCHEMA);
     }
 
+    //#region 🔖️TextBridgeTests
+    /// 🧪️ Real round trip for the paragraph <-> `SemioTextSnapshot` converter: multiple paragraphs,
+    /// multiple runs, every mark (bold/italic/link) the converter maps.
+    #[test]
+    fn text_bridge_round_trips_paragraphs_through_semio_text_snapshot() {
+        let paragraphs = vec![
+            NoteTextParagraph {
+                runs: vec![
+                    NoteTextRun { text: "plain ".into(), bold: None, italic: None, underline: None, link: None },
+                    NoteTextRun { text: "bold".into(), bold: Some(true), italic: None, underline: None, link: None },
+                ],
+            },
+            NoteTextParagraph { runs: vec![NoteTextRun { text: "second para".into(), bold: None, italic: Some(true), underline: None, link: Some("https://semio.tech".into()) }] },
+        ];
+        let snapshot = text_snapshot_from_paragraphs(&paragraphs);
+        assert_eq!(snapshot.runs.len(), 4, "2 content runs + 1 paragraph separator, but bold/link split across marks not runs: {snapshot:?}");
+        let restored = paragraphs_from_text_snapshot(&snapshot);
+        assert_eq!(restored, paragraphs);
+    }
+
+    /// 🧪️ Documents the one honest lossy edge case: an empty paragraph list and a single paragraph
+    /// with zero runs both flatten to zero runs, and [`paragraphs_from_text_snapshot`] always emits a
+    /// trailing paragraph for whatever ran since the last separator (even if that's none) — so both
+    /// restore as the SAME single empty paragraph, never as an empty paragraph list.
+    #[test]
+    fn text_bridge_collapses_empty_paragraph_shapes() {
+        let one_empty_paragraph = vec![NoteTextParagraph { runs: Vec::new() }];
+        assert_eq!(paragraphs_from_text_snapshot(&text_snapshot_from_paragraphs(&[])), one_empty_paragraph);
+        assert_eq!(paragraphs_from_text_snapshot(&text_snapshot_from_paragraphs(&one_empty_paragraph)), one_empty_paragraph);
+    }
+
+    /// 🧪️ `underline` has no equivalent mark in stdio's text subset and is honestly dropped, never
+    /// fabricated back on the way out.
+    #[test]
+    fn text_bridge_drops_underline_honestly() {
+        let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "u".into(), bold: None, italic: None, underline: Some(true), link: None }] }];
+        let restored = paragraphs_from_text_snapshot(&text_snapshot_from_paragraphs(&paragraphs));
+        assert_eq!(restored[0].runs[0].underline, None);
+    }
+
+    /// 🧪️ Working-scene cache: minting a handle seeds it, `note_block_text` reads it back, and two
+    /// distinct block ids never collide even with identical paragraph content.
+    #[test]
+    fn working_scene_caches_by_child_id_and_block_id_never_collides() {
+        let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "hi".into(), bold: None, italic: None, underline: None, link: None }] }];
+        let a = note_text_child_handle_and_cache("block-a", &paragraphs);
+        let b = note_text_child_handle_and_cache("block-b", &paragraphs);
+        assert_ne!(a.child_id, b.child_id, "identical content on distinct block ids must not share a child slot");
+        assert_eq!(note_block_text(&a), paragraphs);
+        assert_eq!(note_block_text(&b), paragraphs);
+    }
+
+    /// 🧪️ An uncached handle fails soft (empty `Vec`), never panics — the documented staleness gap.
+    #[test]
+    fn note_block_text_fails_soft_on_a_cache_miss() {
+        let handle = note_text_child_handle("never-cached", &[]);
+        assert_eq!(note_block_text(&handle), Vec::<NoteTextParagraph>::new());
+    }
+    //#endregion 🔖️TextBridgeTests
+
     #[test]
     fn note_document_round_trips_assets_and_grid_settings() {
         let mut document = NoteSnapshot {
@@ -326,6 +513,7 @@ mod tests {
             pencil_width: Some(3.0),
             eraser_radius: Some(12.0),
             assets: BTreeMap::new(),
+            linked_artifact: None,
         };
         document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc".into(), width: Some(10.0), height: Some(20.0) });
         document.grid_subdivisions = Some(6.0);

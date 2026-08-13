@@ -55,10 +55,11 @@ pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> Trinity
 /// against the compile-time `Manifest`, not a single sparse-diff concern.
 pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
+    let scene = crate::artifacts::jack::jack_working_scene(fixture);
     match operation {
         TrinityGraphMutation::CreateNode(payload) => {
             let node = &payload.node;
-            if fixture.nodes.iter().any(|existing| existing.id == node.id) {
+            if scene.nodes.iter().any(|existing| existing.id == node.id) {
                 return Err(TrinityRamError::NodeAlreadyExists(node.id.clone()));
             }
             validate_node_kind_trinity(&fixture.manifest, &node.kind)?;
@@ -72,38 +73,38 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixtur
             }
         }
         TrinityGraphMutation::DeleteNode(payload) => {
-            if !fixture.nodes.iter().any(|node| node.id == payload.id) {
+            if !scene.nodes.iter().any(|node| node.id == payload.id) {
                 return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
             }
         }
         TrinityGraphMutation::CreateEdge(payload) => {
             let edge = &payload.edge;
-            if fixture.edges.iter().any(|existing| existing.id == edge.id) {
+            if scene.edges.iter().any(|existing| existing.id == edge.id) {
                 return Err(TrinityRamError::EdgeAlreadyExists(edge.id.clone()));
             }
             validate_edge_kind_trinity(&fixture.manifest, &edge.kind)?;
             validate_edge_properties_trinity(&fixture.manifest, &edge.kind, &edge.properties)?;
             let source_node = crate::artifacts::jack::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
             let target_node = crate::artifacts::jack::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
-            if !fixture.nodes.iter().any(|node| node.id == source_node) {
+            if !scene.nodes.iter().any(|node| node.id == source_node) {
                 return Err(TrinityRamError::SourceNodeNotFound(source_node.to_string()));
             }
-            if !fixture.nodes.iter().any(|node| node.id == target_node) {
+            if !scene.nodes.iter().any(|node| node.id == target_node) {
                 return Err(TrinityRamError::TargetNodeNotFound(target_node.to_string()));
             }
         }
         TrinityGraphMutation::DeleteEdge(payload) => {
-            if !fixture.edges.iter().any(|edge| edge.id == payload.id) {
+            if !scene.edges.iter().any(|edge| edge.id == payload.id) {
                 return Err(TrinityRamError::EdgeNotFound(payload.id.clone()));
             }
         }
         TrinityGraphMutation::RenameNode(payload) => {
-            if !fixture.nodes.iter().any(|node| node.id == payload.id) {
+            if !scene.nodes.iter().any(|node| node.id == payload.id) {
                 return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
             }
         }
         TrinityGraphMutation::MoveNode(payload) => {
-            if !fixture.nodes.iter().any(|node| node.id == payload.id) {
+            if !scene.nodes.iter().any(|node| node.id == payload.id) {
                 return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
             }
         }
@@ -119,12 +120,13 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixtur
 
 fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
+    let scene = crate::artifacts::jack::jack_working_scene(fixture);
     match entity {
         EntityRef::Node(id) => {
-            fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
+            scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
         }
         EntityRef::Edge(id) => {
-            fixture.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
+            scene.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
         }
     }
     let _ = key;
@@ -133,13 +135,14 @@ fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key:
 
 fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
+    let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
-            let node = fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
+            let node = scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
             (fixture.manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
         }
         EntityRef::Edge(id) => {
-            let edge = fixture.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
+            let edge = scene.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
             (fixture.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
         }
     };
@@ -275,14 +278,13 @@ mod tests {
     use protocol::MutationDiff;
 
     fn mini_fixture() -> JackSnapshot {
-        JackSnapshot {
-            schema: JackSnapshot::SCHEMA.into(),
-            name: "mini".into(),
-            manifest_id: Some("nakagin".into()),
-            manifest: Manifest::nakagin_default(),
-            camera: Camera::default(),
-            root_node_id: Some("root".into()),
-            nodes: vec![
+        JackSnapshot::with_content(
+            JackSnapshot::SCHEMA.into(),
+            "mini".into(),
+            Some("nakagin".into()),
+            Manifest::nakagin_default(),
+            Camera::default(),
+            vec![
                 Node {
                     id: "root".into(),
                     kind: "Piece".into(),
@@ -306,7 +308,7 @@ mod tests {
                     ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
                 },
             ],
-            edges: vec![Edge {
+            vec![Edge {
                 id: "e1".into(),
                 kind: "Connection".into(),
                 source: "root@out-a".into(),
@@ -318,7 +320,8 @@ mod tests {
                     p
                 },
             }],
-        }
+            Some("root".into()),
+        )
     }
 
     fn mini_node(id: &str, x: f64, y: f64, ports: Vec<Port>) -> Node {
@@ -379,8 +382,10 @@ mod tests {
 
     #[test]
     fn graph_op_set_data_property_rejects_unknown_entity_kind() {
-        let mut fixture = mini_fixture();
-        fixture.nodes[0].kind = "Ghost".into();
+        let fixture = mini_fixture();
+        let mut nodes = fixture.nodes();
+        nodes[0].kind = "Ghost".into();
+        let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
         let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("x".into())), &fixture).expect_err("unknown entity kind");
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::UnknownEntityKind { .. }));
     }
@@ -410,7 +415,7 @@ mod tests {
     fn apply_trinity_graph_mutations_applies_valid_sequence_and_rejects_invalid() {
         let fixture = mini_fixture();
         let ok = apply_trinity_graph_mutations(fixture.clone(), &[rename_node("root".into(), "renamed".into())]).expect("rename applies");
-        assert_eq!(ok.nodes.iter().find(|n| n.id == "root").unwrap().name, "renamed");
+        assert_eq!(ok.nodes().iter().find(|n| n.id == "root").unwrap().name, "renamed");
 
         let err = apply_trinity_graph_mutations(fixture, &[delete_node("ghost".into())]).expect_err("missing node");
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::NodeNotFound(_)));
@@ -436,22 +441,22 @@ mod tests {
     fn graph_op_reposition_and_rename_undo_restore_prior_values() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![move_node("root".into(), 50.0, 60.0)]).expect("reposition");
-        assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 50.0);
+        assert_eq!(store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().x, 50.0);
         store.dispatch(ArtifactCommand::Undo).expect("undo reposition");
-        assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 0.0);
+        assert_eq!(store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().x, 0.0);
 
         dispatch_trinity_graph_mutations(&mut store, vec![rename_node("root".into(), "renamed".into())]).expect("rename");
         store.dispatch(ArtifactCommand::Undo).expect("undo rename");
-        assert_eq!(store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().name, "core");
+        assert_eq!(store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().name, "core");
     }
 
     #[test]
     fn graph_op_delete_edge_undo_recreates_edge() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![delete_edge("e1".into())]).expect("delete edge");
-        assert!(store.snapshot().unwrap().edges.is_empty());
+        assert!(store.snapshot().unwrap().edges().is_empty());
         store.dispatch(ArtifactCommand::Undo).expect("undo delete edge");
-        assert_eq!(store.snapshot().unwrap().edges.len(), 1);
+        assert_eq!(store.snapshot().unwrap().edges().len(), 1);
     }
 
     #[test]
@@ -459,12 +464,12 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![delete_node("root".into())]).expect("delete node");
         let projection = store.snapshot().unwrap();
-        assert_eq!(projection.nodes.len(), 1);
-        assert!(projection.edges.is_empty());
+        assert_eq!(projection.nodes().len(), 1);
+        assert!(projection.edges().is_empty());
         store.dispatch(ArtifactCommand::Undo).expect("undo delete node");
         let projection = store.snapshot().unwrap();
-        assert_eq!(projection.nodes.len(), 2);
-        assert_eq!(projection.edges.len(), 1);
+        assert_eq!(projection.nodes().len(), 2);
+        assert_eq!(projection.edges().len(), 1);
     }
 
     #[test]
@@ -473,13 +478,13 @@ mod tests {
         dispatch_trinity_graph_mutations(&mut store, vec![change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("first".into()))]).expect("set");
         dispatch_trinity_graph_mutations(&mut store, vec![change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("second".into()))]).expect("set again");
         store.dispatch(ArtifactCommand::Undo).expect("undo second set");
-        let value = store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
+        let value = store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));
 
         dispatch_trinity_graph_mutations(&mut store, vec![remove_data_property(EntityRef::Node("root".into()), "label".into())]).expect("clear");
-        assert!(!store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.contains_key("label"));
+        assert!(!store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().properties.contains_key("label"));
         store.dispatch(ArtifactCommand::Undo).expect("undo clear");
-        let value = store.snapshot().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
+        let value = store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));
     }
 

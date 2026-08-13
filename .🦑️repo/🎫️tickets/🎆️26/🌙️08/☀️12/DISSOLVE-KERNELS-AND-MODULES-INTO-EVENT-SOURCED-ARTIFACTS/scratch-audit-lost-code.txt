@@ -1,0 +1,4 @@
+
+distinctive symbols in the 4 dying modules at baseline : 5826
+of those, still present SOMEWHERE in the tree        : 5826
+⇒ LOST (defined nowhere now)                          : 0

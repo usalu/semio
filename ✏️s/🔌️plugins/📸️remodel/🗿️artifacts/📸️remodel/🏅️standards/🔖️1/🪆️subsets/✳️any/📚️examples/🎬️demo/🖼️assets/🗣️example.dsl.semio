@@ -1,17 +1,54 @@
 semio remodel.remodel.dsl v1
-schema=remodel.scene
-id=remodel
-streams=[]
-assets={}
+schema=remodel.scene id=remodel assets={
+}
 calibration {
+  cameras [id:TEXT label:TEXT model:TEXT fx:NUM fy:NUM cx:NUM cy:NUM skew:NUM distortion:TUPLE rms-reprojection-px:NUM locked:BOOL] {
+  }
+  rig [camera-id:TEXT rotation-wxyz:TUPLE translation-m:CRD] {
+  }
 }
 params {
+  ingest {
+    frame-sample-stride=5 max-frames=200 downscale-long-edge-px=1600 min-sharpness=0.30000001192092896
+  }
+  feature {
+    detector=orb target-count=4000 octaves=4 edge-threshold=10
+  }
+  matching {
+    matcher=brute-force ratio-test=0.800000011920929 cross-check=true sequential-window=8 max-pairs-per-frame=16 loop-closure=true
+  }
+  sfm {
+    ransac-iterations=1000 ransac-threshold-px=2 min-track-length=3 ba-max-iterations=50 robust-loss=huber huber-delta-px=1.5
+  }
+  dense {
+    resolution=medium window-radius-px=3 min-view-consistency=3 confidence-threshold=0.5 max-points=500000
+  }
+  mesh {
+    tsdf-voxel-size-mm=5mm tsdf-truncation-mm=20mm decimate-target-triangles=200000 smoothing-iterations=2 texture-enabled=true texture-size=2048 guarantee-watertight=true hole-fill-max-boundary-verts=512 self-intersection-check=false
+  }
+  motion {
+    enabled=false max-tracks=64 track-window-px=21 min-track-quality=0.30000001192092896 min-track-length-frames=5
+  }
+  geo {
+    enabled=false gsd-m=0.05000000074505806m dsm-cell-m=0.10000000149011612m dtm-filter-radius-m=2m ortho-max-px=4096
+  }
 }
-gcps=[]
 job {
+  id="" stage=idle progress-0-1=0 cancel-requested=false stage-cursor=0 sparse-point-cloud-preview=""
+  camera-poses-preview [camera-id:TEXT rotation-wxyz:TUPLE translation:CRD] {
+  }
 }
 results {
   mesh {
     source=placeholder
+    mesh {
+      child_id=remodel-mesh-901ccade3f60f8f1 target="remodel-mesh!s.stdio.semio@v1/mesh"
+    }
   }
+  tracks [id:TEXT length:UINT class:ENUM mean-speed-m-s:QTY] {
+  }
+}
+streams [id:TEXT name:TEXT kind:ENUM camera-id:TEXT sync-offset-ms:NUM fps-hint:NUM frames:TABLE source:BLOCK] {
+}
+gcps [id:TEXT name:TEXT world-position:CRD observations:TABLE] {
 }

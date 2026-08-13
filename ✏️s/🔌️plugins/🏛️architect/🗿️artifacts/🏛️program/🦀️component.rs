@@ -10,6 +10,212 @@ pub use crate::artifacts::program::kernel::*;
 pub use crate::artifacts::program::registers::*;
 pub use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
 
+//#region 🔖️Composition
+/// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4 batch Db (`architect→C:table,graph
+/// R:model`): `program.benchmarks` (an id-keyed register that is NOT one of the 8 registers wired
+/// into `patch_register_item_operation`'s reflection dispatch, unlike e.g. `stakeholders`/
+/// `elements`) is the first — smallest, lowest-blast-radius — of this plugin's 68 register
+/// collections to compose stdio's `table`
+/// subset, proving the pattern before a wider follow-up pass. Every `BenchmarkRecord` row nests a
+/// rich `EntityHeader` (id/name/status/priority/ownership/tags/notes/timestamps) that has no clean
+/// native `table`-column mapping, so the converter below follows `🕸️dag`'s "honest string boundary"
+/// precedent: `id`/`name` are ALSO projected onto native columns for genuine table-tooling, but the
+/// full row (source of truth) round-trips as one JSON cell — nothing is silently dropped.
+///
+/// Every one of the four existing `create`/`replace`/`delete`/`rename` mutation triads for
+/// `benchmarks` keeps its exact public payload/wire shape (`CreateBenchmarkRecord`,
+/// `ReplaceBenchmarkRecord`, …) — only the internal `🔺️diff`/`↩️inverse` bodies are rewired to read
+/// the working-scene cache below and re-mint a fresh content-addressed child handle, mirroring
+/// `➗️mathematical`'s `MATH_SCRATCH`/`📕️norm`'s `EN1990_QK_SCRATCH` for the identical per-entry
+/// mutation-rich shape (`📓️migration-recipe.md` §3/§4 — no `LinkResolver`/child-dispatch seam
+/// exists in `ArtifactApp::handle` yet, checked directly against `🔌️plugin/🦀️component.rs`,
+/// W1-owned, read-only).
+
+//#region 🔖️ChildTypes
+pub type ProgramBenchmarksChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+//#endregion 🔖️ChildTypes
+
+//#region 🔖️Converters
+/// 🌉 REAL bidirectional converter: `benchmarks` rows <-> `table` rows — three columns (`id: Str`,
+/// `name: Str`, `json: Str`). `json` is the FULL `serde_json` serialization of the row (source of
+/// truth on decode); `id`/`name` are a redundant native-column projection for table-shaped tooling
+/// that only understands the neutral subset — the same split `🕸️dag`'s node/edge converter uses for
+/// its own richer-than-native domain type.
+pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    SemioTableSnapshot {
+        schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
+        columns: vec![
+            SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str },
+            SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str },
+            SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str },
+        ],
+        rows: records
+            .iter()
+            .map(|record| SemioTableRow {
+                cells: vec![
+                    SemioValue::Str { value: record.header.id.0.clone() },
+                    SemioValue::Str { value: record.header.name.clone() },
+                    SemioValue::Str { value: serde_json::to_string(record).unwrap_or_default() },
+                ],
+            })
+            .collect(),
+    }
+}
+
+/// 🌉 Inverse of the converter above — real reconstruction from the `json` cell (source of truth),
+/// never a stub. A row whose `json` cell is missing or fails to parse is honestly SKIPPED (not
+/// fabricated from `id`/`name` alone, since `BenchmarkRecord` has no `Default` and a partial
+/// reconstruction would silently invent data) — documented here rather than hidden.
+pub fn benchmark_records_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<BenchmarkRecord> {
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    table
+        .rows
+        .iter()
+        .filter_map(|row| match row.cells.get(2) {
+            Some(SemioValue::Str { value }) => serde_json::from_str(value).ok(),
+            _ => None,
+        })
+        .collect()
+}
+//#endregion 🔖️Converters
+
+//#region 🔖️WorkingScene
+/// 🌱 Ephemeral, session-side cache of the live `benchmarks` rows behind a composed-child handle —
+/// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
+/// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
+/// (checked directly, W1-owned, read-only), so this is the only way a persisted content-addressed
+/// handle round-trips to the real rows within one process — mirrors `➗️mathematical`'s
+/// `MATH_SCRATCH`/`📕️norm`'s `EN1990_QK_SCRATCH`.
+///
+/// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
+/// undo/redo past this session's history, or a genuinely reloaded persisted `.architect` document)
+/// sees a `benchmarks` handle whose cache entry was never populated — `program_benchmarks` fails
+/// soft to an EMPTY list rather than panicking. Every register-panel/report/mutation-diff call path
+/// already routes through `program_benchmarks`, so the gap is visibly empty, not
+/// silently-wrong-but-plausible. Not a fix for the missing resolver — a bridge until one lands.
+thread_local! {
+    static PROGRAM_BENCHMARKS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<BenchmarkRecord>>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
+    use std::hash::{Hash, Hasher};
+    let content_json = serde_json::to_string(records).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_json.hash(&mut hasher);
+    format!("architect-benchmarks-{:016x}", hasher.finish())
+}
+
+fn program_benchmarks_target() -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef {
+        artifact_id: "architect-program-benchmarks".into(),
+        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() },
+    }
+}
+
+/// 🏗️ Mints the composed-child handle for a `benchmarks` row list AND seeds the scratch cache in
+/// one call — the standard way every mutation-diff/fixture builder in this artifact creates
+/// `benchmarks` field values; never construct this handle without also caching, or
+/// `program_benchmarks` will read back empty.
+pub fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenchmarksChild {
+    let scene_id = program_benchmarks_scene_id(records);
+    PROGRAM_BENCHMARKS_SCRATCH.with(|cache| {
+        cache.borrow_mut().insert(scene_id.clone(), records.to_vec());
+    });
+    store::ArtifactChild::new(scene_id, program_benchmarks_target())
+}
+
+/// 🔎 The live `benchmarks` rows behind a snapshot's composed child — the single read call site
+/// every mutation-diff/panel/report call path in this artifact now uses instead of a direct
+/// `.benchmarks` field. Empty (never a panic) on a cache miss, per this region's own doc comment.
+pub fn program_benchmarks(snapshot: &ProgramSnapshot) -> Vec<BenchmarkRecord> {
+    PROGRAM_BENCHMARKS_SCRATCH.with(|cache| cache.borrow().get(&snapshot.benchmarks.child_id).cloned()).unwrap_or_default()
+}
+//#endregion 🔖️WorkingScene
+
+//#region 🔖️Knowledge
+/// 🧩️ `program.knowledge` — second proof-of-pattern field (also outside
+/// `patch_register_item_operation`'s reflection dispatch), composed identically to `benchmarks`
+/// above. `KnowledgeRecord` also nests a rich `EntityHeader` with no clean native `table`-column
+/// mapping, so it follows the identical `id`/`name`-native-plus-full-`json` converter shape.
+
+//#region 🔖️ChildTypes
+pub type ProgramKnowledgeChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+//#endregion 🔖️ChildTypes
+
+//#region 🔖️Converters
+pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    SemioTableSnapshot {
+        schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
+        columns: vec![
+            SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str },
+            SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str },
+            SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str },
+        ],
+        rows: records
+            .iter()
+            .map(|record| SemioTableRow {
+                cells: vec![
+                    SemioValue::Str { value: record.header.id.0.clone() },
+                    SemioValue::Str { value: record.header.name.clone() },
+                    SemioValue::Str { value: serde_json::to_string(record).unwrap_or_default() },
+                ],
+            })
+            .collect(),
+    }
+}
+
+pub fn knowledge_records_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<KnowledgeRecord> {
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    table
+        .rows
+        .iter()
+        .filter_map(|row| match row.cells.get(2) {
+            Some(SemioValue::Str { value }) => serde_json::from_str(value).ok(),
+            _ => None,
+        })
+        .collect()
+}
+//#endregion 🔖️Converters
+
+//#region 🔖️WorkingScene
+thread_local! {
+    static PROGRAM_KNOWLEDGE_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<KnowledgeRecord>>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
+    use std::hash::{Hash, Hasher};
+    let content_json = serde_json::to_string(records).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_json.hash(&mut hasher);
+    format!("architect-knowledge-{:016x}", hasher.finish())
+}
+
+fn program_knowledge_target() -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef {
+        artifact_id: "architect-program-knowledge".into(),
+        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() },
+    }
+}
+
+pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowledgeChild {
+    let scene_id = program_knowledge_scene_id(records);
+    PROGRAM_KNOWLEDGE_SCRATCH.with(|cache| {
+        cache.borrow_mut().insert(scene_id.clone(), records.to_vec());
+    });
+    store::ArtifactChild::new(scene_id, program_knowledge_target())
+}
+
+pub fn program_knowledge(snapshot: &ProgramSnapshot) -> Vec<KnowledgeRecord> {
+    PROGRAM_KNOWLEDGE_SCRATCH.with(|cache| cache.borrow().get(&snapshot.knowledge.child_id).cloned()).unwrap_or_default()
+}
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Knowledge
+//#endregion 🔖️Composition
+
 #[cfg(test)]
 use store::ArtifactDsl;
 
@@ -157,8 +363,8 @@ pub fn empty_plugin() -> ProgramSnapshot {
         issues: Vec::new(),
         audit_events: Vec::new(),
         templates: Vec::new(),
-        knowledge: Vec::new(),
-        benchmarks: Vec::new(),
+        knowledge: knowledge_child_from_records(&[]),
+        benchmarks: benchmarks_child_from_records(&[]),
         governance: Governance {
             id: governance_id,
             framework: String::new(),

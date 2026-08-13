@@ -28,10 +28,10 @@ impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ReplaceWidget 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Replace widget \"{}\"", widget_id(&payload.widget))
+        format!("Replace widget \"{}\"", widget_id(&self.widget))
     }
     fn target(&self) -> Vec<String> {
-        vec![widget_id(&payload.widget).to_string()]
+        vec![widget_id(&self.widget).to_string()]
     }
 }
 //#endregion 🔖️Mutation

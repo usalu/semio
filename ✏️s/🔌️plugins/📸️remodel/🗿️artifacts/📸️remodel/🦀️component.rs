@@ -12,6 +12,8 @@
 use base64::Engine as _;
 use semio_framework::MeshData;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -126,6 +128,189 @@ pub use crate::artifacts::remodel::schema::mutations::RemodelMutation;
 pub use crate::artifacts::remodel::schema::diff::RemodelDiff;
 
 pub const REMODEL_DOCUMENT_SCHEMA: &str = "remodel.scene";
+
+//#region 🧩️Composition
+/// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "remodel→C:mesh R:image").
+/// Two content-duplication shapes, both verified against real code (not assumed from the one-line
+/// design summary):
+///
+/// 1. **`results.mesh.mesh` (was `MeshData`, the reconstructed/placeholder mesh's flat buffers) is now
+///    a composed `s.stdio.semio/v1/mesh` CHILD** (`RemodelMeshChild = store::ArtifactChild<
+///    SemioMeshSnapshot>`) — exactly `💠️lowpoly`'s own pattern (this ticket's closest precedent for
+///    opaque mesh composition), extended with a REAL bidirectional converter
+///    (`crate::artifacts::remodel::standards::v1::subsets::any::io::{mesh_data_to_semio_mesh,
+///    semio_mesh_to_mesh_data}`, already real — the export path already built the forward direction).
+///
+/// 2. **`assets: BTreeMap<String, ImageAsset>` (embedded mime+base64 pixel bytes: video frames,
+///    baked mesh textures, DSM/DTM/ortho rasters) is now `BTreeMap<String, RemodelAssetChild>`
+///    (`RemodelAssetChild = store::ArtifactChild<SemioImageSnapshot>`)** — the design line's "R:image"
+///    literally means `ArtifactLink` (an INDEPENDENT-lifecycle reference, `store::ArtifactLink`'s own
+///    doc comment: "renders as a chip, never nests inline"). `remodel`'s assets are NOT independent
+///    documents referenced from elsewhere — they are embedded content OWNED by this exact document
+///    (keyed by an id that only this document's own `MediaStream.frames`/`RemodelMesh.
+///    texture_asset_id`/`GeoProducts` fields ever address), the identical shape `🖨️raster`'s own
+///    `assets: BTreeMap<String, RasterImageAsset>` had — and raster's own migration (this ticket,
+///    same design map, "raster→C:image layers R:drawing") converted that shape to a composed CHILD,
+///    not a link, documenting exactly this reasoning in place. Followed here for the same reason:
+///    composing (owned CHILD) is the honest verb for content this document owns and mutates through
+///    its own `create-asset`/`delete-asset` triad; `ArtifactLink` would be dishonest (there is no
+///    independent target document to pin/reference).
+///
+/// **Schema-introspection gap, documented and accepted** (matches raster's/lowpoly's own identical
+/// gap): `#[derive(ArtifactSchema)]`'s `#[child(kind=...)]` mechanism only recognizes a bare
+/// `ArtifactChild<T>`/`Vec<ArtifactChild<T>>` field declared DIRECTLY on the struct it derives — not a
+/// `BTreeMap` value (`assets`) and not a field nested two levels deep inside `results.mesh.mesh`. Kept
+/// as-is (not reshaped) to preserve the exact addressing every existing mutation already assumes
+/// (`image_key`-equivalent lookups by asset id; `ReplaceMeshResult`'s whole-`RemodelMesh` payload
+/// shape) — the type/mutation/persistence layer is fully real, only the derive's SCHEMA
+/// INTROSPECTION table is incomplete for these two fields.
+use crate::artifacts::remodel::standards::v1::subsets::any::io::{mesh_data_to_semio_mesh, semio_image_snapshot_from_image_asset};
+
+pub type RemodelAssetChild = store::ArtifactChild<SemioImageSnapshot>;
+pub type RemodelMeshChild = store::ArtifactChild<SemioMeshSnapshot>;
+
+//#region 🔖️AssetHandles
+fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RemodelAssetChild {
+    let child_id = format!("remodel-asset-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle, hashed off the RAW `(mime, data)` bytes — the
+/// fallback shape used only when the bytes can't be decoded into real `SemioImageSnapshot` content
+/// (see `mint_and_stash_asset`), mirrors `🖨️raster`'s `image_asset_child_handle` exactly.
+pub fn image_asset_child_handle(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    asset.mime.hash(&mut hasher);
+    asset.data.hash(&mut hasher);
+    mint_asset_child_handle(asset_id, hasher.finish())
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle, hashed off the composed child's own CANONICAL
+/// pack bytes — makes `decode → cache → re-encode → decode` idempotent at the handle level, exactly
+/// `🖨️raster`'s `image_content_child_handle` rationale (two pixel-identical PNGs from different
+/// encoders are not byte-identical, so hashing raw bytes would mint two handles for the same image).
+/// Used only when the asset decodes into real `SemioImageSnapshot` content (`image/png` today); every
+/// other mime mints off the raw bytes instead (`image_asset_child_handle`).
+fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RemodelAssetChild {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image).hash(&mut hasher);
+    mint_asset_child_handle(asset_id, hasher.finish())
+}
+
+// 🩹️ Working-scene cache, keyed `child_id`. Caches the REAL `ImageAsset` (mime + base64 bytes)
+// directly — deliberately NOT the lossy `SemioImageSnapshot` projection raster's own identical cache
+// stores. Divergence from raster's own precedent, documented honestly: raster's `assets` carry
+// exactly one real mime (`image/png`, its own doc comment), so a decode failure there is anomalous
+// input worth leaving uncached. `remodel`'s `assets` legitimately carry TWO real mimes in normal
+// operation — `image/png` (textures/DSM/DTM/ortho) AND `image/jpeg` (`MediaStream.frames`, sampled
+// video frames, `🎛️apps/📸️remodel/🎮️commands/📥️ingest`'s own real call sites) — so a jpeg asset
+// failing `semio_image_snapshot_from_image_asset` (jpeg bridge not wired yet, see that function's
+// doc comment) is an EXPECTED, common, correct case, not bad data; leaving the cache slot empty for
+// it would make every jpeg-sourced `create-asset`'s inverse silently lossy. Caching the real asset
+// bytes regardless of decodability keeps every mutation's inverse (`create-asset`/`delete-asset`,
+// `🧬️mutations/…/↩️inverse`) exact for BOTH mimes today.
+thread_local! {
+    static REMODEL_ASSET_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, ImageAsset>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+pub fn stash_remodel_asset(child_id: &str, asset: ImageAsset) {
+    REMODEL_ASSET_SCRATCH.with(|cache| { cache.borrow_mut().insert(child_id.to_string(), asset); });
+}
+
+pub fn cached_remodel_asset(child_id: &str) -> Option<ImageAsset> {
+    REMODEL_ASSET_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
+}
+
+/// 🌉️ The single funnel-through "add real content" primitive for `assets`: mints a handle (the
+/// CANONICAL content-addressed one when the bytes decode into real `SemioImageSnapshot` content —
+/// today `image/png` only — the raw-bytes one otherwise) and ALWAYS stashes the real `ImageAsset` into
+/// the working-scene cache (see that field's doc comment for why, unlike raster, this never leaves the
+/// cache slot empty). Every call site that used to do `assets.insert(id, ImageAsset{..})` now calls
+/// this instead, and gets back only the handle.
+pub fn mint_and_stash_asset(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
+    let handle = match semio_image_snapshot_from_image_asset(asset) {
+        Ok(image) => image_content_child_handle(asset_id, &image),
+        Err(_) => image_asset_child_handle(asset_id, asset),
+    };
+    stash_remodel_asset(&handle.child_id, asset.clone());
+    handle
+}
+
+/// 🌉️ The single read accessor every render/export/inference call site funnels through — resolves
+/// `asset_id` through the persisted handle map, then through the working-scene cache. `None` on either
+/// a missing handle OR a cold cache (store-level undo/redo bypassing `ArtifactApp::handle`, matching
+/// every prior exemplar's documented staleness gap in this ticket) — fails soft, never panics.
+pub fn remodel_asset(assets: &BTreeMap<String, RemodelAssetChild>, asset_id: &str) -> Option<ImageAsset> {
+    let handle = assets.get(asset_id)?;
+    cached_remodel_asset(&handle.child_id)
+}
+//#endregion 🔖️AssetHandles
+
+//#region 🔖️MeshHandle
+fn mint_mesh_child_handle(content_hash: u64) -> RemodelMeshChild {
+    let child_id = format!("remodel-mesh-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: "remodel-mesh".into(), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle for `results.mesh.mesh`, hashed off the REAL
+/// canonical conversion's pack bytes (`mesh_data_to_semio_mesh`, already real — reused from
+/// `🚪️io/🦀️component.rs`'s existing PLY/LAS export hand-off, not reimplemented) — same
+/// canonical-content-hash rationale as `image_content_child_handle` above.
+fn mesh_content_child_handle(mesh: &MeshData) -> RemodelMeshChild {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    let semio = mesh_data_to_semio_mesh(mesh);
+    <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(&semio).hash(&mut hasher);
+    mint_mesh_child_handle(hasher.finish())
+}
+
+thread_local! {
+    static REMODEL_MESH_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, MeshData>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+pub fn stash_remodel_mesh(child_id: &str, mesh: MeshData) {
+    REMODEL_MESH_SCRATCH.with(|cache| { cache.borrow_mut().insert(child_id.to_string(), mesh); });
+}
+
+pub fn cached_remodel_mesh(child_id: &str) -> Option<MeshData> {
+    REMODEL_MESH_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
+}
+
+/// 🌉️ The single funnel-through "add real content" primitive for `results.mesh.mesh`: mints the
+/// canonical content-addressed handle (via the real `mesh_data_to_semio_mesh` conversion) and stashes
+/// the REAL, full-fidelity `MeshData` — never the lossy `SemioMeshSnapshot` projection — into the
+/// working-scene cache. Full fidelity matters here specifically: `SemioMeshSnapshot`'s gltf-shaped
+/// primitive has no slot for `face_ids`/`vertex_ids`/`edge_*`/`paint_texture_base64`, all of which
+/// this plugin's own interactive mesh view/undo path genuinely needs; caching the real `MeshData`
+/// directly (not round-tripping through the lossy conversion) means those buffers are never lost for
+/// the live document — only a COLD cache (see the staleness gap below) ever falls back to the lossy
+/// `semio_mesh_to_mesh_data` reconstruction.
+pub fn mint_and_stash_mesh(mesh: MeshData) -> RemodelMeshChild {
+    let handle = mesh_content_child_handle(&mesh);
+    stash_remodel_mesh(&handle.child_id, mesh);
+    handle
+}
+
+/// 🌉️ The single read accessor every render/export/mutation call site funnels through — reads the
+/// REAL, full-fidelity `MeshData` back out of the working-scene cache by the handle's `child_id`.
+/// **Staleness gap, documented honestly** (matches every prior exemplar in this ticket): store-level
+/// undo/redo bypasses `ArtifactApp::handle`, so the cache can go stale relative to a snapshot's `mesh`
+/// handle across an undo/redo spanning a process boundary; `None` on a cold cache, never a fabricated
+/// mesh. `semio_mesh_to_mesh_data` (`🚪️io/🦀️component.rs`) is the real inverse for the day a
+/// `LinkResolver`/child-dispatch seam (migration recipe §3) makes the composed child's OWN
+/// `SemioMeshSnapshot` content independently resolvable — not wired in here today because nothing in
+/// this plugin populates that content separately from this cache.
+pub fn remodel_mesh_workspace(handle: &RemodelMeshChild) -> Option<MeshData> {
+    cached_remodel_mesh(&handle.child_id)
+}
+//#endregion 🔖️MeshHandle
+//#endregion 🧩️Composition
 
 //#region 🔖️Packed
 /// 📦️ A flat `f32` buffer serialized as a base64 string of its little-endian bytes rather than a JSON
@@ -687,218 +872,46 @@ pub struct WatertightReportSnapshot {
     pub is_watertight: bool,
 }
 
-/// 🧵️ The reconstructed (or placeholder/imported) mesh, reusing the canonical interchange type
-/// (`MeshData` already carries its own `uvs`, so `RemodelMesh` doesn't duplicate them). Always present
-/// (never `Option`) so the 3D view always has something to render — `default_remodel_scene()` seeds it
-/// with a placeholder box.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// 🧵️ The reconstructed (or placeholder/imported) mesh. Ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `mesh` is now a composed `s.stdio.semio/v1/mesh`
+/// CHILD handle (`RemodelMeshChild`, `🧩️Composition` region above), never embedded `MeshData` —
+/// the real geometry lives in the working-scene cache (`mint_and_stash_mesh`/`remodel_mesh_workspace`).
+/// `source`/`texture_asset_id`/`watertight` are genuinely NOT part of the composed mesh's own content
+/// (they describe THIS document's relationship to the mesh — provenance, a separate asset reference, a
+/// derived QC summary — not geometry), so they stay sibling fields here rather than folding into the
+/// child, matching `puzzle`'s own `*Extra`-sibling precedent for content a composed subset's shape
+/// can't represent. Always present (never `Option`) so the 3D view always has something to render —
+/// `default_remodel_scene()` seeds it with a placeholder box.
+///
+/// `ArtifactChild<S>: dsl::DslField` is now real (`🏪️store/🦀️component.rs:523`) so this struct keeps
+/// its plain `#[derive(dsl::DslRecord)]` instead of hand-rolling — the former `🔖️MeshBridge` region
+/// (a `MeshDataTwin` buffer-by-buffer bridge, needed only because `MeshData` is foreign and had no
+/// `DslField` impl reachable from this crate) is gone entirely: every field left on this struct now has
+/// a real `DslField` impl on its own.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelMesh {
-    pub mesh: MeshData,
+    #[dsl(block)]
+    pub mesh: RemodelMeshChild,
     pub source: MeshSource,
     pub texture_asset_id: Option<String>,
+    #[dsl(block)]
     pub watertight: Option<WatertightReportSnapshot>,
 }
 
+impl Default for RemodelMesh {
+    fn default() -> Self {
+        Self { mesh: mint_and_stash_mesh(MeshData::default()), source: MeshSource::default(), texture_asset_id: None, watertight: None }
+    }
+}
+
 //#region 🔖️MeshBridge
-/// 🔢️ Base64-packed `u32` buffer, the `indices`/`faceIds`/`vertexIds`/`edgeIds` counterpart to
-/// {@link PackedF32}/{@link PackedU8} — kept private to {@link MeshDataTwin} since nothing else in
-/// this document needs a `u32` buffer.
-#[derive(Clone, Debug, Default, PartialEq)]
-struct PackedU32(String);
-
-impl PackedU32 {
-    fn from_u32_slice(values: &[u32]) -> Self {
-        let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
-        Self(base64::engine::general_purpose::STANDARD.encode(bytes))
-    }
-
-    fn to_u32_vec(&self) -> Vec<u32> {
-        let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()) else {
-            return Vec::new();
-        };
-        let (chunks, remainder) = bytes.as_chunks::<4>();
-        if !remainder.is_empty() {
-            return Vec::new();
-        }
-        chunks.iter().map(|chunk| u32::from_le_bytes(*chunk)).collect()
-    }
-}
-
-impl dsl::DslField for PackedU32 {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Text
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Text(self.0.clone())
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
-            other => Err(format!("expected Text, found {other:?}")),
-        }
-    }
-}
-
-/// 🌉️ Local structural twin of `semio_framework::MeshData`'s numeric buffers, for the DSL
-/// boundary only — `MeshData` is foreign (`framework/core`, out of scope for this conversion), so
-/// `RemodelMesh.mesh` can't get a derive-generated `dsl::DslField` impl directly (the orphan rule
-/// blocks `impl dsl::DslField for MeshData` here: both the trait and the type are foreign to this
-/// crate). Every buffer packs base64 exactly like the old hand-rolled parser did; see
-/// `RemodelMesh`'s own hand `dsl::DslField` impl below for how this twin is used without ever
-/// changing `mesh: MeshData`'s public Rust type (`remodel/plugin` calls `.vertex_count()`/`.aabb()`
-/// and builds `RemodelMesh { mesh: mesh_from_kind(..), .. }` directly against it).
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
-struct MeshDataTwin {
-    positions: PackedF32,
-    normals: PackedF32,
-    colors: PackedF32,
-    indices: PackedU32,
-    uvs: PackedF32,
-    face_ids: PackedU32,
-    vertex_ids: PackedU32,
-    edge_positions: PackedF32,
-    edge_ids: PackedU32,
-    edge_uvs: PackedF32,
-    edge_is_seam: PackedU8,
-    paint_texture_base64: Option<String>,
-}
-
-impl From<&MeshData> for MeshDataTwin {
-    fn from(mesh: &MeshData) -> Self {
-        Self {
-            positions: PackedF32::from_f32_slice(&mesh.positions),
-            normals: PackedF32::from_f32_slice(&mesh.normals),
-            colors: PackedF32::from_f32_slice(&mesh.colors),
-            indices: PackedU32::from_u32_slice(&mesh.indices),
-            uvs: PackedF32::from_f32_slice(&mesh.uvs),
-            face_ids: PackedU32::from_u32_slice(&mesh.face_ids),
-            vertex_ids: PackedU32::from_u32_slice(&mesh.vertex_ids),
-            edge_positions: PackedF32::from_f32_slice(&mesh.edge_positions),
-            edge_ids: PackedU32::from_u32_slice(&mesh.edge_ids),
-            edge_uvs: PackedF32::from_f32_slice(&mesh.edge_uvs),
-            edge_is_seam: PackedU8::from_u8_slice(&mesh.edge_is_seam),
-            paint_texture_base64: mesh.paint_texture_base64.clone(),
-        }
-    }
-}
-
-impl From<MeshDataTwin> for MeshData {
-    fn from(twin: MeshDataTwin) -> Self {
-        Self {
-            positions: twin.positions.to_f32_vec(),
-            normals: twin.normals.to_f32_vec(),
-            colors: twin.colors.to_f32_vec(),
-            indices: twin.indices.to_u32_vec(),
-            uvs: twin.uvs.to_f32_vec(),
-            face_ids: twin.face_ids.to_u32_vec(),
-            vertex_ids: twin.vertex_ids.to_u32_vec(),
-            edge_positions: twin.edge_positions.to_f32_vec(),
-            edge_ids: twin.edge_ids.to_u32_vec(),
-            edge_uvs: twin.edge_uvs.to_f32_vec(),
-            edge_is_seam: twin.edge_is_seam.to_u8_vec(),
-            paint_texture_base64: twin.paint_texture_base64,
-        }
-    }
-}
-
-/// 🌉️ Hand-written (NOT `#[derive(dsl::DslRecord)]`) `dsl::DslField`/spec/record trio for
-/// `RemodelMesh` — mirrors exactly what the derive macro would generate for a plain record, except
-/// the `mesh: MeshData` field routes through `MeshDataTwin` above instead of `<MeshData as
-/// dsl::DslField>`, which can't exist here (orphan rule). Field ids are purely internal wiring
-/// between these three functions, not a wire-compatibility concern.
-impl RemodelMesh {
-    fn __dsl_spec() -> dsl::RecordSpec {
-        dsl::RecordSpec::new_owned(
-            None,
-            dsl::RecordLayout::Inline,
-            vec![
-                dsl::FieldSpec::new(0, "source", <MeshSource as dsl::DslField>::shape()),
-                dsl::FieldSpec::new(1, "texture-asset-id", <String as dsl::DslField>::shape()).optional(),
-                dsl::FieldSpec::new(2, "geometry", dsl::Shape::Block(Box::new(<MeshDataTwin as dsl::DslField>::shape()))),
-                dsl::FieldSpec::new(3, "watertight", dsl::Shape::Block(Box::new(<WatertightReportSnapshot as dsl::DslField>::shape()))).optional(),
-            ],
-        )
-    }
-
-    fn __dsl_to_record(&self) -> dsl::RecordValue {
-        let mut record = dsl::RecordValue::default();
-        record.fields.insert(0, dsl::DslField::to_value(&self.source));
-        record.fields.insert(
-            1,
-            match &self.texture_asset_id {
-                Some(v) => dsl::DslField::to_value(v),
-                None => dsl::FieldValue::Absent,
-            },
-        );
-        record.fields.insert(2, dsl::FieldValue::Block(Box::new(dsl::DslField::to_value(&MeshDataTwin::from(&self.mesh)))));
-        record.fields.insert(
-            3,
-            match &self.watertight {
-                Some(v) => dsl::FieldValue::Block(Box::new(dsl::DslField::to_value(v))),
-                None => dsl::FieldValue::Absent,
-            },
-        );
-        record
-    }
-
-    fn __dsl_from_record(record: &dsl::RecordValue) -> Result<Self, dsl::TextError> {
-        let source = {
-            let value = record.get(0).ok_or_else(|| dsl::__rt::field_error("missing field 'source'"))?;
-            <MeshSource as dsl::DslField>::from_value(value).map_err(dsl::__rt::field_error)?
-        };
-        let texture_asset_id = {
-            let value = record.get(1).ok_or_else(|| dsl::__rt::field_error("missing field 'texture-asset-id'"))?;
-            match value {
-                dsl::FieldValue::Absent => None,
-                other => Some(<String as dsl::DslField>::from_value(other).map_err(dsl::__rt::field_error)?),
-            }
-        };
-        let mesh = {
-            let value = record.get(2).ok_or_else(|| dsl::__rt::field_error("missing field 'geometry'"))?;
-            let twin = match value {
-                dsl::FieldValue::Block(inner) => <MeshDataTwin as dsl::DslField>::from_value(inner.as_ref()).map_err(dsl::__rt::field_error)?,
-                dsl::FieldValue::Absent => <MeshDataTwin as dsl::DslField>::from_value(&dsl::FieldValue::Absent).map_err(dsl::__rt::field_error)?,
-                other => return Err(dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
-            };
-            MeshData::from(twin)
-        };
-        let watertight = {
-            let value = record.get(3).ok_or_else(|| dsl::__rt::field_error("missing field 'watertight'"))?;
-            match value {
-                dsl::FieldValue::Block(inner) => match inner.as_ref() {
-                    dsl::FieldValue::Absent => None,
-                    other => Some(<WatertightReportSnapshot as dsl::DslField>::from_value(other).map_err(dsl::__rt::field_error)?),
-                },
-                dsl::FieldValue::Absent => None,
-                other => return Err(dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
-            }
-        };
-        Ok(RemodelMesh { mesh, source, texture_asset_id, watertight })
-    }
-}
-
-impl dsl::DslField for RemodelMesh {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(Self::__dsl_spec)
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Record(self.__dsl_to_record())
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
-            other => Err(format!("expected Record, found {other:?}")),
-        }
-    }
-}
-
 /// 🌉️ `Box<T>` is a `#[fundamental]` std type, so implementing the foreign `dsl::DslField` trait for
 /// `Box<RemodelMesh>` (a local type parameter) here is coherence-legal — needed because
 /// `RemodelMutation::ReplaceMeshResult` carries `mesh: Box<RemodelMesh>` (boxed only to shrink the
 /// enum's overall size; `RemodelMesh` itself is a plain record, not a `DslEnum`, so the derive's
 /// `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't apply — this is the ordinary
-/// boxed-scalar case instead).
+/// boxed-scalar case instead). Delegates to `RemodelMesh`'s own (now derive-generated) `DslField` impl.
 impl dsl::DslField for Box<RemodelMesh> {
     fn shape() -> dsl::Shape {
         <RemodelMesh as dsl::DslField>::shape()
@@ -1025,7 +1038,7 @@ pub fn default_remodel_scene() -> RemodelSnapshot {
         params: ReconstructionParams::default(),
         gcps: Vec::new(),
         job: ReconstructionJob::default(),
-        results: ReconstructionResults { mesh: RemodelMesh { mesh: semio_framework::mesh_from_kind("box"), source: MeshSource::Placeholder, ..RemodelMesh::default() }, ..ReconstructionResults::default() },
+        results: ReconstructionResults { mesh: RemodelMesh { mesh: mint_and_stash_mesh(semio_framework::mesh_from_kind("box")), source: MeshSource::Placeholder, ..RemodelMesh::default() }, ..ReconstructionResults::default() },
     }
 }
 //#endregion 🔖️Domain
@@ -1052,7 +1065,8 @@ mod tests {
             frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: "asset-1".into() }],
             source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
-        scene.assets.insert("asset-1".into(), ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 });
+        let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
+        scene.assets.insert("asset-1".into(), mint_and_stash_asset("asset-1", &asset_one));
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),
@@ -1080,7 +1094,7 @@ mod tests {
         scene.results.dense =
             Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
         scene.results.mesh = RemodelMesh {
-            mesh: semio_framework::mesh_from_kind("box"),
+            mesh: mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
             source: MeshSource::Reconstructed,
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot {
@@ -1126,8 +1140,9 @@ mod tests {
     fn default_scene_has_placeholder_mesh() {
         let scene = default_remodel_scene();
         assert_eq!(scene.results.mesh.source, MeshSource::Placeholder);
-        assert!(!scene.results.mesh.mesh.positions.is_empty());
-        assert!(!scene.results.mesh.mesh.indices.is_empty());
+        let mesh = remodel_mesh_workspace(&scene.results.mesh.mesh).expect("working-scene cache warm right after default_remodel_scene()");
+        assert!(!mesh.positions.is_empty());
+        assert!(!mesh.indices.is_empty());
         assert_eq!(scene.results.mesh.watertight, None);
         assert!(scene.streams.is_empty());
         assert!(scene.assets.is_empty());

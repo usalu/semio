@@ -29,7 +29,12 @@
       "x-semio-state": "artifact"
     },
     "kindCatalogs": {
-      "$ref": "#/$defs/Puzzle5dKindCatalogs",
+      "$ref": "#/$defs/ArtifactChildHandle",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio.kit"
+    },
+    "kindCatalogsExtra": {
+      "$ref": "#/$defs/Puzzle5dKindCatalogsExtra",
       "x-semio-state": "artifact"
     },
     "kindCompatibility": {
@@ -55,6 +60,85 @@
     }
   },
   "$defs": {
+    "ArtifactChildHandle": {
+      "title": "ArtifactChildHandle",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["childId", "target"],
+      "properties": {
+        "childId": { "type": "string" },
+        "target": { "type": "string" }
+      }
+    },
+    "Puzzle5dKindCatalogsExtra": {
+      "title": "Puzzle5dKindCatalogsExtra",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parts": { "type": "array", "items": { "$ref": "#/$defs/Puzzle5dCatalogPartKindExtra" } },
+        "grips": { "type": "array", "items": { "$ref": "#/$defs/Puzzle5dCatalogGripKindExtra" } },
+        "fasteners": { "type": "array", "items": { "$ref": "#/$defs/Puzzle5dCatalogFastenerKindExtra" } },
+        "ropes": { "type": "array", "items": { "$ref": "#/$defs/Puzzle5dCatalogRopeKindExtra" } }
+      }
+    },
+    "Puzzle5dCatalogPartKindExtra": {
+      "title": "Puzzle5dCatalogPartKindExtra",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "image": { "type": "string" },
+        "unit": { "type": "string" },
+        "abstract": { "type": "boolean" },
+        "baseKinds": { "type": "array", "items": { "type": "string" } },
+        "representations": { "type": "array", "items": { "$ref": "#/$defs/Puzzle5dRepresentation" } },
+        "grips": { "type": "array", "items": { "$ref": "#/$defs/Puzzle5dGripTemplate" } },
+        "attributes": { "type": "array", "items": { "$ref": "#/$defs/Puzzle5dAttribute" } },
+        "authors": { "type": "array", "items": { "$ref": "#/$defs/Puzzle5dAuthor" } }
+      }
+    },
+    "Puzzle5dCatalogGripKindExtra": {
+      "title": "Puzzle5dCatalogGripKindExtra",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "label": { "type": "string" },
+        "order": { "type": "integer" },
+        "compatibleWith": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "color": { "type": "string" },
+        "defaultRopeKind": { "type": "string" }
+      }
+    },
+    "Puzzle5dCatalogFastenerKindExtra": {
+      "title": "Puzzle5dCatalogFastenerKindExtra",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" }
+      }
+    },
+    "Puzzle5dCatalogRopeKindExtra": {
+      "title": "Puzzle5dCatalogRopeKindExtra",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "defaultFastenerKind": { "type": "string" }
+      }
+    },
     "Puzzle5dMeta": {
       "title": "Puzzle5dMeta",
       "type": "object",

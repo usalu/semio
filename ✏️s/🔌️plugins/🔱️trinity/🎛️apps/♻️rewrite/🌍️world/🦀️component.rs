@@ -256,9 +256,11 @@ fn force_layout_reposition_operations(fixture: &JackSnapshot) -> Result<Vec<Trin
     let mut graph = Graph::from_fixture(fixture.clone())?;
     apply_force_layout_to_trinity_graph(&mut graph)?;
     let next = graph.to_fixture();
+    let next_nodes = next.nodes();
+    let prev_nodes = fixture.nodes();
     let mut operations = Vec::new();
-    for node in &next.nodes {
-        let Some(prev) = fixture.nodes.iter().find(|entry| entry.id == node.id) else {
+    for node in &next_nodes {
+        let Some(prev) = prev_nodes.iter().find(|entry| entry.id == node.id) else {
             continue;
         };
         if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
@@ -545,12 +547,13 @@ impl TrinityBridge {
 
     fn commit_drag_positions(&mut self) -> Result<(), TrinityRewriteError> {
         let projection = self.store.snapshot()?;
+        let projection_nodes = projection.nodes();
         let mut operations = Vec::new();
         for (nid, widget_id) in &self.node_id_map {
             let Some(engine_node) = self.engine.nodes.get(nid) else {
                 continue;
             };
-            let Some(fixture_node) = projection.nodes.iter().find(|node| node.id == *widget_id) else {
+            let Some(fixture_node) = projection_nodes.iter().find(|node| node.id == *widget_id) else {
                 continue;
             };
             if (fixture_node.x - engine_node.center.x).abs() > 1e-6 || (fixture_node.y - engine_node.center.y).abs() > 1e-6 {
@@ -759,7 +762,7 @@ mod wasm_session {
             let dsl = include_str!("../../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             let host = JackSnapshot::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityBridge::from_graph(&g)).unwrap_or_else(|| {
                 let empty =
-                    JackSnapshot { schema: JackSnapshot::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+                    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "empty".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), vec![], vec![], None);
                 TrinityBridge::from_graph(&Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
             });
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }

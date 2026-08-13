@@ -1,11 +1,14 @@
 # 🧬️ Puzzle5d snapshot schema — artifact-lane fields only.
 
+type ArtifactChildHandle { childId: String! target: String! }
+
 type Puzzle5dSnapshot {
   schema: String! @state(class: ARTIFACT)
   domain: String! @state(class: ARTIFACT)
   label: String @state(class: ARTIFACT)
   meta: Puzzle5dMeta! @state(class: ARTIFACT)
-  kindCatalogs: Puzzle5dKindCatalogs @state(class: ARTIFACT)
+  kindCatalogs: ArtifactChildHandle @state(class: ARTIFACT) @child(kind: "s.stdio.semio.kit")
+  kindCatalogsExtra: Puzzle5dKindCatalogsExtra @state(class: ARTIFACT)
   kindCompatibility: [Puzzle5dKindCompatibility!]! @state(class: ARTIFACT)
   parts: [Puzzle5dPart!]! @state(class: ARTIFACT)
   fasteners: [Puzzle5dFastener!]! @state(class: ARTIFACT)
@@ -65,6 +68,39 @@ type Puzzle5dKindCatalogs {
   grips: [Puzzle5dCatalogGripKind!]
   fasteners: [Puzzle5dCatalogFastenerKind!]
   ropes: [Puzzle5dCatalogRopeKind!]
+}
+type Puzzle5dCatalogPartKindExtra {
+  id: String!
+  label: String
+  description: String
+  icon: String
+  image: String
+  unit: String
+  abstract: Boolean
+  baseKinds: [String!]
+  representations: [Puzzle5dRepresentation!]
+  grips: [Puzzle5dGripTemplate!]
+  attributes: [Puzzle5dAttribute!]
+  authors: [Puzzle5dAuthor!]
+}
+type Puzzle5dCatalogGripKindExtra {
+  id: String!
+  code: String
+  label: String
+  order: Int
+  compatibleWith: [String!]
+  description: String
+  icon: String
+  color: String
+  defaultRopeKind: String
+}
+type Puzzle5dCatalogFastenerKindExtra { id: String! label: String }
+type Puzzle5dCatalogRopeKindExtra { id: String! label: String defaultFastenerKind: String }
+type Puzzle5dKindCatalogsExtra {
+  parts: [Puzzle5dCatalogPartKindExtra!]
+  grips: [Puzzle5dCatalogGripKindExtra!]
+  fasteners: [Puzzle5dCatalogFastenerKindExtra!]
+  ropes: [Puzzle5dCatalogRopeKindExtra!]
 }
 type Puzzle5dKindCompatibility {
   source: String!

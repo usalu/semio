@@ -753,7 +753,8 @@ mod tests {
     #[test]
     fn raster_io_declares_image_in_out_and_export_media_covers_all_ports() {
         let projection = empty_raster_document();
-        let doc = ArtifactView::new(&projection, &semio_framework_plugin::HistoryView::empty());
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&projection, &history);
         let app = RasterPlayApp;
         let image_out = RasterPlayApp::export_media("image:out", &doc).expect("image:out");
         let MediaPayload::Structured { schema, json } = image_out.payload else { panic!("expected structured payload") };

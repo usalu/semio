@@ -296,9 +296,9 @@ impl ArtifactApp for Procedural2dPlayApp {
         let mut operations = Vec::new();
         for (widget_id_key, value) in object {
             let Some(number) = value.as_f64() else { continue };
-            let Some((index, widget)) = doc.snapshot.fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key.as_str()) else { continue };
+            let Some(widget) = doc.snapshot.fixture.widgets.iter().find(|widget| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key.as_str()) else { continue };
             if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
-                operations.push(Procedural2dMutation::SetWidget { index, widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } });
+                operations.push(crate::artifacts::procedural2d::op::replace_widget(flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step }));
             }
         }
         Ok(Emit::mutations(operations))

@@ -4,9 +4,11 @@
 use super::mutation::DeleteKnowledgeRecord;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramKnowledgeDelta};
 
-/// 🗑️ `removed = [id]`.
-pub fn diff(payload: &DeleteKnowledgeRecord, _base: &ProgramSnapshot) -> ProgramDiff {
-    ProgramDiff { knowledge: Some(ProgramKnowledgeDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() }
+/// 🗑️ Removes the target row from the working-scene cache, then re-mints a fresh
+/// content-addressed `table` child handle over the remaining rows.
+pub fn diff(payload: &DeleteKnowledgeRecord, base: &ProgramSnapshot) -> ProgramDiff {
+    let mut records = crate::artifacts::program::program_knowledge(base);
+    records.retain(|row| row.header.id != payload.id);
+    ProgramDiff { knowledge: Some(crate::artifacts::program::knowledge_child_from_records(&records)), ..Default::default() }
 }

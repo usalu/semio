@@ -122,7 +122,7 @@ pub mod place_vortex {
         let direction = if cfg.snapshot.brush_flip { [-payload.normal[0], -payload.normal[1], -payload.normal[2]] } else { payload.normal };
         let vortex_kind_id = resolve_brush_vortex_kind_id(doc.snapshot, cfg.snapshot);
         let mut operations = Vec::new();
-        if doc.snapshot.vortex_kinds.is_empty() {
+        if crate::artifacts::block3d::vortex_kinds_of(doc.snapshot).is_empty() {
             operations.push(crate::artifacts::block3d::mutations::create_vortex_kind(default_vortex_kind()));
         }
         let id = crate::artifacts::block3d::schema::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");

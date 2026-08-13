@@ -36,10 +36,11 @@ impl Default for JackTopology {
 /// 📐️ Computes `topology` directly from `nodes`/`edges` via Kahn's algorithm — deterministic
 /// because both the root frontier and each frontier's children are drained in node-id sort order.
 pub fn compute_topology(snapshot: &JackSnapshot) -> JackTopology {
-    let node_count = snapshot.nodes.len() as u32;
-    let mut adjacency: BTreeMap<String, Vec<String>> = snapshot.nodes.iter().map(|node| (node.id.clone(), Vec::new())).collect();
-    let mut indegree: BTreeMap<String, u32> = snapshot.nodes.iter().map(|node| (node.id.clone(), 0u32)).collect();
-    for edge in &snapshot.edges {
+    let scene = crate::artifacts::jack::jack_working_scene(snapshot);
+    let node_count = scene.nodes.len() as u32;
+    let mut adjacency: BTreeMap<String, Vec<String>> = scene.nodes.iter().map(|node| (node.id.clone(), Vec::new())).collect();
+    let mut indegree: BTreeMap<String, u32> = scene.nodes.iter().map(|node| (node.id.clone(), 0u32)).collect();
+    for edge in &scene.edges {
         let Some(source_id) = port_node_id(&edge.source) else { continue };
         let Some(target_id) = port_node_id(&edge.target) else { continue };
         if !indegree.contains_key(source_id) || !indegree.contains_key(target_id) {
@@ -103,16 +104,16 @@ mod tests {
 
     fn chain_snapshot() -> JackSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
-        JackSnapshot {
-            schema: "trinity.graph".into(),
-            name: "chain".into(),
-            manifest_id: None,
-            manifest: Default::default(),
-            camera: Default::default(),
-            nodes: vec![node("root"), node("mid"), node("leaf")],
-            edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")],
-            root_node_id: Some("root".into()),
-        }
+        JackSnapshot::with_content(
+            "trinity.graph".into(),
+            "chain".into(),
+            None,
+            Default::default(),
+            Default::default(),
+            vec![node("root"), node("mid"), node("leaf")],
+            vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")],
+            Some("root".into()),
+        )
     }
     //#endregion 🧸️Fixtures
 
@@ -130,8 +131,10 @@ mod tests {
 
     #[test]
     fn a_cycle_is_reported_as_not_cycle_free() {
-        let mut snapshot = chain_snapshot();
-        snapshot.edges.push(edge("e3", "leaf@out", "root@in"));
+        let snapshot = chain_snapshot();
+        let mut edges = snapshot.edges();
+        edges.push(edge("e3", "leaf@out", "root@in"));
+        let snapshot = JackSnapshot::with_content(snapshot.schema.clone(), snapshot.name.clone(), snapshot.manifest_id.clone(), snapshot.manifest.clone(), snapshot.camera.clone(), snapshot.nodes(), edges, snapshot.root_node_id.clone());
         let topology = compute_topology(&snapshot);
         assert!(!topology.cycle_free);
         assert!(topology.topo_order.is_empty(), "every node in the 3-cycle has nonzero indegree");

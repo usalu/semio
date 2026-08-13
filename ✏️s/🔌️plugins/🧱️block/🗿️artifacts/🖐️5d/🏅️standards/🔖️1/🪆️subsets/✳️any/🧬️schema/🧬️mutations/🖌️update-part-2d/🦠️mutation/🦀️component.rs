@@ -24,7 +24,7 @@ pub fn update_part_2d(new_shape: Option<String>, new_radius: Option<f64>, new_wi
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for UpdatePart2d {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "part-2d", kind: "update-part-2d", record: "UpdatedPart2d" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "part-2d", kind: "update-part2d", record: "UpdatedPart2d" };
 
     fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
         super::diff::diff(self, base)

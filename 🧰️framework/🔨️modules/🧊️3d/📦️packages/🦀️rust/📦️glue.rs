@@ -73,12 +73,8 @@ pub mod brep {
     pub mod blend;
     #[path = "../../📐️brep/📄️step/🦀️component.rs"]
     pub mod step;
-    #[path = "../../📐️brep/📦️mesh-io/🦀️component.rs"]
-    pub mod mesh_io;
     #[path = "../../📐️brep/⚙️engine/🦀️component.rs"]
     pub mod engine;
-    #[path = "../../📐️brep/🧰️kernel/🦀️component.rs"]
-    pub mod kernel;
 }
 //#endregion 🔖️Brep
 

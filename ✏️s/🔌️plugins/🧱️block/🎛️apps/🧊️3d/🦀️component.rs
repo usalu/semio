@@ -558,11 +558,11 @@ mod tests {
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
-        assert_eq!(app.snapshot().expect("snapshot").vortex_kinds.len(), 1);
+        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len(), 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.snapshot().expect("snapshot").vortex_kinds.len(), 0);
+        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len(), 0);
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.snapshot().expect("snapshot").vortex_kinds.len(), 1);
+        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len(), 1);
     }
 
     #[test]
@@ -597,7 +597,7 @@ mod tests {
             Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }),
         );
         let projection = app.snapshot().expect("snapshot");
-        assert!(!projection.vortex_kinds.is_empty());
+        assert!(!crate::artifacts::block3d::vortex_kinds_of(&projection).is_empty());
         assert_eq!(projection.vortices.len(), 2);
     }
 

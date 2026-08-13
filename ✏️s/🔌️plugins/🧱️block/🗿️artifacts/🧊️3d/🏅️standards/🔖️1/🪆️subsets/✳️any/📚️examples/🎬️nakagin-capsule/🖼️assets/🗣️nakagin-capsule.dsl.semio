@@ -3,6 +3,7 @@ schema=block.3d
 object-kind {
   id="Capsule J" name="Capsule J" label="Capsule J" description=""
 }
+catalog=child_id=catalog-9dc5de0f33c9568d target="catalog-9dc5de0f33c9568d!s.stdio.semio@v1/kit"
 camera3d {
   position=@10,-10,6 target=@0,0,1 zoom=1
 }
@@ -13,8 +14,8 @@ representations [id:TEXT name:TEXT mesh-url:TEXT tags:LIST lod:TEXT description:
   r0 "Full Detail" "/mesh/🧊️capsule_J.glb" [ full ] full "" [ ]
   r1 "1:500" "/mesh/capsule_J.1to500.glb" [ "1to500" ] low "" [ ]
 }
-vortex-kinds [id:TEXT name:TEXT label:TEXT color:TEXT default-cable-kind:TEXT] {
-  door door Door "hsl(206 52% 48%)" cable.link
+vortex-kind-extra [id:TEXT label:TEXT color:TEXT default-cable-kind:TEXT] {
+  door Door "hsl(206 52% 48%)" cable.link
 }
 vortices [id:TEXT vortex-kind:REF position:CRD direction:DIR radius:NUM label:TEXT] {
   v0 door @0,-1.6,1.2 ^0,-1,0 0.3 door

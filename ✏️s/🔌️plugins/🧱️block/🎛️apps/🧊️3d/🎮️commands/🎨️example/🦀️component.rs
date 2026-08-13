@@ -54,11 +54,13 @@ fn replace_document_operations(current: &crate::artifacts::block3d::Block3dSnaps
         }
     }
 
-    for vortex_kind in &current.vortex_kinds {
-        if !next.vortex_kinds.iter().any(|entry| entry.id == vortex_kind.id) { ops.push(m::delete_vortex_kind(vortex_kind.id.clone())); }
+    let current_vortex_kinds = crate::artifacts::block3d::vortex_kinds_of(current);
+    let next_vortex_kinds = crate::artifacts::block3d::vortex_kinds_of(next);
+    for vortex_kind in &current_vortex_kinds {
+        if !next_vortex_kinds.iter().any(|entry| entry.id == vortex_kind.id) { ops.push(m::delete_vortex_kind(vortex_kind.id.clone())); }
     }
-    for vortex_kind in &next.vortex_kinds {
-        match current.vortex_kinds.iter().find(|entry| entry.id == vortex_kind.id) {
+    for vortex_kind in &next_vortex_kinds {
+        match current_vortex_kinds.iter().find(|entry| entry.id == vortex_kind.id) {
             None => ops.push(m::create_vortex_kind(vortex_kind.clone())),
             Some(prior) => {
                 if prior.name != vortex_kind.name { ops.push(m::rename_vortex_kind(vortex_kind.id.clone(), vortex_kind.name.clone())); }

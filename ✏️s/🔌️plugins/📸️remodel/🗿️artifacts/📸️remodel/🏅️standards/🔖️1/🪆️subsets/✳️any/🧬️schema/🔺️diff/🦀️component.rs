@@ -4,8 +4,8 @@ use crate::artifacts::remodel::schema::{
     RemodelArtifact, RemodelUiCamera, RemodelUiFrameCursor, RemodelUiLayers, RemodelUiSelection,
 };
 use crate::artifacts::remodel::{
-    CalibrationState, GroundControlPoint, ImageAsset, MediaStream, ReconstructionJob,
-    ReconstructionParams, ReconstructionResults,
+    CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob,
+    ReconstructionParams, ReconstructionResults, RemodelAssetChild,
 };
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ pub struct RemodelDiff {
     #[state(artifact)] pub schema: Option<String>,
     #[state(artifact)] pub id: Option<String>,
     #[state(artifact)] pub streams: Option<RemodelMediaStreamList>,
-    #[state(artifact)] pub assets: Option<BTreeMap<String, ImageAsset>>,
+    #[state(artifact)] pub assets: Option<BTreeMap<String, RemodelAssetChild>>,
     #[state(artifact)] pub calibration: Option<CalibrationState>,
     #[state(artifact)] pub params: Option<ReconstructionParams>,
     #[state(artifact)] pub gcps: Option<RemodelGcpList>,

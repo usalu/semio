@@ -52,8 +52,18 @@ mod tests {
             pencil_width: Some(3.0),
             eraser_radius: None,
             assets,
+            linked_artifact: None,
             blocks: vec![
                 NoteBlockNode::Text {
+                    content: crate::artifacts::note::note_text_child_handle_and_cache(
+                        "text-1",
+                        &[NoteTextParagraph {
+                            runs: vec![
+                                NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None },
+                                NoteTextRun { text: "bold+link".into(), bold: Some(true), italic: Some(false), underline: Some(true), link: Some("https://semio.io".into()) },
+                            ],
+                        }],
+                    ),
                     id: "text-1".into(),
                     name: "Text".into(),
                     x: 0.0,
@@ -63,12 +73,6 @@ mod tests {
                     rotation: 0.0,
                     visible: true,
                     locked: false,
-                    paragraphs: vec![NoteTextParagraph {
-                        runs: vec![
-                            NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None },
-                            NoteTextRun { text: "bold+link".into(), bold: Some(true), italic: Some(false), underline: Some(true), link: Some("https://semio.io".into()) },
-                        ],
-                    }],
                     font_size: 16.0,
                     font_weight: "bold".into(),
                     align: "center".into(),
@@ -113,6 +117,7 @@ mod tests {
                     visible: true,
                     locked: false,
                     children: vec![NoteBlockNode::Text {
+                        content: crate::artifacts::note::note_text_child_handle_and_cache("child-text-1", &[]),
                         id: "child-text-1".into(),
                         name: "Child".into(),
                         x: 0.0,
@@ -122,7 +127,6 @@ mod tests {
                         rotation: 0.0,
                         visible: true,
                         locked: false,
-                        paragraphs: Vec::new(),
                         font_size: 12.0,
                         font_weight: "normal".into(),
                         align: "left".into(),

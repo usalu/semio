@@ -94,6 +94,9 @@ impl NoteDiff {
         if let Some(value) = &self.hovered_block_id {
             next.hovered_block_id = value.clone();
         }
+        if let Some(value) = &self.linked_artifact {
+            next.linked_artifact = value.clone();
+        }
         next
     }
 }
@@ -191,6 +194,9 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
                 }
             }
         }
+        if let Some(value) = &self.linked_artifact {
+            next.linked_artifact = value.clone();
+        }
         next
     }
 
@@ -225,6 +231,7 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
         take!(camera_zoom);
         take!(locale);
         take!(hovered_block_id);
+        take!(linked_artifact);
         match (&mut self.blocks, other.blocks) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);

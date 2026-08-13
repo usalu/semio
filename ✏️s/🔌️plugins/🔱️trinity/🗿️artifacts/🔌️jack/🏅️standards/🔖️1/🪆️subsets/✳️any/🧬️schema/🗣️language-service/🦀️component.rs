@@ -499,14 +499,13 @@ pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
 /// 🧩️ Demo `Piece`/`Connection` fixture shared by the jack language server default session
 /// and playgrounds that need a non-empty graph for completions, hover and lint.
 pub fn example_graph_fixture() -> JackSnapshot {
-    JackSnapshot {
-        schema: JackSnapshot::SCHEMA.into(),
-        name: "jack-example".into(),
-        manifest_id: Some("nakagin".into()),
-        manifest: Manifest::nakagin_default(),
-        camera: Camera::default(),
-        root_node_id: Some("root".into()),
-        nodes: vec![
+    JackSnapshot::with_content(
+        JackSnapshot::SCHEMA.into(),
+        "jack-example".into(),
+        Some("nakagin".into()),
+        Manifest::nakagin_default(),
+        Camera::default(),
+        vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -530,8 +529,9 @@ pub fn example_graph_fixture() -> JackSnapshot {
                 ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
         ],
-        edges: vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }],
-    }
+        vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }],
+        Some("root".into()),
+    )
 }
 
 /// 🧩️ [`example_graph_fixture`] as a resolved in-memory [`Graph`].

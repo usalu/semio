@@ -99,12 +99,13 @@ pub fn remodel_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
+    use crate::artifacts::remodel::mint_and_stash_mesh;
     use protocol::Inference;
     use semio_framework::MeshData;
 
     fn triangle_snapshot() -> RemodelSnapshot {
         let mut snapshot = RemodelSnapshot::default();
-        snapshot.results.mesh.mesh = MeshData { positions: vec![0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() };
+        snapshot.results.mesh.mesh = mint_and_stash_mesh(MeshData { positions: vec![0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() });
         snapshot
     }
 

@@ -106,7 +106,7 @@ mod tests {
             grips: vec![Puzzle5dGrip { id: "bottom".into(), grip_kind: None, grip_2d: Puzzle5dGrip2d { angle: 0.0, grip_kind: None, radius: None }, grip_3d: Puzzle5dGrip3d { position: [0.0, 0.0, -1.0], direction: Some([0.0, 0.0, -1.0]), radius: None, label: None } }],
         };
         let fastener = Puzzle5dFastener { id: "f".into(), source: "p:top".into(), target: "c:bottom".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.5, y: 2.5 };
-        Puzzle5dSnapshot { schema: "puzzle.5d".into(), domain: "architecture".into(), label: None, meta: Puzzle5dMeta::default(), kind_catalogs: None, kind_compatibility: Vec::new(), parts: vec![parent, child], fasteners: vec![fastener] }
+        Puzzle5dSnapshot { schema: "puzzle.5d".into(), domain: "architecture".into(), label: None, meta: Puzzle5dMeta::default(), kind_catalogs: None, kind_catalogs_extra: None, kind_compatibility: Vec::new(), parts: vec![parent, child], fasteners: vec![fastener] }
     }
     //#endregion 🧸️Fixtures
 

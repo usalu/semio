@@ -1,0 +1,91 @@
+WAVE DEDUP — census notes (before any edits)
+
+JOB 1 (brep window):
+- OLD duplicated content = 🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️component.rs (262 LOC)
+  + 🧰️framework/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs (1482 LOC) = 1744 LOC total.
+- NEW home = ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs (1695 LOC).
+- Symbol diff (defs, len>3, old engine+kernel minus new stdio engine): only
+  Aabb, FaceGroup, MeshTransfer, ParamDomain, PointClassification, Vec3 remain OLD-only —
+  these are the "stayed behind" algorithm types stdio's file itself imports back
+  (`use semio_framework_3d::brep::engine::{MeshTransfer, ParamDomain, PointClassification, Vec3, Vec3 as EVec3};`)
+  and framework-3d internals (bvh, spatial, offset, mesh_io, classify, tessellate, boolean) use them via
+  `crate::brep::engine::{...}` too. MUST NOT DELETE these 6 types — keep them in a trimmed engine/component.rs.
+- Everything else (GeometryKind, GeometryHandle, ClosestPoint, BrepTopology, BrepError, BrepKernel trait,
+  Brep struct + all 93 `_sync` methods, SolidExporter/SolidImporter + Step/Stl/Obj/Glb pairs) is a byte-for-byte
+  duplicate already present in stdio's file. Confirmed 93/93 `_sync` method count match.
+- ⚙️engine/🧮️compute/🦀️component.rs (13 LOC, `pub fn block_on`) — duplicate; stdio's file defines its own
+  `block_on` via `pollster::block_on` directly (same body). Zero external callers of
+  `semio_framework_3d::brep::engine::block_on` or `::compute::block_on` outside kernel.rs/host component.rs
+  (both being deleted). Safe to delete.
+- ⚙️engine/🖥️host/🦀️component.rs (149 LOC, `BrepEngineHost`/`BrepDocumentOpEngine`/`BREP_ENGINE_ID`) — DEAD CODE.
+  repo-wide grep for `BrepEngineHost|BREP_ENGINE_ID|BrepDocumentOpEngine` and for the literal string
+  `"s.3d.brep"` found ZERO live callers (only comments in cad's inferences + process3d's inferences
+  explicitly documenting that wave G4 already deleted the sole `static HOST: OnceLock<BrepEngineHost>`
+  call site and replaced it with direct `Brep::new()` ownership, verified no cross-call registry was
+  load-bearing). Safe to delete as dead weight, not "lost code" — its capability has a verified live
+  replacement pattern already in production (cad_brep_kernel(), ProcessKernelReplay).
+- Re-census of live `semio_framework_3d::brep::kernel` / duplicated `semio_framework_3d::brep::engine::
+  {BrepKernel,BrepError,GeometryKind,GeometryHandle,ClosestPoint,BrepTopology}` consumers (mount-resolved,
+  not substring grep):
+  * 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/benches/kernel.rs — DUPLICATE bench, byte-identical
+    (module renames only) to ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/benches/brep_kernel.rs. DELETE.
+  * 🧰️framework/🛍️products/💻️os/🦀️component.rs — ORPHANED / UNMOUNTED. Verified via python realpath walk
+    of every `#[path = "..."]` in the whole repo: ZERO mounts resolve to this file. It is NOT part of
+    any compiled crate. (The REAL live file for crate `semio-framework-os` is the DIFFERENT, already-
+    updated 🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs, mounted via
+    🖥️host/📦️packages/🦀️rust/📦️glue.rs's `#[path="../../🦀️component.rs"] mod host_core;` — confirmed by
+    python os.path.realpath, NOT naive string matching, per the ticket's own emoji-collision warning.)
+    This orphaned top-level file duplicates ~98% of the mounted 🖥️host file (4425 vs 4537 LOC) and
+    still contains the old, unmigrated SolidMediaExport region. OUT OF SCOPE for wave DEDUP's two named
+    jobs (it isn't a brep-kernel or DWG duplication, it's a whole-file orphan) — flagged separately,
+    NOT deleted this wave to stay inside the assigned mandate.
+  * 🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs — the REAL live file, already migrated by wave IO1
+    (SolidMediaExport region deleted, comments only mention the old symbol names). NO CHANGE NEEDED.
+  * 🌊️flow/📐️brep-geometry, ✏️s/🌊️flow/🧩️extensions/📐️brep, cad geometry-import, cad inferences, stdio's
+    own bench — all use ONLY the 6 non-duplicated types (Vec3/ParamDomain/PointClassification/
+    MeshTransfer). NO CHANGE NEEDED — these keep resolving to the trimmed engine/component.rs.
+  * stdio's own ⚙️engine/🦀️component.rs — imports real ALGORITHM modules (arena, blend, boolean, bspline,
+    classify, curve, error, euler, heal, history, int_cc, int_cs, int_ss, mat, measure, mesh_io, offset,
+    primitives, sew, step, surface, sweep, tolerance, topo, validate, vec) via the documented "temporary
+    forward edge" — this is the legitimate NOT-yet-migrated 16k LOC of algorithms. NO CHANGE.
+  CONCLUSION: prior waves (G4, IO1) already repointed every real compiled consumer. Job 1's only
+  remaining work is deleting framework-3d's own dead/duplicate definitions — zero external repointing
+  needed.
+- Cargo.toml fallout: after deleting kernel/, engine's compute+host, and moving mesh-io out (job 2),
+  repo-wide grep across the WHOLE 🧊️3d tree (not just brep/) found ZERO remaining uses of async_trait,
+  pollster, blake3, base64, or `semio_framework::` in framework-3d. Only semio_framework_os_kernel
+  remains used (topology/component.rs's `EngineRep`). Pruned the now-dead optional deps from the `brep`
+  feature + [dependencies] in 🧊️3d/📦️packages/🦀️rust/Cargo.toml.
+
+JOB 2 (DWG / 🔺️mesh window):
+- OLD DWG codec: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs (1648 LOC) — own docstring literally says
+  "a misplaced drawing/CAD format engine... known follow-up violation with its own correct future home".
+  Defines DwgDrawing/DwgLayer/DwgColor/DwgEntity/DwgGeometry/DwgPathSegment + dwg_to_bytes/dwg_from_bytes/
+  mesh_to_dwg_drawing/dwg_drawing_to_mesh/paths_to_dwg_drawing/dwg_drawing_to_paths.
+- NEW home: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  (2267 LOC) — confirmed FULL symbol parity (all 8 old fns/enums present) PLUS extra real R2004 decode
+  pipeline + dwg_geometry_to_path_segments not in the old file. Re-exported at crate root via
+  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️component.rs → `crate::artifacts::dwg::{...}`.
+- Sole remaining framework-tier caller (confirmed via mount-resolved census, not substring grep):
+  🧰️framework/🔨️modules/🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs (440 LOC) calling
+  `semio_framework::mesh_to_dwg_drawing` (+ dwg_from_bytes/dwg_to_bytes/dwg_drawing_to_mesh from the
+  same re-export). This file is itself one of the "16k LOC not-yet-migrated algorithms" that stdio's
+  own engine/component.rs ALREADY imports via `use semio_framework_3d::brep::mesh_io::{export_solid_dwg,
+  export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body, import_glb_to_body,
+  import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer, StlFormat};`
+  — i.e. mesh-io only has ONE real consumer (stdio) and is brep<->mesh bridging IO code, so per the
+  ticket's own suggested resolution it MOVES INTO stdio (✳️brep/🧬️schema/⚙️engine/📦️mesh-io/, a sibling
+  submodule of engine/component.rs, mounted the same way engine used to mount compute/host), where its
+  DWG calls become same-crate `crate::artifacts::dwg::{...}` and its framework-3d algorithm imports
+  become the same external `semio_framework_3d::brep::*` forward-edge pattern engine/component.rs
+  already uses. This dissolves the only remaining "framework depends on the DWG codec" edge WITHOUT
+  creating framework-3d → stdio (which would be an actual cycle, since stdio → framework-3d already
+  exists for the algorithm forward-edge).
+- Other `semio_framework::{dwg_*,Dwg*}` hits were all either the mesh-io caller itself, the ORPHANED
+  unmounted 💻️os/🦀️component.rs (out of scope, see Job 1 notes), or doc-comment-only mentions
+  (🚪️io/component.rs, note plugin's io component.rs) — not real code. `mesh::` substring hits inside
+  framework's own glue.rs and 🚪️io/component.rs were doc-comment-only too.
+- After the move: zero remaining callers of `semio_framework::{mesh_to_dwg_drawing,dwg_from_bytes,
+  dwg_to_bytes,dwg_drawing_to_mesh,paths_to_dwg_drawing,dwg_drawing_to_paths,DwgColor,DwgDrawing,
+  DwgEntity,DwgGeometry,DwgLayer,DwgPathSegment}` anywhere compiled → 🔺️mesh/ safe to delete outright,
+  along with framework's `pub mod mesh;` mount + `pub use mesh::{...}` re-export block.

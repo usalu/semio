@@ -511,6 +511,291 @@ pub type Puzzle5dCatalogPart = Puzzle5dCatalogPartKind;
 /// 🏷️ Temporary name alias until Wave 3 app callers migrate to [`Puzzle5dCatalogGripKind`].
 pub type Puzzle5dCatalogGrip = Puzzle5dCatalogGripKind;
 
+//#region 🔖️KindCatalogComposition
+// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4d: `Puzzle5dSnapshot.kind_catalogs`
+// duplicated stdio's `s.stdio.semio.kit` type-registry vocabulary (`SemioKitType { id, name,
+// category }`) four times over (part/grip/fastener/rope kind catalogs), each row far richer than
+// `SemioKitType` can represent. Same split-and-compose pattern `sourcing`'s wave-4 migration used for
+// its own `stock: Vec<ObjectKind>` (see `../../../🪵️sourcing/🗿️artifacts/🗂️curate/🦀️component.rs`'s
+// `🔖️CatalogComposition` region, this migration's primary precedent): every kind-catalog row splits
+// into a shared `SemioKitType` half (id/name/category) plus a puzzle5d-owned `*Extra` half carrying
+// everything `SemioKitType` cannot, id-joined back together by `kind_catalogs_of`.
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+
+/// 🧩️ Puzzle5d-owned overflow for one part-kind catalog row — everything `SemioKitType` cannot
+/// represent. Id-joined 1:1 to a `SemioKitType` (`category = "part"`) in the composed
+/// `Puzzle5dSnapshot::kind_catalogs` child.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle5dCatalogPartKindExtra {
+    pub id: String,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub icon: String,
+    #[serde(default)]
+    pub image: String,
+    #[serde(default)]
+    pub unit: String,
+    #[serde(default, rename = "abstract")]
+    pub is_abstract: bool,
+    #[serde(default)]
+    pub base_kinds: Vec<String>,
+    #[serde(default)]
+    pub representations: Vec<Puzzle5dRepresentation>,
+    #[serde(default)]
+    pub grips: Vec<Puzzle5dGripTemplate>,
+    #[serde(default)]
+    pub attributes: Vec<Puzzle5dAttribute>,
+    #[serde(default)]
+    pub authors: Vec<Puzzle5dAuthor>,
+}
+
+/// 🧩️ Puzzle5d-owned overflow for one grip-kind catalog row (`category = "grip"`). `SemioKitType` has
+/// no `name` slot this row ever populated (`Puzzle5dCatalogGripKind` never carried one either) — the
+/// composed `SemioKitType.name` is a display-only derivation (`label` else `code`), never round-
+/// tripped back into `code`/`label` themselves, both of which live here unchanged.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle5dCatalogGripKindExtra {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i32>,
+    #[serde(default)]
+    pub compatible_with: Vec<String>,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub icon: String,
+    #[serde(default)]
+    pub color: String,
+    #[serde(default)]
+    #[dsl(refs = "rope_kind")]
+    pub default_rope_kind: String,
+}
+
+/// 🧩️ Puzzle5d-owned overflow for one fastener-kind catalog row (`category = "fastener"`).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle5dCatalogFastenerKindExtra {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+}
+
+/// 🧩️ Puzzle5d-owned overflow for one rope-kind catalog row (`category = "rope"`).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle5dCatalogRopeKindExtra {
+    pub id: String,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    #[dsl(refs = "fastener_kind")]
+    pub default_fastener_kind: String,
+}
+
+/// 🗂️ The puzzle5d-owned overflow half of `Puzzle5dKindCatalogs`, sibling to the composed
+/// `kind_catalogs` child — see the region doc for the split/join contract.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle5dKindCatalogsExtra {
+    #[serde(default)]
+    #[dsl(table)]
+    pub parts: Vec<Puzzle5dCatalogPartKindExtra>,
+    #[serde(default)]
+    #[dsl(table)]
+    pub grips: Vec<Puzzle5dCatalogGripKindExtra>,
+    #[serde(default)]
+    #[dsl(table)]
+    pub fasteners: Vec<Puzzle5dCatalogFastenerKindExtra>,
+    #[serde(default)]
+    #[dsl(table)]
+    pub ropes: Vec<Puzzle5dCatalogRopeKindExtra>,
+}
+
+//#region 🔖️RowConverters
+pub fn kit_type_from_part_kind(k: &Puzzle5dCatalogPartKind) -> SemioKitType { SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "part".into() } }
+pub fn part_kind_extra_from_part_kind(k: &Puzzle5dCatalogPartKind) -> Puzzle5dCatalogPartKindExtra {
+    Puzzle5dCatalogPartKindExtra {
+        id: k.id.clone(), label: k.label.clone(), description: k.description.clone(), icon: k.icon.clone(), image: k.image.clone(), unit: k.unit.clone(),
+        is_abstract: k.is_abstract, base_kinds: k.base_kinds.clone(), representations: k.representations.clone(), grips: k.grips.clone(), attributes: k.attributes.clone(), authors: k.authors.clone(),
+    }
+}
+pub fn part_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogPartKindExtra) -> Puzzle5dCatalogPartKind {
+    Puzzle5dCatalogPartKind {
+        id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone(), description: extra.description.clone(), icon: extra.icon.clone(), image: extra.image.clone(), unit: extra.unit.clone(),
+        is_abstract: extra.is_abstract, base_kinds: extra.base_kinds.clone(), representations: extra.representations.clone(), grips: extra.grips.clone(), attributes: extra.attributes.clone(), authors: extra.authors.clone(),
+    }
+}
+
+pub fn kit_type_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> SemioKitType {
+    let name = k.label.clone().or_else(|| k.code.clone()).unwrap_or_default();
+    SemioKitType { id: k.id.clone(), name, category: "grip".into() }
+}
+pub fn grip_kind_extra_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> Puzzle5dCatalogGripKindExtra {
+    Puzzle5dCatalogGripKindExtra {
+        id: k.id.clone(), code: k.code.clone(), label: k.label.clone(), order: k.order, compatible_with: k.compatible_with.clone(),
+        description: k.description.clone(), icon: k.icon.clone(), color: k.color.clone(), default_rope_kind: k.default_rope_kind.clone(),
+    }
+}
+pub fn grip_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogGripKindExtra) -> Puzzle5dCatalogGripKind {
+    let _ = kit_type;
+    Puzzle5dCatalogGripKind {
+        id: extra.id.clone(), code: extra.code.clone(), label: extra.label.clone(), order: extra.order, compatible_with: extra.compatible_with.clone(),
+        description: extra.description.clone(), icon: extra.icon.clone(), color: extra.color.clone(), default_rope_kind: extra.default_rope_kind.clone(),
+    }
+}
+
+pub fn kit_type_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> SemioKitType { SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "fastener".into() } }
+pub fn fastener_kind_extra_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> Puzzle5dCatalogFastenerKindExtra { Puzzle5dCatalogFastenerKindExtra { id: k.id.clone(), label: k.label.clone() } }
+pub fn fastener_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogFastenerKindExtra) -> Puzzle5dCatalogFastenerKind {
+    Puzzle5dCatalogFastenerKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone() }
+}
+
+pub fn kit_type_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> SemioKitType { SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "rope".into() } }
+pub fn rope_kind_extra_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> Puzzle5dCatalogRopeKindExtra { Puzzle5dCatalogRopeKindExtra { id: k.id.clone(), label: k.label.clone(), default_fastener_kind: k.default_fastener_kind.clone() } }
+pub fn rope_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogRopeKindExtra) -> Puzzle5dCatalogRopeKind {
+    Puzzle5dCatalogRopeKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone(), default_fastener_kind: extra.default_fastener_kind.clone() }
+}
+//#endregion 🔖️RowConverters
+
+//#region 🔖️WholeListConverters
+/// 🔀️ `Puzzle5dKindCatalogs` → the shared `SemioKitType` half of the composed catalog child (all
+/// four kind lists flattened into one `category`-tagged list, matching `SemioKitSnapshot.types`'s
+/// own id-keyed, category-differentiated shape).
+pub fn kind_catalogs_kit_types(catalogs: &Puzzle5dKindCatalogs) -> Vec<SemioKitType> {
+    catalogs.parts.iter().map(kit_type_from_part_kind)
+        .chain(catalogs.grips.iter().map(kit_type_from_grip_kind))
+        .chain(catalogs.fasteners.iter().map(kit_type_from_fastener_kind))
+        .chain(catalogs.ropes.iter().map(kit_type_from_rope_kind))
+        .collect()
+}
+
+/// 🔀️ `Puzzle5dKindCatalogs` → the puzzle5d-owned overflow half. Lossless together with
+/// `kind_catalogs_kit_types`: every field of every row lands in exactly one of the two halves.
+pub fn kind_catalogs_extra_from_kind_catalogs(catalogs: &Puzzle5dKindCatalogs) -> Puzzle5dKindCatalogsExtra {
+    Puzzle5dKindCatalogsExtra {
+        parts: catalogs.parts.iter().map(part_kind_extra_from_part_kind).collect(),
+        grips: catalogs.grips.iter().map(grip_kind_extra_from_grip_kind).collect(),
+        fasteners: catalogs.fasteners.iter().map(fastener_kind_extra_from_fastener_kind).collect(),
+        ropes: catalogs.ropes.iter().map(rope_kind_extra_from_rope_kind).collect(),
+    }
+}
+
+/// 🔀️ Inverse of the split above — reassembles a full `Puzzle5dKindCatalogs` from its composed-child
+/// half (a flat, category-tagged `SemioKitType` list) and its puzzle5d-owned overflow half, id-joined
+/// per category. A `SemioKitType` with no matching `*Extra` row (composed-child content the working-
+/// scene cache hasn't seen yet — see `kind_catalogs_of`'s doc comment) is silently dropped rather than
+/// fabricated with placeholder fields.
+pub fn kind_catalogs_from_kit_types_and_extra(types: &[SemioKitType], extra: &Puzzle5dKindCatalogsExtra) -> Puzzle5dKindCatalogs {
+    let by_category = |category: &str| -> std::collections::HashMap<&str, &SemioKitType> {
+        types.iter().filter(|t| t.category == category).map(|t| (t.id.as_str(), t)).collect()
+    };
+    let part_types = by_category("part");
+    let grip_types = by_category("grip");
+    let fastener_types = by_category("fastener");
+    let rope_types = by_category("rope");
+    Puzzle5dKindCatalogs {
+        parts: extra.parts.iter().filter_map(|e| part_types.get(e.id.as_str()).map(|t| part_kind_from_parts(t, e))).collect(),
+        grips: extra.grips.iter().filter_map(|e| grip_types.get(e.id.as_str()).map(|t| grip_kind_from_parts(t, e))).collect(),
+        fasteners: extra.fasteners.iter().filter_map(|e| fastener_types.get(e.id.as_str()).map(|t| fastener_kind_from_parts(t, e))).collect(),
+        ropes: extra.ropes.iter().filter_map(|e| rope_types.get(e.id.as_str()).map(|t| rope_kind_from_parts(t, e))).collect(),
+    }
+}
+
+/// 🔀️ The full kind-catalogs' shared half, as a fresh (design-less, link-less, object/model/
+/// properties-less) `SemioKitSnapshot` — content-addressed by `kind_catalogs_child_handle` below,
+/// never embedded inline in `Puzzle5dSnapshot`.
+pub fn kind_catalogs_kit_snapshot(catalogs: &Puzzle5dKindCatalogs) -> SemioKitSnapshot {
+    SemioKitSnapshot { types: kind_catalogs_kit_types(catalogs), ..SemioKitSnapshot::default() }
+}
+
+/// 🪪️ Content-addressed child handle for a kind-catalogs bundle — hashes the deterministic JSON of
+/// the derived `SemioKitType` list so peers replaying the same catalogs converge on the same
+/// `child_id` (never a random/incrementing id), mirroring `sourcing`'s `catalog_child_handle`.
+pub fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::ArtifactChild<SemioKitSnapshot> {
+    use std::hash::{Hash, Hasher};
+    let types = kind_catalogs_kit_types(catalogs);
+    let canonical = serde_json::to_string(&types).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    canonical.hash(&mut hasher);
+    let child_id = format!("kind-catalogs-{:016x}", hasher.finish());
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+//#endregion 🔖️WholeListConverters
+
+//#region 🔖️KindCatalogScratch
+/// 🖌️ Ephemeral working-scene cache: `kind_catalogs` child_id → its live `SemioKitSnapshot` content.
+/// Per this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/
+/// `VcsArtifactApp.children` exist structurally in the framework but are NOT populated by any plugin
+/// as of 2026-08-13 (no `open_child`/`register_child` caller yet), so there is no live resolver seam
+/// to read a composed child's content back through — every render/export/inference/mutation call site
+/// funnels through `kind_catalogs_of` below instead, which reads this cache. Populated wherever a
+/// `Puzzle5dSnapshot` with real kind-catalog content is built (`puzzle5d_snapshot_from_kind_catalogs`,
+/// `seed_kind_catalogs_scratch`) — NEVER persisted, NEVER a snapshot field, droppable at any instant
+/// (matches the repo-wide `EngineRep` contract). Staleness gap documented rather than fail-closed
+/// (same category as `sourcing`'s `SOURCING_CATALOG_SCRATCH`: `kind_catalogs` is only ever whole-
+/// value-replaced via `ReplaceKindCatalogs`, never incrementally mutated in-history, so there is no
+/// undo/redo-of-a-partial-edit scenario to go stale across — only a whole-document undo/redo, which
+/// re-seeds the cache from the restored snapshot's own DSL/pack parse path).
+thread_local! {
+    static PUZZLE5D_KIND_CATALOGS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+fn kind_catalogs_scratch_set(child_id: &str, kit_snapshot: SemioKitSnapshot) {
+    PUZZLE5D_KIND_CATALOGS_SCRATCH.with(|cell| cell.borrow_mut().insert(child_id.to_string(), kit_snapshot));
+}
+
+fn kind_catalogs_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
+    PUZZLE5D_KIND_CATALOGS_SCRATCH.with(|cell| cell.borrow().get(child_id).cloned())
+}
+//#endregion 🔖️KindCatalogScratch
+
+/// 🌱 Seeds the working-scene cache for `catalogs`' deterministic `kind_catalogs_child_handle`,
+/// without building a whole `Puzzle5dSnapshot` — for fixture loaders that parse the persisted
+/// snapshot from DSL text (which never embeds child content) but still need the SAME content-
+/// addressed handle's catalogs resolvable immediately after loading.
+pub fn seed_kind_catalogs_scratch(catalogs: &Puzzle5dKindCatalogs) {
+    let handle = kind_catalogs_child_handle(catalogs);
+    kind_catalogs_scratch_set(&handle.child_id, kind_catalogs_kit_snapshot(catalogs));
+}
+
+/// 🏗️ Mints a fresh content-addressed handle for `catalogs`, splits it into its composed-child half
+/// and puzzle5d-owned overflow half, and seeds the working-scene cache so this SAME call's render/
+/// export/inference/mutation paths can resolve the handle immediately. Returns the handle plus the
+/// overflow half — the two fields a `Puzzle5dSnapshot`/`Puzzle5dArtifact`/`Puzzle5dDiff` now carry in
+/// place of the old inline `Puzzle5dKindCatalogs` field.
+pub fn split_and_seed_kind_catalogs(catalogs: Option<Puzzle5dKindCatalogs>) -> (Option<store::ArtifactChild<SemioKitSnapshot>>, Option<Puzzle5dKindCatalogsExtra>) {
+    match catalogs {
+        None => (None, None),
+        Some(catalogs) => {
+            let handle = kind_catalogs_child_handle(&catalogs);
+            kind_catalogs_scratch_set(&handle.child_id, kind_catalogs_kit_snapshot(&catalogs));
+            (Some(handle), Some(kind_catalogs_extra_from_kind_catalogs(&catalogs)))
+        }
+    }
+}
+
+/// 👁️ The one accessor every render/export/inference/mutation call site funnels through to read the
+/// full reassembled kind-catalogs bundle back in its original `Puzzle5dKindCatalogs` shape — see
+/// `PUZZLE5D_KIND_CATALOGS_SCRATCH`'s doc comment for the staleness gap.
+pub fn kind_catalogs_of(handle: &Option<store::ArtifactChild<SemioKitSnapshot>>, extra: &Option<Puzzle5dKindCatalogsExtra>) -> Option<Puzzle5dKindCatalogs> {
+    let handle = handle.as_ref()?;
+    let kit_snapshot = kind_catalogs_scratch_get(&handle.child_id).unwrap_or_default();
+    let extra = extra.clone().unwrap_or_default();
+    Some(kind_catalogs_from_kit_types_and_extra(&kit_snapshot.types, &extra))
+}
+//#endregion 🔖️KindCatalogComposition
+
 //#region 🔖️Snapshot
 //#endregion 🔖️Snapshot
 

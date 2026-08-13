@@ -1,0 +1,114 @@
+=== DUPLICATED: defined in BOTH a dying module AND an artifact ===
+
+--- 3d: 317 duplicated definitions ---
+  const IDENTITY
+      old: 🧰️framework/🔨️modules/🧊️3d/📐️brep/🔢️matrix/🦀️component.rs
+      new: ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/➕️algebra-internals/🦀️component.rs
+  const fn
+      old: 🧰️framework/🔨️modules/🧊️3d/📐️brep/📄️step/🦀️component.rs
+      new: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs
+  enum BrepError
+      old: 🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs
+  enum Entity
+      old: 🧰️framework/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs
+  enum GeometryKind
+      old: 🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs
+  fn add
+      old: 🧰️framework/🔨️modules/🧊️3d/📐️brep/📏️tolerance/🦀️component.rs
+      new: ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/➕️algebra-internals/🦀️component.rs
+  fn all_edges
+      old: 🧰️framework/🔨️modules/🧊️3d/📐️brep/🧰️kernel/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs
+  fn approximate_curve
+      old: 🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs
+  … +309 more
+
+--- math: 815 duplicated definitions ---
+  const ALL
+      old: 🧰️framework/🔨️modules/🧮️math/🧩️wfc/🪞️symmetry/🦀️component.rs
+      new: ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🦀️component.rs
+  const CHECKPOINT_VERSION
+      old: 🧰️framework/🔨️modules/🧮️math/🧩️wfc/💾️serial/🦀️component.rs
+      new: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs
+  const DEFAULT_STEP_BUDGET
+      old: 🧰️framework/🔨️modules/🧮️math/🧩️wfc/🔮️oracle/🦀️component.rs
+      new: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs
+  const RESYNC_INTERVAL
+      old: 🧰️framework/🔨️modules/🧮️math/🧩️wfc/🌐️domain/🦀️component.rs
+      new: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌐️domain/🦀️component.rs
+  const SOURCE_MODEL_VERSION
+      old: 🧰️framework/🔨️modules/🧮️math/🧩️wfc/💾️serial/🦀️component.rs
+      new: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs
+  const fn
+      old: 🧰️framework/🔨️modules/🧮️math/🧩️wfc/🆔️ids/🦀️component.rs
+      new: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs
+  enum BestOfNKeep
+      old: 🧰️framework/🔨️modules/🧮️math/🧩️wfc/🪶️soft/🦀️component.rs
+      new: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs
+  enum Boundary
+      old: 🧰️framework/🔨️modules/🧮️math/🧩️wfc/🔲️grid-2d/🦀️component.rs
+      new: ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔲️grid-2d/🦀️component.rs
+  … +807 more
+
+--- mesh: 96 duplicated definitions ---
+  const DWG_FILE_HEADER_LEN
+      old: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  const DWG_SENTINEL_CLASSES_BEGIN
+      old: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  const DWG_SENTINEL_CLASSES_END
+      old: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  const DWG_SENTINEL_FILE_HEADER_END
+      old: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  const DWG_SENTINEL_HEADER_VARS_BEGIN
+      old: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  const DWG_SENTINEL_HEADER_VARS_END
+      old: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  const DWG_TYPE_ARC
+      old: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  const DWG_TYPE_CIRCLE
+      old: 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  … +88 more
+
+--- mesh-engine: 8 duplicated definitions ---
+  fn export
+      old: 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs
+      new: ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs
+  fn fmt
+      old: 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+  fn format_kind
+      old: 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs
+  fn import
+      old: 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs
+  fn merge
+      old: 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🎲️entropy-internals/🦀️component.rs
+  fn normalize3
+      old: 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🏛️spatial/🦀️component.rs
+  fn scale3
+      old: 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs
+      new: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🏛️spatial/🦀️component.rs
+  fn vertex_count
+      old: 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs
+      new: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs
+
+=== TOTALS ===
+  3d: 317
+  math: 815
+  mesh: 96
+  mesh-engine: 8

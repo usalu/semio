@@ -13,7 +13,7 @@ pub(crate) fn render(state: &RewriteSnapshot, cfg: &RewriteConfig, labels: &Trin
     let jack_action = crate::apps::rewrite::rewrite_action;
     let builder = PanelTreeBuilder::new("trinity-document");
     let node_items: Vec<UiTreeItemNode> = fixture
-        .nodes
+        .nodes()
         .iter()
         .map(|node| {
             tree_item_with_action(builder.item_id("node", &node.id), Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }), Some(node.kind.clone()), jack_action("setSelection", Some(json!({ "ids": [node.id] }))))

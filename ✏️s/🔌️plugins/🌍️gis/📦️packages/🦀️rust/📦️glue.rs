@@ -945,6 +945,7 @@ pub mod apps {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
+#[cfg(feature = "plugin-entry")]
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 
 //#region 📚️Examples

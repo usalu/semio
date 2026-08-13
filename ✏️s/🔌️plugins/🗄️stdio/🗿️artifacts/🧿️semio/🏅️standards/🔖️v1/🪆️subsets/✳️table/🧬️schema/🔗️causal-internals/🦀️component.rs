@@ -8,7 +8,9 @@
 //! DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3c: Rust-only compute internals
 //! backing `✳️table`'s inferences (no TS twin — this is algorithm, not boundary vocabulary). Depends
 //! on sibling `📋️tabular-internals`/`🎲️probability-internals`/`📊️statistics-internals` and framework
-//! `semio_framework_math::algebra` + `semio_framework_geometry::random`.
+//! `semio_framework_geometry::random` + (as of wave M3e, re-pointed after a CONCURRENT wave M3d
+//! dissolved `semio_framework_math::algebra` entirely) sibling-subset
+//! `✳️value/🧬️schema/➕️algebra-internals` for `MatD`/`VecD` — see that file's own doc comment.
 
 use crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::Continuous;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -491,7 +493,7 @@ pub trait CiTest {
 /// 🔬️ Fisher-z partial-correlation test for continuous data, precomputing the correlation matrix
 /// once per dataset — PC-stable runs thousands of tests against the same table.
 pub struct FisherZ {
-    corr: semio_framework_math::algebra::MatD,
+    corr: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD,
     n: usize,
 }
 
@@ -670,7 +672,7 @@ pub fn local_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::
         let sigma2 = (ss / n as f64).max(1e-12);
         return Ok(-0.5 * n as f64 * sigma2.ln() - 0.5 * (n as f64).ln());
     }
-    let mut design = semio_framework_math::algebra::MatD::zeros(n, p);
+    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, p);
     for (col, &parent) in parents.iter().enumerate() {
         let values = data.continuous(parent)?;
         for row in 0..n {
@@ -691,7 +693,7 @@ pub fn dag_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::sc
 /// 📦️ DirectLiNGAM output: the recovered causal order and the pruned weighted adjacency (`weights[child][parent]`).
 pub struct LingamResult {
     pub order: Vec<usize>,
-    pub weights: semio_framework_math::algebra::MatD,
+    pub weights: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD,
     pub dag: CausalDag,
 }
 
@@ -749,7 +751,7 @@ pub fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subsets::tab
     }
     order.push(remaining[0]);
 
-    let mut weights = semio_framework_math::algebra::MatD::zeros(n, n);
+    let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
     let mut edges = Vec::new();
     for (pos, &child) in order.iter().enumerate() {
         let candidate_parents = &order[..pos];
@@ -757,7 +759,7 @@ pub fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subsets::tab
             continue;
         }
         let n_rows = columns[child].len();
-        let mut design = semio_framework_math::algebra::MatD::zeros(n_rows, candidate_parents.len());
+        let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n_rows, candidate_parents.len());
         for (col, &parent) in candidate_parents.iter().enumerate() {
             for row in 0..n_rows {
                 design.set(row, col, columns[parent][row]);
@@ -951,9 +953,9 @@ pub fn identify(dag: &CausalDag, x: usize, y: usize) -> Result<Identification, C
 #[derive(Clone, Debug)]
 pub struct LinearGaussianScm {
     pub dag: CausalDag,
-    pub weights: semio_framework_math::algebra::MatD,
-    pub intercepts: semio_framework_math::algebra::VecD,
-    pub noise_var: semio_framework_math::algebra::VecD,
+    pub weights: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD,
+    pub intercepts: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD,
+    pub noise_var: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD,
 }
 
 impl LinearGaussianScm {
@@ -961,9 +963,9 @@ impl LinearGaussianScm {
     #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the pv slice — enumerate() would only remove one of the two")]
     pub fn fit(dag: &CausalDag, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<Self, CausalError> {
         let n = dag.n();
-        let mut weights = semio_framework_math::algebra::MatD::zeros(n, n);
-        let mut intercepts = semio_framework_math::algebra::VecD::zeros(n);
-        let mut noise_var = semio_framework_math::algebra::VecD::zeros(n);
+        let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
+        let mut intercepts = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n);
+        let mut noise_var = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n);
         for v in 0..n {
             let y = data.continuous(v)?;
             let parents = dag.parents(v);
@@ -973,7 +975,7 @@ impl LinearGaussianScm {
                 continue;
             }
             let n_rows = y.len();
-            let mut design = semio_framework_math::algebra::MatD::zeros(n_rows, parents.len());
+            let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n_rows, parents.len());
             for (col, &p) in parents.iter().enumerate() {
                 let pv = data.continuous(p)?;
                 for row in 0..n_rows {
@@ -1015,7 +1017,7 @@ impl LinearGaussianScm {
         let remaining_edges: Vec<(usize, usize)> = self.dag.edges().into_iter().filter(|&(_, child)| !intervened_set.contains(&child)).collect();
         let new_dag = CausalDag::new(self.dag.names().to_vec(), &remaining_edges)?;
         let n = self.dag.n();
-        let mut weights = semio_framework_math::algebra::MatD::zeros(n, n);
+        let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
         let mut intercepts = self.intercepts.clone();
         let mut noise_var = self.noise_var.clone();
         for v in 0..n {
@@ -1034,8 +1036,8 @@ impl LinearGaussianScm {
     }
 
     /// 🧮️ `E[v]` for every `v`, via forward substitution in topological order.
-    pub fn mean(&self) -> semio_framework_math::algebra::VecD {
-        let mut mu = semio_framework_math::algebra::VecD::zeros(self.dag.n());
+    pub fn mean(&self) -> crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD {
+        let mut mu = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(self.dag.n());
         for &v in self.dag.topological_order() {
             let mut val = self.intercepts.get(v);
             for &p in self.dag.parents(v) {
@@ -1047,16 +1049,16 @@ impl LinearGaussianScm {
     }
 
     /// 🧮️ Implied covariance `(I−B)⁻¹ D (I−B)⁻ᵀ`.
-    pub fn implied_covariance(&self) -> Result<semio_framework_math::algebra::MatD, CausalError> {
+    pub fn implied_covariance(&self) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD, CausalError> {
         let n = self.dag.n();
-        let mut i_minus_b = semio_framework_math::algebra::MatD::identity(n);
+        let mut i_minus_b = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::identity(n);
         for v in 0..n {
             for &p in self.dag.parents(v) {
                 i_minus_b.set(v, p, -self.weights.get(v, p));
             }
         }
         let inv = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::invert(&i_minus_b)?;
-        let mut d = semio_framework_math::algebra::MatD::zeros(n, n);
+        let mut d = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
         for v in 0..n {
             d.set(v, v, self.noise_var.get(v));
         }
@@ -1090,7 +1092,7 @@ impl LinearGaussianScm {
     /// 🔮️ Abduction–action–prediction (Pearl 2009 ch. 7, Thm 7.1.7): recovers every exogenous
     /// noise term from a fully observed row, applies `interventions`, and re-propagates the same
     /// noise — exact for a linear-Gaussian model.
-    pub fn counterfactual(&self, observed: &[f64], interventions: &[(usize, f64)]) -> Result<semio_framework_math::algebra::VecD, CausalError> {
+    pub fn counterfactual(&self, observed: &[f64], interventions: &[(usize, f64)]) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD, CausalError> {
         let n = self.dag.n();
         if observed.len() != n {
             return Err(CausalError::DimensionMismatch(format!("observed row has {} entries, expected {n}", observed.len())));
@@ -1104,7 +1106,7 @@ impl LinearGaussianScm {
             noise[v] = observed[v] - predicted;
         }
         let intervened_map: HashMap<usize, f64> = interventions.iter().copied().collect();
-        let mut out = semio_framework_math::algebra::VecD::zeros(n);
+        let mut out = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n);
         for &v in self.dag.topological_order() {
             if let Some(&value) = intervened_map.get(&v) {
                 out.set(v, value);
@@ -1466,9 +1468,9 @@ pub fn naive_difference(data: &crate::artifacts::semio::standards::v1::subsets::
 }
 
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and a values/t slice — enumerate() would only remove one of the two")]
-fn design_with_treatment(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, covariates: &[usize], treatment_value: Option<f64>) -> Result<semio_framework_math::algebra::MatD, CausalError> {
+fn design_with_treatment(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, covariates: &[usize], treatment_value: Option<f64>) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD, CausalError> {
     let n = data.n_rows();
-    let mut design = semio_framework_math::algebra::MatD::zeros(n, covariates.len() + 1);
+    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, covariates.len() + 1);
     let t = data.continuous(treatment)?;
     for row in 0..n {
         design.set(row, 0, treatment_value.unwrap_or(t[row]));
@@ -1486,7 +1488,7 @@ fn g_formula_point(data: &crate::artifacts::semio::standards::v1::subsets::table
     let y = data.continuous(outcome)?;
     let design = design_with_treatment(data, treatment, covariates, None)?;
     let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, y, true)?;
-    let predict_mean = |design: &semio_framework_math::algebra::MatD| -> f64 {
+    let predict_mean = |design: &crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD| -> f64 {
         let n = design.rows;
         let p = design.cols;
         let total: f64 = (0..n).map(|row| fit.coefficients[0] + (0..p).map(|col| fit.coefficients[col + 1] * design.get(row, col)).sum::<f64>()).sum();
@@ -1508,7 +1510,7 @@ pub fn g_formula_ate(data: &crate::artifacts::semio::standards::v1::subsets::tab
 fn ipw_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
     const EPS: f64 = 1e-6;
     let n = data.n_rows();
-    let mut design = semio_framework_math::algebra::MatD::zeros(n, covariates.len());
+    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, covariates.len());
     for (col, &c) in covariates.iter().enumerate() {
         let values = data.continuous(c)?;
         for row in 0..n {
@@ -1742,10 +1744,10 @@ mod tests {
     fn linear_chain_scm() -> LinearGaussianScm {
         // x -> m -> y, coefficients 2.0 and 1.5.
         let dag = CausalDag::from_named_edges(vec!["x".into(), "m".into(), "y".into()], &[("x", "m"), ("m", "y")]).unwrap();
-        let mut weights = semio_framework_math::algebra::MatD::zeros(3, 3);
+        let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(3, 3);
         weights.set(1, 0, 2.0);
         weights.set(2, 1, 1.5);
-        LinearGaussianScm { dag, weights, intercepts: semio_framework_math::algebra::VecD::from_vec(vec![0.0, 0.0, 0.0]), noise_var: semio_framework_math::algebra::VecD::from_vec(vec![1.0, 0.25, 0.25]) }
+        LinearGaussianScm { dag, weights, intercepts: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::from_vec(vec![0.0, 0.0, 0.0]), noise_var: crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::from_vec(vec![1.0, 0.25, 0.25]) }
     }
 
     #[test]

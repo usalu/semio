@@ -2,18 +2,17 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📚knowledge` per Wave C.
 
 use super::mutation::ReplaceKnowledgeRecord;
-use protocol::Patchable;
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::artifacts::program::diff::{ProgramKnowledgeDelta, ProgramKnowledgePatchEntry};
 
-/// 🔁️ `patched = [{id, full patch}]` via `Patchable::diff_patch` — every field of the payload
-/// row becomes the patch, so applying it fully overwrites the target's non-identity content.
-/// Target absent from `base` ⇒ empty diff (nothing to change).
+/// 🔁️ Whole-value swap of one row's non-identity content within the working-scene cache, then
+/// re-mint a fresh content-addressed `table` child handle. Target absent from `base` ⇒ empty diff
+/// (nothing to change) — same observable behavior as the former sparse-patch shape.
 pub fn diff(payload: &ReplaceKnowledgeRecord, base: &ProgramSnapshot) -> ProgramDiff {
-    let Some(existing) = base.knowledge.iter().find(|row| row.header.id == payload.knowledge_record.header.id) else {
+    let mut records = crate::artifacts::program::program_knowledge(base);
+    let Some(existing) = records.iter_mut().find(|row| row.header.id == payload.knowledge_record.header.id) else {
         return ProgramDiff::default();
     };
-    let patch = existing.diff_patch(&payload.knowledge_record).expect("diff_patch always produces a full patch");
-    ProgramDiff { knowledge: Some(ProgramKnowledgeDelta { patched: vec![ProgramKnowledgePatchEntry { id: payload.knowledge_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() }
+    *existing = payload.knowledge_record.clone();
+    ProgramDiff { knowledge: Some(crate::artifacts::program::knowledge_child_from_records(&records)), ..Default::default() }
 }

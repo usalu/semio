@@ -2596,17 +2596,22 @@ mod tests {
             next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).apply(&next_projection);
         }
 
-        let parts = next_projection.pointer("/kindCatalogs/parts").and_then(Value::as_array).expect("parts catalog present");
-        let capsule = parts.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).expect("the imported part kind must appear in kindCatalogs.parts");
-        assert_eq!(capsule.pointer("/representations/0/url").and_then(Value::as_str), Some("/mesh/capsule.glb"));
-        assert_eq!(capsule.pointer("/grips/0/gripKind").and_then(Value::as_str), Some("door"), "the per-part grip template keeps its gripKind after normalization");
-        assert_eq!(capsule.pointer("/grips/0/point").and_then(Value::as_array), Some(&vec![json!(0.0), json!(0.0), json!(0.0)]));
-        assert_eq!(capsule.pointer("/grips/0/direction").and_then(Value::as_array), Some(&vec![json!(0.0), json!(1.0), json!(0.0)]));
-        assert_eq!(capsule.pointer("/grips/0/radius").and_then(Value::as_f64), Some(0.3));
+        // 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4d: `next_projection`'s raw
+        // `kindCatalogs` key is now the composed `{childId,target}` handle, not the embedded
+        // `{parts:[...],...}` shape a JSON pointer could probe directly — reassemble the full
+        // `Puzzle5dKindCatalogs` through the typed snapshot + `kind_catalogs_of` accessor instead
+        // (same pattern `sourcing`'s `stock_of` established for its own composed catalog field).
+        let next_snapshot: Puzzle5dSnapshot = serde_json::from_value(next_projection.clone()).expect("next_projection deserializes as Puzzle5dSnapshot");
+        let catalogs = crate::artifacts::puzzle5d::kind_catalogs_of(&next_snapshot.kind_catalogs, &next_snapshot.kind_catalogs_extra).expect("parts catalog present");
+        let capsule = catalogs.parts.iter().find(|entry| entry.id == "capsule").expect("the imported part kind must appear in kindCatalogs.parts");
+        assert_eq!(capsule.representations.first().map(|representation| representation.url.as_str()), Some("/mesh/capsule.glb"));
+        assert_eq!(capsule.grips.first().and_then(|grip| grip.grip_kind.as_deref()), Some("door"), "the per-part grip template keeps its gripKind after normalization");
+        assert_eq!(capsule.grips.first().map(|grip| grip.point), Some([0.0, 0.0, 0.0]));
+        assert_eq!(capsule.grips.first().map(|grip| grip.direction), Some([0.0, 1.0, 0.0]));
+        assert_eq!(capsule.grips.first().and_then(|grip| grip.radius), Some(0.3));
 
-        let grips = next_projection.pointer("/kindCatalogs/grips").and_then(Value::as_array).expect("grips catalog present");
-        let door = grips.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("door")).expect("the imported grip kind must appear in kindCatalogs.grips");
-        assert_eq!(door.get("defaultRopeKind").and_then(Value::as_str), Some(""), "defaultCableKind maps onto defaultRopeKind (a naming judgment call — see import_media's doc comment)");
+        let door = catalogs.grips.iter().find(|entry| entry.id == "door").expect("the imported grip kind must appear in kindCatalogs.grips");
+        assert_eq!(door.default_rope_kind.as_str(), "", "defaultCableKind maps onto defaultRopeKind (a naming judgment call — see import_media's doc comment)");
 
         let compatibility = next_projection.pointer("/kindCompatibility").and_then(Value::as_array).expect("kind compatibility present");
         assert!(compatibility.iter().any(|entry| entry.get("source").and_then(Value::as_str) == Some("door") && entry.get("target").and_then(Value::as_str) == Some("door")));
@@ -2639,8 +2644,9 @@ mod tests {
             }
         }
 
-        let parts = current.pointer("/kindCatalogs/parts").and_then(Value::as_array).expect("parts catalog present");
-        assert_eq!(parts.iter().filter(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
+        let current_snapshot: Puzzle5dSnapshot = serde_json::from_value(current.clone()).expect("current deserializes as Puzzle5dSnapshot");
+        let catalogs = crate::artifacts::puzzle5d::kind_catalogs_of(&current_snapshot.kind_catalogs, &current_snapshot.kind_catalogs_extra).expect("parts catalog present");
+        assert_eq!(catalogs.parts.iter().filter(|entry| entry.id == "capsule").count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
     }
 
     #[test]

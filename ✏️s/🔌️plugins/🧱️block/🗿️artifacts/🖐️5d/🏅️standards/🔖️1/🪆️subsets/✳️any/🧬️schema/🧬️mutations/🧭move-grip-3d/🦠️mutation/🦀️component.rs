@@ -21,7 +21,7 @@ pub fn move_grip_3d(id: String, new_position: [f64; 3], new_direction: [f64; 3])
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for MoveGrip3d {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "grip", kind: "move-grip-3d", record: "MovedGrip3d" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "grip", kind: "move-grip3d", record: "MovedGrip3d" };
 
     fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
         super::diff::diff(self, base)

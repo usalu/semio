@@ -18,9 +18,6 @@ pub use ui_wgpu::wgpu::{Locale, Terminology};
 #[path = "../../🔨️modules/🎯️action-bus/🦀️component.rs"]
 pub mod action_bus;
 
-#[path = "../../🔨️modules/🔺️mesh/🦀️component.rs"]
-pub mod mesh;
-
 #[path = "../../🔨️modules/🚪️io/🦀️component.rs"]
 pub mod io;
 
@@ -56,10 +53,14 @@ pub use semio_framework_mesh_engine::{
     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
     IoError,
 };
-pub use mesh::{
-    dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
-    DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
-};
+// 🚪️ DWG codec (`dwg_to_bytes`/`dwg_from_bytes`/`mesh_to_dwg_drawing`/…) DELETED (ticket 26/08/12/
+// DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP): `🔺️mesh/🦀️component.rs`
+// was a misplaced, fully-duplicated copy of stdio's real DWG artifact
+// (`semio_s_plugin_stdio::artifacts::dwg::{dwg_to_bytes, dwg_from_bytes, mesh_to_dwg_drawing, …}`,
+// `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/…`). Its sole framework-tier caller
+// (`🧊️3d/📐️brep/📦️mesh-io`) moved into stdio's own brep engine this same wave, so this re-export
+// has zero remaining callers. `🔺️mesh/🟦️component.ts` (unrelated scene-protocol payload types,
+// still imported by `🟦️glue.ts`) was NOT touched — only the Rust DWG codec shared that directory.
 // 🔀️ OsMediaCapability/ArtifactKindSpec/MediaClass/MediaForm/MediaType/MediaWireFormat/MediaPortDirection/
 // PortMultiplicity/MediaPortSpec/MediaCompat/media_types_compatible/Media/MediaPayload/MediaFingerprint/
 // MediaError/MediaConverter/AppIo/ArtifactPresentation/ConfigFieldShape/ConfigFieldSpec/ConfigSpec/

@@ -59,7 +59,11 @@ impl Block3dDiff {
         if let Some(v) = &self.schema { next.schema = v.clone(); }
         if let Some(v) = &self.object_kind { next.object_kind = v.clone(); }
         if let Some(d) = &self.representations { next.representations = apply_delta!(&next.representations, d, |i: &BlockRepresentation| i.id.as_str()); }
-        if let Some(d) = &self.vortex_kinds { next.vortex_kinds = apply_delta!(&next.vortex_kinds, d, |i: &Block3dVortexKind| i.id.as_str()); }
+        if let Some(d) = &self.vortex_kinds {
+            let current = crate::artifacts::block3d::vortex_kinds_of_parts(&next.catalog, &next.vortex_kind_extra);
+            let merged = apply_delta!(&current, d, |i: &Block3dVortexKind| i.id.as_str());
+            crate::artifacts::block3d::set_vortex_kinds_parts(&mut next.catalog, &mut next.vortex_kind_extra, merged);
+        }
         if let Some(d) = &self.vortices { next.vortices = apply_delta!(&next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str()); }
         if let Some(d) = &self.compatibility { next.compatibility = apply_delta!(&next.compatibility, d, |i: &BlockCompatibilityRule| i.id.as_str()); }
         if let Some(d) = &self.attributes { next.attributes = apply_delta!(&next.attributes, d, |i: &BlockAttribute| i.key.as_str()); }
@@ -88,7 +92,11 @@ impl MutationDiff<Block3dSnapshot> for Block3dDiff {
         if let Some(v) = &self.schema { next.schema = v.clone(); }
         if let Some(v) = &self.object_kind { next.object_kind = v.clone(); }
         if let Some(d) = &self.representations { next.representations = apply_delta!(&next.representations, d, |i: &BlockRepresentation| i.id.as_str()); }
-        if let Some(d) = &self.vortex_kinds { next.vortex_kinds = apply_delta!(&next.vortex_kinds, d, |i: &Block3dVortexKind| i.id.as_str()); }
+        if let Some(d) = &self.vortex_kinds {
+            let current = crate::artifacts::block3d::vortex_kinds_of(&next);
+            let merged = apply_delta!(&current, d, |i: &Block3dVortexKind| i.id.as_str());
+            crate::artifacts::block3d::set_vortex_kinds(&mut next, merged);
+        }
         if let Some(d) = &self.vortices { next.vortices = apply_delta!(&next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str()); }
         if let Some(d) = &self.compatibility { next.compatibility = apply_delta!(&next.compatibility, d, |i: &BlockCompatibilityRule| i.id.as_str()); }
         if let Some(d) = &self.attributes { next.attributes = apply_delta!(&next.attributes, d, |i: &BlockAttribute| i.key.as_str()); }
@@ -154,9 +162,10 @@ pub fn diff_remove_representation(id: String) -> Block3dDiff {
     Block3dDiff { representations: Some(Block3dRepresentationsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 pub fn diff_set_vortex_kind(index: usize, item: Block3dVortexKind, base: &Block3dSnapshot) -> Block3dDiff {
+    let current = crate::artifacts::block3d::vortex_kinds_of(base);
     let mut delta = Block3dVortexKindsDelta { added: vec![item.clone()], ..Default::default() };
-    if block3d_index_of(&base.vortex_kinds, &item.id).is_none() {
-        let mut order: Vec<_> = base.vortex_kinds.iter().map(|e| e.id.clone()).collect();
+    if block3d_index_of(&current, &item.id).is_none() {
+        let mut order: Vec<_> = current.iter().map(|e| e.id.clone()).collect();
         order.insert(index.min(order.len()), item.id.clone());
         delta.reordered = Some(order);
     }

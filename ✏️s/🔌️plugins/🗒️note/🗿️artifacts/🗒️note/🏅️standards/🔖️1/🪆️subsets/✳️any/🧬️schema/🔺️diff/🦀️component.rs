@@ -25,6 +25,10 @@ pub struct NoteDiff {
     #[state(artifact)] pub pencil_width: Option<Option<f64>>,
     #[state(artifact)] pub eraser_radius: Option<Option<f64>>,
     #[state(artifact)] pub assets: Option<NoteAssetsDelta>,
+    /// 🔗️ Same double-`Option` shape as every optional-slot field in this ticket's plugins, for the
+    /// `R:any` forward link slot — schema/codec-complete, currently unset by any mutation (see the
+    /// snapshot field's own doc comment).
+    #[state(artifact)] pub linked_artifact: Option<Option<store::ArtifactLink>>,
     #[state(presence)] pub selected_block_ids: Option<NoteStringList>,
     #[state(presence)] pub active_utility_id: Option<String>,
     #[state(config)] pub engagement_input: Option<String>,

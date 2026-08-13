@@ -40,7 +40,8 @@ pub(crate) fn render(state: &RewriteSnapshot, cfg: &RewriteConfig, term_labels: 
             menu: None,
         }]);
     }
-    let nodes: Vec<&Node> = cfg.selected_node_ids.iter().filter_map(|id| fixture.nodes.iter().find(|node| &node.id == id)).collect();
+    let scene_nodes = fixture.nodes();
+    let nodes: Vec<&Node> = cfg.selected_node_ids.iter().filter_map(|id| scene_nodes.iter().find(|node| &node.id == id)).collect();
     if nodes.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "trinity-inspector.empty".into(),

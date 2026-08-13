@@ -12,7 +12,8 @@ pub mod add_vortex {
     pub struct AddVortex {}
 
     pub fn handle(_payload: &AddVortex, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
-        let Some(vortex_kind_id) = doc.snapshot.vortex_kinds.first().map(|kind| kind.id.clone()) else {
+        let vortex_kinds = crate::artifacts::block3d::vortex_kinds_of(doc.snapshot);
+        let Some(vortex_kind_id) = vortex_kinds.first().map(|kind| kind.id.clone()) else {
             return Ok(Emit::default());
         };
         let id = crate::artifacts::block3d::schema::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");

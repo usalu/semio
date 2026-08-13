@@ -9,14 +9,15 @@ use serde_json::json;
 pub(crate) fn render(fixture: &JackSnapshot, cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
     let jack_action = crate::apps::jack::jack_action;
     let builder = PanelTreeBuilder::new("trinity-document");
-    let node_items: Vec<UiTreeItemNode> = fixture
+    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+    let node_items: Vec<UiTreeItemNode> = scene
         .nodes
         .iter()
         .map(|node| {
             tree_item_with_action(builder.item_id("node", &node.id), Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }), Some(node.kind.clone()), jack_action("setSelection", Some(json!({ "ids": [node.id] }))))
         })
         .collect();
-    let edge_items: Vec<UiTreeItemNode> = fixture.edges.iter().map(|edge| tree_item(builder.item_id("edge", &edge.id), Label::data(format!("{} → {}", edge.source, edge.target)))).collect();
+    let edge_items: Vec<UiTreeItemNode> = scene.edges.iter().map(|edge| tree_item(builder.item_id("edge", &edge.id), Label::data(format!("{} → {}", edge.source, edge.target)))).collect();
     let selected = cfg.selected_node_ids.iter().map(|id| builder.item_id("node", id)).collect();
     builder
         .section("trinity-document.nodes", Some(labels.pieces.into()), true, node_items)

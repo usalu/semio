@@ -1,0 +1,21 @@
+=== REAL DUPLICATION (distinctive symbols present in BOTH old and new) ===
+
+🧩️wfc
+   old  10930 LOC,  626 distinctive syms   |   new  12289 LOC,  717 syms
+   ⇒ SHARED: 626  (DUPLICATED)
+      e.g. Ac4Engine, AdjacencyView, ArcSpec, Attempt, Beam, BeamConfig
+
+brep kernel/engine
+   old  17910 LOC, 1110 distinctive syms   |   new   1695 LOC,  234 syms
+   ⇒ SHARED: 234  (DUPLICATED)
+      e.g. Brep, BrepError, BrepKernel, BrepTopology, ClosestPoint, Entity
+
+DWG codec
+   old   2777 LOC,  166 distinctive syms   |   new   6170 LOC,  271 syms
+   ⇒ SHARED: 94  (DUPLICATED)
+      e.g. DWG_FILE_HEADER_LEN, DWG_SENTINEL_CLASSES_BEGIN, DWG_SENTINEL_CLASSES_END, DWG_SENTINEL_FILE_HEADER_END, DWG_SENTINEL_HEADER_VARS_BEGIN, DWG_SENTINEL_HEADER_VARS_END
+
+mesh-engine
+   old   1129 LOC,   72 distinctive syms   |   new   6466 LOC,  367 syms
+   ⇒ SHARED: 0  (clean/low overlap)
+

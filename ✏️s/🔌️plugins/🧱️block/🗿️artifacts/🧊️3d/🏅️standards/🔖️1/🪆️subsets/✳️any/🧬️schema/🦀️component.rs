@@ -1,9 +1,10 @@
 //! 🧬️ Block3d artifact schema — every field with its state class.
 
-use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate, Block3dSnapshot, BLOCK_3D_SCHEMA};
+use crate::artifacts::block3d::{Block3dVortexKindExtra, Block3dVortexTemplate, Block3dSnapshot, BLOCK_3D_SCHEMA};
 use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -15,7 +16,8 @@ pub struct Block3dArtifact {
     #[state(artifact)] pub schema: String,
     #[state(artifact)] pub object_kind: BlockKindIdentity,
     #[state(artifact)] pub representations: Vec<BlockRepresentation>,
-    #[state(artifact)] pub vortex_kinds: Vec<Block3dVortexKind>,
+    #[state(artifact)] #[child(kind = "s.stdio.semio.kit")] pub catalog: store::ArtifactChild<SemioKitSnapshot>,
+    #[state(artifact)] pub vortex_kind_extra: Vec<Block3dVortexKindExtra>,
     #[state(artifact)] pub vortices: Vec<Block3dVortexTemplate>,
     #[state(artifact)] pub compatibility: Vec<BlockCompatibilityRule>,
     #[state(artifact)] pub attributes: Vec<BlockAttribute>,
@@ -50,7 +52,8 @@ impl Block3dArtifact {
             schema: self.schema.clone(),
             object_kind: self.object_kind.clone(),
             representations: self.representations.clone(),
-            vortex_kinds: self.vortex_kinds.clone(),
+            catalog: self.catalog.clone(),
+            vortex_kind_extra: self.vortex_kind_extra.clone(),
             vortices: self.vortices.clone(),
             compatibility: self.compatibility.clone(),
             attributes: self.attributes.clone(),
@@ -66,7 +69,8 @@ impl Block3dArtifact {
             schema: snapshot.schema,
             object_kind: snapshot.object_kind,
             representations: snapshot.representations,
-            vortex_kinds: snapshot.vortex_kinds,
+            catalog: snapshot.catalog,
+            vortex_kind_extra: snapshot.vortex_kind_extra,
             vortices: snapshot.vortices,
             compatibility: snapshot.compatibility,
             attributes: snapshot.attributes,
@@ -92,7 +96,8 @@ impl Block3dArtifact {
         self.schema = snapshot.schema;
         self.object_kind = snapshot.object_kind;
         self.representations = snapshot.representations;
-        self.vortex_kinds = snapshot.vortex_kinds;
+        self.catalog = snapshot.catalog;
+        self.vortex_kind_extra = snapshot.vortex_kind_extra;
         self.vortices = snapshot.vortices;
         self.compatibility = snapshot.compatibility;
         self.attributes = snapshot.attributes;

@@ -1,9 +1,0 @@
-{
-  "extensionId": "flow-extension-bim",
-  "version": "0.0.0-dev",
-  "label": "flow-extension-bim",
-  "extends": "flow",
-  "moduleUrl": "/extensions/flow-extension-bim/semio_s_plugin_flow_extension_bim.js",
-  "packageHash": "dev:1786546640478",
-  "installedAt": 1786546640478
-}

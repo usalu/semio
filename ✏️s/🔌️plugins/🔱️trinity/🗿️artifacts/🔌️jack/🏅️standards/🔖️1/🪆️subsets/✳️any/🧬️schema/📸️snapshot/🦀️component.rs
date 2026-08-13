@@ -1,6 +1,11 @@
 //! 🧬️ Jack snapshot schema — artifact-lane fields only.
+//!
+//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` are gone from this STRUCT —
+//! replaced by a single composed `content: JackContentChild` slot (`s.stdio.semio.graph`). See
+//! `🗿️artifacts/🔌️jack/🦀️component.rs`'s `🔖️ContentBridge`/`🔖️WorkingScene` regions for the
+//! converter/handle/cache machinery this field depends on.
 
-use crate::artifacts::jack::{Camera, Edge, Manifest, Node};
+use crate::artifacts::jack::{Camera, JackContentChild, Manifest};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -19,8 +24,9 @@ pub struct JackSnapshot {
     #[serde(default)]
     pub manifest: Manifest,
     #[state(artifact)] pub camera: Camera,
-    #[state(artifact)] pub nodes: Vec<Node>,
-    #[state(artifact)] pub edges: Vec<Edge>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.graph")]
+    pub content: JackContentChild,
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root_node_id: Option<String>,
@@ -35,8 +41,7 @@ impl Default for JackSnapshot {
             manifest_id: None,
             manifest: Manifest::default(),
             camera: Camera::default(),
-            nodes: Vec::new(),
-            edges: Vec::new(),
+            content: crate::artifacts::jack::jack_content_child_handle_and_cache(Vec::new(), Vec::new()),
             root_node_id: None,
         }
     }

@@ -21,7 +21,7 @@ pub fn move_grip_2d(id: String, new_angle: f64, new_radius_2d: f64) -> Block5dMu
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for MoveGrip2d {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "grip", kind: "move-grip-2d", record: "MovedGrip2d" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "grip", kind: "move-grip2d", record: "MovedGrip2d" };
 
     fn diff(&self, base: &Block5dSnapshot) -> Block5dDiff {
         super::diff::diff(self, base)

@@ -770,6 +770,186 @@ The agent correctly **refused** step 3 (remove `MeshData` from the SDK's public 
 
 **Consequence for the mesh wave: `MeshData`'s blast radius is not the ~30 direct importers previously counted — it is those plus everything reaching it through this glob.** Recorded as the real gate on deleting `MeshData`.
 
+## ✅ FINAL AUDIT — nothing lost, nothing duplicated. All three windows CLOSED.
+
+Answering the user's requirement (*"no old code is lost or duplicated, just cleanly migrated"*) by measurement, with every apparent exception chased to ground rather than explained away.
+
+### Loss: 0
+
+```
+distinctive symbols in the 4 dying modules at session baseline : 5826
+still present somewhere in the tree                            : 5821
+apparent losses                                                :    5
+```
+The 5: `BrepEngineHost`, `BrepDocumentOpEngine`, `BREP_ENGINE_ID`, and their two tests (`host_derive_registers_brep_engine`, `kernel_lock_runs_box_prim`). **Each has 0 live code references.** These are not losses — `BrepEngineHost` is *this ticket's headline target*, the process-global `Mutex<EngineCache> + Mutex<Brep>` singleton the whole effort existed to remove. Deleting a singleton and the tests that exercised it **is** the deliverable. **Real loss: zero.**
+
+### Duplication: 0 — all three windows closed
+
+| Window | Before | After |
+|---|---|---|
+| `🧩️wfc` | 626 shared (total parity) | **dir deleted from math** ✅ |
+| DWG codec | 94 shared | **0 shared, old Rust file gone** ✅ |
+| brep contract | 234 shared | **18 → all interface-vs-implementation** ✅ |
+
+**Both residuals chased down and cleared:**
+- **brep's 18** (`fillet_edges`, `chamfer_edges`, `heal_solid`, `offset_solid`, `sew_faces`, `pipe`…) are the `BrepKernel` **trait declaring** operations whose **implementations** live in framework-3d's algorithm modules. Proof: stdio has `async fn fillet_edges(&mut self, …) -> Result<…>`; framework has `pub fn fillet_edges(` in `🎨️blend/`. An interface naming its implementation is not a copy.
+- **math↔assembly's 32** (`count_ones`, `add_edge`, `neighbors`, `in_degree`, `iter_ones`…) are generic method names on **unrelated types**. Proof: `count_ones` returns `usize` in math's `🎯️sampling`; `u32` in wfc's `🎛️bitset`. Coincidental naming.
+
+⚠️ **My coarse repo-wide scan reported 256 "shared" symbols and was wrong** — comparing every dying-module symbol against every artifact symbol makes any common word (`Node`, `Edge`, `Expr`, `Constraint`) collide. The pairwise per-window check is the correct instrument. **Fifth instance today of "grep to find, enumerate to count"**, and the third time I made the error myself.
+
+### 🛑 The agent refused my instruction, and was right — again
+
+My brief said *"delete `🧰️framework/🔨️modules/🔺️mesh/` entirely."* The agent found that directory holds **two unrelated files sharing a name**: the DWG codec (`🦀️component.rs`, deleted — fully duplicated in stdio) **and `🟦️component.ts`, a 26 KB TypeScript scene-protocol file, untouched since Aug 10, actively imported by `🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts`.** A literal `rm -rf` would have destroyed live, unrelated, un-migrated code. It deleted only the Rust file and said so.
+
+This is the emoji-path-overload trap in its most dangerous form yet: not two files with the same *name* in different places, but two unrelated files **inside one directory** whose name describes only one of them. **The directory was never "the mesh module" — it was a DWG codec and a TS protocol sharing a folder.**
+
+### Final gates
+
+```
+semio-framework-3d          396 / 0      (was 413 — 17 duplicate-coverage tests removed with their duplicate code)
+semio-framework              98 / 0      (was 127 — the 29 DWG+mesh-engine tests now live in their artifacts)
+semio-framework-mesh-engine  20 / 0      unchanged
+semio-s-plugin-stdio       2957 / 5      (was 2951 — same 5 pre-existing failures, by exact name)
+semio-s-plugin-procedural   503 / 3      0 check errors
+semio-framework-math        …            🧮️math 72,439 → 21,258 LOC
+workspace                   cargo metadata OK
+```
+
+## 🧨 A BASELINE I RELIED ON ALL EVENING WAS PARTLY FICTION — disk-full poisoning
+
+The state-architecture session (`26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION`) reported that the machine hit **100% disk** (257 MB free of 926 GB) earlier today. Cargo then fails with `No space left on device`, **which renders as output indistinguishable from real compile errors**. They watched `semio-s-plugin-procedural`'s count swing **94 → 16 → 116** across runs.
+
+**I had been treating "~93 pre-existing errors in procedural" as a settled fact since the M3b wave**, briefed it to three separate agents, and used it to justify *not* closing a 10,930-LOC duplication window. Re-measured after they freed 202 GB (disk now 77% used / 204 GiB free; this ticket's own `🎯️target` is down to 20 GB from ~118 GB, cleaned by wave IO1):
+
+```
+cargo check -p semio-s-plugin-procedural --all-targets  →  0 errors
+cargo test  -p semio-s-plugin-procedural --lib          →  503 passed, 3 failed
+```
+
+**The blocker did not exist by the time I was citing it.** And the peer was scrupulous about the epistemics in a way worth copying: they explicitly told me *not* to trust their own `94 → 16 → 116` framing either, since they couldn't separate real errors from failed writes from my live edits landing between their runs — the only figure they'd stand behind was the end state they measured after freeing space. I verified that end state independently rather than adopting it.
+
+**Rule: a cargo error count taken while the disk is near-full is not a measurement.** Check `df` before trusting a surprising error count, and never let one become a durable premise without re-measuring.
+
+### ✅ Consequence: the `🧩️wfc` deletion is now validated by TESTS, not just parity
+
+I closed that window on symbol-parity evidence alone (626/626) because the destination could not be test-verified. It now can be, and it passes:
+```
+artifacts::assembly::…::schema::diff::tests::upsert_by_id_replaces_in_place_never_duplicates ... ok
+artifacts::assembly::…::schema::diff::tests::absorb_composes_to_the_same_result_as_applying_sequentially ... ok
+artifacts::assembly::…::schema::diff::tests::absorb_a_later_remove_wins_over_an_earlier_upsert_of_the_same_id ... ok
+… (diff/absorb laws green)
+```
+The Assembly artifact's diff algebra holds. The deletion was safe, and is now *provably* safe rather than *defensibly* safe.
+
+## 🔓 The `🔺️mesh` cycle dissolved on its own — it was positional, not structural
+
+I recorded the last DWG caller (`📐️brep/📦️mesh-io` → `semio_framework::mesh_to_dwg_drawing`) as a hard structural blocker: framework-tier crate, stdio depends on it, reverse edge is a cycle. **That was true only while the file sat in `🧊️3d`.** `📦️mesh-io` has since moved to `✳️brep/🧬️schema/⚙️engine/📦️mesh-io/` (verified by realpath: mounted from `✳️brep/…/⚙️engine/🦀️component.rs`), so the caller is now *inside* stdio and there is no cycle to close.
+
+Re-censused every remaining `semio_framework::` DWG reference: **all of them are in `💻️os/🦀️component.rs`, which is unmounted dead code** (realpath resolution: zero mounts). The framework glue's `pub mod mesh;` and `pub use mesh::{…}` blocks are already gone; `cargo check -p semio-framework --all-targets` → **0 errors**.
+
+**Lesson: "this is a dependency cycle" can be a fact about where a file currently sits, not about the code.** Moving the file dissolved it. Worth checking before recording a cycle as structural — I'd have kept `🔺️mesh` alive indefinitely on a blocker that a sibling wave had already removed.
+
+## 🔬 LOSS / DUPLICATION AUDIT — measured, not recalled (user request)
+
+> *"Make sure that no old code is lost or duplicated. Just cleanly migrated to accurate composable artifacts."*
+
+Answered with a repo-wide symbol census rather than from memory. Method: extract every `fn`/`struct`/`enum`/`trait`/`type`/`const`/`static` definition name, discard generic names (`new`/`default`/`fmt`/`from`/`into`/…) and names ≤3 chars, then compare sets.
+
+### Loss: ZERO — and this is the strong direction of the result
+
+```
+distinctive symbols in the 4 dying modules at this session's baseline (3550b3dc09, 10:05) : 5826
+of those, still defined SOMEWHERE in the working tree now                                 : 5826
+LOST (defined nowhere)                                                                    :    0
+```
+Every symbol survives. Combined with the per-wave test arithmetic (math 1738 → … → its current count, with each decrement exactly matching what the destination gained), nothing has been silently dropped.
+
+### Duplication: three windows found, ~14,200 LOC existing twice
+
+| Window | Old | New | Shared distinctive symbols |
+|---|---|---|---|
+| `🧩️wfc` | `🧮️math/🧩️wfc` 10,930 | `🧩️assembly/…/🧩️wfc-engine` | **626 of 626 — total parity** |
+| brep contract | `🧊️3d/📐️brep` | `✳️brep/🧬️schema/⚙️engine` 1,695 | **234** |
+| DWG codec | `🔺️mesh` 1,648 | `🖊️dwg/🔖️ac1024/🚪️io` | **94** |
+| mesh-engine | `🔺️mesh-engine` 1,129 | `✳️mesh` | **0** — not yet migrated, so not duplicated |
+
+⚠️ **A first pass of this audit reported 317/815/96/8 "duplicated definitions" and was wrong** — it counted generic names (`fn add`, `fn fmt`, `fn export`, and a `const fn` parse artifact) colliding across unrelated files. Filtering to distinctive symbols gave the real figures above. *Grep to find, enumerate to count* — the same rule this ticket has now violated and corrected four times.
+
+### `🧩️wfc` window CLOSED by the coordinator
+
+Safety established before deleting, not after: the copy compiles (**0 errors inside `🧩️assembly`**, the ~93 errors in that crate are all pre-existing `procedural2d`/`procedural3d` breakage), **626/626 symbol parity**, and the only remaining `math::wfc` mention repo-wide is a doc comment in brep's error module describing a naming convention. Removed the `pub mod wfc { … }` block and the directory in one change.
+
+```
+🧮️math: 32,610 → 21,258 LOC     workspace OK     cargo check -p semio-framework-math --all-targets → 0 errors
+remaining: 🎯️sampling 9,809 · 🕸️graph 7,930 (Jack DSL) · 🔢️number 3,456
+```
+
+This is the wave the earlier M3d correctly refused — it could not test-verify the copy, so it declined to delete. That refusal was right *for an agent working from inside one wave*. With the parity evidence in hand, the deletion is safe, and the coordinator is the right actor for it. **Wave DEDUP dispatched to close the remaining two windows.**
+
+## 🏆 IO1 — the artifact-io path was SILENTLY DEAD REPO-WIDE. That is the finding of the wave.
+
+The user's ruling was *"all importers and exporters must flow over the io mechanism of artifacts."* IO1 went to enforce it and discovered **the mechanism was not running at all.**
+
+`registry_export_media`/`registry_import_media` in `💻️os/🖥️host/🦀️component.rs` are the bridge that is supposed to *try the typed artifact-io registry first* and only then fall back. Two independent bugs made that first branch unreachable **for every artifact and every format**:
+1. it looked up the wrong id-namespace — `ArtifactKindSpec.id` instead of the real `Dialect.artifact_kind`;
+2. a double-`"stdio."` prefix in the constructed key.
+
+So every import/export in the product had been silently taking the escape hatch, and the artifact `🚪️io` facets — including the ones this ticket has been authoring all day — were never being consulted at that boundary. **Both bugs fixed, and that fix is what made the rest of the migration possible.** A mechanism that is mandated, present, tested in isolation, and never actually invoked is the most expensive kind of dead code: everything downstream looks compliant.
+
+### Delivered
+
+- **`register_solid_exporter` / `register_solid_importer` / `register_dwg_import_handler` deleted outright** — function, registry, self-tests, and the host's now-unused `semio-framework-3d` dependency (`🖥️host/Cargo.toml:31` now carries a deletion note in its place). Verified: the only surviving occurrences in the live host are **comments recording the removal**.
+- **`register_mesh_exporter`/`register_mesh_importer`**: OBJ/STL registrations deleted; **GLB kept as an evidenced remainder** — no `"s.stdio.glb"` dialect exists in stdio's format catalog, so there is nowhere conforming to route it yet. Named, not hidden.
+- **Census correction**: 24 real registrants, not the ~68 my brief estimated — several plugins had already migrated in an earlier unrelated wave.
+- **An inversion of my own warning**: I briefed the *registrants* as the hidden coupling. In fact the **read** side (`export_registered_solid`/`import_registered_solid`) had **zero production callers** — cad's real solid path already called the genuine stdio serializer/deserializer leaves directly, bypassing the registry entirely. The escape hatch was less load-bearing than either of us thought.
+
+Verified: framework-3d **413/0**, stdio **2943/5** (same 5 named baseline failures), process **158/0**, `semio-framework-os` clean, workspace OK.
+
+**Job 4 (delete the duplicated brep kernel) blocked on real evidence**: `semio-s-plugin-flow-extension-brep` and several other live consumers still name `semio_framework_3d::brep` directly. Reported precisely rather than forced — correct under the ruling, which exempts proven structural blockers but not effort.
+
+⚠️ **Operational catch worth keeping**: the agent found the disk at **92% full — this ticket's own `🎯️target` had grown to 118 GB** — and cleaned it before finishing. All its numbers are post-clean. Disk now 80% used / 182 GiB free. A per-ticket target dir is not free; check it on long sessions.
+
+### 🧹 Housekeeping note, deliberately not acted on
+
+`💻️os/🦀️component.rs` still holds **13 references** to the now-deleted registries — but it is the **unmounted dead twin** (re-confirmed this session: mounts resolving to it = **0**). Left untouched: I told IO1 to stay out, deleting unmounted code is a separate decision, and it belongs to whoever owns that file. Recorded so the next grep of these symbols is not misread as incomplete work.
+
+## ✅ M3e — completed on a later pass; window CLOSED, and it survived a real cross-wave collision
+
+Final state: both `🧮️math/🎲️entropy` and `🧮️math/🌫️fuzzy` gone from disk, homes compiling, tests at baseline. `🎲️entropy` → `✳️table/🧬️schema/🎲️entropy-internals` + a genuine `InferredField<SemioTableSnapshot>` at `💡️inferences/🎲entropy` (Shannon entropy per column, any kind — a broader gate than `📊moments`'s numeric-only), with a `BTreeMap`-based `dep_input` for determinism. `🌫️fuzzy` → `✳️value/🧬️schema/🌫️fuzzy-internals`, **parked with no inference and documented as parked**.
+
+**The collision is the instructive part.** Mid-verification, sibling wave M3d removed `semio_framework_math::algebra` entirely — breaking not only M3e's new `fuzzy-internals` but **two pre-existing stdio files** (`📊️statistics-internals`, `🔗️causal-internals`) that also depended on it. Only the compiler surfaced it. M3e resolved it **without entering M3d's off-limits directories**: recovered the needed `VecD`/`MatD` subset byte-identically via `git show`, landed it as `✳️value/🧬️schema/➕️algebra-internals/` mirroring the duplication pattern `🏗️fem` had already established, and repointed all three broken files.
+
+That is the right shape of response to a cross-wave break: repair from your own side, never reach into the other wave's territory. Verified after: stdio **2951 passed / 5 failed** (byte-identical baseline names), math **773 / 2**, both `--all-targets` checks clean.
+
+## ✅ M3d + M3e — `🧮️math` is now 32,610 LOC (from 72,439). Both windows closed.
+
+```
+🧮️math remaining:  🧩️wfc 10,930 (duplicated, window open BY CHOICE) · 🎯️sampling 9,809
+                   🕸️graph 7,930 (Jack DSL) · 🔢️number 3,456 · ➕️algebra 311 remnant
+verified:          math 773 passed / 2 failed  ·  framework-3d 413/0  ·  workspace OK  ·  math check 0 errors
+```
+
+**M3d — photogrammetry family → `📸️remodel`.** `🎯️optimize`/`🔷️lie`/`📶️signal`/`🗺️spatial`/`➕️algebra` moved into `✳️any/🧬️schema/*-internals` (confirmed on disk), 8 remodel + 6 fem files repointed, both `Cargo.toml`s narrowed, 5 mounts removed from math's glue. Authored a genuine `impl store::InferredField<RemodelSnapshot>` — `RemodelRelativeCameraPose`, a real parent-linked DAG over `results.trajectory.poses` using `crate::lie`'s `Se3`/`So3`, with 6 tests. Not a library dump.
+
+**M3e — entropy + fuzzy.** `🎲️entropy` (9,881) → `✳️table/🧬️schema/🎲️entropy-internals` plus a real `InferredField` at `💡️inferences/🎲entropy`; `🌫️fuzzy` (2,449) → `✳️value/🧬️schema/🌫️fuzzy-internals`, **deliberately parked without an inference** and documented as such in the file header, because it has zero consumers and no evidence of an owning domain. Inventing a plugin to host it would have been fabrication.
+
+### Two corrections the agents made to MY briefs
+
+1. **M3d on the algebra split**: my brief asserted fem needs "sparse CG/Cholesky". False — fem already has its own independent sparse stack. The real boundary is a 302-line dense-basics region (duplicated into fem) versus the rest (moved wholesale to remodel). Cut at the measured seam, not my imagined one.
+2. **M3d found a coupling the sole-consumership check missed**: `🌫️fuzzy` used `crate::algebra::{MatD, VecD}` internally. It resolved *from the other side* mid-wave when M3e dissolved fuzzy out of math — caught live via `git status`, not assumed.
+
+### The WFC window stays open, correctly
+
+M3d re-measured `semio-s-plugin-procedural`: **still 93 lib / 103 lib-test errors**, identical to the earlier baseline, all in `procedural2d`/`procedural3d`, none touching the assembly destination. **It refused to delete `🧮️math/🧩️wfc`** — a copy you cannot test is not a verified copy. Right call; the window closes when someone clears that unrelated pre-existing breakage.
+
+### ⚠️ Coordinator intervention: I closed M3e's window myself
+
+M3e and M3d both terminated into **polling loops**, repeatedly reporting "still waiting" on background cargo builds contending for the target-dir lock — burning tokens without progressing. M3e had left **unverified code mounted in stdio's `📦️glue.rs`** and said so honestly.
+
+I verified rather than assumed: `cargo check -p semio-s-plugin-stdio --all-targets` → **0 errors** (its work was sound, merely unverified), external references to `math::entropy`/`math::fuzzy` → **0**. Then removed both mounts from math's glue and deleted the directories in one change: `cargo metadata` → OK, `cargo check -p semio-framework-math --all-targets` → **0 errors**.
+
+**Dispatch lesson:** an agent told to gate on a slow shared-lock build can spend its whole remaining budget waiting. Future briefs should say: if a verification build is blocked on lock contention for more than one poll, **report the state and stop** — leave the verification to the coordinator, who owns the target dir.
+
 ## 🚪️ NEW BINDING RULING — io through artifacts; effort is not an exemption
 
 > *"All importers and exporters must flow over the io mechanism of artifacts. Everything must be migrated to artifacts, no matter the effort, unless it is domain-neutral framework functionality."*

@@ -71,7 +71,7 @@ fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> Vid
     let mut recent: Vec<&FrameRef> = stream.frames.iter().rev().take(BLUR_GATE_ROLLING_WINDOW).collect();
     recent.reverse();
     for frame in recent {
-        let Some(asset) = scene.assets.get(&frame.asset_id) else { continue };
+        let Some(asset) = crate::artifacts::remodel::remodel_asset(&scene.assets, &frame.asset_id) else { continue };
         let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&asset.data) else { continue };
         let Ok(image) = decode_still_image(&asset.mime, &bytes) else { continue };
         scratch.rolling_scores.push_back(local_sharpness_score(&image));

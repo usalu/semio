@@ -121,9 +121,13 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 serde.workspace = true
 serde_json.workspace = true
 
-procedural = { path = "../../../🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural" }
-cad = { path = "../../../📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
-puzzle = { path = "../../../🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
-sourcing = { path = "../../../🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
-process = { path = "../../../🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
-gis = { path = "../../../🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis" }
+# 🔌️ `default-features = false` switches OFF each pane plugin's `plugin-entry` feature: this
+# crate bundles all six into ONE component and owns the single `semio_plugin_install_bundle`
+# entry point. Without this, seven crates export that `#[no_mangle]` symbol and the component
+# fails to link with duplicate-symbol errors.
+procedural = { path = "../../../🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural", default-features = false }
+cad = { path = "../../../📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad", default-features = false }
+puzzle = { path = "../../../🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle", default-features = false }
+sourcing = { path = "../../../🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing", default-features = false }
+process = { path = "../../../🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process", default-features = false }
+gis = { path = "../../../🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis", default-features = false }

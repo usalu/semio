@@ -208,8 +208,8 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
             Some(_) => {}
         }
     }
-    if before.kind_catalogs != after.kind_catalogs {
-        mutations.push(replace_kind_catalogs(after.kind_catalogs.clone()));
+    if before.kind_catalogs != after.kind_catalogs || before.kind_catalogs_extra != after.kind_catalogs_extra {
+        mutations.push(replace_kind_catalogs(crate::artifacts::puzzle5d::kind_catalogs_of(&after.kind_catalogs, &after.kind_catalogs_extra)));
     }
     mutations
 }
@@ -229,9 +229,37 @@ pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzl
 // `serde_json::Value` scratch fixture. Bridging `Puzzle5dMutation`/`Puzzle5dDiff` onto that `Value`
 // boundary round-trips through the typed `Puzzle5dSnapshot` (`serde_json::from_value`/`to_value`)
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`'s bridge exactly.
+//
+// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4d: `Puzzle5dDocument.kind_catalogs:
+// Option<Value>` (the app's own untyped scratch fixture, `🎛️apps/🖐️5d/🦀️component.rs`) still carries
+// the LEGACY embedded-catalog shape end to end — the catalogue panel / mesh-resolution UI reads it
+// directly and `kit:in` media import writes it directly, both untouched by this migration since they
+// never round-trip through the typed `Puzzle5dSnapshot`. But `serde_json::to_value(a_document)` DOES
+// feed straight into this bridge's `from_value::<Puzzle5dSnapshot>` calls below, and the composed
+// `Puzzle5dSnapshot::kind_catalogs` field now expects the `{childId,target}` handle shape, not the
+// embedded one — a raw `Puzzle5dDocument`-sourced `Value` would otherwise fail that one field's
+// deserialize, and because serde fails the WHOLE struct (not just one field) on a shape mismatch,
+// `unwrap_or_default()` would silently reset every other field too. `normalize_kind_catalogs_for_
+// snapshot_value` is the one guard every `from_value::<Puzzle5dSnapshot>` call in this region funnels
+// through to prevent that — never assume an inbound `Value` is already handle-shaped.
+fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
+    let mut value = value.clone();
+    let Some(object) = value.as_object_mut() else { return value };
+    let is_embedded = object.get("kindCatalogs").map(|catalogs| catalogs.is_object() && catalogs.get("childId").is_none()).unwrap_or(false);
+    if !is_embedded {
+        return value;
+    }
+    let Some(catalogs_value) = object.remove("kindCatalogs") else { return value };
+    let catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs = serde_json::from_value(catalogs_value).unwrap_or_default();
+    let (handle, extra) = crate::artifacts::puzzle5d::split_and_seed_kind_catalogs(Some(catalogs));
+    if let Ok(handle_value) = serde_json::to_value(&handle) { object.insert("kindCatalogs".into(), handle_value); }
+    if let Ok(extra_value) = serde_json::to_value(&extra) { object.insert("kindCatalogsExtra".into(), extra_value); }
+    value
+}
+
 impl MutationDiff<Value> for Puzzle5dDiff {
     fn apply(&self, projection: &Value) -> Value {
-        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
         let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base);
         serde_json::to_value(next).unwrap_or_else(|_| projection.clone())
     }
@@ -245,12 +273,12 @@ impl Mutation<Value> for Puzzle5dMutation {
     type Diff = Puzzle5dDiff;
 
     fn diff(&self, projection: &Value) -> Puzzle5dDiff {
-        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::diff(self, &base)
     }
 
     fn inverse(&self, projection: &Value) -> Vec<Self> {
-        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::inverse(self, &base)
     }
 }
@@ -259,8 +287,8 @@ impl Mutation<Value> for Puzzle5dMutation {
 /// bare document JSON the play app mutates), by round-tripping through the typed
 /// `Puzzle5dSnapshot` and delegating to [`puzzle5d_snapshot_mutations`].
 pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
-    let before_snapshot: Puzzle5dSnapshot = serde_json::from_value(before.clone()).unwrap_or_default();
-    let after_snapshot: Puzzle5dSnapshot = serde_json::from_value(after.clone()).unwrap_or_default();
+    let before_snapshot: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(before)).unwrap_or_default();
+    let after_snapshot: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(after)).unwrap_or_default();
     if before_snapshot == after_snapshot {
         return Vec::new();
     }

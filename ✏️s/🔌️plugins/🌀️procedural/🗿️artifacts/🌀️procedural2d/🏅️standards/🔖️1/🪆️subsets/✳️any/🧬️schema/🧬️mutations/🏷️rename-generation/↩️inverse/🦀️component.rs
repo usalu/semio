@@ -1,7 +1,8 @@
 //! ↩️ Inverse for `RenameGeneration`, reconstructed from BASE.
 use super::mutation::RenameGeneration;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
-use crate::artifacts::procedural2d::{widget_id, widget_index, Procedural2dSnapshot};
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
+use crate::artifacts::procedural2d::mutations::{rename_generation, widget_index};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RenameGeneration, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

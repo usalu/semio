@@ -47,7 +47,8 @@ mod tests {
             frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: "asset-1".into() }],
             source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
-        scene.assets.insert("asset-1".into(), ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 });
+        let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
+        scene.assets.insert("asset-1".into(), crate::artifacts::remodel::mint_and_stash_asset("asset-1", &asset_one));
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),
@@ -75,7 +76,7 @@ mod tests {
         scene.results.dense =
             Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
         scene.results.mesh = RemodelMesh {
-            mesh: semio_framework::mesh_from_kind("box"),
+            mesh: crate::artifacts::remodel::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
             source: MeshSource::Reconstructed,
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot {
@@ -125,6 +126,13 @@ mod tests {
     #[test]
     fn populated_scene_roundtrips_through_dsl() {
         store::os_store::test_support::assert_dsl_round_trip(&populated_scene_fixture());
+    }
+
+    #[test]
+    fn debug_verify_example_dsl_semio_fixture_parses() {
+        let text = include_str!("../../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+        let parsed = <RemodelSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("regenerated fixture parses");
+        assert_eq!(parsed.results.mesh.source, crate::artifacts::remodel::MeshSource::Placeholder);
     }
 }
 //#endregion 🧪️Tests

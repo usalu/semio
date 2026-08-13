@@ -1,7 +1,15 @@
 //! 🧬️ Jack diff schema — sparse field delta over the artifact.
+//!
+//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` deltas collapsed into a
+//! single `content: Option<JackContentChild>` (always-present slot, never-absent-only-replaced shape
+//! — matches `dag`'s/`writer`'s precedent, not `lowpoly`'s `Option<Option<_>>` optional-slot shape,
+//! since jack's content always exists). `JackNodesDelta`/`JackEdgesDelta`/`JackNodePatch*`/
+//! `JackEdgePatch*` are gone — every triad's `🔺️diff` now reads the current scene via
+//! `jack_working_scene(base)`, applies its own specific semantics to a clone, and calls
+//! `diff_replace_content`.
 
 use crate::artifacts::jack::schema::JackEditorSelection;
-use crate::artifacts::jack::{Camera, Edge, Node};
+use crate::artifacts::jack::{Camera, JackContentChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -17,8 +25,7 @@ pub struct JackDiff {
     #[state(artifact)] pub manifest_id: Option<Option<String>>,
     #[state(artifact)] pub manifest: Option<crate::artifacts::jack::Manifest>,
     #[state(artifact)] pub camera: Option<Camera>,
-    #[state(artifact)] pub nodes: Option<JackNodesDelta>,
-    #[state(artifact)] pub edges: Option<JackEdgesDelta>,
+    #[state(artifact)] pub content: Option<JackContentChild>,
     #[state(artifact)] pub root_node_id: Option<Option<String>>,
     #[state(presence)] pub selected_node_ids: Option<JackStringList>,
     #[state(presence)] pub active_fixture_id: Option<String>,
@@ -42,62 +49,5 @@ pub struct JackDiff {
 #[serde(rename_all = "camelCase", default)]
 pub struct JackStringList {
     pub values: Vec<String>,
-}
-
-/// 🧩 Identified-collection delta for `nodes`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct JackNodesDelta {
-    pub added: Vec<Node>,
-    pub removed: Vec<String>,
-    pub patched: Vec<JackNodePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched node entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct JackNodePatchEntry {
-    pub id: String,
-    pub patch: JackNodePatch,
-}
-
-/// 🩹 Node geometry/name patch.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct JackNodePatch {
-    pub name: Option<String>,
-    pub x: Option<f64>,
-    pub y: Option<f64>,
-    pub width: Option<f64>,
-    pub height: Option<f64>,
-    pub key: Option<String>,
-    pub value_json: Option<Option<String>>,
-}
-
-/// 🧩 Identified-collection delta for `edges`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct JackEdgesDelta {
-    pub added: Vec<Edge>,
-    pub removed: Vec<String>,
-    pub patched: Vec<JackEdgePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched edge entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct JackEdgePatchEntry {
-    pub id: String,
-    pub patch: JackEdgePatch,
-}
-
-/// 🩹 Edge property patch (key cleared when value is null).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct JackEdgePatch {
-    pub key: Option<String>,
-    pub value_json: Option<Option<String>>,
 }
 //#endregion 🔖️DeltaHelpers

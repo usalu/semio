@@ -1,7 +1,8 @@
 //! ↩️ Inverse for `ReplaceSynapse`, reconstructed from BASE.
 use super::mutation::ReplaceSynapse;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
-use crate::artifacts::procedural2d::{widget_id, widget_index, Procedural2dSnapshot};
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
+use crate::artifacts::procedural2d::mutations::{replace_synapse, synapse_index, widget_index};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceSynapse, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

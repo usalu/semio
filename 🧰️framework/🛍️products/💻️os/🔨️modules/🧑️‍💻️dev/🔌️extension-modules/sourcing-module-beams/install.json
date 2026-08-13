@@ -1,9 +1,0 @@
-{
-  "extensionId": "sourcing-module-beams",
-  "version": "0.0.0-dev",
-  "label": "sourcing-module-beams",
-  "extends": "sourcing",
-  "moduleUrl": "/extensions/sourcing-module-beams/semio_s_plugin_sourcing_beams.js",
-  "packageHash": "dev:1786381108394",
-  "installedAt": 1786381108394
-}

@@ -14,35 +14,24 @@ role = "framework"
 [lib]
 path = "📦️glue.rs"
 
+# 🚪️ `brep`'s `dep:semio-framework`/`dep:async-trait`/`dep:base64`/`dep:blake3`/`dep:pollster`
+# REMOVED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP):
+# they were only used by `⚙️engine`'s deleted `BrepKernel`/`Brep`/`BrepEngineHost` consumer-contract
+# duplicate and `🧰️kernel`'s `Brep` implementation, both now solely at
+# `semio_s_plugin_stdio::…::subsets::brep::schema::engine`. Repo-wide grep across the WHOLE 🧊️3d
+# tree (not just brep/) confirmed zero remaining uses of any of the five. `semio-framework-os-kernel`
+# stays — `🕸️topology`'s `EngineRep` still uses it.
 [features]
 default = ["parallel", "brep"]
 parallel = ["dep:rayon", "dep:futures"]
-brep = [
-    "dep:semio-framework",
-    "dep:semio-framework-os-kernel",
-    "dep:async-trait",
-    "dep:base64",
-    "dep:blake3",
-    "dep:pollster",
-]
+brep = ["dep:semio-framework-os-kernel"]
 
 [dependencies]
-async-trait = { version = "0.1.88", optional = true }
-base64 = { version = "0.22", optional = true }
 futures = { version = "0.3.31", optional = true }
-pollster = { version = "0.4.0", optional = true }
 rayon = { version = "1.10.0", optional = true }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 semio-framework-math = { workspace = true }
 semio-framework-geometry = { workspace = true }
-semio-framework = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true, optional = true }
-blake3 = { version = "1", optional = true }
-[dev-dependencies]
-criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
-[[bench]]
-name = "kernel"
-path = "benches/kernel.rs"
-harness = false

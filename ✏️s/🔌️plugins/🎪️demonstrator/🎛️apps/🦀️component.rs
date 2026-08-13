@@ -98,7 +98,7 @@ mod tests {
     #[test]
     fn every_pane_declares_a_document_schema() {
         for app in test_bundle().manifest.apps {
-            assert!(!app.document.is_empty(), "app {} declares no document schema", app.id);
+            assert!(!app.io.document_schema.is_empty(), "app {} declares no document schema", app.id);
         }
     }
 }

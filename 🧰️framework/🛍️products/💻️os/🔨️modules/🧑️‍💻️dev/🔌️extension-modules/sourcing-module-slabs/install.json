@@ -1,9 +1,0 @@
-{
-  "extensionId": "sourcing-module-slabs",
-  "version": "0.0.0-dev",
-  "label": "sourcing-module-slabs",
-  "extends": "sourcing",
-  "moduleUrl": "/extensions/sourcing-module-slabs/semio_s_plugin_sourcing_slabs.js",
-  "packageHash": "dev:1786381108403",
-  "installedAt": 1786381108403
-}

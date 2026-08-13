@@ -17,11 +17,12 @@ pub fn deserialize(from: &PdfSnapshot) -> Result<NoteSnapshot, String> {
     snap.title = Some("Imported PDF".into());
     let page = from.pages.first().cloned().unwrap_or_default();
     let PdfPage { media_box: [x0, y0, x1, y1], text, .. } = page;
+    let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text, bold: None, italic: None, underline: None, link: None }] }];
     snap.blocks.push(NoteBlockNode::Text {
+        content: crate::artifacts::note::note_text_child_handle_and_cache("pdf-text-1", &paragraphs),
         id: "pdf-text-1".into(), name: "PDF".into(), x: 0.0, y: 0.0,
         width: (x1 - x0).max(1.0), height: (y1 - y0).max(1.0),
         rotation: 0.0, visible: true, locked: false,
-        paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text, bold: None, italic: None, underline: None, link: None }] }],
         font_size: 12.0, font_weight: "normal".into(), align: "left".into(),
     });
     Ok(snap)

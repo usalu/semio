@@ -6,11 +6,12 @@ use crate::artifacts::jack::JackSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::DeleteNode, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
-    let Some(node) = base.nodes.iter().find(|node| node.id == payload.id) else {
+    let nodes = base.nodes();
+    let Some(node) = nodes.iter().find(|node| node.id == payload.id) else {
         return Vec::new();
     };
     let mut out = vec![create_node(node.clone())];
-    for edge in base.edges.iter().filter(|edge| {
+    for edge in base.edges().iter().filter(|edge| {
         crate::artifacts::jack::port_node_id(&edge.source) == Some(payload.id.as_str()) || crate::artifacts::jack::port_node_id(&edge.target) == Some(payload.id.as_str())
     }) {
         out.push(create_edge(edge.clone()));

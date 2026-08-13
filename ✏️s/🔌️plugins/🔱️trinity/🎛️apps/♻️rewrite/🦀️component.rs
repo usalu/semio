@@ -159,7 +159,8 @@ pub(crate) fn after_fixture_json(state: &RewriteSnapshot) -> String {
 
 pub(crate) fn sync_select_var_from_node(fixture_json: &str, node_id: &str) -> Option<String> {
     let fixture = parse_fixture_json(fixture_json)?;
-    let node = fixture.nodes.iter().find(|node| node.id == node_id)?;
+    let nodes = fixture.nodes();
+    let node = nodes.iter().find(|node| node.id == node_id)?;
     var_from_node_name(&node.name)
 }
 
@@ -188,16 +189,16 @@ fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewrite::schema::Lhs, rule
         nodes.push(semantic_rule_node("lhs-where", "rewrite.where", where_clause, 220.0, 80.0, rule_layout));
         edges.push(crate::artifacts::jack::Edge { id: "lhs-match-where".into(), kind: "rewrite.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
     }
-    JackSnapshot {
-        schema: JackSnapshot::SCHEMA.into(),
-        name: "lhs".into(),
-        manifest_id: Some("nakagin".into()),
-        manifest: crate::artifacts::jack::Manifest::nakagin_default(),
-        camera: Camera { x: 0.0, y: 0.0, zoom: 1.0 },
+    JackSnapshot::with_content(
+        JackSnapshot::SCHEMA.into(),
+        "lhs".into(),
+        Some("nakagin".into()),
+        crate::artifacts::jack::Manifest::nakagin_default(),
+        Camera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes,
         edges,
-        root_node_id: None,
-    }
+        None,
+    )
 }
 
 fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
@@ -236,16 +237,16 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPo
     if nodes.is_empty() {
         nodes.push(semantic_rule_node("rhs-empty", "rewrite.create", "result:Piece", 0.0, 0.0, rule_layout));
     }
-    JackSnapshot {
-        schema: JackSnapshot::SCHEMA.into(),
-        name: "rhs".into(),
-        manifest_id: Some("nakagin".into()),
-        manifest: crate::artifacts::jack::Manifest::nakagin_default(),
-        camera: Camera { x: 0.0, y: 0.0, zoom: 1.0 },
+    JackSnapshot::with_content(
+        JackSnapshot::SCHEMA.into(),
+        "rhs".into(),
+        Some("nakagin".into()),
+        crate::artifacts::jack::Manifest::nakagin_default(),
+        Camera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes,
         edges,
-        root_node_id: None,
-    }
+        None,
+    )
 }
 
 pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
@@ -267,7 +268,7 @@ fn node_id_for_var(fixture_json: &str, var: &str) -> Option<String> {
         return None;
     }
     let fixture = JackSnapshot::from_json(fixture_json).ok()?;
-    fixture.nodes.iter().find(|node| node.name.starts_with(&format!("{var}:")) || node.name == var || var_from_node_name(&node.name).as_deref() == Some(var)).map(|node| node.id.clone())
+    fixture.nodes().iter().find(|node| node.name.starts_with(&format!("{var}:")) || node.name == var || var_from_node_name(&node.name).as_deref() == Some(var)).map(|node| node.id.clone())
 }
 
 fn graph_hover(fixture_json: &str, hover_var: &str, hover_node_id: &str) -> Option<semio_framework_plugin::NodeGraphHover> {
@@ -985,7 +986,7 @@ mod tests {
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64");
         let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).expect("decode pack");
         let expected = JackSnapshot::from_json(&after_fixture_json(&app.snapshot().unwrap())).unwrap();
-        assert_eq!(fixture.nodes.len(), expected.nodes.len());
+        assert_eq!(fixture.nodes().len(), expected.nodes().len());
     }
 
     #[test]

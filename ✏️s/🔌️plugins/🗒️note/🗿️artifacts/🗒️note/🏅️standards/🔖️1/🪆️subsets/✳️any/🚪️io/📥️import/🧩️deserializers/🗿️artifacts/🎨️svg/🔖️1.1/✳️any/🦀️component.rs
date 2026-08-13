@@ -9,10 +9,11 @@ pub fn deserialize(from: &SvgSnapshot) -> Result<NoteSnapshot, String> {
     let mut snap = empty_note_snapshot();
     snap.id = create_note_id("svg-import");
     snap.title = Some("Imported SVG".into());
+    let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: xml.chars().take(512).collect(), bold: None, italic: None, underline: None, link: None }] }];
     snap.blocks.push(NoteBlockNode::Text {
+        content: crate::artifacts::note::note_text_child_handle_and_cache("svg-text-1", &paragraphs),
         id: "svg-text-1".into(), name: "SVG".into(), x: 0.0, y: 0.0, width: 400.0, height: 200.0,
         rotation: 0.0, visible: true, locked: false,
-        paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: xml.chars().take(512).collect(), bold: None, italic: None, underline: None, link: None }] }],
         font_size: 14.0, font_weight: "normal".into(), align: "left".into(),
     });
     Ok(snap)

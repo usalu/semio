@@ -76,7 +76,7 @@ mod tests {
         snapshot.grips.push(grip("g0", [1.0, 2.0, 3.0], 0.5));
         snapshot.grips.push(grip("g1", [-1.0, 0.0, 4.0], 0.25));
         let bounds = compute_block5d_bounds(&snapshot);
-        assert_eq!(bounds.bounding_box, Some(BoundingBox3d { min: [-1.25, -0.5, 2.5], max: [1.5, 2.5, 4.25] }));
+        assert_eq!(bounds.bounding_box, Some(BoundingBox3d { min: [-1.25, -0.25, 2.5], max: [1.5, 2.5, 4.25] }));
         assert_eq!(bounds.vertex_count, 2);
     }
 }

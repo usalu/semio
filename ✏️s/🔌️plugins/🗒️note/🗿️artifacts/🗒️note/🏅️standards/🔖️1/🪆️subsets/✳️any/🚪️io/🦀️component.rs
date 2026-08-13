@@ -214,7 +214,8 @@ fn note_asset_data_uri_bytes(data_uri: &str) -> Vec<u8> {
 fn draw_node_from_note_block(block: &NoteBlockNode, document: &NoteSnapshot, styles: &mut Vec<DrawStyle>) -> Option<DrawNode> {
     let transform = note_block_transform(block);
     let inner = match block {
-        NoteBlockNode::Text { paragraphs, font_size, .. } => {
+        NoteBlockNode::Text { content, font_size, .. } => {
+            let paragraphs = crate::artifacts::note::note_block_text(content);
             let text = paragraphs.iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join("")).collect::<Vec<_>>().join("\n");
             DrawNode::Text { value: text, at: SemioPoint2 { x: 0.0, y: *font_size }, style: None }
         }
@@ -348,8 +349,11 @@ fn ink_block_from_points(points: &[[f64; 2]]) -> NoteBlockNode {
 
 fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str) -> NoteBlockNode {
     let font_size = if height > 0.0 { height } else { 12.0 };
+    let id = crate::artifacts::note::schema::create_note_id("dwg-text");
+    let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }] }];
     NoteBlockNode::Text {
-        id: crate::artifacts::note::schema::create_note_id("dwg-text"),
+        content: crate::artifacts::note::note_text_child_handle_and_cache(&id, &paragraphs),
+        id,
         name: "Imported Text".into(),
         x: at[0],
         y: at[1],
@@ -358,7 +362,6 @@ fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str)
         rotation,
         visible: true,
         locked: false,
-        paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }] }],
         font_size,
         font_weight: "normal".into(),
         align: "left".into(),
@@ -425,7 +428,8 @@ mod media_tests {
         } else {
             panic!("expected ink block");
         }
-        if let Some(NoteBlockNode::Text { paragraphs, .. }) = document.blocks.iter().find(|block| matches!(block, NoteBlockNode::Text { .. })) {
+        if let Some(NoteBlockNode::Text { content, .. }) = document.blocks.iter().find(|block| matches!(block, NoteBlockNode::Text { .. })) {
+            let paragraphs = crate::artifacts::note::note_block_text(content);
             assert_eq!(paragraphs[0].runs[0].text, "semio");
         } else {
             panic!("expected text block");
@@ -451,6 +455,10 @@ mod media_tests {
     fn document_to_svg_dispatches_through_semio_drawing_bridge() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.blocks.push(NoteBlockNode::Text {
+            content: crate::artifacts::note::note_text_child_handle_and_cache(
+                "t1",
+                &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }],
+            ),
             id: "t1".into(),
             name: "Text".into(),
             x: 10.0,
@@ -460,7 +468,6 @@ mod media_tests {
             rotation: 0.0,
             visible: true,
             locked: false,
-            paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }],
             font_size: 18.0,
             font_weight: "normal".into(),
             align: "left".into(),

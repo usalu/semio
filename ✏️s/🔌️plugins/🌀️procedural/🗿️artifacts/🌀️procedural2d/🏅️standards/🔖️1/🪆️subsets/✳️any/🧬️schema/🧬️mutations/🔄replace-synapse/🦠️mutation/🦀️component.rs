@@ -3,7 +3,7 @@ use crate::artifacts::procedural2d::diff::Procedural2dDiff;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 use flow::playbook::FormGeneration;
-use flow::Widget;
+use flow::{SynapseSpec, Widget};
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
@@ -28,10 +28,10 @@ impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ReplaceSynapse
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Replace synapse \"{}\"", payload.synapse.id)
+        format!("Replace synapse \"{}\"", self.synapse.id)
     }
     fn target(&self) -> Vec<String> {
-        vec![payload.synapse.id.clone()]
+        vec![self.synapse.id.clone()]
     }
 }
 //#endregion 🔖️Mutation

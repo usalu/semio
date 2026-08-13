@@ -137,7 +137,7 @@ pub fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str) -> V
     let Some(part) = projection.parts.iter().find(|part| part.id == part_id) else {
         return Vec::new();
     };
-    let Some(catalogs) = &projection.kind_catalogs else {
+    let Some(catalogs) = crate::artifacts::puzzle5d::kind_catalogs_of(&projection.kind_catalogs, &projection.kind_catalogs_extra) else {
         return Vec::new();
     };
     let grip_kinds: HashSet<&str> = part.grips.iter().filter_map(|grip| grip.grip_kind.as_deref()).collect();
@@ -249,7 +249,7 @@ mod tests {
         let mut projection = three_part_projection();
         projection.parts[0].part_kind = Some("kind-a".into());
         projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "k".into(), target: "k2".into(), bidirectional: false, important: false, specificity: Puzzle5dCompatSpecificity::General });
-        projection.kind_catalogs = Some(Puzzle5dKindCatalogs {
+        let (kind_catalogs, kind_catalogs_extra) = crate::artifacts::puzzle5d::split_and_seed_kind_catalogs(Some(Puzzle5dKindCatalogs {
             parts: vec![
                 Puzzle5dCatalogPartKind { id: "kind-a".into(), name: "A".into(), label: "A".into(), grips: vec![], ..Default::default() },
                 Puzzle5dCatalogPartKind { id: "kind-b".into(), name: "B".into(), label: "B".into(), grips: vec![Puzzle5dGripTemplate { grip_kind: Some("k2".into()), ..Default::default() }], ..Default::default() },
@@ -258,7 +258,9 @@ mod tests {
             grips: vec![],
             fasteners: vec![],
             ropes: vec![],
-        });
+        }));
+        projection.kind_catalogs = kind_catalogs;
+        projection.kind_catalogs_extra = kind_catalogs_extra;
         let replaceable = find_replaceable_kinds(&projection, "p1");
         assert_eq!(replaceable, vec!["kind-b".to_string()]);
     }

@@ -7,7 +7,8 @@ use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a rename by restoring the pre-state name. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::mutation::RenameKnowledgeRecord, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
-    match base.knowledge.iter().find(|row| row.header.id == payload.id) {
+    let records = crate::artifacts::program::program_knowledge(base);
+    match records.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::RenameKnowledgeRecord(super::mutation::RenameKnowledgeRecord { id: payload.id.clone(), new_name: existing.header.name.clone() })],
         None => Vec::new(),
     }

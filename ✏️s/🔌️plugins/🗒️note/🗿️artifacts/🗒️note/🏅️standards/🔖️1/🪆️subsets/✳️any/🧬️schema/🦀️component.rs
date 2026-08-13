@@ -25,6 +25,7 @@ pub struct NoteArtifact {
     #[state(artifact)] pub pencil_width: Option<f64>,
     #[state(artifact)] pub eraser_radius: Option<f64>,
     #[state(artifact)] pub assets: BTreeMap<String, NoteImageAsset>,
+    #[state(artifact)] #[link_slot(roles("any"))] pub linked_artifact: Option<store::ArtifactLink>,
     #[state(presence)] pub selected_block_ids: Vec<String>,
     #[state(presence)] pub active_utility_id: String,
     #[state(config)] pub engagement_input: String,
@@ -60,6 +61,7 @@ impl NoteArtifact {
             pencil_width: self.pencil_width,
             eraser_radius: self.eraser_radius,
             assets: self.assets.clone(),
+            linked_artifact: self.linked_artifact.clone(),
         }
     }
 
@@ -79,6 +81,7 @@ impl NoteArtifact {
             pencil_width: snapshot.pencil_width,
             eraser_radius: snapshot.eraser_radius,
             assets: snapshot.assets,
+            linked_artifact: snapshot.linked_artifact,
             ..Self::default_ui()
         }
     }
@@ -98,6 +101,7 @@ impl NoteArtifact {
             pencil_width: Some(3.0),
             eraser_radius: Some(12.0),
             assets: BTreeMap::new(),
+            linked_artifact: None,
             selected_block_ids: Vec::new(),
             active_utility_id: "selectDirect".into(),
             engagement_input: String::new(),
@@ -124,6 +128,7 @@ impl NoteArtifact {
         self.pencil_width = snapshot.pencil_width;
         self.eraser_radius = snapshot.eraser_radius;
         self.assets = snapshot.assets;
+        self.linked_artifact = snapshot.linked_artifact;
     }
 }
 //#endregion 🔖️Conversions
@@ -207,6 +212,7 @@ pub fn empty_note_snapshot() -> crate::artifacts::note::NoteSnapshot {
         pencil_width: Some(3.0),
         eraser_radius: Some(12.0),
         assets: BTreeMap::new(),
+        linked_artifact: None,
     }
 }
 
@@ -335,21 +341,24 @@ pub fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
         "math" => NoteBlockNode::Math { id, name: "Math".into(), x, y, width: 200.0, height: 80.0, rotation: 0.0, visible: true, locked: false, tex: "E = mc^2".into(), display_mode: true },
         "stroke" => NoteBlockNode::Ink { id, name: "Ink".into(), x, y, width: 1.0, height: 1.0, rotation: 0.0, visible: true, locked: false, points: Vec::new(), stroke_width: 3.0, color: [0.0, 0.0, 0.0, 1.0] },
         "group" => NoteBlockNode::Group { id, name: "Group".into(), x, y, width: 280.0, height: 120.0, rotation: 0.0, visible: true, locked: false, children: Vec::new() },
-        _ => NoteBlockNode::Text {
-            id,
-            name: "Text".into(),
-            x,
-            y,
-            width: 280.0,
-            height: 120.0,
-            rotation: 0.0,
-            visible: true,
-            locked: false,
-            paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: String::new(), bold: None, italic: None, underline: None, link: None }] }],
-            font_size: 18.0,
-            font_weight: "normal".into(),
-            align: "left".into(),
-        },
+        _ => {
+            let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: String::new(), bold: None, italic: None, underline: None, link: None }] }];
+            NoteBlockNode::Text {
+                content: crate::artifacts::note::note_text_child_handle_and_cache(&id, &paragraphs),
+                id,
+                name: "Text".into(),
+                x,
+                y,
+                width: 280.0,
+                height: 120.0,
+                rotation: 0.0,
+                visible: true,
+                locked: false,
+                font_size: 18.0,
+                font_weight: "normal".into(),
+                align: "left".into(),
+            }
+        }
     }
 }
 
@@ -370,6 +379,12 @@ pub fn remove_block_from_tree(blocks: &mut Vec<NoteBlockNode>, target_id: &str) 
 
 pub fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
     let kind = block_kind(block).to_string();
+    // 🧬️ A duplicated Text block must never keep its source's composed `content` child handle — two
+    // distinct block ids sharing one content-addressed child slot would violate the "a child slot is
+    // owned by exactly one parent" invariant composition assumes. Recover the source's live
+    // paragraphs from the working-scene cache BEFORE the id changes (the cache is keyed by the OLD
+    // handle's `child_id`), then remint under the NEW id once it's assigned below.
+    let recovered_paragraphs = if let NoteBlockNode::Text { content, .. } = &*block { Some(crate::artifacts::note::note_block_text(content)) } else { None };
     match block {
         NoteBlockNode::Text { id, name, .. } | NoteBlockNode::Image { id, name, .. } | NoteBlockNode::Table { id, name, .. } | NoteBlockNode::Math { id, name, .. } | NoteBlockNode::Ink { id, name, .. } | NoteBlockNode::Group { id, name, .. } => {
             *id = create_note_id(&kind);
@@ -377,6 +392,9 @@ pub fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
                 *name = format!("{name} copy");
             }
         }
+    }
+    if let (NoteBlockNode::Text { id, content, .. }, Some(paragraphs)) = (&mut *block, recovered_paragraphs) {
+        *content = crate::artifacts::note::note_text_child_handle_and_cache(id, &paragraphs);
     }
     if let NoteBlockNode::Group { children, .. } = block {
         for child in children.iter_mut() {
@@ -573,8 +591,8 @@ pub fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, block_
                 let text = value.as_str().unwrap_or("");
                 let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }];
                 let mut updated = block;
-                if let NoteBlockNode::Text { paragraphs: p, .. } = &mut updated {
-                    *p = paragraphs;
+                if let NoteBlockNode::Text { id, content, .. } = &mut updated {
+                    *content = crate::artifacts::note::note_text_child_handle_and_cache(id, &paragraphs);
                 }
                 update_block_in_tree(&mut next.blocks, block_id, updated);
             }

@@ -78,7 +78,7 @@ pub mod calibrate_cameras {
                 continue;
             }
             let Some(frame) = stream.frames.first() else { continue };
-            let Some(asset) = scene.assets.get(&frame.asset_id) else { continue };
+            let Some(asset) = crate::artifacts::remodel::remodel_asset(&scene.assets, &frame.asset_id) else { continue };
             let (width, height) = (asset.width.max(1), asset.height.max(1));
             let f = f64::from(width.max(height));
             seen.push(camera_id.clone());

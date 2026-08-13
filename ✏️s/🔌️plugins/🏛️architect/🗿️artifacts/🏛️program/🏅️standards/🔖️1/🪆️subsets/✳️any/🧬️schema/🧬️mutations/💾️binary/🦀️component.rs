@@ -35,13 +35,13 @@ mod tests {
 
     #[test]
     fn disconnect_adjacency_round_trips_through_the_binary_codec() {
-        let operation = ProgramMutation::DisconnectAdjacency(super::super::clear_adjacency::mutation::DisconnectAdjacency { id: EntityId("adjacency-1".into()) });
+        let operation = ProgramMutation::DisconnectAdjacency(super::super::disconnect_adjacency::mutation::DisconnectAdjacency { id: EntityId("adjacency-1".into()) });
         assert_eq!(decode_op(&encode_op(&operation).expect("encode")).expect("decode"), operation);
     }
 
     #[test]
     fn delete_program_element_round_trips_through_the_binary_codec() {
-        let operation = ProgramMutation::DeleteProgramElement(super::super::elements::mutation::DeleteProgramElement { id: EntityId("element-1".into()) });
+        let operation = ProgramMutation::DeleteProgramElement(super::super::delete_program_element::mutation::DeleteProgramElement { id: EntityId("element-1".into()) });
         assert_eq!(decode_op(&encode_op(&operation).expect("encode")).expect("decode"), operation);
     }
 }

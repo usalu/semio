@@ -3,7 +3,7 @@
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::schema::{default_snapshot, example_snapshot, is_procedural3d_example_id};
-use crate::artifacts::procedural3d::op::{procedural3d_fixture_operations, Procedural3dMutation};
+use crate::artifacts::procedural3d::op::{generation_mutation_to_procedural3d, procedural3d_fixture_operations, Procedural3dMutation};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{CameraJson, FlowEvalSession};
 use flow::playbook::GenerationMutation;
@@ -49,7 +49,7 @@ pub mod set_active_example {
         } else {
             return Ok(Emit::default());
         };
-        let mut operations: Vec<Procedural3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| Procedural3dMutation::Generation(GenerationMutation::Remove { id: generation.id.clone() })).collect();
+        let mut operations: Vec<Procedural3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| generation_mutation_to_procedural3d(GenerationMutation::Remove { id: generation.id.clone() })).collect();
         operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
         Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::Snapshot { config: config_after_example_load(cfg.snapshot, &target.fixture.camera) }], ..Default::default() })
     }

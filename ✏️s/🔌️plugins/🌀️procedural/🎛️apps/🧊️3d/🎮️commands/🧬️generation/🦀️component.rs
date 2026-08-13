@@ -2,7 +2,7 @@
 
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::schema::evaluate_generation_preview;
-use crate::artifacts::procedural3d::op::Procedural3dMutation;
+use crate::artifacts::procedural3d::op::{generation_mutation_to_procedural3d, Procedural3dMutation};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::FlowEvalSession;
@@ -28,7 +28,7 @@ fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural
     let generation_preview_text = selected_generation(&state).map(|selected| evaluate_generation_preview(&projection.fixture, &selected.values));
     let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
     Emit {
-        artifact_mutations: operations.into_iter().map(Procedural3dMutation::Generation).collect(),
+        artifact_mutations: operations.into_iter().map(generation_mutation_to_procedural3d).collect(),
         config_mutations: vec![Procedural3dConfigMutation::SetGeneration { selected_generation_id: state.selected_generation_id.clone(), generation_preview_text }],
         coalesce_key,
         ..Default::default()
