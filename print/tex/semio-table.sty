@@ -3,6 +3,7 @@
 
 \RequirePackage{array}
 \RequirePackage{colortbl}
+\RequirePackage{etoolbox}
 \RequirePackage{longtable}
 \RequirePackage{expl3}
 \RequirePackage{semio-core}
@@ -114,6 +115,8 @@
 \newlength{\semio@table@body@height}
 \newif\ifsemio@table@row@started
 \newcount\semio@table@long@mode
+\newcount\semio@table@long@part
+\newif\ifsemio@table@long@pageparts
 
 % ?? Adjustable table body text size, mirroring the window `text-size`
 % keyval (semio-window.sty) so `\begin{Table}[text-size=8pt]` and
@@ -465,7 +468,7 @@
 
 \newcommand{\semio@table@long@title@chrome@prepare}{}
 
-\newcommand{\semio@table@long@title@chrome@row}[1]{%
+\newcommand{\semio@table@long@title@chrome@row@render}[2]{%
   % 🩹 Chrome spans the full table width with flush muted chips (no side
   % border slots, no shrink, no hairline pull). Body rows keep @{\border@L};
   % chip L then shares that same outer x. Phantom-L + hspace* pull still left a
@@ -473,7 +476,7 @@
   \multicolumn{#1}{@{}l@{}}{%
     \begingroup
       \semio@window@header@flushtrue
-      \semio@window@header@invoke
+      #2%
       \semio@window@header@flushfalse
     \endgroup
   }%
@@ -486,9 +489,84 @@
   \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
 }
 
+\newcommand{\semio@table@long@title@chrome@row}[1]{%
+  \semio@table@long@title@chrome@row@render{#1}{\semio@window@header@invoke}%
+}
+
+\newcommand{\semio@table@long@title@chrome@row@pageparts}[1]{%
+  \semio@table@long@title@chrome@row@render{#1}{%
+    \semio@window@header@muted{}{\semio@window@header@title}%
+  }%
+}
+
 \newcommand{\semio@table@long@continuation@chrome}[1]{%
   \semio@table@long@title@chrome@row{#1}%
 }
+
+%region LongTablePageParts
+% 🧩 longtable stores its head as a box and copies that same box onto every
+% page, so a hierarchy chip inside the stored head can never advance from :1 to
+% :2. Store a title-only chrome row in \LT@head to reserve the exact repeated
+% head height, then overlay the numbered cap live whenever longtable inserts that
+% box. The page-part counter advances once per physical table page while the
+% register key remains unsuffixed.
+\newcommand{\semio@table@long@part@number}{%
+  \ifnum\semio@table@long@part=1\relax
+    \semio@window@header@number@page1
+  \else
+    \semio@window@header@number:\the\semio@table@long@part
+  \fi
+}
+
+\newsavebox{\semio@table@long@part@chip@box}
+\newcommand{\semio@table@long@part@overlay}{%
+  \begingroup
+    \sbox{\semio@table@long@part@chip@box}{%
+      \semio@heading@cap@muted@open{\semio@table@long@part@number}%
+    }%
+    \nointerlineskip
+    \hbox to 0pt{%
+      \hbox to \linewidth{%
+        \hfil
+        \raisebox{-\height}[0pt][0pt]{\usebox{\semio@table@long@part@chip@box}}%
+      }%
+      \hss
+    }%
+    \nointerlineskip
+  \endgroup
+}
+
+\newcommand{\semio@table@long@head@copy}{%
+  \ifnum\semio@table@long@mode>0\relax
+    \ifsemio@table@long@pageparts
+      \global\advance\semio@table@long@part\@ne
+      \semio@table@long@part@overlay
+    \fi
+  \fi
+  \copy\LT@head
+}
+
+\newcommand{\semio@table@long@parts@record}{%
+  \ifsemio@table@long@pageparts
+    \ifcsname semio@window@break@record\endcsname
+      \semio@window@break@record{\the\semio@table@long@part}%
+    \fi
+  \fi
+}
+
+\newcommand{\semio@table@long@pageparts@patch}{%
+  \patchcmd{\LT@start}
+    {\copy\LT@head}
+    {\semio@table@long@head@copy}
+    {}{\PackageError{semio-table}{Unable to patch longtable first page head}{}}%
+  \patchcmd{\LT@output}
+    {\copy\LT@head\nobreak}
+    {\semio@table@long@head@copy\nobreak}
+    {}{\PackageError{semio-table}{Unable to patch longtable continuation head}{}}%
+}
+
+\AtBeginDocument{\semio@table@long@pageparts@patch}
+%endregion LongTablePageParts
 
 \newcommand{\semio@register@table@header@long@repeat}{%
   \semio@table@long@header@continuation@three
@@ -522,6 +600,7 @@
 
 \newcommand{\semio@table@long@render}[5]{%
   \global\semio@table@long@mode=1\relax
+  \global\semio@table@long@part=0\relax
   \global\semio@table@row@startedfalse
   \begingroup
   \ifvmode\else\par\fi
@@ -549,12 +628,13 @@
   % chips ~48pt apart).
   \global\setbox\LT@firsthead=\box\voidb@x
   \begin{longtable}{#1}%
-  \semio@table@long@continuation@chrome{#5}%
+  \semio@table@long@title@chrome@row@pageparts{#5}%
   #3%
   \endhead
   \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
   #4%
   \end{longtable}%
+  \semio@table@long@parts@record
   \endgroup
   \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse
@@ -836,9 +916,11 @@
   \semio@table@keys@set{#1}%
   \semio@table@long@prepare{#3}{#4}%
   \semio@table@long@open{#2}%
+  \global\semio@table@long@pagepartstrue
   \global\semio@table@headerfilltrue
   \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@continuation@current}{#5}{\semio@table@long@column@count}%
   \global\semio@table@headerfillfalse
+  \global\semio@table@long@pagepartsfalse
   \semio@table@long@close
   \semio@table@keys@reset
 }

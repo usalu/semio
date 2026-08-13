@@ -703,6 +703,11 @@ class TestScript extends BundleScript {
     assert.match(classSource, /\\RequirePackage\[style=\\semio@citestyle,backend=bibtex,sorting=nyt,backref=true\]\{biblatex\}/);
     assert.match(componentsSource, /\\NewDocumentCommand\{\\makecoverpages\}\{\}\{%[\s\S]*?\\newgeometry\{[^}]+\}\s*\\thispagestyle\{empty\}/);
     assert.match(windowSource, /\\newcommand\{\\semio@chrome@heading@track\}\[2\]\{%\s*\\semio@chrome@heading@set\{#2\}%\s*\}/);
+    assert.match(tableSource, /\\newcommand\{\\semio@table@long@head@copy\}\{%[\s\S]*?\\ifsemio@table@long@pageparts[\s\S]*?\\global\\advance\\semio@table@long@part\\@ne[\s\S]*?\\semio@table@long@part@overlay[\s\S]*?\\copy\\LT@head/);
+    assert.match(tableSource, /\\patchcmd\{\\LT@start\}[\s\S]*?\{\\copy\\LT@head\}[\s\S]*?\{\\semio@table@long@head@copy\}/);
+    assert.match(tableSource, /\\end\{longtable\}%\s*\\semio@table@long@parts@record/);
+    assert.match(tableSource, /\\newcommand\{\\semio@table@long@parts@record\}\{%\s*\\ifsemio@table@long@pageparts[\s\S]*?\\semio@window@break@record/);
+    assert.match(tableSource, /\\newcommand\{\\SemioTableLong\}[\s\S]*?\\semio@table@long@pagepartstrue[\s\S]*?\\semio@table@long@render[\s\S]*?\\semio@table@long@pagepartsfalse/);
     assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-\\semio@stroke@hairline-5\.75pt\\relax/);
     assert.match(windowSource, /overlay~unbroken=\{\\semio@window@break@record\{1\}/);
     assert.match(windowSource, /overlay~first=\{\\semio@window@frame@bottom@stroke\}/);
