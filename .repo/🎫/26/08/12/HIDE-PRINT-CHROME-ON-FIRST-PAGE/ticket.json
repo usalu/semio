@@ -1,8 +1,9 @@
 {
   "title": "Hide Print Chrome on First Page",
   "emoji": "🫥",
-  "status": "open",
+  "status": "closed",
   "description": "The first page of printed documents must not show the shared header or footer chrome, including report labels such as Zwischenbericht and Mit Bestand. Preserve header and footer behavior on subsequent pages and verify the Zwischenbericht output.",
+  "summary": "Removed shared navbar and footer chrome from generated cover pages by applying the empty page style after cover geometry is activated. Added a source regression assertion. Verified the registered Zwischenbericht template build and the 127-page Entwerfen mit Bestand Zwischenbericht in light and dark: page 1 has no header, footer, author/logo chips, or page number, while page 2 retains the full running chrome.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2552"
   },

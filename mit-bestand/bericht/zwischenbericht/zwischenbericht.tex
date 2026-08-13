@@ -304,12 +304,12 @@ Ergänzend zur Recherche wurden externe fachliche Perspektiven einbezogen. Sie d
 
 \begin{SemioNest}
 \paragraph{Sekundärbefund: Interview- und Umfragestudie}
-Die im Dezember~2025 veröffentlichte Studie „ReUse in der Bauindustrie stärken“ wurde als ergänzender externer Befund in die Auswertung einbezogen \cite{baselcircular-reuse-2025}. Sie basiert auf 18 qualitativen Interviews mit Akteur:innen aus unterschiedlichen Bereichen der Bauindustrie und einer anschließenden quantitativen Befragung von 94 Teilnehmenden.
+Die im Dezember~2025 veröffentlichte Studie „ReUse in der Bauindustrie stärken“ wurde als externer Befund in die Auswertung einbezogen \cite{baselcircular-reuse-2025}. Sie basiert auf 18 qualitativen Interviews mit Akteur:innen aus unterschiedlichen Bereichen der Bauindustrie und einer anschließenden quantitativen Befragung von 94 Teilnehmenden.
 
 Die Studie bestätigt zentrale Ergebnisse der eigenen Recherche: die Bedeutung einer frühen Einbindung, strukturierter Inventare, interoperabler Schnittstellen und einer eindeutigen Identifikation der Baukomponenten.
 
 \paragraph{Ergänzende Fachperspektiven}
-Die Recherche wurde durch drei Fachgespräche ergänzt, um zentrale Anforderungen aus unterschiedlichen disziplinären Perspektiven zu überprüfen und zu vertiefen.
+In dem Sekundärbefunde haben wir für uns drei fehlende Fachperspektiven identifiziert und durch Fachgespräche ergänzt, um zentrale Anforderungen aus unterschiedlichen disziplinären Perspektiven zu überprüfen und zu vertiefen.
 
 \begin{SemioNest}
 \paragraph{Computergestütztes Entwerfen}
@@ -332,13 +332,31 @@ Auch mehrere kleinere Elemente können zu neuen Tragwerken kombiniert werden. Ei
 \end{SemioNest}
 
 \subsubsection{User Stories und Anforderungen}
-Die Ergebnisse aus Recherche, Projektanalyse und Fachgesprächen wurden in 35 User Stories aus den Perspektiven von Bauteilbörsen, Architektur, Tragwerksplanung und Energieberatung überführt. Sie beschreiben konkrete Aufgaben sowie die dafür erforderlichen Informationen und Funktionen.
+\paragraph{Perspektiven}
+Aus Recherche und Fachgesprächen wurden 35 User Stories entwickelt. Sie übertragen die bisherigen Befunde aus den Perspektiven von Bauteilbörsen, Architektur, Tragwerksplanung und Energieberatung in konkrete Anwendungssituationen.
 
-Die User Stories betreffen drei zentrale Bereiche: die Erfassung und \Gls{Qualifizierung} von Baukomponentendaten, die Suche und Verwendung verfügbarer Komponenten im Entwurf sowie die fachliche Bewertung und Abstimmung von Varianten. Übergreifend sind die Nachvollziehbarkeit von Informationen, die Vergleichbarkeit von Komponenten und Varianten sowie der transparente Umgang mit Unsicherheiten von Bedeutung.
+\begin{SemioNest}
+\paragraph{Bauteilbörsen}
+Die Perspektive der Bauteilbörsen umfasst die Erfassung, Strukturierung, Qualifizierung und Bereitstellung von Baukomponentendaten. Im Mittelpunkt stehen belastbare Angaben zu Verfügbarkeit, Zustand, Herkunft, Kosten und offenen Informationsbedarfen sowie deren laufende Pflege.
 
-Auf dieser Grundlage wurden die Funktionen der \Gls{Einspeiseplattform} und des \Gls{Entwurfswerkzeug}s konkretisiert. Die Einspeiseplattform dient als \Gls{Bauteilportal} zur Erfassung, Qualifizierung und Bereitstellung von Baukomponentendaten. Das Entwurfswerkzeug gliedert sich in \Gls{Bauteilkatalog}, \Gls{Entwurfsumgebung} und \Gls{Konfigurator}.
+\paragraph{Architektur}
+Die Perspektive von Architektur betreffen die Suche, Auswahl und Verwendung verfügbarer Komponenten im Entwurf. Sie schließen den Vergleich von Entwurfsvarianten ein.
 
-Die 35 User Stories wurden anschließend zu 17 funktionalen Anforderungsclustern zusammengeführt und den jeweiligen Systembereichen zugeordnet. Das Anforderungsmapping bildet die Grundlage für die weitere funktionale und technische Entwicklung.
+\paragraph{Tragwerksplanung}
+Die Perspektive von Tragwerksplanung betreffen die konstruktive Integration sowie die Nachvollziehbarkeit fachlicher Annahmen, Risiken und Entscheidungen ein.
+
+\paragraph{Energieberatung}
+Die Perspektive der Energieberatung richtet sich auf die ökologische und energetische Bewertung von Baukomponenten und Varianten. Erforderlich sind vergleichbare Kennwerte, prüfbare Ziel- und Grenzwerte sowie nachvollziehbar dokumentierte und exportierbare Bewertungsergebnisse.
+\end{SemioNest}
+
+\paragraph{Bereiche}
+Inhaltlich lassen sich die User Stories drei übergeordneten Aufgabenfeldern zuordnen: der Erfassung und Qualifizierung von Baukomponentendaten, der Suche, Auswahl und Verwendung von Komponenten im Entwurf sowie der fachlichen Bewertung, Abstimmung und Dokumentation von Varianten. Übergreifend stehen die Nachvollziehbarkeit von Informationen, die Vergleichbarkeit von Komponenten und Varianten sowie der sichtbare Umgang mit Unsicherheiten im Vordergrund.
+
+\begin{SemioNest}
+  \paragraph{Erfassung und Qualifizierung}
+  \paragraph{Suche, Auswahl und Verwendung}
+  \paragraph{Fachliche Bewertung, Abstimmung und Dokumentation}
+\end{SemioNest}
 
 \subsection{AP-Plattform}
 
@@ -475,17 +493,14 @@ Der formale Durchführungszeitraum reicht vom 03.11.2025 bis 02.05.2027. Die ope
 
 Gegenüber dem Antrag sind drei Punkte relevant:
 
-\begin{Window}[title=Operativer Projektbeginn]
+\paragraph{Operativer Projektbeginn}
 Die Bearbeitung begann später als im formalen Durchführungszeitraum vorgesehen.
-\end{Window}
 
-\begin{Window}[title=Methodische Präzisierung der Geometrieerzeugung]
+\paragraph{Methodische Präzisierung der Geometrieerzeugung}
 Die Arbeitsgeometrie der Baukomponenten wird parametrisch durch einen Generator erzeugt. Der Generator überführt die erfassten Angaben in eine einheitliche und anpassbare Arbeitsgeometrie. Fotografien und Scans können ergänzend als Referenz- und Belegquellen genutzt werden. Die methodische Präzisierung betrifft die technische Umsetzung, nicht das Ziel der digitalen Objektbildung.
-\end{Window}
 
-\begin{Window}[title=Interviews]
+\paragraph{Interviews}
 Drei der acht genehmigten Fachgespräche sind ausgewertet. Die fünf weiteren Gespräche ergänzen in den nächsten Projektphasen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung.
-\end{Window}
 
 Projektziel und grundsätzliche Abfolge der Arbeitspakete bleiben unverändert. [ERGÄNZEN: formalen Status der Startverschiebung, Datum und Empfänger eintragen.]
 
@@ -612,11 +627,15 @@ Die vorgesehenen Softwarelizenz in Höhe von für Rhino musste nicht angeschafft
 
 \subsubsection{Cloud - Infrastructure-as-a-Service}
 \subsubsection{Nutzung vortrainierter KI-Modelle}
-Die Kosten für die Nutzung vortrainierter \Abbr{KI}-Modelle sind gegenüber der Antragskalkulation gestiegen. Die Mehrkosten sollen durch die nicht benötigte Rhino-Lizenz ausgeglichen werden (vgl.\ Softwarelizenzen). 
+Der Bedarf für Nutzung von vortrainierter \Abbr{KI}-Modelle wurde in der Antragskalkulation unterschätzt. Die Mehrkosten sollen durch die freigewordenen Dienstleisungskosten ausgeglichen werden. 
 
 \subsubsection{Externe Softwareentwicklung}
 \begin{SemioNest}
+
 \paragraph{Server}
+
+Die vorgesehenen Kosten für Hosting sind bislang nicht angefallen, da bis jetzt die Seite kostenlos über GitHub Pages bereitgestellt werden konnte. 
+
 \paragraph{Fotogrammetrie}
 \paragraph{User-Interface}
 \paragraph{Anbindungen Bauteilbörsen}
