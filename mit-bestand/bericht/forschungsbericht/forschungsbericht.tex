@@ -116,7 +116,7 @@
 \renewfontfamily\SemioSansBold[Path=\semio@font@root anta/]{Anta-Regular.ttf}
 \makeatother
 
-% Zeichenvokabel für Systemkarte, Prüftabellen und Bäume der Anlagen. tikz wird
+% Zeichenvokabel für Systemkarte und Prüftabellen der Anlagen. tikz wird
 % bereits von semio-window.sty geladen; hier nur zusätzliche Bibliotheken und
 % die Stile. Identisch zum Zwischenbericht, damit die Anlagen unverändert
 % übernommen werden können.
@@ -143,16 +143,11 @@
   semio edge synth/.style={semio edge, dash pattern=on 2.25pt off 1.5pt},
   semio bar/.style={draw=semio-chrome-border-normal,
     line width=\semio@stroke@hairline, fill=semio-chrome-panel},
-  semio tree root/.style={draw=semio-chrome-border-emphasized,
-    line width=\semio@stroke@focus, fill=semio-chrome-panel,
-    text=semio-chrome-foreground, align=left},
-  semio tree group/.style={draw=semio-chrome-border-normal,
-    line width=\semio@stroke@default, fill=semio-chrome-window,
-    text=semio-chrome-foreground, align=left},
-  semio tree branch/.style={draw=semio-chrome-border-normal,
-    line width=\semio@stroke@hairline},
 }
 \makeatother
+% Hürden-Baum (Anlage HW): eigener Mechanismus semio-tree.sty (SemioTree /
+% SemioTreeGroup / SemioTreeLeaf), von semio.cls geladen wie semio-graph.sty --
+% keine Diagramm-Vokabel lebt im Dokument-Preamble.
 
 \begin{document}
 

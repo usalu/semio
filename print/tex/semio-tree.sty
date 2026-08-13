@@ -17,7 +17,6 @@
 % it opens \SemioTableLong exactly as GraphFigure opens the existing Figure
 % window, and adds only the tree-specific vocabulary: row kinds, indentation
 % and mark formatting.
-\providecommand{\semio@tree@indent}{4mm}
 \providecommand{\semio@tree@text@size}{7.2pt}
 \providecommand{\semio@tree@marks@size}{7pt}
 \providecommand{\semio@tree@marks@sep}{;}
@@ -89,53 +88,141 @@
 }
 \NewDocumentCommand \SemioTreeMarks { O{\semio@tree@marks@sep} m }
   {
-    {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr1.2\semio@tree@marks@size\relax}\selectfont
+    {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr \semio@tree@marks@size*6/5\relax}\selectfont
      \color{semio-chrome-text-normal}\semio_tree_marks_format:nn {#1}{#2}}
   }
 %endregion
 
 %region Rows
-% 🪟 A GROUP row spans the full inner width as one filled band -- the exact
-% \multicolumn{N}{@{}>{...}p{\semio@table@long@inner@w}@{}}{...} idiom
-% \SemioTableBandRow already uses for the same purpose in the projects table,
-% here with tree content (code, name, leaf count) instead of an image caption.
-% Passed through \SemioTableRow (not hand-rolled) so the long/short mode
-% switch and the row separator stay owned by semio-table.sty, not duplicated.
-\cs_new_protected:Npn \semio_tree_group_row:nnn #1#2#3 { % code, label, count
-  \SemioTableRow{
-    \multicolumn{3}{@{}>{\raggedright\arraybackslash
-        \cellcolor{\tl_use:c{c_semio_tree_kind_group_fill_tl}}}
-      p{\semio@table@long@inner@w}@{}}{%
-      {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr1.2\semio@tree@marks@size\relax}\selectfont #1}%
-      ~~{\tl_use:c{c_semio_tree_kind_group_font_tl} #2}%
-      \tl_if_blank:nF {#3} { ~\textperiodcentered~ {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr1.2\semio@tree@marks@size\relax}\selectfont #3}}%
-    }
-  }
+% 🌲 The reference this package targets (the pre-.sty TikZ rendering of this
+% same appendix, kept for comparison, and a hand-drawn diagram of the
+% pattern) is a rectangular cladogram: each node's trunk starts at its OWN
+% bottom-left corner -- not carried over from a sibling above it -- runs
+% down through ONLY that node's own children with one branch stub per
+% child, and STOPS after the last child (a closing corner, not a line that
+% keeps going). A group node itself carries no incoming trunk/stub; it is
+% the anchor its children's trunk hangs from, not a stop along someone
+% else's. A tikzpicture cannot paginate (one unbreakable box -- see
+% semio-graph.sty's GraphSpread comment), so this is built from independent
+% per-row segments, not one drawn path: every row already draws itself
+% against the SAME strut envelope every ordinary cell uses
+% (\semio@table@vtop above baseline, \semio@table@vbot below), so a \vrule
+% with that exact height+depth, drawn fresh by consecutive LEAF rows at the
+% same x, abuts with zero gap and reads as one line -- right up until the
+% last child of a group, whose segment is cut short (zero depth) to close
+% the branch instead of continuing into whatever comes next.
+\newcommand{\semio@tree@trunk@x}{2mm}
+% Continues into the row below (used by every leaf except a group's last).
+\newcommand{\semio@tree@trunk}{%
+  {\color{semio-chrome-border-normal}%
+   \rule[-\semio@table@vbot]{0.6pt}{\dimexpr\semio@table@vtop+\semio@table@vbot\relax}}%
+}
+% Stops at this row (used by a group's last leaf) -- zero depth, so nothing
+% is drawn below the branch stub; the line closes here instead of carrying
+% on toward whatever row (a new group, or nothing) comes next.
+\newcommand{\semio@tree@trunk@last}{%
+  {\color{semio-chrome-border-normal}%
+   \rule[0pt]{0.6pt}{\semio@table@vtop}}%
+}
+% Stub width IS the indent step: a leaf's code lands at trunk@x + this
+% width, so this is what makes a leaf read as visibly nested under its
+% group box rather than sitting at nearly the same x as it. Measured
+% directly off the reference PDF (huerden_final.pdf, "Detailbaum ECO"):
+% ECO.COST starts at x=100.13pt, ECO.COST.01 at x=120.73pt -- a 20.6pt
+% (~7.3mm) step. 7mm here matches that; it only fit once the Code column
+% itself was widened (0.16 -> 0.24 in \SemioTree below), which is the fix
+% that was actually missing, not the stub width.
+% Raise amount: same <coefficient><macro> \dimexpr hazard as everywhere else
+% in this file (\raisebox's argument is a plain <dimen>, and
+% \semio@tree@text@size is TEXT ("7.2pt"), not an internal dimen) -- macro
+% first, multiplier after via \dimexpr's */ operators.
+\newcommand{\semio@tree@stub@w}{7mm}
+\newcommand{\semio@tree@stub}{%
+  {\color{semio-chrome-border-normal}%
+   \raisebox{\dimexpr\semio@tree@text@size*7/50\relax}{\rule{\semio@tree@stub@w}{0.6pt}}}%
+}
+
+% 🪟 A GROUP node is a content-sized bordered box (\fcolorbox, auto width),
+% not a full-width filled band -- matching the reference's family/clade
+% boxes, not \SemioTableBandRow's edge-to-edge band (which is unused
+% anywhere in the report; nothing else in the codebase actually renders
+% this way). It carries NO trunk/stub of its own (see this region's opening
+% comment) -- just \hspace*{trunk@x} to sit at the same x its children's
+% trunk will hang from. Still a \multicolumn spanning all 3 real columns,
+% because the box's content (code+label+count together) does not map onto
+% the table's 3-column grid -- but the multicolumn's own format spec only
+% supplies alignment (border@L/R + padendL/R, matching the outer colspec so
+% the box starts at the same x as the header), not a background fill.
+%
+% Found by isolated bisection (minimal macros run through \SemioTableLong
+% standalone, one axis varied at a time -- plain vs expl3, protected vs not,
+% direct vs through \SemioTableRow, assignment vs pure expansion before the
+% call): the ONE thing that reproduces "Misplaced \omit" is a \protected
+% macro (\cs_new_protected:Npn) whose expansion contains \multicolumn --
+% \cs_new:Npn with byte-identical body compiles clean. The array/longtable
+% cell-start scan that looks for \multicolumn's leading \omit does not
+% transparently expand a \protected macro the way it does an ordinary one
+% (\protected exists precisely to stop exactly this kind of silent
+% expansion, so this is consistent, if easy to miss). \omit still has to be
+% the FIRST thing reached, so the row is not routed through \SemioTableRow
+% either (its long/short \ifnum sits in the way); it hand-rolls the
+% long-table row terminator, matching \SemioTableBandRow.
+% ?? \hspace{...} not ~ between the segments below: an active-character
+% nbsp measurably produces NO width at all here (confirmed by extracting the
+% compiled PDF's text layer -- "ECO.COSTKosten-..." came back as one glued
+% word with zero space between), while the identical ~ works completely
+% normally as ordinary body text elsewhere in the same document. Root cause
+% not chased further since \hspace is unambiguous and side-steps whatever
+% babel/active-char interaction is specific to this multicolumn cell.
+% ?? Row ends in a plain \\, not \\*\semio@table@rule: a tree is an outline,
+% not a data grid -- a hairline under every single row read as "normal table"
+% rather than hierarchy-by-indentation (the whole point of this package).
+% The outer table border stayed (it gives the tree the same contained-module
+% look as every other Figure/Table -- an earlier attempt to drop it left the
+% header's own corner-tick rule floating disconnected above a sideless body).
+\cs_new:Npn \semio_tree_group_row:nnn #1#2#3 { % code, label, count
+  \multicolumn{3}{@{\semio@table@border@L}@{\semio@table@padendL}%
+    >{\raggedright\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
+    p{\semio@table@long@inner@w}<{\semio@cell@strutbot}%
+    @{\semio@table@padendR}@{\semio@table@border@R}}{%
+    \hspace*{\semio@tree@trunk@x}%
+    {\fboxsep=2.2pt\fboxrule=0.6pt
+     \fcolorbox{semio-chrome-border-normal}{\tl_use:c{c_semio_tree_kind_group_fill_tl}}{%
+       {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr \semio@tree@marks@size*6/5\relax}\selectfont #1}%
+       \hspace{0.5em}{\tl_use:c{c_semio_tree_kind_group_font_tl}\color{semio-chrome-foreground} #2}%
+       \tl_if_blank:nF {#3} { \hspace{0.35em}\textperiodcentered\hspace{0.35em}{\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr \semio@tree@marks@size*6/5\relax}\selectfont #3}}%
+     }}%
+  }%
+  \\
 }
 
 % 🍃 A LEAF row is three ordinary cells from \SemioTableLong's own
 % fraction-driven colspec (real `array` p{} measurement -- no estimated line
-% count anywhere). Hierarchy reads through indentation (a leading \hspace* on
-% the code cell, sized from the kind's registered indent) under the group
-% band directly above it, not through a drawn connector -- connectors cannot
-% survive a longtable page break; a repeated left inset does, by construction.
-\tl_new:N \l_semio_tree_row_indent_tl
-\cs_new_protected:Npn \semio_tree_leaf_row:nnnn #1#2#3#4 { % kind, code, label, marks
+% count anywhere). #5 (last) selects which trunk segment closes the branch:
+% every leaf but a group's final one carries the trunk on into the row
+% below; the final one stops it (see this region's opening comment) --
+% the caller decides via \SemioTreeLeaf vs \SemioTreeLeafLast, since the
+% data layer already knows which taxon ends its family's list. (The kind
+% registry's `indent` field is unused here now -- the connector is
+% fixed-position by design, so every leaf shares one trunk x -- but stays
+% registered as a hook for a future kind wanting a second indent level.)
+\cs_new_protected:Npn \semio_tree_leaf_row:nnnnn #1#2#3#4#5 { % kind, code, label, marks, last(0/1)
   \semio_tree_kind_require:n {#1}
-  % Same doubly-indirect \tl_use:c pitfall as the legend swatch: \dimexpr's
-  % number scanner does not reliably resolve a csname-lookup-of-a-lookup
-  % inline. Materialise the indent multiplier first (:x, fully expanding),
-  % then use that plain, already-resolved value inside \dimexpr.
-  \tl_set:Nx \l_semio_tree_row_indent_tl { \tl_use:c{c_semio_tree_kind_#1_indent_tl} }
-  \SemioTableRow{
-    \hspace*{\dimexpr \l_semio_tree_row_indent_tl \semio@tree@indent\relax}%
-    {\SemioMono\fontsize{\semio@tree@text@size}{\dimexpr1.2\semio@tree@text@size\relax}\selectfont
-     \color{semio-chrome-text-normal}#2}
-    &
-    {\tl_use:c{c_semio_tree_kind_#1_font_tl}#3}
-    &
-    #4
-  }
+  % Not routed through \SemioTableRow, for the same reason the group row
+  % isn't (see its comment): \SemioTableRow always appends \\*\semio@table@rule
+  % in long mode, and a hairline under every leaf item is exactly the
+  % table-grid look this package exists to avoid. Content ends in a plain \\
+  % -- ordinary longtable row end, natural page breaks allowed between items.
+  \hspace*{\semio@tree@trunk@x}%
+  \tl_if_eq:nnTF {#5}{1} { \semio@tree@trunk@last } { \semio@tree@trunk }
+  \semio@tree@stub
+  {\SemioMono\fontsize{\semio@tree@text@size}{\dimexpr \semio@tree@text@size*6/5\relax}\selectfont
+   \color{semio-chrome-text-normal}#2}
+  &
+  {\tl_use:c{c_semio_tree_kind_#1_font_tl}#3}
+  &
+  #4
+  \\
 }
 
 % 🩹 Plain \newcommand, not xparse, and every argument mandatory (pass {}
@@ -146,22 +233,44 @@
 % carries no \multicolumn but is kept in the same mandatory-args shape for
 % one consistent authoring idiom across both row kinds.
 \newcommand{\SemioTreeGroup}[3]{\semio_tree_group_row:nnn{#1}{#2}{#3}}
-\newcommand{\SemioTreeLeaf}[3]{\semio_tree_leaf_row:nnnn{leaf}{#1}{#2}{#3}}
+% Two commands, not one with a last/not-last switch argument: the same
+% "plain \newcommand, mandatory args only" reasoning as \SemioTreeGroup
+% above (consistency, not a hard requirement here -- leaf carries no
+% \multicolumn) and it keeps a group's LAST call visually distinct at the
+% call site, where the data layer is already iterating its taxon list and
+% knows which one is last without having to compute or pass a boolean.
+\newcommand{\SemioTreeLeaf}[3]{\semio_tree_leaf_row:nnnnn{leaf}{#1}{#2}{#3}{0}}
+\newcommand{\SemioTreeLeafLast}[3]{\semio_tree_leaf_row:nnnnn{leaf}{#1}{#2}{#3}{1}}
 %endregion
 
 %region Tree
 % 🌲 SemioTree does NOT reimplement the long-table substrate -- it opens the
 % existing \SemioTableLong exactly as GraphFigure opens the existing Figure
 % window, supplying only the tree-shaped colspec/header. Body content is a
-% brace-delimited sequence of \SemioTreeGroup/\SemioTreeLeaf calls, matching
-% how \SemioTableLong's own body is already a sequence of \SemioTableRow
-% calls everywhere else in this codebase -- no new authoring idiom introduced.
+% brace-delimited sequence of \SemioTreeGroup/\SemioTreeLeaf/
+% \SemioTreeLeafLast calls, matching how \SemioTableLong's own body is
+% already a sequence of \SemioTableRow calls everywhere else in this
+% codebase -- no new authoring idiom introduced.
 \NewDocumentCommand \SemioTree { m m }
   {
+    % The outer left/right table border (\semio@table@border@L/R) stays --
+    % removing it left the header's own little corner-tick rule (drawn
+    % directly by \semio@table@rule@band, independent of border@L/R) floating
+    % disconnected above a sideless body, reading as broken rather than
+    % deliberately open. The border gives the tree the same contained-module
+    % look as every other Figure/Table in the report; what actually made it
+    % read as a data grid was the hairline under every single row, which is
+    % what the Rows region's plain \\ (instead of \\*\semio@table@rule)
+    % removes -- that is the part that stays gone.
+    % Code column widened from the register/glossary-style 0.16 -- measured
+    % against the reference PDF (huerden_final.pdf), the real indent step
+    % between a family and its taxa is ~20.6pt (~7.3mm); at 0.16 that step
+    % overflowed the column by 8.4pt. 0.16 was sized for flush-left codes
+    % with no connector; this tree needs room for trunk+stub+indent too.
     \SemioTableLong
       [ text-size = 7.2pt ]
       {#1}
-      {0.16,0.58,0.26}
+      {0.24,0.50,0.26}
       {Code & Bezeichnung & Merkmale}
       {#2}
   }
@@ -209,7 +318,7 @@
 \NewDocumentCommand \SemioTreeLegend { m }
   {
     \int_zero:N \l_semio_tree_legend_int
-    {\SemioSans\fontsize{\semio@tree@marks@size}{\dimexpr1.2\semio@tree@marks@size\relax}\selectfont
+    {\SemioSans\fontsize{\semio@tree@marks@size}{\dimexpr \semio@tree@marks@size*6/5\relax}\selectfont
      \color{semio-chrome-text-normal}
      \clist_map_inline:nn {#1} { \semio_tree_legend_entry:n {##1} }}
   }
