@@ -6,6 +6,7 @@
 \RequirePackage{geometry}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
+\RequirePackage{semio-logo}
 \RequirePackage{semio-window}
 % tikz itself arrives with semio-window.sty; nothing extra to load here.
 
@@ -150,6 +151,8 @@
 \tl_new:N \l_semio_graph_height_tl
 \tl_new:N \l_semio_graph_state_tl
 \tl_new:N \l_semio_graph_kind_tl
+\tl_new:N \l_semio_graph_image_tl
+\tl_new:N \l_semio_graph_image_path_tl
 \tl_new:N \l_semio_graph_margin_h_tl
 \tl_new:N \l_semio_graph_margin_v_tl
 \bool_new:N \l_semio_graph_chrome_bool
@@ -185,6 +188,7 @@
 }
 \keys_define:nn { semio / graph / node } {
   state .code:n = { \semio_graph_state_select:n {#1} },
+  image .tl_set:N = \l_semio_graph_image_tl,
 }
 \keys_define:nn { semio / graph / edge } {
   kind .code:n = { \semio_graph_kind_select:n {#1} },
@@ -206,8 +210,10 @@
   \tl_set:Nn \l_semio_graph_width_tl  { \semio@graph@frame@width }
   \tl_set:Nn \l_semio_graph_height_tl { \semio@graph@frame@height }
 }
-\cs_new_protected:Npn \semio_graph_node_keys_reset:
-  { \tl_set:Nn \l_semio_graph_state_tl { plain } }
+\cs_new_protected:Npn \semio_graph_node_keys_reset: {
+  \tl_set:Nn \l_semio_graph_state_tl { plain }
+  \tl_clear:N \l_semio_graph_image_tl
+}
 \cs_new_protected:Npn \semio_graph_edge_keys_reset:
   { \tl_set:Nn \l_semio_graph_kind_tl { plain } }
 \cs_new_protected:Npn \semio_graph_spread_keys_reset: {
@@ -260,8 +266,31 @@
     { \msg_error:nnn { semio-graph } { outside-figure } {#1} }
 }
 
+\cs_new_protected:Npn \semio_graph_node_image_draw:nn #1#2 {
+  \semio_logo_resolve_path:nN {#2} \l_semio_graph_image_path_tl
+  \exp_args:NV \file_if_exist:nT \l_semio_graph_image_path_tl {
+    \begin{scope}
+      \clip (#1) circle [ radius=\semio@graph@node@radius ] ;
+      \node [ inner~sep=0pt ] at (#1) {
+        \includegraphics
+          [ width=\dim_eval:n { 2 \semio@graph@node@radius } ]
+          { \tl_use:N \l_semio_graph_image_path_tl }
+      } ;
+    \end{scope}
+  }
+}
+
 \cs_new_protected:Npn \semio_graph_node_draw:nnn #1#2#3 {
-  \draw [ semio~graph~node , semio~graph~node~#1 ] (#2) circle [] ;
+  \tl_if_blank:VTF \l_semio_graph_image_tl {
+    % Preserve the historical no-image path byte-for-byte at the TikZ level.
+    \draw [ semio~graph~node , semio~graph~node~#1 ] (#2) circle [] ;
+  } {
+    \draw [ semio~graph~node , semio~graph~node~#1 ] (#2) circle [] ;
+    \semio_graph_node_image_draw:nn {#2} { \l_semio_graph_image_tl }
+    % The image sits below the existing semantic contour and label.
+    \draw [ semio~graph~node , semio~graph~node~#1 , fill=none ]
+      (#2) circle [] ;
+  }
   \tl_if_blank:nF {#3} {
     \node [ semio~graph~label , \tl_use:c { c_semio_graph_state_#1_label_tl } ]
       at (#2) {#3} ;

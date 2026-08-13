@@ -26,15 +26,24 @@
 % column is `depth * step`, so adding a level between two existing ones (or
 % deeper than the deepest) is registering a kind at that integer depth via
 % \SemioTreeKind -- no new x constant to invent, and every level scales
-% together if the step ever changes. `width`/step values are millimetres
-% because `semio tree picture` sets x=1mm; the column widths carry units
-% because they are handed to a tabular, a different consumer.
-\providecommand{\semio@tree@width}{147}
+% together if the step ever changes. `width` carries an explicit unit (not a
+% bare number under the picture's x=1mm) because it is also used in
+% \dimexpr arithmetic (a box kind's right-edge alignment, Primitives region)
+% where a bare number would not be a valid dimension to subtract from.
+\providecommand{\semio@tree@width}{147mm}
 \providecommand{\semio@tree@indent@step}{7.3mm}
 \providecommand{\semio@tree@w@code}{21.5mm}
 \providecommand{\semio@tree@w@label}{72.5mm}
 \providecommand{\semio@tree@w@marks}{33mm}
 \providecommand{\semio@tree@w@gutter}{1.5mm}
+% A single, shared box inset (not the em-based, per-kind inner~xsep the
+% original root/group styles each carried) -- a box kind's right-edge
+% alignment (Primitives region) has to subtract this back out of text~width
+% to land the drawn border AT the target edge rather than inner~xsep beyond
+% it, which is only possible if there is ONE explicit dimension to subtract,
+% not two different em-relative-to-two-different-font-sizes values buried
+% inside each kind's own tikz style string.
+\providecommand{\semio@tree@box@inset}{1.3mm}
 % 📏 Vertical rhythm: only the GAPS between nodes -- the nodes size
 % themselves, so no line-height estimate exists anywhere in this package.
 \providecommand{\semio@tree@gap@box}{3.4mm}
@@ -181,14 +190,26 @@
 % already in each kind's own code-font \fontsize{}{leading} switch --
 % duplicated here (not derived) because there is no clean way to pull it back
 % out of that token stream once assembled; see \semio_tree_elbow:n.
+% Both boxes draw at \semio@stroke@hairline in semio-chrome-border-normal --
+% the SAME weight and colour \semio@table@border@L/R and every Figure/Table
+% window's tcolorbox frame use (semio-table.sty's \arrayrulewidth is
+% \semio@stroke@hairline; semio-window.sty's boxrule/leftrule/rightrule/
+% bottomrule are all \semio@stroke@hairline too) -- \semio@stroke@default/
+% @focus (1.5pt/2.25pt) are semio-graph.sty's OWN vocabulary for a node's
+% emphasis STATE (its `focal`/`hypo` deltas over a hairline base), not a
+% general house border weight; used here they read as 2x/3x heavier than
+% every table and window border on the same page. Depth still reads through
+% FILL tone (panel vs window, matching the same two chrome fills tables and
+% windows already use for foreground-vs-background panels), just not
+% through stroke weight anymore.
 \semio_tree_kind_define:nnnnnnn { root }
   {
-    draw=semio-chrome-border-emphasized,
-    line~width=\semio@stroke@focus,
+    draw=semio-chrome-border-normal,
+    line~width=\semio@stroke@hairline,
     fill=semio-chrome-panel,
     text=semio-chrome-foreground,
     align=left, minimum~height=8mm,
-    inner~xsep=0.5em, inner~ysep=0.32em,
+    inner~xsep=\semio@tree@box@inset, inner~ysep=0.32em,
   }
   { 0 } { box }
   { \SemioMono\fontsize{8.4pt}{10pt}\selectfont }
@@ -197,11 +218,11 @@
 \semio_tree_kind_define:nnnnnnn { group }
   {
     draw=semio-chrome-border-normal,
-    line~width=\semio@stroke@default,
+    line~width=\semio@stroke@hairline,
     fill=semio-chrome-window,
     text=semio-chrome-foreground,
     align=left, minimum~height=6.4mm,
-    inner~xsep=0.45em, inner~ysep=0.28em,
+    inner~xsep=\semio@tree@box@inset, inner~ysep=0.28em,
   }
   { 1 } { box }
   { \SemioMono\fontsize{7.4pt}{8.8pt}\selectfont }
@@ -310,9 +331,47 @@
   \tl_set:Nx #1 { semiotreenode \int_use:N \g_semio_tree_node_int }
 }
 \tl_new:N \l_semio_tree_colname_tl
+% 📏 A "box" kind (root, group, …) stretches to the picture's right edge
+% instead of sizing to its own content: text~width (not minimum~width) is
+% set to `width - depth*step`, so a box's LEFT edge still tracks its depth
+% (the cascade) while its RIGHT edge lands at the same x for every box
+% regardless of depth or text length -- which is what makes them "aligned
+% from their right edges" against each other and flush against the window
+% they sit in. text~width, specifically, not minimum~width: the tikz style
+% already carries align=left, but align only governs placement WITHIN a
+% text block whose width has been fixed by text~width -- minimum~width only
+% widens the drawn box, leaving a single line of content centred in the
+% extra space instead of flush left against it (confirmed by first trying
+% minimum~width: box grew correctly, text visibly recentred instead of
+% staying put on the left). A "row" kind (a leaf) gets no such option: it
+% is text, not a box, and has nothing to stretch.
+%
+% text~width sets the TEXT block, not the drawn box -- the box is that width
+% PLUS inner~xsep on both sides, so the raw `width - depth*step` formula
+% first tried overshot the target right edge by roughly 2*inner~xsep
+% (measured: the root box landed 4.08pt past the table's own border, close
+% to its own 4.2pt inner~xsep; the group box, with a smaller inner~xsep,
+% overshot by a correspondingly smaller 2.99pt -- confirming the padding,
+% not a rounding error, as the cause). Subtracting 2*\semio@tree@box@inset
+% is only possible because that inset is now ONE shared, explicit dimension
+% (see the Tokens region) instead of each kind's own em-relative-to-its-own-
+% font-size inner~xsep value, which nothing outside the tikz style string
+% could reference to undo.
+\tl_new:N \l_semio_tree_boxopt_tl
+\cs_new_protected:Npn \semio_tree_boxopt_set:nn #1#2 { % kind, depth
+  \str_if_eq:eeTF { \tl_use:c { c_semio_tree_kind_#1_inlet_tl } } { box }
+    {
+      \tl_set:Nx \l_semio_tree_boxopt_tl {
+        , text~width=\dimexpr \semio@tree@width - \semio@tree@indent@step * #2
+          - \semio@tree@box@inset * 2 \relax
+      }
+    }
+    { \tl_clear:N \l_semio_tree_boxopt_tl }
+}
 \cs_new_protected:Npn \semio_tree_place:nnnn #1#2#3#4 { % kind, depth, gap-before, content
   \semio_tree_node_name:N \l_semio_tree_name_tl
   \tl_set:Nx \l_semio_tree_colname_tl { \l_semio_tree_name_tl col }
+  \semio_tree_boxopt_set:nn {#1} {#2}
   \use:x {
     \exp_not:N \coordinate ( \l_semio_tree_colname_tl )
       at ( \dimexpr \semio@tree@indent@step * #2 \relax , 0mm ) ;
@@ -320,7 +379,7 @@
   \tl_if_empty:NTF \l_semio_tree_prev_tl
     {
       \use:x {
-        \exp_not:N \node [ semio~tree~node~#1 , anchor=north~west ]
+        \exp_not:N \node [ semio~tree~node~#1 , anchor=north~west \l_semio_tree_boxopt_tl ]
           ( \l_semio_tree_name_tl ) at ( \l_semio_tree_colname_tl )
           { \exp_not:n {#4} } ;
       }
@@ -340,7 +399,7 @@
       % first version of this line did: every node landed at y=0, the column
       % coordinates' own y, because the operands were swapped).
       \use:x {
-        \exp_not:N \node [ semio~tree~node~#1 , anchor=north~west ]
+        \exp_not:N \node [ semio~tree~node~#1 , anchor=north~west \l_semio_tree_boxopt_tl ]
           ( \l_semio_tree_name_tl )
           at ( \l_semio_tree_colname_tl below -| \l_semio_tree_colname_tl )
           { \exp_not:n {#4} } ;
