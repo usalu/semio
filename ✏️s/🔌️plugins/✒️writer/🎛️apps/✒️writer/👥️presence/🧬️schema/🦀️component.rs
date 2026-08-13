@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.writer.writer.presence")]
 pub struct WriterPresence {
-    #[state(shared_ui)] pub selected_ast_ids: Vec<String>,
-    #[state(shared_ui)] pub editor_selection: Option<WriterEditorSelection>,
-    #[state(shared_ui)] pub tree_hovered_ast_id: Option<String>,
-    #[state(shared_ui)] pub editor_hover_offset: Option<usize>,
-    #[state(shared_ui)] pub camera: WriterCamera,
+    #[state(presence)] pub selected_ast_ids: Vec<String>,
+    #[state(presence)] pub editor_selection: Option<WriterEditorSelection>,
+    #[state(presence)] pub tree_hovered_ast_id: Option<String>,
+    #[state(presence)] pub editor_hover_offset: Option<usize>,
+    #[state(presence)] pub camera: WriterCamera,
 }

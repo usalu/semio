@@ -11,7 +11,7 @@
   "properties": {
     "selectedObjectId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "worldCameraPosition": {
       "type": "array",
@@ -20,7 +20,7 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "worldCameraTarget": {
       "type": "array",
@@ -29,11 +29,11 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "worldCameraFov": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

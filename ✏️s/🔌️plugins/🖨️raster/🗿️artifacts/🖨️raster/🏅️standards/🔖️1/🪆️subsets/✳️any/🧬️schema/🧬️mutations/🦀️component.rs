@@ -85,6 +85,13 @@ mod tests {
         RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }
     }
 
+    /// 🖼️ Real, decodable 1x1 RGBA PNGs (not arbitrary placeholder bytes) — `add-layer-asset` now
+    /// routes through the real `s.stdio.semio/v1/image` png codec bridge
+    /// (`crate::artifacts::raster::mint_and_stash_asset`), so `AddLayerAsset`'s inverse can only
+    /// recover a faithful prior asset from the working-scene cache if the payload actually decodes.
+    const SEED_ASSET_PNG: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 224, 18, 145, 251, 15, 0, 1, 164, 1, 60, 76, 213, 28, 167, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130];
+    const ABC_ASSET_PNG: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 56, 49, 45, 229, 63, 0, 6, 174, 2, 194, 232, 197, 127, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130];
+
     fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
         let forward = vcs::apply_mutation(snapshot, mutation);
         let mut restored = forward.clone();
@@ -109,7 +116,7 @@ mod tests {
             RasterMutation::MoveLayer(move_layer::mutation::MoveLayer { layer_id: "l1".into(), new_x: 10.0, new_y: 20.0 }),
             RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id: "l1".into(), new_width: 256, new_height: 256 }),
             RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
-            RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "asset-1".into(), asset: RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() } }),
+            RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "asset-1".into(), asset: RasterImageAsset { mime: "image/png".into(), data: ABC_ASSET_PNG.to_vec() } }),
             RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id: "asset-1".into() }),
         ]
     }
@@ -128,7 +135,8 @@ mod tests {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));
         base.layers.push(RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params: BTreeMap::new() });
-        base.assets.insert("asset-1".into(), RasterImageAsset { mime: "image/png".into(), data: b"seed".to_vec() });
+        let seed_asset = RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() };
+        base.assets.insert("asset-1".into(), crate::artifacts::raster::mint_and_stash_asset("asset-1", &seed_asset));
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
         }
@@ -184,7 +192,7 @@ mod tests {
     //#region 🔖️OpText
     fn representative_raster_document() -> RasterSnapshot {
         let mut assets = BTreeMap::new();
-        assets.insert("asset-1".into(), RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() });
+        assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = BTreeMap::new();
         params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
         params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));

@@ -1,49 +1,49 @@
 /** 🧬️ Note diff schema — sparse field delta. */
 
 export interface NoteDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: NoteArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   id?: string;
-  /** @state persistent */
+  /** @state artifact */
   title?: string | null;
-  /** @state persistent */
+  /** @state artifact */
   blocks?: NoteBlocksDelta;
-  /** @state persistent */
+  /** @state artifact */
   gridVisible?: boolean | null;
-  /** @state persistent */
+  /** @state artifact */
   gridSpacing?: number | null;
-  /** @state persistent */
+  /** @state artifact */
   gridSubdivisions?: number | null;
-  /** @state persistent */
+  /** @state artifact */
   gridOpacity?: number | null;
-  /** @state persistent */
+  /** @state artifact */
   snapEnabled?: boolean | null;
-  /** @state persistent */
+  /** @state artifact */
   snapGridSpacing?: number | null;
-  /** @state persistent */
+  /** @state artifact */
   pencilWidth?: number | null;
-  /** @state persistent */
+  /** @state artifact */
   eraserRadius?: number | null;
-  /** @state persistent */
+  /** @state artifact */
   assets?: NoteAssetsDelta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedBlockIds?: NoteStringList;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput?: string;
-  /** @state local-ui */
+  /** @state config */
   cameraX?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom?: number;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredBlockId?: string | null;
 }
 

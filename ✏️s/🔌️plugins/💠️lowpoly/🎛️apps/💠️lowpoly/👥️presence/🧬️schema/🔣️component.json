@@ -20,7 +20,7 @@
   "properties": {
     "selectionMode": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionIds": {
       "type": "array",
@@ -28,47 +28,47 @@
         "type": "integer",
         "minimum": 0
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionTargetsMesh": {
       "type": "boolean",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionTargetsVertex": {
       "type": "boolean",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionTargetsEdge": {
       "type": "boolean",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionTargetsFace": {
       "type": "boolean",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedObjectIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredObjectId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredTargetObjectId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredTargetMode": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredTargetId": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "worldCameraPosition": {
       "type": "array",
@@ -77,7 +77,7 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "worldCameraTarget": {
       "type": "array",
@@ -86,19 +86,19 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "worldCameraFov": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "paintUtility": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

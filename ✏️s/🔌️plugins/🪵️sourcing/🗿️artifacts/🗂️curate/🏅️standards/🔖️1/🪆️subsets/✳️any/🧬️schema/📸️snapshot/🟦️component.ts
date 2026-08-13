@@ -36,8 +36,8 @@ export interface CuratedItem {
 }
 
 export interface CurateSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   stock: ObjectKind[];
-  /** @state persistent */
+  /** @state artifact */
   curated: CuratedItem[];
 }

@@ -9,6 +9,6 @@ export interface SemioTextProfile {
 }
 
 export interface SemioTextInference {
-  /** @state inferred */
+  /** @derived */
   profile: SemioTextProfile;
 }

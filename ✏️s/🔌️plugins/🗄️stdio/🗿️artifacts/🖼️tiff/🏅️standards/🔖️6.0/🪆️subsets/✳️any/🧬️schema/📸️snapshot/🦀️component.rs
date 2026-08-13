@@ -218,14 +218,14 @@ pub const TAG_TILE_BYTE_COUNTS: u16 = 325;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff")]
 pub struct TiffSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub byte_order: TiffByteOrder,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub ifds: Vec<TiffIfd>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixels: Vec<u8>,
 }

@@ -1,5 +1,5 @@
 # 🧬️ Ifc2x3Artifact
 type Ifc2x3Artifact {
-  schema: String! @state(class: PERSISTENT)
-  document: Bytes! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  document: Bytes! @state(class: ARTIFACT)
 }

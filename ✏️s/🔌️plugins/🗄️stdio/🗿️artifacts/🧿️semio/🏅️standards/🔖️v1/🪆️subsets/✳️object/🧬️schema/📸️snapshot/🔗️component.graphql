@@ -13,9 +13,9 @@ type SemioTransform {
 }
 
 type SemioObjectSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  transform: SemioTransform! @state(class: PERSISTENT)
-  brep: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.brep")
-  mesh: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.mesh")
-  properties: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.value")
+  schema: String! @state(class: ARTIFACT)
+  transform: SemioTransform! @state(class: ARTIFACT)
+  brep: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.brep")
+  mesh: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.mesh")
+  properties: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.value")
 }

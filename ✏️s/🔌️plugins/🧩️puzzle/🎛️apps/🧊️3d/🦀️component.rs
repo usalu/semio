@@ -3630,7 +3630,7 @@ mod tests {
         let inner = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let document = ArtifactView { snapshot: &projection, history: &history };
+        let document = ArtifactView::new(&projection, &history);
         let mut config = Puzzle3dConfig::default();
         let activate = inner.handle_action_impl(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None, &document, &config);
         for op in &activate.config_mutations {
@@ -4482,7 +4482,7 @@ mod tests {
         let app = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
 
         let fragment = json!({
             "schema": "manifest",
@@ -4541,7 +4541,7 @@ mod tests {
 
         for _ in 0..2 {
             let doc_projection = Puzzle3dPlaySnapshot(current.clone());
-            let doc = ArtifactView { snapshot: &doc_projection, history: &history };
+            let doc = ArtifactView::new(&doc_projection, &history);
             let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
             for operation in &emit.artifact_mutations {
                 current = protocol::Mutation::<Value>::diff(operation, &current).apply(&current);

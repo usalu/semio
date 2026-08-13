@@ -36,16 +36,16 @@ export interface CuratedItem {
 }
 
 export interface CurateArtifact {
-  /** @state persistent */
+  /** @state artifact */
   stock: ObjectKind[];
-  /** @state persistent */
+  /** @state artifact */
   curated: CuratedItem[];
-  /** @state local-ui */
+  /** @state config */
   filters: Filters;
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectId?: string | null;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }

@@ -12,6 +12,6 @@ export interface MdOutline {
 }
 
 export interface MdInference {
-  /** @state inferred */
+  /** @derived */
   outline: MdOutline;
 }

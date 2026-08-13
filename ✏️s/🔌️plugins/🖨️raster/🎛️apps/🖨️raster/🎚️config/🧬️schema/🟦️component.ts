@@ -1,35 +1,35 @@
 /** 🧬️ RasterConfig */
 export interface RasterCamera {
-  /** @state local-ui */
+  /** @state config */
   x: number;
-  /** @state local-ui */
+  /** @state config */
   y: number;
-  /** @state local-ui */
+  /** @state config */
   zoom: number;
 }
 
 export interface RasterConfigViewportSize {
-  /** @state local-ui */
+  /** @state config */
   width: number;
-  /** @state local-ui */
+  /** @state config */
   height: number;
 }
 
 export interface RasterConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   hoveredId?: string;
-  /** @state local-ui */
+  /** @state config */
   brushSize: number;
-  /** @state local-ui */
+  /** @state config */
   brushOpacity: number;
-  /** @state local-ui */
+  /** @state config */
   compositeViewport?: RasterConfigViewportSize;
-  /** @state local-ui */
+  /** @state config */
   camera: RasterCamera;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

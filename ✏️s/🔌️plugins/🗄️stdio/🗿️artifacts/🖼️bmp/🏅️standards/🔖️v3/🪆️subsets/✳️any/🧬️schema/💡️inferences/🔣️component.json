@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["dimensions"],
   "properties": {
-    "dimensions": { "$ref": "#/$defs/BmpDimensions", "x-semio-state": "inferred" }
+    "dimensions": { "$ref": "#/$defs/BmpDimensions", "x-semio-derived": true }
   },
   "$defs": {
     "BmpDimensions": {

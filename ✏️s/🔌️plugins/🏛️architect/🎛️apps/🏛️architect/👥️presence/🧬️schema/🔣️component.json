@@ -16,28 +16,28 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeRegister": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "adjacencyKindFilter": {
       "type": "string",
       "enum": ["required", "preferred", "optional", "prohibited"],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "graphCameraX": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "graphCameraY": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "graphCameraZoom": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

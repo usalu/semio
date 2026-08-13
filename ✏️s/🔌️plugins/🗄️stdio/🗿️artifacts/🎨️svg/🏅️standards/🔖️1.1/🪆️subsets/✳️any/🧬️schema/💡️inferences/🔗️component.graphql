@@ -1,7 +1,7 @@
 # 💡️ Svg inference schema — root `<svg>` intrinsic size.
 
 type SvgInference {
-  dimensions: SvgDimensions! @state(class: INFERRED)
+  dimensions: SvgDimensions! @derived
 }
 
 type SvgDimensions {

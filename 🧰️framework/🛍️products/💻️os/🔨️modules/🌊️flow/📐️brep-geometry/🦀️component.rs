@@ -7,8 +7,8 @@
 //! 🔷️ Flow brep module: native geometry operators.
 
 use base64::Engine;
-use semio_framework_3d::brep::kernel::Brep;
-use semio_framework_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle, GeometryKind};
+use semio_framework_3d::brep::engine::{ParamDomain, PointClassification, Vec3};
 use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
@@ -219,7 +219,7 @@ pub fn encode_base64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
 }
 
-pub fn map_kernel_error(error: semio_framework_3d::brep::engine::BrepError) -> EvalError {
+pub fn map_kernel_error(error: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
@@ -442,7 +442,7 @@ pub enum BrepModuleError {
     #[error("brep kernel lock poisoned")]
     LockPoisoned,
     #[error(transparent)]
-    Kernel(#[from] semio_framework_3d::brep::engine::BrepError),
+    Kernel(#[from] semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError),
     #[error(transparent)]
     Codec(#[from] neural_engine::EvalError),
     #[error("{0}")]
@@ -477,7 +477,7 @@ pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framewo
         let geometry = GeometryHandle(handle.to_string());
         block_on(guard.tessellate(&geometry, tolerance)).map_err(|error| error.to_string())?
     };
-    let data = semio_framework_3d::brep::kernel::mesh_data_from_mesh_transfer(&mesh);
+    let data = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&mesh);
     if let Ok(mut cache) = mesh_cache().lock() {
         cache.insert(key, data.clone());
     }
@@ -526,7 +526,7 @@ pub fn export_glb_via_tessellation(kernel: &dyn BrepKernel, shapes: &[GeometryHa
     let mut merged = semio_framework::MeshData::default();
     for shape in shapes {
         let transfer = block_on(kernel.tessellate(shape, deflection))?;
-        let mesh = semio_framework_3d::brep::kernel::mesh_data_from_mesh_transfer(&transfer);
+        let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&transfer);
         let offset = (merged.positions.len() / 3) as u32;
         merged.positions.extend(mesh.positions);
         merged.normals.extend(mesh.normals);

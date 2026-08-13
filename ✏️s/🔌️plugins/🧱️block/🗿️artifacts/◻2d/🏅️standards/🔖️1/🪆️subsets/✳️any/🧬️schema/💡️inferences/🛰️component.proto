@@ -4,7 +4,7 @@ package semio.s.block.block2d.inference;
 // 💡️ Block2d inference schema — bounds (bounding box + vertex count) over the node kind's rim handle templates.
 
 message Block2dInference {
-  // @state inferred
+  // @derived
   Block2dBounds bounds = 1;
 }
 

@@ -1,74 +1,74 @@
 /** 🧬️ Puzzle3dConfig */
 export interface Puzzle3dConfig {
-  /** @state local-ui */
+  /** @state config */
   selection: Puzzle3dSelection;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredObjectId?: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredVortexFullId?: string;
-  /** @state local-ui */
+  /** @state config */
   suggestionMenu?: Puzzle3dSuggestionMenu;
-  /** @state local-ui */
+  /** @state config */
   overlapBudget: number;
-  /** @state local-ui */
+  /** @state config */
   fillCount: number;
-  /** @state local-ui */
+  /** @state config */
   brushCandidateIndex: number;
-  /** @state local-ui */
+  /** @state config */
   objectKindWeights: Record<string, number>;
-  /** @state local-ui */
+  /** @state config */
   vortexKindWeights: Record<string, number>;
-  /** @state local-ui */
+  /** @state config */
   lodAutomatic: boolean;
-  /** @state local-ui */
+  /** @state config */
   lodDepthVariable: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridVisible: boolean;
-  /** @state local-ui */
+  /** @state config */
   lodManual: number;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridSpacing: number;
-  /** @state local-ui */
+  /** @state config */
   selectableKinds: Puzzle3dSelectableKinds;
-  /** @state local-ui */
+  /** @state config */
   hoveredKindId?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   selectionModeDefault: string;
-  /** @state local-ui */
+  /** @state config */
   proximityRadius: number;
-  /** @state local-ui */
+  /** @state config */
   chunkSize: number;
-  /** @state local-ui */
+  /** @state config */
   voxelDims: number[];
-  /** @state local-ui */
+  /** @state config */
   transformMove: boolean;
-  /** @state local-ui */
+  /** @state config */
   transformRotate: boolean;
-  /** @state local-ui */
+  /** @state config */
   vortexShow: string;
-  /** @state local-ui */
+  /** @state config */
   vortexDirection: string;
-  /** @state local-ui */
+  /** @state config */
   sun: WorldSunConfig;
-  /** @state local-ui */
+  /** @state config */
   camera: Puzzle3dCamera;
-  /** @state local-ui */
+  /** @state config */
   windowOptions: Record<string, Puzzle3dWindowOptions>;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityByWindowId: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   activeToolId?: string;
-  /** @state local-ui */
+  /** @state config */
   terminology: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   windowIds: string[];
 }
 

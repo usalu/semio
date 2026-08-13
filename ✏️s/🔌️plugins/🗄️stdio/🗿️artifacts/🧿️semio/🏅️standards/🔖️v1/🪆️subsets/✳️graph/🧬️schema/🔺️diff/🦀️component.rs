@@ -36,10 +36,10 @@ pub struct SemioGraphEdgeList {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.graph.diff")]
 pub struct SemioGraphDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nodes: Option<SemioGraphNodeList>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edges: Option<SemioGraphEdgeList>,
 }

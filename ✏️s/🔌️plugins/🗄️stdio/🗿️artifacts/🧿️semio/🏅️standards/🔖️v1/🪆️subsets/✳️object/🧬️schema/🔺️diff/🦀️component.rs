@@ -20,16 +20,16 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.object.diff")]
 pub struct SemioObjectDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transform: Option<SemioTransform>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub brep: Option<Option<store::ArtifactChild<SemioBrepSnapshot>>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<Option<store::ArtifactChild<SemioMeshSnapshot>>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<Option<store::ArtifactChild<SemioValueSnapshot>>>,
 }

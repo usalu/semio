@@ -53,21 +53,21 @@
     }
   },
   "properties": {
-    "width": { "type": "integer", "x-semio-state": "persistent" },
-    "height": { "type": "integer", "x-semio-state": "persistent" },
-    "pixels": { "type": "array", "items": { "type": "integer" }, "x-semio-state": "persistent" },
-    "reEncodeQuality": { "type": ["integer", "null"], "x-semio-state": "persistent" },
-    "jfifVersion": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2, "x-semio-state": "persistent" },
-    "jfifDensityUnits": { "type": "string", "enum": ["aspect", "pixelsPerInch", "pixelsPerCm"], "x-semio-state": "persistent" },
-    "jfifXDensity": { "type": "integer", "x-semio-state": "persistent" },
-    "jfifYDensity": { "type": "integer", "x-semio-state": "persistent" },
-    "jfifThumbnail": { "type": ["object", "null"], "x-semio-state": "persistent" },
-    "frame": { "$ref": "#/$defs/frameChange", "x-semio-state": "persistent" },
-    "sofMarker": { "type": "integer", "x-semio-state": "persistent" },
-    "arithmetic": { "type": "boolean", "x-semio-state": "persistent" },
-    "quantTables": { "$ref": "#/$defs/quantTablesDiff", "x-semio-state": "persistent" },
-    "huffmanTables": { "$ref": "#/$defs/huffmanTablesDiff", "x-semio-state": "persistent" },
-    "restartInterval": { "type": ["integer", "null"], "x-semio-state": "persistent" },
-    "otherSegments": { "$ref": "#/$defs/otherSegmentsDiff", "x-semio-state": "persistent" }
+    "width": { "type": "integer", "x-semio-state": "artifact" },
+    "height": { "type": "integer", "x-semio-state": "artifact" },
+    "pixels": { "type": "array", "items": { "type": "integer" }, "x-semio-state": "artifact" },
+    "reEncodeQuality": { "type": ["integer", "null"], "x-semio-state": "artifact" },
+    "jfifVersion": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2, "x-semio-state": "artifact" },
+    "jfifDensityUnits": { "type": "string", "enum": ["aspect", "pixelsPerInch", "pixelsPerCm"], "x-semio-state": "artifact" },
+    "jfifXDensity": { "type": "integer", "x-semio-state": "artifact" },
+    "jfifYDensity": { "type": "integer", "x-semio-state": "artifact" },
+    "jfifThumbnail": { "type": ["object", "null"], "x-semio-state": "artifact" },
+    "frame": { "$ref": "#/$defs/frameChange", "x-semio-state": "artifact" },
+    "sofMarker": { "type": "integer", "x-semio-state": "artifact" },
+    "arithmetic": { "type": "boolean", "x-semio-state": "artifact" },
+    "quantTables": { "$ref": "#/$defs/quantTablesDiff", "x-semio-state": "artifact" },
+    "huffmanTables": { "$ref": "#/$defs/huffmanTablesDiff", "x-semio-state": "artifact" },
+    "restartInterval": { "type": ["integer", "null"], "x-semio-state": "artifact" },
+    "otherSegments": { "$ref": "#/$defs/otherSegmentsDiff", "x-semio-state": "artifact" }
   }
 }

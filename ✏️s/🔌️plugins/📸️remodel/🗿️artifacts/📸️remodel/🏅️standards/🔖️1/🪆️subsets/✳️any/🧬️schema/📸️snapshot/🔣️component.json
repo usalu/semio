@@ -17,48 +17,48 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "id": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "streams": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/MediaStream"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "assets": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/ImageAsset"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "calibration": {
       "$ref": "#/$defs/CalibrationState",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "params": {
       "$ref": "#/$defs/ReconstructionParams",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "gcps": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/GroundControlPoint"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "job": {
       "$ref": "#/$defs/ReconstructionJob",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "results": {
       "$ref": "#/$defs/ReconstructionResults",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

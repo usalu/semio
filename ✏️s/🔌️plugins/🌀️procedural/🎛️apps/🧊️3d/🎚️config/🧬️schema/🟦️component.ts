@@ -1,30 +1,30 @@
 /** 🧬️ Procedural3dConfig */
 export interface Procedural3dConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   lodMode: string;
-  /** @state local-ui */
+  /** @state config */
   showMode: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredNodeId?: string;
-  /** @state local-ui */
+  /** @state config */
   camera: CameraJson;
-  /** @state local-ui */
+  /** @state config */
   previewCamera: Procedural3dPreviewCamera;
-  /** @state local-ui */
+  /** @state config */
   sunJson: string;
-  /** @state local-ui */
+  /** @state config */
   selectedGenerationId?: string;
-  /** @state local-ui */
+  /** @state config */
   generationPreviewText?: string;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }
 

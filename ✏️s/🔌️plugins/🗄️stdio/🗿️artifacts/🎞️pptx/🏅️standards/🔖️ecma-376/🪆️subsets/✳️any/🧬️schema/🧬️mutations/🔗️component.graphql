@@ -3,6 +3,6 @@ type PptxEntry {
   data: [Int!]!
 }
 type PptxMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [PptxEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [PptxEntry!]! @state(class: ARTIFACT)
 }

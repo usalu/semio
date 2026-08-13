@@ -11,12 +11,12 @@
     "exaggeration": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "importedFeaturesJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   }
 }

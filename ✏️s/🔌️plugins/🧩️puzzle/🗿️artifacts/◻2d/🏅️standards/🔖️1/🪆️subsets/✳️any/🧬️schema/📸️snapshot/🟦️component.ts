@@ -1,15 +1,15 @@
 /** 🧬️ Puzzle2d snapshot schema — persistent fields only. */
 
 export interface Puzzle2dSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   camera: Puzzle2dCamera;
-  /** @state persistent */
+  /** @state artifact */
   nodes: Puzzle2dNode[];
-  /** @state persistent */
+  /** @state artifact */
   edges: Puzzle2dEdge[];
-  /** @state persistent */
+  /** @state artifact */
   meta: Puzzle2dMeta;
 }
 

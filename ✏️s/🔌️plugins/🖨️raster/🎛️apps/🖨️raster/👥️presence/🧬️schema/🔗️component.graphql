@@ -1,14 +1,14 @@
 type RasterPresenceCamera {
-  x: Float! @state(class: SHARED_UI)
-  y: Float! @state(class: SHARED_UI)
-  zoom: Float! @state(class: SHARED_UI)
+  x: Float! @state(class: PRESENCE)
+  y: Float! @state(class: PRESENCE)
+  zoom: Float! @state(class: PRESENCE)
 }
 
 type RasterPresence {
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  hoveredId: String @state(class: SHARED_UI)
-  brushSize: Float! @state(class: SHARED_UI)
-  brushOpacity: Float! @state(class: SHARED_UI)
-  camera: RasterPresenceCamera! @state(class: SHARED_UI)
-  activeUtilityId: String! @state(class: SHARED_UI)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  hoveredId: String @state(class: PRESENCE)
+  brushSize: Float! @state(class: PRESENCE)
+  brushOpacity: Float! @state(class: PRESENCE)
+  camera: RasterPresenceCamera! @state(class: PRESENCE)
+  activeUtilityId: String! @state(class: PRESENCE)
 }

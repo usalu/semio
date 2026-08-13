@@ -18,7 +18,7 @@ use super::topology::{compute_procedural2d_topology, Procedural2dTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.procedural2d.inference")]
 pub struct Procedural2dInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: Procedural2dTopology,
 }
 

@@ -1,6 +1,6 @@
 type ImperativeConfig {
-  selectedStepIds: [String!]! @state(class: LOCAL_UI)
-  runOutputJson: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
-  contributionsJson: String! @state(class: LOCAL_UI)
+  selectedStepIds: [String!]! @state(class: CONFIG)
+  runOutputJson: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+  contributionsJson: String! @state(class: CONFIG)
 }

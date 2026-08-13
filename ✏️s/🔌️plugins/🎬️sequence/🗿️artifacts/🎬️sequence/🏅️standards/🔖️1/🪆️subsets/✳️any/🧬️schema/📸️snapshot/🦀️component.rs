@@ -14,9 +14,9 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub content: SequenceContentChild,
 }

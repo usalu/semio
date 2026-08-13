@@ -4,85 +4,85 @@ package semio.s.puzzle.puzzle3d.diff;
 // 🧬️ Puzzle3d diff schema — sparse field delta.
 
 message Puzzle3dDiff {
-  // @state persistent
+  // @state artifact
   optional Puzzle3dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional string domain = 3;
-  // @state persistent
+  // @state artifact
   optional Puzzle3dMeta meta = 4;
-  // @state persistent
+  // @state artifact
   optional Puzzle3dObjectsDelta objects = 5;
-  // @state persistent
+  // @state artifact
   optional Puzzle3dAttractionsDelta attractions = 6;
-  // @state persistent
+  // @state artifact
   optional Puzzle3dTargetVolumesDelta target_volumes = 7;
-  // @state persistent
+  // @state artifact
   optional Puzzle3dReferencesDelta references = 8;
-  // @state shared-ui
+  // @state presence
   optional Puzzle3dStringList selected_object_ids = 9;
-  // @state shared-ui
+  // @state presence
   optional Puzzle3dStringList selected_vortex_ids = 10;
-  // @state shared-ui
+  // @state presence
   optional Puzzle3dStringList selected_attraction_ids = 11;
-  // @state shared-ui
+  // @state presence
   optional Puzzle3dStringList selected_target_volume_ids = 12;
-  // @state shared-ui
+  // @state presence
   optional Puzzle3dStringList selected_reference_ids = 13;
-  // @state shared-ui
+  // @state presence
   optional string active_utility_id = 14;
-  // @state local-ui
+  // @state config
   optional double camera_position_x = 15;
-  // @state local-ui
+  // @state config
   optional double camera_position_y = 16;
-  // @state local-ui
+  // @state config
   optional double camera_position_z = 17;
-  // @state local-ui
+  // @state config
   optional double camera_target_x = 18;
-  // @state local-ui
+  // @state config
   optional double camera_target_y = 19;
-  // @state local-ui
+  // @state config
   optional double camera_target_z = 20;
-  // @state local-ui
+  // @state config
   optional double camera_zoom = 21;
-  // @state local-ui
+  // @state config
   optional string selection_method = 22;
-  // @state local-ui
+  // @state config
   optional string selection_mode_default = 23;
-  // @state local-ui
+  // @state config
   optional string engagement_input = 24;
-  // @state local-ui
+  // @state config
   optional bool grid_visible = 25;
-  // @state local-ui
+  // @state config
   optional bool grid_snap_enabled = 26;
-  // @state local-ui
+  // @state config
   optional double grid_spacing = 27;
-  // @state local-ui
+  // @state config
   optional double overlap_budget = 28;
-  // @state local-ui
+  // @state config
   optional uint32 fill_count = 29;
-  // @state local-ui
+  // @state config
   optional uint32 brush_candidate_index = 30;
-  // @state local-ui
+  // @state config
   optional bool lod_automatic = 31;
-  // @state local-ui
+  // @state config
   optional bool lod_depth_variable = 32;
-  // @state local-ui
+  // @state config
   optional double lod_manual = 33;
-  // @state local-ui
+  // @state config
   optional double proximity_radius = 34;
-  // @state local-ui
+  // @state config
   optional string locale = 35;
-  // @state local-ui
+  // @state config
   optional string runtime_extras_json = 36;
-  // @state preview
+  // @state artifact
   optional string hovered_object_id = 37;
-  // @state preview
+  // @state artifact
   optional string hovered_vortex_full_id = 38;
-  // @state preview
+  // @state artifact
   optional string hovered_kind_id = 39;
-  // @state preview
+  // @state artifact
   optional int64 preview_seq = 40;
 }
 

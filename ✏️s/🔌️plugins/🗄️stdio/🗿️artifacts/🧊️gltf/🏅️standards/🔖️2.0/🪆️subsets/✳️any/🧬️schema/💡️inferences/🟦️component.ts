@@ -9,6 +9,6 @@ export interface GltfBounds {
 }
 
 export interface GltfInference {
-  /** @state inferred */
+  /** @derived */
   bounds: GltfBounds;
 }

@@ -14,6 +14,6 @@ export interface SemioPresentationOutline {
 }
 
 export interface SemioPresentationInference {
-  /** @state inferred */
+  /** @derived */
   outline: SemioPresentationOutline;
 }

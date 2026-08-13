@@ -134,7 +134,7 @@ mod tests {
         dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
         let deck = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &deck, history: &history };
+        let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "demo".into() }, &doc, &cfg).expect("handle");
@@ -149,7 +149,7 @@ mod tests {
     fn set_active_example_unknown_id_is_a_no_op() {
         let deck = default_present_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &deck, history: &history };
+        let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "other".into() }, &doc, &cfg).expect("handle");

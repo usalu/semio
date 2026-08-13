@@ -188,37 +188,37 @@ impl GifFrame {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.89a")]
 pub struct GifSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(block)]
     pub gct: Option<GifColorTable>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub background_color_index: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixel_aspect_ratio: u8,
     /// 🔁️ NETSCAPE2.0 application extension loop count: `None` = no looping extension present
     /// (plays once); `Some(0)` = loop forever; `Some(n)` = loop `n` additional times.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub loop_count: Option<u16>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub frames: Vec<GifFrame>,
     /// 💬️ Comment Extension bodies, in file order (positionally normalized to appear right after
     /// the screen descriptor on re-encode — see `engine::encode_gif`'s documented normal form).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comments: Vec<String>,
     /// 🧩️ Every application extension OTHER than NETSCAPE2.0, verbatim.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub app_extensions: Vec<GifAppExtension>,
 }

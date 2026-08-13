@@ -1,14 +1,14 @@
 /** 🧬️ RewritePresence */
 export interface RewritePresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeHoverVar: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeSelectVar: string;
-  /** @state shared-ui */
+  /** @state presence */
   beforePaneCamera: Camera;
-  /** @state shared-ui */
+  /** @state presence */
   lodModeByWindow: Record<string, string>;
 }
 

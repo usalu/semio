@@ -11,12 +11,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.zip")]
 pub struct ZipArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entries: Vec<ZipEntry>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comment: String,
 }

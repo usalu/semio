@@ -244,13 +244,13 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt.diff")]
 pub struct TxtDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trailing_newline: Option<bool>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub line_ending: Option<LineEnding>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lines: Option<TxtLinesDiff>,
 }

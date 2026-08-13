@@ -4,7 +4,7 @@ package semio.s.stdio.semio.table.inference;
 // 💡️ Semio table inference schema — dimensions + declared column-kind census.
 
 message SemioTableInference {
-  // @state inferred
+  // @derived
   SemioTableShape shape = 1;
 }
 

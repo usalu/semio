@@ -46,20 +46,20 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg.diff")]
 pub struct DwgDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maintenance_version: Option<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub codepage: Option<u16>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bytes: Option<Vec<u8>>,
     /// 🗂️ Whole-value weak-entity replace — see module doc for why this is not a keyed triple.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub section_names: Option<Vec<String>>,
 }

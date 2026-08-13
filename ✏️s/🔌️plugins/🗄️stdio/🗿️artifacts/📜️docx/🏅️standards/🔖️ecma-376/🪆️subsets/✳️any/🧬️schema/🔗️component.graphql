@@ -3,6 +3,6 @@ type DocxEntry {
   data: [Int!]!
 }
 type DocxArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [DocxEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [DocxEntry!]! @state(class: ARTIFACT)
 }

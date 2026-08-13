@@ -52,8 +52,8 @@ export type DocBlock =
   | { kind: "pageBreak" };
 
 export interface SemioDocumentSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ styles: DocStyle[];
-  /** @state persistent */ images: DocImage[];
-  /** @state persistent */ blocks: DocBlock[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ styles: DocStyle[];
+  /** @state artifact */ images: DocImage[];
+  /** @state artifact */ blocks: DocBlock[];
 }

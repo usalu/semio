@@ -21,48 +21,48 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeRegister": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "searchQuery": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "searchHistoryJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeReportJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lastResultJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lastAnalysisJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "adjacencyKindFilter": {
       "type": "string",
       "enum": ["required", "preferred", "optional", "prohibited"],
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "graphCameraX": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "graphCameraY": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "graphCameraZoom": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   }
 }

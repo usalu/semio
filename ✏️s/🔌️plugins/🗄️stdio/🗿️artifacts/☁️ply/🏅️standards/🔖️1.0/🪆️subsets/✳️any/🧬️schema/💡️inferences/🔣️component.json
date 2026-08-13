@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/PlyBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/PlyBounds", "x-semio-derived": true }
   },
   "$defs": {
     "PlyBounds": {

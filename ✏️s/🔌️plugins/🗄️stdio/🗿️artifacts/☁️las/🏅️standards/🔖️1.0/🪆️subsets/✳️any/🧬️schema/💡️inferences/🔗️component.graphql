@@ -1,7 +1,7 @@
 # 💡️ Las inference schema — header-declared bounding box and point count.
 
 type LasInference {
-  bounds: LasBounds! @state(class: INFERRED)
+  bounds: LasBounds! @derived
 }
 
 type LasBounds {

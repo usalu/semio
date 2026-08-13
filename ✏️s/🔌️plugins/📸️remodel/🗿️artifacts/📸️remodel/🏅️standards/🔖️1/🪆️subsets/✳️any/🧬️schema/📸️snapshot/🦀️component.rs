@@ -15,36 +15,36 @@ use std::collections::BTreeMap;
 #[dsl(extension = "remodel")]
 #[artifact_schema(id = "s.remodel.remodel")]
 pub struct RemodelSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: String,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub streams: Vec<MediaStream>,
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub assets: BTreeMap<String, ImageAsset>,
     #[serde(default)]
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub calibration: CalibrationState,
     #[serde(default)]
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub params: ReconstructionParams,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub gcps: Vec<GroundControlPoint>,
     #[serde(default)]
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub job: ReconstructionJob,
     #[serde(default)]
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub results: ReconstructionResults,
 }
 //#region 🔖️HandcraftedArtifactCodecs

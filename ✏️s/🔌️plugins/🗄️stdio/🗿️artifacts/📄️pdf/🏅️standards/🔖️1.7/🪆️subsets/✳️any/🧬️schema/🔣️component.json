@@ -4,11 +4,11 @@
   "type": "object",
   "required": ["schema", "declaredVersion", "pages", "info", "objects", "trailer"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "declaredVersion": { "type": "string", "x-semio-state": "persistent" },
-    "pages": { "type": "array", "x-semio-state": "persistent" },
-    "info": { "type": "object", "x-semio-state": "persistent" },
-    "objects": { "type": "array", "x-semio-state": "persistent" },
-    "trailer": { "type": "array", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "declaredVersion": { "type": "string", "x-semio-state": "artifact" },
+    "pages": { "type": "array", "x-semio-state": "artifact" },
+    "info": { "type": "object", "x-semio-state": "artifact" },
+    "objects": { "type": "array", "x-semio-state": "artifact" },
+    "trailer": { "type": "array", "x-semio-state": "artifact" }
   }
 }

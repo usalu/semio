@@ -12,12 +12,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step")]
 pub struct StepArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub header: StepHeader,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entities: Vec<StepEntity>,
 }

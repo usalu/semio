@@ -9,13 +9,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.space.home")]
 pub struct SHomeDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub catalog_generation: Option<u64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub active_panel_tab: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

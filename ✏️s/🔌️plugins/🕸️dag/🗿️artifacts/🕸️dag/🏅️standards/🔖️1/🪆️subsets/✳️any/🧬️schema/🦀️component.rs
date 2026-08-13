@@ -15,17 +15,17 @@ use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecor
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.graph")]
     pub content: DagContentChild,
-    #[state(shared_ui)]
+    #[state(presence)]
     #[serde(default)]
     pub selected_node_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera: DagCamera,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Artifact

@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/DxfBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/DxfBounds", "x-semio-derived": true }
   },
   "$defs": {
     "DxfBounds": {

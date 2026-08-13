@@ -10,11 +10,11 @@
   "properties": {
     "fixture": {
       "$ref": "#/$defs/FlowFixture",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "generation": {
       "$ref": "#/$defs/GenerationPlayState",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

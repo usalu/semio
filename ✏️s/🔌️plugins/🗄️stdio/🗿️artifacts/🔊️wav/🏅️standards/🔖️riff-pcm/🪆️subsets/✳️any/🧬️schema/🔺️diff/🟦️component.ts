@@ -5,6 +5,6 @@ export interface WavDiffEntry {
   value: string;
 }
 export interface WavDiff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: WavDiffEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: WavDiffEntry[];
 }

@@ -1,26 +1,26 @@
 /** 🧬️ WriterConfig */
 export interface WriterConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedAstIds: string[];
-  /** @state local-ui */
+  /** @state config */
   editorSelection?: WriterEditorSelection;
-  /** @state local-ui */
+  /** @state config */
   formatSignal: number;
-  /** @state local-ui */
+  /** @state config */
   lintSignal: number;
-  /** @state local-ui */
+  /** @state config */
   revision: number;
-  /** @state local-ui */
+  /** @state config */
   editorSettings: WriterEditorSettings;
-  /** @state local-ui */
+  /** @state config */
   treeHoveredAstId?: string;
-  /** @state local-ui */
+  /** @state config */
   editorHoverOffset?: number;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   camera: WriterCamera;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

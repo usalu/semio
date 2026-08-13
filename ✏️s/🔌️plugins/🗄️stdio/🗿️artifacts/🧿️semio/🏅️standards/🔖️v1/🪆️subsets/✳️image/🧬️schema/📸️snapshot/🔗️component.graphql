@@ -12,12 +12,12 @@ type SemioImageMetadataEntry {
 }
 
 type SemioImageSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  width: Int! @state(class: PERSISTENT)
-  height: Int! @state(class: PERSISTENT)
-  colorspace: SemioColorspace! @state(class: PERSISTENT)
-  bitDepth: Int! @state(class: PERSISTENT)
-  frames: [SemioImageFrame!]! @state(class: PERSISTENT)
-  icc: String @state(class: PERSISTENT)
-  metadata: [SemioImageMetadataEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  width: Int! @state(class: ARTIFACT)
+  height: Int! @state(class: ARTIFACT)
+  colorspace: SemioColorspace! @state(class: ARTIFACT)
+  bitDepth: Int! @state(class: ARTIFACT)
+  frames: [SemioImageFrame!]! @state(class: ARTIFACT)
+  icc: String @state(class: ARTIFACT)
+  metadata: [SemioImageMetadataEntry!]! @state(class: ARTIFACT)
 }

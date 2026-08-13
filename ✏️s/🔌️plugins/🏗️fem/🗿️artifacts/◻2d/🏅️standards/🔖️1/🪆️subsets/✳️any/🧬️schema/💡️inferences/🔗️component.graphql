@@ -1,7 +1,7 @@
 # 💡️ Fem2d inference schema — bounds (plan-view extent + node/element counts).
 
 type Fem2dInference {
-  bounds: Fem2dBounds! @state(class: INFERRED)
+  bounds: Fem2dBounds! @derived
 }
 
 type Fem2dBounds {

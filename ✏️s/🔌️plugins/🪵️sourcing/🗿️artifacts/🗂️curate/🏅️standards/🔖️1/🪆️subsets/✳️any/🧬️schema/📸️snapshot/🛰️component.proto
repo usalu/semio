@@ -69,8 +69,8 @@ message CuratedItem {
 }
 
 message CurateSnapshot {
-  // @state persistent
+  // @state artifact
   repeated ObjectKind stock = 1;
-  // @state persistent
+  // @state artifact
   repeated CuratedItem curated = 2;
 }

@@ -15,24 +15,24 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.mathematical.mathematical")]
 pub struct MathematicalArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.text")]
     pub notation: MathematicalNotationChild,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub results: MathematicalResultsChild,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
     pub computed: MathematicalComputedChild,
-    #[state(persistent)]
+    #[state(artifact)]
     pub equation: EquationSnapshot,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_x: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_y: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_zoom: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Artifact

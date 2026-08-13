@@ -1,130 +1,130 @@
 /** 🧬️ Din16798 artifact schema — every field with its state class. */
 
 export interface Din16798Artifact {
-  /** @state persistent */
+  /** @state artifact */
   annex: string;
-  /** @state persistent */
+  /** @state artifact */
   occupancy: string;
-  /** @state persistent */
+  /** @state artifact */
   comfortCategory: string;
-  /** @state persistent */
+  /** @state artifact */
   tOpC: number;
-  /** @state persistent */
+  /** @state artifact */
   rhPercent: number;
-  /** @state persistent */
+  /** @state artifact */
   airSpeedMS: number;
-  /** @state persistent */
+  /** @state artifact */
   thetaRmC: number;
-  /** @state persistent */
+  /** @state artifact */
   co2Ppm: number;
-  /** @state persistent */
+  /** @state artifact */
   dfPercent: number;
-  /** @state persistent */
+  /** @state artifact */
   lAeqDb: number;
-  /** @state persistent */
+  /** @state artifact */
   persons: number;
-  /** @state persistent */
+  /** @state artifact */
   idaClass: string;
-  /** @state persistent */
+  /** @state artifact */
   ventilationM3H: number;
-  /** @state persistent */
+  /** @state artifact */
   floorAreaM2: number;
-  /** @state persistent */
+  /** @state artifact */
   bedrooms: number;
-  /** @state persistent */
+  /** @state artifact */
   dwellingVentilationM3H: number;
-  /** @state persistent */
+  /** @state artifact */
   occupants: number;
-  /** @state persistent */
+  /** @state artifact */
   residentialVentilationM3H: number;
-  /** @state persistent */
+  /** @state artifact */
   sfpWM3S: number;
-  /** @state persistent */
+  /** @state artifact */
   sfpRequiredClass: number;
-  /** @state persistent */
+  /** @state artifact */
   heatRecoveryEta: number;
-  /** @state persistent */
+  /** @state artifact */
   heatRecoveryEtaMin: number;
-  /** @state persistent */
+  /** @state artifact */
   systemType: string;
-  /** @state persistent */
+  /** @state artifact */
   yearsSinceInspection: number;
-  /** @state persistent */
+  /** @state artifact */
   humidificationRequiredKgH: number;
-  /** @state persistent */
+  /** @state artifact */
   humidificationProvidedKgH: number;
-  /** @state persistent */
+  /** @state artifact */
   fanQVM3S: number;
-  /** @state persistent */
+  /** @state artifact */
   fanTRunH: number;
-  /** @state persistent */
+  /** @state artifact */
   fanEnergyReferenceKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   nightSetbackK: number;
-  /** @state persistent */
+  /** @state artifact */
   hrMDotKgS: number;
-  /** @state persistent */
+  /** @state artifact */
   hrCpJKgk: number;
-  /** @state persistent */
+  /** @state artifact */
   hrDeltaTC: number;
-  /** @state persistent */
+  /** @state artifact */
   hrTH: number;
-  /** @state persistent */
+  /** @state artifact */
   hrSavingsReferenceKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   n50HInv: number;
-  /** @state persistent */
+  /** @state artifact */
   volumeM3: number;
-  /** @state persistent */
+  /** @state artifact */
   infiltrationAllowanceM3H: number;
-  /** @state persistent */
+  /** @state artifact */
   cellarAreaM2: number;
-  /** @state persistent */
+  /** @state artifact */
   cellarVentilationM3H: number;
-  /** @state persistent */
+  /** @state artifact */
   hTrWK: number;
-  /** @state persistent */
+  /** @state artifact */
   hVeWK: number;
-  /** @state persistent */
+  /** @state artifact */
   thetaEC: number;
-  /** @state persistent */
+  /** @state artifact */
   thetaSetC: number;
-  /** @state persistent */
+  /** @state artifact */
   coolingDeltaTH: number;
-  /** @state persistent */
+  /** @state artifact */
   coolingGainsKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   coolingUtilizationFactor: number;
-  /** @state persistent */
+  /** @state artifact */
   coolingReferenceKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   chillerType: string;
-  /** @state persistent */
+  /** @state artifact */
   eerActual: number;
-  /** @state persistent */
+  /** @state artifact */
   qCKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   generationReferenceKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   dataCenterSupplyC: number;
-  /** @state persistent */
+  /** @state artifact */
   hStWK: number;
-  /** @state persistent */
+  /** @state artifact */
   thetaStC: number;
-  /** @state persistent */
+  /** @state artifact */
   thetaAmbC: number;
-  /** @state persistent */
+  /** @state artifact */
   storageTH: number;
-  /** @state persistent */
+  /** @state artifact */
   storageAllowanceKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   dhwDeliveryC: number;
-  /** @state persistent */
+  /** @state artifact */
   ductClass: string;
-  /** @state persistent */
+  /** @state artifact */
   ductTestPressurePa: number;
-  /** @state persistent */
+  /** @state artifact */
   ductLeakageM3SM2: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }

@@ -7,6 +7,6 @@ export interface SemioVideoDuration {
 }
 
 export interface SemioVideoInference {
-  /** @state inferred */
+  /** @derived */
   duration: SemioVideoDuration;
 }

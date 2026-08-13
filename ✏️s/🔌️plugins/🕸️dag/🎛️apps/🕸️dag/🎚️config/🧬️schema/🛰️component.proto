@@ -1,14 +1,14 @@
 syntax = "proto3";
 package semio.app.dag.dag;
 message DagConfig {
-  // @state local-ui
+  // @state config
   repeated string selected_node_ids = 1;
-  // @state local-ui
+  // @state config
   double camera_x = 2;
-  // @state local-ui
+  // @state config
   double camera_y = 3;
-  // @state local-ui
+  // @state config
   double camera_zoom = 4;
-  // @state local-ui
+  // @state config
   string locale = 5;
 }

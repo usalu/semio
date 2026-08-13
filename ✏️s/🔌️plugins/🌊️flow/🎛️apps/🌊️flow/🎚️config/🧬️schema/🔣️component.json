@@ -26,72 +26,72 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectedEdgeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectedHandleIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "previewOffNodeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera": {
       "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "proximityDistance": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridVisible": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSnapEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridFactor": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "catalogueSectionsJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "automationEnabledJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "generationJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

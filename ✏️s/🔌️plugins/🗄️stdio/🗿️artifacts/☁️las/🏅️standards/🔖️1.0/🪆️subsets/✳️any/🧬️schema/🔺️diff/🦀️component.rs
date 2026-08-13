@@ -474,85 +474,85 @@ fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.las.diff")]
 pub struct LasDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version_major: Option<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version_minor: Option<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub system_identifier: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub generating_software: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub creation_day_of_year: Option<u16>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub creation_year: Option<u16>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub header_size: Option<u16>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub offset_to_point_data: Option<u32>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub number_of_vlrs: Option<u32>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub point_data_format_id: Option<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub point_data_record_length: Option<u16>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub number_of_point_records: Option<u32>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub points_by_return: Option<[u32; 5]>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub x_scale: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub y_scale: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub z_scale: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub x_offset: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub y_offset: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub z_offset: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_x: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub min_x: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_y: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub min_y: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_z: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub min_z: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vlrs: Option<LasVlrsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub points: Option<LasPointsDiff>,
 }

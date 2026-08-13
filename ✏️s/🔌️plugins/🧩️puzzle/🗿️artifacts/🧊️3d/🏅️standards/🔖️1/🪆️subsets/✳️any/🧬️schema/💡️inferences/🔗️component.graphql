@@ -1,7 +1,7 @@
 # 💡️ Puzzle3d inference schema — flatPosition (plane + center) per object.
 
 type Puzzle3dInference {
-  flatPositions: [Puzzle3dFlatPositionEntry!]! @state(class: INFERRED)
+  flatPositions: [Puzzle3dFlatPositionEntry!]! @derived
 }
 
 type Puzzle3dFlatPositionEntry {

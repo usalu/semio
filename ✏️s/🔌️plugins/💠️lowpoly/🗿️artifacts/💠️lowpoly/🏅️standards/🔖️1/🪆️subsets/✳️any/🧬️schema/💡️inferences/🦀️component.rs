@@ -18,9 +18,9 @@ use super::bounds::{scene_bounds, LowpolyBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly.inference")]
 pub struct LowpolyInference {
-    #[state(inferred)]
+    #[derived]
     pub object_count: usize,
-    #[state(inferred)]
+    #[derived]
     pub bounds: Option<LowpolyBounds>,
 }
 

@@ -1,7 +1,7 @@
 //! 🧬️ Raster artifact schema — every field of the artifact with its state class.
 
 use base64::Engine as _;
-use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
+use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -12,21 +12,21 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterArtifact {
-    #[state(persistent)] pub schema: String,
-    #[state(persistent)] pub id: String,
-    #[state(persistent)] pub title: Option<String>,
-    #[state(persistent)] pub layers: Vec<RasterLayerNode>,
-    #[state(persistent)] pub assets: BTreeMap<String, RasterImageAsset>,
-    #[state(shared_ui)] pub selected_ids: Vec<String>,
-    #[state(shared_ui)] pub active_utility_id: String,
-    #[state(local_ui)] pub brush_size: f64,
-    #[state(local_ui)] pub brush_opacity: f64,
-    #[state(local_ui)] pub composite_viewport: Option<RasterViewportSize>,
-    #[state(local_ui)] pub camera_x: f64,
-    #[state(local_ui)] pub camera_y: f64,
-    #[state(local_ui)] pub camera_zoom: f64,
-    #[state(local_ui)] pub locale: String,
-    #[state(preview)] pub hovered_id: Option<String>,
+    #[state(artifact)] pub schema: String,
+    #[state(artifact)] pub id: String,
+    #[state(artifact)] pub title: Option<String>,
+    #[state(artifact)] pub layers: Vec<RasterLayerNode>,
+    #[state(artifact)] pub assets: BTreeMap<String, RasterAssetChild>,
+    #[state(presence)] pub selected_ids: Vec<String>,
+    #[state(presence)] pub active_utility_id: String,
+    #[state(config)] pub brush_size: f64,
+    #[state(config)] pub brush_opacity: f64,
+    #[state(config)] pub composite_viewport: Option<RasterViewportSize>,
+    #[state(config)] pub camera_x: f64,
+    #[state(config)] pub camera_y: f64,
+    #[state(config)] pub camera_zoom: f64,
+    #[state(config)] pub locale: String,
+    #[state(artifact)] pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -375,10 +375,18 @@ pub fn empty_raster_document() -> RasterSnapshot {
 
 pub fn semio_fixture_snapshot() -> RasterSnapshot {
     let mut assets = BTreeMap::new();
-    assets.insert(
-        "semio-emblem".into(),
-        RasterImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.decode("iVBORw0KGgo=").unwrap_or_default() },
-    );
+    // 🖼️ A real, decodable 2x2 RGBA PNG (not merely the PNG magic-number bytes the pre-migration
+    // fixture embedded verbatim with no decode validation) — this migration routes every asset
+    // through the real `s.stdio.semio/v1/image` png codec (`mint_and_stash_asset`), so the fixture
+    // must be genuinely decodable for `composite_scene_syncs_document_and_assets` to keep proving
+    // real embedded pixels survive, not a decode-failure fallback.
+    let emblem = RasterImageAsset {
+        mime: "image/png".into(),
+        data: base64::engine::general_purpose::STANDARD
+            .decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC")
+            .unwrap_or_default(),
+    };
+    assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_and_stash_asset("semio-emblem", &emblem));
     let mut params = BTreeMap::new();
     params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.12)).expect("dsl value"));
     params.insert("contrast".into(), dsl::to_dsl_value(&serde_json::json!(0.08)).expect("dsl value"));
@@ -488,7 +496,8 @@ mod tests {
             panic!("expected pixel layer");
         };
         let asset_key = image_key.as_ref().expect("image key set");
-        let asset = document.assets.get(asset_key).expect("asset present");
+        assert!(document.assets.contains_key(asset_key), "asset handle present");
+        let asset = crate::artifacts::raster::raster_asset(&document.assets, asset_key).expect("asset content cached");
         assert_eq!(asset.mime, "image/png");
         assert!(!asset.data.is_empty());
     }
@@ -505,7 +514,7 @@ mod tests {
         assert_eq!(*width, Some(1));
         assert_eq!(*height, Some(1));
         let asset_key = image_key.as_ref().expect("image key set");
-        let asset = document.assets.get(asset_key).expect("asset present");
+        let asset = crate::artifacts::raster::raster_asset(&document.assets, asset_key).expect("asset content cached");
         assert!(!asset.data.is_empty());
     }
 }

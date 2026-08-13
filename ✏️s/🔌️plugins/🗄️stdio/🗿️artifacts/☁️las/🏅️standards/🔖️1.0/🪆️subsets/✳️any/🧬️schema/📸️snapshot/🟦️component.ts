@@ -54,8 +54,8 @@ export interface LasPoint {
 }
 
 export interface LasSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ header: LasHeader;
-  /** @state persistent */ vlrs: LasVlr[];
-  /** @state persistent */ points: LasPoint[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ header: LasHeader;
+  /** @state artifact */ vlrs: LasVlr[];
+  /** @state artifact */ points: LasPoint[];
 }

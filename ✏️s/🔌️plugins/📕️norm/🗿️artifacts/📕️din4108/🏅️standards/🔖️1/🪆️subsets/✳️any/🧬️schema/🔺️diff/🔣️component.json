@@ -8,88 +8,88 @@
     "artifact": {
       "title": "Din4108Artifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "category": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "layers": {
       "$ref": "#/$defs/Din4108LayerList",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "climate": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "airtightnessN50": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "psiTimesLSum": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "rhInt": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "catalogId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "materialId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "airtightnessClass": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "tIntC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "solarAbsorptance": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "irradianceWM2": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "moistureMuExterior": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "moistureMuInterior": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "envelopeAreaM2": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "bb2DetailsConform": {
       "type": "boolean",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "applicationType": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "declaredApplicationClass": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedCheckIndex": {
       "oneOf": [
@@ -102,7 +102,7 @@
           "minimum": 0
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   },
   "$defs": {

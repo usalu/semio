@@ -4,7 +4,7 @@ package semio.s.stdio.pdf.1_7.inference;
 // 💡️ Pdf (1.7) inference schema — document outline (page count, word count, title).
 
 message Pdf17Inference {
-  // @state inferred
+  // @derived
   Pdf17Outline outline = 1;
 }
 

@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["dimensions"],
   "properties": {
-    "dimensions": { "$ref": "#/$defs/JpgDimensions", "x-semio-state": "inferred" }
+    "dimensions": { "$ref": "#/$defs/JpgDimensions", "x-semio-derived": true }
   },
   "$defs": {
     "JpgDimensions": {

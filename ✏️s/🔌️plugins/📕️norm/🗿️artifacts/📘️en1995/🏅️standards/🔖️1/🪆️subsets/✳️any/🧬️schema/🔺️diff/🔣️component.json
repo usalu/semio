@@ -8,104 +8,104 @@
     "artifact": {
       "title": "En1995Artifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "annex": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "mEdKnm": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nEdKn": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "vEdKn": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "wMm3": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "aMm2": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "bMm": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hMm": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fMK": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fC0K": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "serviceClass": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "loadDuration": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "mCritKnm": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fEdKn": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "aEfMm2": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fVK": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fireDurationMin": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sectionDepthMm": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "aVertMS2": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nCyclesBridge": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedCheckIndex": {
       "oneOf": [
@@ -116,7 +116,7 @@
           "type": "integer"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

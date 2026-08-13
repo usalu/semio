@@ -1,52 +1,52 @@
 /** 🧬️ Layout LayoutArtifact schema. */
 export interface LayoutArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   name: string;
-  /** @state persistent */
+  /** @state artifact */
   grid: GridSettings;
-  /** @state persistent */
+  /** @state artifact */
   paragraphStyles: ParagraphStyle[];
-  /** @state persistent */
+  /** @state artifact */
   characterStyles: CharacterStyle[];
-  /** @state persistent */
+  /** @state artifact */
   stories: TextStory[];
-  /** @state persistent */
+  /** @state artifact */
   links: ImageLink[];
-  /** @state persistent */
+  /** @state artifact */
   parentPages: ParentPage[];
-  /** @state persistent */
+  /** @state artifact */
   spreads: Spread[];
-  /** @state persistent */
+  /** @state artifact */
   pages: Page[];
-  /** @state persistent */
+  /** @state artifact */
   printTarget?: string;
-  /** @state persistent */
+  /** @state artifact */
   dataFieldsJson?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   activePageId: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   cameraX: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   previewCameraX: number;
-  /** @state local-ui */
+  /** @state config */
   previewCameraY: number;
-  /** @state local-ui */
+  /** @state config */
   previewCameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   dropPreview: LayoutDropPreviewState;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredId?: string;
 }
 

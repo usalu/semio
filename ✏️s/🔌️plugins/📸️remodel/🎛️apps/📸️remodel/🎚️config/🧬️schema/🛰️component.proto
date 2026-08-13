@@ -2,54 +2,54 @@ syntax = "proto3";
 package semio.app.remodel.remodel;
 
 message RemodelWorldCamera {
-  // @state local-ui
+  // @state config
   repeated double position = 1;
-  // @state local-ui
+  // @state config
   repeated double target = 2;
-  // @state local-ui
+  // @state config
   double fov = 3;
 }
 
 message RemodelSelection {
-  // @state local-ui
+  // @state config
   string mode = 4;
-  // @state local-ui
+  // @state config
   repeated string ids = 5;
 }
 
 message RemodelLayerVisibility {
-  // @state local-ui
+  // @state config
   bool mesh = 6;
-  // @state local-ui
+  // @state config
   bool dense = 7;
-  // @state local-ui
+  // @state config
   bool sparse = 8;
-  // @state local-ui
+  // @state config
   bool cameras = 9;
-  // @state local-ui
+  // @state config
   bool gcps = 10;
 }
 
 message RemodelFrameCursor {
-  // @state local-ui
+  // @state config
   optional string stream_id = 11;
-  // @state local-ui
+  // @state config
   uint32 frame_index = 12;
 }
 
 message RemodelConfig {
-  // @state local-ui
+  // @state config
   RemodelWorldCamera camera = 1;
-  // @state local-ui
+  // @state config
   RemodelSelection selection = 2;
-  // @state local-ui
+  // @state config
   RemodelLayerVisibility layers = 3;
-  // @state local-ui
+  // @state config
   RemodelFrameCursor frame_cursor = 4;
-  // @state local-ui
+  // @state config
   string report_table = 5;
-  // @state local-ui
+  // @state config
   string active_utility_id = 6;
-  // @state local-ui
+  // @state config
   string locale = 7;
 }

@@ -1,11 +1,11 @@
 syntax = "proto3";
 package semio.app.sequence.sequence;
 message SequencePresence {
-  // @state shared-ui
+  // @state presence
   repeated string selected_step_ids = 1;
-  // @state shared-ui
+  // @state presence
   string orientation = 2;
-  // @state shared-ui
+  // @state presence
   SequenceCamera camera = 3;
 }
 message SequenceCamera { double x = 1; double y = 2; double zoom = 3; }

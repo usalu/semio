@@ -53,8 +53,8 @@
     }
   },
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "timelines": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/AnimTimeline" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "timelines": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/AnimTimeline" } }
   },
   "required": ["schema", "timelines"]
 }

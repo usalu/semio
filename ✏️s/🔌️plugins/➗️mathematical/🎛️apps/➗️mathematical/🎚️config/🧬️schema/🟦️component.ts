@@ -7,8 +7,8 @@ export interface MathematicalCamera {
 
 /** 🧬️ MathematicalConfig */
 export interface MathematicalConfig {
-  /** @state local-ui */
+  /** @state config */
   camera: MathematicalCamera;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

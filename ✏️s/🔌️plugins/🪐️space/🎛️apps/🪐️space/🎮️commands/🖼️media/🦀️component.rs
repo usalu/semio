@@ -119,8 +119,8 @@ mod tests {
         use base64::Engine;
         crate::apps::space::testkit::seed_draw_plugin();
         semio_framework_os::workflow::register_os_media_export_handler_kind("2d.drawing", "dwg", |_doc| {
-            let drawing = semio_framework_os::DwgDrawing::default();
-            let bytes = semio_framework_os::dwg_to_bytes(&drawing)?;
+            let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
+            let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)?;
             Ok(semio_framework_os::OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
         });
         semio_framework_os::register_dwg_import_handler("2d.drawing", |_drawing| Ok(json!({ "schema": "draw.document", "imported": true })));

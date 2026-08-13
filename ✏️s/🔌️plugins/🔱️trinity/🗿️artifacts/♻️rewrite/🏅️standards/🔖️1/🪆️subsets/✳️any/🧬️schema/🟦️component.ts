@@ -1,33 +1,33 @@
 /** 🧬️ Rewrite artifact schema — every field with its state class. */
 
 export interface RewriteArtifact {
-  /** @state persistent */
+  /** @state artifact */
   beforeFixtureJson: string;
-  /** @state persistent */
+  /** @state artifact */
   lhsJson: string;
-  /** @state persistent */
+  /** @state artifact */
   rhsJson: string;
-  /** @state persistent */
+  /** @state artifact */
   parameterBindings: Record<string, PropertyValue>;
-  /** @state persistent */
+  /** @state artifact */
   ruleLayout: Record<string, LayoutPoint>;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeHoverVar: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeSelectVar: string;
-  /** @state shared-ui */
+  /** @state presence */
   lodModeByWindow: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   beforePaneCamera: Camera;
-  /** @state local-ui */
+  /** @state config */
   reorganizeEpoch: number;
-  /** @state local-ui */
+  /** @state config */
   hoverEpoch: number;
-  /** @state local-ui */
+  /** @state config */
   selectEpoch: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

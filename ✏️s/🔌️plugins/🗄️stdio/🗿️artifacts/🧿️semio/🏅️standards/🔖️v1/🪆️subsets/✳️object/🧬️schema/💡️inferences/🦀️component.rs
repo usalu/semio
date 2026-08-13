@@ -25,7 +25,7 @@ use super::composition::{compute_semio_object_composition, SemioObjectCompositio
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.object.inference")]
 pub struct SemioObjectInference {
-    #[state(inferred)]
+    #[derived]
     pub composition: SemioObjectComposition,
 }
 

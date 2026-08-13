@@ -4,7 +4,7 @@ package semio.s.stdio.semio.value.inference;
 // 💡️ Semio value inference schema — real variant census + max depth over the value graph.
 
 message SemioValueInference {
-  // @state inferred
+  // @derived
   SemioValueCensus census = 1;
 }
 

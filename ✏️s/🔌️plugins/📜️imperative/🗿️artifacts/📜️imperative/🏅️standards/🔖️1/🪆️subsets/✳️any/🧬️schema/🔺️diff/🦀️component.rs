@@ -15,19 +15,19 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.imperative.imperative")]
 pub struct ImperativeDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::imperative::schema::ImperativeArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub flow: Option<ImperativeFlowChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub text: Option<ImperativeTextChild>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_step_ids: Option<ImperativeStringList>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff

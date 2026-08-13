@@ -1061,7 +1061,7 @@ mod tests {
     fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
         let app = app();
         let projection = app.snapshot().expect("projection");
-        let doc = ArtifactView { snapshot: &projection, history: &HistoryView::empty() };
+        let doc = ArtifactView::new(&projection, &HistoryView::empty());
         let inner = RemodelPlayApp;
         let media = Media {
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
@@ -1077,7 +1077,7 @@ mod tests {
         assert_eq!(next.streams[0].id, REMODEL_WORKFLOW_PHOTOS_STREAM_ID);
         assert_eq!(next.streams[0].frames.len(), 1);
 
-        let doc2 = ArtifactView { snapshot: &next, history: &HistoryView::empty() };
+        let doc2 = ArtifactView::new(&next, &HistoryView::empty());
         let emit2 = RemodelPlayApp::import_media("photos:in", &media, &doc2).expect("second photos:in import");
         let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation));
         assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
@@ -1089,7 +1089,7 @@ mod tests {
     fn export_media_mesh_out_exports_a_structured_3d_mesh() {
         let app = app();
         let projection = app.snapshot().expect("projection");
-        let doc = ArtifactView { snapshot: &projection, history: &HistoryView::empty() };
+        let doc = ArtifactView::new(&projection, &HistoryView::empty());
         let media = RemodelPlayApp::export_media("mesh:out", &doc).expect("mesh:out export");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Mesh);

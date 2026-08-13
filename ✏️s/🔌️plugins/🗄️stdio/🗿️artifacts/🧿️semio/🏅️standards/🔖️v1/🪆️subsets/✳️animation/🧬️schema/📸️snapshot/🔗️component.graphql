@@ -53,6 +53,6 @@ type AnimTimeline {
 }
 
 type SemioAnimationSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  timelines: [AnimTimeline!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  timelines: [AnimTimeline!]! @state(class: ARTIFACT)
 }

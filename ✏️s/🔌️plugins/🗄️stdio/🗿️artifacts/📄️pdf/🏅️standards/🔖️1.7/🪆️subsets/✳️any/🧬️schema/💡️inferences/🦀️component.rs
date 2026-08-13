@@ -18,7 +18,7 @@ use super::outline::Pdf17Outline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7.inference")]
 pub struct Pdf17Inference {
-    #[state(inferred)]
+    #[derived]
     pub outline: Pdf17Outline,
 }
 

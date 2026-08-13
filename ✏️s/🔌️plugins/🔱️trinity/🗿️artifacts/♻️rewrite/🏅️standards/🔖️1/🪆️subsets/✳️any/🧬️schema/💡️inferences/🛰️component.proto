@@ -4,7 +4,7 @@ package semio.s.trinity.rewrite.inference;
 // 💡️ Rewrite inference schema — bounds (bounding box + node count) over `ruleLayout`.
 
 message RewriteInference {
-  // @state inferred
+  // @derived
   RewriteBounds bounds = 1;
 }
 

@@ -18,20 +18,20 @@ use std::hash::{Hash, Hasher};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.draw.draw")]
 pub struct DrawArtifact {
-    #[state(persistent)] pub schema: String,
-    #[state(persistent)] pub id: String,
-    #[state(persistent)] pub title: Option<String>,
-    #[state(persistent)] pub layers: Vec<DrawLayerNode>,
-    #[state(persistent)] pub assets: BTreeMap<String, DrawImageAsset>,
-    #[state(persistent)] pub artboard: Option<DrawArtboard>,
-    #[state(shared_ui)] pub selected_ids: Vec<String>,
-    #[state(shared_ui)] pub active_utility_id: String,
-    #[state(local_ui)] pub engagement_input: String,
-    #[state(local_ui)] pub camera_x: f64,
-    #[state(local_ui)] pub camera_y: f64,
-    #[state(local_ui)] pub camera_zoom: f64,
-    #[state(local_ui)] pub locale: String,
-    #[state(preview)] pub hovered_id: Option<String>,
+    #[state(artifact)] pub schema: String,
+    #[state(artifact)] pub id: String,
+    #[state(artifact)] pub title: Option<String>,
+    #[state(artifact)] pub layers: Vec<DrawLayerNode>,
+    #[state(artifact)] pub assets: BTreeMap<String, DrawImageAsset>,
+    #[state(artifact)] pub artboard: Option<DrawArtboard>,
+    #[state(presence)] pub selected_ids: Vec<String>,
+    #[state(presence)] pub active_utility_id: String,
+    #[state(config)] pub engagement_input: String,
+    #[state(config)] pub camera_x: f64,
+    #[state(config)] pub camera_y: f64,
+    #[state(config)] pub camera_zoom: f64,
+    #[state(config)] pub locale: String,
+    #[state(artifact)] pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 

@@ -40,64 +40,64 @@ message CadDislocateOptions {
 }
 
 message CadConfig {
-  // @state local-ui
+  // @state config
   repeated string selected_object_ids = 1;
-  // @state local-ui
+  // @state config
   repeated string selected_node_ids = 2;
-  // @state local-ui
+  // @state config
   string selection_method = 3;
-  // @state local-ui
+  // @state config
   optional string hovered_object_id = 4;
-  // @state local-ui
+  // @state config
   optional CadHoverTarget hovered_target = 5;
-  // @state local-ui
+  // @state config
   optional string active_object_id = 6;
-  // @state local-ui
+  // @state config
   CadComponentSelection component_selection = 7;
-  // @state local-ui
+  // @state config
   string engagement_input = 8;
-  // @state local-ui
+  // @state config
   string engagement_step = 9;
-  // @state local-ui
+  // @state config
   optional string active_example_id = 10;
-  // @state local-ui
+  // @state config
   optional string selected_reference_model_definition_id = 11;
-  // @state local-ui
+  // @state config
   optional string selected_reference_id = 12;
-  // @state local-ui
+  // @state config
   optional string selected_primitive_id = 13;
-  // @state local-ui
+  // @state config
   optional string selected_primitive_kind = 14;
-  // @state local-ui
+  // @state config
   optional string engagement_pane = 15;
-  // @state local-ui
+  // @state config
   optional string engagement_session_json = 16;
-  // @state local-ui
+  // @state config
   optional string last_finalized_interaction_id = 17;
-  // @state local-ui
+  // @state config
   CadSunConfig sun = 18;
-  // @state local-ui
+  // @state config
   CadCamera camera = 19;
-  // @state local-ui
+  // @state config
   CadCamera camera_building = 20;
-  // @state local-ui
+  // @state config
   CadCamera camera_energy = 21;
-  // @state local-ui
+  // @state config
   CadCamera camera_structure_classic = 22;
-  // @state local-ui
+  // @state config
   CadDislocateOptions dislocate_shape = 23;
-  // @state local-ui
+  // @state config
   CadDislocateOptions dislocate_building = 24;
-  // @state local-ui
+  // @state config
   CadDislocateOptions dislocate_energy = 25;
-  // @state local-ui
+  // @state config
   CadDislocateOptions dislocate_structure_classic = 26;
-  // @state local-ui
+  // @state config
   string active_utility_id = 27;
-  // @state local-ui
+  // @state config
   string locale = 28;
-  // @state local-ui
+  // @state config
   string terminology = 29;
-  // @state local-ui
+  // @state config
   string contributions_json = 30;
 }

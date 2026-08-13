@@ -1,13 +1,13 @@
 syntax = "proto3";
 package semio.s.animate.present.diff;
 message PresentDiff {
-  optional PresentArtifact artifact = 1; // @state persistent
-  optional string schema = 2; // @state persistent
-  optional FigureTileSource source = 3; // @state persistent
-  optional PresentTilesDelta tiles = 4; // @state persistent
-  optional PresentStringList selected_ids = 5; // @state shared-ui
-  optional string engagement_input = 6; // @state local-ui
-  optional string locale = 7; // @state local-ui
+  optional PresentArtifact artifact = 1; // @state artifact
+  optional string schema = 2; // @state artifact
+  optional FigureTileSource source = 3; // @state artifact
+  optional PresentTilesDelta tiles = 4; // @state artifact
+  optional PresentStringList selected_ids = 5; // @state presence
+  optional string engagement_input = 6; // @state config
+  optional string locale = 7; // @state config
 }
 message PresentStringList { repeated string values = 1; }
 message PresentTilesDelta {

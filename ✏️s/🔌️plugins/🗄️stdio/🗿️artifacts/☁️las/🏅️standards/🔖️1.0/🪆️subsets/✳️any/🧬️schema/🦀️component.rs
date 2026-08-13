@@ -9,15 +9,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.las")]
 pub struct LasArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub header: crate::artifacts::las::schema::snapshot::LasHeader,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub vlrs: Vec<crate::artifacts::las::schema::snapshot::LasVlr>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub points: Vec<crate::artifacts::las::schema::snapshot::LasPoint>,
 }

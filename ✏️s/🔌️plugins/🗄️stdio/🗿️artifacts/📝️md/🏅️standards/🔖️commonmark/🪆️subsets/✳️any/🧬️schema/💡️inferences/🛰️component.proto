@@ -4,7 +4,7 @@ package semio.s.stdio.md.inference;
 // 💡️ Md inference schema — document outline (heading outline, block/word counts).
 
 message MdInference {
-  // @state inferred
+  // @derived
   MdOutline outline = 1;
 }
 

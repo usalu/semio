@@ -1,37 +1,37 @@
 /** 🧬️ Remodel artifact schema — TypeScript mirror of the normative JSON Schema. */
 
 export interface RemodelArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   streams: MediaStream[];
-  /** @state persistent */
+  /** @state artifact */
   assets: Record<string, ImageAsset>;
-  /** @state persistent */
+  /** @state artifact */
   calibration: CalibrationState;
-  /** @state persistent */
+  /** @state artifact */
   params: ReconstructionParams;
-  /** @state persistent */
+  /** @state artifact */
   gcps: GroundControlPoint[];
-  /** @state persistent */
+  /** @state artifact */
   job: ReconstructionJob;
-  /** @state persistent */
+  /** @state artifact */
   results: ReconstructionResults;
-  /** @state shared-ui */
+  /** @state presence */
   selection: RemodelUiSelection;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state shared-ui */
+  /** @state presence */
   reportTable: string;
-  /** @state shared-ui */
+  /** @state presence */
   frameCursor: RemodelUiFrameCursor;
-  /** @state local-ui */
+  /** @state config */
   camera: RemodelUiCamera;
-  /** @state local-ui */
+  /** @state config */
   layers: RemodelUiLayers;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

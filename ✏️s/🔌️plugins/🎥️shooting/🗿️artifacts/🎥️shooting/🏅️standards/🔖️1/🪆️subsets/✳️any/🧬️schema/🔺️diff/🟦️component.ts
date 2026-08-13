@@ -1,47 +1,47 @@
 /** 🧬️ Shooting diff schema — sparse field delta over the artifact. */
 
 export interface ShootingDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: ShootingArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   assets?: ShootingAssetsDelta;
-  /** @state persistent */
+  /** @state artifact */
   savedCameras?: ShootingSavedCamerasDelta;
-  /** @state persistent */
+  /** @state artifact */
   scene?: ShootingSceneLighting;
-  /** @state persistent */
+  /** @state artifact */
   shots?: ShootingShotsDelta;
-  /** @state persistent */
+  /** @state artifact */
   activeShotId?: string;
-  /** @state persistent */
+  /** @state artifact */
   activeAssetId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedShotIds?: ShootingStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedAssetIds?: ShootingStringList;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId?: string;
-  /** @state local-ui */
+  /** @state config */
   defaultShotFormat?: string;
-  /** @state local-ui */
+  /** @state config */
   defaultShotShape?: string;
-  /** @state local-ui */
+  /** @state config */
   defaultAssetFormat?: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod?: string;
-  /** @state local-ui */
+  /** @state config */
   centerModel?: boolean;
-  /** @state local-ui */
+  /** @state config */
   fitRevision?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraDraftLabel?: string;
-  /** @state local-ui */
+  /** @state config */
   camera?: ShootingCamera;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredAssetId?: string | null;
 }
 

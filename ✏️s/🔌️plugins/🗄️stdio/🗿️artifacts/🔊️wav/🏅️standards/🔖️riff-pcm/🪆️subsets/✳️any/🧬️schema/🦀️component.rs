@@ -9,13 +9,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.wav")]
 pub struct WavArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fmt: WavFmt,
-    #[state(persistent)]
+    #[state(artifact)]
     pub data: WavData,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub other_chunks: Vec<RiffChunk>,
 }

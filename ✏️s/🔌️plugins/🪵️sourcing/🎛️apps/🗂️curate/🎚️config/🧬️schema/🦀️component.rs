@@ -7,10 +7,10 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curate.config")]
 pub struct SourcingCurateConfig {
-    #[state(local_ui)] pub filters: Filters,
-    #[state(local_ui)] pub selected_object_id: Option<String>,
-    #[state(local_ui)] pub locale: String,
-    #[state(local_ui)] pub contributions_json: String,
+    #[state(config)] pub filters: Filters,
+    #[state(config)] pub selected_object_id: Option<String>,
+    #[state(config)] pub locale: String,
+    #[state(config)] pub contributions_json: String,
 }
 
 //#region 🔖️AppSchemaDescriptor

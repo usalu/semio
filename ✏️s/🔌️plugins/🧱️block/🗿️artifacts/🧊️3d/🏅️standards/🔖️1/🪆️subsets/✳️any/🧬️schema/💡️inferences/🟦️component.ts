@@ -11,6 +11,6 @@ export interface Block3dBounds {
 }
 
 export interface Block3dInference {
-  /** @state inferred */
+  /** @derived */
   bounds: Block3dBounds;
 }

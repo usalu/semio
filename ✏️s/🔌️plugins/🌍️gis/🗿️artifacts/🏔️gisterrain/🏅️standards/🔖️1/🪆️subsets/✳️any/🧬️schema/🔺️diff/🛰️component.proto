@@ -4,17 +4,17 @@ package semio.s.gis.gisterrain.diff;
 // 🧬️ GIS terrain diff schema — sparse field delta.
 
 message GisTerrainDiff {
-  // @state persistent
+  // @state artifact
   optional GisTerrainArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional double exaggeration = 2;
-  // @state persistent
+  // @state artifact
   optional string imported_features_json = 3;
-  // @state shared-ui
+  // @state presence
   optional GisTerrainStringList selected_ids = 4;
-  // @state local-ui
+  // @state config
   optional string camera_json = 5;
-  // @state local-ui
+  // @state config
   optional string locale = 6;
 }
 

@@ -1,13 +1,13 @@
 /** 🧬️ Imperative diff schema — sparse field delta over the artifact. */
 
 export interface ImperativeDiff {
-  /** @state persistent */ artifact?: ImperativeArtifact;
-  /** @state persistent */ schema?: string;
-  /** @state persistent */ path?: ImperativePathDelta;
-  /** @state persistent */ seed?: Record<string, unknown>;
-  /** @state shared-ui */ selectedStepIds?: ImperativeStringList;
-  /** @state local-ui */ locale?: string;
-  /** @state local-ui */ contributionsJson?: string;
+  /** @state artifact */ artifact?: ImperativeArtifact;
+  /** @state artifact */ schema?: string;
+  /** @state artifact */ path?: ImperativePathDelta;
+  /** @state artifact */ seed?: Record<string, unknown>;
+  /** @state presence */ selectedStepIds?: ImperativeStringList;
+  /** @state config */ locale?: string;
+  /** @state config */ contributionsJson?: string;
 }
 
 export interface ImperativeStringList {

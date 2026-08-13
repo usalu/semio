@@ -19,11 +19,11 @@ use super::bounds::{object_count, scene_bounds, vertex_count, CadBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad.inference")]
 pub struct CadInference {
-    #[state(inferred)]
+    #[derived]
     pub object_count: usize,
-    #[state(inferred)]
+    #[derived]
     pub vertex_count: usize,
-    #[state(inferred)]
+    #[derived]
     pub bounds: Option<CadBounds>,
 }
 
@@ -108,7 +108,8 @@ mod tests {
 mod derive_transformation {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 
-    use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle, Vec3};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
+    use semio_framework_3d::brep::engine::Vec3;
     use std::collections::HashMap;
 
     //#region 🔖️ClassifyRules
@@ -150,7 +151,7 @@ mod derive_transformation {
 
     //#region 🔖️FaceAnalytics
     fn face_mesh_analytics(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<(Vec3, Vec3)> {
-        let mesh = semio_framework_3d::brep::engine::block_on(kernel.tessellate(face, 0.1)).ok()?;
+        let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.tessellate(face, 0.1)).ok()?;
         let mut area_sum = 0.0;
         let mut centroid = [0.0, 0.0, 0.0];
         let mut normal = [0.0, 0.0, 0.0];
@@ -291,14 +292,14 @@ mod derive_transformation {
     /// @emoji 📦️ Builds or reuses a kernel solid for a CAD object.
     pub fn solid_for_object(kernel: &mut dyn BrepKernel, object: &CadObject) -> Option<GeometryHandle> {
         if let Some(handle) = object.solid_handle.as_ref() {
-            if semio_framework_3d::brep::engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
+            if semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
                 return Some(GeometryHandle(handle.clone()));
             }
         }
         let [ex, ey, ez] = object.extent.unwrap_or([1.0, 1.0, 1.0]);
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         let is_cylindrical = object.typology.contains("column");
-        let handle = if is_cylindrical { semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok() } else { semio_framework_3d::brep::engine::block_on(kernel.box_prim(width, depth, height)).ok() }?;
+        let handle = if is_cylindrical { semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok() } else { semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height)).ok() }?;
         Some(handle)
     }
 
@@ -307,9 +308,9 @@ mod derive_transformation {
         let [ex, ey, ez] = extent;
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         if typology.contains("column") {
-            semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
         } else {
-            semio_framework_3d::brep::engine::block_on(kernel.box_prim(width, depth, height)).ok()
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height)).ok()
         }
     }
 
@@ -319,7 +320,7 @@ mod derive_transformation {
         }
         let mut current = solids[0].clone();
         for solid in solids.iter().skip(1) {
-            current = semio_framework_3d::brep::engine::block_on(kernel.fuse(&current, solid)).ok()?;
+            current = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.fuse(&current, solid)).ok()?;
         }
         Some(current)
     }
@@ -346,7 +347,7 @@ mod derive_transformation {
             Some(hull) => hull,
             None => return Vec::new(),
         };
-        let topology = match semio_framework_3d::brep::engine::block_on(kernel.deconstruct(&hull)) {
+        let topology = match semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.deconstruct(&hull)) {
             Ok(topology) => topology,
             Err(_) => return Vec::new(),
         };
@@ -515,8 +516,8 @@ mod derive_transformation {
 
         #[test]
         fn derive_from_geometry_classifies_box() {
-            let mut kernel = semio_framework_3d::brep::kernel::Brep::new();
-            let solid = semio_framework_3d::brep::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box");
+            let mut kernel = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep::new();
+            let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box");
             let source = vec![CadObject {
                 id: "object-box".into(),
                 label: "Box".into(),
@@ -791,8 +792,9 @@ pub use construct_query::*;
 mod scene_compute {
     use crate::artifacts::cad::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot};
-    use semio_framework_3d::brep::kernel::mesh_data_from_mesh_transfer;
-    use semio_framework_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
+    use semio_framework_3d::brep::engine::MeshTransfer;
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use serde_json::Value;
@@ -844,8 +846,8 @@ mod scene_compute {
     /// exact ambient-reach anti-pattern the ticket exists to remove even though it was write-once).
     /// Every call site already builds, uses and drops its handles within the one call that owns
     /// this kernel, so no cross-call registry was ever load-bearing.
-    pub fn cad_brep_kernel() -> semio_framework_3d::brep::kernel::Brep {
-        semio_framework_3d::brep::kernel::Brep::new()
+    pub fn cad_brep_kernel() -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep {
+        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep::new()
     }
 
     /// @emoji 📐️ Tessellates a typology's primitive sized from authored geometry (or a universal

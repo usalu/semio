@@ -66,13 +66,29 @@ fn document_sync_json(document: &RasterSnapshot) -> String {
     value.to_string()
 }
 
+/// 🧩️ Resolves every asset handle on `document.assets` back to its real `RasterImageAsset` bytes
+/// through the working-scene cache accessor (`crate::artifacts::raster::raster_asset`, ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — `document.assets` now stores composed
+/// `s.stdio.semio.image` CHILD handles, not embedded bytes) — the ONE call site the WASM compositor's
+/// real pixel bytes funnel through. A handle whose content is not (or no longer) cached is honestly
+/// omitted rather than serialized as an empty/garbage blob (documented staleness gap, matches every
+/// other exemplar in this ticket).
+fn assets_json_from_document(document: &RasterSnapshot) -> String {
+    let resolved: std::collections::BTreeMap<String, crate::artifacts::raster::RasterImageAsset> = document
+        .assets
+        .keys()
+        .filter_map(|asset_id| crate::artifacts::raster::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset)))
+        .collect();
+    serde_json::to_string(&resolved).unwrap_or_else(|_| "{}".into())
+}
+
 /// 🎞️ Builds the shared `Paint2dScene` payload for both the composite and navigator windows. Takes
 /// `&RasterConfig` (an app-only view-state type), so per TEMPLATE.md §4's `DocumentHelpers` placement
 /// rule this stays at app level even though it has two window consumers.
 pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_utility: &str, view_mode: &str) -> semio_framework_plugin::Paint2dScene {
     semio_framework_plugin::Paint2dScene {
         document_sync_json: document_sync_json(document),
-        assets_json: serde_json::to_string(&document.assets).unwrap_or_else(|_| "{}".into()),
+        assets_json: assets_json_from_document(document),
         camera_json: serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
         selection_json: serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into()),
         hovered_id: runtime.hovered_id.clone(),
@@ -735,7 +751,7 @@ mod tests {
     #[test]
     fn raster_io_declares_image_in_out_and_export_media_covers_all_ports() {
         let projection = empty_raster_document();
-        let doc = ArtifactView { snapshot: &projection, history: &semio_framework_plugin::HistoryView::empty() };
+        let doc = ArtifactView::new(&projection, &semio_framework_plugin::HistoryView::empty());
         let app = RasterPlayApp;
         let image_out = RasterPlayApp::export_media("image:out", &doc).expect("image:out");
         let MediaPayload::Structured { schema, json } = image_out.payload else { panic!("expected structured payload") };

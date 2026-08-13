@@ -23,89 +23,89 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "id": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "languageId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "uri": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "text": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedAstIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "editorSelection": {
       "$ref": "#/$defs/WriterEditorSelection",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "editorSettings": {
       "$ref": "#/$defs/WriterEditorSettings",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "formatSignal": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lintSignal": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "revision": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraZoom": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "treeHoveredAstId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "editorHoverOffset": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

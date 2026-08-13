@@ -12,49 +12,49 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.en1996", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1996")]
 pub struct En1996Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_ed_knm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub z_mm3: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub area_mm2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub shear_area_mm2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_k_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_vk_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: crate::document::AnnexChoice,
-    #[state(persistent)]
+    #[state(artifact)]
     pub masonry_class: crate::artifacts::en1996::MasonryClass,
-    #[state(persistent)]
+    #[state(artifact)]
     pub design_situation: crate::document::DesignSituation,
-    #[state(persistent)]
+    #[state(artifact)]
     pub mu: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub wall_thickness_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_resistance_min: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub unit: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub exposure: crate::artifacts::en1996::part_2::ExposureClass,
-    #[state(persistent)]
+    #[state(artifact)]
     pub mortar: crate::artifacts::en1996::part_2::MortarClass,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bed_joint_thickness_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub storeys: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_ef_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub t_ef_mm: f64,
 }
 //#endregion 🔖️Snapshot

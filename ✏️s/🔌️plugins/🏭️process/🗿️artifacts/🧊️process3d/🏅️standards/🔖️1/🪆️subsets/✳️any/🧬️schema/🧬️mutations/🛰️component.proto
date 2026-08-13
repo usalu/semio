@@ -4,13 +4,13 @@ package semio.s.process.process3d.mutation;
 // 🧬️ Process3d mutation schema — persistent fields only.
 
 message Process3dMutation {
-  // @state persistent
+  // @state artifact
   Process3dWorkshop workshop = 1;
-  // @state persistent
+  // @state artifact
   Process3dStock stock = 2;
-  // @state persistent
+  // @state artifact
   repeated Process3dStep steps = 3;
-  // @state persistent
+  // @state artifact
   optional uint32 resolved_up_to = 4;
 }
 

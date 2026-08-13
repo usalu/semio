@@ -1,9 +1,9 @@
 /** 🧬️ Lowpoly snapshot schema — persistent fields only. */
 
 export interface LowpolySnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   objects: LowpolyObject[];
 }
 

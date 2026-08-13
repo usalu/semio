@@ -5,17 +5,17 @@
   "additionalProperties": false,
   "required": ["schema", "vertices", "texcoords", "normals", "faces", "groups", "objects", "usemtl", "smoothingGroups", "unknownStatements"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "vertices": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjVertex" } },
-    "texcoords": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjTexCoord" } },
-    "normals": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjNormal" } },
-    "faces": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjFace" } },
-    "groups": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjGroup" } },
-    "objects": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjObject" } },
-    "mtllib": { "type": "string", "x-semio-state": "persistent" },
-    "usemtl": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjUsemtlRange" } },
-    "smoothingGroups": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjSmoothingRange" } },
-    "unknownStatements": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/ObjUnknownStatement" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "vertices": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjVertex" } },
+    "texcoords": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjTexCoord" } },
+    "normals": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjNormal" } },
+    "faces": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjFace" } },
+    "groups": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjGroup" } },
+    "objects": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjObject" } },
+    "mtllib": { "type": "string", "x-semio-state": "artifact" },
+    "usemtl": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjUsemtlRange" } },
+    "smoothingGroups": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjSmoothingRange" } },
+    "unknownStatements": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/ObjUnknownStatement" } }
   },
   "$defs": {
     "ObjVertex": {

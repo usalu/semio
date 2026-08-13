@@ -4,7 +4,7 @@ package semio.s.stdio.epw.inference;
 // 💡️ Epw inference schema — hourly dry-bulb temperature min/max/avg derived from `records`.
 
 message EpwInference {
-  // @state inferred
+  // @derived
   EpwClimateSummary climate = 1;
 }
 

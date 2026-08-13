@@ -17,26 +17,26 @@ use serde_json::Value;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub version: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub steps: Vec<FormStep>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub current_step_index: u32,
-    #[state(local_ui)]
+    #[state(config)]
     pub try_values_json: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub contributions_json: String,
 }
 //#endregion 🔖️Artifact

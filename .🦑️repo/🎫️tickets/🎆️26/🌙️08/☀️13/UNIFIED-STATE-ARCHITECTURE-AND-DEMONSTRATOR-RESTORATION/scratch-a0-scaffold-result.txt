@@ -1,0 +1,6 @@
+window_dirs: 238
+window_markers: 238
+mode_dirs: 179
+mode_markers: 179
+windows: 119
+modes: 59

@@ -13,15 +13,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Artifact {
-    #[state(persistent)] pub g_k: f64,
-    #[state(persistent)]
+    #[state(artifact)] pub g_k: f64,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub q_k: En1990QkChild,
-    #[state(persistent)] pub resistance_kn: f64,
-    #[state(persistent)] pub consequence_class: u8,
-    #[state(persistent)] pub annex: crate::document::AnnexChoice,
-    #[state(persistent)] pub seismic_a_ed_kn: f64,
-    #[state(shared_ui)] pub selected_check_index: Option<u32>,
+    #[state(artifact)] pub resistance_kn: f64,
+    #[state(artifact)] pub consequence_class: u8,
+    #[state(artifact)] pub annex: crate::document::AnnexChoice,
+    #[state(artifact)] pub seismic_a_ed_kn: f64,
+    #[state(presence)] pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 

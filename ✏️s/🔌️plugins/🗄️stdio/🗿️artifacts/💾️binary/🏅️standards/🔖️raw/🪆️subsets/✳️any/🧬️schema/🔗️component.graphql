@@ -1,5 +1,5 @@
 # 🧬️ BinaryArtifact
 type BinaryArtifact {
-  schema: String! @state(class: PERSISTENT)
-  bytes: String! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  bytes: String! @state(class: ARTIFACT)
 }

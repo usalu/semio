@@ -12,25 +12,25 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::wires::schema::WiresArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub wires_fixture: Option<DslValue>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub content: Option<crate::artifacts::wires::WiresContentChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub camera: Option<DslValue>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: Option<DslValue>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_ids: Option<WiresStringList>,
-    #[state(preview)]
+    #[state(artifact)]
     pub drag_node_id: Option<Option<String>>,
-    #[state(preview)]
+    #[state(artifact)]
     pub drag_last_x: Option<f64>,
-    #[state(preview)]
+    #[state(artifact)]
     pub drag_last_y: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

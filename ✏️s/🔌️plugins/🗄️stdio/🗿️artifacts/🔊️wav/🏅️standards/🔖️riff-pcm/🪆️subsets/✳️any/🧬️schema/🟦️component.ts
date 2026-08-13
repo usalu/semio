@@ -5,6 +5,6 @@ export interface WavArtifactEntry {
   value: string;
 }
 export interface WavArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: WavArtifactEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: WavArtifactEntry[];
 }

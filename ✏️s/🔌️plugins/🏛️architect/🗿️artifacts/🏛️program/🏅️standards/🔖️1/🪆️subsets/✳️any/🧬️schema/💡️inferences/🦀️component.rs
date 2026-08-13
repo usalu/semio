@@ -42,7 +42,7 @@ use std::collections::{HashMap, HashSet};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.architect.program.inference")]
 pub struct ProgramInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: ProgramTopology,
 }
 

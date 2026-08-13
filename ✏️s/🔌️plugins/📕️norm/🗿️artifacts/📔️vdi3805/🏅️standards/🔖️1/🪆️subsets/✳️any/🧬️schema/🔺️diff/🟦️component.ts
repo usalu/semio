@@ -1,27 +1,27 @@
 /** 🧬️ Vdi3805 diff schema — sparse field delta. */
 
 export interface Vdi3805Diff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Vdi3805Artifact;
-  /** @state persistent */
+  /** @state artifact */
   manufacturerFile?: string;
-  /** @state persistent */
+  /** @state artifact */
   catalog?: string;
-  /** @state persistent */
+  /** @state artifact */
   editionProfile?: Record<string, string>;
-  /** @state persistent */
+  /** @state artifact */
   correctionAsOf?: string;
-  /** @state persistent */
+  /** @state artifact */
   strictMode?: boolean;
-  /** @state persistent */
+  /** @state artifact */
   index?: string;
-  /** @state persistent */
+  /** @state artifact */
   geometry?: Record<string, string>;
-  /** @state persistent */
+  /** @state artifact */
   curves?: Record<string, string>;
-  /** @state persistent */
+  /** @state artifact */
   limits?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }
 

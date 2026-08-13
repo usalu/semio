@@ -1,8 +1,8 @@
 /** 🧬️ S Home snapshot schema — persistent fields only. */
 
 export interface SHomeSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   catalogGeneration: number;
 }

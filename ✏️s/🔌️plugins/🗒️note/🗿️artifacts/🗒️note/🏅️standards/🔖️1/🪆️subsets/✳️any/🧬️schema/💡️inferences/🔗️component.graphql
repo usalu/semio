@@ -1,7 +1,7 @@
 # 💡️ Note inference schema — block outline (flattened block names + word/block counts).
 
 type NoteInference {
-  outline: NoteOutline! @state(class: INFERRED)
+  outline: NoteOutline! @derived
 }
 
 type NoteOutline {

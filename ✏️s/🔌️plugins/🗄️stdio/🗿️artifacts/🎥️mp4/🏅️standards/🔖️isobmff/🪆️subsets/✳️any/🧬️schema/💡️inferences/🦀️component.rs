@@ -19,7 +19,7 @@ use super::duration::{compute_mp4_duration, Mp4Duration};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4.inference")]
 pub struct Mp4Inference {
-    #[state(inferred)]
+    #[derived]
     pub duration: Mp4Duration,
 }
 

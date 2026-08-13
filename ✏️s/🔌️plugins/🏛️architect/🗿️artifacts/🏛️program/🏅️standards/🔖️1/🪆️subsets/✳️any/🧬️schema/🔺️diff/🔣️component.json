@@ -9,295 +9,295 @@
     "artifact": {
       "title": "ProgramArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/ProgramMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "project": {
       "$ref": "#/$defs/ProjectDefinition",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "stakeholders": {
       "$ref": "#/$defs/ProgramStakeholdersDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "users": {
       "$ref": "#/$defs/ProgramUsersDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activities": {
       "$ref": "#/$defs/ProgramActivitiesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "functions": {
       "$ref": "#/$defs/ProgramFunctionsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "elements": {
       "$ref": "#/$defs/ProgramElementsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "quantities": {
       "$ref": "#/$defs/ProgramQuantitiesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "relationships": {
       "$ref": "#/$defs/ProgramRelationshipsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "adjacencies": {
       "$ref": "#/$defs/ProgramAdjacenciesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "processes": {
       "$ref": "#/$defs/ProgramProcessesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "flows": {
       "$ref": "#/$defs/ProgramFlowsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "accessRules": {
       "$ref": "#/$defs/ProgramAccessRulesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "operations": {
       "$ref": "#/$defs/ProgramOperationsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "equipment": {
       "$ref": "#/$defs/ProgramEquipmentDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resources": {
       "$ref": "#/$defs/ProgramResourcesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "storage": {
       "$ref": "#/$defs/ProgramStorageDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "environmental": {
       "$ref": "#/$defs/ProgramEnvironmentalDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "humanFactors": {
       "$ref": "#/$defs/ProgramHumanFactorsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "accessibility": {
       "$ref": "#/$defs/ProgramAccessibilityDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "privacy": {
       "$ref": "#/$defs/ProgramPrivacyDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "safety": {
       "$ref": "#/$defs/ProgramSafetyDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "security": {
       "$ref": "#/$defs/ProgramSecurityDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "regulatory": {
       "$ref": "#/$defs/ProgramRegulatoryDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "siteContext": {
       "$ref": "#/$defs/ProgramSiteContextDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "organizational": {
       "$ref": "#/$defs/ProgramOrganizationalDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "services": {
       "$ref": "#/$defs/ProgramServicesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "infrastructure": {
       "$ref": "#/$defs/ProgramInfrastructureDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "information": {
       "$ref": "#/$defs/ProgramInformationDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "communication": {
       "$ref": "#/$defs/ProgramCommunicationDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "wayfinding": {
       "$ref": "#/$defs/ProgramWayfindingDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schedules": {
       "$ref": "#/$defs/ProgramSchedulesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "flexibility": {
       "$ref": "#/$defs/ProgramFlexibilityDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "growth": {
       "$ref": "#/$defs/ProgramGrowthDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sustainability": {
       "$ref": "#/$defs/ProgramSustainabilityDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resilience": {
       "$ref": "#/$defs/ProgramResilienceDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "costs": {
       "$ref": "#/$defs/ProgramCostsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "delivery": {
       "$ref": "#/$defs/ProgramDeliveryDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "risks": {
       "$ref": "#/$defs/ProgramRisksDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "conflicts": {
       "$ref": "#/$defs/ProgramConflictsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "requirements": {
       "$ref": "#/$defs/ProgramRequirementsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "priorities": {
       "$ref": "#/$defs/ProgramPrioritiesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "scenarios": {
       "$ref": "#/$defs/ProgramScenariosDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "options": {
       "$ref": "#/$defs/ProgramOptionsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "decisions": {
       "$ref": "#/$defs/ProgramDecisionsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "validations": {
       "$ref": "#/$defs/ProgramValidationsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "performance": {
       "$ref": "#/$defs/ProgramPerformanceDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "quality": {
       "$ref": "#/$defs/ProgramQualityDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "documents": {
       "$ref": "#/$defs/ProgramDocumentsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "assumptions": {
       "$ref": "#/$defs/ProgramAssumptionsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "constraints": {
       "$ref": "#/$defs/ProgramConstraintsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "complianceRecords": {
       "$ref": "#/$defs/ProgramComplianceRecordsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "approvals": {
       "$ref": "#/$defs/ProgramApprovalsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meetings": {
       "$ref": "#/$defs/ProgramMeetingsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "changes": {
       "$ref": "#/$defs/ProgramChangesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "collaboration": {
       "$ref": "#/$defs/ProgramCollaborationDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "analyses": {
       "$ref": "#/$defs/ProgramAnalysesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "reports": {
       "$ref": "#/$defs/ProgramReportsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "searchFilters": {
       "$ref": "#/$defs/ProgramSearchFiltersDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "statusRecords": {
       "$ref": "#/$defs/ProgramStatusRecordsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "workshops": {
       "$ref": "#/$defs/ProgramWorkshopsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "surveys": {
       "$ref": "#/$defs/ProgramSurveysDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "issues": {
       "$ref": "#/$defs/ProgramIssuesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "auditEvents": {
       "$ref": "#/$defs/ProgramAuditEventsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "templates": {
       "$ref": "#/$defs/ProgramTemplatesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "knowledge": {
       "$ref": "#/$defs/ProgramKnowledgeDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "benchmarks": {
       "$ref": "#/$defs/ProgramBenchmarksDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "traces": {
       "$ref": "#/$defs/ProgramTracesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "governance": {
       "$ref": "#/$defs/Governance",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "$ref": "#/$defs/ProgramStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeRegister": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "adjacencyKindFilter": {
       "oneOf": [
@@ -308,46 +308,46 @@
           "$ref": "#/$defs/AdjacencyKind"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeReportJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "searchQuery": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "searchHistoryJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lastResultJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lastAnalysisJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "graphCameraX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "graphCameraY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "graphCameraZoom": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

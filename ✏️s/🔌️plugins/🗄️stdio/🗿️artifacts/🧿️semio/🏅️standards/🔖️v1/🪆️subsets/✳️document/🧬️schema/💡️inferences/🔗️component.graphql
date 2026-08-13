@@ -1,7 +1,7 @@
 # 💡️ Semio document inference schema — heading/word/block-derived document outline.
 
 type SemioDocumentInference {
-  outline: SemioDocumentOutline! @state(class: INFERRED)
+  outline: SemioDocumentOutline! @derived
 }
 
 type SemioDocumentOutline {

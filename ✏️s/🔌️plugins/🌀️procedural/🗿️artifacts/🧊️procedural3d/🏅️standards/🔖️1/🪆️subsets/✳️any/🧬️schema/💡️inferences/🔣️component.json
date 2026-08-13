@@ -7,7 +7,7 @@
   "properties": {
     "topology": {
       "$ref": "#/$defs/Procedural3dTopology",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

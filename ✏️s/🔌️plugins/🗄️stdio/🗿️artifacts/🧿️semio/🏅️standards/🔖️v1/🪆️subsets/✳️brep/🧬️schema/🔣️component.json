@@ -4,13 +4,13 @@
   "description": "Full artifact state, mirrors SemioBrepSnapshot field for field. See ./📸️snapshot/🔣️component.json for the entity type definitions.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "vertices": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepVertex" } },
-    "edges": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepEdge" } },
-    "loops": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepLoop" } },
-    "faces": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepFace" } },
-    "shells": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepShell" } },
-    "solids": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepSolid" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "vertices": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepVertex" } },
+    "edges": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepEdge" } },
+    "loops": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepLoop" } },
+    "faces": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepFace" } },
+    "shells": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepShell" } },
+    "solids": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️component.json#/$defs/brepSolid" } }
   },
   "required": ["schema", "vertices", "edges", "loops", "faces", "shells", "solids"]
 }

@@ -1,16 +1,16 @@
 # 🧬️ Iso16757 diff schema — sparse field delta.
 
 type Iso16757Diff {
-  artifact: Iso16757Artifact @state(class: PERSISTENT)
-  catalogue: String @state(class: PERSISTENT)
-  dictionary: String @state(class: PERSISTENT)
-  geometry: String @state(class: PERSISTENT)
-  selection: String @state(class: PERSISTENT)
-  partNumberRule: String @state(class: PERSISTENT)
-  partNumberInputs: [Iso16757StringMapEntry!] @state(class: PERSISTENT)
-  scriptLimits: String @state(class: PERSISTENT)
-  exchangeProcess: String @state(class: PERSISTENT)
-  selectedCheckIndex: Int @state(class: SHARED_UI)
+  artifact: Iso16757Artifact @state(class: ARTIFACT)
+  catalogue: String @state(class: ARTIFACT)
+  dictionary: String @state(class: ARTIFACT)
+  geometry: String @state(class: ARTIFACT)
+  selection: String @state(class: ARTIFACT)
+  partNumberRule: String @state(class: ARTIFACT)
+  partNumberInputs: [Iso16757StringMapEntry!] @state(class: ARTIFACT)
+  scriptLimits: String @state(class: ARTIFACT)
+  exchangeProcess: String @state(class: ARTIFACT)
+  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type Iso16757Artifact {

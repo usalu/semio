@@ -19,13 +19,13 @@ use super::bounds::{all_lon_lat_pairs, lon_lat_bounds, GisMapBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap.inference")]
 pub struct GisMapInference {
-    #[state(inferred)]
+    #[derived]
     pub position_count: usize,
-    #[state(inferred)]
+    #[derived]
     pub route_count: usize,
-    #[state(inferred)]
+    #[derived]
     pub region_count: usize,
-    #[state(inferred)]
+    #[derived]
     pub bounds: Option<GisMapBounds>,
 }
 

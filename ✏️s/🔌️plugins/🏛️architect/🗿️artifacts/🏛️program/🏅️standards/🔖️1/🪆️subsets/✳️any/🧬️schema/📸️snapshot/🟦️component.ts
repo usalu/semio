@@ -1,145 +1,145 @@
 /** 🧬️ ProgramSnapshot snapshot schema — persistent fields only. */
 
 export interface ProgramSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   meta: ProgramMeta;
-  /** @state persistent */
+  /** @state artifact */
   project: ProjectDefinition;
-  /** @state persistent */
+  /** @state artifact */
   stakeholders: Stakeholder[];
-  /** @state persistent */
+  /** @state artifact */
   users: UserProfile[];
-  /** @state persistent */
+  /** @state artifact */
   activities: Activity[];
-  /** @state persistent */
+  /** @state artifact */
   functions: Function[];
-  /** @state persistent */
+  /** @state artifact */
   elements: ProgramElement[];
-  /** @state persistent */
+  /** @state artifact */
   quantities: QuantityRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   relationships: Relationship[];
-  /** @state persistent */
+  /** @state artifact */
   adjacencies: Adjacency[];
-  /** @state persistent */
+  /** @state artifact */
   processes: Process[];
-  /** @state persistent */
+  /** @state artifact */
   flows: FlowRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   accessRules: AccessRule[];
-  /** @state persistent */
+  /** @state artifact */
   operations: OperationalRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   equipment: Equipment[];
-  /** @state persistent */
+  /** @state artifact */
   resources: Resource[];
-  /** @state persistent */
+  /** @state artifact */
   storage: StorageRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   environmental: EnvironmentalRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   humanFactors: HumanFactorRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   accessibility: AccessibilityRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   privacy: PrivacyRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   safety: SafetyRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   security: SecurityRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   regulatory: RegulatoryRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   siteContext: SiteContext[];
-  /** @state persistent */
+  /** @state artifact */
   organizational: OrganizationalRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   services: ServiceRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   infrastructure: InfrastructureRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   information: InformationRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   communication: CommunicationRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   wayfinding: WayfindingRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   schedules: ScheduleRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   flexibility: FlexibilityRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   growth: GrowthPlan[];
-  /** @state persistent */
+  /** @state artifact */
   sustainability: SustainabilityRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   resilience: ResilienceRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   costs: CostRequirement[];
-  /** @state persistent */
+  /** @state artifact */
   delivery: DeliveryConstraint[];
-  /** @state persistent */
+  /** @state artifact */
   risks: Risk[];
-  /** @state persistent */
+  /** @state artifact */
   conflicts: Conflict[];
-  /** @state persistent */
+  /** @state artifact */
   requirements: Requirement[];
-  /** @state persistent */
+  /** @state artifact */
   priorities: PriorityRecord[];
-  /** @state persistent */
+  /** @state artifact */
   scenarios: Scenario[];
-  /** @state persistent */
+  /** @state artifact */
   options: OptionEvaluation[];
-  /** @state persistent */
+  /** @state artifact */
   decisions: Decision[];
-  /** @state persistent */
+  /** @state artifact */
   validations: ValidationRecord[];
-  /** @state persistent */
+  /** @state artifact */
   performance: PerformanceCriterion[];
-  /** @state persistent */
+  /** @state artifact */
   quality: QualityRecord[];
-  /** @state persistent */
+  /** @state artifact */
   documents: DocumentRecord[];
-  /** @state persistent */
+  /** @state artifact */
   assumptions: Assumption[];
-  /** @state persistent */
+  /** @state artifact */
   constraints: ConstraintRecord[];
-  /** @state persistent */
+  /** @state artifact */
   complianceRecords: ComplianceRecord[];
-  /** @state persistent */
+  /** @state artifact */
   approvals: ApprovalRecord[];
-  /** @state persistent */
+  /** @state artifact */
   meetings: MeetingRecord[];
-  /** @state persistent */
+  /** @state artifact */
   changes: ChangeRecord[];
-  /** @state persistent */
+  /** @state artifact */
   collaboration: CollaborationRecord[];
-  /** @state persistent */
+  /** @state artifact */
   analyses: AnalysisRecord[];
-  /** @state persistent */
+  /** @state artifact */
   reports: ReportRecord[];
-  /** @state persistent */
+  /** @state artifact */
   searchFilters: SearchFilter[];
-  /** @state persistent */
+  /** @state artifact */
   statusRecords: StatusRecord[];
-  /** @state persistent */
+  /** @state artifact */
   workshops: Workshop[];
-  /** @state persistent */
+  /** @state artifact */
   surveys: Survey[];
-  /** @state persistent */
+  /** @state artifact */
   issues: Issue[];
-  /** @state persistent */
+  /** @state artifact */
   auditEvents: AuditEvent[];
-  /** @state persistent */
+  /** @state artifact */
   templates: TemplateRecord[];
-  /** @state persistent */
+  /** @state artifact */
   knowledge: KnowledgeRecord[];
-  /** @state persistent */
+  /** @state artifact */
   benchmarks: BenchmarkRecord[];
-  /** @state persistent */
+  /** @state artifact */
   traces: TraceLink[];
-  /** @state persistent */
+  /** @state artifact */
   governance: Governance;
 }
 

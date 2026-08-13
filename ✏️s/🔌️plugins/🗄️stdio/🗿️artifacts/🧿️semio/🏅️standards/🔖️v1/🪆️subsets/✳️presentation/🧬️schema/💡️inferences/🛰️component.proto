@@ -4,7 +4,7 @@ package semio.s.stdio.semio.presentation.inference;
 // 💡️ Semio presentation inference schema — heading outline + census over masters/layouts/slides.
 
 message SemioPresentationInference {
-  // @state inferred
+  // @derived
   SemioPresentationOutline outline = 1;
 }
 

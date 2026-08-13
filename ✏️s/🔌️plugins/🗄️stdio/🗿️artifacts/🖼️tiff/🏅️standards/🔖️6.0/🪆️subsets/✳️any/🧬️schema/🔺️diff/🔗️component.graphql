@@ -25,7 +25,7 @@ Sparse diff for `stdio.tiff`. Every field present = changed to a value. No tri-s
 this level.
 """
 type TiffDiff {
-  byteOrder: TiffByteOrder @state(class: PERSISTENT)
-  ifds: TiffIfdsDiff @state(class: PERSISTENT)
-  pixels: [Int!] @state(class: PERSISTENT)
+  byteOrder: TiffByteOrder @state(class: ARTIFACT)
+  ifds: TiffIfdsDiff @state(class: ARTIFACT)
+  pixels: [Int!] @state(class: ARTIFACT)
 }

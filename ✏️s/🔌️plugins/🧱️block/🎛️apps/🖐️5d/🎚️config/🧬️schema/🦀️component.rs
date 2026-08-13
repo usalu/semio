@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.5d.config")]
 pub struct Block5dConfig {
-    #[state(local_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_ids: Vec<String>,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema descriptor

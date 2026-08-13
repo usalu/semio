@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["window"],
   "properties": {
-    "window": { "$ref": "#/$defs/DeflateWindow", "x-semio-state": "inferred" }
+    "window": { "$ref": "#/$defs/DeflateWindow", "x-semio-derived": true }
   },
   "$defs": {
     "DeflateWindow": {

@@ -63,9 +63,9 @@
     }
   },
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "header": { "$ref": "#/definitions/LasHeader", "x-semio-state": "persistent" },
-    "vlrs": { "type": "array", "items": { "$ref": "#/definitions/LasVlr" }, "x-semio-state": "persistent" },
-    "points": { "type": "array", "items": { "$ref": "#/definitions/LasPoint" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "header": { "$ref": "#/definitions/LasHeader", "x-semio-state": "artifact" },
+    "vlrs": { "type": "array", "items": { "$ref": "#/definitions/LasVlr" }, "x-semio-state": "artifact" },
+    "points": { "type": "array", "items": { "$ref": "#/definitions/LasPoint" }, "x-semio-state": "artifact" }
   }
 }

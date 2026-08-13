@@ -31,6 +31,26 @@ pub struct HistoryLog {
     /// it (`REC_CURSOR`) — absent for text-compiled/imported logs and for any log predating this
     /// field, in which case undo/redo position is runtime-only, exactly as before.
     pub cursor: Option<HistoryCursor>,
+    /// @emoji 🧩️ Composition overlay (`REC_COMPOSITION`): who owns this document, which dialect it
+    /// materializes as, and each checkpoint's child pins. Absent for every non-composed document
+    /// (the overwhelming majority) and for logs predating the record.
+    pub composition: Option<HistoryComposition>,
+}
+
+/// @emoji 🧩️ The durable form of a document's composition facts, carried as ONE extension record
+/// rather than as new fields on `REC_DOC`/`REC_CHECKPOINT`: those two are format-frozen critical
+/// records, and a composition overlay is precisely the kind of thing an older/foreign reader must
+/// be able to skip without failing the whole file. Before this record existed all three of these
+/// were in-memory only, so a reloaded child forgot both that it was owned and what dialect it
+/// materialized as — which made "children with their own version history" unpersistable.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct HistoryComposition {
+    /// 🏠️ `(parent_artifact_uri, slot, child_id)` — the child-side ownership stamp.
+    pub owner: Option<(String, String, String)>,
+    /// 🎯️ `(artifact_kind, standard, subset)` — the dialect this document materializes as.
+    pub dialect: Option<(String, String, String)>,
+    /// 📌️ `(checkpoint_id, [(child_artifact_uri, child_checkpoint_id)])` — the cascade pins.
+    pub checkpoint_pins: Vec<(String, Vec<(String, String)>)>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1004,6 +1024,73 @@ pub fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: im
     Ok(HistoryCursor { applied_edit_ids, redo_edit_ids, checkpoint_id })
 }
 //#endregion 🔖️Cursor
+
+//#region 🔖️Composition
+/// @emoji 🧩️ Second caller-defined extension record (`REC_CURSOR`'s neighbour in the 0x40..=0x7E
+/// range), written NON-critical for the same reason: a reader that does not know about composition
+/// skips it under the standard skip-unknown rule and still reads a fully valid document. Last-wins,
+/// mirroring `REC_ACTIVE`/`REC_CURSOR`.
+pub const REC_COMPOSITION: u8 = 0x41;
+
+/// @emoji 🧩️ `format u8 (=1) | presence u8 (bit0 owner, bit1 dialect) | [owner triple] |
+/// [dialect triple] | pin_group_count varint + (checkpoint_id, pin_count, (child_uri, child_ck)*)*`.
+/// Every string goes through the shared dictionary via `write_id_field`, same as every other
+/// identifier in this crate — composition ids repeat heavily across checkpoints, so dictionary
+/// coding is what keeps the overlay small on a document with a long pinned history.
+pub fn encode_composition(composition: &HistoryComposition, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
+    let plain: &dyn Fn(&str) -> Option<u64> = &|_: &str| None;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
+    let presence = u8::from(composition.owner.is_some()) | (u8::from(composition.dialect.is_some()) << 1);
+    out.write_u8(presence);
+    if let Some((parent, slot, child_id)) = &composition.owner {
+        for field in [parent, slot, child_id] {
+            write_id_field(&mut out, field, dict, plain)?;
+        }
+    }
+    if let Some((kind, standard, subset)) = &composition.dialect {
+        for field in [kind, standard, subset] {
+            write_id_field(&mut out, field, dict, plain)?;
+        }
+    }
+    out.write_varint_u64(composition.checkpoint_pins.len() as u64);
+    for (checkpoint_id, pins) in &composition.checkpoint_pins {
+        write_id_field(&mut out, checkpoint_id, dict, plain)?;
+        out.write_varint_u64(pins.len() as u64);
+        for (child_uri, child_checkpoint_id) in pins {
+            write_id_field(&mut out, child_uri, dict, plain)?;
+            write_id_field(&mut out, child_checkpoint_id, dict, plain)?;
+        }
+    }
+    Ok(out.into_bytes())
+}
+
+/// @emoji 🧩️ Inverse of [`encode_composition`].
+pub fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<HistoryComposition, ProtocolError> {
+    let miss: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
+    if format > 1 {
+        return Err(malformed_fmt("composition", format));
+    }
+    let presence = input.read_u8()?;
+    let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?)) };
+    let owner = if presence & 1 != 0 { Some(triple(&mut input)?) } else { None };
+    let dialect = if presence & 2 != 0 { Some(triple(&mut input)?) } else { None };
+    let group_count = input.read_varint_u64()?;
+    let mut checkpoint_pins = Vec::with_capacity(group_count as usize);
+    for _ in 0..group_count {
+        let checkpoint_id = read_id_field(&mut input, dict, miss)?;
+        let pin_count = input.read_varint_u64()?;
+        let mut pins = Vec::with_capacity(pin_count as usize);
+        for _ in 0..pin_count {
+            pins.push((read_id_field(&mut input, dict, miss)?, read_id_field(&mut input, dict, miss)?));
+        }
+        checkpoint_pins.push((checkpoint_id, pins));
+    }
+    Ok(HistoryComposition { owner, dialect, checkpoint_pins })
+}
+//#endregion 🔖️Composition
 //#endregion 🔖️Payloads
 
 //#region 🔖️Codec
@@ -1135,6 +1222,12 @@ pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u
         writer.write_record(REC_CURSOR, false, &cursor_payload, CodecId(0))?;
     }
 
+    if let Some(composition) = &log.composition {
+        let composition_payload = encode_composition(composition, &mut dict)?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
+        writer.write_record(REC_COMPOSITION, false, &composition_payload, CodecId(0))?;
+    }
+
     writer.commit()?;
     Ok(writer.into_sink())
 }
@@ -1180,6 +1273,7 @@ fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<Histor
                 let edit_ids_ref = &edit_ids;
                 log.cursor = Some(decode_cursor(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?);
             }
+            REC_COMPOSITION => log.composition = Some(decode_composition(frame.payload(), &dict)?),
             crate::os_spr::REC_COMMIT if full => {
                 let (commit_seq, chain_hash) = parse_commit_fields(frame.payload())?;
                 let mut concat = running_chain.to_vec();
@@ -1678,8 +1772,34 @@ mod tests {
             alternatives: vec![HistoryAlternative { id: "alt-1".to_string(), name: "main".to_string(), checkpoint_ids: vec!["ck-1".to_string()] }],
             active_alternative_id: Some("alt-1".to_string()),
             cursor: None,
+            composition: None,
         }
     }
+
+    //#region 🔖️Composition
+    #[test]
+    fn composition_overlay_round_trips_through_the_binary_log() {
+        let composition = HistoryComposition {
+            owner: Some(("parent-1!s.stdio.object@1/*".to_string(), "mesh".to_string(), "child-1".to_string())),
+            dialect: Some(("s.stdio.mesh".to_string(), "1".to_string(), "*".to_string())),
+            checkpoint_pins: vec![("ck-1".to_string(), vec![("child-1!s.stdio.mesh@1/*".to_string(), "ck-child-7".to_string())])],
+        };
+        let log = HistoryLog { composition: Some(composition.clone()), ..sample_log() };
+
+        let bytes = encode_history(&log, &EncodeOptions::default()).expect("encode");
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).expect("decode");
+        assert_eq!(decoded.composition, Some(composition), "the composition overlay did not survive the binary round trip");
+    }
+
+    #[test]
+    fn a_log_without_composition_writes_no_composition_record() {
+        let bytes = encode_history(&sample_log(), &EncodeOptions::default()).expect("encode");
+        assert_eq!(decode_history(&bytes, &DecodeOptions::default()).expect("decode").composition, None);
+        // 🎯️ The record is non-critical, so a reader that skips it must still read the whole log —
+        // which is exactly what "absent" and "skipped" both look like from here.
+        assert!(!bytes.windows(1).any(|window| window == [REC_COMPOSITION]) || decode_history(&bytes, &DecodeOptions::default()).is_ok());
+    }
+    //#endregion 🔖️Composition
 
     //#region 🔖️TextGrammar
     #[test]

@@ -1,7 +1,7 @@
 //! 🧬️ Shooting diff schema — sparse field delta over the artifact.
 
 use crate::artifacts::shooting::{
-    ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingSavedCamera, ShootingSavedCameraPatch,
+    ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSavedCameraPatch,
     ShootingSceneLighting, ShootingShot, ShootingShotPatch,
 };
 use schema::ArtifactSchema;
@@ -13,47 +13,53 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.shooting.shooting")]
 pub struct ShootingDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::shooting::schema::ShootingArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub assets: Option<ShootingAssetsDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub saved_cameras: Option<ShootingSavedCamerasDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub scene: Option<ShootingSceneLighting>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub shots: Option<ShootingShotsDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub active_shot_id: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub active_asset_id: Option<String>,
-    #[state(shared_ui)]
+    /// 🕸️ Composed `s.stdio.semio.image` child slot. Double-`Option` per the migration recipe's
+    /// "optional slot" diff convention: outer = did the presence/identity change, inner = is it now
+    /// present. No mutation triad currently sets this (see the artifact root's `🔖️Composition`
+    /// doc comment) — present for schema completeness and future writers.
+    #[state(artifact)]
+    pub emblem: Option<Option<ShootingEmblemChild>>,
+    #[state(presence)]
     pub selected_shot_ids: Option<ShootingStringList>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_asset_ids: Option<ShootingStringList>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub active_utility_id: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub default_shot_format: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub default_shot_shape: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub default_asset_format: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub selection_method: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub center_model: Option<bool>,
-    #[state(local_ui)]
+    #[state(config)]
     pub fit_revision: Option<u32>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_draft_label: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera: Option<ShootingCamera>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
-    #[state(preview)]
+    #[state(artifact)]
     pub hovered_asset_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff

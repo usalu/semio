@@ -1,9 +1,9 @@
 # 💡️ Cad inference schema — object/vertex counts + 3d bounding box across every pane.
 
 type CadInference {
-  objectCount: Int! @state(class: INFERRED)
-  vertexCount: Int! @state(class: INFERRED)
-  bounds: CadBounds @state(class: INFERRED)
+  objectCount: Int! @derived
+  vertexCount: Int! @derived
+  bounds: CadBounds @derived
 }
 
 type CadBounds {

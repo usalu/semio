@@ -7,6 +7,6 @@ export interface VcsSummary {
 }
 
 export interface VcsInference {
-  /** @state inferred */
+  /** @derived */
   summary: VcsSummary;
 }

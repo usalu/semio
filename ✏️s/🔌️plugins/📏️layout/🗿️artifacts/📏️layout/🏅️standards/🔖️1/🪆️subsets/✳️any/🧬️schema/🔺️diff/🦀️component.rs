@@ -1,8 +1,8 @@
 //! 🧬️ Layout diff schema — sparse field delta over the artifact.
 
 use crate::artifacts::layout::{
-    CharacterStyle, GridSettings, ImageLink, ImageLinkPatch, Page, PagePatch, ParagraphStyle, ParentPage, Spread,
-    TextStory, TextStoryPatch,
+    CharacterStyle, GridSettings, ImageLink, ImageLinkPatch, LayoutDrawingChild, Page, PagePatch, ParagraphStyle, ParentPage,
+    Spread, TextStory, TextStoryPatch,
 };
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -13,55 +13,63 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::layout::schema::LayoutArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub name: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub grid: Option<GridSettings>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub paragraph_styles: Option<LayoutParagraphStylesDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub character_styles: Option<LayoutCharacterStylesDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub stories: Option<LayoutStoriesDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub links: Option<LayoutLinksDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub parent_pages: Option<LayoutParentPagesDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub spreads: Option<LayoutSpreadsDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub pages: Option<LayoutPagesDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub print_target: Option<Option<String>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub data_fields_json: Option<Option<String>>,
-    #[state(shared_ui)]
+    /// 🖇️ Optional composed-child slot: outer `Option` = "did the presence/identity change", inner
+    /// `Option` = "is it now present" — the same double-`Option` shape `✳️object`'s own `mesh` diff
+    /// already established, per the migration recipe's §8 diff-shape convention.
+    #[state(artifact)]
+    pub background_drawing: Option<Option<LayoutDrawingChild>>,
+    /// 🔗️ Same double-`Option` shape as `background_drawing`, for the forward link slot.
+    #[state(artifact)]
+    pub referenced_model: Option<Option<store::ArtifactLink>>,
+    #[state(presence)]
     pub selected_ids: Option<LayoutStringList>,
-    #[state(local_ui)]
+    #[state(config)]
     pub active_page_id: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub engagement_input: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_x: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_y: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_zoom: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub preview_camera_x: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub preview_camera_y: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub preview_camera_zoom: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub drop_preview: Option<crate::artifacts::layout::LayoutDropPreviewState>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
-    #[state(preview)]
+    #[state(artifact)]
     pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff

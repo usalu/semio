@@ -3,145 +3,145 @@ package semio.s.architect.program.snapshot;
 
 // 🧬️ Program snapshot schema
 message ProgramSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   ProgramMeta meta = 2;
-  // @state persistent
+  // @state artifact
   ProjectDefinition project = 3;
-  // @state persistent
+  // @state artifact
   repeated Stakeholder stakeholders = 4;
-  // @state persistent
+  // @state artifact
   repeated UserProfile users = 5;
-  // @state persistent
+  // @state artifact
   repeated Activity activities = 6;
-  // @state persistent
+  // @state artifact
   repeated Function functions = 7;
-  // @state persistent
+  // @state artifact
   repeated ProgramElement elements = 8;
-  // @state persistent
+  // @state artifact
   repeated QuantityRequirement quantities = 9;
-  // @state persistent
+  // @state artifact
   repeated Relationship relationships = 10;
-  // @state persistent
+  // @state artifact
   repeated Adjacency adjacencies = 11;
-  // @state persistent
+  // @state artifact
   repeated Process processes = 12;
-  // @state persistent
+  // @state artifact
   repeated FlowRequirement flows = 13;
-  // @state persistent
+  // @state artifact
   repeated AccessRule access_rules = 14;
-  // @state persistent
+  // @state artifact
   repeated OperationalRequirement operations = 15;
-  // @state persistent
+  // @state artifact
   repeated Equipment equipment = 16;
-  // @state persistent
+  // @state artifact
   repeated Resource resources = 17;
-  // @state persistent
+  // @state artifact
   repeated StorageRequirement storage = 18;
-  // @state persistent
+  // @state artifact
   repeated EnvironmentalRequirement environmental = 19;
-  // @state persistent
+  // @state artifact
   repeated HumanFactorRequirement human_factors = 20;
-  // @state persistent
+  // @state artifact
   repeated AccessibilityRequirement accessibility = 21;
-  // @state persistent
+  // @state artifact
   repeated PrivacyRequirement privacy = 22;
-  // @state persistent
+  // @state artifact
   repeated SafetyRequirement safety = 23;
-  // @state persistent
+  // @state artifact
   repeated SecurityRequirement security = 24;
-  // @state persistent
+  // @state artifact
   repeated RegulatoryRequirement regulatory = 25;
-  // @state persistent
+  // @state artifact
   repeated SiteContext site_context = 26;
-  // @state persistent
+  // @state artifact
   repeated OrganizationalRequirement organizational = 27;
-  // @state persistent
+  // @state artifact
   repeated ServiceRequirement services = 28;
-  // @state persistent
+  // @state artifact
   repeated InfrastructureRequirement infrastructure = 29;
-  // @state persistent
+  // @state artifact
   repeated InformationRequirement information = 30;
-  // @state persistent
+  // @state artifact
   repeated CommunicationRequirement communication = 31;
-  // @state persistent
+  // @state artifact
   repeated WayfindingRequirement wayfinding = 32;
-  // @state persistent
+  // @state artifact
   repeated ScheduleRequirement schedules = 33;
-  // @state persistent
+  // @state artifact
   repeated FlexibilityRequirement flexibility = 34;
-  // @state persistent
+  // @state artifact
   repeated GrowthPlan growth = 35;
-  // @state persistent
+  // @state artifact
   repeated SustainabilityRequirement sustainability = 36;
-  // @state persistent
+  // @state artifact
   repeated ResilienceRequirement resilience = 37;
-  // @state persistent
+  // @state artifact
   repeated CostRequirement costs = 38;
-  // @state persistent
+  // @state artifact
   repeated DeliveryConstraint delivery = 39;
-  // @state persistent
+  // @state artifact
   repeated Risk risks = 40;
-  // @state persistent
+  // @state artifact
   repeated Conflict conflicts = 41;
-  // @state persistent
+  // @state artifact
   repeated Requirement requirements = 42;
-  // @state persistent
+  // @state artifact
   repeated PriorityRecord priorities = 43;
-  // @state persistent
+  // @state artifact
   repeated Scenario scenarios = 44;
-  // @state persistent
+  // @state artifact
   repeated OptionEvaluation options = 45;
-  // @state persistent
+  // @state artifact
   repeated Decision decisions = 46;
-  // @state persistent
+  // @state artifact
   repeated ValidationRecord validations = 47;
-  // @state persistent
+  // @state artifact
   repeated PerformanceCriterion performance = 48;
-  // @state persistent
+  // @state artifact
   repeated QualityRecord quality = 49;
-  // @state persistent
+  // @state artifact
   repeated DocumentRecord documents = 50;
-  // @state persistent
+  // @state artifact
   repeated Assumption assumptions = 51;
-  // @state persistent
+  // @state artifact
   repeated ConstraintRecord constraints = 52;
-  // @state persistent
+  // @state artifact
   repeated ComplianceRecord compliance_records = 53;
-  // @state persistent
+  // @state artifact
   repeated ApprovalRecord approvals = 54;
-  // @state persistent
+  // @state artifact
   repeated MeetingRecord meetings = 55;
-  // @state persistent
+  // @state artifact
   repeated ChangeRecord changes = 56;
-  // @state persistent
+  // @state artifact
   repeated CollaborationRecord collaboration = 57;
-  // @state persistent
+  // @state artifact
   repeated AnalysisRecord analyses = 58;
-  // @state persistent
+  // @state artifact
   repeated ReportRecord reports = 59;
-  // @state persistent
+  // @state artifact
   repeated SearchFilter search_filters = 60;
-  // @state persistent
+  // @state artifact
   repeated StatusRecord status_records = 61;
-  // @state persistent
+  // @state artifact
   repeated Workshop workshops = 62;
-  // @state persistent
+  // @state artifact
   repeated Survey surveys = 63;
-  // @state persistent
+  // @state artifact
   repeated Issue issues = 64;
-  // @state persistent
+  // @state artifact
   repeated AuditEvent audit_events = 65;
-  // @state persistent
+  // @state artifact
   repeated TemplateRecord templates = 66;
-  // @state persistent
+  // @state artifact
   repeated KnowledgeRecord knowledge = 67;
-  // @state persistent
+  // @state artifact
   repeated BenchmarkRecord benchmarks = 68;
-  // @state persistent
+  // @state artifact
   repeated TraceLink traces = 69;
-  // @state persistent
+  // @state artifact
   Governance governance = 70;
 }
 

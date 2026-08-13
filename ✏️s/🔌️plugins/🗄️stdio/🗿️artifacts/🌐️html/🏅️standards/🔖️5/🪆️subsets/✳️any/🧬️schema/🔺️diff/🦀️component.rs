@@ -25,14 +25,14 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.stdio.html.diff")]
 pub struct HtmlDiff {
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = doctype removed, `Some(Some(s))` = set.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doctype: Option<Option<String>>,
     /// 🌳 `None` = root subtree unchanged; `Some(diff)` = the root changed (recursive, possibly
     /// down to a deeply nested leaf via `diff_at_path`, or a wholesale `Replace`). The root
     /// `HtmlNode` itself is never optional (unlike xml/svg's `Option<XmlNode>` root), so there is
     /// no "root removed" state — only "root replaced" via `HtmlNodeDiff::Replace`.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root: Option<HtmlNodeDiff>,
 }

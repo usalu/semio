@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["dimensions"],
   "properties": {
-    "dimensions": { "$ref": "#/$defs/TiffDimensions", "x-semio-state": "inferred" }
+    "dimensions": { "$ref": "#/$defs/TiffDimensions", "x-semio-derived": true }
   },
   "$defs": {
     "TiffDimensions": {

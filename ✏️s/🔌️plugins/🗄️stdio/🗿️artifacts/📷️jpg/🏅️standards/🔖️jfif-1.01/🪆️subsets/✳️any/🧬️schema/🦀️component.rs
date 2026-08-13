@@ -12,15 +12,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.jpg")]
 pub struct JpgArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixels: Vec<u8>,
 }

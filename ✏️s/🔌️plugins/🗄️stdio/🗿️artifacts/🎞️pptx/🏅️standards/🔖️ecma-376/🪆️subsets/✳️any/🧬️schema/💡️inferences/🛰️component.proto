@@ -4,7 +4,7 @@ package semio.s.stdio.pptx.inference;
 // 💡️ Pptx inference schema — document outline (slide/shape/word counts).
 
 message PptxInference {
-  // @state inferred
+  // @derived
   PptxOutline outline = 1;
 }
 

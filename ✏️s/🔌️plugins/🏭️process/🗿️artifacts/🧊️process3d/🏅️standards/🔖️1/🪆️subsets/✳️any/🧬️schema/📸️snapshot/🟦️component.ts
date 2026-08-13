@@ -1,13 +1,13 @@
 /** 🧬️ Process3d snapshot schema — persistent fields only. */
 
 export interface Process3dSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   workshop: Process3dWorkshop;
-  /** @state persistent */
+  /** @state artifact */
   stock: Process3dStock;
-  /** @state persistent */
+  /** @state artifact */
   steps: Process3dStep[];
-  /** @state persistent */
+  /** @state artifact */
   resolvedUpTo?: number;
 }
 

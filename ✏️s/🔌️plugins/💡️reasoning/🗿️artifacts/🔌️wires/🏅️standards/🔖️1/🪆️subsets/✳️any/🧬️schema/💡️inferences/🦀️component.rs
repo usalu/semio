@@ -20,7 +20,7 @@ use super::topology::{compute_wires_topology, WiresTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires.inference")]
 pub struct WiresInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: WiresTopology,
 }
 

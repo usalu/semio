@@ -20,7 +20,7 @@ use super::outline::NoteOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.note.note.inference")]
 pub struct NoteInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: NoteOutline,
 }
 

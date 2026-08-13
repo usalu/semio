@@ -12,67 +12,67 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "id": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "title": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "blocks": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/NoteBlockNode"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "gridVisible": {
       "type": "boolean",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "gridSpacing": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "gridSubdivisions": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "gridOpacity": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "snapEnabled": {
       "type": "boolean",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "snapGridSpacing": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "pencilWidth": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "eraserRadius": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "assets": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/NoteImageAsset"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

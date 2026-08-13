@@ -1,39 +1,39 @@
 /** 🧬️ Fem2d diff schema — sparse field delta. */
 
 export interface Fem2dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Fem2dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   nodes?: Fem2dNodesDelta;
-  /** @state persistent */
+  /** @state artifact */
   elements?: Fem2dElementsDelta;
-  /** @state persistent */
+  /** @state artifact */
   regions?: Fem2dRegionsDelta;
-  /** @state persistent */
+  /** @state artifact */
   materials?: Fem2dMaterialsDelta;
-  /** @state persistent */
+  /** @state artifact */
   sections?: Fem2dSectionsDelta;
-  /** @state persistent */
+  /** @state artifact */
   supports?: Fem2dSupportsDelta;
-  /** @state persistent */
+  /** @state artifact */
   loadCases?: Fem2dLoadCasesDelta;
-  /** @state persistent */
+  /** @state artifact */
   combinations?: Fem2dCombinationsDelta;
-  /** @state persistent */
+  /** @state artifact */
   analysis?: FemAnalysisSettings;
-  /** @state shared-ui */
+  /** @state presence */
   resultSourceId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   resultMode?: string;
-  /** @state shared-ui */
+  /** @state presence */
   resultModeIndex?: number;
-  /** @state local-ui */
+  /** @state config */
   camera?: FemCamera;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state preview */
+  /** @state artifact */
   solverResultsJson?: string;
-  /** @state preview */
+  /** @state artifact */
   meshPreviewJson?: string;
 }
 

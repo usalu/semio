@@ -9,6 +9,6 @@ export interface BmpDimensions {
 }
 
 export interface BmpInference {
-  /** @state inferred */
+  /** @derived */
   dimensions: BmpDimensions;
 }

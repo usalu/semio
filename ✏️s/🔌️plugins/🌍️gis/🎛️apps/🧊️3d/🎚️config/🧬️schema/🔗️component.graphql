@@ -1,5 +1,5 @@
 type Gis3dConfig {
-  cameraJson: String! @state(class: LOCAL_UI)
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  cameraJson: String! @state(class: CONFIG)
+  selectedIds: [String!]! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

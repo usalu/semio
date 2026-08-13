@@ -147,15 +147,15 @@ pub const STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.present
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.presentation")]
 pub struct SemioPresentationSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub masters: Vec<SlideMaster>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub layouts: Vec<SlideLayout>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub slides: Vec<Slide>,
 }

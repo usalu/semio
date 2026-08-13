@@ -7,7 +7,7 @@
   "properties": {
     "bounds": {
       "$ref": "#/$defs/RemodelBounds",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

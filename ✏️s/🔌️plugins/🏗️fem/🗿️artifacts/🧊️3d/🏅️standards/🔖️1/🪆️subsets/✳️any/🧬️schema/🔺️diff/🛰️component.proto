@@ -3,37 +3,37 @@ package semio.s.fem.fem3d.diff;
 
 // 🧬️ Fem3d diff schema
 message Fem3dDiff {
-  // @state persistent
+  // @state artifact
   optional Fem3dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional Fem3dNodesDelta nodes = 2;
-  // @state persistent
+  // @state artifact
   optional Fem3dElementsDelta elements = 3;
-  // @state persistent
+  // @state artifact
   optional Fem3dMaterialsDelta materials = 4;
-  // @state persistent
+  // @state artifact
   optional Fem3dSectionsDelta sections = 5;
-  // @state persistent
+  // @state artifact
   optional Fem3dSolidsDelta solids = 6;
-  // @state persistent
+  // @state artifact
   optional Fem3dSupportsDelta supports = 7;
-  // @state persistent
+  // @state artifact
   optional Fem3dLoadCasesDelta load_cases = 8;
-  // @state persistent
+  // @state artifact
   optional Fem3dCombinationsDelta combinations = 9;
-  // @state persistent
+  // @state artifact
   optional FemAnalysisSettings analysis = 10;
-  // @state shared-ui
+  // @state presence
   optional string result_source_id = 11;
-  // @state shared-ui
+  // @state presence
   optional string result_mode = 12;
-  // @state shared-ui
+  // @state presence
   optional uint32 result_mode_index = 13;
-  // @state local-ui
+  // @state config
   optional FemCamera camera = 14;
-  // @state preview
+  // @state artifact
   optional string solver_results_json = 15;
-  // @state preview
+  // @state artifact
   optional string mesh_preview_json = 16;
 }
 

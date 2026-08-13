@@ -14,15 +14,15 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.procedural.procedural2d")]
 
 pub struct Procedural2dDiff {
-    #[state(persistent)] pub artifact: Option<Box<Procedural2dArtifact>>,
-    #[state(persistent)] pub fixture: Option<FlowFixture>,
-    #[state(persistent)] pub generation: Option<GenerationPlayState>,
-    #[state(shared_ui)] pub selected_ids: Option<Procedural2dStringList>,
-    #[state(local_ui)] pub graph_camera: Option<CameraJson>,
-    #[state(local_ui)] pub show_mode: Option<String>,
-    #[state(shared_ui)] pub selected_generation_id: Option<Option<String>>,
-    #[state(preview)] pub generation_preview_text: Option<Option<String>>,
-    #[state(local_ui)] pub locale: Option<String>}
+    #[state(artifact)] pub artifact: Option<Box<Procedural2dArtifact>>,
+    #[state(artifact)] pub fixture: Option<FlowFixture>,
+    #[state(artifact)] pub generation: Option<GenerationPlayState>,
+    #[state(presence)] pub selected_ids: Option<Procedural2dStringList>,
+    #[state(config)] pub graph_camera: Option<CameraJson>,
+    #[state(config)] pub show_mode: Option<String>,
+    #[state(presence)] pub selected_generation_id: Option<Option<String>>,
+    #[state(artifact)] pub generation_preview_text: Option<Option<String>>,
+    #[state(config)] pub locale: Option<String>}
 //#endregion 🔖️Procedural2dDiff
 
 //#region 🔖️Helpers

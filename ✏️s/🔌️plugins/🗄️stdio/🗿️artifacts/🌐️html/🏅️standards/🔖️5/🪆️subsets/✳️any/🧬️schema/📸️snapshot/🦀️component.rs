@@ -120,12 +120,12 @@ pub type NodePath = Vec<usize>;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.html")]
 pub struct HtmlSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doctype: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub root: HtmlNode,
 }
 

@@ -12,61 +12,61 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.en1994", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1994")]
 pub struct En1994Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: AnnexChoice,
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_ed_knm: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_pla: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_pl_rd: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub eta: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_l_rd: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub insulation_thickness_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_rating: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub deck_type: String,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub delta_sigma_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fatigue_detail: String,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub d_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_sc_mm: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_ck_mpa: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_u_mpa: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub e_cm_mpa: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_ed_per_stud_kn: f64,
     #[dsl(unit = "m")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub span_m: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_y_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_cycles_stud: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub delta_tau_stud_mpa: f64,
 }
 //#region 🔖️HandcraftedArtifactCodecs

@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["structure"],
   "properties": {
-    "structure": { "$ref": "#/$defs/DwgStructure", "x-semio-state": "inferred" }
+    "structure": { "$ref": "#/$defs/DwgStructure", "x-semio-derived": true }
   },
   "$defs": {
     "DwgStructure": {

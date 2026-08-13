@@ -7,12 +7,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.note.note.config")]
 pub struct NoteConfig {
-    #[state(local_ui)] pub selected_block_ids: Vec<String>,
-    #[state(local_ui)] pub hovered_block_id: Option<String>,
-    #[state(local_ui)] pub engagement_input: String,
-    #[state(local_ui)] pub camera: NoteCamera,
-    #[state(local_ui)] pub active_utility_id: String,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_block_ids: Vec<String>,
+    #[state(config)] pub hovered_block_id: Option<String>,
+    #[state(config)] pub engagement_input: String,
+    #[state(config)] pub camera: NoteCamera,
+    #[state(config)] pub active_utility_id: String,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema descriptor

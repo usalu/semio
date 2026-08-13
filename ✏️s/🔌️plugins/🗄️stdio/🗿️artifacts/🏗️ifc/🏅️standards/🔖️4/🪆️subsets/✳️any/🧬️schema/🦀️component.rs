@@ -13,13 +13,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc")]
 pub struct IfcArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 📦️ The full, lossless IFC4 graph in IFC's own typed model — the actual persisted state.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub header: IfcHeader,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entities: Vec<IfcEntity>,
 }

@@ -1,13 +1,13 @@
 /** 🧬️ FormsConfig */
 export interface FormsConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   currentStepIndex: number;
-  /** @state local-ui */
+  /** @state config */
   tryValuesJson: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }

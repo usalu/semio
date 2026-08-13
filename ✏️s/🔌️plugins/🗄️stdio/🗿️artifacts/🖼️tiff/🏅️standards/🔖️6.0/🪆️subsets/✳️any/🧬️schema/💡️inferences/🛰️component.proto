@@ -4,7 +4,7 @@ package semio.s.stdio.tiff.inference;
 // 💡️ Tiff inference schema — IFD 0 baseline-tag-derived raster geometry.
 
 message TiffInference {
-  // @state inferred
+  // @derived
   TiffDimensions dimensions = 1;
 }
 

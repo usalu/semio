@@ -1,5 +1,5 @@
 # 🧬️ Playground snapshot schema — persistent fields only.
 
 type PlaygroundSnapshot {
-  schema: String! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
 }

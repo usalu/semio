@@ -1,15 +1,15 @@
 /** 🧬️ Writer snapshot schema. */
 
 export interface WriterSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   languageId: string;
-  /** @state persistent */
+  /** @state artifact */
   uri: string;
-  /** @state persistent */
+  /** @state artifact */
   text: string;
 }
 

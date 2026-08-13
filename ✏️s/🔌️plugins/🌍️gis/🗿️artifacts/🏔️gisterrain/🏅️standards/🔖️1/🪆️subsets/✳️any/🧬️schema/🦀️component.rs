@@ -13,17 +13,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainArtifact {
-    #[state(persistent)] pub exaggeration: f64,
-    #[state(persistent)] pub imported_features_json: String,
+    #[state(artifact)] pub exaggeration: f64,
+    #[state(artifact)] pub imported_features_json: String,
     /// 🕸️ Mirrors `GisTerrainSnapshot.mesh` — see that field's own doc comment. Always re-derived
     /// from `(exaggeration, imported_features_json)` by `to_snapshot`, never independently set.
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
-    #[state(shared_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub camera_json: String,
-    #[state(local_ui)] pub locale: String,
+    #[state(presence)] pub selected_ids: Vec<String>,
+    #[state(config)] pub camera_json: String,
+    #[state(config)] pub locale: String,
 }
 //#endregion 🔖️Artifact
 

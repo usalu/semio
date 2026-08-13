@@ -1,13 +1,13 @@
 syntax = "proto3";
 package semio.app.procedural.2d;
 message Procedural2dPresence {
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 1;
-  // @state shared-ui
+  // @state presence
   CameraJson camera = 2;
-  // @state shared-ui
+  // @state presence
   string show_mode = 3;
-  // @state shared-ui
+  // @state presence
   optional string selected_generation_id = 4;
 }
 message CameraJson {

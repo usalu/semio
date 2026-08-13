@@ -37,10 +37,10 @@ pub struct SemioTableRowList {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.table.diff")]
 pub struct SemioTableDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub columns: Option<SemioTableColumnList>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rows: Option<SemioTableRowList>,
 }

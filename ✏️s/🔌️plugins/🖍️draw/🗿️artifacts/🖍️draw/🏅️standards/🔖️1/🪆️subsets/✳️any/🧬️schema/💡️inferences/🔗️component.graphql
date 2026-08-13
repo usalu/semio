@@ -1,7 +1,7 @@
 # 💡️ Draw inference schema — layer-tree topology (structural pre-order + nesting depth).
 
 type DrawInference {
-  topology: DrawTopology! @state(class: INFERRED)
+  topology: DrawTopology! @derived
 }
 
 type DrawTopology {

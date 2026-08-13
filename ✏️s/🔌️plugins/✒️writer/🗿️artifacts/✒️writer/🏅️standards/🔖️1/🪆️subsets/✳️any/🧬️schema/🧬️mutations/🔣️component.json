@@ -13,23 +13,23 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "id": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "languageId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "uri": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "text": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   }
 }

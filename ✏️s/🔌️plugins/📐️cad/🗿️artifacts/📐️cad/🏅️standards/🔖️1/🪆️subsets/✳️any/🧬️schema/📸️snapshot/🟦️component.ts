@@ -1,31 +1,31 @@
 /** 🧬️ CadSnapshot schema. */
 
 export interface CadSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   objects: CadObject[];
-  /** @state persistent */
+  /** @state artifact */
   buildingObjects: CadObject[];
-  /** @state persistent */
+  /** @state artifact */
   energyObjects: CadObject[];
-  /** @state persistent */
+  /** @state artifact */
   structureClassicObjects: CadObject[];
-  /** @state persistent */
+  /** @state artifact */
   referencesByModelDefinitionId: Record<string, CadReferenceList>;
-  /** @state persistent */
+  /** @state artifact */
   nodes: CadNode[];
-  /** @state persistent */
+  /** @state artifact */
   shapeGeometry?: CadGeometry;
-  /** @state persistent */
+  /** @state artifact */
   buildingGeometry?: CadGeometry;
-  /** @state persistent */
+  /** @state artifact */
   energyGeometry?: CadGeometry;
-  /** @state persistent */
+  /** @state artifact */
   structureClassicGeometry?: CadGeometry;
-  /** @state persistent */
+  /** @state artifact */
   activeModelDefinitionId: string;
 }
 

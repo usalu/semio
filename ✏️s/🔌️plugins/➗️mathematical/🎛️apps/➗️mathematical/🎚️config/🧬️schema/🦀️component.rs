@@ -10,9 +10,9 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.mathematical.mathematical.config")]
 pub struct MathematicalConfig {
-    #[state(local_ui)]
+    #[state(config)]
     pub camera: MathematicalCamera,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Config

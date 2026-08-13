@@ -20,77 +20,77 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "id": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "title": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "layers": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/RasterLayerNode"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "assets": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/RasterImageAsset"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "brushSize": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushOpacity": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "compositeViewport": {
       "$ref": "#/$defs/RasterViewportSize",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraZoom": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

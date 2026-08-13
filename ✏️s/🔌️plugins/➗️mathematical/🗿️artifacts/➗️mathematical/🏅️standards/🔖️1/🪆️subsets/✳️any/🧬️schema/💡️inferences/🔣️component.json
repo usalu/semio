@@ -7,7 +7,7 @@
   "properties": {
     "topology": {
       "$ref": "#/$defs/MathematicalTopology",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

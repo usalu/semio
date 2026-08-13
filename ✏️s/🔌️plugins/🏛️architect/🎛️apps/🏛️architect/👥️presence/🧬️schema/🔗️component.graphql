@@ -6,10 +6,10 @@ enum AdjacencyKind {
 }
 
 type ArchitectPresence {
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  activeRegister: String! @state(class: SHARED_UI)
-  adjacencyKindFilter: AdjacencyKind @state(class: SHARED_UI)
-  graphCameraX: Float! @state(class: SHARED_UI)
-  graphCameraY: Float! @state(class: SHARED_UI)
-  graphCameraZoom: Float! @state(class: SHARED_UI)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  activeRegister: String! @state(class: PRESENCE)
+  adjacencyKindFilter: AdjacencyKind @state(class: PRESENCE)
+  graphCameraX: Float! @state(class: PRESENCE)
+  graphCameraY: Float! @state(class: PRESENCE)
+  graphCameraZoom: Float! @state(class: PRESENCE)
 }

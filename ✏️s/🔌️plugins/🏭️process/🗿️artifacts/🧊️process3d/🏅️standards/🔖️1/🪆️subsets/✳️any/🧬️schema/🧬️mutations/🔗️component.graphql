@@ -1,8 +1,8 @@
 # 🧬️ Process3d mutation schema — persistent fields only.
 
 type Process3dMutation {
-  workshop: Workshop! @state(class: PERSISTENT)
-  stock: Stock! @state(class: PERSISTENT)
-  steps: [ProcessStep!]! @state(class: PERSISTENT)
-  resolvedUpTo: Int @state(class: PERSISTENT)
+  workshop: Workshop! @state(class: ARTIFACT)
+  stock: Stock! @state(class: ARTIFACT)
+  steps: [ProcessStep!]! @state(class: ARTIFACT)
+  resolvedUpTo: Int @state(class: ARTIFACT)
 }

@@ -14,19 +14,19 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "dragNodeId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "dragLastX": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "dragLastY": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

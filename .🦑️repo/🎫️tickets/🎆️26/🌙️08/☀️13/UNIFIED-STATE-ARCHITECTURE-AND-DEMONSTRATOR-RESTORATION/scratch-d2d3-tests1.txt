@@ -1,0 +1,106 @@
+2026-08-13 16:28:35
+### semio-s-plugin-cad
+test result: ok. 140 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.73s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### semio-s-plugin-gis
+test artifacts::gismap::component::tests::gis_owns_the_host_io_registration_for_its_own_kind ... FAILED
+failures:
+thread 'artifacts::gismap::component::tests::gis_owns_the_host_io_registration_for_its_own_kind' (302043544) panicked at ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/././../../🗿️artifacts/🗺️gismap/🦀️component.rs:310:108:
+failures:
+test result: FAILED. 171 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+error: test failed, to rerun pass `-p semio-s-plugin-gis --lib`
+### semio-s-plugin-demonstrator
+error[E0252]: the name `change_schema` is defined multiple times
+error[E0252]: the name `clear_widget_layout` is defined multiple times
+error[E0252]: the name `connect_synapse` is defined multiple times
+error[E0252]: the name `create_widget` is defined multiple times
+error[E0252]: the name `delete_widget` is defined multiple times
+error[E0252]: the name `disconnect_synapse` is defined multiple times
+error[E0252]: the name `move_widget` is defined multiple times
+error[E0432]: unresolved import `create_generation::create_generation`
+error[E0432]: unresolved import `delete_generation::delete_generation`
+error[E0432]: unresolved import `rename_generation::rename_generation`
+error[E0432]: unresolved import `change_generation_value::change_generation_value`
+error[E0432]: unresolved import `replace_widget::replace_widget`
+error[E0432]: unresolved import `replace_synapse::replace_synapse`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `super::remove_layout`
+error[E0432]: unresolved import `super::remove_synapse`
+error[E0432]: unresolved import `super::remove_widget`
+error[E0432]: unresolved import `super::set_camera`
+error[E0432]: unresolved import `super::set_layout`
+error[E0432]: unresolved import `super::set_schema`
+error[E0432]: unresolved import `super::set_synapse`
+error[E0432]: unresolved import `super::set_widget`
+error[E0425]: cannot find type `ReplaceWidget` in module `replace_widget`
+error[E0425]: cannot find type `ReplaceSynapse` in module `replace_synapse`
+error[E0425]: cannot find type `CreateGeneration` in module `create_generation`
+error[E0425]: cannot find type `DeleteGeneration` in module `delete_generation`
+error[E0425]: cannot find type `RenameGeneration` in module `rename_generation`
+error[E0425]: cannot find type `ChangeGenerationValue` in module `change_generation_value`
+error[E0423]: expected function, found module `replace_widget`
+error[E0423]: expected function, found module `replace_synapse`
+error[E0423]: expected function, found module `create_generation`
+error[E0423]: expected function, found module `delete_generation`
+error[E0423]: expected function, found module `rename_generation`
+error[E0423]: expected function, found module `change_generation_value`
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find function `replace_widget` in this scope
+error[E0425]: cannot find type `SynapseSpec` in this scope
+error[E0425]: cannot find type `SynapseSpec` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find function `synapse_index` in this scope
+error[E0425]: cannot find function `synapse_index` in this scope
+error[E0425]: cannot find function `replace_synapse` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find function `delete_generation` in module `crate::artifacts::procedural2d::mutations::delete_generation`
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find function `create_generation` in module `crate::artifacts::procedural2d::mutations::create_generation`
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find function `rename_generation` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find value `payload` in this scope
+error[E0425]: cannot find function `change_generation_value` in this scope
+error[E0433]: cannot find module or crate `update_widget` in this scope
+error[E0433]: cannot find module or crate `delete_widget` in this scope
+error[E0433]: cannot find module or crate `update_synapse` in this scope
+error[E0433]: cannot find module or crate `disconnect_synapse` in this scope
+error[E0433]: cannot find module or crate `move_widget` in this scope
+error[E0433]: cannot find module or crate `delete_widget_position` in this scope
+error[E0433]: cannot find module or crate `update_camera` in this scope
+error[E0433]: cannot find module or crate `change_schema` in this scope
+error[E0433]: cannot find module or crate `update_widget` in this scope
+error[E0433]: cannot find module or crate `delete_widget` in this scope
+error[E0433]: cannot find module or crate `disconnect_synapse` in this scope
+error[E0433]: cannot find module or crate `delete_widget` in this scope
+error[E0433]: cannot find module or crate `update_widget` in this scope
+error[E0433]: cannot find module or crate `disconnect_synapse` in this scope
+error[E0433]: cannot find module or crate `update_synapse` in this scope
+error[E0433]: cannot find module or crate `delete_widget_position` in this scope
+error[E0433]: cannot find module or crate `move_widget` in this scope
+error[E0433]: cannot find module or crate `change_schema` in this scope
+error[E0599]: no variant, associated function, or constant named `Generation` found for enum `Procedural3dMutation` in the current scope
+error[E0599]: no variant, associated function, or constant named `Generation` found for enum `Procedural3dMutation` in the current scope
+error[E0599]: no variant named `SetWidget` found for enum `Procedural3dMutation`
+error[E0599]: no variant, associated function, or constant named `Generation` found for enum `Procedural2dMutation` in the current scope
+error[E0599]: no variant named `SetWidget` found for enum `Procedural2dMutation`
+error: could not compile `semio-s-plugin-procedural` (lib) due to 93 previous errors; 110 warnings emitted

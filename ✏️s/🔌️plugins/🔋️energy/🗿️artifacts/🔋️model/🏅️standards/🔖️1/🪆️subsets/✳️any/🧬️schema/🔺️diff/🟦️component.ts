@@ -1,13 +1,13 @@
 /** 🧬️ EnergyModel diff schema — sparse field delta. */
 
 export interface EnergyModelDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: EnergyModelArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   modelJson?: string;
-  /** @state preview */
+  /** @state artifact */
   resultsJson?: string;
 }
 

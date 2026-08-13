@@ -5,10 +5,10 @@
   "type": "object",
   "required": ["schema", "spatial", "elements", "relations"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
     "spatial": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "required": ["id", "kind", "name", "placement"],
@@ -23,7 +23,7 @@
     },
     "elements": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "required": ["id", "class", "placement", "geometry", "psets"],
@@ -56,7 +56,7 @@
     },
     "relations": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "required": ["id", "kind", "from", "to"],

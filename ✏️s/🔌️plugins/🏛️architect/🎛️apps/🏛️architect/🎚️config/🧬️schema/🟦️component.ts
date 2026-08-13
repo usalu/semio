@@ -2,26 +2,26 @@
 export type AdjacencyKind = "required" | "preferred" | "optional" | "prohibited";
 
 export interface ArchitectConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   activeRegister: string;
-  /** @state local-ui */
+  /** @state config */
   searchQuery: string;
-  /** @state local-ui */
+  /** @state config */
   searchHistoryJson: string;
-  /** @state local-ui */
+  /** @state config */
   activeReportJson: string;
-  /** @state local-ui */
+  /** @state config */
   lastResultJson: string;
-  /** @state local-ui */
+  /** @state config */
   lastAnalysisJson: string;
-  /** @state local-ui */
+  /** @state config */
   adjacencyKindFilter?: AdjacencyKind;
-  /** @state local-ui */
+  /** @state config */
   graphCameraX: number;
-  /** @state local-ui */
+  /** @state config */
   graphCameraY: number;
-  /** @state local-ui */
+  /** @state config */
   graphCameraZoom: number;
 }

@@ -11,21 +11,21 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.draw.draw")]
 pub struct DrawDiff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::draw::schema::DrawArtifact>>,
-    #[state(persistent)] pub schema: Option<String>,
-    #[state(persistent)] pub id: Option<String>,
-    #[state(persistent)] pub title: Option<Option<String>>,
-    #[state(persistent)] pub layers: Option<DrawLayersDelta>,
-    #[state(persistent)] pub assets: Option<DrawAssetsDelta>,
-    #[state(persistent)] pub artboard: Option<Option<DrawArtboard>>,
-    #[state(shared_ui)] pub selected_ids: Option<DrawStringList>,
-    #[state(shared_ui)] pub active_utility_id: Option<String>,
-    #[state(local_ui)] pub engagement_input: Option<String>,
-    #[state(local_ui)] pub camera_x: Option<f64>,
-    #[state(local_ui)] pub camera_y: Option<f64>,
-    #[state(local_ui)] pub camera_zoom: Option<f64>,
-    #[state(local_ui)] pub locale: Option<String>,
-    #[state(preview)] pub hovered_id: Option<Option<String>>,
+    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::draw::schema::DrawArtifact>>,
+    #[state(artifact)] pub schema: Option<String>,
+    #[state(artifact)] pub id: Option<String>,
+    #[state(artifact)] pub title: Option<Option<String>>,
+    #[state(artifact)] pub layers: Option<DrawLayersDelta>,
+    #[state(artifact)] pub assets: Option<DrawAssetsDelta>,
+    #[state(artifact)] pub artboard: Option<Option<DrawArtboard>>,
+    #[state(presence)] pub selected_ids: Option<DrawStringList>,
+    #[state(presence)] pub active_utility_id: Option<String>,
+    #[state(config)] pub engagement_input: Option<String>,
+    #[state(config)] pub camera_x: Option<f64>,
+    #[state(config)] pub camera_y: Option<f64>,
+    #[state(config)] pub camera_zoom: Option<f64>,
+    #[state(config)] pub locale: Option<String>,
+    #[state(artifact)] pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 

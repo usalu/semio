@@ -270,7 +270,7 @@ pub mod io_registry {
 // to stdio's real semio/mesh + semio/brep codecs is io by definition (rule 5), not artifact-engine
 // compute.
 use base64::Engine as _;
-use semio_framework_3d::brep::engine::{block_on, BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
 use semio_framework::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
@@ -713,11 +713,45 @@ pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Resul
 }
 //#endregion 🌉️GeometryBridges
 
+//#region 🔌️HostIoRegistration
+/// 🏷️ The artifact kind `📐️cad` owns; every registration below keys on it and on nothing else.
+pub const CAD_KIND: &str = "3d.cad";
+/// 🏷️ File stem the OS media pipeline names cad exports with (`cad.obj`, `cad.dwg`, …).
+pub const CAD_FORMAT: &str = "cad";
+
+/// 🔌️ Self-registers cad's OWN kind into the process-global OS media/solid registries — the
+/// compliant shape 🌀️procedural already uses for `"3d.procedural"` (`register_dwg_mesh_bridge`,
+/// called from that plugin root's `.setup()`).
+///
+/// Relocated verbatim from `🎪️demonstrator/🎪️panes/📐️koordinator/🦀️component.rs` (ticket
+/// 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2): the demonstrator was the
+/// SOLE registrant of these ten handlers even though it neither declares nor owns `"3d.cad"`, so a
+/// standalone `cad-play` booted outside the demonstrator bundle had no solid/mesh/dwg IO at all,
+/// and inside the bundle plugin load order silently decided the winner for an OS-global key. Living
+/// here, the owner registers once and every host that loads 📐️cad gets the same table.
+///
+/// No `ArtifactDeclaration` field models any of these registrars (they are outside APA §6's covered
+/// set — same declaration gap `🌀️procedural`'s `register_dwg_mesh_bridge` is filed under), so this
+/// stays an imperative fn reached from `.setup()` rather than declarative `.artifact(…)` data.
+pub fn register_host_io() {
+    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(semio_framework_3d::brep::kernel::ObjSolidExporter));
+    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(semio_framework_3d::brep::kernel::StlSolidExporter));
+    semio_framework_os::register_solid_exporter(CAD_KIND, Box::new(semio_framework_3d::brep::kernel::StepSolidExporter));
+    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(semio_framework_3d::brep::kernel::ObjSolidImporter));
+    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(semio_framework_3d::brep::kernel::StlSolidImporter));
+    semio_framework_os::register_solid_importer(CAD_KIND, Box::new(semio_framework_3d::brep::kernel::StepSolidImporter));
+    semio_framework_os::register_mesh_exporter(CAD_KIND, CAD_FORMAT, cad_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_importer(CAD_KIND, cad_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+    semio_framework_os::register_mesh_dwg_export_handler(CAD_KIND, CAD_FORMAT, cad_mesh_from_document);
+    semio_framework_os::register_dwg_import_handler(CAD_KIND, cad_document_from_dwg);
+}
+//#endregion 🔌️HostIoRegistration
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_3d::brep::kernel::Brep;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
 
     //#region 🔖️SemioMeshBridge
     #[test]
@@ -849,5 +883,29 @@ mod tests {
         assert_eq!(repair_step_trailing_comma_before_close_paren("('weird,)name', #1)"), "('weird,)name', #1)");
     }
     //#endregion 🔖️SemioBrepBridge
+
+    //#region 🔌️HostIoRegistration
+    /// 🧪️ 📐️cad — and only 📐️cad — puts `"3d.cad"`'s solid codecs into the OS registry. Before
+    /// ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2 the sole
+    /// registrant was `🎪️demonstrator`'s koordinator pane, so this crate on its own registered
+    /// nothing and a standalone `cad-play` had no solid IO; the assertion runs entirely inside the
+    /// owner crate, which is exactly the property that was missing.
+    ///
+    /// The `register_solid_*` half is directly observable through `solid_exporter_for`. The mesh /
+    /// mesh-dwg / dwg half lands in the OS media handler map, which exposes no membership predicate
+    /// (only `export_os_app_instance_media_kind`, gated behind the `os-host-full` `WorkflowNode`
+    /// type plugins do not get), so the kind-ownership assertion below is what pins those: the kind
+    /// they key on is this artifact's own declared `ArtifactKindSpec` id, never a foreign one.
+    #[test]
+    fn cad_owns_the_host_io_registration_for_its_own_kind() {
+        assert_eq!(CAD_KIND, crate::artifacts::cad::artifact_kind().id, "register_host_io must key on the kind this artifact itself declares");
+        register_host_io();
+        for format in ["obj", "stl", "step"] {
+            assert!(semio_framework_os::solid_exporter_for(CAD_KIND, format), "no {format} solid exporter registered for {CAD_KIND} by its own owner");
+        }
+        register_host_io();
+        assert!(semio_framework_os::solid_exporter_for(CAD_KIND, "step"), "register_host_io must be idempotent — the OS registry is keyed, not appended");
+    }
+    //#endregion 🔌️HostIoRegistration
 }
 //#endregion 🧪️Tests

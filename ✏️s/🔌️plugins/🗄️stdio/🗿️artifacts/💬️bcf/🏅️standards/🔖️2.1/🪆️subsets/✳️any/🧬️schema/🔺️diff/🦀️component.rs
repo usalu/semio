@@ -187,13 +187,13 @@ pub type BcfPartsDiff = NamedTripleDiff<String, BcfPartDiff, BcfRawPart>;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf.diff")]
 pub struct BcfDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub topics: Option<BcfTopicsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parts: Option<BcfPartsDiff>,
 }

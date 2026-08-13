@@ -1,16 +1,16 @@
 type Gis2dConfig {
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  layerVisibility: [Gis2dBoolEntry!]! @state(class: LOCAL_UI)
-  cameraJson: String! @state(class: LOCAL_UI)
-  renderMode: String! @state(class: LOCAL_UI)
-  vectorStyle: String! @state(class: LOCAL_UI)
-  lodMode: String! @state(class: LOCAL_UI)
-  featureSelectionJson: String! @state(class: LOCAL_UI)
-  hoverJson: String! @state(class: LOCAL_UI)
-  selectionMethod: String! @state(class: LOCAL_UI)
-  selectionMode: String! @state(class: LOCAL_UI)
-  layerStrokeScale: [Gis2dNumberEntry!]! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedIds: [String!]! @state(class: CONFIG)
+  layerVisibility: [Gis2dBoolEntry!]! @state(class: CONFIG)
+  cameraJson: String! @state(class: CONFIG)
+  renderMode: String! @state(class: CONFIG)
+  vectorStyle: String! @state(class: CONFIG)
+  lodMode: String! @state(class: CONFIG)
+  featureSelectionJson: String! @state(class: CONFIG)
+  hoverJson: String! @state(class: CONFIG)
+  selectionMethod: String! @state(class: CONFIG)
+  selectionMode: String! @state(class: CONFIG)
+  layerStrokeScale: [Gis2dNumberEntry!]! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 
 type Gis2dBoolEntry {

@@ -5,9 +5,9 @@
   "type": "object",
   "required": ["schema", "mainHeader", "streams", "idx1Present", "unknownChunks"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
     "mainHeader": {
-      "type": "object", "x-semio-state": "persistent",
+      "type": "object", "x-semio-state": "artifact",
       "properties": {
         "microSecPerFrame": { "type": "integer" }, "maxBytesPerSec": { "type": "integer" }, "paddingGranularity": { "type": "integer" }, "flags": { "type": "integer" },
         "totalFrames": { "type": "integer" }, "initialFrames": { "type": "integer" }, "streams": { "type": "integer" }, "suggestedBufferSize": { "type": "integer" },
@@ -15,7 +15,7 @@
       }
     },
     "streams": {
-      "type": "array", "x-semio-state": "persistent",
+      "type": "array", "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "properties": {
@@ -29,7 +29,7 @@
         }
       }
     },
-    "idx1Present": { "type": "boolean", "x-semio-state": "persistent" },
-    "unknownChunks": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array" } } } }
+    "idx1Present": { "type": "boolean", "x-semio-state": "artifact" },
+    "unknownChunks": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array" } } } }
   }
 }

@@ -4,35 +4,35 @@ package semio.s.trinity.rewrite.diff;
 // 🧬️ Rewrite diff schema — sparse field delta.
 
 message RewriteDiff {
-  // @state persistent
+  // @state artifact
   optional RewriteArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string before_fixture_json = 2;
-  // @state persistent
+  // @state artifact
   optional string lhs_json = 3;
-  // @state persistent
+  // @state artifact
   optional string rhs_json = 4;
-  // @state persistent
+  // @state artifact
   optional map<string, string> parameter_bindings = 5;
-  // @state persistent
+  // @state artifact
   optional map<string, LayoutPoint> rule_layout = 6;
-  // @state shared-ui
+  // @state presence
   optional RewriteStringList selected_node_ids = 7;
-  // @state shared-ui
+  // @state presence
   optional string active_hover_var = 8;
-  // @state shared-ui
+  // @state presence
   optional string active_select_var = 9;
-  // @state shared-ui
+  // @state presence
   optional map<string, string> lod_mode_by_window = 10;
-  // @state local-ui
+  // @state config
   optional Camera before_pane_camera = 11;
-  // @state local-ui
+  // @state config
   optional int64 reorganize_epoch = 12;
-  // @state local-ui
+  // @state config
   optional int64 hover_epoch = 13;
-  // @state local-ui
+  // @state config
   optional int64 select_epoch = 14;
-  // @state local-ui
+  // @state config
   optional string locale = 15;
 }
 

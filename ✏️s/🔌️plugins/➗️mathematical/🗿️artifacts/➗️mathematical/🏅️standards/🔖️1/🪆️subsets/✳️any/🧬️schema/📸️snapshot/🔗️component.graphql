@@ -1,8 +1,8 @@
 # 📸️ Mathematical snapshot schema.
 
 type MathematicalSnapshot {
-  graph: MathematicalGraph! @state(class: PERSISTENT)
-  geometry: MathematicalGeometry! @state(class: PERSISTENT)
+  graph: MathematicalGraph! @state(class: ARTIFACT)
+  geometry: MathematicalGeometry! @state(class: ARTIFACT)
 }
 
 type MathematicalGraph {

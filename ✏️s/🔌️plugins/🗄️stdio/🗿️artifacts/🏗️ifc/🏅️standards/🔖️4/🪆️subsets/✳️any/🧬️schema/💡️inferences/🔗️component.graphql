@@ -1,7 +1,7 @@
 # 💡️ IFC4 inference schema — IFCCARTESIANPOINT-derived spatial bounding box.
 
 type IfcInference {
-  bounds: IfcBounds! @state(class: INFERRED)
+  bounds: IfcBounds! @derived
 }
 
 type IfcBounds {

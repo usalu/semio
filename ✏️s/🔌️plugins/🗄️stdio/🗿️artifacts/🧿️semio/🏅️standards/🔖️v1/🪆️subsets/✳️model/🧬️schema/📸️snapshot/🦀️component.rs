@@ -173,15 +173,15 @@ pub struct ModelRelation {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.model")]
 pub struct SemioModelSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub spatial: Vec<SpatialNode>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub elements: Vec<SemioModelElement>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub relations: Vec<ModelRelation>,
 }

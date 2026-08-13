@@ -38,11 +38,11 @@
   "properties": {
     "activeObjectId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionIds": {
       "type": "array",
@@ -50,99 +50,99 @@
         "type": "integer",
         "minimum": 0
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionTargetsMesh": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionTargetsVertex": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionTargetsEdge": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionTargetsFace": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionKeys": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintUtility": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activePaintLayer": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionModeDefault": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectedObjectIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredObjectId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredTargetObjectId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredTargetMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredTargetId": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "utilityParamsJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintColorR": {
       "type": "integer",
       "minimum": 0,
       "maximum": 255,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintColorG": {
       "type": "integer",
       "minimum": 0,
       "maximum": 255,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintColorB": {
       "type": "integer",
       "minimum": 0,
       "maximum": 255,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintColorA": {
       "type": "integer",
       "minimum": 0,
       "maximum": 255,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraPosition": {
       "type": "array",
@@ -151,7 +151,7 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraTarget": {
       "type": "array",
@@ -160,47 +160,47 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraFov": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "showEdges": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunAzimuth": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunElevation": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunIntensity": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunColor": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   }
 }

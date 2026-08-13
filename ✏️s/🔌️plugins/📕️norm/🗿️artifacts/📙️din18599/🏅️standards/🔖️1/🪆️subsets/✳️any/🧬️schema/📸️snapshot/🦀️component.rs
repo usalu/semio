@@ -16,32 +16,32 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub use_class: UseClass,
-    #[state(persistent)]
+    #[state(artifact)]
     pub heated_area_m2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub occupants: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_t: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_v: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub climate: Din18599ClimateChild,
-    #[state(persistent)]
+    #[state(artifact)]
     pub internal_gains_w_m2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub solar_gains_kwh: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub system_losses_kwh: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub renewable_kwh: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub annual_limit_kwh: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub energy_carrier: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub reference_q_p_kwh: f64,
 }
 

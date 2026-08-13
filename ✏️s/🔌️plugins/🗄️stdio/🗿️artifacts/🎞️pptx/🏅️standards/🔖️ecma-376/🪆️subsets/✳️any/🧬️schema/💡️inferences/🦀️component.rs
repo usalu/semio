@@ -18,7 +18,7 @@ use super::outline::PptxOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pptx.inference")]
 pub struct PptxInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: PptxOutline,
 }
 

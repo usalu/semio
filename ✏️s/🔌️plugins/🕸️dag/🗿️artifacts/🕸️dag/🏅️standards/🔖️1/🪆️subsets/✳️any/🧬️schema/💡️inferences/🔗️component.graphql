@@ -1,7 +1,7 @@
 # 💡️ Dag inference schema — topology (topological order + depth + cycle-freedom) over nodes/edges.
 
 type DagInference {
-  topology: DagTopology! @state(class: INFERRED)
+  topology: DagTopology! @derived
 }
 
 type DagTopology {

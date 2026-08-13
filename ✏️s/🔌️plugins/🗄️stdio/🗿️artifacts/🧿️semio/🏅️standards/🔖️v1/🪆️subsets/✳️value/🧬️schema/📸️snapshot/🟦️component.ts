@@ -24,7 +24,7 @@ export interface SemioValueNode {
 }
 
 export interface SemioValueSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ root: SemioValue;
-  /** @state persistent */ nodes: SemioValueNode[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ root: SemioValue;
+  /** @state artifact */ nodes: SemioValueNode[];
 }

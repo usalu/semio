@@ -814,7 +814,7 @@ mod tests {
         dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }));
         let snapshot = app.snapshot().expect("snapshot");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let media = Fem3dPlayApp::export_media("results:out", &doc).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
@@ -831,7 +831,7 @@ mod tests {
     fn export_media_results_out_errors_without_load_cases_3d() {
         let snapshot = crate::artifacts::fem3d::schema::empty_fem3d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let err = Fem3dPlayApp::export_media("results:out", &doc).expect_err("no load cases should error");
         assert!(matches!(err, MediaError::Payload(..)));
     }
@@ -843,7 +843,7 @@ mod tests {
         dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 30e9, g: 12.5e9 }));
         let snapshot = app.snapshot().expect("snapshot");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let json = serde_json::json!({
             "outline": [[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]],
             "holes": [],

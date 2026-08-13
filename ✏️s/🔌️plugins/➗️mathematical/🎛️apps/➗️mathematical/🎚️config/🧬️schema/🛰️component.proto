@@ -8,8 +8,8 @@ message MathematicalCamera {
 }
 
 message MathematicalConfig {
-  // @state local-ui
+  // @state config
   MathematicalCamera camera = 1;
-  // @state local-ui
+  // @state config
   string locale = 2;
 }

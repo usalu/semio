@@ -179,10 +179,10 @@ impl ZipEntriesDiff {
 #[artifact_schema(id = "s.stdio.zip.diff")]
 pub struct ZipDiff {
     /// 💬️ Archive-level (EOCD) comment.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entries: Option<ZipEntriesDiff>,
 }

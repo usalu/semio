@@ -4,7 +4,7 @@ package semio.s.puzzle.puzzle5d.inference;
 // 💡️ Puzzle5d inference schema — flatPosition (plane + center) per part.
 
 message Puzzle5dInference {
-  // @state inferred
+  // @derived
   map<string, FlattenPose> flat_positions = 1;
 }
 

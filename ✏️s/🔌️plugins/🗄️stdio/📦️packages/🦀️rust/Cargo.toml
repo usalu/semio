@@ -19,6 +19,10 @@ crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
 [dependencies]
+async-trait = "0.1.88"
+blake3 = "1"
+pollster = "0.4.0"
+semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 semio-framework-mesh-engine = { path = "../../../../../🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { workspace = true }
@@ -26,3 +30,11 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
+
+[[bench]]
+name = "brep_kernel"
+path = "benches/brep_kernel.rs"
+harness = false

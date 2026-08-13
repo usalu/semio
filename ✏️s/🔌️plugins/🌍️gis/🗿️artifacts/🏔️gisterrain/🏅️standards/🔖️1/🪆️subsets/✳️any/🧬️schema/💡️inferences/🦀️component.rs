@@ -19,9 +19,9 @@ use super::bounds::{imported_lon_lat_positions, lon_lat_bounds, GisTerrainBounds
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain.inference")]
 pub struct GisTerrainInference {
-    #[state(inferred)]
+    #[derived]
     pub position_count: usize,
-    #[state(inferred)]
+    #[derived]
     pub bounds: Option<GisTerrainBounds>,
 }
 
@@ -60,7 +60,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gisterrain::
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): `parse_descriptor` is a pure
 /// snapshot → projection function (`&GisTerrainSnapshot` → `TerrainDescriptorJson`), matching the
 /// `🧬️schema/💡️inferences/` destination — same family as `GisTerrainInference` above, just not yet
-/// wired through the typed `#[state(inferred)]` registry.
+/// wired through the typed `#[derived]` registry.
 ///
 /// ⚠️ `crate::modules::terrain` used to be a pre-existing unresolved import (predating this ticket,
 /// flagged by another session — `crate::modules` was never mounted in this crate's `📦️glue.rs`).

@@ -7,6 +7,6 @@ export interface JsonOutline {
 }
 
 export interface JsonInference {
-  /** @state inferred */
+  /** @derived */
   outline: JsonOutline;
 }

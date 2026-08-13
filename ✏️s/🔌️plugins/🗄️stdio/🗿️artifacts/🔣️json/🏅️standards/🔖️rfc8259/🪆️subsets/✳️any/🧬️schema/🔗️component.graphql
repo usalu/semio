@@ -21,6 +21,6 @@ enum JsonValueKind {
 }
 
 type JsonArtifact {
-  schema: String! @state(class: PERSISTENT)
-  value: JsonValue! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  value: JsonValue! @state(class: ARTIFACT)
 }

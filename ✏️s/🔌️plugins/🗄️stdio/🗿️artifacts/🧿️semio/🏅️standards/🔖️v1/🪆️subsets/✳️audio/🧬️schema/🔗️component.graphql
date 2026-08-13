@@ -3,6 +3,6 @@ type SemioAudioEntry {
   data: [Int!]!
 }
 type SemioAudioArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [SemioAudioEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [SemioAudioEntry!]! @state(class: ARTIFACT)
 }

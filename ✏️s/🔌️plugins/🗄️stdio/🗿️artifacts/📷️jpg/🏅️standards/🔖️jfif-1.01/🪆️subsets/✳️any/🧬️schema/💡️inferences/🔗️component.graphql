@@ -1,7 +1,7 @@
 # 💡️ Jpg inference schema — canonical raster geometry.
 
 type JpgInference {
-  dimensions: JpgDimensions! @state(class: INFERRED)
+  dimensions: JpgDimensions! @derived
 }
 
 type JpgDimensions {

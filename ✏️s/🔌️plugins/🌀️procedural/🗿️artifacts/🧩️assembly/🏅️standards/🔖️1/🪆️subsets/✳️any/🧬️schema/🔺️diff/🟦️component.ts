@@ -3,14 +3,14 @@
 import type { AssemblyModuleWeight, AssemblyRule, AssemblySlot, AssemblySlotEdge } from "../📸️snapshot/🟦️component";
 
 export interface AssemblyDiff {
-  /** @state persistent */ schema?: string;
-  /** @state persistent */ seed?: number;
-  /** @state persistent */ slotsRemoved: string[];
-  /** @state persistent */ slotsUpserted: [number, AssemblySlot][];
-  /** @state persistent */ edgesRemoved: string[];
-  /** @state persistent */ edgesUpserted: [number, AssemblySlotEdge][];
-  /** @state persistent */ weightsRemoved: string[];
-  /** @state persistent */ weightsUpserted: AssemblyModuleWeight[];
-  /** @state persistent */ rulesRemoved: string[];
-  /** @state persistent */ rulesUpserted: [number, AssemblyRule][];
+  /** @state artifact */ schema?: string;
+  /** @state artifact */ seed?: number;
+  /** @state artifact */ slotsRemoved: string[];
+  /** @state artifact */ slotsUpserted: [number, AssemblySlot][];
+  /** @state artifact */ edgesRemoved: string[];
+  /** @state artifact */ edgesUpserted: [number, AssemblySlotEdge][];
+  /** @state artifact */ weightsRemoved: string[];
+  /** @state artifact */ weightsUpserted: AssemblyModuleWeight[];
+  /** @state artifact */ rulesRemoved: string[];
+  /** @state artifact */ rulesUpserted: [number, AssemblyRule][];
 }

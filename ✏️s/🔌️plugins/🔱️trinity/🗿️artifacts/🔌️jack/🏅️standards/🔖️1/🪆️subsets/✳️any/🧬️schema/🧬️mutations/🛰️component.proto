@@ -4,21 +4,21 @@ package semio.s.trinity.jack.mutation;
 // 🧬️ Jack mutation schema — persistent fields only.
 
 message JackMutation {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string name = 2;
-  // @state persistent
+  // @state artifact
   optional string manifest_id = 3;
-  // @state persistent
+  // @state artifact
   Manifest manifest = 4;
-  // @state persistent
+  // @state artifact
   Camera camera = 5;
-  // @state persistent
+  // @state artifact
   repeated Node nodes = 6;
-  // @state persistent
+  // @state artifact
   repeated Edge edges = 7;
-  // @state persistent
+  // @state artifact
   optional string root_node_id = 8;
 }
 

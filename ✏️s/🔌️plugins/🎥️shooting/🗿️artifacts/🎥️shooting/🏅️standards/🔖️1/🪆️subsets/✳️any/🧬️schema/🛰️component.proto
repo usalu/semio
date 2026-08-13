@@ -4,45 +4,45 @@ package semio.s.shooting.shooting.artifact;
 // 🧬️ Shooting artifact schema — every field with its state class.
 
 message ShootingArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   repeated ShootingAsset assets = 2;
-  // @state persistent
+  // @state artifact
   repeated ShootingSavedCamera saved_cameras = 3;
-  // @state persistent
+  // @state artifact
   ShootingSceneLighting scene = 4;
-  // @state persistent
+  // @state artifact
   repeated ShootingShot shots = 5;
-  // @state persistent
+  // @state artifact
   string active_shot_id = 6;
-  // @state persistent
+  // @state artifact
   string active_asset_id = 7;
-  // @state shared-ui
+  // @state presence
   repeated string selected_shot_ids = 8;
-  // @state shared-ui
+  // @state presence
   repeated string selected_asset_ids = 9;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 10;
-  // @state local-ui
+  // @state config
   string default_shot_format = 11;
-  // @state local-ui
+  // @state config
   string default_shot_shape = 12;
-  // @state local-ui
+  // @state config
   string default_asset_format = 13;
-  // @state local-ui
+  // @state config
   string selection_method = 14;
-  // @state local-ui
+  // @state config
   bool center_model = 15;
-  // @state local-ui
+  // @state config
   uint32 fit_revision = 16;
-  // @state local-ui
+  // @state config
   string camera_draft_label = 17;
-  // @state local-ui
+  // @state config
   ShootingCamera camera = 18;
-  // @state local-ui
+  // @state config
   string locale = 19;
-  // @state preview
+  // @state artifact
   optional string hovered_asset_id = 20;
 }
 

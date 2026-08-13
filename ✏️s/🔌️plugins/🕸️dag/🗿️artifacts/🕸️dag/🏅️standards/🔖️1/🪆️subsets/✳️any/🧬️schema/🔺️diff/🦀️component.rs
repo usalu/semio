@@ -25,15 +25,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub content: Option<DagContentChild>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_node_ids: Option<DagStringList>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera: Option<DagCamera>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

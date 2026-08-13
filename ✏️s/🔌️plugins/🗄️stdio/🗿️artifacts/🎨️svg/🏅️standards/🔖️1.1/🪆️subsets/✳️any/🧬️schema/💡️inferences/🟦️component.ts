@@ -6,6 +6,6 @@ export interface SvgDimensions {
 }
 
 export interface SvgInference {
-  /** @state inferred */
+  /** @derived */
   dimensions: SvgDimensions;
 }

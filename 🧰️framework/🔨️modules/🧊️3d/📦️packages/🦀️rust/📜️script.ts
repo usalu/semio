@@ -9,7 +9,10 @@ class TestScript extends BundleScript {
   }
 }
 
-/** 📈️ Runs the criterion benchmark suite (`benches/🦀️kernel.rs`). */
+/** 📈️ Runs the criterion benchmark suite (`benches/🦀️kernel.rs`). Benchmarks the pre-flip `Brep`
+ * duplicate still kept here for `semio-framework-os-kernel`'s escape hatch (ticket 26/08/12/
+ * DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave G5) — the stdio-side twin has its
+ * own `bun ./📜️script.ts bench` in `semio-s-plugin-stdio`. */
 class BenchScript extends BundleScript {
   run(): void {
     runCmd("cargo", ["bench", "-p", "semio-framework-3d"], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });

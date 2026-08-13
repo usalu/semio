@@ -4,6 +4,6 @@ export interface ZipEntry {
   data: number[];
 }
 export interface ZipArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: ZipEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: ZipEntry[];
 }

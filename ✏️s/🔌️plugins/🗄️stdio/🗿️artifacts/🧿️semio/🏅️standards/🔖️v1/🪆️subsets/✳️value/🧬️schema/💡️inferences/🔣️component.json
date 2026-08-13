@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["census"],
   "properties": {
-    "census": { "$ref": "#/$defs/SemioValueCensus", "x-semio-state": "inferred" }
+    "census": { "$ref": "#/$defs/SemioValueCensus", "x-semio-derived": true }
   },
   "$defs": {
     "SemioValueCensus": {

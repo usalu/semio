@@ -4,6 +4,6 @@ type Mp3ArtifactEntry {
   value: String!
 }
 type Mp3Artifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Mp3ArtifactEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Mp3ArtifactEntry!]! @state(class: ARTIFACT)
 }

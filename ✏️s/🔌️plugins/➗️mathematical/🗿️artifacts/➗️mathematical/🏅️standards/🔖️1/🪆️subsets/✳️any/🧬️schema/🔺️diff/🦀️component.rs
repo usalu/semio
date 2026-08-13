@@ -20,21 +20,21 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.mathematical.mathematical")]
 pub struct MathematicalDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub notation: Option<MathematicalNotationChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub results: Option<MathematicalResultsChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub computed: Option<MathematicalComputedChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub equation: Option<EquationSnapshot>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_x: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_y: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_zoom: Option<f64>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

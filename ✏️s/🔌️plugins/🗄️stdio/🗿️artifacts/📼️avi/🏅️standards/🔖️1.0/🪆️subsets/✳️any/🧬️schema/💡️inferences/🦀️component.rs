@@ -19,7 +19,7 @@ use super::duration::{compute_avi_duration, AviDuration};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.avi.inference")]
 pub struct AviInference {
-    #[state(inferred)]
+    #[derived]
     pub duration: AviDuration,
 }
 

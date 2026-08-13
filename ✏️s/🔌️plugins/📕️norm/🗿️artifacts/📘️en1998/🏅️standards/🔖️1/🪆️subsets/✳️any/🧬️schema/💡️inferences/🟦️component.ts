@@ -7,6 +7,6 @@ export interface En1998Outline {
 }
 
 export interface En1998Inference {
-  /** @state inferred */
+  /** @derived */
   outline: En1998Outline;
 }

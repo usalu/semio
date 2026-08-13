@@ -1,6 +1,6 @@
 # 🔺️ PdfDiff (1.4) — flat 3-field patch over PageDoc (no collections, no full-replace slot).
 type PdfDiff {
-  width: Float @state(class: PERSISTENT)
-  height: Float @state(class: PERSISTENT)
-  text: String @state(class: PERSISTENT)
+  width: Float @state(class: ARTIFACT)
+  height: Float @state(class: ARTIFACT)
+  text: String @state(class: ARTIFACT)
 }

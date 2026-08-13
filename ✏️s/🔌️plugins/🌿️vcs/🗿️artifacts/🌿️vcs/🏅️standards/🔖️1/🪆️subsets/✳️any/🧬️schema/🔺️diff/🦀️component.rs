@@ -9,23 +9,23 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.vcs.vcs")]
 pub struct VcsDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::vcs::schema::VcsArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub title: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub counter: Option<i64>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub notes: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub status: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub tags: Option<VcsTagsDelta>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_checkpoint_ids: Option<VcsStringList>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

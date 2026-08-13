@@ -13,22 +13,22 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Artifact {
-    #[state(persistent)] pub use_class: crate::artifacts::din18599::UseClass,
-    #[state(persistent)] pub heated_area_m2: f64,
-    #[state(persistent)] pub occupants: u32,
-    #[state(persistent)] pub h_t: f64,
-    #[state(persistent)] pub h_v: f64,
-    #[state(persistent)]
+    #[state(artifact)] pub use_class: crate::artifacts::din18599::UseClass,
+    #[state(artifact)] pub heated_area_m2: f64,
+    #[state(artifact)] pub occupants: u32,
+    #[state(artifact)] pub h_t: f64,
+    #[state(artifact)] pub h_v: f64,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub climate: Din18599ClimateChild,
-    #[state(persistent)] pub internal_gains_w_m2: f64,
-    #[state(persistent)] pub solar_gains_kwh: f64,
-    #[state(persistent)] pub system_losses_kwh: f64,
-    #[state(persistent)] pub renewable_kwh: f64,
-    #[state(persistent)] pub annual_limit_kwh: f64,
-    #[state(persistent)] pub energy_carrier: String,
-    #[state(persistent)] pub reference_q_p_kwh: f64,
-    #[state(shared_ui)] pub selected_check_index: Option<u32>,
+    #[state(artifact)] pub internal_gains_w_m2: f64,
+    #[state(artifact)] pub solar_gains_kwh: f64,
+    #[state(artifact)] pub system_losses_kwh: f64,
+    #[state(artifact)] pub renewable_kwh: f64,
+    #[state(artifact)] pub annual_limit_kwh: f64,
+    #[state(artifact)] pub energy_carrier: String,
+    #[state(artifact)] pub reference_q_p_kwh: f64,
+    #[state(presence)] pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 

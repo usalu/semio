@@ -10,6 +10,6 @@ export interface DeflateWindow {
 }
 
 export interface DeflateInference {
-  /** @state inferred */
+  /** @derived */
   window: DeflateWindow;
 }

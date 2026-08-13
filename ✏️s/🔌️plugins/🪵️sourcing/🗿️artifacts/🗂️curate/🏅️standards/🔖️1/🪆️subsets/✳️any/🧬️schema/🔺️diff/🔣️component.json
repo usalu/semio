@@ -8,19 +8,19 @@
     "artifact": {
       "title": "CurateArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "stock": {
       "$ref": "#/$defs/CurateStockDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "curated": {
       "$ref": "#/$defs/CurateCuratedDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "filters": {
       "$ref": "#/$defs/Filters",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectedObjectId": {
       "oneOf": [
@@ -31,15 +31,15 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

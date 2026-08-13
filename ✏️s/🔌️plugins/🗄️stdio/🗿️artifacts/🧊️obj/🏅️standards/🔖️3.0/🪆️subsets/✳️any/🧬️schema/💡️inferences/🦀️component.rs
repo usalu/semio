@@ -19,7 +19,7 @@ use super::bounds::{compute_obj_bounds, ObjBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.obj.inference")]
 pub struct ObjInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: ObjBounds,
 }
 

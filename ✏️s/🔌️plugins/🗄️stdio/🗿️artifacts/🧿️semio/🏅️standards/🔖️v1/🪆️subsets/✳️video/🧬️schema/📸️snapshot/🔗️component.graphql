@@ -26,6 +26,6 @@ type SemioVideoStream {
 }
 
 type SemioVideoSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  streams: [SemioVideoStream!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  streams: [SemioVideoStream!]! @state(class: ARTIFACT)
 }

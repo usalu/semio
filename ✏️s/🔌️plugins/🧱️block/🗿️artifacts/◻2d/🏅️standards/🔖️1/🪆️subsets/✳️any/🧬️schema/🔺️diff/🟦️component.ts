@@ -1,31 +1,31 @@
 /** 🧬️ Block2d diff schema — sparse field delta. */
 
 export interface Block2dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Block2dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   nodeKind?: BlockKindIdentity;
-  /** @state persistent */
+  /** @state artifact */
   presentation?: Block2dPresentation;
-  /** @state persistent */
+  /** @state artifact */
   handleKinds?: Block2dHandleKindsDelta;
-  /** @state persistent */
+  /** @state artifact */
   handles?: Block2dHandlesDelta;
-  /** @state persistent */
+  /** @state artifact */
   compatibility?: Block2dCompatibilityDelta;
-  /** @state persistent */
+  /** @state artifact */
   attributes?: Block2dAttributesDelta;
-  /** @state persistent */
+  /** @state artifact */
   authors?: Block2dAuthorList;
-  /** @state persistent */
+  /** @state artifact */
   camera2d?: BlockCamera2d;
-  /** @state persistent */
+  /** @state artifact */
   meta?: BlockMeta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds?: Block2dStringList;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

@@ -20,7 +20,7 @@ use super::outline::{compute_semio_document_outline, SemioDocumentOutline};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.document.inference")]
 pub struct SemioDocumentInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: SemioDocumentOutline,
 }
 

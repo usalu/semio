@@ -17,8 +17,26 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 5;
+pub const CHANNEL_VERSION: u32 = 6;
 //#endregion 🔖️Version
+
+//#region 🔖️ChildPackEntry
+/// @emoji 🧸️ One owned child's whole persisted envelope, as it travels between host and guest.
+/// Composed children are their OWN envelopes with their own `ArtifactVcs` history, so a composing
+/// document's `LoadDocument`/`Document` pair is not sufficient to save or restore it — its children
+/// would exist only until the process ended. `AppCommand::LoadChildren`/`AppFrame::Children` carry
+/// exactly these, keyed the way the parent's `ArtifactChild` handles name them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChildPackEntry {
+    pub slot: String,
+    pub child_id: String,
+    /// 🎯️ `ArtifactDialect` as its `<kind>@<standard>/<subset>` wire string — the guest needs it to
+    /// pick the right `ChildStoreFactory`, and it is not recoverable from the pack bytes alone.
+    pub dialect: String,
+    /// 📦️ The child's full envelope pack (`encode_document_pack_bytes` framing: pack + spr).
+    pub envelope_pack: Vec<u8>,
+}
+//#endregion 🔖️ChildPackEntry
 
 //#region 🔖️SectionProbe
 /// @emoji 🔍️ One UI-section cache probe: `AppCommand::RefreshUi` sends a batch of these so the
@@ -125,6 +143,18 @@ pub enum AppCommand {
         draft: Vec<u8>,
         draft_spr: Vec<u8>,
     },
+    /// 🧸️ Restores a composing document's owned children into the engine, each as its own live
+    /// store. Sent after `LoadDocument` (the parent must exist before its children can be adopted).
+    /// CHANNEL_VERSION 6 wire addition.
+    LoadChildren {
+        seq: u64,
+        entries: Vec<ChildPackEntry>,
+    },
+    /// 🧸️ Asks the engine for every owned child's current envelope, for persistence — the child-side
+    /// counterpart of `ReadDocument`. CHANNEL_VERSION 6 wire addition.
+    ReadChildren {
+        seq: u64,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -161,6 +191,14 @@ pub enum AppFrame {
         pack: Vec<u8>,
         spr: Vec<u8>,
         ops: String,
+    },
+    /// 🧸️ Every owned child's current envelope — the reply to `ReadChildren`, and also emitted
+    /// unsolicited (`in_reply_to` of the originating command) after a composite gesture creates new
+    /// children, so the host learns about a genesis child without having to poll for it.
+    /// CHANNEL_VERSION 6 wire addition.
+    Children {
+        in_reply_to: u64,
+        entries: Vec<ChildPackEntry>,
     },
 }
 //#endregion 🔖️AppFrame
@@ -363,8 +401,44 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             crate::os_spr::write_bytes(&mut out, draft);
             crate::os_spr::write_bytes(&mut out, draft_spr);
         }
+        AppCommand::LoadChildren { seq, entries } => {
+            out.push(19);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            write_vec_child_pack(&mut out, entries);
+        }
+        AppCommand::ReadChildren { seq } => {
+            out.push(20);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+        }
     }
     out
+}
+
+/// @emoji 🧸️ `count varint | (slot, child_id, dialect, envelope_pack)*` — the shared list codec for
+/// both `AppCommand::LoadChildren` and `AppFrame::Children`.
+fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
+    crate::os_spr::write_varint_u64(out, entries.len() as u64);
+    for entry in entries {
+        crate::os_spr::write_str(out, &entry.slot);
+        crate::os_spr::write_str(out, &entry.child_id);
+        crate::os_spr::write_str(out, &entry.dialect);
+        crate::os_spr::write_bytes(out, &entry.envelope_pack);
+    }
+}
+
+/// @emoji 🧸️ Inverse of [`write_vec_child_pack`].
+fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildPackEntry>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+    let mut entries = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        entries.push(ChildPackEntry {
+            slot: crate::os_spr::read_str(bytes, pos)?,
+            child_id: crate::os_spr::read_str(bytes, pos)?,
+            dialect: crate::os_spr::read_str(bytes, pos)?,
+            envelope_pack: crate::os_spr::read_bytes(bytes, pos)?,
+        });
+    }
+    Ok(entries)
 }
 
 /// @emoji 📥️ Decodes one `AppCommand`, the inverse of [`encode_app_command`].
@@ -405,6 +479,8 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::Pro
             draft: crate::os_spr::read_bytes(bytes, &mut pos)?,
             draft_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
+        19 => AppCommand::LoadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos)? },
+        20 => AppCommand::ReadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -511,6 +587,11 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_bytes(&mut out, spr);
             crate::os_spr::write_str(&mut out, ops);
         }
+        AppFrame::Children { in_reply_to, entries } => {
+            out.push(16);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            write_vec_child_pack(&mut out, entries);
+        }
     }
     out
 }
@@ -558,6 +639,7 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
             spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
             ops: crate::os_spr::read_str(bytes, &mut pos)?,
         },
+        16 => AppFrame::Children { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -801,7 +883,27 @@ mod tests {
     #[test]
     fn app_frame_draft_round_trips() {
         assert_frame_round_trips(&AppFrame::Draft { in_reply_to: 15, pack: vec![1], spr: vec![2], ops: "d".to_string() });
+        assert_frame_round_trips(&AppFrame::Children { in_reply_to: 16, entries: sample_child_entries() });
+        assert_frame_round_trips(&AppFrame::Children { in_reply_to: 17, entries: Vec::new() });
     }
+
+    //#region 🔖️Children
+    /// 🧸️ Two children in different slots, one of them with an empty pack (a genesis child whose
+    /// envelope has not been printed yet), so the list codec is exercised at both extremes.
+    fn sample_child_entries() -> Vec<ChildPackEntry> {
+        vec![
+            ChildPackEntry { slot: "mesh".to_string(), child_id: "child-1".to_string(), dialect: "s.stdio.mesh@1/*".to_string(), envelope_pack: vec![7, 8, 9] },
+            ChildPackEntry { slot: "brep".to_string(), child_id: "child-2".to_string(), dialect: "s.stdio.brep@1/*".to_string(), envelope_pack: Vec::new() },
+        ]
+    }
+
+    #[test]
+    fn child_pack_commands_round_trip() {
+        assert_command_round_trips(&AppCommand::LoadChildren { seq: 19, entries: sample_child_entries() });
+        assert_command_round_trips(&AppCommand::LoadChildren { seq: 20, entries: Vec::new() });
+        assert_command_round_trips(&AppCommand::ReadChildren { seq: 21 });
+    }
+    //#endregion 🔖️Children
     //#endregion 🔖️AppFrame
 
     //#region 🔖️SectionProbe

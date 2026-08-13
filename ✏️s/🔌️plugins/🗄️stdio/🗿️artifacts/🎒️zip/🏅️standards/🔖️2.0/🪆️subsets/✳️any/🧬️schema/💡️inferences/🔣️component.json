@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["entries"],
   "properties": {
-    "entries": { "$ref": "#/$defs/ZipEntries", "x-semio-state": "inferred" }
+    "entries": { "$ref": "#/$defs/ZipEntries", "x-semio-derived": true }
   },
   "$defs": {
     "ZipEntries": {

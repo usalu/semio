@@ -9,12 +9,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainDiff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::gisterrain::schema::GisTerrainArtifact>>,
-    #[state(persistent)] pub exaggeration: Option<f64>,
-    #[state(persistent)] pub imported_features_json: Option<String>,
-    #[state(shared_ui)] pub selected_ids: Option<GisTerrainStringList>,
-    #[state(local_ui)] pub camera_json: Option<String>,
-    #[state(local_ui)] pub locale: Option<String>,
+    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::gisterrain::schema::GisTerrainArtifact>>,
+    #[state(artifact)] pub exaggeration: Option<f64>,
+    #[state(artifact)] pub imported_features_json: Option<String>,
+    #[state(presence)] pub selected_ids: Option<GisTerrainStringList>,
+    #[state(config)] pub camera_json: Option<String>,
+    #[state(config)] pub locale: Option<String>,
 }
 //#endregion 🔹Diff
 

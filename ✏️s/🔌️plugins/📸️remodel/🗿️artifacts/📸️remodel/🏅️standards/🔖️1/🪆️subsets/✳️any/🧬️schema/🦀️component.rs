@@ -68,22 +68,22 @@ pub fn video_codec_from_label(label: &str) -> VideoCodec {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel")]
 pub struct RemodelArtifact {
-    #[state(persistent)] pub schema: String,
-    #[state(persistent)] pub id: String,
-    #[state(persistent)] pub streams: Vec<MediaStream>,
-    #[state(persistent)] pub assets: BTreeMap<String, ImageAsset>,
-    #[state(persistent)] pub calibration: CalibrationState,
-    #[state(persistent)] pub params: ReconstructionParams,
-    #[state(persistent)] pub gcps: Vec<GroundControlPoint>,
-    #[state(persistent)] pub job: ReconstructionJob,
-    #[state(persistent)] pub results: ReconstructionResults,
-    #[state(shared_ui)] pub selection: RemodelUiSelection,
-    #[state(shared_ui)] pub active_utility_id: String,
-    #[state(shared_ui)] pub report_table: String,
-    #[state(shared_ui)] pub frame_cursor: RemodelUiFrameCursor,
-    #[state(local_ui)] pub camera: RemodelUiCamera,
-    #[state(local_ui)] pub layers: RemodelUiLayers,
-    #[state(local_ui)] pub locale: String,
+    #[state(artifact)] pub schema: String,
+    #[state(artifact)] pub id: String,
+    #[state(artifact)] pub streams: Vec<MediaStream>,
+    #[state(artifact)] pub assets: BTreeMap<String, ImageAsset>,
+    #[state(artifact)] pub calibration: CalibrationState,
+    #[state(artifact)] pub params: ReconstructionParams,
+    #[state(artifact)] pub gcps: Vec<GroundControlPoint>,
+    #[state(artifact)] pub job: ReconstructionJob,
+    #[state(artifact)] pub results: ReconstructionResults,
+    #[state(presence)] pub selection: RemodelUiSelection,
+    #[state(presence)] pub active_utility_id: String,
+    #[state(presence)] pub report_table: String,
+    #[state(presence)] pub frame_cursor: RemodelUiFrameCursor,
+    #[state(config)] pub camera: RemodelUiCamera,
+    #[state(config)] pub layers: RemodelUiLayers,
+    #[state(config)] pub locale: String,
 }
 //#endregion 🔖️Artifact
 

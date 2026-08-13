@@ -106,13 +106,13 @@ pub struct ZipEntry {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.zip")]
 pub struct ZipSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entries: Vec<ZipEntry>,
     /// 💬️ Archive-level comment (EOCD comment field).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comment: String,
 }

@@ -8,31 +8,31 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.89a")]
 pub struct GifArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub gct: Option<GifColorTable>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub background_color_index: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixel_aspect_ratio: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub loop_count: Option<u16>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub frames: Vec<GifFrame>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comments: Vec<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub app_extensions: Vec<GifAppExtension>,
 }

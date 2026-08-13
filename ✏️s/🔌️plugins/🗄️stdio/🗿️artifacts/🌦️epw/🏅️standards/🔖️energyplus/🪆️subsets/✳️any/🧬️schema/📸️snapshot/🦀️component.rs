@@ -240,40 +240,40 @@ pub const STDIO_EPW_DOCUMENT_SCHEMA: &str = "stdio.epw";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw")]
 pub struct EpwSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 📍️ Header line 1 — fully typed (see [`EpwLocation`]).
-    #[state(persistent)]
+    #[state(artifact)]
     pub location: EpwLocation,
     /// 🌡️ Header line 2, retained verbatim (design-day sizing summary; not structurally decoded).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub design_conditions: String,
     /// 📆️ Header line 3, retained verbatim (named typical/extreme week ranges).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub typical_extreme_periods: String,
     /// 🌍️ Header line 4, retained verbatim (per-depth monthly ground temperatures).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub ground_temperatures: String,
     /// 🎉️ Header line 5, retained verbatim (holiday/DST flags).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub holidays_dst: String,
     /// 💬️ Header line 6, retained verbatim.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comments_1: String,
     /// 💬️ Header line 7, retained verbatim.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comments_2: String,
     /// 📅️ Header line 8 — structured (see [`EpwDataPeriods`]).
-    #[state(persistent)]
+    #[state(artifact)]
     pub data_periods: EpwDataPeriods,
     /// 🌡️ Hourly data records, in file order, each carrying all 35 EPW columns.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub records: Vec<EpwRecord>,
 }

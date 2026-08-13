@@ -1,8 +1,8 @@
 """🧬️ JpgArtifact schema — reduced UI-editable view: identity + the raster the user is directly
 manipulating."""
 type JpgArtifact {
-  schema: String! @state(class: PERSISTENT)
-  width: Int! @state(class: PERSISTENT)
-  height: Int! @state(class: PERSISTENT)
-  pixels: [Int!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  width: Int! @state(class: ARTIFACT)
+  height: Int! @state(class: ARTIFACT)
+  pixels: [Int!]! @state(class: ARTIFACT)
 }

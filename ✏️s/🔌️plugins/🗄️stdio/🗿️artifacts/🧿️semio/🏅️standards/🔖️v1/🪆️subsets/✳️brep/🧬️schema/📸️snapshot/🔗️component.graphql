@@ -36,11 +36,11 @@ type BrepSolidShell { shell: String!, isVoid: Boolean! }
 type BrepSolid { id: String!, shells: [BrepSolidShell!]! }
 
 type SemioBrepSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  vertices: [BrepVertex!]! @state(class: PERSISTENT)
-  edges: [BrepEdge!]! @state(class: PERSISTENT)
-  loops: [BrepLoop!]! @state(class: PERSISTENT)
-  faces: [BrepFace!]! @state(class: PERSISTENT)
-  shells: [BrepShell!]! @state(class: PERSISTENT)
-  solids: [BrepSolid!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  vertices: [BrepVertex!]! @state(class: ARTIFACT)
+  edges: [BrepEdge!]! @state(class: ARTIFACT)
+  loops: [BrepLoop!]! @state(class: ARTIFACT)
+  faces: [BrepFace!]! @state(class: ARTIFACT)
+  shells: [BrepShell!]! @state(class: ARTIFACT)
+  solids: [BrepSolid!]! @state(class: ARTIFACT)
 }

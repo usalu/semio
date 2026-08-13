@@ -1,12 +1,12 @@
 /** 🧬️ Procedural2dPresence */
 export interface Procedural2dPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   camera: CameraJson;
-  /** @state shared-ui */
+  /** @state presence */
   showMode: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedGenerationId?: string;
 }
 

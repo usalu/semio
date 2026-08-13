@@ -1,13 +1,13 @@
 # 🧬️ Shooting snapshot schema — persistent fields only.
 
 type ShootingSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  assets: [ShootingAsset!]! @state(class: PERSISTENT)
-  savedCameras: [ShootingSavedCamera!]! @state(class: PERSISTENT)
-  scene: ShootingSceneLighting! @state(class: PERSISTENT)
-  shots: [ShootingShot!]! @state(class: PERSISTENT)
-  activeShotId: String! @state(class: PERSISTENT)
-  activeAssetId: String! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  assets: [ShootingAsset!]! @state(class: ARTIFACT)
+  savedCameras: [ShootingSavedCamera!]! @state(class: ARTIFACT)
+  scene: ShootingSceneLighting! @state(class: ARTIFACT)
+  shots: [ShootingShot!]! @state(class: ARTIFACT)
+  activeShotId: String! @state(class: ARTIFACT)
+  activeAssetId: String! @state(class: ARTIFACT)
 }
 
 type ShootingCamera {

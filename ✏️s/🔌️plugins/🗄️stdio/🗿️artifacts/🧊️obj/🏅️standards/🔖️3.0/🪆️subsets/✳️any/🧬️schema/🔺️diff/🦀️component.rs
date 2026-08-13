@@ -716,34 +716,34 @@ impl ObjObjectsDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.obj.diff")]
 pub struct ObjDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vertices: Option<ObjVerticesDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub texcoords: Option<ObjTexCoordsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub normals: Option<ObjNormalsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faces: Option<ObjFacesDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub groups: Option<ObjGroupsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub objects: Option<ObjObjectsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtllib: Option<Option<String>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub usemtl: Option<Vec<ObjUsemtlRange>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub smoothing_groups: Option<Vec<ObjSmoothingRange>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unknown_statements: Option<Vec<ObjUnknownStatement>>,
 }

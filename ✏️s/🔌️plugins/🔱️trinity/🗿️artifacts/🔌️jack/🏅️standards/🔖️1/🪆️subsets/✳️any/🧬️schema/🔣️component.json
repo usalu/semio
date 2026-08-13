@@ -26,102 +26,102 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "name": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "manifestId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "manifest": {
       "$ref": "#/$defs/Manifest",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Node"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "edges": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Edge"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "rootNodeId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedNodeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeFixtureId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "jackQuery": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "lodModeByWindow": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "viewportCamera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "jackResultJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "editorEngagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "graphEngagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "resultsEngagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "reorganizeEpoch": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "editorSelection": {
       "$ref": "#/$defs/JackEditorSelection",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "revision": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

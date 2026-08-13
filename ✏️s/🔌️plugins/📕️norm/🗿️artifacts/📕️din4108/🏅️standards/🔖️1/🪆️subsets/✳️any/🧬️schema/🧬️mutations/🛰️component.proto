@@ -2,40 +2,40 @@ syntax = "proto3";
 package semio.s.norm.din4108.mutation;
 
 message Din4108Mutation {
-  // @state persistent
+  // @state artifact
   string category = 1;
-  // @state persistent
+  // @state artifact
   repeated string layers = 2;
-  // @state persistent
+  // @state artifact
   string climate = 3;
-  // @state persistent
+  // @state artifact
   double airtightness_n50 = 4;
-  // @state persistent
+  // @state artifact
   double psi_times_l_sum = 5;
-  // @state persistent
+  // @state artifact
   double rh_int = 6;
-  // @state persistent
+  // @state artifact
   string catalog_id = 7;
-  // @state persistent
+  // @state artifact
   string material_id = 8;
-  // @state persistent
+  // @state artifact
   string airtightness_class = 9;
-  // @state persistent
+  // @state artifact
   double t_int_c = 10;
-  // @state persistent
+  // @state artifact
   double solar_absorptance = 11;
-  // @state persistent
+  // @state artifact
   double irradiance_w_m2 = 12;
-  // @state persistent
+  // @state artifact
   double moisture_mu_exterior = 13;
-  // @state persistent
+  // @state artifact
   double moisture_mu_interior = 14;
-  // @state persistent
+  // @state artifact
   double envelope_area_m2 = 15;
-  // @state persistent
+  // @state artifact
   bool bb2_details_conform = 16;
-  // @state persistent
+  // @state artifact
   string application_type = 17;
-  // @state persistent
+  // @state artifact
   string declared_application_class = 18;
 }

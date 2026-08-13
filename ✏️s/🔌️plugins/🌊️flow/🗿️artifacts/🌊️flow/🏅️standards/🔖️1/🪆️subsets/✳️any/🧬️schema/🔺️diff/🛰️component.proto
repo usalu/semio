@@ -4,45 +4,45 @@ package semio.s.flow.flow.diff;
 // 🧬️ Flow diff schema — sparse field delta.
 
 message FlowDiff {
-  // @state persistent
+  // @state artifact
   optional FlowArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional CameraJson camera = 3;
-  // @state persistent
+  // @state artifact
   optional FlowWidgetsDelta widgets = 4;
-  // @state persistent
+  // @state artifact
   optional FlowSynapsesDelta synapses = 5;
-  // @state persistent
+  // @state artifact
   optional FlowLayoutMapDelta layout = 6;
-  // @state shared-ui
+  // @state presence
   optional FlowStringList selected_node_ids = 7;
-  // @state shared-ui
+  // @state presence
   optional FlowStringList selected_edge_ids = 8;
-  // @state shared-ui
+  // @state presence
   optional FlowStringList selected_handle_ids = 9;
-  // @state shared-ui
+  // @state presence
   optional FlowStringList preview_off_node_ids = 10;
-  // @state local-ui
+  // @state config
   optional string lod_mode = 11;
-  // @state local-ui
+  // @state config
   optional double proximity_distance = 12;
-  // @state local-ui
+  // @state config
   optional bool grid_visible = 13;
-  // @state local-ui
+  // @state config
   optional bool grid_snap_enabled = 14;
-  // @state local-ui
+  // @state config
   optional double grid_factor = 15;
-  // @state local-ui
+  // @state config
   optional string catalogue_sections_json = 16;
-  // @state local-ui
+  // @state config
   optional string automation_enabled_json = 17;
-  // @state local-ui
+  // @state config
   optional string contributions_json = 18;
-  // @state local-ui
+  // @state config
   optional string generation_json = 19;
-  // @state local-ui
+  // @state config
   optional string locale = 20;
 }
 

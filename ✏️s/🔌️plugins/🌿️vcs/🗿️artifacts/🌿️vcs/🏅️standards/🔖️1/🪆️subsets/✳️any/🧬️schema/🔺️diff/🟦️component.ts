@@ -1,23 +1,23 @@
 /** 🧬️ VCS diff schema — sparse field delta over the artifact. */
 
 export interface VcsDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: VcsArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   title?: string;
-  /** @state persistent */
+  /** @state artifact */
   counter?: number;
-  /** @state persistent */
+  /** @state artifact */
   notes?: string;
-  /** @state persistent */
+  /** @state artifact */
   status?: string;
-  /** @state persistent */
+  /** @state artifact */
   tags?: VcsTagsDelta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckpointIds?: VcsStringList;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

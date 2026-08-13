@@ -7,6 +7,6 @@ export interface WavDuration {
 }
 
 export interface WavInference {
-  /** @state inferred */
+  /** @derived */
   duration: WavDuration;
 }

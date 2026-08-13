@@ -9,6 +9,6 @@ export interface FlattenedNode {
 }
 
 export interface SemioDrawingInference {
-  /** @state inferred */
+  /** @derived */
   flattenedScene: Record<string, FlattenedNode>;
 }

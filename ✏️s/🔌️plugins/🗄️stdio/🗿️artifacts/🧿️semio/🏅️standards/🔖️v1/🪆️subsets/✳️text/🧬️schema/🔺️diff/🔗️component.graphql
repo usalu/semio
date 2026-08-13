@@ -3,5 +3,5 @@ type SemioTextRunListDiff {
   values: [SemioTextRun!]!
 }
 type SemioTextDiff {
-  runs: SemioTextRunListDiff @state(class: PERSISTENT)
+  runs: SemioTextRunListDiff @state(class: ARTIFACT)
 }

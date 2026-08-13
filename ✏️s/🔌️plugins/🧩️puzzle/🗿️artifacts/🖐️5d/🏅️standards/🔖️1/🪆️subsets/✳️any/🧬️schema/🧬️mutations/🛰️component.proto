@@ -4,21 +4,21 @@ package semio.s.puzzle.puzzle5d.mutation;
 // 🧬️ Puzzle5d mutation schema — persistent fields only.
 
 message Puzzle5dMutation {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string domain = 2;
-  // @state persistent
+  // @state artifact
   optional string label = 3;
-  // @state persistent
+  // @state artifact
   Puzzle5dMeta meta = 4;
-  // @state persistent
+  // @state artifact
   optional Puzzle5dKindCatalogs kind_catalogs = 5;
-  // @state persistent
+  // @state artifact
   repeated Puzzle5dKindCompatibility kind_compatibility = 6;
-  // @state persistent
+  // @state artifact
   repeated Puzzle5dPart parts = 7;
-  // @state persistent
+  // @state artifact
   repeated Puzzle5dFastener fasteners = 8;
 }
 

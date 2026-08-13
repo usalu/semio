@@ -1,52 +1,52 @@
 /** 🧬️ EN 1997 diff schema. */
 
 export interface En1997Diff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: En1997Artifact;
-  /** @state persistent */
+  /** @state artifact */
   vEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   hEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   footingAreaM2?: number;
-  /** @state persistent */
+  /** @state artifact */
   phiDeg?: number;
-  /** @state persistent */
+  /** @state artifact */
   cKpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   gammaKnM3?: number;
-  /** @state persistent */
+  /** @state artifact */
   bM?: number;
-  /** @state persistent */
+  /** @state artifact */
   dFM?: number;
-  /** @state persistent */
+  /** @state artifact */
   eSMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   nu?: number;
-  /** @state persistent */
+  /** @state artifact */
   designApproach?: number;
-  /** @state persistent */
+  /** @state artifact */
   annex?: number;
-  /** @state persistent */
+  /** @state artifact */
   settlementLimitMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   nPileEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   alphaS?: number;
-  /** @state persistent */
+  /** @state artifact */
   pileDM?: number;
-  /** @state persistent */
+  /** @state artifact */
   qSKpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   pileLM?: number;
-  /** @state persistent */
+  /** @state artifact */
   qBKpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   pileBaseAreaM2?: number;
-  /** @state persistent */
+  /** @state artifact */
   pileNProfiles?: number;
-  /** @state persistent */
+  /** @state artifact */
   zInvestigatedM?: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null | null;
 }

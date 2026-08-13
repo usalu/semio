@@ -25,6 +25,6 @@ export type SemioValueDiff =
   | { kind: "ref"; id: ValueId };
 
 export interface SemioValueTreeDiff {
-  /** @state persistent */ root?: SemioValueDiff;
-  /** @state persistent */ nodes?: NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>>;
+  /** @state artifact */ root?: SemioValueDiff;
+  /** @state artifact */ nodes?: NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>>;
 }

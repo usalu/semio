@@ -24,115 +24,115 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "objectKind": {
       "$ref": "#/$defs/BlockKindIdentity",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "representations": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BlockRepresentation"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "vortexKinds": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Block3dVortexKind"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "vortices": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Block3dVortexTemplate"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "compatibility": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BlockCompatibilityRule"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "attributes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BlockAttribute"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "authors": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BlockAuthor"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera3d": {
       "$ref": "#/$defs/BlockCamera3d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/BlockMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeRepresentationId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "wantedTags": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "windows": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Block3dWindowView"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushVortexKindId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushRadius": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushFlip": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushPreview": {
       "$ref": "#/$defs/Block3dBrushPreview",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "camera": {
       "$ref": "#/$defs/BlockCamera3d",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredVortexFullId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

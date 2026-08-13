@@ -1,55 +1,55 @@
 /** 🧬️ Process3d diff schema — sparse field delta over the artifact. */
 
 export interface Process3dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Process3dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   workshop?: Process3dWorkshop;
-  /** @state persistent */
+  /** @state artifact */
   stock?: Process3dStock;
-  /** @state persistent */
+  /** @state artifact */
   steps?: Process3dStepsDelta;
-  /** @state persistent */
+  /** @state artifact */
   resolvedUpTo?: number | null;
-  /** @state shared-ui */
+  /** @state presence */
   selectedId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   selectedFaceId?: number | null;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId?: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput?: string;
-  /** @state local-ui */
+  /** @state config */
   cameraPositionX?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraPositionY?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraPositionZ?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraTargetX?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraTargetY?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraTargetZ?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraFov?: number;
-  /** @state local-ui */
+  /** @state config */
   sunEnabled?: boolean;
-  /** @state local-ui */
+  /** @state config */
   sunAzimuth?: number;
-  /** @state local-ui */
+  /** @state config */
   sunElevation?: number;
-  /** @state local-ui */
+  /** @state config */
   sunIntensity?: number;
-  /** @state local-ui */
+  /** @state config */
   sunColor?: string;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredId?: string | null;
 }
 

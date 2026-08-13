@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["duration"],
   "properties": {
-    "duration": { "$ref": "#/$defs/WavDuration", "x-semio-state": "inferred" }
+    "duration": { "$ref": "#/$defs/WavDuration", "x-semio-derived": true }
   },
   "$defs": {
     "WavDuration": {

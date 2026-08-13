@@ -95,15 +95,15 @@ pub struct SemioValueNode {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value")]
 pub struct SemioValueSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 🌱 The graph's entry point — any `SemioValue`, including a `Ref` into `nodes`.
-    #[state(persistent)]
+    #[state(artifact)]
     pub root: SemioValue,
     /// 🕸️ The id-keyed backing store `Ref` values resolve against — ordered (insertion order
     /// preserved), id-addressable, a real strong-entity collection (never a `HashMap`, so decode
     /// -> encode never silently reorders it).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub nodes: Vec<SemioValueNode>,
 }

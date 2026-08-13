@@ -9,17 +9,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.audio")]
 pub struct SemioAudioArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sample_rate: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub format: SemioAudioFormat,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub channels: Vec<SemioAudioChannel>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub tags: Vec<SemioAudioTag>,
 }

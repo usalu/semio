@@ -19,7 +19,7 @@ use super::topicstats::{compute_bcf_topic_stats, BcfTopicStats};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf.inference")]
 pub struct BcfInference {
-    #[state(inferred)]
+    #[derived]
     pub topic_stats: BcfTopicStats,
 }
 

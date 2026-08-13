@@ -6,5 +6,5 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.imperative.imperative.presence")]
 pub struct ImperativePresence {
-    #[state(shared_ui)] pub selected_step_ids: Vec<String>,
+    #[state(presence)] pub selected_step_ids: Vec<String>,
 }

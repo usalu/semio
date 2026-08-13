@@ -5,6 +5,6 @@ export interface Semio_wav_snapshotEntry {
   value: string;
 }
 export interface Semio_wav_snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_wav_snapshotEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: Semio_wav_snapshotEntry[];
 }

@@ -92,10 +92,10 @@ impl Default for SemioValueDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value.diff")]
 pub struct SemioValueTreeDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root: Option<SemioValueDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nodes: Option<NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>>>,
 }

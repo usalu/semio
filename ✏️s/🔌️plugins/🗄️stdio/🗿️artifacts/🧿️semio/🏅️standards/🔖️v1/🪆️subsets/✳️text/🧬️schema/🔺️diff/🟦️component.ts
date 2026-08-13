@@ -3,5 +3,5 @@ export interface SemioTextRunListDiff {
   values: import("../📸️snapshot/🟦️component.ts").SemioTextRun[];
 }
 export interface SemioTextDiff {
-  /** @state persistent */ runs?: SemioTextRunListDiff | null;
+  /** @state artifact */ runs?: SemioTextRunListDiff | null;
 }

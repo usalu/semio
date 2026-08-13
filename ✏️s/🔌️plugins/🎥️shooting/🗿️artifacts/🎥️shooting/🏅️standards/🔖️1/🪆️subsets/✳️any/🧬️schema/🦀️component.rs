@@ -1,7 +1,7 @@
 //! 🧬️ Shooting artifact schema — every field of the artifact with its state class.
 
 use crate::artifacts::shooting::{
-    ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot,
+    ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot,
 };
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
@@ -19,45 +19,49 @@ use serde_json::{json, Value};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting")]
 pub struct ShootingArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub assets: Vec<ShootingAsset>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub saved_cameras: Vec<ShootingSavedCamera>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub scene: ShootingSceneLighting,
-    #[state(persistent)]
+    #[state(artifact)]
     pub shots: Vec<ShootingShot>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub active_shot_id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub active_asset_id: String,
-    #[state(shared_ui)]
+    /// 🕸️ Composed `s.stdio.semio.image` child mirror — see `ShootingSnapshot::emblem`'s doc comment.
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.image")]
+    pub emblem: Option<ShootingEmblemChild>,
+    #[state(presence)]
     pub selected_shot_ids: Vec<String>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_asset_ids: Vec<String>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub active_utility_id: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub default_shot_format: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub default_shot_shape: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub default_asset_format: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub selection_method: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub center_model: bool,
-    #[state(local_ui)]
+    #[state(config)]
     pub fit_revision: u32,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_draft_label: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera: ShootingCamera,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
-    #[state(preview)]
+    #[state(artifact)]
     pub hovered_asset_id: Option<String>,
 }
 //#endregion 🔖️Artifact
@@ -73,6 +77,7 @@ impl Default for ShootingArtifact {
             shots: Vec::new(),
             active_shot_id: String::new(),
             active_asset_id: String::new(),
+            emblem: None,
             selected_shot_ids: Vec::new(),
             selected_asset_ids: Vec::new(),
             active_utility_id: "move".into(),
@@ -101,6 +106,7 @@ impl ShootingArtifact {
             shots: self.shots.clone(),
             active_shot_id: self.active_shot_id.clone(),
             active_asset_id: self.active_asset_id.clone(),
+            emblem: self.emblem.clone(),
         }
     }
 
@@ -114,6 +120,7 @@ impl ShootingArtifact {
             shots: snapshot.shots,
             active_shot_id: snapshot.active_shot_id,
             active_asset_id: snapshot.active_asset_id,
+            emblem: snapshot.emblem,
             ..Self::default()
         }
     }
@@ -127,6 +134,7 @@ impl ShootingArtifact {
         self.shots = snapshot.shots;
         self.active_shot_id = snapshot.active_shot_id;
         self.active_asset_id = snapshot.active_asset_id;
+        self.emblem = snapshot.emblem;
     }
 }
 //#endregion 🔖️Conversions
@@ -202,7 +210,7 @@ fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawing
     let label = asset.map_or("Untitled", |entry| entry.name.as_str());
 
     let mut children = vec![DrawNode::Path { segments: shooting_shape_path_segments(shape, width as f64, height as f64), style: Some("background".into()) }];
-    if let Some(bytes) = snapshot.scene.emblem_base64.as_deref().filter(|data| !data.is_empty()).and_then(shooting_base64_decode) {
+    if let Some(bytes) = crate::artifacts::shooting::shooting_emblem_bytes(snapshot).filter(|bytes| !bytes.is_empty()) {
         children.push(DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: width as f64, height: height as f64, mime: "image/png".into(), bytes });
     }
     children.push(DrawNode::Text { value: label.to_string(), at: SemioPoint2 { x: width as f64 / 2.0, y: height as f64 * 0.92 }, style: Some("label".into()) });
@@ -254,33 +262,6 @@ fn shooting_hex_color_to_rgba(hex: &str) -> Option<SemioRgba> {
         8 => Some(SemioRgba { r: byte(&trimmed[0..2])?, g: byte(&trimmed[2..4])?, b: byte(&trimmed[4..6])?, a: byte(&trimmed[6..8])? }),
         _ => None,
     }
-}
-
-/// 🔤️ Minimal, dependency-free base64 decoder for `scene.emblem_base64` — mirrors the semio
-/// drawing subset's own svg import leaf decoder (no shared crate; every leaf in this codebase
-/// hand-rolls this exact algorithm rather than pull in an external dependency).
-fn shooting_base64_decode(data: &str) -> Option<Vec<u8>> {
-    fn val(c: u8) -> Option<u8> {
-        match c {
-            b'A'..=b'Z' => Some(c - b'A'),
-            b'a'..=b'z' => Some(c - b'a' + 26),
-            b'0'..=b'9' => Some(c - b'0' + 52),
-            b'+' => Some(62),
-            b'/' => Some(63),
-            _ => None,
-        }
-    }
-    let clean: Vec<u8> = data.bytes().filter(|&b| b != b'=' && !b.is_ascii_whitespace()).collect();
-    let mut out = Vec::with_capacity(clean.len() * 3 / 4);
-    for chunk in clean.chunks(4) {
-        let vals: Vec<u8> = chunk.iter().map(|&b| val(b)).collect::<Option<Vec<u8>>>()?;
-        let n = vals.len();
-        let combined = vals.iter().fold(0u32, |acc, &v| (acc << 6) | v as u32) << ((4 - n) * 6);
-        out.push((combined >> 16) as u8);
-        if n > 2 { out.push((combined >> 8) as u8); }
-        if n > 3 { out.push(combined as u8); }
-    }
-    Some(out)
 }
 
 /// 🔌️ Runs the `s.stdio.semio/v1/drawing` composer registration exactly once per process —
@@ -393,7 +374,7 @@ pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &Sho
 /// in the app's `🦀️config.rs`), and `register_dwg_import_handler`'s callback signature
 /// (`&DwgDrawing -> Result<Value, String>`) has no channel back into that runtime state, so this no
 /// longer reframes the camera to the drawing extent (dropped, not moved — see the ticket notes).
-pub fn shooting_document_json_from_dwg(_drawing: &semio_framework_plugin::DwgDrawing) -> Result<Value, String> {
+pub fn shooting_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
     serde_json::to_value(default_snapshot()).map_err(|error| error.to_string())
 }
 //#endregion 🔖️MediaImport
@@ -599,7 +580,7 @@ mod tests {
     /// surviving intent: import still succeeds and stays schema-valid for a non-trivial extent.
     #[test]
     fn dwg_import_stays_schema_valid_for_a_non_trivial_extent() {
-        let drawing = semio_framework_plugin::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..Default::default() };
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..Default::default() };
         let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors");
         let snapshot: ShootingSnapshot = serde_json::from_value(document).expect("schema-valid snapshot");
         assert_eq!(snapshot.schema, SHOOTING_DOCUMENT_SCHEMA);
@@ -608,7 +589,7 @@ mod tests {
 
     #[test]
     fn dwg_import_never_errors_on_empty_drawing() {
-        let drawing = semio_framework_plugin::DwgDrawing::default();
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors on empty drawing");
         let snapshot: ShootingSnapshot = serde_json::from_value(document).expect("schema-valid fixture");
         assert_eq!(snapshot.schema, SHOOTING_DOCUMENT_SCHEMA);

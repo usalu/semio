@@ -1,16 +1,16 @@
 # 🧬️ Block2d snapshot schema — persistent fields only.
 
 type Block2dSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  nodeKind: BlockKindIdentity! @state(class: PERSISTENT)
-  presentation: Block2dPresentation! @state(class: PERSISTENT)
-  handleKinds: [Block2dHandleKind!]! @state(class: PERSISTENT)
-  handles: [Block2dHandleTemplate!]! @state(class: PERSISTENT)
-  compatibility: [BlockCompatibilityRule!]! @state(class: PERSISTENT)
-  attributes: [BlockAttribute!]! @state(class: PERSISTENT)
-  authors: [BlockAuthor!]! @state(class: PERSISTENT)
-  camera2d: BlockCamera2d! @state(class: PERSISTENT)
-  meta: BlockMeta! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  nodeKind: BlockKindIdentity! @state(class: ARTIFACT)
+  presentation: Block2dPresentation! @state(class: ARTIFACT)
+  handleKinds: [Block2dHandleKind!]! @state(class: ARTIFACT)
+  handles: [Block2dHandleTemplate!]! @state(class: ARTIFACT)
+  compatibility: [BlockCompatibilityRule!]! @state(class: ARTIFACT)
+  attributes: [BlockAttribute!]! @state(class: ARTIFACT)
+  authors: [BlockAuthor!]! @state(class: ARTIFACT)
+  camera2d: BlockCamera2d! @state(class: ARTIFACT)
+  meta: BlockMeta! @state(class: ARTIFACT)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

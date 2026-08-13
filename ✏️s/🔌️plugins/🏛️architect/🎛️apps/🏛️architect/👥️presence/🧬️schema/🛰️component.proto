@@ -10,16 +10,16 @@ enum AdjacencyKind {
 }
 
 message ArchitectPresence {
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 1;
-  // @state shared-ui
+  // @state presence
   string active_register = 2;
-  // @state shared-ui
+  // @state presence
   optional AdjacencyKind adjacency_kind_filter = 3;
-  // @state shared-ui
+  // @state presence
   double graph_camera_x = 4;
-  // @state shared-ui
+  // @state presence
   double graph_camera_y = 5;
-  // @state shared-ui
+  // @state presence
   double graph_camera_zoom = 6;
 }

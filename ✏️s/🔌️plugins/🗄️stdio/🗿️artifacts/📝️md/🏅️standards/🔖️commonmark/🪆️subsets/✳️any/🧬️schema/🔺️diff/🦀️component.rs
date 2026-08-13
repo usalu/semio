@@ -34,7 +34,7 @@ use schema::ArtifactSchema;
 pub struct MdDiff {
     /// 🌳 `None` = top-level block sequence unchanged; `Some(diff)` = index-keyed recursive
     /// triple over it.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub blocks: Option<MdBlocksDiff>,
 }

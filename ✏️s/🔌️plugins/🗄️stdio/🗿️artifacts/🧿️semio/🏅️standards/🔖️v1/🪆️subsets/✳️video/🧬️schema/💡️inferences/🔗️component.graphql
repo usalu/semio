@@ -1,7 +1,7 @@
 # 💡️ Semio video inference schema — real per-stream max-pts elapsed time.
 
 type SemioVideoInference {
-  duration: SemioVideoDuration! @state(class: INFERRED)
+  duration: SemioVideoDuration! @derived
 }
 
 type SemioVideoDuration {

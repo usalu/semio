@@ -54,8 +54,8 @@ type LasPoint {
 }
 
 type LasSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  header: LasHeader! @state(class: PERSISTENT)
-  vlrs: [LasVlr!]! @state(class: PERSISTENT)
-  points: [LasPoint!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  header: LasHeader! @state(class: ARTIFACT)
+  vlrs: [LasVlr!]! @state(class: ARTIFACT)
+  points: [LasPoint!]! @state(class: ARTIFACT)
 }

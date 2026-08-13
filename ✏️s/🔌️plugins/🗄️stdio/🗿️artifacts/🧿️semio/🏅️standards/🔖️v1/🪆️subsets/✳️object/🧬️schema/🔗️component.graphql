@@ -1,8 +1,8 @@
 # 🧬️ SemioObjectArtifact schema — real facet mirror of the Rust `🦀️component.rs` sibling.
 type SemioObjectArtifact {
-  schema: String! @state(class: PERSISTENT)
-  transformWire: String! @state(class: PERSISTENT)
-  brep: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.brep")
-  mesh: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.mesh")
-  properties: ArtifactLink @state(class: PERSISTENT) @child(kind: "s.stdio.semio.value")
+  schema: String! @state(class: ARTIFACT)
+  transformWire: String! @state(class: ARTIFACT)
+  brep: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.brep")
+  mesh: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.mesh")
+  properties: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.value")
 }

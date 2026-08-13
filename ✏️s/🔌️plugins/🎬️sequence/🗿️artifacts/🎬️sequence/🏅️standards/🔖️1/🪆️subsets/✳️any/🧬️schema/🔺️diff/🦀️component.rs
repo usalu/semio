@@ -14,21 +14,21 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::sequence::schema::SequenceArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub content: Option<SequenceContentChild>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_step_ids: Option<SequenceStringList>,
-    #[state(local_ui)]
+    #[state(config)]
     pub last_run_json: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub orientation: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera: Option<SequenceCamera>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

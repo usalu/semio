@@ -36,7 +36,7 @@ export interface ZipEntry {
 
 /** 📸️ Persisted `stdio.zip` snapshot. */
 export interface ZipSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: ZipEntry[];
-  /** @state persistent — archive-level comment (EOCD comment field). */ comment: string;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: ZipEntry[];
+  /** @state artifact — archive-level comment (EOCD comment field). */ comment: string;
 }

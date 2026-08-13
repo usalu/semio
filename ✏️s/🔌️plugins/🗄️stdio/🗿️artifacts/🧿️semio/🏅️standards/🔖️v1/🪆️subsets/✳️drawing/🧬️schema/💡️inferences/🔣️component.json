@@ -8,7 +8,7 @@
     "flattenedScene": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/FlattenedNode" },
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

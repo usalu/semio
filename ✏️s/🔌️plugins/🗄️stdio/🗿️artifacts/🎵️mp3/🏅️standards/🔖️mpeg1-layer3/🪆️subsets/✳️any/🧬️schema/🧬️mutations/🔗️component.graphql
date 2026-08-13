@@ -4,6 +4,6 @@ type Mp3MutationEntry {
   value: String!
 }
 type Mp3Mutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Mp3MutationEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Mp3MutationEntry!]! @state(class: ARTIFACT)
 }

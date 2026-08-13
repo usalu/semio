@@ -13,32 +13,32 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera": {
       "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "widgets": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Widget"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "synapses": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SynapseSpec"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "layout": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/WidgetLayout"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

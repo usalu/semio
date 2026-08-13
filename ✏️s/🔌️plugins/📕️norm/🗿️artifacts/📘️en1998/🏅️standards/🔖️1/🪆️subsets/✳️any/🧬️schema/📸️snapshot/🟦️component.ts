@@ -1,102 +1,102 @@
 /** 🧬️ EN 1998 snapshot schema. */
 
 export interface En1998Snapshot {
-  /** @state persistent */
+  /** @state artifact */
   seismicZone: number;
-  /** @state persistent */
+  /** @state artifact */
   groundType: number;
-  /** @state persistent */
+  /** @state artifact */
   importanceClass: number;
-  /** @state persistent */
+  /** @state artifact */
   structuralSystem: number;
-  /** @state persistent */
+  /** @state artifact */
   t1S: number;
-  /** @state persistent */
+  /** @state artifact */
   massT: number;
-  /** @state persistent */
+  /** @state artifact */
   vRdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   driftMm: number;
-  /** @state persistent */
+  /** @state artifact */
   heightM: number;
-  /** @state persistent */
+  /** @state artifact */
   multipleResistingSystems: boolean;
-  /** @state persistent */
+  /** @state artifact */
   annex: number;
-  /** @state persistent */
+  /** @state artifact */
   enAGr: number;
-  /** @state persistent */
+  /** @state artifact */
   enGroundType: number;
-  /** @state persistent */
+  /** @state artifact */
   enSpectrumType: number;
-  /** @state persistent */
+  /** @state artifact */
   periodRatio: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeVRdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   bearingDEdMm: number;
-  /** @state persistent */
+  /** @state artifact */
   bearingDRdMm: number;
-  /** @state persistent */
+  /** @state artifact */
   retrofitKnowledgeLevel: number;
-  /** @state persistent */
+  /** @state artifact */
   retrofitLimitState: number;
-  /** @state persistent */
+  /** @state artifact */
   retrofitEDKn: number;
-  /** @state persistent */
+  /** @state artifact */
   retrofitRKKn: number;
-  /** @state persistent */
+  /** @state artifact */
   retrofitGammaEl: number;
-  /** @state persistent */
+  /** @state artifact */
   siloHeightM: number;
-  /** @state persistent */
+  /** @state artifact */
   siloRadiusM: number;
-  /** @state persistent */
+  /** @state artifact */
   siloNRdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   siloVEdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   siloVRdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   siloQNominal: number;
-  /** @state persistent */
+  /** @state artifact */
   tankHeightM: number;
-  /** @state persistent */
+  /** @state artifact */
   tankRadiusM: number;
-  /** @state persistent */
+  /** @state artifact */
   tankMassT: number;
-  /** @state persistent */
+  /** @state artifact */
   tankVRdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   towerMEdKnm: number;
-  /** @state persistent */
+  /** @state artifact */
   towerMRdKnm: number;
-  /** @state persistent */
+  /** @state artifact */
   towerIsChimney: boolean;
-  /** @state persistent */
+  /** @state artifact */
   towerQNominal: number;
-  /** @state persistent */
+  /** @state artifact */
   towerMassT: number;
-  /** @state persistent */
+  /** @state artifact */
   foundationAreaM2: number;
-  /** @state persistent */
+  /** @state artifact */
   foundationPRdKpa: number;
-  /** @state persistent */
+  /** @state artifact */
   foundationHEdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   foundationHRdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   kFoundation: number;
-  /** @state persistent */
+  /** @state artifact */
   kSoil: number;
-  /** @state persistent */
+  /** @state artifact */
   wallHeightM: number;
-  /** @state persistent */
+  /** @state artifact */
   wallPhiDeg: number;
-  /** @state persistent */
+  /** @state artifact */
   wallSoilGammaKnM3: number;
-  /** @state persistent */
+  /** @state artifact */
   wallR: number;
-  /** @state persistent */
+  /** @state artifact */
   wallHRdKn: number;
 }

@@ -8,6 +8,6 @@ export interface PlyBounds {
 }
 
 export interface PlyInference {
-  /** @state inferred */
+  /** @derived */
   bounds: PlyBounds;
 }

@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["outline"],
   "properties": {
-    "outline": { "$ref": "#/$defs/XlsxOutline", "x-semio-state": "inferred" }
+    "outline": { "$ref": "#/$defs/XlsxOutline", "x-semio-derived": true }
   },
   "$defs": {
     "XlsxOutline": {

@@ -12,12 +12,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pptx")]
 pub struct PptxArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub opc: OpcPackage,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub presentation: PptxPresentation,
 }

@@ -41,8 +41,8 @@ type RelationKind { kind: RelationKindTag! label: String }
 type ModelRelation { id: String! kind: RelationKind! from: String! to: String! }
 
 type SemioModelSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  spatial: [SpatialNode!]! @state(class: PERSISTENT)
-  elements: [SemioModelElement!]! @state(class: PERSISTENT)
-  relations: [ModelRelation!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  spatial: [SpatialNode!]! @state(class: ARTIFACT)
+  elements: [SemioModelElement!]! @state(class: ARTIFACT)
+  relations: [ModelRelation!]! @state(class: ARTIFACT)
 }

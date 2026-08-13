@@ -24,7 +24,7 @@ pub use super::bounds::{RemodelBoundingBox, RemodelBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel.inference")]
 pub struct RemodelInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: RemodelBounds,
 }
 

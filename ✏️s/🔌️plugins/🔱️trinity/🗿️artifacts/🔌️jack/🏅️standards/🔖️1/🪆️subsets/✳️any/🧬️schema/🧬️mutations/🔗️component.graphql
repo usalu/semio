@@ -1,14 +1,14 @@
 # 🧬️ Jack mutation schema — persistent fields only.
 
 type JackMutation {
-  schema: String! @state(class: PERSISTENT)
-  name: String! @state(class: PERSISTENT)
-  manifestId: String @state(class: PERSISTENT)
-  manifest: Manifest! @state(class: PERSISTENT)
-  camera: Camera! @state(class: PERSISTENT)
-  nodes: [Node!]! @state(class: PERSISTENT)
-  edges: [Edge!]! @state(class: PERSISTENT)
-  rootNodeId: String @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  name: String! @state(class: ARTIFACT)
+  manifestId: String @state(class: ARTIFACT)
+  manifest: Manifest! @state(class: ARTIFACT)
+  camera: Camera! @state(class: ARTIFACT)
+  nodes: [Node!]! @state(class: ARTIFACT)
+  edges: [Edge!]! @state(class: ARTIFACT)
+  rootNodeId: String @state(class: ARTIFACT)
 }
 
 type Camera {

@@ -1,18 +1,18 @@
 /** 🧬️ En1990 artifact schema — every field with its state class. */
 
 export interface En1990Artifact {
-  /** @state persistent */
+  /** @state artifact */
   gK: number;
-  /** @state persistent */
+  /** @state artifact */
   qK: qK[];
-  /** @state persistent */
+  /** @state artifact */
   resistanceKn: number;
-  /** @state persistent */
+  /** @state artifact */
   consequenceClass: number;
-  /** @state persistent */
+  /** @state artifact */
   annex: string;
-  /** @state persistent */
+  /** @state artifact */
   seismicAEdKn: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }

@@ -4,7 +4,7 @@ package semio.s.stdio.stl.inference;
 // 💡️ Stl inference schema — triangle-soup bounding box and triangle count.
 
 message StlInference {
-  // @state inferred
+  // @derived
   StlBounds bounds = 1;
 }
 

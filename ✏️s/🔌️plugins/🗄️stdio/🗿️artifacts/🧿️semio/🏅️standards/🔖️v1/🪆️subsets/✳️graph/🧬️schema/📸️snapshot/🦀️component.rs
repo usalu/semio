@@ -133,12 +133,12 @@ pub struct SemioGraphEdge {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.graph")]
 pub struct SemioGraphSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub nodes: Vec<SemioGraphNode>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub edges: Vec<SemioGraphEdge>,
 }

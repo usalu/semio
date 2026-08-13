@@ -7,7 +7,7 @@
   "properties": {
     "entries": {
       "$ref": "#/$defs/EnergyModelEntries",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

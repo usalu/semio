@@ -26,7 +26,7 @@ pub use super::entries::EnergyModelEntries;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.energy.model.inference")]
 pub struct EnergyModelInference {
-    #[state(inferred)]
+    #[derived]
     pub entries: EnergyModelEntries,
 }
 

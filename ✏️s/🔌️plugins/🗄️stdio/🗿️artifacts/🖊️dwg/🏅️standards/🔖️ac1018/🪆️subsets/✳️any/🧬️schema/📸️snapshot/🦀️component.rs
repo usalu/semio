@@ -14,24 +14,24 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg")]
 pub struct DwgSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub version: String,
     /// 🗓️ `maint_version` (RC, plain preamble byte 0x12) — cross-checked against LibreDWG's
     /// `header.spec` (`FIELD_RC (maint_version, 0);` right after `dwg_version` at 0x11) and
     /// verified on the real `architectural.dwg` fixture (byte 0x12 == 0x02, matching the
     /// redundant `zero_one_or_three`-adjacent byte at 0x0B for the same file).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub maintenance_version: u8,
     /// 🌐 `codepage` (RS, plain preamble bytes 0x13-0x14, little-endian) — LibreDWG's
     /// `header.spec` documents this exact offset with `//@0x13: 29/30 for ANSI_1252`; the real
     /// `architectural.dwg` fixture reads `30` there (AC1024, ANSI_1252), an exact match.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub codepage: u16,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(base64)]
     pub bytes: Vec<u8>,
@@ -39,7 +39,7 @@ pub struct DwgSnapshot {
     /// fixed-offset label table read). Opaque by design: ac1018 is a deliberately frozen legacy
     /// shim (Decision #5, see `DwgArtifact::to_snapshot`) that never determined per-section byte
     /// ranges, so there is no honest `data` payload to carry per name -- do not expand this.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub section_names: Vec<String>,
 }

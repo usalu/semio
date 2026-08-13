@@ -11,10 +11,10 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "curate.curate", layout = "lines")]
 #[artifact_schema(id = "s.sourcing.curate")]
 pub struct CurateSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub stock: Vec<ObjectKind>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(table)]
     pub curated: Vec<CuratedItem>,

@@ -1,73 +1,73 @@
 /** 🧬️ En1991 diff schema — sparse field delta. */
 
 export interface En1991Diff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: En1991Artifact;
-  /** @state persistent */
+  /** @state artifact */
   areaM2?: number;
-  /** @state persistent */
+  /** @state artifact */
   category?: string;
-  /** @state persistent */
+  /** @state artifact */
   annex?: string;
-  /** @state persistent */
+  /** @state artifact */
   selfWeightMaterial?: string;
-  /** @state persistent */
+  /** @state artifact */
   selfWeightThicknessM?: number;
-  /** @state persistent */
+  /** @state artifact */
   assumedGKKnM2?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireCurve?: string;
-  /** @state persistent */
+  /** @state artifact */
   fireResistanceMin?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireMemberCapacityC?: number;
-  /** @state persistent */
+  /** @state artifact */
   snowZone?: number;
-  /** @state persistent */
+  /** @state artifact */
   snowAltitudeM?: number;
-  /** @state persistent */
+  /** @state artifact */
   enSKKnM2?: number;
-  /** @state persistent */
+  /** @state artifact */
   windZone?: number;
-  /** @state persistent */
+  /** @state artifact */
   enVBMS?: number;
-  /** @state persistent */
+  /** @state artifact */
   deltaTK?: number;
-  /** @state persistent */
+  /** @state artifact */
   constructionActivity?: string;
-  /** @state persistent */
+  /** @state artifact */
   accidentalMassT?: number;
-  /** @state persistent */
+  /** @state artifact */
   accidentalSpeedKmH?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeLane?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeSpanM?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeLaneWidthM?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeMomentResistanceKnm?: number;
-  /** @state persistent */
+  /** @state artifact */
   craneClass?: string;
-  /** @state persistent */
+  /** @state artifact */
   hoistClass?: string;
-  /** @state persistent */
+  /** @state artifact */
   hoistingSpeedMS?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloBulkDensityKnM3?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloHeightM?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloHydraulicRadiusM?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloMu?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloK?: number;
-  /** @state persistent */
+  /** @state artifact */
   cS?: number;
-  /** @state persistent */
+  /** @state artifact */
   cD?: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }
 

@@ -76,7 +76,7 @@
   },
   "type": "object",
   "properties": {
-    "comment": { "type": "string", "x-semio-state": "persistent" },
-    "entries": { "$ref": "#/$defs/ZipEntriesDiff", "x-semio-state": "persistent" }
+    "comment": { "type": "string", "x-semio-state": "artifact" },
+    "entries": { "$ref": "#/$defs/ZipEntriesDiff", "x-semio-state": "artifact" }
   }
 }

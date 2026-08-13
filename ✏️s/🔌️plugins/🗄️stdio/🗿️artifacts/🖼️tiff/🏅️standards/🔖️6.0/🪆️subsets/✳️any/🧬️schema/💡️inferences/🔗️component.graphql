@@ -1,7 +1,7 @@
 # 💡️ Tiff inference schema — IFD 0 baseline-tag-derived raster geometry.
 
 type TiffInference {
-  dimensions: TiffDimensions! @state(class: INFERRED)
+  dimensions: TiffDimensions! @derived
 }
 
 type TiffDimensions {

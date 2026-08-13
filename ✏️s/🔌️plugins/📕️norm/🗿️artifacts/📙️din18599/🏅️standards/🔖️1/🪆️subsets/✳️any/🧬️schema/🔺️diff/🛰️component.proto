@@ -2,35 +2,35 @@ syntax = "proto3";
 package semio.s.norm.din18599.diff;
 
 message Din18599Diff {
-  // @state persistent
+  // @state artifact
   optional Din18599Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string use_class = 2;
-  // @state persistent
+  // @state artifact
   optional double heated_area_m2 = 3;
-  // @state persistent
+  // @state artifact
   optional uint32 occupants = 4;
-  // @state persistent
+  // @state artifact
   optional double h_t = 5;
-  // @state persistent
+  // @state artifact
   optional double h_v = 6;
-  // @state persistent
+  // @state artifact
   optional string climate = 7;
-  // @state persistent
+  // @state artifact
   optional double internal_gains_w_m2 = 8;
-  // @state persistent
+  // @state artifact
   optional double solar_gains_kwh = 9;
-  // @state persistent
+  // @state artifact
   optional double system_losses_kwh = 10;
-  // @state persistent
+  // @state artifact
   optional double renewable_kwh = 11;
-  // @state persistent
+  // @state artifact
   optional double annual_limit_kwh = 12;
-  // @state persistent
+  // @state artifact
   optional string energy_carrier = 13;
-  // @state persistent
+  // @state artifact
   optional double reference_q_p_kwh = 14;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 15;
 }
 

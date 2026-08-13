@@ -4,16 +4,16 @@ package semio.s.vcs.vcs.mutation;
 // 🧬️ VCS mutation schema — persistent fields only.
 
 message VcsMutation {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string title = 2;
-  // @state persistent
+  // @state artifact
   int64 counter = 3;
-  // @state persistent
+  // @state artifact
   string notes = 4;
-  // @state persistent
+  // @state artifact
   string status = 5;
-  // @state persistent
+  // @state artifact
   repeated string tags = 6;
 }

@@ -5,6 +5,6 @@ export interface Semio_semio_snapshotEntry {
   value: string;
 }
 export interface Semio_semio_snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_semio_snapshotEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: Semio_semio_snapshotEntry[];
 }

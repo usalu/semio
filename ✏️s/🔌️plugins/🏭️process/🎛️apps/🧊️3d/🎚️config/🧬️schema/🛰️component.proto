@@ -1,36 +1,36 @@
 syntax = "proto3";
 package semio.app.process.x3d;
 message Process3dConfig {
-  // @state local-ui
+  // @state config
   optional string selected_id = 1;
-  // @state local-ui
+  // @state config
   optional string hovered_id = 2;
-  // @state local-ui
+  // @state config
   optional uint32 selected_face_id = 3;
-  // @state local-ui
+  // @state config
   string selection_method = 4;
-  // @state local-ui
+  // @state config
   string engagement_input = 5;
-  // @state local-ui
+  // @state config
   repeated double camera_position = 6;
-  // @state local-ui
+  // @state config
   repeated double camera_target = 7;
-  // @state local-ui
+  // @state config
   double camera_fov = 8;
-  // @state local-ui
+  // @state config
   bool sun_enabled = 9;
-  // @state local-ui
+  // @state config
   double sun_azimuth = 10;
-  // @state local-ui
+  // @state config
   double sun_elevation = 11;
-  // @state local-ui
+  // @state config
   double sun_intensity = 12;
-  // @state local-ui
+  // @state config
   string sun_color = 13;
-  // @state local-ui
+  // @state config
   string active_utility_id = 14;
-  // @state local-ui
+  // @state config
   string locale = 15;
-  // @state local-ui
+  // @state config
   string contributions_json = 16;
 }

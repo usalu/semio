@@ -1,7 +1,7 @@
 # 💡️ Txt inference schema — document outline (line/word/char counts).
 
 type TxtInference {
-  outline: TxtOutline! @state(class: INFERRED)
+  outline: TxtOutline! @derived
 }
 
 type TxtOutline {

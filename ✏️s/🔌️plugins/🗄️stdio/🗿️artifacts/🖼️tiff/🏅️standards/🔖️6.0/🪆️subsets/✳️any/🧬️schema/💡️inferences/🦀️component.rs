@@ -17,7 +17,7 @@ use super::dimensions::{compute_tiff_dimensions, TiffDimensions};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff.inference")]
 pub struct TiffInference {
-    #[state(inferred)]
+    #[derived]
     pub dimensions: TiffDimensions,
 }
 

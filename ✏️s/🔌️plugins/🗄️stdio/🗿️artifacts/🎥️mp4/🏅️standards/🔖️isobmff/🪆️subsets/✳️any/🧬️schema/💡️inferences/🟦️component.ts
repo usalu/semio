@@ -7,6 +7,6 @@ export interface Mp4Duration {
 }
 
 export interface Mp4Inference {
-  /** @state inferred */
+  /** @derived */
   duration: Mp4Duration;
 }

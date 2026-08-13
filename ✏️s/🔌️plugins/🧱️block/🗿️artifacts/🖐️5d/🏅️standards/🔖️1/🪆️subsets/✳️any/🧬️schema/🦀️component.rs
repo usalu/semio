@@ -11,21 +11,21 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block5d")]
 pub struct Block5dArtifact {
-    #[state(persistent)] pub schema: String,
-    #[state(persistent)] pub part_kind: BlockKindIdentity,
-    #[state(persistent)] pub part_2d: Block5dPart2d,
-    #[state(persistent)] pub part_3d: Block5dPart3d,
-    #[state(persistent)] pub representations: Vec<BlockRepresentation>,
-    #[state(persistent)] pub grip_kinds: Vec<Block5dGripKind>,
-    #[state(persistent)] pub grips: Vec<Block5dGripTemplate>,
-    #[state(persistent)] pub compatibility: Vec<BlockCompatibilityRule>,
-    #[state(persistent)] pub attributes: Vec<BlockAttribute>,
-    #[state(persistent)] pub authors: Vec<BlockAuthor>,
-    #[state(persistent)] pub camera2d: BlockCamera2d,
-    #[state(persistent)] pub camera3d: BlockCamera3d,
-    #[state(persistent)] pub meta: BlockMeta,
-    #[state(shared_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub locale: String,
+    #[state(artifact)] pub schema: String,
+    #[state(artifact)] pub part_kind: BlockKindIdentity,
+    #[state(artifact)] pub part_2d: Block5dPart2d,
+    #[state(artifact)] pub part_3d: Block5dPart3d,
+    #[state(artifact)] pub representations: Vec<BlockRepresentation>,
+    #[state(artifact)] pub grip_kinds: Vec<Block5dGripKind>,
+    #[state(artifact)] pub grips: Vec<Block5dGripTemplate>,
+    #[state(artifact)] pub compatibility: Vec<BlockCompatibilityRule>,
+    #[state(artifact)] pub attributes: Vec<BlockAttribute>,
+    #[state(artifact)] pub authors: Vec<BlockAuthor>,
+    #[state(artifact)] pub camera2d: BlockCamera2d,
+    #[state(artifact)] pub camera3d: BlockCamera3d,
+    #[state(artifact)] pub meta: BlockMeta,
+    #[state(presence)] pub selected_ids: Vec<String>,
+    #[state(config)] pub locale: String,
 }
 //#endregion 🔖️Artifact
 

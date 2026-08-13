@@ -28,7 +28,7 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d.inference")]
 pub struct Puzzle5dInference {
-    #[state(inferred)]
+    #[derived]
     pub flat_positions: BTreeMap<String, FlattenPose>,
 }
 

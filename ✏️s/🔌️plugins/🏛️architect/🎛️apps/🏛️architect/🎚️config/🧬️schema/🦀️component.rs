@@ -7,17 +7,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.architect.architect.config")]
 pub struct ArchitectConfig {
-    #[state(local_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub active_register: String,
-    #[state(local_ui)] pub search_query: String,
-    #[state(local_ui)] pub search_history_json: String,
-    #[state(local_ui)] pub active_report_json: String,
-    #[state(local_ui)] pub last_result_json: String,
-    #[state(local_ui)] pub last_analysis_json: String,
-    #[state(local_ui)] pub adjacency_kind_filter: Option<AdjacencyKind>,
-    #[state(local_ui)] pub graph_camera_x: f64,
-    #[state(local_ui)] pub graph_camera_y: f64,
-    #[state(local_ui)] pub graph_camera_zoom: f64,
+    #[state(config)] pub selected_ids: Vec<String>,
+    #[state(config)] pub active_register: String,
+    #[state(config)] pub search_query: String,
+    #[state(config)] pub search_history_json: String,
+    #[state(config)] pub active_report_json: String,
+    #[state(config)] pub last_result_json: String,
+    #[state(config)] pub last_analysis_json: String,
+    #[state(config)] pub adjacency_kind_filter: Option<AdjacencyKind>,
+    #[state(config)] pub graph_camera_x: f64,
+    #[state(config)] pub graph_camera_y: f64,
+    #[state(config)] pub graph_camera_zoom: f64,
 }
 
 //region 📎 App-schema self-registration

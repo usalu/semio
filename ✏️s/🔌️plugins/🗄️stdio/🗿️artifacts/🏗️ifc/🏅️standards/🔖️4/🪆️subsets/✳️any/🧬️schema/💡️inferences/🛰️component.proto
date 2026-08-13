@@ -4,7 +4,7 @@ package semio.s_stdio_ifc.inference;
 // 💡️ IFC4 inference schema — IFCCARTESIANPOINT-derived spatial bounding box.
 
 message IfcInference {
-  // @state inferred
+  // @derived
   IfcBounds bounds = 1;
 }
 

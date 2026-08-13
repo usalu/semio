@@ -81,15 +81,15 @@ pub const STDIO_MP3_DOCUMENT_SCHEMA: &str = "stdio.mp3";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp3")]
 pub struct Mp3Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub id3v2: Option<Id3v2Tag>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub frames: Vec<Mp3Frame>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub id3v1: Option<Id3v1Tag>,
 }

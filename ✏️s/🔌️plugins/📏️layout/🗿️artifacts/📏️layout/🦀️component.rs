@@ -2,11 +2,101 @@
 
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
 //#endregion 🔖️Constants
+
+//#region 🔖️ComposedTypes
+/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4 (design map row `layout | C:drawing
+/// R:model`): layout composes stdio's real `s.stdio.semio/v1/drawing` subset as a genuine persisted
+/// child (`LayoutSnapshot::background_drawing`) instead of only ever computing one ephemerally at
+/// SVG-export time (`io::layout_snapshot_to_semio_drawing`, unchanged, still the authored-frames→
+/// drawing direction) — DWG/DXF/SVG import used to discard everything but page-boundary rectangles
+/// (`io::dwg_drawing_to_semio_drawing`/`layout_document_json_from_dwg` only ever read `path_bounds`
+/// back out of the drawing they built, then threw it away); it now mints a real content-addressed
+/// child from the FULL decoded drawing instead — see `io::background_drawing_child_from_import`.
+/// `LayoutSnapshot::referenced_model` is a forward `ArtifactLink` reference slot for the same design
+/// map row's `R:model` half — layout pages can reference an architecture `model` artifact (e.g. a
+/// floor plan a sheet is traced from) without owning/duplicating its content. This is genuinely new
+/// capability (no prior inline `model`-shaped duplication existed anywhere in this plugin to remove —
+/// confirmed by grep before this migration started); left schema/codec-complete but otherwise inert
+/// (no `LinkResolver` seam, no mutation dispatch) — same documented-gap posture the migration recipe
+/// sanctions for any composed slot a plugin agent can't wire a live resolver into yet.
+pub type LayoutDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
+
+/// 🧪️ Content-addressed child-handle mint (mirrors cad's `cad_model_child_handle` exactly) — hashes
+/// the drawing content being wrapped so peers converge on replay instead of minting a random id.
+/// `source_tag` disambiguates which import path produced the content (`"dwg"`/`"dxf"`/`"svg"`) so two
+/// different-format imports of otherwise-identical geometry don't collide on the same child id.
+pub fn background_drawing_child_handle(source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
+    use std::hash::{Hash, Hasher};
+    let content_json = serde_json::to_string(content).expect("SemioDrawingSnapshot is always JSON-serializable");
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_json.hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let child_id = format!("background-drawing-{source_tag}-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: format!("layout-background-drawing-{source_tag}"), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+//#endregion 🔖️ComposedTypes
+
+//#region 🔖️WorkingScene
+/// 🌉️ Ephemeral session-local bridge from a `LayoutDrawingChild` HANDLE back to its real decoded
+/// content. No `LinkResolver`/child-dispatch seam exists yet in `ArtifactApp::handle` (checked
+/// directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only here — matches every W4 exemplar's
+/// finding), so the app layer can't resolve a composed child handle to live content through the
+/// framework. Mirrors cad's `CadWorkingScene`/lowpoly's `mesh_workspace` pattern exactly: populated
+/// at the one call site that has the literal decoded content (DWG/DXF/SVG import —
+/// `background_drawing_child_handle`'s callers in `🚪️io/🦀️component.rs`) and at fixture-construction
+/// time, read through exactly one accessor (`background_drawing_content`) — never scattered direct
+/// cache reads. `EngineRep` contract: wholly derived, never a durable struct field, droppable at any
+/// instant.
+///
+/// Staleness gap, documented honestly (not fail-closed): store-level undo/redo bypasses
+/// `ArtifactApp::handle` entirely, so this cache can go stale relative to the document's own
+/// `background_drawing` handle across an undo/redo of an import. The one read path funneling through
+/// this (`io::layout_snapshot_to_semio_drawing`'s SVG-export merge) is export/render-only, not a
+/// destructive-geometry-edit path, so a documented gap is sufficient here — matches cad/writer's own
+/// documented-gap posture rather than lowpoly's fail-closed content-hash check (lowpoly's read path
+/// was geometry-edit-sensitive; this one is not).
+mod working_scene {
+    use super::SemioDrawingSnapshot;
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+
+    thread_local! {
+        static BACKGROUND_DRAWING_SCRATCH: RefCell<HashMap<String, SemioDrawingSnapshot>> = RefCell::new(HashMap::new());
+    }
+
+    pub(crate) fn cache_background_drawing_content(child_id: &str, content: SemioDrawingSnapshot) {
+        BACKGROUND_DRAWING_SCRATCH.with(|cache| {
+            cache.borrow_mut().insert(child_id.to_string(), content);
+        });
+    }
+
+    pub(crate) fn cached_background_drawing_content(child_id: &str) -> Option<SemioDrawingSnapshot> {
+        BACKGROUND_DRAWING_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
+    }
+}
+
+/// 📝️ Populates the working-scene scratch cache for a freshly-minted `background_drawing` child —
+/// the one call site that has the literal decoded content (import), or a fixture builder.
+pub fn cache_background_drawing_content(child_id: &str, content: SemioDrawingSnapshot) {
+    working_scene::cache_background_drawing_content(child_id, content);
+}
+
+/// 🔎️ The one accessor every render/export call site funnels through — `None` both when the
+/// document has no `background_drawing` slot and when the slot's content hasn't (or no longer) lives
+/// in this process's scratch cache (see this region's staleness-gap doc).
+pub fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDrawingSnapshot> {
+    let child = snapshot.background_drawing.as_ref()?;
+    working_scene::cached_background_drawing_content(&child.child_id)
+}
+//#endregion 🔖️WorkingScene
 
 
 //#region 🔖️DropPreview

@@ -4,7 +4,7 @@ package semio.s.stdio.semio.document.inference;
 // 💡️ Semio document inference schema — heading/word/block-derived document outline.
 
 message SemioDocumentInference {
-  // @state inferred
+  // @derived
   SemioDocumentOutline outline = 1;
 }
 

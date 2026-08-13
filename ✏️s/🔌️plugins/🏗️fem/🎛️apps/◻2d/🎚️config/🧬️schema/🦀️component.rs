@@ -7,11 +7,11 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.2d.config")]
 pub struct Fem2dConfig {
-    #[state(local_ui)] pub result_source_id: Option<String>,
-    #[state(local_ui)] pub result_mode: String,
-    #[state(local_ui)] pub result_mode_index: u32,
-    #[state(local_ui)] pub camera: FemCamera,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub result_source_id: Option<String>,
+    #[state(config)] pub result_mode: String,
+    #[state(config)] pub result_mode_index: u32,
+    #[state(config)] pub camera: FemCamera,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema descriptor

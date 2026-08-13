@@ -1,9 +1,13 @@
-//! 🖇️ `add-layer-asset` — attaches an embedded `RasterImageAsset` to the document's id-keyed asset
-//! map. NOT one of the coordinator's ten mandated derivations; added so `image:in` media import
-//! (`crate::apps::raster::wasm`/the app's `import_media`) can stay a real, undoable operation now
-//! that whole-document replace is gone — `assets: BTreeMap<String, RasterImageAsset>` is itself an id-keyed
-//! root collection per `📓️derivation-rules.md` rule 2, and `add`/`remove` is its taxonomy-correct
-//! verb pair (`add`: "Attach a set-like member … inverse: remove").
+//! 🖇️ `add-layer-asset` — attaches a real `RasterImageAsset` (event-log content) to the document's
+//! id-keyed asset collection. NOT one of the coordinator's ten mandated derivations; added so
+//! `image:in` media import (`crate::apps::raster::wasm`/the app's `import_media`) can stay a real,
+//! undoable operation now that whole-document replace is gone — `assets: BTreeMap<String,
+//! store::ArtifactChild<SemioImageSnapshot>>` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`:
+//! the persisted document field holds only a composed-child HANDLE; this mutation's own payload still
+//! carries the real bytes, minted into a handle + working-scene cache entry at apply time via
+//! `crate::artifacts::raster::mint_and_stash_asset`) is itself an id-keyed root collection per
+//! `📓️derivation-rules.md` rule 2, and `add`/`remove` is its taxonomy-correct verb pair (`add`:
+//! "Attach a set-like member … inverse: remove").
 
 use crate::artifacts::raster::diff::RasterDiff;
 use crate::artifacts::raster::mutations::RasterMutation;

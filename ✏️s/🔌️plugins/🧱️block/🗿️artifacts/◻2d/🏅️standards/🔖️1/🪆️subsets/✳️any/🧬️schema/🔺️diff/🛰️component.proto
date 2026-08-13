@@ -4,31 +4,31 @@ package semio.s.block.block2d.diff;
 // 🧬️ Block2d diff schema — sparse field delta.
 
 message Block2dDiff {
-  // @state persistent
+  // @state artifact
   optional Block2dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional BlockKindIdentity node_kind = 3;
-  // @state persistent
+  // @state artifact
   optional Block2dPresentation presentation = 4;
-  // @state persistent
+  // @state artifact
   optional Block2dHandleKindsDelta handle_kinds = 5;
-  // @state persistent
+  // @state artifact
   optional Block2dHandlesDelta handles = 6;
-  // @state persistent
+  // @state artifact
   optional Block2dCompatibilityDelta compatibility = 7;
-  // @state persistent
+  // @state artifact
   optional Block2dAttributesDelta attributes = 8;
-  // @state persistent
+  // @state artifact
   optional Block2dAuthorList authors = 9;
-  // @state persistent
+  // @state artifact
   optional BlockCamera2d camera2d = 10;
-  // @state persistent
+  // @state artifact
   optional BlockMeta meta = 11;
-  // @state shared-ui
+  // @state presence
   optional Block2dStringList selected_ids = 12;
-  // @state local-ui
+  // @state config
   optional string locale = 13;
 }
 

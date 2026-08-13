@@ -17,9 +17,9 @@ pub struct PageDoc {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf")]
 pub struct PdfSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(block)]
     pub page: PageDoc,

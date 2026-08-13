@@ -1,7 +1,7 @@
 /** 🧬️ Block2dConfig */
 export interface Block2dConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

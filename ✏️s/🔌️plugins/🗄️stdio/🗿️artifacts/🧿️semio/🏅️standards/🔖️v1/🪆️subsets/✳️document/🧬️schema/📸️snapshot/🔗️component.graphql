@@ -49,8 +49,8 @@ type DocBlock {
 }
 
 type SemioDocumentSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  styles: [DocStyle!]! @state(class: PERSISTENT)
-  images: [DocImage!]! @state(class: PERSISTENT)
-  blocks: [DocBlock!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  styles: [DocStyle!]! @state(class: ARTIFACT)
+  images: [DocImage!]! @state(class: ARTIFACT)
+  blocks: [DocBlock!]! @state(class: ARTIFACT)
 }

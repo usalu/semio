@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/StepBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/StepBounds", "x-semio-derived": true }
   },
   "$defs": {
     "StepBounds": {

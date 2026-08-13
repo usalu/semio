@@ -1,21 +1,21 @@
 # 🧬️ Din18599 diff schema — sparse field delta.
 
 type Din18599Diff {
-  artifact: Din @state(class: PERSISTENT)
-  useClass: String @state(class: PERSISTENT)
-  heatedAreaM2: Float @state(class: PERSISTENT)
-  occupants: Int @state(class: PERSISTENT)
-  hT: Float @state(class: PERSISTENT)
-  hV: Float @state(class: PERSISTENT)
-  climate: String @state(class: PERSISTENT)
-  internalGainsWM2: Float @state(class: PERSISTENT)
-  solarGainsKwh: Float @state(class: PERSISTENT)
-  systemLossesKwh: Float @state(class: PERSISTENT)
-  renewableKwh: Float @state(class: PERSISTENT)
-  annualLimitKwh: Float @state(class: PERSISTENT)
-  energyCarrier: String @state(class: PERSISTENT)
-  referenceQPKwh: Float @state(class: PERSISTENT)
-  selectedCheckIndex: Int @state(class: SHARED_UI)
+  artifact: Din @state(class: ARTIFACT)
+  useClass: String @state(class: ARTIFACT)
+  heatedAreaM2: Float @state(class: ARTIFACT)
+  occupants: Int @state(class: ARTIFACT)
+  hT: Float @state(class: ARTIFACT)
+  hV: Float @state(class: ARTIFACT)
+  climate: String @state(class: ARTIFACT)
+  internalGainsWM2: Float @state(class: ARTIFACT)
+  solarGainsKwh: Float @state(class: ARTIFACT)
+  systemLossesKwh: Float @state(class: ARTIFACT)
+  renewableKwh: Float @state(class: ARTIFACT)
+  annualLimitKwh: Float @state(class: ARTIFACT)
+  energyCarrier: String @state(class: ARTIFACT)
+  referenceQPKwh: Float @state(class: ARTIFACT)
+  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type Din18599Artifact {

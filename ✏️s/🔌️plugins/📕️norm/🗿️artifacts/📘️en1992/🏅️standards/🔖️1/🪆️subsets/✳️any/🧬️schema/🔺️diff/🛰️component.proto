@@ -2,79 +2,79 @@ syntax = "proto3";
 package semio.s.norm.en1992.diff;
 
 message En1992Diff {
-  // @state persistent
+  // @state artifact
   optional En1992Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string annex = 2;
-  // @state persistent
+  // @state artifact
   optional double m_ed_knm = 3;
-  // @state persistent
+  // @state artifact
   optional double v_ed_kn = 4;
-  // @state persistent
+  // @state artifact
   optional double f_ck = 5;
-  // @state persistent
+  // @state artifact
   optional double b_mm = 6;
-  // @state persistent
+  // @state artifact
   optional double d_mm = 7;
-  // @state persistent
+  // @state artifact
   optional double a_s_mm2 = 8;
-  // @state persistent
+  // @state artifact
   optional double f_yk = 9;
-  // @state persistent
+  // @state artifact
   optional double rho_l = 10;
-  // @state persistent
+  // @state artifact
   optional double n_ed_kn = 11;
-  // @state persistent
+  // @state artifact
   optional double p_kn = 12;
-  // @state persistent
+  // @state artifact
   optional double a_c_mm2 = 13;
-  // @state persistent
+  // @state artifact
   optional bool use_fem = 14;
-  // @state persistent
+  // @state artifact
   optional double span_m = 15;
-  // @state persistent
+  // @state artifact
   optional double udl_kn_m = 16;
-  // @state persistent
+  // @state artifact
   optional string fire_rating = 17;
-  // @state persistent
+  // @state artifact
   optional double provided_axis_distance_mm = 18;
-  // @state persistent
+  // @state artifact
   optional double bridge_sigma_c_mpa = 19;
-  // @state persistent
+  // @state artifact
   optional double bridge_delta_sigma_s_mpa = 20;
-  // @state persistent
+  // @state artifact
   optional string tightness_class = 21;
-  // @state persistent
+  // @state artifact
   optional double hd_over_h = 22;
-  // @state persistent
+  // @state artifact
   optional double liquid_sigma_s_mpa = 23;
-  // @state persistent
+  // @state artifact
   optional double liquid_rho_p_eff = 24;
-  // @state persistent
+  // @state artifact
   optional double liquid_f_ct_eff_mpa = 25;
-  // @state persistent
+  // @state artifact
   optional double liquid_e_s_mpa = 26;
-  // @state persistent
+  // @state artifact
   optional double liquid_s_r_max_mm = 27;
-  // @state persistent
+  // @state artifact
   optional double anchor_h_ef_mm = 28;
-  // @state persistent
+  // @state artifact
   optional bool anchor_cracked = 29;
-  // @state persistent
+  // @state artifact
   optional double anchor_f_uk_mpa = 30;
-  // @state persistent
+  // @state artifact
   optional double anchor_f_yk_mpa = 31;
-  // @state persistent
+  // @state artifact
   optional double anchor_a_s_mm2 = 32;
-  // @state persistent
+  // @state artifact
   optional double anchor_d_mm = 33;
-  // @state persistent
+  // @state artifact
   optional double anchor_c1_mm = 34;
-  // @state persistent
+  // @state artifact
   optional double anchor_n_ed_kn = 35;
-  // @state persistent
+  // @state artifact
   optional double anchor_v_ed_kn = 36;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 37;
 }
 

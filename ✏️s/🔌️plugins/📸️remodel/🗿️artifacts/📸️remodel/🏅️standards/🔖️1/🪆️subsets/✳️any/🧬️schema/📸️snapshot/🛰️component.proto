@@ -4,23 +4,23 @@ package semio.s.remodel.remodel.snapshot;
 // 🧬️ Remodel snapshot schema.
 
 message RemodelSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string id = 2;
-  // @state persistent
+  // @state artifact
   repeated MediaStream streams = 3;
-  // @state persistent
+  // @state artifact
   map<string, ImageAsset> assets = 4;
-  // @state persistent
+  // @state artifact
   CalibrationState calibration = 5;
-  // @state persistent
+  // @state artifact
   ReconstructionParams params = 6;
-  // @state persistent
+  // @state artifact
   repeated GroundControlPoint gcps = 7;
-  // @state persistent
+  // @state artifact
   ReconstructionJob job = 8;
-  // @state persistent
+  // @state artifact
   ReconstructionResults results = 9;
 }
 

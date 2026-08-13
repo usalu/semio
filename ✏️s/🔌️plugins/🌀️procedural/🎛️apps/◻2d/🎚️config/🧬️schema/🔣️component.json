@@ -15,27 +15,27 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera": {
       "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "showMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectedGenerationId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "generationPreviewText": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

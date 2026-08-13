@@ -18,43 +18,43 @@
     "selectedNodeIds": {
       "type": "array",
       "items": { "type": "string" },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "beforePaneCamera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "reorganizeEpoch": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeHoverVar": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoverEpoch": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeSelectVar": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectEpoch": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodModeByWindow": {
       "type": "object",
       "additionalProperties": { "type": "string" },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

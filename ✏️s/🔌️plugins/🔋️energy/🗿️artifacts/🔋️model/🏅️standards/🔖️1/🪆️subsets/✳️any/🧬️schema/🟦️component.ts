@@ -1,10 +1,10 @@
 /** 🧬️ EnergyModel artifact schema — every field with its state class. */
 
 export interface EnergyModelArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   modelJson: string;
-  /** @state preview */
+  /** @state artifact */
   resultsJson: string;
 }

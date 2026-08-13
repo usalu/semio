@@ -4,7 +4,7 @@ package semio.s.norm.en1995.inference;
 // 💡️ En1995 inference schema — document outline (field/section list + entry count).
 
 message En1995Inference {
-  // @state inferred
+  // @derived
   En1995Outline outline = 1;
 }
 

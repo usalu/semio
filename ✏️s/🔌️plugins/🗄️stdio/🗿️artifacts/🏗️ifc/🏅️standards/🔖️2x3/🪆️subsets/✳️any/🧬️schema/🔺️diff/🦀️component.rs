@@ -23,16 +23,16 @@ use std::collections::HashSet;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.2x3.diff")]
 pub struct Ifc2x3Diff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub header: Option<Part21Header>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removed_instances: Vec<u64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub upserted_instances: Vec<Part21Instance>,
 }

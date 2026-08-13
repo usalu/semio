@@ -12,214 +12,214 @@ use serde::{Deserialize, Serialize};
 #[dsl(extension = "architect", layout = "lines")]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: ProgramMeta,
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub project: ProjectDefinition,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub stakeholders: Vec<Stakeholder>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub users: Vec<UserProfile>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub activities: Vec<Activity>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub functions: Vec<Function>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub elements: Vec<ProgramElement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub quantities: Vec<QuantityRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub relationships: Vec<Relationship>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub adjacencies: Vec<Adjacency>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub processes: Vec<Process>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub flows: Vec<FlowRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub access_rules: Vec<AccessRule>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub operations: Vec<OperationalRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub equipment: Vec<Equipment>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub resources: Vec<Resource>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub storage: Vec<StorageRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub environmental: Vec<EnvironmentalRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub human_factors: Vec<HumanFactorRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub accessibility: Vec<AccessibilityRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub privacy: Vec<PrivacyRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub safety: Vec<SafetyRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub security: Vec<SecurityRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub regulatory: Vec<RegulatoryRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub site_context: Vec<SiteContext>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub organizational: Vec<OrganizationalRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub services: Vec<ServiceRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub infrastructure: Vec<InfrastructureRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub information: Vec<InformationRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub communication: Vec<CommunicationRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub wayfinding: Vec<WayfindingRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub schedules: Vec<ScheduleRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub flexibility: Vec<FlexibilityRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub growth: Vec<GrowthPlan>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub sustainability: Vec<SustainabilityRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub resilience: Vec<ResilienceRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub costs: Vec<CostRequirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub delivery: Vec<DeliveryConstraint>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub risks: Vec<Risk>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub conflicts: Vec<Conflict>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub requirements: Vec<Requirement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub priorities: Vec<PriorityRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub scenarios: Vec<Scenario>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub options: Vec<OptionEvaluation>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub decisions: Vec<Decision>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub validations: Vec<ValidationRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub performance: Vec<PerformanceCriterion>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub quality: Vec<QualityRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifacts: Vec<ArtifactRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub assumptions: Vec<Assumption>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub constraints: Vec<ConstraintRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub compliance_records: Vec<ComplianceRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub approvals: Vec<ApprovalRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub meetings: Vec<MeetingRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub changes: Vec<ChangeRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub collaboration: Vec<CollaborationRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub analyses: Vec<AnalysisRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub reports: Vec<ReportRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub search_filters: Vec<SearchFilter>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub status_records: Vec<StatusRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub workshops: Vec<Workshop>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub surveys: Vec<Survey>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub issues: Vec<Issue>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub audit_events: Vec<AuditEvent>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub templates: Vec<TemplateRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub knowledge: Vec<KnowledgeRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub benchmarks: Vec<BenchmarkRecord>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub traces: Vec<TraceLink>,
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub governance: Governance,
 }
 

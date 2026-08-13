@@ -8,7 +8,7 @@
 use crate::artifacts::cad::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 
-use semio_framework_3d::brep::engine::BrepKernel;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepKernel;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -517,7 +517,7 @@ fn commit_primitive_box(kernel: &mut dyn BrepKernel, params: &HashMap<String, Va
     let height = params.get("height").and_then(|value| value.as_f64()).unwrap_or(1.0);
     let width = (corner_b[0] - corner_a[0]).abs().max(0.05);
     let depth = (corner_b[1] - corner_a[1]).abs().max(0.05);
-    let solid = semio_framework_3d::brep::engine::block_on(kernel.box_prim(width, depth, height.max(0.05))).ok()?;
+    let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height.max(0.05))).ok()?;
     Some(CadObject {
         id: next_id("object"),
         label: format!("Box {}", label_count + 1),
@@ -546,7 +546,7 @@ fn commit_from_2_points_and_height(kernel: &mut dyn BrepKernel, params: &HashMap
 
     if lower.contains("column") {
         let radius = 0.25;
-        let solid = semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
+        let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
         return Some(CadObject {
             id: next_id("object"),
             label: format!("{label} {}", label_count + 1),
@@ -575,7 +575,7 @@ fn commit_from_2_points_and_height(kernel: &mut dyn BrepKernel, params: &HashMap
         let d = (point_b[1] - point_a[1]).abs().max(0.5);
         (w, d, height.max(0.05))
     };
-    let solid = semio_framework_3d::brep::engine::block_on(kernel.box_prim(width, depth, solid_height)).ok()?;
+    let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, solid_height)).ok()?;
     Some(CadObject {
         id: next_id("object"),
         label: format!("{label} {}", label_count + 1),
@@ -610,7 +610,7 @@ fn commit_command_finish(kernel: &mut dyn BrepKernel, params: &HashMap<String, V
                 ((radius_point[0] - center[0]).powi(2) + (radius_point[1] - center[1]).powi(2) + (radius_point[2] - center[2]).powi(2)).sqrt()
             }
             .max(0.05);
-            let solid = semio_framework_3d::brep::engine::block_on(kernel.sphere_prim(radius)).ok()?;
+            let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.sphere_prim(radius)).ok()?;
             Some(CadObject {
                 id: next_id("object"),
                 label: format!("Sphere {}", label_count + 1),
@@ -636,7 +636,7 @@ fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScra
         let base = context_point(session, "base")?;
         let height = session.context.0.get("height").and_then(|value| value.as_f64()).unwrap_or(3.0);
         let radius = 0.25;
-        let solid = semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
+        let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
         return Some(CadObject {
             id: next_id("object"),
             label: format!("{} {}", entry.label, label_count + 1),
@@ -673,7 +673,7 @@ fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScra
     } else {
         (width, depth, height.max(0.05))
     };
-    let solid = semio_framework_3d::brep::engine::block_on(kernel.box_prim(solid_width, solid_depth, solid_height)).ok()?;
+    let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(solid_width, solid_depth, solid_height)).ok()?;
     Some(CadObject {
         id: next_id("object"),
         label: format!("{} {}", entry.label, label_count + 1),
@@ -819,7 +819,7 @@ pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_3d::brep::kernel::Brep;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
 
     #[test]
     fn catalog_includes_json_driven_and_legacy_building_entries() {

@@ -33,7 +33,7 @@ export interface IfcHeader {
 
 /** 🧬️ IfcSnapshot schema — the full, lossless IFC4 Part-21 graph in IFC's own typed model. */
 export interface IfcSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ header: IfcHeader;
-  /** @state persistent */ entities: IfcEntity[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ header: IfcHeader;
+  /** @state artifact */ entities: IfcEntity[];
 }

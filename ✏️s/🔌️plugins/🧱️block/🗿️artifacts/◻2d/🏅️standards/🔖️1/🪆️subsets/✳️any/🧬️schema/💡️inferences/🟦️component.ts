@@ -11,6 +11,6 @@ export interface Block2dBounds {
 }
 
 export interface Block2dInference {
-  /** @state inferred */
+  /** @derived */
   bounds: Block2dBounds;
 }

@@ -1,13 +1,13 @@
 syntax = "proto3";
 package semio.app.sourcing.curate;
 message SourcingCurateConfig {
-  // @state local-ui
+  // @state config
   Filters filters = 1;
-  // @state local-ui
+  // @state config
   optional string selected_object_id = 2;
-  // @state local-ui
+  // @state config
   string locale = 3;
-  // @state local-ui
+  // @state config
   string contributions_json = 4;
 }
 

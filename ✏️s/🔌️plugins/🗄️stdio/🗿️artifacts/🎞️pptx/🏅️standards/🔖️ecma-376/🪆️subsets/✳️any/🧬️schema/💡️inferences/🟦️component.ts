@@ -7,6 +7,6 @@ export interface PptxOutline {
 }
 
 export interface PptxInference {
-  /** @state inferred */
+  /** @derived */
   outline: PptxOutline;
 }

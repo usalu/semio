@@ -2,8 +2,8 @@
 # and flat-position (each node's flattened (u, v) position, BFS-walked from root_node_id).
 
 type JackInference {
-  topology: JackTopology! @state(class: INFERRED)
-  flatPosition: JackFlatPosition! @state(class: INFERRED)
+  topology: JackTopology! @derived
+  flatPosition: JackFlatPosition! @derived
 }
 
 type JackTopology {

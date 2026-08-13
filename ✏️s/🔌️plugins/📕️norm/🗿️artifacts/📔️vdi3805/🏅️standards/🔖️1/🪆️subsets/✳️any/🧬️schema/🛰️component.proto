@@ -4,24 +4,24 @@ package semio.s.norm.vdi3805.artifact;
 // 🧬️ Vdi3805 artifact schema — every field with its state class.
 
 message Vdi3805Artifact {
-  // @state persistent
+  // @state artifact
   string manufacturer_file = 1;
-  // @state persistent
+  // @state artifact
   string catalog = 2;
-  // @state persistent
+  // @state artifact
   map<string, string> edition_profile = 3;
-  // @state persistent
+  // @state artifact
   string correction_as_of = 4;
-  // @state persistent
+  // @state artifact
   bool strict_mode = 5;
-  // @state persistent
+  // @state artifact
   string index = 6;
-  // @state persistent
+  // @state artifact
   map<string, string> geometry = 7;
-  // @state persistent
+  // @state artifact
   map<string, string> curves = 8;
-  // @state persistent
+  // @state artifact
   string limits = 9;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 10;
 }

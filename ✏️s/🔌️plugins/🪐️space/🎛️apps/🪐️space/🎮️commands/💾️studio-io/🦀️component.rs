@@ -262,7 +262,7 @@ mod tests {
         let home = crate::apps::home::HomeApp;
         let home_projection = crate::apps::home::HomeApp::initial_snapshot();
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: &home_projection, history: &history };
+        let doc = ArtifactView::new(&home_projection, &history);
         let home_config = crate::apps::home::config::HomeConfig::default();
         let home_cfg = ConfigView { snapshot: &home_config };
         let create = create_studio::handle(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
@@ -290,7 +290,7 @@ mod tests {
         let home = crate::apps::home::HomeApp;
         let home_projection = crate::apps::home::HomeApp::initial_snapshot();
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: &home_projection, history: &history };
+        let doc = ArtifactView::new(&home_projection, &history);
         let home_config = crate::apps::home::config::HomeConfig::default();
         let home_cfg = ConfigView { snapshot: &home_config };
         let emit = create_studio::handle(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
@@ -312,7 +312,7 @@ mod tests {
         assert!(document.vcs.initial_snapshot.collections.is_empty());
 
         let empty = empty_workflow_snapshot();
-        let studio_doc = ArtifactView { snapshot: &empty, history: &history };
+        let studio_doc = ArtifactView::new(&empty, &history);
         let studio_config = SpaceConfig::default();
         let studio_cfg = ConfigView { snapshot: &studio_config };
         let studio = crate::apps::space::SpaceApp::default();

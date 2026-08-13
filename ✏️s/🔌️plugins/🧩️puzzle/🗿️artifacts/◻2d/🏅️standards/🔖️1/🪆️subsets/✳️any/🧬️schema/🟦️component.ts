@@ -1,59 +1,59 @@
 /** 🧬️ Puzzle2d artifact schema — every field with its state class. */
 
 export interface Puzzle2dArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   camera: Puzzle2dCamera;
-  /** @state persistent */
+  /** @state artifact */
   nodes: Puzzle2dNode[];
-  /** @state persistent */
+  /** @state artifact */
   edges: Puzzle2dEdge[];
-  /** @state persistent */
+  /** @state artifact */
   meta: Puzzle2dMeta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   cameraX: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridFactor: number;
-  /** @state local-ui */
+  /** @state config */
   suggestionOffset: number;
-  /** @state local-ui */
+  /** @state config */
   fillCount: number;
-  /** @state local-ui */
+  /** @state config */
   brushCandidateIndex: number;
-  /** @state local-ui */
+  /** @state config */
   brushCandidateSourceHandleId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   terminology: string;
-  /** @state local-ui */
+  /** @state config */
   lodModeByPaneJson: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInputByPaneJson: string;
-  /** @state local-ui */
+  /** @state config */
   brushCandidatesJson: string;
-  /** @state local-ui */
+  /** @state config */
   nodeKindWeightsJson: string;
-  /** @state local-ui */
+  /** @state config */
   handleKindWeightsJson: string;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityByWindowIdJson: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredNodeId?: string;
-  /** @state preview */
+  /** @state artifact */
   previewSeq: number;
 }
 

@@ -131,15 +131,15 @@ pub struct DocxDocument {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.docx")]
 pub struct DocxSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 📦️ Lossless OPC container — every part verbatim, including `word/document.xml` and
     /// `word/styles.xml` (kept in sync with `document` on encode; see `engine::encode_docx`).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub opc: OpcPackage,
     /// 🧬️ Typed semantic view of `word/document.xml` + `word/styles.xml`.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub document: DocxDocument,
 }

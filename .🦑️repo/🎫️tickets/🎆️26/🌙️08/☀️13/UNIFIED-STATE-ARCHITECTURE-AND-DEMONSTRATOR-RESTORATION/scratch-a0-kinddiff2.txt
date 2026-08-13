@@ -1,0 +1,6 @@
+TOTAL before=29456 after=29461 delta=5
+delta   before   after   kind|priority
+     2     704     706   taxonomy/plugin-registration-violation|medium
+     2      24      26   taxonomy/plugin-registration-setup-callback|medium
+     2     308     310   os-state-authority/item-scope-global|high
+    -1       1       0   taxonomy/plugin-closed-shape|high

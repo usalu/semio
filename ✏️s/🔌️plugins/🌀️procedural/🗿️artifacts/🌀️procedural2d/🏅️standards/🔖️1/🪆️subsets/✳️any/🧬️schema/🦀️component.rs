@@ -21,14 +21,14 @@ use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecor
 #[artifact_schema(id = "s.procedural.procedural2d")]
 
 pub struct Procedural2dArtifact {
-    #[state(persistent)] pub fixture: FlowFixture,
-    #[state(persistent)] pub generation: GenerationPlayState,
-    #[state(shared_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub graph_camera: CameraJson,
-    #[state(local_ui)] pub show_mode: String,
-    #[state(shared_ui)] pub selected_generation_id: Option<String>,
-    #[state(preview)] pub generation_preview_text: Option<String>,
-    #[state(local_ui)] pub locale: String}
+    #[state(artifact)] pub fixture: FlowFixture,
+    #[state(artifact)] pub generation: GenerationPlayState,
+    #[state(presence)] pub selected_ids: Vec<String>,
+    #[state(config)] pub graph_camera: CameraJson,
+    #[state(config)] pub show_mode: String,
+    #[state(presence)] pub selected_generation_id: Option<String>,
+    #[state(artifact)] pub generation_preview_text: Option<String>,
+    #[state(config)] pub locale: String}
 //#endregion 🔖️Procedural2dArtifact
 
 impl Default for Procedural2dArtifact {

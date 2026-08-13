@@ -4,7 +4,7 @@ package semio.s.stdio.bcf.inference;
 // 💡️ Bcf inference schema — topic/comment/viewpoint/author counts derived from the topic tree.
 
 message BcfInference {
-  // @state inferred
+  // @derived
   BcfTopicStats topic_stats = 1;
 }
 

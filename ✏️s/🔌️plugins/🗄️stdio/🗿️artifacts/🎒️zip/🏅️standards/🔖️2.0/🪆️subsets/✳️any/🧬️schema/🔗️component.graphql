@@ -3,6 +3,6 @@ type ZipEntry {
   data: [Int!]!
 }
 type ZipArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [ZipEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [ZipEntry!]! @state(class: ARTIFACT)
 }

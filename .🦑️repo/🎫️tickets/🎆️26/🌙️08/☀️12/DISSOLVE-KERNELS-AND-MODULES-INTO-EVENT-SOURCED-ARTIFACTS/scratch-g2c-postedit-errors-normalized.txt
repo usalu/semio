@@ -1,0 +1,31 @@
+error[E0308]: mismatched types: expected `DslValue`, found `Value`
+error[E0422]: cannot find struct, variant or union type `EvalChannels` in this scope: not found in this scope
+error[E0422]: cannot find struct, variant or union type `Tree` in this scope: not found in this scope
+error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+error[E0425]: cannot find function `computation_node_width` in this scope: not found in this scope
+error[E0425]: cannot find function `create_document_envelope` in this scope: not found in this scope
+error[E0425]: cannot find function `fit_node_size` in this scope: not found in this scope
+error[E0425]: cannot find function `slider_widget_height` in this scope: not found in this scope
+error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+error[E0425]: cannot find type `EvalError` in this scope: not found in this scope
+error[E0425]: cannot find type `HashMap` in this scope: not found in this scope
+error[E0425]: cannot find value `INPUT_KIND` in this scope: not found in this scope
+error[E0425]: cannot find value `OUTPUT_KIND` in this scope: not found in this scope
+error[E0425]: cannot find value `mutations` in this scope: not found in this scope
+error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+error[E0433]: cannot find type `BTreeSet` in this scope: use of undeclared type `BTreeSet`
+error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+error[E0433]: cannot find type `DagPreviewContent` in this scope: use of undeclared type `DagPreviewContent`
+error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+error[E0433]: cannot find type `Evaluator` in this scope: use of undeclared type `Evaluator`
+error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+error[E0433]: cannot find type `Neuron` in this scope: use of undeclared type `Neuron`
+error[E0616]: field `generation` of struct `FlowExtensionRegistryState` is private: private field
+error[E0616]: field `registry` of struct `FlowExtensionRegistryState` is private: private field

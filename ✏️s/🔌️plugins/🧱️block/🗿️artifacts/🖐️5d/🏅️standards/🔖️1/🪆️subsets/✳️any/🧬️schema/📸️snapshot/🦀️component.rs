@@ -12,54 +12,54 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "block.block5d", layout = "lines")]
 #[artifact_schema(id = "s.block.block5d")]
 pub struct Block5dSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub part_kind: BlockKindIdentity,
     #[dsl(block)]
     #[serde(default, rename = "2d")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub part_2d: Block5dPart2d,
     #[dsl(block)]
     #[serde(default, rename = "3d")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub part_3d: Block5dPart3d,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub representations: Vec<BlockRepresentation>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub grip_kinds: Vec<Block5dGripKind>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub grips: Vec<Block5dGripTemplate>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub compatibility: Vec<BlockCompatibilityRule>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub attributes: Vec<BlockAttribute>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub authors: Vec<BlockAuthor>,
     #[dsl(block)]
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub camera2d: BlockCamera2d,
     #[dsl(block)]
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub camera3d: BlockCamera3d,
     #[dsl(block)]
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: BlockMeta,
 }
 //#endregion 🔖️Snapshot

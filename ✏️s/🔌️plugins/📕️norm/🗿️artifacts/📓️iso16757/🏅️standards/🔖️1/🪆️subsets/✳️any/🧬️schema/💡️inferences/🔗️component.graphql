@@ -1,7 +1,7 @@
 # 💡️ Iso16757 inference schema — document outline (field/section list + entry count).
 
 type Iso16757Inference {
-  outline: Iso16757Outline! @state(class: INFERRED)
+  outline: Iso16757Outline! @derived
 }
 
 type Iso16757Outline {

@@ -132,12 +132,12 @@ pub struct StepEntity {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step")]
 pub struct StepSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub header: StepHeader,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entities: Vec<StepEntity>,
 }

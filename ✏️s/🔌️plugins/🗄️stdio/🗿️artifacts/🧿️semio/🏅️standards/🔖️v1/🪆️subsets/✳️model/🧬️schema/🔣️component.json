@@ -4,9 +4,9 @@
   "description": "Full artifact state, mirrors SemioModelSnapshot field for field.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "spatial": { "type": "array", "x-semio-state": "persistent" },
-    "elements": { "type": "array", "x-semio-state": "persistent" },
-    "relations": { "type": "array", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "spatial": { "type": "array", "x-semio-state": "artifact" },
+    "elements": { "type": "array", "x-semio-state": "artifact" },
+    "relations": { "type": "array", "x-semio-state": "artifact" }
   }
 }

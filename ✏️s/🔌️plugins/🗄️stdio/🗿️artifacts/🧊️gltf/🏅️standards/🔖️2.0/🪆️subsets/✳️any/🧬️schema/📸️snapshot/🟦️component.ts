@@ -169,8 +169,8 @@ export interface GltfDocument {
 export type GltfSourceForm = 'json' | 'glb';
 
 export interface GltfSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ document: GltfDocument;
-  /** @state persistent */ buffers: number[][]; // raw payload bytes, index-aligned with document.buffers
-  /** @state persistent */ sourceForm: GltfSourceForm;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ document: GltfDocument;
+  /** @state artifact */ buffers: number[][]; // raw payload bytes, index-aligned with document.buffers
+  /** @state artifact */ sourceForm: GltfSourceForm;
 }

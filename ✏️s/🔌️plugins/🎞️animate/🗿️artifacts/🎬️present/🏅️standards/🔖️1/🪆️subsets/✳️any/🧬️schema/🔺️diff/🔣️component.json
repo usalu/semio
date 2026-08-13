@@ -5,13 +5,13 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": { "title": "PresentArtifact", "type": "object", "x-semio-state": "persistent" },
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "source": { "$ref": "#/$defs/FigureTileSource", "x-semio-state": "persistent" },
-    "tiles": { "$ref": "#/$defs/PresentTilesDelta", "x-semio-state": "persistent" },
-    "selectedIds": { "$ref": "#/$defs/PresentStringList", "x-semio-state": "shared-ui" },
-    "engagementInput": { "type": "string", "x-semio-state": "local-ui" },
-    "locale": { "type": "string", "x-semio-state": "local-ui" }
+    "artifact": { "title": "PresentArtifact", "type": "object", "x-semio-state": "artifact" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "source": { "$ref": "#/$defs/FigureTileSource", "x-semio-state": "artifact" },
+    "tiles": { "$ref": "#/$defs/PresentTilesDelta", "x-semio-state": "artifact" },
+    "selectedIds": { "$ref": "#/$defs/PresentStringList", "x-semio-state": "presence" },
+    "engagementInput": { "type": "string", "x-semio-state": "config" },
+    "locale": { "type": "string", "x-semio-state": "config" }
   },
   "$defs": {
     "FigureTileFrame": {

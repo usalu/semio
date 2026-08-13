@@ -4,7 +4,7 @@ package semio.s.stdio.las.inference;
 // 💡️ Las inference schema — header-declared bounding box and point count.
 
 message LasInference {
-  // @state inferred
+  // @derived
   LasBounds bounds = 1;
 }
 

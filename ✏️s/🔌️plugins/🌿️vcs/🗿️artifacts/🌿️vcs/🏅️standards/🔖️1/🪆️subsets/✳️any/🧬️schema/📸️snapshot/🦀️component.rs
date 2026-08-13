@@ -12,17 +12,17 @@ use serde::{Deserialize, Serialize};
 #[dsl(extension = "vcs")]
 #[dsl(layout = "lines")]
 pub struct VcsSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub title: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub counter: i64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub notes: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub status: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub tags: Vec<String>,
 }

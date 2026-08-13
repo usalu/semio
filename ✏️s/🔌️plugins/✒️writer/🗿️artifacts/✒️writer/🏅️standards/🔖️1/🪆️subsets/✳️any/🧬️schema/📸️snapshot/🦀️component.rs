@@ -14,16 +14,16 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub language_id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default = "crate::artifacts::writer::default_uri")]
     pub uri: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.document")]
     pub document: WriterDocumentChild,
 }

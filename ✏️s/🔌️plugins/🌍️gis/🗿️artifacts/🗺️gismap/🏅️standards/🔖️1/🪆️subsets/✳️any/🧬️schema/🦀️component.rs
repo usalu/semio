@@ -21,30 +21,30 @@ use std::collections::{BTreeMap, HashSet};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapArtifact {
-    #[state(persistent)] pub positions: Vec<MapFeature>,
-    #[state(persistent)] pub routes: Vec<MapFeature>,
-    #[state(persistent)] pub regions: Vec<MapFeature>,
+    #[state(artifact)] pub positions: Vec<MapFeature>,
+    #[state(artifact)] pub routes: Vec<MapFeature>,
+    #[state(artifact)] pub regions: Vec<MapFeature>,
     /// 🕸️ Mirrors `GisMapSnapshot.image` — see that field's own doc comment and
     /// `crate::artifacts::gismap::🦀️component.rs`'s `🔖️Composition` region. Carried verbatim (never
     /// derived) since, unlike `drawing`/`value`, nothing in this plugin can rebuild it from
     /// `positions`/`routes`/`regions` — dropping it silently on `from_snapshot`/`to_snapshot` would
     /// be a real, undocumented data loss the moment a future basemap-capture path populates it.
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.image")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
-    #[state(shared_ui)] pub selected_ids: Vec<String>,
-    #[state(shared_ui)] pub feature_selection_json: String,
-    #[state(shared_ui)] pub layer_visibility: BTreeMap<String, bool>,
-    #[state(shared_ui)] pub layer_stroke_scale: BTreeMap<String, f64>,
-    #[state(local_ui)] pub camera_json: String,
-    #[state(local_ui)] pub render_mode: String,
-    #[state(local_ui)] pub vector_style: String,
-    #[state(local_ui)] pub lod_mode: String,
-    #[state(local_ui)] pub hover_json: String,
-    #[state(local_ui)] pub selection_method: String,
-    #[state(local_ui)] pub selection_mode: String,
-    #[state(local_ui)] pub locale: String,
+    #[state(presence)] pub selected_ids: Vec<String>,
+    #[state(presence)] pub feature_selection_json: String,
+    #[state(presence)] pub layer_visibility: BTreeMap<String, bool>,
+    #[state(presence)] pub layer_stroke_scale: BTreeMap<String, f64>,
+    #[state(config)] pub camera_json: String,
+    #[state(config)] pub render_mode: String,
+    #[state(config)] pub vector_style: String,
+    #[state(config)] pub lod_mode: String,
+    #[state(config)] pub hover_json: String,
+    #[state(config)] pub selection_method: String,
+    #[state(config)] pub selection_mode: String,
+    #[state(config)] pub locale: String,
 }
 //#endregion 🔹Artifact
 

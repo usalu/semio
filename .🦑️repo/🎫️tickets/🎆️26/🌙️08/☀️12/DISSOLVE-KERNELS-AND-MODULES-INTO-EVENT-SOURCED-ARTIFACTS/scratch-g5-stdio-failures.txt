@@ -1,0 +1,7 @@
+    artifacts::binary::standards::v_raw::subsets::any::schema::inferences::extent::component::tests::inference_default_law
+    artifacts::dwg::standards::v_ac1018::subsets::any::schema::component::tests::conformance_laws::fixture_honesty_law
+    artifacts::dxf::standards::v_r12::subsets::any::schema::inferences::bounds::component::tests::bounds_matches_hand_built_entity_extent
+    artifacts::ifc::standards::v2x3::subsets::any::io::component::tests::conformance_laws::fixture_honesty_law
+    artifacts::semio::component::tests::a_registered_factory_mints_and_reopens_a_real_child_envelope
+    artifacts::semio::component::tests::every_semio_subset_has_a_registered_child_store_factory
+    artifacts::zip::standards::v2_0::subsets::any::schema::inferences::entries::component::tests::inference_default_law

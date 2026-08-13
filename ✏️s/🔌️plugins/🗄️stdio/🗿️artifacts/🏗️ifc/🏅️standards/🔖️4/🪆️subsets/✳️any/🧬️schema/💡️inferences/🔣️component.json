@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/IfcBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/IfcBounds", "x-semio-derived": true }
   },
   "$defs": {
     "IfcBounds": {

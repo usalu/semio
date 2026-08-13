@@ -1,7 +1,7 @@
 # 💡️ zip inference schema — real central-directory-style census over decompressed `entries`.
 
 type ZipInference {
-  entries: ZipEntries! @state(class: INFERRED)
+  entries: ZipEntries! @derived
 }
 
 type ZipEntries {

@@ -1,14 +1,14 @@
 # 🧬️ Fem2d mutation schema — persistent fields only.
 
 type Fem2dMutation {
-  nodes: [FemNode!]! @state(class: PERSISTENT)
-  elements: [FemElement!]! @state(class: PERSISTENT)
-  regions: [FemRegion!]! @state(class: PERSISTENT)
-  materials: [FemMaterial!]! @state(class: PERSISTENT)
-  sections: [FemSection!]! @state(class: PERSISTENT)
-  supports: [FemSupport!]! @state(class: PERSISTENT)
-  loadCases: [FemLoadCase!]! @state(class: PERSISTENT)
-  combinations: [FemCombination!]! @state(class: PERSISTENT)
-  analysis: FemAnalysisSettings! @state(class: PERSISTENT)
+  nodes: [FemNode!]! @state(class: ARTIFACT)
+  elements: [FemElement!]! @state(class: ARTIFACT)
+  regions: [FemRegion!]! @state(class: ARTIFACT)
+  materials: [FemMaterial!]! @state(class: ARTIFACT)
+  sections: [FemSection!]! @state(class: ARTIFACT)
+  supports: [FemSupport!]! @state(class: ARTIFACT)
+  loadCases: [FemLoadCase!]! @state(class: ARTIFACT)
+  combinations: [FemCombination!]! @state(class: ARTIFACT)
+  analysis: FemAnalysisSettings! @state(class: ARTIFACT)
 }
 

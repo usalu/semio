@@ -1,9 +1,9 @@
 # 🧬️ GIS map mutation schema — persistent fields only.
 
 type GisMapMutation {
-  positions: [GisMapFeature!]! @state(class: PERSISTENT)
-  routes: [GisMapFeature!]! @state(class: PERSISTENT)
-  regions: [GisMapFeature!]! @state(class: PERSISTENT)
+  positions: [GisMapFeature!]! @state(class: ARTIFACT)
+  routes: [GisMapFeature!]! @state(class: ARTIFACT)
+  regions: [GisMapFeature!]! @state(class: ARTIFACT)
 }
 
 type GisMapFeature {

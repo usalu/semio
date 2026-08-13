@@ -1173,7 +1173,7 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Brep);
@@ -1191,7 +1191,7 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
     }
 
@@ -1200,7 +1200,7 @@ mod tests {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
         assert!(matches!(Process3dPlayApp::import_media("geometry:in", &media, &doc), Err(MediaError::Payload(port, _)) if port == "geometry:in"));
     }

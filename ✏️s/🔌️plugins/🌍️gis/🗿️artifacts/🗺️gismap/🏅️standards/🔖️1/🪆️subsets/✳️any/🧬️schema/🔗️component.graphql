@@ -1,21 +1,21 @@
 # 🧬️ GIS map artifact schema — every field with its state class.
 
 type GisMapArtifact {
-  positions: [GisMapFeature!]! @state(class: PERSISTENT)
-  routes: [GisMapFeature!]! @state(class: PERSISTENT)
-  regions: [GisMapFeature!]! @state(class: PERSISTENT)
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  featureSelectionJson: String! @state(class: SHARED_UI)
-  layerVisibility: [GisMapBoolEntry!]! @state(class: SHARED_UI)
-  layerStrokeScale: [GisMapNumberEntry!]! @state(class: SHARED_UI)
-  cameraJson: String! @state(class: LOCAL_UI)
-  renderMode: String! @state(class: LOCAL_UI)
-  vectorStyle: String! @state(class: LOCAL_UI)
-  lodMode: String! @state(class: LOCAL_UI)
-  hoverJson: String! @state(class: LOCAL_UI)
-  selectionMethod: String! @state(class: LOCAL_UI)
-  selectionMode: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  positions: [GisMapFeature!]! @state(class: ARTIFACT)
+  routes: [GisMapFeature!]! @state(class: ARTIFACT)
+  regions: [GisMapFeature!]! @state(class: ARTIFACT)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  featureSelectionJson: String! @state(class: PRESENCE)
+  layerVisibility: [GisMapBoolEntry!]! @state(class: PRESENCE)
+  layerStrokeScale: [GisMapNumberEntry!]! @state(class: PRESENCE)
+  cameraJson: String! @state(class: CONFIG)
+  renderMode: String! @state(class: CONFIG)
+  vectorStyle: String! @state(class: CONFIG)
+  lodMode: String! @state(class: CONFIG)
+  hoverJson: String! @state(class: CONFIG)
+  selectionMethod: String! @state(class: CONFIG)
+  selectionMode: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 
 type GisMapFeature {

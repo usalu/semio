@@ -1,0 +1,296 @@
+error: could not compile `semio-framework-os-flow` (lib test) due to 160 previous errors; 135 warnings emitted
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1090:35: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1112:35: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1176:27: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1188:26: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1192:144: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1214:16: warning: `test_support` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1214:30: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1215:16: warning: `test_support` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1215:30: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1220:16: warning: `test_support` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1220:30: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1221:16: warning: `test_support` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1221:30: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:853:39: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:11:5: warning: unused imports: `DagFixtureEdge`, `DagFixture`, `DagHost`, `DagLayoutOptions`, `DagNodeKind`, `DagNodeSpec`, `DagPreviewContent`, `EdgeRouteStyle`, `IoPortSpec`, `computation_node_height`, `computation_node_width`, `dag_fixture_execution_rows`, `dag_fixture_to_wire_literal`, `fit_node_size`, `image_widget_size`, `io_widget_height`, `io_widget_width`, `normalize_node_display`, `note_widget_size`, `preview_widget_size`, `slider_widget_height`, `slider_widget_width`, and `would_create_cycle`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:14:23: warning: unused imports: `PropertyBag` and `PropertyValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:16:5: warning: unused imports: `BudgetedEval`, `CLUSTER_KIND`, `Evaluator`, `NeuralCache`, `OperatorImpl`, `Synapse`, `TreeSnapshot`, `Tree`, `channel_output`, and `compute_dirty_set`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:19:5: warning: unused import: `flow_extension_sdk::FlowExtensionManifest`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:20:13: warning: unused imports: `Deserialize` and `Serialize`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:23:5: warning: unused import: `crate::catalogue::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:24:5: warning: unused import: `crate::registry::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:26:5: warning: unused import: `crate::drawing`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:27:5: warning: unused import: `crate::wasm_session::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:28:5: warning: unused import: `crate::vcs::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:29:28: warning: unused imports: `dispose_geometry`, `export_solid_json`, `import_solid_json`, `retain_geometry_handles`, and `tessellate_geometry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:4:5: warning: unused import: `crate::infinite::canvas as canvas`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:7:24: warning: unused imports: `BTreeMap` and `HashSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️bridge/🦀️component.rs:8:17: warning: unused imports: `Arc`, `LazyLock`, and `Mutex`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:11:5: warning: unused imports: `DagFixtureEdge`, `DagFixture`, `DagHost`, `DagLayoutOptions`, `DagNodeKind`, `DagNodeSpec`, `DagPreviewContent`, `EdgeRouteStyle`, `IoPortSpec`, `computation_node_height`, `computation_node_width`, `dag_fixture_execution_rows`, `dag_fixture_to_wire_literal`, `fit_node_size`, `image_widget_size`, `io_widget_height`, `io_widget_width`, `normalize_node_display`, `note_widget_size`, `preview_widget_size`, `slider_widget_height`, `slider_widget_width`, and `would_create_cycle`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:14:23: warning: unused imports: `PropertyBag` and `PropertyValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:16:5: warning: unused imports: `Atom`, `BudgetedEval`, `CLUSTER_KIND`, `ChannelSpec`, `Dictionary`, `EvalChannels`, `EvalError`, `Evaluator`, `INPUT_KIND`, `NeuralCache`, `Neuron`, `OUTPUT_KIND`, `OperatorImpl`, `OperatorInfo`, `Synapse`, `TreeSnapshot`, `Tree`, `Value as NeuralValue`, `channel_output`, `cluster_operator_info`, and `compute_dirty_set`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:19:5: warning: unused import: `flow_extension_sdk::FlowExtensionManifest`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:20:13: warning: unused imports: `Deserialize` and `Serialize`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:22:5: warning: unused import: `crate::artifact::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:23:5: warning: unused import: `crate::catalogue::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:24:5: warning: unused import: `crate::registry::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:25:5: warning: unused import: `crate::bridge::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:26:5: warning: unused import: `crate::host::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:27:5: warning: unused import: `crate::drawing::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:28:5: warning: unused import: `crate::vcs::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:29:28: warning: unused imports: `dispose_geometry`, `export_solid_json`, `import_solid_json`, `retain_geometry_handles`, and `tessellate_geometry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:4:5: warning: unused import: `crate::infinite::canvas as canvas`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:7:24: warning: unused imports: `BTreeMap`, `BTreeSet`, `HashMap`, and `HashSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌉️wasm/🦀️component.rs:8:17: warning: unused imports: `Arc`, `LazyLock`, and `Mutex`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1103:23: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1107:24: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1145:84: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:11:5: warning: unused imports: `DagFixtureEdge`, `DagFixture`, `DagHost`, `DagLayoutOptions`, `DagNodeKind`, `DagNodeSpec`, `DagPreviewContent`, `EdgeRouteStyle`, `IoPortSpec`, `computation_node_height`, `computation_node_width`, `dag_fixture_execution_rows`, `dag_fixture_to_wire_literal`, `fit_node_size`, `image_widget_size`, `io_widget_height`, `io_widget_width`, `normalize_node_display`, `note_widget_size`, `preview_widget_size`, `slider_widget_height`, `slider_widget_width`, and `would_create_cycle`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1239:20: error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/../../../📚️examples/🌊️default.flow`: No such file or directory (os error 2)
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:14:23: warning: unused imports: `PropertyBag` and `PropertyValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:16:5: warning: unused imports: `BudgetedEval`, `CLUSTER_KIND`, `ChannelSpec`, `EvalChannels`, `EvalError`, `Evaluator`, `INPUT_KIND`, `NeuralCache`, `OUTPUT_KIND`, `OperatorImpl`, `OperatorInfo`, `TreeSnapshot`, `channel_output`, `cluster_operator_info`, and `compute_dirty_set`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:19:5: warning: unused import: `flow_extension_sdk::FlowExtensionManifest`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:23:5: warning: unused import: `crate::catalogue::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:24:5: warning: unused import: `crate::registry::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:25:5: warning: unused import: `crate::bridge::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:27:5: warning: unused import: `crate::drawing`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:28:5: warning: unused import: `crate::wasm_session::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:29:28: warning: unused imports: `dispose_geometry`, `export_solid_json`, `import_solid_json`, `retain_geometry_handles`, and `tessellate_geometry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:39:5: warning: unused import: `crate::os_store::create_document_envelope`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:40:5: warning: unused import: `crate::os_store::ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:4:5: warning: unused import: `crate::infinite::canvas as canvas`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:7:44: warning: unused imports: `HashMap` and `HashSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:8:17: warning: unused imports: `Arc`, `LazyLock`, and `Mutex`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:11:54: warning: unused imports: `DagFixtureEdge`, `DagFixture`, `DagHost`, `DagLayoutOptions`, `EdgeRouteStyle`, `dag_fixture_execution_rows`, `dag_fixture_to_wire_literal`, `fit_node_size`, and `would_create_cycle`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:16:5: warning: unused imports: `BudgetedEval`, `EvalChannels`, `EvalError`, `Evaluator`, `NeuralCache`, `OperatorImpl`, `TreeSnapshot`, `channel_output`, and `compute_dirty_set`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:19:5: warning: unused import: `flow_extension_sdk::FlowExtensionManifest`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:22:5: warning: unused import: `crate::catalogue::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:23:5: warning: unused import: `crate::registry::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:24:5: warning: unused import: `crate::bridge::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:26:5: warning: unused import: `crate::drawing::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:27:5: warning: unused import: `crate::wasm_session::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:28:5: warning: unused import: `crate::vcs::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:29:28: warning: unused imports: `dispose_geometry`, `export_solid_json`, `import_solid_json`, `retain_geometry_handles`, and `tessellate_geometry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:4:5: warning: unused import: `crate::infinite::canvas as canvas`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:7:53: warning: unused import: `HashSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:8:17: warning: unused imports: `Arc`, `LazyLock`, and `Mutex`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📐️brep-geometry/🦀️component.rs:12:21: warning: unused import: `channel_output`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📐️brep-geometry/🦀️component.rs:447:19: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:11:5: warning: unused imports: `DagFixtureEdge`, `DagFixture`, `DagHost`, `DagLayoutOptions`, `DagNodeKind`, `DagNodeSpec`, `DagPreviewContent`, `EdgeRouteStyle`, `IoPortSpec`, `computation_node_height`, `computation_node_width`, `dag_fixture_execution_rows`, `dag_fixture_to_wire_literal`, `fit_node_size`, `image_widget_size`, `io_widget_height`, `io_widget_width`, `normalize_node_display`, `note_widget_size`, `preview_widget_size`, `slider_widget_height`, `slider_widget_width`, and `would_create_cycle`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:14:23: warning: unused imports: `PropertyBag` and `PropertyValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:16:5: warning: unused imports: `Atom`, `BudgetedEval`, `CLUSTER_KIND`, `ChannelSpec`, `EvalChannels`, `Evaluator`, `INPUT_KIND`, `Neuron`, `OUTPUT_KIND`, `Synapse`, `TreeSnapshot`, `Tree`, `Value as NeuralValue`, `channel_output`, `cluster_operator_info`, and `compute_dirty_set`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:176:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:22:5: warning: unused import: `crate::artifact::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:24:5: warning: unused import: `crate::bridge::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:26:5: warning: unused import: `crate::drawing::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:27:5: warning: unused import: `crate::wasm_session::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:28:5: warning: unused import: `crate::vcs::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:29:28: warning: unused imports: `dispose_geometry`, `export_solid_json`, `import_solid_json`, `retain_geometry_handles`, and `tessellate_geometry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:4:5: warning: unused import: `crate::infinite::canvas as canvas`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:65:1: warning: type `FlowExtensionRegistryState` is more private than the item `FLOW_EXTENSION_STATE`: static `FLOW_EXTENSION_STATE` is reachable at visibility `pub(crate)`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️component.rs:7:34: warning: unused imports: `BTreeSet`, `HashMap`, and `HashSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:11:5: warning: unused imports: `DagFixtureEdge`, `DagFixture`, `DagHost`, `DagLayoutOptions`, `DagNodeKind`, `DagNodeSpec`, `DagPreviewContent`, `EdgeRouteStyle`, `IoPortSpec`, `computation_node_height`, `computation_node_width`, `dag_fixture_execution_rows`, `dag_fixture_to_wire_literal`, `fit_node_size`, `image_widget_size`, `io_widget_height`, `io_widget_width`, `normalize_node_display`, `note_widget_size`, `preview_widget_size`, `slider_widget_height`, `slider_widget_width`, and `would_create_cycle`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:14:23: warning: unused imports: `PropertyBag` and `PropertyValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:16:5: warning: unused imports: `Atom`, `BudgetedEval`, `CLUSTER_KIND`, `Dictionary`, `EvalChannels`, `EvalError`, `Evaluator`, `NeuralCache`, `Neuron`, `OperatorImpl`, `Synapse`, `TreeSnapshot`, `Tree`, `Value as NeuralValue`, `channel_output`, `cluster_operator_info`, and `compute_dirty_set`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:19:5: warning: unused import: `flow_extension_sdk::FlowExtensionManifest`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:24:5: warning: unused import: `crate::bridge::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:26:5: warning: unused import: `crate::drawing`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:27:5: warning: unused import: `crate::wasm_session::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:28:5: warning: unused import: `crate::vcs::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:29:28: warning: unused imports: `dispose_geometry`, `export_solid_json`, `import_solid_json`, `retain_geometry_handles`, and `tessellate_geometry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:4:5: warning: unused import: `crate::infinite::canvas as canvas`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:7:24: warning: unused imports: `BTreeMap`, `BTreeSet`, `HashMap`, and `HashSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../📚️catalogue/🦀️component.rs:8:17: warning: unused imports: `Arc`, `LazyLock`, and `Mutex`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:21:5: warning: unused import: `crate::infinite::canvas as canvas`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:24:24: warning: unused imports: `BTreeMap`, `BTreeSet`, and `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:25:17: warning: unused import: `Arc`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:28:5: warning: unused imports: `DagFixtureEdge`, `DagFixture`, `DagHost`, `DagLayoutOptions`, `DagNodeKind`, `DagNodeSpec`, `DagPreviewContent`, `EdgeRouteStyle`, `IoPortSpec`, `computation_node_height`, `computation_node_width`, `dag_fixture_execution_rows`, `dag_fixture_to_wire_literal`, `fit_node_size`, `image_widget_size`, `io_widget_height`, `io_widget_width`, `normalize_node_display`, `note_widget_size`, `preview_widget_size`, `slider_widget_height`, `slider_widget_width`, and `would_create_cycle`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:31:23: warning: unused imports: `PropertyBag` and `PropertyValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:33:5: warning: unused imports: `Atom`, `BudgetedEval`, `CLUSTER_KIND`, `ChannelSpec`, `Dictionary`, `EvalChannels`, `Evaluator`, `INPUT_KIND`, `NeuralCache`, `Neuron`, `OUTPUT_KIND`, `OperatorImpl`, `OperatorInfo`, `Synapse`, `TreeSnapshot`, `Tree`, `Value as NeuralValue`, `channel_output`, `cluster_operator_info`, and `compute_dirty_set`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:36:5: warning: unused import: `flow_extension_sdk::FlowExtensionManifest`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:39:5: warning: unused import: `crate::artifact::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:40:5: warning: unused import: `crate::catalogue::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:41:5: warning: unused import: `crate::registry::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:42:5: warning: unused import: `crate::bridge::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:43:5: warning: unused import: `crate::host::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:44:5: warning: unused import: `crate::wasm_session::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:45:5: warning: unused import: `crate::vcs::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖍️drawing/🦀️component.rs:46:28: warning: unused imports: `dispose_geometry`, `export_solid_json`, `import_solid_json`, `retain_geometry_handles`, and `tessellate_geometry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:110:19: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:11:5: warning: unused imports: `DagPreviewContent`, `IoPortSpec`, `computation_node_height`, `computation_node_width`, `image_widget_size`, `io_widget_height`, `io_widget_width`, `normalize_node_display`, `note_widget_size`, `preview_widget_size`, `slider_widget_height`, and `slider_widget_width`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:141:48: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:147:76: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:14:36: warning: unused import: `PropertyValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:16:21: warning: unused imports: `CLUSTER_KIND`, `ChannelSpec`, `OperatorImpl`, and `cluster_operator_info`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1828:59: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1832:17: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1861:28: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1864:34: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1866:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1894:36: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1895:42: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1896:41: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:1987:60: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:19:5: warning: unused import: `flow_extension_sdk::FlowExtensionManifest`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2071:35: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2071:79: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2181:76: warning: unused import: `Registry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:45: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:67: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:79: error[E0425]: cannot find type `EvalError` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:48: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:112: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:46: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:94: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:47: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2201:194: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:113: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:45: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:95: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2206:167: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:48: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2210:107: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2211:98: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2212:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2214:13: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2245:19: error[E0616]: field `registry` of struct `FlowExtensionRegistryState` is private: private field
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2246:19: error[E0616]: field `generation` of struct `FlowExtensionRegistryState` is private: private field
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2326:39: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2327:35: error[E0425]: cannot find function `slider_widget_height` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2329:36: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2331:34: error[E0425]: cannot find function `computation_node_width` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2333:40: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2600:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:159: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:177: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:38: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:41: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2603:26: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:101: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:154: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:172: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:40: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:77: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2605:24: error[E0422]: cannot find struct, variant or union type `EvalChannels` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2619:48: error[E0425]: cannot find type `HashMap` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2619:64: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2631:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:157: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:175: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:38: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:148: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:166: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:41: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:75: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:99: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2640:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2643:13: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:102: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:126: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:183: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:201: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:34: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:58: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2646:24: error[E0422]: cannot find struct, variant or union type `EvalChannels` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2646:56: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:20: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:57: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:75: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2664:35: error[E0433]: cannot find type `DagPreviewContent` in this scope: use of undeclared type `DagPreviewContent`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:20: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:55: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:73: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2673:13: error[E0433]: cannot find type `DagPreviewContent` in this scope: use of undeclared type `DagPreviewContent`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2684:37: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2713:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:27:5: warning: unused import: `crate::wasm_session::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2813:25: error[E0433]: cannot find type `Evaluator` in this scope: use of undeclared type `Evaluator`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2814:45: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2815:25: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:114: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:132: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:39: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:64: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2866:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2868:21: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2941:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2941:87: error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/../../../📚️examples/🌊️default.flow`: No such file or directory (os error 2)
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2978:37: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2996:38: error[E0425]: cannot find function `create_document_envelope` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2998:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2998:49: error[E0425]: cannot find value `mutations` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:29:28: warning: unused imports: `dispose_geometry`, `export_solid_json`, `import_solid_json`, `retain_geometry_handles`, and `tessellate_geometry`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3001:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3006:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3030:229: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:57: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:79: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:91: error[E0425]: cannot find type `EvalError` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:23: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:73: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:91: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3043:24: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3045:94: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3049:24: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3051:26: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3053:108: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3056:12: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3067:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3068:101: error[E0433]: cannot find type `BTreeSet` in this scope: use of undeclared type `BTreeSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3068:72: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3075:21: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3131:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3150:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3194:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3228:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3335:30: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3338:13: error[E0425]: cannot find function `fit_node_size` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3485:101: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3486:99: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3487:93: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3557:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3558:90: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3559:88: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3766:21: error[E0422]: cannot find struct, variant or union type `Tree` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:156: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:174: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:17: error[E0433]: cannot find type `Neuron` in this scope: use of undeclared type `Neuron`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:43: error[E0425]: cannot find value `INPUT_KIND` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:55: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:113: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:162: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:17: error[E0433]: cannot find type `Neuron` in this scope: use of undeclared type `Neuron`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:180: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:46: error[E0425]: cannot find value `OUTPUT_KIND` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:59: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:95: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3774:70: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:4041:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs:12:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs:13:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs:14:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs:4:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs:5:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs:63:9: warning: glob import doesn't reexport anything with visibility `pub` because no imported item is public enough
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs:63:9: warning: unused import: `bridge::*`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/📦️glue.rs:75:9: warning: unused import: `wasm_session::*`

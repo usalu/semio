@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["topology"],
   "properties": {
-    "topology": { "$ref": "#/$defs/ShootingTopology", "x-semio-state": "inferred" }
+    "topology": { "$ref": "#/$defs/ShootingTopology", "x-semio-derived": true }
   },
   "$defs": {
     "ShootingTopology": {

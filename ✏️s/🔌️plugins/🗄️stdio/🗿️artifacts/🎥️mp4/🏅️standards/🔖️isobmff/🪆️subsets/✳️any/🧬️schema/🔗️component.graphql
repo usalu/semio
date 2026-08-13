@@ -1,7 +1,7 @@
 # Mp4Artifact — full artifact state, mirrors Mp4Snapshot field for field.
 type Mp4Artifact {
-  schema: String! @state(class: PERSISTENT)
-  ftyp: Mp4Ftyp! @state(class: PERSISTENT)
-  tracks: [Mp4Track!]! @state(class: PERSISTENT)
-  unknownBoxes: [Mp4Box!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  ftyp: Mp4Ftyp! @state(class: ARTIFACT)
+  tracks: [Mp4Track!]! @state(class: ARTIFACT)
+  unknownBoxes: [Mp4Box!]! @state(class: ARTIFACT)
 }

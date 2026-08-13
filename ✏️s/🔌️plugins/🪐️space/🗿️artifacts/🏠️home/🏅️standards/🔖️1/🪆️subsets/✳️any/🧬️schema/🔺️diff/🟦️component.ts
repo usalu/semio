@@ -1,12 +1,12 @@
 /** 🧬️ S Home diff schema — sparse field delta over the artifact. */
 
 export interface SHomeDiff {
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   catalogGeneration?: number;
-  /** @state local-ui */
+  /** @state config */
   activePanelTab?: string;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }

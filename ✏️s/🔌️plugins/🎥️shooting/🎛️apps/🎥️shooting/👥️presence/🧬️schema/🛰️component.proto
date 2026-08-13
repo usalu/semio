@@ -1,15 +1,15 @@
 syntax = "proto3";
 package semio.app.shooting.shooting;
 message ShootingPresence {
-  // @state shared-ui
+  // @state presence
   repeated string selected_shot_ids = 1;
-  // @state shared-ui
+  // @state presence
   repeated string selected_asset_ids = 2;
-  // @state shared-ui
+  // @state presence
   optional string hovered_asset_id = 3;
-  // @state shared-ui
+  // @state presence
   ShootingCamera camera = 4;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 5;
 }
 

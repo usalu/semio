@@ -193,7 +193,7 @@ mod tests {
     fn temporary_studio_uses_ephemeral_registry_not_catalog() {
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = create_studio::handle(&create_studio::CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).expect("handle");

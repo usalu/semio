@@ -9,12 +9,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.flow")]
 pub struct SemioFlowArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub nodes: Vec<FlowNode>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub edges: Vec<FlowEdge>,
 }

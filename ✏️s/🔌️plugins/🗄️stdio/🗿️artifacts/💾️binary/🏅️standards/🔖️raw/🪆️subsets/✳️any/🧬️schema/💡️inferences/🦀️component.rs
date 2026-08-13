@@ -23,7 +23,7 @@ use super::extent::{compute_binary_extent, BinaryExtent};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary.inference")]
 pub struct BinaryInference {
-    #[state(inferred)]
+    #[derived]
     pub extent: BinaryExtent,
 }
 

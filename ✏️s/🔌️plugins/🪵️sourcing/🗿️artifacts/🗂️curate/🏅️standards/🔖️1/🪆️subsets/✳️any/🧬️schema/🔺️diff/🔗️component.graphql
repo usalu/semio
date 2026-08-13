@@ -96,11 +96,11 @@ type CurateCuratedDelta {
 }
 
 type CurateDiff {
-  artifact: CurateArtifact @state(class: PERSISTENT)
-  stock: CurateStockDelta @state(class: PERSISTENT)
-  curated: CurateCuratedDelta @state(class: PERSISTENT)
-  filters: Filters @state(class: LOCAL_UI)
-  selectedObjectId: String @state(class: SHARED_UI)
-  locale: String @state(class: LOCAL_UI)
-  contributionsJson: String @state(class: LOCAL_UI)
+  artifact: CurateArtifact @state(class: ARTIFACT)
+  stock: CurateStockDelta @state(class: ARTIFACT)
+  curated: CurateCuratedDelta @state(class: ARTIFACT)
+  filters: Filters @state(class: CONFIG)
+  selectedObjectId: String @state(class: PRESENCE)
+  locale: String @state(class: CONFIG)
+  contributionsJson: String @state(class: CONFIG)
 }

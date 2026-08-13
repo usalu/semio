@@ -4,7 +4,7 @@ package semio.s.procedural.procedural3d.inference;
 // 💡️ Procedural3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph).
 
 message Procedural3dInference {
-  // @state inferred
+  // @derived
   Procedural3dTopology topology = 1;
 }
 

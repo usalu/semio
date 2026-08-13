@@ -1,5 +1,5 @@
 /** 🧬️ BinarySnapshot schema. */
 export interface BinarySnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ bytes: number[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ bytes: number[];
 }

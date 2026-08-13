@@ -12,9 +12,9 @@ use serde::{Deserialize, Serialize};
 #[dsl(extension = "shome")]
 #[dsl(layout = "lines")]
 pub struct SHomeSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(key = "gen")]
     pub catalog_generation: u64,

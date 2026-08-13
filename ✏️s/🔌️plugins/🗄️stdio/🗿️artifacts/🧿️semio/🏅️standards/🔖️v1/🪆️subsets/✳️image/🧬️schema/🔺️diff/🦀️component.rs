@@ -327,26 +327,26 @@ fn metadata_absorb(d1: SemioImageMetadataDiff, d2: SemioImageMetadataDiff) -> Se
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.image.diff")]
 pub struct SemioImageDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub colorspace: Option<SemioColorspace>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bit_depth: Option<u8>,
     /// 🎨️ Tri-state: `None` = unchanged, `Some(None)` = ICC removed, `Some(Some(bytes))` = set.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icc: Option<Option<Vec<u8>>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub frames: Option<SemioImageFramesDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<SemioImageMetadataDiff>,
 }

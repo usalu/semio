@@ -21,7 +21,7 @@ use super::duration::{compute_semio_video_duration, SemioVideoDuration};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.video.inference")]
 pub struct SemioVideoInference {
-    #[state(inferred)]
+    #[derived]
     pub duration: SemioVideoDuration,
 }
 

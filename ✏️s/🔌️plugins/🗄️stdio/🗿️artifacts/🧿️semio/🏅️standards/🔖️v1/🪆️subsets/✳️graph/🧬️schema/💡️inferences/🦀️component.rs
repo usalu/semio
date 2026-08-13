@@ -21,7 +21,7 @@ use super::topology::{compute_semio_graph_topology, SemioGraphTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.graph.inference")]
 pub struct SemioGraphInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: SemioGraphTopology,
 }
 

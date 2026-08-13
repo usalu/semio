@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/LasBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/LasBounds", "x-semio-derived": true }
   },
   "$defs": {
     "LasBounds": {

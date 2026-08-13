@@ -29,129 +29,129 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "name": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "grid": {
       "$ref": "#/$defs/GridSettings",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "paragraphStyles": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ParagraphStyle"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "characterStyles": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CharacterStyle"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "stories": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/TextStory"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "links": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ImageLink"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "parentPages": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ParentPage"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "spreads": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Spread"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "pages": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Page"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "printTarget": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "dataFieldsJson": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activePageId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraZoom": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "previewCameraX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "previewCameraY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "previewCameraZoom": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dropPreview": {
       "$ref": "#/$defs/LayoutDropPreviewState",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

@@ -9,19 +9,19 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack.config")]
 pub struct JackConfig {
-    #[state(local_ui)] pub selected_node_ids: Vec<String>,
-    #[state(local_ui)] pub camera: Camera,
-    #[state(local_ui)] pub active_fixture_id: String,
-    #[state(local_ui)] pub jack_query: String,
-    #[state(local_ui)] pub jack_result_json: String,
-    #[state(local_ui)] pub editor_engagement_input: String,
-    #[state(local_ui)] pub graph_engagement_input: String,
-    #[state(local_ui)] pub results_engagement_input: String,
-    #[state(local_ui)] pub reorganize_epoch: u64,
-    #[state(local_ui)] pub editor_selection: Option<JackEditorSelection>,
-    #[state(local_ui)] pub lod_mode_by_window: BTreeMap<String, String>,
-    #[state(local_ui)] pub revision: u64,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_node_ids: Vec<String>,
+    #[state(config)] pub camera: Camera,
+    #[state(config)] pub active_fixture_id: String,
+    #[state(config)] pub jack_query: String,
+    #[state(config)] pub jack_result_json: String,
+    #[state(config)] pub editor_engagement_input: String,
+    #[state(config)] pub graph_engagement_input: String,
+    #[state(config)] pub results_engagement_input: String,
+    #[state(config)] pub reorganize_epoch: u64,
+    #[state(config)] pub editor_selection: Option<JackEditorSelection>,
+    #[state(config)] pub lod_mode_by_window: BTreeMap<String, String>,
+    #[state(config)] pub revision: u64,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema descriptor

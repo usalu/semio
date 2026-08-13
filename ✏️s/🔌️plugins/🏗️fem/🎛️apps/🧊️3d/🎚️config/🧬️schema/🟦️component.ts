@@ -4,12 +4,12 @@ export interface FemCamera {
 }
 
 export interface Fem3dConfig {
-  /** @state local-ui */
+  /** @state config */
   resultSourceId?: string;
-  /** @state local-ui */
+  /** @state config */
   resultMode: string;
-  /** @state local-ui */
+  /** @state config */
   resultModeIndex: number;
-  /** @state local-ui */
+  /** @state config */
   camera: FemCamera;
 }

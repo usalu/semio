@@ -9,15 +9,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.document")]
 pub struct SemioDocumentArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub styles: Vec<DocStyle>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub images: Vec<DocImage>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub blocks: Vec<DocBlock>,
 }

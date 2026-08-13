@@ -1,8 +1,8 @@
 # 🧬️ Lowpoly mutation schema — persistent fields only.
 
 type LowpolyMutation {
-  schema: String! @state(class: PERSISTENT)
-  objects: [LowpolyObject!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  objects: [LowpolyObject!]! @state(class: ARTIFACT)
 }
 
 type LowpolySelectionTargets {

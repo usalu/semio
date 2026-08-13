@@ -8,6 +8,6 @@ export interface DagTopology {
 }
 
 export interface DagInference {
-  /** @state inferred */
+  /** @derived */
   topology: DagTopology;
 }

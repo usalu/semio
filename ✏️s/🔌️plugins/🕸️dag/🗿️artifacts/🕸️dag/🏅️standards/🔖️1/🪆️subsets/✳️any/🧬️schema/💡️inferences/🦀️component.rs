@@ -18,7 +18,7 @@ use super::topology::{compute_dag_topology, DagTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag.inference")]
 pub struct DagInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: DagTopology,
 }
 

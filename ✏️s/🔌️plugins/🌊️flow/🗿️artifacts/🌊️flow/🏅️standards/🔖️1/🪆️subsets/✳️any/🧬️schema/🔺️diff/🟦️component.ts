@@ -1,45 +1,45 @@
 /** 🧬️ Flow diff schema — sparse field delta. */
 
 export interface FlowDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: FlowArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   camera?: CameraJson;
-  /** @state persistent */
+  /** @state artifact */
   widgets?: FlowWidgetsDelta;
-  /** @state persistent */
+  /** @state artifact */
   synapses?: FlowSynapsesDelta;
-  /** @state persistent */
+  /** @state artifact */
   layout?: FlowLayoutMapDelta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds?: FlowStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedEdgeIds?: FlowStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedHandleIds?: FlowStringList;
-  /** @state shared-ui */
+  /** @state presence */
   previewOffNodeIds?: FlowStringList;
-  /** @state local-ui */
+  /** @state config */
   lodMode?: string;
-  /** @state local-ui */
+  /** @state config */
   proximityDistance?: number;
-  /** @state local-ui */
+  /** @state config */
   gridVisible?: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled?: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridFactor?: number;
-  /** @state local-ui */
+  /** @state config */
   catalogueSectionsJson?: string;
-  /** @state local-ui */
+  /** @state config */
   automationEnabledJson?: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson?: string;
-  /** @state local-ui */
+  /** @state config */
   generationJson?: string;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

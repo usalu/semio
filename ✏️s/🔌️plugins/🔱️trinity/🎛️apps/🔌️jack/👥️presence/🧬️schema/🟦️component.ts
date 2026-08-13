@@ -1,14 +1,14 @@
 /** 🧬️ JackPresence */
 export interface JackPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeFixtureId: string;
-  /** @state shared-ui */
+  /** @state presence */
   jackQuery: string;
-  /** @state shared-ui */
+  /** @state presence */
   camera: Camera;
-  /** @state shared-ui */
+  /** @state presence */
   lodModeByWindow: Record<string, string>;
 }
 

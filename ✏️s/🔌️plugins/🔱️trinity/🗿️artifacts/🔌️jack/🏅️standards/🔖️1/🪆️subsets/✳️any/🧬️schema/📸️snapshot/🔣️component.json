@@ -14,41 +14,41 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "name": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "manifestId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "manifest": {
       "$ref": "#/$defs/Manifest",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Node"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "edges": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Edge"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "rootNodeId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

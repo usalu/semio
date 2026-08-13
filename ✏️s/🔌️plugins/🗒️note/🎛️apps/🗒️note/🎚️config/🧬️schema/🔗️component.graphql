@@ -1,10 +1,10 @@
 type NoteConfig {
-  selectedBlockIds: [String!]! @state(class: LOCAL_UI)
-  hoveredBlockId: String @state(class: LOCAL_UI)
-  engagementInput: String! @state(class: LOCAL_UI)
-  camera: NoteCamera! @state(class: LOCAL_UI)
-  activeUtilityId: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedBlockIds: [String!]! @state(class: CONFIG)
+  hoveredBlockId: String @state(class: CONFIG)
+  engagementInput: String! @state(class: CONFIG)
+  camera: NoteCamera! @state(class: CONFIG)
+  activeUtilityId: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 
 type NoteCamera {

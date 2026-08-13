@@ -1,157 +1,124 @@
 # Wave M3a — `🧮️math/🧮️cas` + `🧮️math/📈️polynomial` → `➗️mathematical` artifact tree
 
-**Slice**: `🧮️cas` (6,323 LOC) + `📈️polynomial` (2,366 LOC) = 8,689 LOC.
-**Status: STEP 1 (COPY) COMPLETE AND VERIFIED. STEPS 2–4 NOT DONE — stopped here deliberately, see "What's not done" below.**
+**THE DUPLICATION WINDOW IS CLOSED.** `🧮️cas`/`📈️polynomial` are deleted from `🧮️math`, their `#[path]` mounts removed from `🧮️math/📦️packages/🦀️rust/📦️glue.rs` in the same change, and `cargo check -p semio-framework-math --all-targets` is clean. All 8,689 LOC exist exactly once now, inside `➗️mathematical`'s artifact tree. On top of the migrated internals, ONE real vertical slice is proven end-to-end: `EquationSnapshot` (persistent, label-addressed expression tree) → `change-coefficient` mutation triad (real `diff`/`inverse`, `PersistentLabel`-addressed) → `roots` inference (the codebase's first real `impl InferredField<P>`, real `DepHash` chain, delegates into `📈️polynomial-internals`' actual Sturm-sequence isolation + bisection refinement).
 
-Nothing was deleted. Every line of both files exists, verbatim, in its new home, mounted, compiling, and test-verified to produce byte-identical pass/fail results to the original. `🧮️math` itself was **not touched** — `🧮️cas`/`📈️polynomial` still live there too, unmodified. This is the "code exists twice, bounded duplication window" state the ticket describes as the expected mid-wave condition.
+This report supersedes the mid-wave version (git history has it, if the intermediate "step 1 only" state is ever needed).
 
-## 1. Coupling map (cas ↔ polynomial ↔ number/algebra)
-
-Grepped every `crate::` prefix in both files (`grep -oE "crate::[a-z_]+"`), then cross-checked each call site:
+## 1. Coupling map (cas ↔ polynomial ↔ number/algebra) — unchanged from the mid-wave finding, now load-bearing
 
 ```
-cas        → crate::number   (Rational, Integer, Natural — assume/expr/simplify/matrix/integrate/sums/ode/limits/rootof, ~35 call sites)
-cas        → crate::algebra  (MatG, VecG — matrix module's numeric solve path, polybridge's partial-fraction linear system)
-cas        → crate::polynomial (MonomialOrder, PolyM, PolyU, factor_integer_poly, AlgebraicReal, isolate_real_roots —
-                                  polybridge/rootof/limits/matrix::charpoly/integrate/sums/ode, ~15 call sites)
-cas        → crate::cas      (self-reference only — every submodule reaches sibling submodules via the full crate-root path,
-                                  e.g. `crate::cas::canon::make_symbol` called from `cas::expr`)
-polynomial → crate::number   (CommutativeRing/Field/GcdDomain/IntegralDomain/Ring traits, ModInt, primes, Integer/Natural/Rational —
-                                  polynomial is generic OVER this trait hierarchy, ~10 call sites)
-polynomial → crate::polynomial (self-reference only, same pattern as cas)
-polynomial → crate::cas      ZERO — grepped explicitly (`grep -n "super::cas\|crate::cas\|::cas::"`), no hits.
+cas        → number    (Rational, Integer, Natural — ~35 call sites)
+cas        → algebra   (MatG, VecG — matrix module, polybridge's partial-fraction solve)
+cas        → polynomial (MonomialOrder, PolyM, PolyU, factor_integer_poly, AlgebraicReal, isolate_real_roots — ~15 call sites)
+polynomial → number    (CommutativeRing/Field/GcdDomain/IntegralDomain/Ring, ModInt, primes, Integer/Natural/Rational — polynomial is GENERIC over this hierarchy)
+polynomial → cas       ZERO (grepped explicitly, confirmed twice)
+number/algebra → cas/polynomial  ZERO CODE (re-checked before deleting: both files DO mention `crate::cas`/`crate::polynomial` in doc-comment PROSE — e.g. algebra's own doc: "this crate must not depend on `crate::polynomial`" — but no actual `use`/call. Confirmed by reading every matched line before deleting anything.)
 ```
 
-**Verdict: a clean one-directional DAG.** `cas → polynomial → number`, `cas → number`, `cas → algebra` directly; polynomial never reaches back into cas. This is exactly the shape that makes "copy cas+polynomial together, leave number+algebra behind" a clean cut — no back-edge to sever, no mutual recursion between the two files being migrated.
+A clean one-directional DAG: `cas → polynomial → number`, `cas → algebra`/`number` directly, nothing pointing back. This is what made the cut safe.
 
-`polynomial` also uses `geometry::random::Rng` (twice, in `univariate`/`finite` test modules) via the plain crate-name path — this works unchanged because the `➗️mathematical` plugin already depends on `semio-framework-geometry` aliased as `geometry` in its own `Cargo.toml` (same alias math's `extern crate semio_framework_geometry as geometry;` provided). Neither file uses `thiserror`, `wasm_bindgen`, `serde`, or any of math's other `extern crate` aliases (`dsl_core`, `dsl_schema`, `dsl`, `graph_core`) — grepped and confirmed zero hits, so no other new dependency was needed.
+## 2. What's implemented (all four steps, in order)
 
-## 2. Destination architecture — what I found before writing any code
+**Step 1 — COPY.** `🧮️cas`/`📈️polynomial` copied verbatim into `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/{🌿️cas-internals,📈️polynomial-internals}/🦀️component.rs`. `crate::number`→`math::number`, `crate::algebra`→`math::algebra` (new `semio-framework-math` dependency, aliased `math`); `crate::cas::…`/`crate::polynomial::…` self-references left untouched, made to work by mounting BOTH crate-root-direct (`#[path=…] pub mod cas;` in the plugin's `📦️glue.rs`, exactly like `🧮️math`'s own glue did) rather than nested-with-reexport — the first attempt (`mod component; pub use component::*;` nested under `inferences`) broke on `error[E0433]: cannot find canon in cas` because `mod canon` is non-`pub` and a glob re-export doesn't leak private items back out. Documented in both files' doc headers and the glue.rs comments.
 
-Read `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/` in full before touching it, per the brief. Two findings changed my plan:
+**Step 2 — new home compiles + tests run.** `cargo check -p semio-s-plugin-mathematical --all-targets` clean; migrated tests produced BYTE-IDENTICAL pass/fail counts to the original (166 passed/13 failed, same 13 names, cross-checked against `🧮️math`'s still-intact copy before deleting anything).
 
-**(a) The snapshot was JUST refactored away from inline domain fields.** `MathematicalSnapshot` (`🧬️schema/📸️snapshot/🦀️component.rs`) no longer holds `graph`/`geometry` directly — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`mathematical→C:text,table,value`) replaced them with three fixed composed CHILD slots (`notation: ArtifactChild<SemioTextSnapshot>`, `results: ArtifactChild<SemioTableSnapshot>`, `computed: ArtifactChild<SemioValueSnapshot>`), reconstructing `MathematicalGraph`/`MathematicalGeometry` from those children at the boundary (`mathematical_graph_geometry_from_children`). I checked whether the `value` child (`SemioValueSnapshot` — `Null/Bool/Int/Float/Str/Bytes/List/Map/Ref`, an untyped JSON-like graph) could host the equation `Expr` AST instead of adding new plugin fields, per the brief's "only add new artifact dirs if the existing one genuinely cannot host equations." It genuinely cannot: it has no operator/variable/assumption vocabulary, and structural mutations like "change coefficient of term 3" need a typed `Expr` enum to identify, not an untyped `Map`/`List` walk. **Conclusion (design, not yet implemented): a 4th field belongs directly on `MathematicalSnapshot` — `equation: EquationSnapshot` — parallel to, not routed through, the text/table/value composition contract**, which governs this plugin's competing content models for exactly those three kinds, not new domain content.
+**Step 2.5 — the vertical slice (this session's continuation), §3 below.**
 
-**(b) `InferredField<P>`/`DepHash` is real, but this plugin's own precedent argues against it for scalar derivations.** Read `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️component.rs` per the brief. But the *existing* `🧭topology` inference in this exact plugin uses the simpler `protocol::Inference<P>`/`InferenceSpec<P>` top-level trait with a plain `compute_mathematical_topology(&graph) -> MathematicalTopology` function — no `InferredField`, no `DepHash`. I found the reasoning documented verbatim elsewhere in the SAME codebase: `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/…/💡️inferences/📦bounds/🦀️component.rs`'s own doc comment: *"Block3d has no parent/child object graph … so this is a plain whole-snapshot derivation, not a per-entity `InferredField` chain: every vortex contributes independently to one aggregate box, there is nothing to invalidate incrementally."* An `Expr` AST is exactly this shape for `simplify`/`diff`/`integrate`/`limits`/etc — one whole-snapshot value in, one whole-snapshot value out, nothing to invalidate per-entity. **Design decision: use the plain `compute_X(snapshot) -> X` pattern (matching `📦bounds`/`🧭topology` precedent) for whole-Expr derivations, and reserve `InferredField<P>` for `roots` specifically** (`Key = usize` index into the root list — a genuine small indexed collection, and the brief's own named example `💡️inferences/🌱roots/`), where per-root caching is a defensible real use of the DAG mechanism. This is a documented deviation from a blanket reading of the brief's "each is an `impl InferredField<P>`," backed by the codebase's own precedent for exactly this shape of problem.
+**Step 3 — repoint consumers.** Census (`grep -rln "math::cas\|math::polynomial"` and broader `cas::\|polynomial::` excluding math/the new location itself, both re-run immediately before deleting): **zero** external consumers, twice. Nothing to repoint.
 
-## 3. What's implemented (Step 1 — COPY, done and verified)
+**Step 4 — delete + verify.** `rm -rf 🧮️math/🧮️cas 🧮️math/📈️polynomial`, removed both `#[path]` mounts + `pub mod cas;`/`pub mod polynomial;` from `🧮️math/📦️packages/🦀️rust/📦️glue.rs` in the same change, updated the crate's `Cargo.toml` `description` (no longer mentions CAS). `🔢️number`/`➕️algebra` and every other math subdir untouched — confirmed by `git status`-equivalent (only `🧮️cas`/`📈️polynomial` removed, only `📦️glue.rs`/`Cargo.toml` edited).
 
-Both files copied **verbatim** (`cp`, not retyped) into:
+## 3. The vertical slice — `roots`, end-to-end
 
-- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌿️cas-internals/🦀️component.rs` (6,323 → 6,335 lines, +12 doc-header lines)
-- `…/💡️inferences/📈️polynomial-internals/🦀️component.rs` (2,366 → 2,375 lines, +9 doc-header lines)
+### 3a. `EquationSnapshot` (new `#[state(persistent)]` field on `MathematicalSnapshot`)
 
-Physically placed under the facet's `💡️inferences/` dir — mirrors stdio's `📐️step` io facet's `🪜️ladder`/`📐️part21`/`🧱️brep` precedent for deep Rust-only helper dirs a facet's real leaves delegate into. Neither file is itself a `MutationKind` or `InferredField` leaf.
+Read the destination's CURRENT snapshot shape before adding anything: `MathematicalSnapshot` was JUST refactored (ticket `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `mathematical→C:text,table,value`) to hold three composed CHILD slots (`notation`/`results`/`computed`, each an `ArtifactChild<S>` into a stdio subset) instead of inline domain fields. Checked whether `computed`'s `SemioValueSnapshot` (an untyped `Null/Bool/Int/Float/Str/Bytes/List/Map/Ref` JSON-like graph) could host the equation instead of adding a new field — it can't: no operator/variable vocabulary, and label-addressed structural mutations need a typed enum to address, not an untyped tree walk. So `equation: EquationSnapshot` is a FOURTH, plain (non-`#[child]`) persistent field, added directly — not routed through the child-composition contract, which governs this plugin's competing text/table/value content models specifically, not new domain content.
 
-**Edits made to the copies** (mechanical, sed + 2 doc headers, nothing else):
-- `crate::number` → `math::number`, `crate::algebra` → `math::algebra` (all ~35+~10 occurrences, code AND doc-comment prose) — these two stay in `🧮️math` for now, reached through a new `extern crate semio_framework_math as math;` dependency.
-- `crate::cas::…` / `crate::polynomial::…` self-references: **left untouched, zero edits.**
+`EquationSnapshot { expr: EquationNode, next_label: u64 }`. `EquationNode { label: EquationNodeLabel(u64), kind: EquationNodeKind }`, `EquationNodeKind ∈ {Integer{lexeme}, Rational{numer,denom}, Symbol{name}, Add{terms}, Mul{factors}, Pow{base,exponent}}` — a deliberately separate, plain, serde-friendly type from `cas::expr::Expr` (which has no `Serialize`/`Deserialize` and whose private `Node`/hash-cache invariants are only safe to build through `canon.rs`'s smart constructors — a naive field-by-field deserialize would violate them). Bridged to/from `cas::expr::Expr` through `cas`'s PUBLIC constructor/accessor API only (`Expr::kind()`, `Expr::integer`/`from(Rational)`/`symbol`/`add`/`mul`/`pow`) — `equation_node_to_expr`/`expr_to_equation_node` in `📸️snapshot/🦀️component.rs`. Scope: `Integer`/`Rational`/`Symbol`/`Add`/`Mul`/`Pow` only, enough for a single-variable polynomial — `Fn`/`Piecewise`/`Rel`/`Wild`/`RootOf`/`Constant` are explicitly out of scope this wave (documented in the type's own doc comment, not silently dropped: `expr_to_equation_node` falls back to `Integer(0)` for anything outside scope rather than panicking).
 
-**Mounting** (`✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📦️glue.rs`): first attempt mounted the two files as `mod component; pub use component::*;` nested under `…schema::inferences` — this **broke the build** (`error[E0433]: cannot find canon in cas`, 13 occurrences) because `mod canon { … }` inside `cas`'s component.rs is non-`pub`, and Rust privacy is structural: a `pub use X::*` re-export does not leak `X`'s private items back out through the alias, no matter how many wrapper modules point at it. Fixed by mounting **directly at crate root** — `#[path = "…/🌿️cas-internals/🦀️component.rs"] pub mod cas;` / same for `polynomial` — exactly mirroring how `🧮️math`'s own `glue.rs` mounted them, which is the only way every `crate::cas::…` (including references to non-`pub` inner modules) keeps resolving unedited.
+**Label addressing — `EquationNodeLabel`, not a positional path.** This is the part the coordinator flagged explicitly. A `u64` issued at node birth, never reused, carried in the snapshot — mirrors `✳️brep`'s `PersistentLabel`. The concrete argument for why positional (`expr.children[2].children[0]`) is unsafe here, not hypothetical: `MathematicalSnapshot`'s OWN pre-existing `➕️insert-point`/`➖️remove-point` triad has exactly this bug, already found and documented (with root cause and dating, `git log` `2026-08-12 11:09:41`, before this ticket opened) in `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave4-reports/mathematical-report.md`: `remove-point`'s diff computes an index against `base`, then that diff gets applied to a DIFFERENT `state` whose collection length has changed — `insert_point_inverse_is_remove_point_at_same_index` fails because the base-relative index silently resolves to the wrong element. `EquationNodeLabel` cannot have this failure mode by construction: `find`/`replace` walk the WHOLE tree looking for the exact label, never index into a positionally-addressed slot, so an unrelated insert/delete elsewhere in the tree cannot shift what a label resolves to. (This pre-existing bug is STILL failing, unfixed, unrelated to this wave's change — see §5.)
 
-`Cargo.toml`: added `semio-framework-math = { path = "…/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }`. Verified no dependency cycle (math is a `role = "framework"` crate, never depends on plugins).
+Text/binary codecs extended: `equation` round-trips as hex-encoded `serde_json` (text) / length-prefixed JSON bytes (binary) — no handcrafted grammar yet (documented as future work), consistent with how the child-handle half of the existing codec already trades a minimal wire format for a real one. `🗣️example.dsl.semio` (the plugin's fixture) updated with a real `equation=` line (hand-verified to deserialize correctly, not hand-waved) rather than adding a backward-compat "missing equation line" fallback — CLAUDE.md's no-legacy-support rule; there are no persisted users to migrate.
 
-## 4. Verification (real commands, real output)
+### 3b. `change-coefficient` — the authoring mutation triad
 
+`🧬️mutations/🔄️change-coefficient/{🦠️mutation,🔺️diff,↩️inverse}/🦀️component.rs` + `🟦️component.ts` per leaf, mirroring `🏷️change-node-label`'s exact shape. Verb `change` (from `APPROVED_VERBS`), entity `coefficient`, record `ChangedCoefficient`.
+
+- **Payload**: `{ label: EquationNodeLabel, numer: String, denom: String }` — `numer`/`denom` are `Integer` decimal lexemes (never `f64`), `denom == "1"` means a plain integer coefficient.
+- **`diff(payload, base)`**: looks up `payload.label` in `base.equation`; if it resolves to an `Integer`/`Rational` LEAF (not any other node kind), replaces it — otherwise the diff is a no-op (equation unchanged). Computed purely from `(payload, base)`, never apply-then-capture.
+- **`inverse(payload, base)`**: looks up `payload.label` in `base` (the PRE-mutation state) and returns a `ChangeCoefficient` restoring base's own value — `Vec::new()` if the label isn't a numeric leaf in `base`.
+
+Registered in `MathematicalMutation` (15th variant now), and — because this plugin hand-rolls its own `OpText`/`OpBinary` (`🧬️mutations/📝️text/🦀️component.rs`, NOT macro-generated) — added a `change-coefficient` keyword case to the text grammar, tag `14` to the binary codec, and a demo case to the existing exhaustive round-trip test (`op_text_binary_roundtrip_law`), which passed.
+
+Tests (extended the EXISTING `🧬️mutations/🦀️component.rs` test module, no new test files): `change_coefficient_obeys_the_inverse_law` (via the same `protocol::testkit::assert_mutation_inverse_law` helper every other triad's law test uses), `change_coefficient_sets_the_targeted_numeric_leaf`, `change_coefficient_at_an_unknown_label_is_a_no_op`. `semantic_kinds_cover_every_variant`'s count updated 14→15 (a real count that changed because a real variant was added, not a hidden gate).
+
+### 3c. `roots` — the first real `InferredField<P>` in the codebase
+
+Grepped repo-wide for `impl.*InferredField for|impl InferredField<` before writing anything: **zero hits** anywhere outside `InferredField`'s own definition file's unit tests. Every currently-named inference in the ENTIRE codebase (`🧭topology`, `📦bounds`, `flat-position`, …) documents, in its own doc comment, why it uses the plain `compute_X(snapshot) -> X` pattern instead ("a plain whole-snapshot derivation… nothing to invalidate incrementally"). `roots` is the genuine fit: real roots of a polynomial form a small INDEXED COLLECTION with no cross-root dependency — exactly `InferredField::Key`'s intended shape (`Key = usize`, index into the isolated-root list; no parents, since roots don't depend on each other).
+
+`💡️inferences/🌱roots/🦀️component.rs`:
+- **`plan(snapshot)`**: extracts a single-variable, INTEGER-coefficient polynomial from `snapshot.equation` (a real structural walk over `EquationNode` — `Add`/`Mul`/`Pow(Symbol,IntegerLit)`/`Integer`/`Rational{denom==1}`; anything else, including a second variable or a non-integer coefficient, returns `None`); if extraction succeeds, calls `polynomial::roots::isolate_real_roots` (Sturm-sequence sign-change counting — real math, not reimplemented, delegated straight into `📈️polynomial-internals`) and plans one step per isolated interval. Out-of-scope equations plan ZERO steps — an empty root list, never a panic or a wrong answer (tested explicitly).
+- **`dep_input(snapshot, key, _)`**: the polynomial's own coefficients (so ANY coefficient edit invalidates EVERY root's cache entry — roots are a global function of all coefficients) plus `key`'s own isolating interval bytes.
+- **`compute(snapshot, key, _)`**: re-isolates, bisects the `key`-th interval to width `1/10^9` via `polynomial::roots::refine_root` (again, real delegated math), returns the refined interval's midpoint as `f64`.
+- **`compute_mathematical_roots(snapshot)`**: calls `protocol::infer_field::<MathematicalSnapshot, MathematicalRootsField>(snapshot, None)` — the REAL plan→dep-hash→compute orchestration `InferredField` exists for (found in `💡️inference/🦀️component.rs`'s own test module, the only place in the repo that had ever exercised it), not a hand-rolled loop.
+
+Wired into `MathematicalInference` (`roots: Vec<MathematicalRoot>`, `#[state(inferred)]`) alongside `topology`, registered in `InferenceSpec::fields()`.
+
+**Proof it actually computes roots, not just compiles**: `compute_mathematical_roots_finds_one_and_two` builds `x² − 3x + 2` as a labeled tree by hand and asserts the two computed roots are `1.0` and `2.0` within `1e-6` — this test PASSED (real output below). `dep_input_changes_when_a_coefficient_changes` proves the `DepHash` chain is actually wired to `equation`, not a constant (also passed).
+
+## 4. Test arithmetic — every number below is from a real run, commands and outputs in the scratch files named
+
+**Plugin (`semio-s-plugin-mathematical`), after the full vertical slice, `cargo test --all-targets`** (`scratch-m3b-fulltest2.txt`):
 ```
-$ touch "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📦️glue.rs"
+test result: FAILED. 248 passed; 14 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.63s
+```
+14 failures = the 13 migrated cas/polynomial failures (unchanged names, unchanged panic sites, just a new file path in the message) + 1 pre-existing, already-documented, unrelated `insert_point_inverse_is_remove_point_at_same_index` (see §3a's label-addressing discussion — this is the SAME bug that motivates `EquationNodeLabel`, still unfixed, out of this wave's scope). 248 passed = 238 (the internals-copy baseline from step 1/2) + 10 new tests from the vertical slice, ALL passing: 6 in `🌱roots`, 1 in the top-level inference test module, 3 in the mutations test module. Zero previously-passing tests broke; zero previously-failing tests started passing unexplained.
+
+**`🧮️math` (`semio-framework-math`), after deletion, `cargo test --lib`** (`scratch-m3c-math-test.txt`):
+```
+test result: FAILED. 1402 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.83s
+```
+Wave-0 baseline was **1568 passed / 15 failed = 1583 total**. `1583 − 1404 (new total) = 179` — **exactly** 166+13, the cas/polynomial tests that emigrated. The 2 remaining failures are `graph::dsl::tests::parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error` and `graph::dsl::wire::tests::dag_from_wire_literal_rejects_unexpected_char` — cross-checked line-for-line against `scratch-w0-baseline-failures-sorted.txt`: **both were already in the Wave-0 baseline**, in a module (`🕸️graph/🗣️dsl`) this wave never touched. `1568 − 1402 = 166` (matches cas/polynomial's passing count exactly); `15 − 2 = 13` (matches cas/polynomial's failing count exactly).
+
+**Verification commands, real, run in this order:**
+```
+$ touch "…/➗️mathematical/📦️packages/🦀️rust/📦️glue.rs"
 $ RUSTC_WRAPPER="" CARGO_TARGET_DIR="…/🎯️target" cargo check -p semio-s-plugin-mathematical --all-targets
-    Finished `dev` profile [unoptimized] target(s) in 1.79s
+    Finished `dev` profile [unoptimized] target(s) in 2.80s          (0 errors — scratch-m3b-check1.txt)
+
+$ RUSTC_WRAPPER="" CARGO_TARGET_DIR="…/🎯️target" cargo test -p semio-s-plugin-mathematical --all-targets
+    test result: FAILED. 248 passed; 14 failed; …                     (scratch-m3b-fulltest2.txt)
+
+$ touch "…/🧮️math/📦️packages/🦀️rust/📦️glue.rs"
+$ RUSTC_WRAPPER="" CARGO_TARGET_DIR="…/🎯️target" cargo check -p semio-framework-math --all-targets
+    Finished `dev` profile [unoptimized] target(s) in 3.99s          (0 errors — scratch-m3c-math-check.txt)
+
+$ RUSTC_WRAPPER="" CARGO_TARGET_DIR="…/🎯️target" cargo test -p semio-framework-math --lib
+    test result: FAILED. 1402 passed; 2 failed; …                     (scratch-m3c-math-test.txt)
 ```
-0 errors (`grep -c "^error\["` → `0`). 737 warnings, all pre-existing and unrelated (unnecessary-qualification lints in untouched files, one `ambiguous_glob_imports` `testkit` warning in the pre-existing `🧬️mutations/🦀️component.rs` from `os_spr::*`/`os_pack::*` glob overlap — not in a file I touched, not caused by my mount). Full output: `scratch-m3a-cargo-check2.txt`.
+Both `cargo check` runs are genuinely fresh (glue.rs `touch`ed immediately before each, `RUSTC_WRAPPER=""` throughout, `--all-targets` throughout — no `cargo check` without `--all-targets` was ever treated as sufficient).
 
-```
-$ RUSTC_WRAPPER="" CARGO_TARGET_DIR="…/🎯️target" cargo test -p semio-s-plugin-mathematical --lib
-test result: FAILED. 238 passed; 14 failed; 0 ignored; 0 measured; finished in 1.56s
-```
-Full output: `scratch-m3a-plugin-test1.txt`. Broken down by prefix:
+**Policy** (`bun ./📜️script.ts policy`, `scratch-m3c-policy-final.txt`, 23,849 high-priority breaches across 29 rules — IDENTICAL count to the pre-vertical-slice run, confirming zero new breaches from the new mutation triad/inference/schema field). Grepped explicitly for `change-coefficient`/`🌱roots`/`cas-internals`/`polynomial-internals`/`EquationSnapshot` in the full breach output: zero hits.
 
-| group | ok | failed | total |
-|---|---|---|---|
-| `cas::*` | 131 | 7 | 138 |
-| `polynomial::*` | 35 | 6 | 41 |
-| plugin-own (pre-existing, untouched) | 72 | 1 | 73 |
-| **total** | **238** | **14** | **252** |
+**Census, re-run immediately before deleting anything**: `grep -rln "math::cas\|math::polynomial"` and the broader `cas::\|polynomial::` (excluding math and the new plugin location) — both empty. Zero external consumers, confirmed twice, right before the irreversible step.
 
-Cross-checked against `🧮️math`'s own (still-intact, unremoved) copy:
-```
-$ RUSTC_WRAPPER="" CARGO_TARGET_DIR="…/🎯️target" cargo test -p semio-framework-math --lib -- cas:: polynomial::
-test result: FAILED. 166 passed; 13 failed; 1404 filtered out; finished in 1.77s
-```
-131+35 = 166 ok, 7+6 = 13 failed — **exact match**, same 13 test names, in both locations. This is the "test-count arithmetic" the brief asks for: the migrated copy produces byte-identical pass/fail results to the original. Full output: `scratch-m3a-math-crossref.txt`.
+## 5. Honest remainders — what this wave did NOT do
 
-**The 13 pre-existing failures** (12 named in the brief, actual count is 13 — the brief's own list, hand-counted, has 13 bullet items: `integrate`(1) + `limits`(1) + `ode`(2) + `sums`(3) + `polynomial::algebraic`(4) + `polynomial::finite`(1) + `polynomial::univariate`(1) = 13; "12" in the brief text appears to be a miscount against its own list, not a discrepancy I introduced):
+- **Only ONE mutation (`change-coefficient`) and ONE inference (`roots`) are wired.** The full verb table (create-term/delete-term/change-exponent/rename-variable/replace-expression/reorder-terms/create-assumption/delete-assumption/change-assumption — 9 more) and inference table (simplified/derivative/taylor_series/limit/factorization/integral/ode_solution/series_sum/solution_set/matrix_ops/transforms — 11 more) from the mid-wave design are still just a design, now proven-compatible with a real implemented instance of each category (one plain-mutation pattern via `change-coefficient`, one `InferredField` pattern via `roots`) but not replicated. Next step is mechanical repetition of a now-proven pattern, not fresh design risk.
+- **`EquationNode`'s vocabulary is `Integer`/`Rational`/`Symbol`/`Add`/`Mul`/`Pow` only** — no `Fn` (so no `sin`/`cos`/`exp`/etc in an authored equation yet), no `Piecewise`/`Rel`/`Wild`/`RootOf`/`Constant`. `roots` itself is further scoped to single-variable, integer-coefficient polynomials (rational coefficients, a second variable, or anything using an unsupported `Kind` all degrade to an empty root list, never a wrong answer or a panic — tested).
+- **`assumptions`/`domains`** (mentioned in the mid-wave mutation-verb design for `create-assumption` etc.) are not part of `EquationSnapshot` yet — would need to land alongside whichever wave implements those mutations.
+- **The `insert_point_inverse_is_remove_point_at_same_index` bug is still failing**, unfixed, exactly as documented in the prior wave's report — this wave's `EquationNodeLabel` design is a deliberate structural avoidance of the same bug CLASS, not a fix to the existing instance.
+- **No graphql/proto/json_schema facet leaves were extended** for the new `equation` field or the new mutation/inference — Rust + TypeScript only (which the ticket's own instructions specifically call for: "non-stub `component.ts`… Inference values need a `component.ts`"). The pre-existing `artifact-schema/facet-completeness` breach category (276 instances repo-wide before this wave, unchanged after) already reflects this as a known, repo-wide, pre-existing gap pattern, not one this wave introduced fresh.
 
-```
-cas::integrate::tests::integrate_simple_partial_fraction
-cas::limits::tests::limit_at_infinity_of_rational_function
-cas::ode::tests::bernoulli_ode
-cas::ode::tests::linear_first_order_ode
-cas::sums::tests::fourier_coefficients_of_a_polynomial_smoke_test
-cas::sums::tests::sum_of_k_from_1_to_n_is_gauss_formula
-cas::sums::tests::sum_of_k_squared_matches_known_hand_values
-polynomial::algebraic::tests::cbrt2_times_cbrt4_equals_2
-polynomial::algebraic::tests::neg_and_inv_hand_cases
-polynomial::algebraic::tests::root_of_selects_correct_irreducible_factor
-polynomial::algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4
-polynomial::finite::tests::is_irreducible_hand_cases
-polynomial::univariate::tests::interpolate_reconstructs_quadratic
-```
-All 13 migrated with their code, still failing, same names, same assertion sites (just a new file path in the panic message). None fixed, none deleted. **No test that was passing before is failing now, and none that was failing is now passing** — verified by exact name-for-name diff against `scratch-w0-baseline-failures-sorted.txt`.
+## 5b. Concurrent churn observed, not mine
 
-**One pre-existing, unrelated failure surfaced in the same run**: `…mutations::component::tests::insert_point_inverse_is_remove_point_at_same_index`. Not in a file I touched (I never edited `🧬️mutations/🦀️component.rs`, `➕️insert-point/`, or `➖️remove-point/`), deterministic (no RNG), and already fully documented with root cause and dating in `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave4-reports/mathematical-report.md` (a whole-collection-slot diff computed from `base` instead of live `state`, dated `2026-08-12 11:09:41` — before this ticket even opened, explicitly deferred to a future DiffKit rework). Not touched here, consistent with the prior wave's own decision.
+`git status` on `🧰️framework/🔨️modules/🧮️math/` shows modified/deleted entries this session never touched — `🎲️random/🦀️component.rs` (deleted), `📐️geometry/🦀️component.rs` (deleted), several `🕸️graph/*` and `🧩️wfc/*` files (modified), `build.rs`/`📋️project.json`/`📜️script.ts`/the TS package files (modified). This session's own edits to `🧮️math` are exactly two: `📦️packages/🦀️rust/📦️glue.rs` (mount removal) and `📦️packages/🦀️rust/Cargo.toml` (description) — every other `🧮️math` diff is another concurrent session's in-flight work (consistent with this repo's live-multi-session model). Both `cargo check`/`cargo test -p semio-framework-math` runs above passed cleanly against the live tree including that concurrent state, so it isn't blocking this wave — flagged here per policy, not re-investigated, not touched.
 
-**Policy check** (`bun ./📜️script.ts policy`, full output `scratch-m3a-policy.txt`, 23,878 lines / 23,849 pre-existing high-priority breaches across 29 rules, all repo-wide and pre-existing — `handcrafted-grammar/spec-distinctness`, `artifact-io/sniff-reality`, `taxonomy/dead-example-leaf`, etc., affecting dozens of unrelated plugins uniformly). Grepped explicitly for `cas-internals`/`polynomial-internals` in the full breach output: **zero hits** — the new dirs introduce no new breach of any kind, confirming the brief's claim that the taxonomy walker doesn't descend to subset depth for new-shape artifacts.
+## 6. Files touched this wave
 
-**Census for consumers** (step 3 precondition): `grep -rln "math::cas\|math::polynomial" --include="*.rs" .` (excl. `target`) → **empty**. Broader `grep -rln "cas::\|polynomial::"` excluding `🧮️math` itself → **empty**. Zero external consumers, confirmed twice with different patterns. Step 3 (repoint) is therefore trivially satisfied by construction — there was nothing to repoint.
+**Deleted**: `🧰️framework/🔨️modules/🧮️math/🧮️cas/` (whole dir), `🧰️framework/🔨️modules/🧮️math/📈️polynomial/` (whole dir).
 
-## 5. Mutation verb table (design — NOT implemented this wave)
+**Modified**: `🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📦️glue.rs` (removed 2 mounts), `🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/Cargo.toml` (description), `✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📦️glue.rs` (mounts + `extern crate semio_framework_math as math;`), `✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/Cargo.toml` (new dependency), `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🦀️component.rs` (`mathematical_snapshot_with_state`), `…/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/{🦀️component.rs, 📸️snapshot/🦀️component.rs, 🔺️diff/🦀️component.rs, 🔺️diff/📝️text/🦀️component.rs, 💡️inferences/🦀️component.rs, 🧬️mutations/🦀️component.rs, 🧬️mutations/📝️text/🦀️component.rs}`, `…/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`.
 
-`EquationSnapshot` (design): `{ expr: Expr, assumptions: BTreeMap<String, AssumeSet>, domains: BTreeMap<String, VariableDomain> }`, using `cas`'s own `Expr`/`Kind`/`AssumeSet` types as the persistent field's value type (these move under `🧬️schema/📸️snapshot/` as support types once implemented — they are NOT derived, they ARE the authoritative content, so they don't belong under `💡️inferences/` the way the calculus/polynomial operations do).
-
-| verb | payload | diff (from base) | inverse (from base) | why mutation not inference |
-|---|---|---|---|---|
-| `create-term` | `{ path: NodePath, term: Expr }` | insert `term` into the `Add`/`Mul` node at `path` | `delete-term` at the same resulting index | user typed a new addend/factor; nothing to compute |
-| `delete-term` | `{ path: NodePath }` | remove the node at `path` | re-insert the removed subexpr (captured from `base`) at the same index | user removed a term they authored |
-| `change-coefficient` | `{ path: NodePath, coefficient: Rational }` | replace the leading numeric factor at `path` | restore `base`'s original coefficient at `path` | direct numeric edit to authored content |
-| `change-exponent` | `{ path: NodePath, exponent: Expr }` | replace a `Pow` node's exponent at `path` | restore `base`'s original exponent | direct edit to an authored `Pow` |
-| `rename-variable` | `{ from: String, to: String }` | rewrite every `Symbol(from)` to `Symbol(to)` | `rename-variable { from: to, to: from }` | user relabels a symbol; simplify/diff/etc. are all downstream of this, not this itself |
-| `replace-expression` | `{ path: NodePath, expr: Expr }` | swap the whole subtree at `path` | restore `base`'s original subtree at `path` | wholesale authored substitution (e.g. swap `sin(x)` for `cos(x)`) — payload is user-authored, not computed |
-| `reorder-terms` | `{ path: NodePath, order: Vec<usize> }` | permute an `Add`/`Mul`'s children per `order` | the inverse permutation | display/authoring order is user intent, canonical order is `simplify`'s job (an inference) |
-| `create-assumption` | `{ symbol: String, operator: RelationalOperator, bound: Rational }` | insert into `assumptions[symbol]` | `delete-assumption { symbol, … }` | user asserts a fact (`x > 0`), never derived |
-| `delete-assumption` | `{ symbol: String, index: usize }` | remove one fact from `assumptions[symbol]` | re-insert the removed fact (captured from `base`) | inverse of `create-assumption` |
-| `change-assumption` | `{ symbol: String, index: usize, operator: …, bound: … }` | replace one fact in place | restore `base`'s original fact at that index | editing an already-authored assumption's bound/operator |
-
-All ten verbs are drawn from the closed `APPROVED_VERBS` set (`create`/`delete`/`change`/`rename`/`replace`/`reorder`) — no `set-*`/`update-*`/option-bag payload anywhere in this table. None of these were implemented this wave (see §7).
-
-## 6. Inference table (design — cross-referenced against what physically exists now)
-
-| inference | mechanism | compute() delegates to | status |
-|---|---|---|---|
-| `simplified: Expr` | plain `compute_X(snapshot)`, precedent §2(b) | `cas::simplify::simplify` (+ `cas::trig::trig_canon` as a candidate) | internals present, not wired |
-| `derivative: Expr` | plain `compute_X` | `cas::diff::diff` | internals present, not wired |
-| `taylor_series: Vec<Expr>` | plain `compute_X` | `cas::series::taylor_series` | internals present, not wired |
-| `limit: Option<Expr>` | plain `compute_X` | `cas::limits::limit` | internals present, not wired |
-| `roots: Vec<Root>` | **`InferredField<MathematicalSnapshot>`**, `Key = usize` | `cas::rootof` + `cas::solve` + `polynomial::roots` + `polynomial::algebraic` | internals present, not wired — the brief's own named example (`💡️inferences/🌱roots/`) |
-| `factorization: Vec<Expr>` | plain `compute_X` | `polynomial::factor` (via `cas::polybridge` Expr↔Poly bridge) | internals present, not wired |
-| `integral: Option<Expr>` | plain `compute_X` | `cas::integrate::integrate`/`integrate_definite` | internals present, not wired |
-| `ode_solution: Option<Expr>` | plain `compute_X` | `cas::ode` | internals present, not wired |
-| `series_sum: Option<Expr>` | plain `compute_X` | `cas::sums` | internals present, not wired |
-| `solution_set: SolutionSet` | plain `compute_X` | `cas::solve` | internals present, not wired |
-| `matrix_ops: MatrixResult` | plain `compute_X` | `cas::matrix` (+ `math::algebra::{MatG,VecG}`) | internals present, not wired |
-| `transforms: Expr` | plain `compute_X` | `cas::transforms` | internals present, not wired |
-
-"Internals present, not wired" means: the Rust code that would BE each `compute()` body already exists, compiles, and its own tests pass/fail exactly as before — it just isn't yet called from an `InferredField`/`Inference` impl, because that requires `EquationSnapshot` (§5) to exist first as something to compute FROM, and I did not build that this wave.
-
-## 7. What's NOT done, and why I stopped here
-
-- **`EquationSnapshot` schema addition** (§5's prerequisite) — not implemented. This needs a real `#[derive(ArtifactSchema)]` struct, DSL text/pack codecs (mirroring `MathematicalSnapshot`'s own handcrafted hex/bracket + LEB128 codecs), and wiring into `MathematicalBuilder` — a genuine new-feature surface, not a code-relocation task, and I judged it unsafe to rush under this session's remaining budget.
-- **All 10 mutation triads and 12 inferences from §5/§6** — designed, none implemented. Implementing them for real (not stubs) means: `MutationKind` impls with genuine `diff()`-from-`(payload,base)` and `inverse()`-from-`base` for tree-structured `Expr` edits (needs a `NodePath` addressing scheme I have not designed in code), plus `.ts` mirrors for each, plus wiring `roots` as a real `InferredField` with a real `DepHash` chain. This is the actual point of "turn everything into artifacts" and I did not want to deliver 22 rushed, likely-subtly-wrong CQRS leaves over a computer algebra system's edit semantics just to claim completion.
-- **Step 3 (repoint)** — trivially satisfied (§4 census: zero consumers), nothing to do.
-- **Step 4 (delete from `🧮️math`, remove `#[path]` mounts from `🧮️math/📦️packages/🦀️rust/📦️glue.rs`)** — deliberately NOT done. Per the brief's own ordering, deletion is safe only once the new home's tests run — they do — but the deeper intent of this migration ("artifacts, not library dumps") isn't met by internals-only relocation; deleting from `🧮️math` now would leave the plugin with a second copy of a raw library and no artifact surface on top of it, which is not an improvement over the status quo, just a relocation. I judged it more honest to leave the duplication window open, fully documented, than to close it prematurely.
-
-**Files touched this wave** (all under `✏️s/🔌️plugins/➗️mathematical/`, `🧮️math` completely untouched):
-- **Created**: `🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌿️cas-internals/🦀️component.rs`, `…/📈️polynomial-internals/🦀️component.rs`
-- **Modified**: `📦️packages/🦀️rust/📦️glue.rs` (mounts + `extern crate semio_framework_math as math;` + doc), `📦️packages/🦀️rust/Cargo.toml` (new dependency)
-
-Next wave should start from §5/§6 directly — the coupling map, verb table, and inference table are the actual design deliverable here, not just documentation of what was skipped.
+**Created**: `…/💡️inferences/{🌿️cas-internals,📈️polynomial-internals}/🦀️component.rs` (verbatim migration), `…/💡️inferences/🌱roots/{🦀️component.rs,🟦️component.ts}`, `…/🧬️mutations/🔄️change-coefficient/{🦠️mutation,🔺️diff,↩️inverse}/{🦀️component.rs,🟦️component.ts}`.

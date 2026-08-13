@@ -4,7 +4,7 @@ package semio.s.stdio.wav.inference;
 // 💡️ wav inference schema — real RIFF/WAVE `fmt ` + decoded `data` sample-count playback duration.
 
 message WavInference {
-  // @state inferred
+  // @derived
   WavDuration duration = 1;
 }
 

@@ -1,105 +1,105 @@
 /** 🧬️ CadDiff schema. */
 
 export interface CadDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: CadArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   id?: string;
-  /** @state persistent */
+  /** @state artifact */
   objects?: CadObjectsDelta;
-  /** @state persistent */
+  /** @state artifact */
   buildingObjects?: CadObjectsDelta;
-  /** @state persistent */
+  /** @state artifact */
   energyObjects?: CadObjectsDelta;
-  /** @state persistent */
+  /** @state artifact */
   structureClassicObjects?: CadObjectsDelta;
-  /** @state persistent */
+  /** @state artifact */
   referencesByModelDefinitionId?: Record<string, CadReferenceList>;
-  /** @state persistent */
+  /** @state artifact */
   nodes?: CadNodesDelta;
-  /** @state persistent */
+  /** @state artifact */
   shapeGeometry?: CadGeometry | null;
-  /** @state persistent */
+  /** @state artifact */
   buildingGeometry?: CadGeometry | null;
-  /** @state persistent */
+  /** @state artifact */
   energyGeometry?: CadGeometry | null;
-  /** @state persistent */
+  /** @state artifact */
   structureClassicGeometry?: CadGeometry | null;
-  /** @state persistent */
+  /** @state artifact */
   activeModelDefinitionId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectIds?: CadStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds?: CadStringList;
-  /** @state shared-ui */
+  /** @state presence */
   activeObjectId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   componentSelection?: CadComponentSelection;
-  /** @state shared-ui */
+  /** @state presence */
   selectedReferenceModelDefinitionId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   selectedReferenceId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   selectedPrimitiveId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   selectedPrimitiveKind?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeExampleId?: string | null;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementStep?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementPane?: string | null;
-  /** @state local-ui */
+  /** @state config */
   engagementSessionJson?: string | null;
-  /** @state local-ui */
+  /** @state config */
   lastFinalizedInteractionId?: string | null;
-  /** @state local-ui */
+  /** @state config */
   sunEnabled?: boolean;
-  /** @state local-ui */
+  /** @state config */
   sunAzimuth?: number;
-  /** @state local-ui */
+  /** @state config */
   sunElevation?: number;
-  /** @state local-ui */
+  /** @state config */
   sunIntensity?: number;
-  /** @state local-ui */
+  /** @state config */
   sunColor?: string;
-  /** @state local-ui */
+  /** @state config */
   camera?: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraBuilding?: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraEnergy?: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraStructureClassic?: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   dislocateShape?: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateBuilding?: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateEnergy?: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateStructureClassic?: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state local-ui */
+  /** @state config */
   terminology?: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredObjectId?: string | null;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetObjectId?: string | null;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetMode?: string | null;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetId?: number | null;
 }
 

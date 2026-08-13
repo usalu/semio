@@ -3,6 +3,6 @@ type BcfEntry {
   data: [Int!]!
 }
 type BcfArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [BcfEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [BcfEntry!]! @state(class: ARTIFACT)
 }

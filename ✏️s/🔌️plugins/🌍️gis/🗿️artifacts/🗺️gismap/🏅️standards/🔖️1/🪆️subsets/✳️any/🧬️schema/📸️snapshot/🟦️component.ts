@@ -1,11 +1,11 @@
 /** 🧬️ GIS map snapshot schema — persistent fields only. */
 
 export interface GisMapSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   positions: GisMapFeature[];
-  /** @state persistent */
+  /** @state artifact */
   routes: GisMapFeature[];
-  /** @state persistent */
+  /** @state artifact */
   regions: GisMapFeature[];
 }
 

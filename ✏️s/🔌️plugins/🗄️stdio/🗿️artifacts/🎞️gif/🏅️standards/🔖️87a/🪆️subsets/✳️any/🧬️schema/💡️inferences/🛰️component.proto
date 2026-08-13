@@ -4,7 +4,7 @@ package semio.s.stdio.gif.inference;
 // 💡️ Gif (87a) inference schema — logical screen geometry.
 
 message GifInference {
-  // @state inferred
+  // @derived
   GifDimensions dimensions = 1;
 }
 

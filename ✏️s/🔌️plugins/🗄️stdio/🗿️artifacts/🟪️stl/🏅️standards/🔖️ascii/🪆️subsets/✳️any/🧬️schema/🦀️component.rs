@@ -11,12 +11,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl")]
 pub struct StlArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub solid_name: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub triangles: Vec<crate::artifacts::stl::schema::snapshot::StlTriangle>,
 }

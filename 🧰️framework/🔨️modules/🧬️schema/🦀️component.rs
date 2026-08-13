@@ -75,19 +75,34 @@ impl SchemaCatalog {
 //#endregion 🔖️SchemaCatalog
 
 //#region 🔖️GraphQlStatePreamble
-/// 🔗 Shared GraphQL `@state` SDL preamble — declared once, never repeated per artifact.
+/// 🔗 Shared GraphQL `@state`/`@derived` SDL preamble — declared once, never repeated per artifact.
+/// `@state` names one of the four state lanes; `@derived` is the ORTHOGONAL derivation marker, never
+/// a fifth lane — a derived field is computed from a snapshot, so it is not state at all.
 pub const GRAPHQL_STATE_PREAMBLE: &str = "\
-enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT INFERRED }\n\
-directive @state(class: StateClass!) on FIELD_DEFINITION\
+enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }\n\
+directive @state(class: StateClass!) on FIELD_DEFINITION\n\
+directive @derived on FIELD_DEFINITION\
 ";
 //#endregion 🔖️GraphQlStatePreamble
 
 //#region 🔖️ArtifactSchemaFields
 /// ✨️ Per-artifact field → [`StateClass`] table emitted by [`ArtifactSchema`].
+///
+/// `field_states()` lists only STATE fields. Fields annotated `#[derived]` are computed from a
+/// snapshot rather than stored in any lane, so they carry no [`StateClass`] at all and are reported
+/// separately by [`ArtifactSchemaFields::derived_fields`] — the Rust twin of JSON Schema's
+/// `x-semio-derived: true` and GraphQL's `@derived`.
 pub trait ArtifactSchemaFields {
     fn artifact_schema_id() -> &'static str;
     fn field_states() -> &'static [(&'static str, StateClass)];
+    fn derived_fields() -> &'static [&'static str] {
+        &[]
+    }
 }
+
+/// 🏷️ Canonical JSON Schema key carrying the derivation marker, sibling of `x-semio-state` on the
+/// orthogonal axis. Its only legal value is `true`; an absent key means "not derived".
+pub const JSON_SCHEMA_DERIVED_KEY: &str = "x-semio-derived";
 //#endregion 🔖️ArtifactSchemaFields
 
 //#region 🔖️ArtifactCompositionSpec
@@ -548,7 +563,7 @@ pub fn app_schema_graphql_sdl(key: &str) -> Option<String> {
     })
 }
 
-/// ✅ Validates a descriptor's JSON Schema leaves: each non-empty facet must be an object schema whose properties all carry a valid `x-semio-state` matching the facet's expected [`StateClass`] (`local-ui` for config, `shared-ui` for presence). Panics with a descriptor-id-prefixed message on the first violation — call this from a plugin's own tests before [`register_app_schema_descriptor`].
+/// ✅ Validates a descriptor's JSON Schema leaves: each non-empty facet must be an object schema whose properties all carry a valid `x-semio-state` matching the facet's expected [`StateClass`] (`config` for config, `presence` for presence). Panics with a descriptor-id-prefixed message on the first violation — call this from a plugin's own tests before [`register_app_schema_descriptor`].
 pub fn validate_registered_app_descriptor(descriptor: &AppSchemaDescriptor) {
     for (facet, leaves) in [("config", &descriptor.config), ("presence", &descriptor.presence)] {
         if leaves.json_schema.trim().is_empty() {
@@ -573,7 +588,7 @@ pub fn validate_registered_app_descriptor(descriptor: &AppSchemaDescriptor) {
                 .unwrap_or_else(|| panic!("{}: {facet} property `{name}` missing x-semio-state", descriptor.id));
             let class = parse_state_class_kebab(raw)
                 .unwrap_or_else(|| panic!("{}: {facet} property `{name}` has invalid x-semio-state `{raw}`", descriptor.id));
-            let expected = if facet == "config" { StateClass::LocalUi } else { StateClass::SharedUi };
+            let expected = if facet == "config" { StateClass::Config } else { StateClass::Presence };
             assert_eq!(
                 class, expected,
                 "{}: {facet} field `{name}` must be {:?}",
@@ -591,12 +606,10 @@ pub fn validate_registered_app_descriptor(descriptor: &AppSchemaDescriptor) {
 /// without inventing a parallel source of truth. The kernel already owns [`StateClass`].
 pub fn parse_state_class_kebab(value: &str) -> Option<StateClass> {
     match value {
-        "persistent" => Some(StateClass::Persistent),
-        "shared-ui" => Some(StateClass::SharedUi),
-        "local-ui" => Some(StateClass::LocalUi),
-        "preview" => Some(StateClass::Preview),
-        "effect" => Some(StateClass::Effect),
-        "inferred" => Some(StateClass::Inferred),
+        "artifact" => Some(StateClass::Artifact),
+        "config" => Some(StateClass::Config),
+        "presence" => Some(StateClass::Presence),
+        "transient" => Some(StateClass::Transient),
         _ => None,
     }
 }
@@ -604,12 +617,10 @@ pub fn parse_state_class_kebab(value: &str) -> Option<StateClass> {
 /// 🏷️ Canonical kebab spelling of a [`StateClass`] for JSON Schema `x-semio-state`.
 pub fn state_class_kebab(class: StateClass) -> &'static str {
     match class {
-        StateClass::Persistent => "persistent",
-        StateClass::SharedUi => "shared-ui",
-        StateClass::LocalUi => "local-ui",
-        StateClass::Preview => "preview",
-        StateClass::Effect => "effect",
-        StateClass::Inferred => "inferred",
+        StateClass::Artifact => "artifact",
+        StateClass::Config => "config",
+        StateClass::Presence => "presence",
+        StateClass::Transient => "transient",
     }
 }
 //#endregion 🔖️StateClassKebab
@@ -624,20 +635,20 @@ mod tests {
     #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
     #[artifact_schema(id = "s.wave3.synthetic")]
     struct SyntheticArtifact {
-        #[state(persistent)]
+        #[state(artifact)]
         schema: String,
-        #[state(persistent)]
+        #[state(artifact)]
         label: String,
-        #[state(shared_ui)]
+        #[state(presence)]
         active_id: Option<String>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
     #[artifact_schema(id = "s.wave3.synthetic")]
     struct SyntheticSnapshot {
-        #[state(persistent)]
+        #[state(artifact)]
         schema: String,
-        #[state(persistent)]
+        #[state(artifact)]
         label: String,
     }
 
@@ -648,8 +659,8 @@ mod tests {
   "additionalProperties": false,
   "required": ["schema", "label"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "label": { "type": "string", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "label": { "type": "string", "x-semio-state": "artifact" }
   }
 }"#;
 
@@ -699,16 +710,16 @@ mod tests {
     #[derive(ArtifactSchema)]
     #[artifact_schema(id = "s.wave3.composite")]
     struct CompositeArtifact {
-        #[state(persistent)]
+        #[state(artifact)]
         #[child(kind = "s.stdio.mesh")]
         primary_mesh: ArtifactChild<()>,
-        #[state(persistent)]
+        #[state(artifact)]
         #[child(kind = "s.stdio.image")]
         textures: Vec<ArtifactChild<()>>,
-        #[state(persistent)]
+        #[state(artifact)]
         #[link_slot(roles("base", "material"))]
         base_material: ArtifactLink,
-        #[state(persistent)]
+        #[state(artifact)]
         label: String,
     }
     //#endregion 🔖️ArtifactCompositionFixture
@@ -786,18 +797,51 @@ mod tests {
 
     #[test]
     fn graphql_state_preamble_matches_normative_sdl() {
-        assert!(GRAPHQL_STATE_PREAMBLE.contains("enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT INFERRED }"));
+        assert!(GRAPHQL_STATE_PREAMBLE.contains("enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }"));
         assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @state(class: StateClass!) on FIELD_DEFINITION"));
+        assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @derived on FIELD_DEFINITION"));
     }
 
     #[test]
-    fn state_class_kebab_round_trips_every_variant_including_inferred() {
-        for class in [StateClass::Persistent, StateClass::SharedUi, StateClass::LocalUi, StateClass::Preview, StateClass::Effect, StateClass::Inferred] {
+    fn state_class_kebab_round_trips_exactly_the_four_lanes() {
+        for class in [StateClass::Artifact, StateClass::Config, StateClass::Presence, StateClass::Transient] {
             let kebab = state_class_kebab(class);
             assert_eq!(parse_state_class_kebab(kebab), Some(class));
         }
-        assert_eq!(state_class_kebab(StateClass::Inferred), "inferred");
+        assert_eq!(state_class_kebab(StateClass::Artifact), "artifact");
+        assert_eq!(state_class_kebab(StateClass::Config), "config");
+        assert_eq!(state_class_kebab(StateClass::Presence), "presence");
+        assert_eq!(state_class_kebab(StateClass::Transient), "transient");
     }
+
+    #[test]
+    fn retired_state_vocabulary_no_longer_parses() {
+        for retired in ["persistent", "shared-ui", "local-ui", "preview", "effect", "inferred", "identity"] {
+            assert_eq!(parse_state_class_kebab(retired), None, "`{retired}` must not resolve to a state lane");
+        }
+    }
+
+    //#region 🔖️DerivedAxis
+    /// 💡️ Derivation travels on its own axis: `#[derived]` fields carry no [`StateClass`] and are
+    /// reported by `derived_fields()`, never by `field_states()`.
+    #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+    #[artifact_schema(id = "s.wave3.synthetic.inference")]
+    struct SyntheticInference {
+        #[derived]
+        topology: String,
+        #[derived]
+        depth: u32,
+    }
+
+    #[test]
+    fn derived_fields_leave_the_state_class_axis_entirely() {
+        assert!(SyntheticInference::field_states().is_empty(), "a #[derived] field is not state");
+        assert_eq!(SyntheticInference::derived_fields(), &["topology", "depth"]);
+        assert_eq!(SyntheticInference::artifact_schema_id(), "s.wave3.synthetic.inference");
+        assert!(SyntheticSnapshot::derived_fields().is_empty(), "state-only structs derive an empty derived table");
+        assert_eq!(JSON_SCHEMA_DERIVED_KEY, "x-semio-derived");
+    }
+    //#endregion 🔖️DerivedAxis
 
     #[test]
     fn schema_catalog_still_registers_json() {

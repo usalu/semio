@@ -15,36 +15,36 @@
     "wiresFixture": {
       "title": "DslValue",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "boardFixture": {
       "title": "DslValue",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
-      "x-semio-state": "shared-ui",
+      "x-semio-state": "presence",
       "type": "array",
       "items": {
         "type": "string"
       }
     },
     "dragNodeId": {
-      "x-semio-state": "preview",
+      "x-semio-state": "artifact",
       "type": "string"
     },
     "dragLastX": {
-      "x-semio-state": "preview",
+      "x-semio-state": "artifact",
       "type": "number",
       "format": "double"
     },
     "dragLastY": {
-      "x-semio-state": "preview",
+      "x-semio-state": "artifact",
       "type": "number",
       "format": "double"
     },
     "locale": {
-      "x-semio-state": "local-ui",
+      "x-semio-state": "config",
       "type": "string"
     }
   },

@@ -137,6 +137,13 @@ mod tests {
 
     #[test]
     fn export_actions_wire_to_real_layout_exporters() {
+        // 🌉️ SVG/PDF export routes through stdio's real `s.stdio.semio/v1/drawing`→svg bridge
+        // (`io_dispatch`, ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT
+        // W5b) — under `cargo nextest`'s per-test process isolation this registration must happen in
+        // THIS test's own process; found missing (pre-existing gap, unrelated to composition work),
+        // fixed by mirroring the sibling registration call already used in
+        // `⚙️engine/🎬️scene/🦀️component.rs`'s own SVG export test.
+        crate::artifacts::layout::io::ensure_stdio_semio_drawing_registered();
         let mut app = layout_app();
         let exports: Vec<(LayoutCommand, &str)> = vec![
             (LayoutCommand::ExportPng(export_png::ExportPng { page_id: Some("page-1".into()) }), "image/png"),

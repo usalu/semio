@@ -20,7 +20,7 @@ use super::bounds::{compute_las_bounds, LasBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.las.inference")]
 pub struct LasInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: LasBounds,
 }
 

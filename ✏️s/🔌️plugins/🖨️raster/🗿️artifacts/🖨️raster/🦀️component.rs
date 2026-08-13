@@ -176,6 +176,117 @@ pub struct RasterImageAsset {
 /// 📸️ Persisted raster snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 //#endregion 🔖️Types
 
+//#region 🧩️Composition
+/// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "raster→C:image layers
+/// R:drawing"): a pixel layer's real image bytes used to live INLINE on `RasterSnapshot.assets:
+/// BTreeMap<String, RasterImageAsset>` (a duplicated bytes-blob type, never `s.stdio.semio/v1/image`
+/// itself). `assets` is now `BTreeMap<String, RasterAssetChild>` — one composed `s.stdio.semio.image`
+/// CHILD per asset id, content-addressed, never embedded bytes. `image_key: Option<String>` on
+/// `RasterLayerNode::Pixel` is UNCHANGED — it still addresses into this same id-keyed collection, only
+/// the map's VALUE type changed from bytes to a handle. `drawing` (`SemioDrawingSnapshot`, used by
+/// `🚪️io`'s SVG export/DWG import bridge) was checked and found to be ALREADY a pure, non-persisted IO
+/// conversion — raster never owns/duplicates a `drawing` field, it only ever calls stdio's real
+/// `SemioDrawingSnapshot`/`DrawNode` types directly at conversion time (`drawing_snapshot_from_raster`/
+/// `drawing_snapshot_from_dwg`, `🚪️io/🦀️component.rs`). That already satisfies "consumes/reads drawing
+/// content but doesn't own it" — no `ArtifactLink` was needed because there was no persisted/duplicated
+/// drawing field to convert.
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+
+pub type RasterAssetChild = store::ArtifactChild<SemioImageSnapshot>;
+
+fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RasterAssetChild {
+    let child_id = format!("raster-asset-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle, hashed off the RAW `(mime, data)` bytes — the
+/// fallback shape used only when the bytes can't be decoded into real `SemioImageSnapshot` content
+/// (see `mint_and_stash_asset`), and by pure-codec tests that need SOME stable handle without
+/// exercising the real png bridge. Prefer `mint_and_stash_asset` at every real call site.
+pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    asset.mime.hash(&mut hasher);
+    asset.data.hash(&mut hasher);
+    mint_asset_child_handle(asset_id, hasher.finish())
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle, hashed off the composed child's own CANONICAL
+/// content (`SemioImageSnapshot`'s real pack bytes) rather than the source encoding's raw bytes —
+/// this is the handle `mint_and_stash_asset` actually persists whenever decode succeeds. Necessary
+/// because two different (but pixel-identical) PNG byte streams — e.g. a hand-authored fixture vs.
+/// this plugin's own re-encode of the SAME decoded content — are NOT byte-identical in general
+/// (different encoders/compression settings), so hashing raw bytes would mint two different handles
+/// for what is honestly the same image; hashing the canonical DECODED content instead makes
+/// `decode → cache → re-encode → decode` idempotent at the handle level, which `add-layer-asset`'s
+/// inverse (`🧬️mutations/🖇️add-layer-asset/↩️inverse`) depends on to restore the exact prior handle.
+fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image).hash(&mut hasher);
+    mint_asset_child_handle(asset_id, hasher.finish())
+}
+
+/// 🩹️ Ephemeral working-scene cache (`EngineRep` contract): no `LinkResolver`/child-dispatch seam
+/// exists in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
+/// read-only), so the app layer cannot resolve a `RasterAssetChild` handle back to its real decoded
+/// `SemioImageSnapshot` content through the framework. This `thread_local!` bridges that gap — matches
+/// `➗️mathematical`'s `MATH_SCRATCH`/`🌊️flow`'s `FLOW_SCRATCH` pattern exactly: keyed by `child_id`
+/// (content-addressed, so identical bytes always land in the identical slot), populated at
+/// mutation-diff-build time (`mint_and_stash_asset`, called from every `assets` diff-apply site) and at
+/// fixture-construction time (`semio_fixture_snapshot`/`empty_raster_document`), read through the ONE
+/// `raster_asset` accessor every render/export/inference call site funnels through. **Staleness gap,
+/// documented honestly**: store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a live
+/// session's cache can go stale relative to a snapshot's `assets` handles across an undo/redo spanning a
+/// process boundary; every read fails soft (`None`) on a cache miss, never panics — the same gap every
+/// prior exemplar in this ticket (lowpoly/cad/writer/mathematical) documents rather than silently papers
+/// over. Never a durable struct field, never derived incrementally from itself, droppable at any instant.
+thread_local! {
+    static RASTER_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+pub fn stash_raster_asset(child_id: &str, image: SemioImageSnapshot) {
+    RASTER_SCRATCH.with(|cache| { cache.borrow_mut().insert(child_id.to_string(), image); });
+}
+
+pub fn cached_raster_asset(child_id: &str) -> Option<SemioImageSnapshot> {
+    RASTER_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
+}
+
+/// 🌉️ The single funnel-through "add real content" primitive: converts the real bytes into the
+/// composed child's own real content (`SemioImageSnapshot`, via the real `🚪️io` png↔semio/image
+/// bridge — never a stub), mints the CANONICAL content-addressed handle off that decoded content
+/// (`image_content_child_handle`), and stashes it into the working-scene cache. An unsupported mime
+/// OR undecodable bytes (e.g. a placeholder/malformed PNG in a test fixture) fall back to the
+/// raw-bytes handle (`image_asset_child_handle`) and honestly leave the cache slot UNPOPULATED —
+/// "no content" is the fail-soft outcome (a clean, documented `raster_asset` cache-miss), never a
+/// fabricated placeholder. Every call site that used to do `assets.insert(id, RasterImageAsset{..})`
+/// now calls this instead, and gets back only the handle.
+pub fn mint_and_stash_asset(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
+    match crate::artifacts::raster::io::semio_image_snapshot_from_raster_asset(asset) {
+        Ok(image) => {
+            let handle = image_content_child_handle(asset_id, &image);
+            stash_raster_asset(&handle.child_id, image);
+            handle
+        }
+        Err(_) => image_asset_child_handle(asset_id, asset),
+    }
+}
+
+/// 🌉️ The single read accessor every render/export/inference call site funnels through — resolves
+/// `asset_id` (the SAME id `image_key` already addressed under the old inline-bytes shape) through the
+/// persisted handle map, then through the working-scene cache, then back through the real
+/// `SemioImageSnapshot` → `RasterImageAsset` converter. `None` on either a missing handle OR a cold
+/// cache — fails soft, documented above, never panics.
+pub fn raster_asset(assets: &BTreeMap<String, RasterAssetChild>, asset_id: &str) -> Option<RasterImageAsset> {
+    let handle = assets.get(asset_id)?;
+    let image = cached_raster_asset(&handle.child_id)?;
+    crate::artifacts::raster::io::raster_asset_from_semio_image_snapshot(&image).ok()
+}
+//#endregion 🧩️Composition
+
 //#region 🔖️Operations
 /// 🩹️ Sparse patch applied to a single `RasterLayerNode` — the `PatchLayer` operation's payload, and
 /// (with fields swapped for their prior values) its own mechanical inverse.

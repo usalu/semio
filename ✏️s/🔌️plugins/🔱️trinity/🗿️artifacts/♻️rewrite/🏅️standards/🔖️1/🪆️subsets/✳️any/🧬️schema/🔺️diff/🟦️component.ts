@@ -1,35 +1,35 @@
 /** 🧬️ Rewrite diff schema — sparse field delta. */
 
 export interface RewriteDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: RewriteArtifact;
-  /** @state persistent */
+  /** @state artifact */
   beforeFixtureJson?: string;
-  /** @state persistent */
+  /** @state artifact */
   lhsJson?: string;
-  /** @state persistent */
+  /** @state artifact */
   rhsJson?: string;
-  /** @state persistent */
+  /** @state artifact */
   parameterBindings?: Record<string, PropertyValue | null>;
-  /** @state persistent */
+  /** @state artifact */
   ruleLayout?: Record<string, LayoutPoint | null>;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds?: RewriteStringList;
-  /** @state shared-ui */
+  /** @state presence */
   activeHoverVar?: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeSelectVar?: string;
-  /** @state shared-ui */
+  /** @state presence */
   lodModeByWindow?: Record<string, string | null>;
-  /** @state local-ui */
+  /** @state config */
   beforePaneCamera?: Camera;
-  /** @state local-ui */
+  /** @state config */
   reorganizeEpoch?: number;
-  /** @state local-ui */
+  /** @state config */
   hoverEpoch?: number;
-  /** @state local-ui */
+  /** @state config */
   selectEpoch?: number;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

@@ -8,42 +8,42 @@
     "artifact": {
       "title": "CadArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "id": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "objects": {
       "$ref": "#/$defs/CadObjectsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "buildingObjects": {
       "$ref": "#/$defs/CadObjectsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "energyObjects": {
       "$ref": "#/$defs/CadObjectsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "structureClassicObjects": {
       "$ref": "#/$defs/CadObjectsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "referencesByModelDefinitionId": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/CadReferenceList"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "$ref": "#/$defs/CadNodesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "shapeGeometry": {
       "oneOf": [
@@ -54,7 +54,7 @@
           "$ref": "#/$defs/CadGeometry"
         }
       ],
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "buildingGeometry": {
       "oneOf": [
@@ -65,7 +65,7 @@
           "$ref": "#/$defs/CadGeometry"
         }
       ],
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "energyGeometry": {
       "oneOf": [
@@ -76,7 +76,7 @@
           "$ref": "#/$defs/CadGeometry"
         }
       ],
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "structureClassicGeometry": {
       "oneOf": [
@@ -87,19 +87,19 @@
           "$ref": "#/$defs/CadGeometry"
         }
       ],
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activeModelDefinitionId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedObjectIds": {
       "$ref": "#/$defs/CadStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedNodeIds": {
       "$ref": "#/$defs/CadStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeObjectId": {
       "oneOf": [
@@ -110,11 +110,11 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "componentSelection": {
       "$ref": "#/$defs/CadComponentSelection",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedReferenceModelDefinitionId": {
       "oneOf": [
@@ -125,7 +125,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedReferenceId": {
       "oneOf": [
@@ -136,7 +136,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedPrimitiveId": {
       "oneOf": [
@@ -147,7 +147,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedPrimitiveKind": {
       "oneOf": [
@@ -158,11 +158,11 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeExampleId": {
       "oneOf": [
@@ -173,19 +173,19 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementStep": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementPane": {
       "oneOf": [
@@ -196,7 +196,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementSessionJson": {
       "oneOf": [
@@ -207,7 +207,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lastFinalizedInteractionId": {
       "oneOf": [
@@ -218,75 +218,75 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunAzimuth": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunElevation": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunIntensity": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunColor": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera": {
       "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraBuilding": {
       "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraEnergy": {
       "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraStructureClassic": {
       "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dislocateShape": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dislocateBuilding": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dislocateEnergy": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dislocateStructureClassic": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "terminology": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredObjectId": {
       "oneOf": [
@@ -297,7 +297,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetObjectId": {
       "oneOf": [
@@ -308,7 +308,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetMode": {
       "oneOf": [
@@ -319,7 +319,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetId": {
       "oneOf": [
@@ -332,7 +332,7 @@
           "minimum": 0
         }
       ],
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

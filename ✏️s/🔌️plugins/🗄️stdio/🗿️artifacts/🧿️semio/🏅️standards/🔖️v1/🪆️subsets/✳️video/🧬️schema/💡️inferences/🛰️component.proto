@@ -4,7 +4,7 @@ package semio.s.stdio.semio.video.inference;
 // 💡️ Semio video inference schema — real per-stream max-pts elapsed time.
 
 message SemioVideoInference {
-  // @state inferred
+  // @derived
   SemioVideoDuration duration = 1;
 }
 

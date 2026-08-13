@@ -1,6 +1,6 @@
 # 🧬️ GIS terrain mutation schema — persistent fields only.
 
 type GisTerrainMutation {
-  exaggeration: Float! @state(class: PERSISTENT)
-  importedFeaturesJson: String! @state(class: PERSISTENT)
+  exaggeration: Float! @state(class: ARTIFACT)
+  importedFeaturesJson: String! @state(class: ARTIFACT)
 }

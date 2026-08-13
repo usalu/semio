@@ -12,21 +12,21 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "catalogGeneration": {
       "type": "integer",
       "format": "int64",
       "minimum": 0,
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activePanelTab": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   }
 }

@@ -4,6 +4,6 @@ type HtmlArtifactEntry {
   value: String!
 }
 type HtmlArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [HtmlArtifactEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [HtmlArtifactEntry!]! @state(class: ARTIFACT)
 }

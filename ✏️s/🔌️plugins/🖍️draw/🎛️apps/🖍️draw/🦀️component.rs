@@ -728,7 +728,7 @@ mod tests {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
         let projection = app.snapshot().expect("projection");
-        let doc = ArtifactView { snapshot: &projection, history: &semio_framework_plugin::HistoryView::empty() };
+        let doc = ArtifactView::new(&projection, &semio_framework_plugin::HistoryView::empty());
         let app_impl = DrawPlayApp::default();
         let vector = DrawPlayApp::export_media("vector:out", &doc).expect("vector:out");
         let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };

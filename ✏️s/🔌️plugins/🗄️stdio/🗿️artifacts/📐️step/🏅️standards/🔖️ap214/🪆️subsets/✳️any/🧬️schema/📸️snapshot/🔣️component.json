@@ -83,8 +83,8 @@
   "type": "object",
   "required": ["schema"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "header": { "$ref": "#/$defs/StepHeader", "x-semio-state": "persistent" },
-    "entities": { "type": "array", "items": { "$ref": "#/$defs/StepEntity" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "header": { "$ref": "#/$defs/StepHeader", "x-semio-state": "artifact" },
+    "entities": { "type": "array", "items": { "$ref": "#/$defs/StepEntity" }, "x-semio-state": "artifact" }
   }
 }

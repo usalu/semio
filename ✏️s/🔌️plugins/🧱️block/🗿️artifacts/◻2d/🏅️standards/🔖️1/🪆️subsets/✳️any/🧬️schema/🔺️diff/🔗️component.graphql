@@ -1,19 +1,19 @@
 # 🧬️ Block2d diff schema — sparse field delta.
 
 type Block2dDiff {
-  artifact: Block2dArtifact @state(class: PERSISTENT)
-  schema: String @state(class: PERSISTENT)
-  nodeKind: BlockKindIdentity @state(class: PERSISTENT)
-  presentation: Block2dPresentation @state(class: PERSISTENT)
-  handleKinds: Block2dHandleKindsDelta @state(class: PERSISTENT)
-  handles: Block2dHandlesDelta @state(class: PERSISTENT)
-  compatibility: Block2dCompatibilityDelta @state(class: PERSISTENT)
-  attributes: Block2dAttributesDelta @state(class: PERSISTENT)
-  authors: Block2dAuthorList @state(class: PERSISTENT)
-  camera2d: BlockCamera2d @state(class: PERSISTENT)
-  meta: BlockMeta @state(class: PERSISTENT)
-  selectedIds: Block2dStringList @state(class: SHARED_UI)
-  locale: String @state(class: LOCAL_UI)
+  artifact: Block2dArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  nodeKind: BlockKindIdentity @state(class: ARTIFACT)
+  presentation: Block2dPresentation @state(class: ARTIFACT)
+  handleKinds: Block2dHandleKindsDelta @state(class: ARTIFACT)
+  handles: Block2dHandlesDelta @state(class: ARTIFACT)
+  compatibility: Block2dCompatibilityDelta @state(class: ARTIFACT)
+  attributes: Block2dAttributesDelta @state(class: ARTIFACT)
+  authors: Block2dAuthorList @state(class: ARTIFACT)
+  camera2d: BlockCamera2d @state(class: ARTIFACT)
+  meta: BlockMeta @state(class: ARTIFACT)
+  selectedIds: Block2dStringList @state(class: PRESENCE)
+  locale: String @state(class: CONFIG)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

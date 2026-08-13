@@ -1,25 +1,25 @@
 /** 🧬️ Puzzle5dPresence */
 export interface Puzzle5dPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedPartIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedGripIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedFastenerIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredPartId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   camera2dX: number;
-  /** @state shared-ui */
+  /** @state presence */
   camera2dY: number;
-  /** @state shared-ui */
+  /** @state presence */
   camera2dZoom: number;
-  /** @state shared-ui */
+  /** @state presence */
   camera3dPosition: number[];
-  /** @state shared-ui */
+  /** @state presence */
   camera3dTarget: number[];
-  /** @state shared-ui */
+  /** @state presence */
   camera3dZoom: number;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
 }

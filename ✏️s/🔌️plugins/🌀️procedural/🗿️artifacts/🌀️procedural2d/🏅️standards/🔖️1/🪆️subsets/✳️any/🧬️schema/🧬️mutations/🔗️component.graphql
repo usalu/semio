@@ -1,8 +1,8 @@
 # 🧬️ Procedural2d mutation schema — persistent fields only.
 
 type Procedural2dMutation {
-  fixture: FlowFixture! @state(class: PERSISTENT)
-  generation: GenerationPlayState! @state(class: PERSISTENT)
+  fixture: FlowFixture! @state(class: ARTIFACT)
+  generation: GenerationPlayState! @state(class: ARTIFACT)
 }
 
 type CameraJson {

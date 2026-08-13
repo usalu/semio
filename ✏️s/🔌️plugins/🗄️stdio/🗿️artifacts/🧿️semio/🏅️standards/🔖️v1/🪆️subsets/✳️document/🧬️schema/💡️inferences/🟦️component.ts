@@ -12,6 +12,6 @@ export interface SemioDocumentOutline {
 }
 
 export interface SemioDocumentInference {
-  /** @state inferred */
+  /** @derived */
   outline: SemioDocumentOutline;
 }

@@ -75,27 +75,27 @@ pub struct AssemblyRule {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.assembly")]
 pub struct AssemblySnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 🎲 Deterministic solve seed — PERSISTED, authored only via `change-seed`, never ambient: the
     /// solve inference's `DepHash` caching is sound only if `compute` is a pure function of
     /// snapshot content, seed included (WFC is seeded-random internally).
-    #[state(persistent)]
+    #[state(artifact)]
     pub seed: u64,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub slots: Vec<AssemblySlot>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub edges: Vec<AssemblySlotEdge>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.kit")]
     #[serde(default)]
     pub modules: Vec<store::ArtifactChild<SemioKitSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub weights: Vec<AssemblyModuleWeight>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub rules: Vec<AssemblyRule>,
 }

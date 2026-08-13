@@ -9,6 +9,6 @@ export interface DwgStructure {
 }
 
 export interface DwgInference {
-  /** @state inferred */
+  /** @derived */
   structure: DwgStructure;
 }

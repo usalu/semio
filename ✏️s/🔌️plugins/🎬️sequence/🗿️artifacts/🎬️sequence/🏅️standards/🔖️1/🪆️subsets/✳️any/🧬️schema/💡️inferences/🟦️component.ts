@@ -9,6 +9,6 @@ export interface SequenceTopology {
 }
 
 export interface SequenceInference {
-  /** @state inferred */
+  /** @derived */
   topology: SequenceTopology;
 }

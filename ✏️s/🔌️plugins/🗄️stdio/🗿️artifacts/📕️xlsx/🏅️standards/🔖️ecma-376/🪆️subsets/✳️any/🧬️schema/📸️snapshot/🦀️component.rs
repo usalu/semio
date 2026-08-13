@@ -85,12 +85,12 @@ pub struct XlsxWorkbook {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xlsx")]
 pub struct XlsxSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub opc: OpcPackage,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub workbook: XlsxWorkbook,
 }

@@ -14,7 +14,7 @@ export type HtmlNode =
   | { kind: 'rawText'; parentKind: RawTextKind; text: string };
 
 export interface HtmlSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ doctype?: string;
-  /** @state persistent */ root: HtmlNode;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ doctype?: string;
+  /** @state artifact */ root: HtmlNode;
 }

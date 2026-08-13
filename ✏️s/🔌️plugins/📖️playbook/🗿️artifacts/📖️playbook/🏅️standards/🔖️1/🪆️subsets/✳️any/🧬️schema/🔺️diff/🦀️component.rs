@@ -10,23 +10,23 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::playbook::schema::PlaybookArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub version: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub title: Option<Option<String>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub steps: Option<PlaybookStepsDelta>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_ids: Option<PlaybookStringList>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff

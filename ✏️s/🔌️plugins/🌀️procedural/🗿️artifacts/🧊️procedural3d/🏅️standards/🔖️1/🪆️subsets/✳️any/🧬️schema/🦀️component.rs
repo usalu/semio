@@ -24,21 +24,21 @@ use crate::artifacts::procedural3d::widget_id;
 #[artifact_schema(id = "s.procedural.procedural3d")]
 
 pub struct Procedural3dArtifact {
-    #[state(persistent)] pub fixture: FlowFixture,
-    #[state(persistent)] pub generation: GenerationPlayState,
-    #[state(shared_ui)] pub selected_node_ids: Vec<String>,
-    #[state(local_ui)] pub lod_mode: String,
-    #[state(local_ui)] pub show_mode: String,
-    #[state(local_ui)] pub selection_method: String,
-    #[state(preview)] pub hovered_node_id: Option<String>,
-    #[state(local_ui)] pub graph_camera: CameraJson,
-    #[state(local_ui)] pub preview_camera: Procedural3dPreviewCamera,
-    #[state(local_ui)] pub sun_json: String,
-    #[state(shared_ui)] pub selected_generation_id: Option<String>,
-    #[state(preview)] pub generation_preview_text: Option<String>,
-    #[state(shared_ui)] pub active_utility_id: String,
-    #[state(local_ui)] pub locale: String,
-    #[state(local_ui)] pub contributions_json: String}
+    #[state(artifact)] pub fixture: FlowFixture,
+    #[state(artifact)] pub generation: GenerationPlayState,
+    #[state(presence)] pub selected_node_ids: Vec<String>,
+    #[state(config)] pub lod_mode: String,
+    #[state(config)] pub show_mode: String,
+    #[state(config)] pub selection_method: String,
+    #[state(artifact)] pub hovered_node_id: Option<String>,
+    #[state(config)] pub graph_camera: CameraJson,
+    #[state(config)] pub preview_camera: Procedural3dPreviewCamera,
+    #[state(config)] pub sun_json: String,
+    #[state(presence)] pub selected_generation_id: Option<String>,
+    #[state(artifact)] pub generation_preview_text: Option<String>,
+    #[state(presence)] pub active_utility_id: String,
+    #[state(config)] pub locale: String,
+    #[state(config)] pub contributions_json: String}
 //#endregion 🔖️Procedural3dArtifact
 
 //#region 🔖️PreviewCamera

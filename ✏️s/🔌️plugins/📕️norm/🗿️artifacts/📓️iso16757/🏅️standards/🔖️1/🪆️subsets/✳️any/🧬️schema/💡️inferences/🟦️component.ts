@@ -7,6 +7,6 @@ export interface Iso16757Outline {
 }
 
 export interface Iso16757Inference {
-  /** @state inferred */
+  /** @derived */
   outline: Iso16757Outline;
 }

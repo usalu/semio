@@ -8,42 +8,42 @@
     "artifact": {
       "title": "Iso16757Artifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "catalogue": {
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "dictionary": {
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "geometry": {
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selection": {
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "partNumberRule": {
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "partNumberInputs": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "scriptLimits": {
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "exchangeProcess": {
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedCheckIndex": {
       "oneOf": [
@@ -56,7 +56,7 @@
           "minimum": 0
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

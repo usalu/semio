@@ -22,7 +22,7 @@ use super::bounds::{compute_semio_model_bounds, SemioModelBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.model.inference")]
 pub struct SemioModelInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: SemioModelBounds,
 }
 

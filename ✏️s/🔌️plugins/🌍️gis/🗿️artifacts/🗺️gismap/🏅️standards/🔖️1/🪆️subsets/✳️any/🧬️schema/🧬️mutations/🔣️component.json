@@ -14,21 +14,21 @@
       "items": {
         "$ref": "#/$defs/GisMapFeature"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "routes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/GisMapFeature"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "regions": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/GisMapFeature"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

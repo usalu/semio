@@ -7,7 +7,7 @@
   "properties": {
     "flatPosition": {
       "$ref": "#/$defs/Puzzle2dFlatPosition",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

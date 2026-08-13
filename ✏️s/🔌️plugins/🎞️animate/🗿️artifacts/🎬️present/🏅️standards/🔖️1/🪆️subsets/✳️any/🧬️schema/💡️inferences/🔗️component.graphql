@@ -1,7 +1,7 @@
 # 💡️ Present inference schema — topology derived from the persisted tile order.
 
 type PresentInference {
-  topology: PresentTopology! @state(class: INFERRED)
+  topology: PresentTopology! @derived
 }
 
 type PresentTopology {

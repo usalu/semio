@@ -18,7 +18,7 @@ use super::outline::CsvOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv.inference")]
 pub struct CsvInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: CsvOutline,
 }
 

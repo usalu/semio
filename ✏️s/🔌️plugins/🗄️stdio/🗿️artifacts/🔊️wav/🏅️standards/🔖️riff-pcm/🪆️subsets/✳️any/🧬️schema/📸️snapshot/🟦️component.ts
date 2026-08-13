@@ -5,6 +5,6 @@ export interface WavSnapshotEntry {
   value: string;
 }
 export interface WavSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: WavSnapshotEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: WavSnapshotEntry[];
 }

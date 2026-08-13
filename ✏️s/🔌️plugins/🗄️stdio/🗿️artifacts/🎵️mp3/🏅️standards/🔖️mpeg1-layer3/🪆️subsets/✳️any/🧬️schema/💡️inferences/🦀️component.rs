@@ -19,7 +19,7 @@ use super::duration::{compute_mp3_duration, Mp3Duration};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp3.inference")]
 pub struct Mp3Inference {
-    #[state(inferred)]
+    #[derived]
     pub duration: Mp3Duration,
 }
 

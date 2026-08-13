@@ -1,7 +1,7 @@
 /** 🧬️ VcsDemoConfig */
 export interface VcsDemoConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedCheckpointIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

@@ -37,7 +37,7 @@ mod tests {
         let config = NormConfig::default();
         let emit = handle(
             &SetSelectedCheckIndex { index: Some(4) },
-            &ArtifactView { snapshot: &projection, history: &HistoryView::empty() },
+            &ArtifactView::new(&projection, &HistoryView::empty()),
             &ConfigView { snapshot: &config },
         )
         .expect("handle");

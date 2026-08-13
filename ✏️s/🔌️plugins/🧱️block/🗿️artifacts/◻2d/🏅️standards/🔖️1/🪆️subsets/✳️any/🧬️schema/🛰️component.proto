@@ -4,29 +4,29 @@ package semio.s.block.block2d.artifact;
 // 🧬️ Block2d artifact schema — every field with its state class.
 
 message Block2dArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   BlockKindIdentity node_kind = 2;
-  // @state persistent
+  // @state artifact
   Block2dPresentation presentation = 3;
-  // @state persistent
+  // @state artifact
   repeated Block2dHandleKind handle_kinds = 4;
-  // @state persistent
+  // @state artifact
   repeated Block2dHandleTemplate handles = 5;
-  // @state persistent
+  // @state artifact
   repeated BlockCompatibilityRule compatibility = 6;
-  // @state persistent
+  // @state artifact
   repeated BlockAttribute attributes = 7;
-  // @state persistent
+  // @state artifact
   repeated BlockAuthor authors = 8;
-  // @state persistent
+  // @state artifact
   BlockCamera2d camera2d = 9;
-  // @state persistent
+  // @state artifact
   BlockMeta meta = 10;
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 11;
-  // @state local-ui
+  // @state config
   string locale = 12;
 }
 

@@ -2,8 +2,8 @@
 import type { GltfDocument, GltfSourceForm } from './📸️snapshot/🟦️component.ts';
 
 export interface GltfArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ document: GltfDocument;
-  /** @state persistent */ buffers: number[][];
-  /** @state persistent */ sourceForm: GltfSourceForm;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ document: GltfDocument;
+  /** @state artifact */ buffers: number[][];
+  /** @state artifact */ sourceForm: GltfSourceForm;
 }

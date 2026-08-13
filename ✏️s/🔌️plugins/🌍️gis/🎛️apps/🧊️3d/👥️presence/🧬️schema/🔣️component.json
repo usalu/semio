@@ -10,12 +10,12 @@
   "properties": {
     "cameraJson": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedIds": {
       "type": "array",
       "items": { "type": "string" },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

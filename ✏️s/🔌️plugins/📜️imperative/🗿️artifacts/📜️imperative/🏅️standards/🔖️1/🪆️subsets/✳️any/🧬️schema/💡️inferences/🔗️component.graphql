@@ -1,7 +1,7 @@
 # 💡️ Imperative inference schema — topology (depth-first order + nesting depth + cycle-freedom) over the Path/Step tree.
 
 type ImperativeInference {
-  topology: ImperativeTopology! @state(class: INFERRED)
+  topology: ImperativeTopology! @derived
 }
 
 type ImperativeTopology {

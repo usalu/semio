@@ -1,7 +1,7 @@
 # 💡️ Playbook inference schema — topology (step/block dependency order).
 
 type PlaybookInference {
-  topology: PlaybookTopology! @state(class: INFERRED)
+  topology: PlaybookTopology! @derived
 }
 
 type PlaybookTopology {

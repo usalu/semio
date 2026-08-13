@@ -8,15 +8,15 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewrite.config")]
 pub struct RewriteConfig {
-    #[state(local_ui)] pub selected_node_ids: Vec<String>,
-    #[state(local_ui)] pub before_pane_camera: Camera,
-    #[state(local_ui)] pub reorganize_epoch: u64,
-    #[state(local_ui)] pub active_hover_var: String,
-    #[state(local_ui)] pub hover_epoch: u64,
-    #[state(local_ui)] pub active_select_var: String,
-    #[state(local_ui)] pub select_epoch: u64,
-    #[state(local_ui)] pub lod_mode_by_window: BTreeMap<String, String>,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_node_ids: Vec<String>,
+    #[state(config)] pub before_pane_camera: Camera,
+    #[state(config)] pub reorganize_epoch: u64,
+    #[state(config)] pub active_hover_var: String,
+    #[state(config)] pub hover_epoch: u64,
+    #[state(config)] pub active_select_var: String,
+    #[state(config)] pub select_epoch: u64,
+    #[state(config)] pub lod_mode_by_window: BTreeMap<String, String>,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema descriptor

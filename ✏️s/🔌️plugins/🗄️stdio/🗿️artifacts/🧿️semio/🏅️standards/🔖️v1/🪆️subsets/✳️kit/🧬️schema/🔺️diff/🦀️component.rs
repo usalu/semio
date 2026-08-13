@@ -39,22 +39,22 @@ pub struct SemioKitLinkList { pub values: Vec<store::ArtifactLink> }
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.kit.diff")]
 pub struct SemioKitDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub types: Option<SemioKitTypeList>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub designs: Option<SemioKitDesignList>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub objects: Option<SemioKitObjectChildList>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub models: Option<SemioKitModelChildList>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<Option<store::ArtifactChild<SemioValueSnapshot>>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub representations: Option<SemioKitLinkList>,
 }

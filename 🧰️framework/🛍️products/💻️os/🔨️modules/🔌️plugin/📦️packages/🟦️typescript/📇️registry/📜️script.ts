@@ -831,6 +831,9 @@ const TAXONOMY_SCHEMA_CHILD_DIRS = TAXONOMY.schemaChildDirs ?? [];
 const TAXONOMY_REPRESENTATION_DIRS = TAXONOMY.representationDirs ?? [];
 const TAXONOMY_CONFIG_CHILD_DIRS = TAXONOMY.configChildDirs ?? [];
 const TAXONOMY_PRESENCE_CHILD_DIRS = TAXONOMY.presenceChildDirs ?? [];
+/** @emoji 🎭️ A mode owns its windows plus its own three state lanes — the completeness set the
+ * taxonomy declares for every `🎭️modes/<mode>/` node. */
+const TAXONOMY_MODE_CHILDREN = TAXONOMY.modeChildDirs ?? [];
 const TAXONOMY_SCHEMA_FORMATS = Object.values(TAXONOMY.schemaFormats ?? {});
 const MUTATIONS_FACET_DIR = "🧬️mutations";
 const ENGINE_FACET_DIR = "⚙️engine";
@@ -1040,9 +1043,15 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
 
   const appsDir = join(pluginRoot, APPS_DIRNAME);
   for (const app of listDirs(appsDir)) {
-    const engineExamples = join(appsDir, app, "⚙️engine", EXAMPLES_DIRNAME);
+    // ⚙️ The headless engine is a declared app component (taxonomy `appComponentDirs`), so its
+    // ABSENCE is the breach — while its `📚️examples/` child remains one too, since app examples are
+    // app-owned and belong at the app root. Both findings coexist; they are not the same rule.
+    if (!existsSync(join(appsDir, app, ENGINE_FACET_DIR))) {
+      findings.push(`${pluginId}: app "${app}" is missing ${ENGINE_FACET_DIR}/`);
+    }
+    const engineExamples = join(appsDir, app, ENGINE_FACET_DIR, EXAMPLES_DIRNAME);
     if (existsSync(engineExamples)) {
-      findings.push(`${pluginId}: app "${app}" still has ⚙️engine/${EXAMPLES_DIRNAME}/ — move to app-root ${EXAMPLES_DIRNAME}/`);
+      findings.push(`${pluginId}: app "${app}" still has ${ENGINE_FACET_DIR}/${EXAMPLES_DIRNAME}/ — move to app-root ${EXAMPLES_DIRNAME}/`);
     }
     const appExamples = join(appsDir, app, EXAMPLES_DIRNAME);
     if (!existsSync(appExamples)) {
@@ -1081,6 +1090,12 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   for (const app of listDirs(appsDir)) {
     const modesDir = join(appsDir, app, TAXONOMY.modesDirName);
     for (const mode of listDirs(modesDir)) {
+      // 🎭️ A mode declares its windows plus its own 🎚️config / 👥️presence / 🫧️transient lanes; an
+      // empty lane is valid (it carries only the tracked marker), an absent lane is not.
+      for (const child of TAXONOMY_MODE_CHILDREN) {
+        if (existsSync(join(modesDir, mode, child))) continue;
+        findings.push(`${pluginId}: mode "${app}/${mode}" is missing required child "${child}"`);
+      }
       const windowsDir = join(modesDir, mode, TAXONOMY.windowsDirName);
       for (const w of listDirs(windowsDir)) {
         for (const child of listDirs(join(windowsDir, w))) {

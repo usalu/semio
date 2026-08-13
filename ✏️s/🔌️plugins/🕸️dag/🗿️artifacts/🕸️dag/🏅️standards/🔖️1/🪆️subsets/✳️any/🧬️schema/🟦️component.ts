@@ -1,11 +1,11 @@
 /** 🧬️ DAG artifact schema — every field with its state class. */
 export interface DagArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ nodes: DagNodeSpec[];
-  /** @state persistent */ edges: DagFixtureEdge[];
-  /** @state shared-ui */ selectedNodeIds: string[];
-  /** @state local-ui */ camera: DagCamera;
-  /** @state local-ui */ locale: string;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ nodes: DagNodeSpec[];
+  /** @state artifact */ edges: DagFixtureEdge[];
+  /** @state presence */ selectedNodeIds: string[];
+  /** @state config */ camera: DagCamera;
+  /** @state config */ locale: string;
 }
 export interface DagNodeSpec { id: string; [key: string]: unknown; }
 export interface DagFixtureEdge { id: string; source: string; target: string; }

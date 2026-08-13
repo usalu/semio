@@ -4,7 +4,7 @@ package semio.s.stdio.gltf.inference;
 // 💡️ Gltf inference schema — mesh-primitive POSITION-accessor-derived bounding box.
 
 message GltfInference {
-  // @state inferred
+  // @derived
   GltfBounds bounds = 1;
 }
 

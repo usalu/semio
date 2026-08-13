@@ -1,4 +1,4 @@
 type Block3dPresence {
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  hoveredVortexFullId: String @state(class: SHARED_UI)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  hoveredVortexFullId: String @state(class: PRESENCE)
 }

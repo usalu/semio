@@ -1,43 +1,43 @@
 /** 🧬️ Flow artifact schema — every field with its state class. */
 
 export interface FlowArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   camera: CameraJson;
-  /** @state persistent */
+  /** @state artifact */
   widgets: Widget[];
-  /** @state persistent */
+  /** @state artifact */
   synapses: SynapseSpec[];
-  /** @state persistent */
+  /** @state artifact */
   layout: Record<string, WidgetLayout>;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedEdgeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedHandleIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   previewOffNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   lodMode: string;
-  /** @state local-ui */
+  /** @state config */
   proximityDistance: number;
-  /** @state local-ui */
+  /** @state config */
   gridVisible: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridFactor: number;
-  /** @state local-ui */
+  /** @state config */
   catalogueSectionsJson: string;
-  /** @state local-ui */
+  /** @state config */
   automationEnabledJson: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
-  /** @state local-ui */
+  /** @state config */
   generationJson: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

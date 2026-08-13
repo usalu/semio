@@ -4,7 +4,7 @@ package semio.s.stdio.xlsx.inference;
 // 💡️ Xlsx inference schema — document outline (sheet names/count, cell count).
 
 message XlsxInference {
-  // @state inferred
+  // @derived
   XlsxOutline outline = 1;
 }
 

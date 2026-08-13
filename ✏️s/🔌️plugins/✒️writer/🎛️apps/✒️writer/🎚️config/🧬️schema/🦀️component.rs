@@ -7,17 +7,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer.config")]
 pub struct WriterConfig {
-    #[state(local_ui)] pub selected_ast_ids: Vec<String>,
-    #[state(local_ui)] pub editor_selection: Option<WriterEditorSelection>,
-    #[state(local_ui)] pub format_signal: u32,
-    #[state(local_ui)] pub lint_signal: u32,
-    #[state(local_ui)] pub revision: u32,
-    #[state(local_ui)] pub editor_settings: WriterEditorSettings,
-    #[state(local_ui)] pub tree_hovered_ast_id: Option<String>,
-    #[state(local_ui)] pub editor_hover_offset: Option<usize>,
-    #[state(local_ui)] pub engagement_input: String,
-    #[state(local_ui)] pub camera: WriterCamera,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_ast_ids: Vec<String>,
+    #[state(config)] pub editor_selection: Option<WriterEditorSelection>,
+    #[state(config)] pub format_signal: u32,
+    #[state(config)] pub lint_signal: u32,
+    #[state(config)] pub revision: u32,
+    #[state(config)] pub editor_settings: WriterEditorSettings,
+    #[state(config)] pub tree_hovered_ast_id: Option<String>,
+    #[state(config)] pub editor_hover_offset: Option<usize>,
+    #[state(config)] pub engagement_input: String,
+    #[state(config)] pub camera: WriterCamera,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema self-registration

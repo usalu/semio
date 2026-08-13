@@ -1,50 +1,50 @@
 /** 🧬️ EN 1996 artifact schema. */
 
 export interface En1996Artifact {
-  /** @state persistent */
+  /** @state artifact */
   mEdKnm: number;
-  /** @state persistent */
+  /** @state artifact */
   nEdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   vEdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   hEdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   zMm3: number;
-  /** @state persistent */
+  /** @state artifact */
   areaMm2: number;
-  /** @state persistent */
+  /** @state artifact */
   shearAreaMm2: number;
-  /** @state persistent */
+  /** @state artifact */
   fKMpa: number;
-  /** @state persistent */
+  /** @state artifact */
   fVkMpa: number;
-  /** @state persistent */
+  /** @state artifact */
   annex: number;
-  /** @state persistent */
+  /** @state artifact */
   masonryClass: number;
-  /** @state persistent */
+  /** @state artifact */
   designSituation: number;
-  /** @state persistent */
+  /** @state artifact */
   mu: number;
-  /** @state persistent */
+  /** @state artifact */
   wallThicknessMm: number;
-  /** @state persistent */
+  /** @state artifact */
   fireResistanceMin: number;
-  /** @state persistent */
+  /** @state artifact */
   unit: number;
-  /** @state persistent */
+  /** @state artifact */
   exposure: number;
-  /** @state persistent */
+  /** @state artifact */
   mortar: number;
-  /** @state persistent */
+  /** @state artifact */
   bedJointThicknessMm: number;
-  /** @state persistent */
+  /** @state artifact */
   storeys: number;
-  /** @state persistent */
+  /** @state artifact */
   hEfMm: number;
-  /** @state persistent */
+  /** @state artifact */
   tEfMm: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }

@@ -3,52 +3,52 @@ syntax = "proto3";
 package semio.s.norm.en1996.diff;
 
 message En1996Diff {
-  // @state persistent
+  // @state artifact
   optional En1996Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional double m_ed_knm = 2;
-  // @state persistent
+  // @state artifact
   optional double n_ed_kn = 3;
-  // @state persistent
+  // @state artifact
   optional double v_ed_kn = 4;
-  // @state persistent
+  // @state artifact
   optional double h_ed_kn = 5;
-  // @state persistent
+  // @state artifact
   optional double z_mm3 = 6;
-  // @state persistent
+  // @state artifact
   optional double area_mm2 = 7;
-  // @state persistent
+  // @state artifact
   optional double shear_area_mm2 = 8;
-  // @state persistent
+  // @state artifact
   optional double f_k_mpa = 9;
-  // @state persistent
+  // @state artifact
   optional double f_vk_mpa = 10;
-  // @state persistent
+  // @state artifact
   optional double annex = 11;
-  // @state persistent
+  // @state artifact
   optional double masonry_class = 12;
-  // @state persistent
+  // @state artifact
   optional double design_situation = 13;
-  // @state persistent
+  // @state artifact
   optional double mu = 14;
-  // @state persistent
+  // @state artifact
   optional double wall_thickness_mm = 15;
-  // @state persistent
+  // @state artifact
   optional uint32 fire_resistance_min = 16;
-  // @state persistent
+  // @state artifact
   optional double unit = 17;
-  // @state persistent
+  // @state artifact
   optional double exposure = 18;
-  // @state persistent
+  // @state artifact
   optional double mortar = 19;
-  // @state persistent
+  // @state artifact
   optional double bed_joint_thickness_mm = 20;
-  // @state persistent
+  // @state artifact
   optional uint32 storeys = 21;
-  // @state persistent
+  // @state artifact
   optional double h_ef_mm = 22;
-  // @state persistent
+  // @state artifact
   optional double t_ef_mm = 23;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 24;
 }

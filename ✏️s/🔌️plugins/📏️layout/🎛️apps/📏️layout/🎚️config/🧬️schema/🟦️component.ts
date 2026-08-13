@@ -1,20 +1,20 @@
 /** 🧬️ LayoutConfig */
 export interface LayoutConfig {
-  /** @state local-ui */
+  /** @state config */
   activePageId: string;
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   hoveredId?: string;
-  /** @state local-ui */
+  /** @state config */
   dropPreview: LayoutDropPreviewState;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   camera: LayoutCamera;
-  /** @state local-ui */
+  /** @state config */
   previewCamera: LayoutCamera;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 export interface LayoutDropPreviewState { kind: string; x: number; y: number; }

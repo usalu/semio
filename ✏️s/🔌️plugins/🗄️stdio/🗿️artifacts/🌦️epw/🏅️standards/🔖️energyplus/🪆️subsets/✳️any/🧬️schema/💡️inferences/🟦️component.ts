@@ -9,6 +9,6 @@ export interface EpwClimateSummary {
 }
 
 export interface EpwInference {
-  /** @state inferred */
+  /** @derived */
   climate: EpwClimateSummary;
 }

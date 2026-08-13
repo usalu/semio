@@ -23,25 +23,25 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub workshop: Workshop,
-    #[state(persistent)]
+    #[state(artifact)]
     pub stock_id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub stock_label: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub stock_pose: Pose,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
     pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub steps: store::ArtifactChild<SemioFlowSnapshot>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
     #[serde(default)]
     pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub resolved_up_to: Option<usize>,
 }

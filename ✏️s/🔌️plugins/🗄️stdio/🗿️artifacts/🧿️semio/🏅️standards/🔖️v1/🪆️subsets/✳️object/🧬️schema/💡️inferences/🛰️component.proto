@@ -4,7 +4,7 @@ package semio.s.stdio.semio.object.inference;
 // 💡️ Semio object inference schema — composition census + own placement.
 
 message SemioObjectInference {
-  // @state inferred
+  // @derived
   SemioObjectComposition composition = 1;
 }
 

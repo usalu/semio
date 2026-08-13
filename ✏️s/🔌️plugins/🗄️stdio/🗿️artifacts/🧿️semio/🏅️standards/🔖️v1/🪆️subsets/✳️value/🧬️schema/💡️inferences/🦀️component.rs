@@ -24,7 +24,7 @@ use super::census::{compute_semio_value_census, SemioValueCensus};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value.inference")]
 pub struct SemioValueInference {
-    #[state(inferred)]
+    #[derived]
     pub census: SemioValueCensus,
 }
 

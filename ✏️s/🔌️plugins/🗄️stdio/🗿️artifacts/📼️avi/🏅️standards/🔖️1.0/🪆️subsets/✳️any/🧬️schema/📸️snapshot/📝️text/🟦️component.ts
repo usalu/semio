@@ -19,9 +19,9 @@ export interface AviChunk { fourcc: string; data: number[]; keyframe: boolean; }
 export interface AviStream { strh: AviStreamHeader; strf: AviStreamFormat; chunks: AviChunk[]; }
 export interface RiffChunk { fourcc: string; data: number[]; }
 export interface AviSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ mainHeader: AviMainHeader;
-  /** @state persistent */ streams: AviStream[];
-  /** @state persistent */ idx1Present: boolean;
-  /** @state persistent */ unknownChunks: RiffChunk[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ mainHeader: AviMainHeader;
+  /** @state artifact */ streams: AviStream[];
+  /** @state artifact */ idx1Present: boolean;
+  /** @state artifact */ unknownChunks: RiffChunk[];
 }

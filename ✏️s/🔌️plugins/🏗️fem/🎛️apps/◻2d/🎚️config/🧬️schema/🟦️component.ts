@@ -6,14 +6,14 @@ export interface FemCamera {
 }
 
 export interface Fem2dConfig {
-  /** @state local-ui */
+  /** @state config */
   resultSourceId?: string;
-  /** @state local-ui */
+  /** @state config */
   resultMode: string;
-  /** @state local-ui */
+  /** @state config */
   resultModeIndex: number;
-  /** @state local-ui */
+  /** @state config */
   camera: FemCamera;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

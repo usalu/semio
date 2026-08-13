@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["duration"],
   "properties": {
-    "duration": { "$ref": "#/$defs/SemioVideoDuration", "x-semio-state": "inferred" }
+    "duration": { "$ref": "#/$defs/SemioVideoDuration", "x-semio-derived": true }
   },
   "$defs": {
     "SemioVideoDuration": {

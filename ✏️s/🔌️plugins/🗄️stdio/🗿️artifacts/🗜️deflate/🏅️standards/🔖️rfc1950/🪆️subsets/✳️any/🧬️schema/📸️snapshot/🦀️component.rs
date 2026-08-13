@@ -60,30 +60,30 @@ impl DeflateLevelHint {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate")]
 pub struct DeflateSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 🧪️ CMF low nibble (CM). RFC1950 defines only `8` (deflate) as legal; other values are
     /// spec-reserved and retained honestly rather than rejected at the type level.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub compression_method: u8,
     /// 🪟️ CMF high nibble (CINFO). Window size = `2^(cinfo+8)`; values `0..=7` are valid for
     /// deflate (up to the 32KB RFC1951 window), `8..=15` are spec-reserved.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub window_bits: u8,
     /// 🎚️ FLG.FLEVEL: informational compression-strategy hint.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub compression_level_hint: DeflateLevelHint,
     /// 📖️ FLG.FDICT + DICTID: the preset dictionary's Adler-32 id, present only when a preset
     /// dictionary was declared. `None` means FDICT is clear.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dict_id: Option<u32>,
     /// 📦️ The decompressed payload -- the format's actual content IS bytes, so this `Vec<u8>` is
     /// the recipe's legitimate exception, not generic-code-to-kill.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(base64)]
     pub payload: Vec<u8>,

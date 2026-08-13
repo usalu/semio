@@ -1,7 +1,7 @@
 # 🧬️ GltfArtifact — full artifact state (same shape as GltfSnapshot).
 type GltfArtifact {
-  schema: String! @state(class: PERSISTENT)
-  document: GltfDocument! @state(class: PERSISTENT)
-  buffers: [[Int!]!]! @state(class: PERSISTENT)
-  sourceForm: GltfSourceForm! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  document: GltfDocument! @state(class: ARTIFACT)
+  buffers: [[Int!]!]! @state(class: ARTIFACT)
+  sourceForm: GltfSourceForm! @state(class: ARTIFACT)
 }

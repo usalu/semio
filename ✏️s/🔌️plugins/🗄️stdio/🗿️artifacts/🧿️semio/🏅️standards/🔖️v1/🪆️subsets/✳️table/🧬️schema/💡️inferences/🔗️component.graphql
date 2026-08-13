@@ -1,7 +1,7 @@
 # 💡️ Semio table inference schema — dimensions + declared column-kind census.
 
 type SemioTableInference {
-  shape: SemioTableShape! @state(class: INFERRED)
+  shape: SemioTableShape! @derived
 }
 
 type SemioTableShape {

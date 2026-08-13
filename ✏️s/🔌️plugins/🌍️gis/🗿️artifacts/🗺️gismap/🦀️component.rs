@@ -285,6 +285,41 @@ mod tests {
         assert!(document.routes.is_empty());
         assert!(document.regions.is_empty());
     }
+
+    //#region 🔌️HostIoRegistration
+    /// 🧪️ 🌍️gis — and only 🌍️gis — puts `"2d.map"`'s media codecs into the OS registry. Before
+    /// ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2 the sole
+    /// registrant was `🎪️demonstrator`'s verfolgen pane, so this crate on its own registered
+    /// nothing; the assertions run entirely inside the owner crate, which is the property that was
+    /// missing.
+    ///
+    /// Unlike solids (`solid_exporter_for`), the OS media handler map exposes no membership
+    /// predicate to plugins — `export_os_app_instance_media_kind` needs the `WorkflowNode` type
+    /// that lives behind the `os-host-full` feature plugins do not enable. So what is pinned here
+    /// is everything observable from the owner side: the registration links and runs (twice — the
+    /// registry is keyed, not appended), it keys on this artifact's OWN declared `ArtifactKindSpec`
+    /// id rather than a foreign kind, and the DWG bridge fn it hands the OS is gis's own and
+    /// actually produces a map document.
+    ///
+    /// Deliberately NOT asserted: the svg half (`gis2d_document_json_to_svg`). That bridge renders
+    /// through `io_dispatch`, whose drawing→svg composer entry is registered by 🗄️stdio's plugin
+    /// build, which never runs in a bare gis unit test — so asserting on it would measure another
+    /// plugin's registration, not this one's ownership.
+    #[test]
+    fn gis_owns_the_host_io_registration_for_its_own_kind() {
+        use crate::artifacts::gismap::standards::v1::subsets::any::io::{register_host_io, GIS_MAP_KIND};
+        assert_eq!(GIS_MAP_KIND, artifact_kind().id, "register_host_io must key on the kind this artifact itself declares");
+        register_host_io();
+        register_host_io();
+        use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
+        let mut drawing = DwgDrawing::default();
+        let layer = drawing.ensure_layer("0");
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Point { at: [1.0, 2.0, 0.0] } });
+        let imported = crate::artifacts::gismap::schema::gis2d_document_json_from_dwg(&drawing).expect("registered dwg bridge imports");
+        let document: GisMapSnapshot = serde_json::from_value(imported).expect("dwg bridge yields a map document");
+        assert_eq!(document.positions.len(), 1, "registered dwg bridge must lower the drawing's point into a position feature");
+    }
+    //#endregion 🔌️HostIoRegistration
 }
 //#endregion 🔹Tests
 //#region 🚪️DerivedIoRegistry

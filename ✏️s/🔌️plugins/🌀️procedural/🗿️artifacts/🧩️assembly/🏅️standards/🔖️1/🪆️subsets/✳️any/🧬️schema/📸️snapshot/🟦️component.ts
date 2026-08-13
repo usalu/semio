@@ -41,11 +41,11 @@ export interface AssemblyRule {
 }
 
 export interface AssemblySnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ seed: number;
-  /** @state persistent */ slots: AssemblySlot[];
-  /** @state persistent */ edges: AssemblySlotEdge[];
-  /** @state persistent @child kind=s.stdio.semio.kit many */ modules: ArtifactChildHandle[];
-  /** @state persistent */ weights: AssemblyModuleWeight[];
-  /** @state persistent */ rules: AssemblyRule[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ seed: number;
+  /** @state artifact */ slots: AssemblySlot[];
+  /** @state artifact */ edges: AssemblySlotEdge[];
+  /** @state artifact @child kind=s.stdio.semio.kit many */ modules: ArtifactChildHandle[];
+  /** @state artifact */ weights: AssemblyModuleWeight[];
+  /** @state artifact */ rules: AssemblyRule[];
 }

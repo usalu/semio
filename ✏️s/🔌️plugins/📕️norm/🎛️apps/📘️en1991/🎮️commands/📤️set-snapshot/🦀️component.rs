@@ -42,7 +42,7 @@ mod tests {
         let config = NormConfig::default();
         let emit = handle(
             &ReplaceSnapshot { snapshot: En1991Snapshot::default() },
-            &ArtifactView { snapshot: &projection, history: &HistoryView::empty() },
+            &ArtifactView::new(&projection, &HistoryView::empty()),
             &ConfigView { snapshot: &config },
         )
         .expect("handle");

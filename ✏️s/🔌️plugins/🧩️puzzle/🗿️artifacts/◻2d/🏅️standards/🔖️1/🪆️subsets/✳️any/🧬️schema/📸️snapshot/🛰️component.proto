@@ -4,15 +4,15 @@ package semio.s.puzzle.puzzle2d.snapshot;
 // 🧬️ Puzzle2d snapshot schema — persistent fields only.
 
 message Puzzle2dSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   Puzzle2dCamera camera = 2;
-  // @state persistent
+  // @state artifact
   repeated Puzzle2dNode nodes = 3;
-  // @state persistent
+  // @state artifact
   repeated Puzzle2dEdge edges = 4;
-  // @state persistent
+  // @state artifact
   Puzzle2dMeta meta = 5;
 }
 

@@ -213,7 +213,7 @@ impl HistoryLogGen {
         };
 
         self.state = rng.0;
-        crate::os_spr::HistoryLog { doc_id, schema, edits, changes, checkpoints, alternatives, active_alternative_id, cursor: None }
+        crate::os_spr::HistoryLog { doc_id, schema, edits, changes, checkpoints, alternatives, active_alternative_id, cursor: None, composition: None }
     }
 }
 

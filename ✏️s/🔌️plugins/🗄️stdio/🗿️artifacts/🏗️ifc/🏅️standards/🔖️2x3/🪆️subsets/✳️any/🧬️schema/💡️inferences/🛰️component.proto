@@ -4,7 +4,7 @@ package semio.s_stdio_ifc_2x3.inference;
 // 💡️ IFC2X3 inference schema — IFCCARTESIANPOINT-derived spatial bounding box.
 
 message Ifc2x3Inference {
-  // @state inferred
+  // @derived
   Ifc2x3Bounds bounds = 1;
 }
 

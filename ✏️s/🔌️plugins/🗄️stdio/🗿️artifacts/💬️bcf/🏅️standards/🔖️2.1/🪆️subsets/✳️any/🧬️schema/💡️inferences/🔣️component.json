@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["topicStats"],
   "properties": {
-    "topicStats": { "$ref": "#/$defs/BcfTopicStats", "x-semio-state": "inferred" }
+    "topicStats": { "$ref": "#/$defs/BcfTopicStats", "x-semio-derived": true }
   },
   "$defs": {
     "BcfTopicStats": {

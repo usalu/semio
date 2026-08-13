@@ -7,6 +7,6 @@ export interface EnergyModelEntries {
 }
 
 export interface EnergyModelInference {
-  /** @state inferred */
+  /** @derived */
   entries: EnergyModelEntries;
 }

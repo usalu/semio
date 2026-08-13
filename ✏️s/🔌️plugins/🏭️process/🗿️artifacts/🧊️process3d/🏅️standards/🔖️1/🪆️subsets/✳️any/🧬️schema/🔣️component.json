@@ -28,113 +28,113 @@
   "properties": {
     "workshop": {
       "$ref": "#/$defs/Process3dWorkshop",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "stock": {
       "$ref": "#/$defs/Process3dStock",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "steps": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Process3dStep"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resolvedUpTo": {
       "type": "integer",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedFaceId": {
       "type": "integer",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraPositionX": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraPositionY": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraPositionZ": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraTargetX": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraTargetY": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraTargetZ": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraFov": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunAzimuth": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunElevation": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunIntensity": {
       "type": "number",
       "format": "float",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunColor": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

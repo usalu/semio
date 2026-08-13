@@ -20,7 +20,7 @@ use super::bounds::{compute_dxf_bounds, DxfBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf.inference")]
 pub struct DxfInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: DxfBounds,
 }
 

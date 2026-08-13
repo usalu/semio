@@ -70,9 +70,9 @@ pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio")]
 pub struct SemioSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub subset: SemioSubsetSnapshot,
 }
 

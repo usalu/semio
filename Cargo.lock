@@ -6759,6 +6759,7 @@ dependencies = [
  "semio-s-plugin-flow-extension-math",
  "semio-s-plugin-flow-extension-primitive",
  "semio-s-plugin-flow-extension-text",
+ "semio-s-plugin-stdio",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -7146,6 +7147,7 @@ dependencies = [
  "semio-framework-3d",
  "semio-framework-graph",
  "semio-framework-math",
+ "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7220,8 +7222,6 @@ dependencies = [
 name = "semio-s-plugin-demonstrator"
 version = "0.1.0"
 dependencies = [
- "semio-framework-3d",
- "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7342,6 +7342,7 @@ dependencies = [
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
+ "semio-s-plugin-stdio",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7939,6 +7940,11 @@ dependencies = [
 name = "semio-s-plugin-stdio"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "blake3",
+ "criterion",
+ "pollster",
+ "semio-framework-3d",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-plugin",

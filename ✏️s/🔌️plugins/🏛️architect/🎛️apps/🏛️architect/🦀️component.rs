@@ -1418,7 +1418,7 @@ pub(crate) mod testkit {
 
     pub fn drive_with_config(command: &ArchitectCommand, program: &ProgramSnapshot, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: program, history: &history };
+        let doc = ArtifactView::new(program, &history);
         let cfg = ConfigView { snapshot: config };
         let draft_snapshot = NoDraft::default();
         let draft = DraftView { snapshot: &draft_snapshot };
@@ -1439,7 +1439,7 @@ pub(crate) mod testkit {
 
     pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> UiNode {
         let history = HistoryView::empty();
-        ArchitectPlayApp::render(body_key, &ArtifactView { snapshot: program, history: &history }, &ConfigView { snapshot: config })
+        ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config })
     }
 }
 //#endregion 🧪️Testkit

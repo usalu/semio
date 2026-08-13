@@ -4,7 +4,7 @@ package semio.s.fem.fem2d.inference;
 // 💡️ Fem2d inference schema — bounds (plan-view extent + node/element counts).
 
 message Fem2dInference {
-  // @state inferred
+  // @derived
   Fem2dBounds bounds = 1;
 }
 

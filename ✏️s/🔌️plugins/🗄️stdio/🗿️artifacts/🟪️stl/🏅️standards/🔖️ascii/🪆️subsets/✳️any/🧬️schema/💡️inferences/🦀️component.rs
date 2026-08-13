@@ -20,7 +20,7 @@ use super::bounds::{compute_stl_bounds, StlBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl.inference")]
 pub struct StlInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: StlBounds,
 }
 

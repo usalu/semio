@@ -9,6 +9,6 @@ export interface GifDimensions {
 }
 
 export interface GifInference {
-  /** @state inferred */
+  /** @derived */
   dimensions: GifDimensions;
 }

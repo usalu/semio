@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.norm.config")]
 pub struct NormConfig {
-    #[state(local_ui)] pub selected_check_index: Option<u32>,
+    #[state(config)] pub selected_check_index: Option<u32>,
 }
 
 //region 📎 App-schema descriptor

@@ -8,9 +8,9 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.trinity.rewrite.presence")]
 pub struct RewritePresence {
-    #[state(shared_ui)] pub selected_node_ids: Vec<String>,
-    #[state(shared_ui)] pub active_hover_var: String,
-    #[state(shared_ui)] pub active_select_var: String,
-    #[state(shared_ui)] pub before_pane_camera: Camera,
-    #[state(shared_ui)] pub lod_mode_by_window: BTreeMap<String, String>,
+    #[state(presence)] pub selected_node_ids: Vec<String>,
+    #[state(presence)] pub active_hover_var: String,
+    #[state(presence)] pub active_select_var: String,
+    #[state(presence)] pub before_pane_camera: Camera,
+    #[state(presence)] pub lod_mode_by_window: BTreeMap<String, String>,
 }

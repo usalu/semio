@@ -1,6 +1,6 @@
 type SourcingCuratePresence {
-  selectedObjectId: String @state(class: SHARED_UI)
-  worldCameraPosition: [Float!]! @state(class: SHARED_UI)
-  worldCameraTarget: [Float!]! @state(class: SHARED_UI)
-  worldCameraFov: Float! @state(class: SHARED_UI)
+  selectedObjectId: String @state(class: PRESENCE)
+  worldCameraPosition: [Float!]! @state(class: PRESENCE)
+  worldCameraTarget: [Float!]! @state(class: PRESENCE)
+  worldCameraFov: Float! @state(class: PRESENCE)
 }

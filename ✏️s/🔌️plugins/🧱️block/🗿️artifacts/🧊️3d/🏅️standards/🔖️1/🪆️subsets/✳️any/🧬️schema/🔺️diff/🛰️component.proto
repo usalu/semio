@@ -4,49 +4,49 @@ package semio.s.block.block3d.diff;
 // 🧬️ Block3d diff schema — sparse field delta.
 
 message Block3dDiff {
-  // @state persistent
+  // @state artifact
   optional Block3dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional BlockKindIdentity object_kind = 3;
-  // @state persistent
+  // @state artifact
   optional Block3dRepresentationsDelta representations = 4;
-  // @state persistent
+  // @state artifact
   optional Block3dVortexKindsDelta vortex_kinds = 5;
-  // @state persistent
+  // @state artifact
   optional Block3dVorticesDelta vortices = 6;
-  // @state persistent
+  // @state artifact
   optional Block3dCompatibilityDelta compatibility = 7;
-  // @state persistent
+  // @state artifact
   optional Block3dAttributesDelta attributes = 8;
-  // @state persistent
+  // @state artifact
   optional Block3dAuthorList authors = 9;
-  // @state persistent
+  // @state artifact
   optional BlockCamera3d camera3d = 10;
-  // @state persistent
+  // @state artifact
   optional BlockMeta meta = 11;
-  // @state shared-ui
+  // @state presence
   optional Block3dStringList selected_ids = 12;
-  // @state shared-ui
+  // @state presence
   optional string active_representation_id = 13;
-  // @state shared-ui
+  // @state presence
   optional Block3dStringList wanted_tags = 14;
-  // @state local-ui
+  // @state config
   optional string locale = 15;
-  // @state local-ui
+  // @state config
   optional Block3dWindowsList windows = 16;
-  // @state local-ui
+  // @state config
   optional string brush_vortex_kind_id = 17;
-  // @state local-ui
+  // @state config
   optional double brush_radius = 18;
-  // @state local-ui
+  // @state config
   optional bool brush_flip = 19;
-  // @state preview
+  // @state artifact
   optional Block3dBrushPreview brush_preview = 20;
-  // @state local-ui
+  // @state config
   optional BlockCamera3d camera = 21;
-  // @state preview
+  // @state artifact
   optional string hovered_vortex_full_id = 22;
 }
 

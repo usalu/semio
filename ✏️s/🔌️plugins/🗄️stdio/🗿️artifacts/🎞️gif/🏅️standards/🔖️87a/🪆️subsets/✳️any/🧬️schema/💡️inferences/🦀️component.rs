@@ -19,7 +19,7 @@ use super::dimensions::{compute_gif_dimensions, GifDimensions};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.inference")]
 pub struct GifInference {
-    #[state(inferred)]
+    #[derived]
     pub dimensions: GifDimensions,
 }
 

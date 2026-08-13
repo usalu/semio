@@ -1,7 +1,7 @@
 # 💡️ Md inference schema — document outline (heading outline, block/word counts).
 
 type MdInference {
-  outline: MdOutline! @state(class: INFERRED)
+  outline: MdOutline! @derived
 }
 
 type MdOutline {

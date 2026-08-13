@@ -29,7 +29,7 @@ export interface SemioGraphEdge {
 }
 
 export interface SemioGraphSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ nodes: SemioGraphNode[];
-  /** @state persistent */ edges: SemioGraphEdge[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ nodes: SemioGraphNode[];
+  /** @state artifact */ edges: SemioGraphEdge[];
 }

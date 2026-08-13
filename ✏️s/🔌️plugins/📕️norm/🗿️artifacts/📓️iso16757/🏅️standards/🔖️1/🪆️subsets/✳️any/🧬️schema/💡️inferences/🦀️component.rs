@@ -19,7 +19,7 @@ use super::outline::Iso16757Outline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.iso16757.inference")]
 pub struct Iso16757Inference {
-    #[state(inferred)]
+    #[derived]
     pub outline: Iso16757Outline,
 }
 

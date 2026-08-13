@@ -770,6 +770,40 @@ The agent correctly **refused** step 3 (remove `MeshData` from the SDK's public 
 
 **Consequence for the mesh wave: `MeshData`'s blast radius is not the ~30 direct importers previously counted — it is those plus everything reaching it through this glob.** Recorded as the real gate on deleting `MeshData`.
 
+## G2c — 22 of 23 sites closed. `🔺️mesh` now blocked on ONE call site, for a real reason.
+
+All 21 flow sites repointed (`🖍️drawing` 19, `🌉️wasm` 2) after adding the stdio dep to os-flow, plus the `🪐️space` and `🎥️shooting` residuals. `🎥️shooting` verified green (2/2 DWG tests).
+
+**Two pieces of rigour worth copying:**
+- It **corrected its predecessor's count from 21 to 22** — a `wc -l` trailing-newline artifact had undercounted `🖍️drawing` by one — and said so rather than silently propagating the number.
+- os-flow is a known-red crate, so instead of hand-waving the gate it **temporarily reverted all three edits, built a true baseline, restored, and rebuilt**: 158 errors both times, byte-identical sorted sets, zero new errors on any touched line. That is how you get a real signal out of an already-broken crate.
+
+### 🛑 The last site cannot be repointed, and the reason is a genuine cycle
+
+`🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs` has 1 live caller of `semio_framework::mesh_to_dwg_drawing`. Its home crate `semio-framework-3d` is role=`framework`, **and wave G5 is adding the edge `stdio → semio-framework-3d`** — so `semio-framework-3d → stdio` would close a hard Cargo cycle. This is categorically unlike the flow sites: os-flow is role=`product` and outside stdio's closure, which is exactly why those 21 *were* mechanical.
+
+**So `🔺️mesh`'s deletion is correctly gated on the brep dissolution, not on more DWG work.** `📦️mesh-io` is part of `📐️brep`, which is being dissolved into stdio anyway — when the peel moves it, the call site moves with it and the blocker evaporates on its own. The agent filed a hypothesis patch but explicitly marked it **unverified**, because testing it would have meant editing a manifest inside the crate G5 was mid-edit in. Correct restraint: the module, its mount and its re-export block are all untouched.
+
+It also caught **G5 landing a real breaking change to `semio-framework-3d` mid-wave**, attributed it with evidence, and declined to claim `🪐️space`'s test run as verified because of it — rather than reporting a green it did not observe.
+
+## G2b — host + registrants repointed; `🔺️mesh` blocker narrowed to 21 call sites
+
+The framework **product** `semio-framework-os` now depends on stdio and gets its DWG codec from the artifact. The agent **proved the edge by compiling it** rather than resting on my closure argument — the right standard, since my reasoning is what would have been wrong.
+
+### The registrant census found 4×, not 1×, what the brief anticipated
+
+I briefed one type-pinned registrant of `register_dwg_import_handler` (cad, via `🎪️demonstrator`). Reality: **`cad`, `gis2d`, `puzzle2d` all type-pinned and all needing the flip**, plus a signature-agnostic closure in `🪐️space` needing none. And a fifth file — `🎞️animate` — wasn't a registrant at all but called `dwg_drawing_to_svg` directly, so it **would have broken from Job 1 alone**; caught and fixed in the same change. `🎪️demonstrator`, the one crate my brief named as critical, needed **zero** edits (it only passes function values).
+
+That is the function-pointer coupling problem in full: a signature change propagates to every registrant *and* to direct callers, and **no import graph shows you the set** — only a census of the registration symbol plus the functions it hands around.
+
+Verified: `semio-framework-os --all-targets` clean · cad **139/0/1** · gis **171/0** · animate **225/0** · puzzle **452/3** (3 pre-existing `camera`-field bugs, attributed) · framework/3d/mesh-engine/stdio all unchanged at baseline.
+
+### Job 3 still blocked — 21 live sites, now precisely located
+
+`🌊️flow/🖍️drawing` (18) · `🌊️flow/🌉️wasm` (2) · `🧊️3d/📐️brep/📦️mesh-io` (1), plus one-line residuals in `🪐️space` and `🎥️shooting`. **The module was left completely untouched** — one remaining caller is a total blocker, and "mostly deleted" is not a state.
+
+**What changed since wave G1a declined this same work:** G1a had no legal destination. It does now — `semio-framework-os-flow` is outside stdio's forbidden closure, and G2b *demonstrated* that edge compiles for a sibling crate. So the 18+2 flow sites became a dependency addition plus an import repoint rather than a redesign. G2c dispatched to close it. The `📦️mesh-io` site is deliberately left to report-not-edit: it is W3a territory **and** wave G5 is live inside that crate right now.
+
 ## ✅ M3b — WFC IS NOW AN INFERENCE. The user's own example, delivered.
 
 *"Turn everything into artifacts such as Assembly (collection of Slots, Modules, Rules, etc) that have WFC as inference."* — that artifact now exists at `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/`.
@@ -793,7 +827,32 @@ The agent found and fixed 3 bugs of its own, including **an inverse-law bug in `
 
 **Step 4 (delete `🧩️wfc` from `🧮️math`) deliberately NOT done**, and the reasoning is right: *deleting the only verified copy before the destination has a genuinely green test run would be premature.* The duplication window stays open here **by choice**, with the reason recorded — which is categorically different from M3a's window, which was open by exhaustion. Closing it needs someone to clear procedural's pre-existing breakage first.
 
-## ⏳ M3a (CAS → Equation/Function) — STEP 1 ONLY; duplication window is OPEN
+## ✅ M3a CONTINUATION — vertical slice proven, duplication window CLOSED
+
+Supersedes the "step 1 only" entry below. All three asks delivered.
+
+**A. One vertical slice, end to end** rather than ten unproven horizontals: `EquationSnapshot` (a `#[state(persistent)]` label-addressed expression tree bridged to `cas::expr::Expr` through its public API only) → a real `change-coefficient` triad with `diff` from `(payload, base)` and `inverse` from `base`, registered in the enum and both hand-rolled text/binary op codecs → a `roots` inference with a genuine `DepHash` chain delegating into the migrated Sturm-sequence isolation and bisection refinement. Test proves it finds `{1, 2}` for `x²−3x+2`.
+
+**B. `EquationNodeLabel` — never-reused ids, not positional paths.** The agent justified this concretely rather than by appeal to my brep analogy: the plugin's **own pre-existing `insert-point`/`remove-point` bug**, documented in an earlier wave's report, is exactly the positional-addressing failure this avoids. Using a live bug in the same crate as the argument is a better justification than the one I supplied.
+
+**C. Window closed.** `🧮️cas`/`📈️polynomial` deleted from `🧮️math`, mounts removed in the same change. `🧮️math`: **64,217 → 55,522 LOC**.
+
+### Coordinator-verified arithmetic — exact
+
+```
+math baseline (W0):        1738 passed / 15 failed   (1753 total)
+after M2 residue:          1568 passed / 15 failed   (1583 total)
+after M3a  (verified):     1402 passed /  2 failed   (1404 total)
+```
+`1583 − 1404 = 179` = **exactly** the 166 passing + 13 failing tests that emigrated. And the failure count fell `15 → 2` because all 13 known-failing tests were cas/polynomial ones that **moved with their code and still fail there** — none deleted to make a gate green, none mysteriously fixed. Both directions check out, which is the property that matters.
+
+### ⚠️ One claim corrected: `roots` is NOT "the codebase's first `InferredField`"
+
+The report states it is, having grepped and found zero prior implementations. Measured: **13 impls exist repo-wide** — 3 in stdio's `✳️brep`, 3 in `🧩️assembly` (wave M3b, landed in parallel), 2 in `➗️mathematical`, 2 in `🧩️puzzle`'s `🧊️3d` (the pre-existing `flatPosition` pilot this ticket has cited since W0), plus the framework spine itself. The grep was almost certainly run before M3b landed and against a narrower pattern than `impl .*InferredField<`.
+
+Harmless — the agent did not *act* on the claim, and the work is right either way. Recorded because an unchallenged "we are first here" is exactly the kind of premise that later gets built on: it invites inventing a mechanism instead of matching the four existing ones.
+
+## ⏳ M3a first pass (superseded above) — STEP 1 ONLY; duplication window was OPEN
 
 **State to be unmissable: `🧮️cas` (6,323) and `📈️polynomial` (2,366) now exist in BOTH `🧮️math` and the `➗️mathematical` plugin — 8,689 LOC duplicated.** Acceptable inside a wave, unacceptable as a resting state, because that is exactly the condition where two copies drift and neither is authoritative. Continuation dispatched to close it.
 

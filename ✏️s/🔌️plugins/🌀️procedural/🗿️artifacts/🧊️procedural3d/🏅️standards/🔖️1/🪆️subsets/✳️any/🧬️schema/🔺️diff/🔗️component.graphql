@@ -1,22 +1,22 @@
 # 🧬️ Procedural3d diff schema — sparse field delta.
 
 type Procedural3dDiff {
-  artifact: Procedural3dArtifact @state(class: PERSISTENT)
-  fixture: FlowFixture @state(class: PERSISTENT)
-  generation: GenerationPlayState @state(class: PERSISTENT)
-  selectedNodeIds: Procedural3dStringList @state(class: SHARED_UI)
-  lodMode: String @state(class: LOCAL_UI)
-  showMode: String @state(class: LOCAL_UI)
-  selectionMethod: String @state(class: LOCAL_UI)
-  hoveredNodeId: String @state(class: PREVIEW)
-  graphCamera: CameraJson @state(class: LOCAL_UI)
-  previewCamera: Procedural3dPreviewCamera @state(class: LOCAL_UI)
-  sunJson: String @state(class: LOCAL_UI)
-  selectedGenerationId: String @state(class: SHARED_UI)
-  generationPreviewText: String @state(class: PREVIEW)
-  activeUtilityId: String @state(class: SHARED_UI)
-  locale: String @state(class: LOCAL_UI)
-  contributionsJson: String @state(class: LOCAL_UI)
+  artifact: Procedural3dArtifact @state(class: ARTIFACT)
+  fixture: FlowFixture @state(class: ARTIFACT)
+  generation: GenerationPlayState @state(class: ARTIFACT)
+  selectedNodeIds: Procedural3dStringList @state(class: PRESENCE)
+  lodMode: String @state(class: CONFIG)
+  showMode: String @state(class: CONFIG)
+  selectionMethod: String @state(class: CONFIG)
+  hoveredNodeId: String @state(class: ARTIFACT)
+  graphCamera: CameraJson @state(class: CONFIG)
+  previewCamera: Procedural3dPreviewCamera @state(class: CONFIG)
+  sunJson: String @state(class: CONFIG)
+  selectedGenerationId: String @state(class: PRESENCE)
+  generationPreviewText: String @state(class: ARTIFACT)
+  activeUtilityId: String @state(class: PRESENCE)
+  locale: String @state(class: CONFIG)
+  contributionsJson: String @state(class: CONFIG)
 }
 
 type CameraJson {

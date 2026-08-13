@@ -1,22 +1,22 @@
 # 🧬️ Block5d diff schema — sparse field delta.
 
 type Block5dDiff {
-  artifact: Block5dArtifact @state(class: PERSISTENT)
-  schema: String @state(class: PERSISTENT)
-  partKind: BlockKindIdentity @state(class: PERSISTENT)
-  part2d: Block5dPart2d @state(class: PERSISTENT)
-  part3d: Block5dPart3d @state(class: PERSISTENT)
-  representations: Block5dRepresentationsDelta @state(class: PERSISTENT)
-  gripKinds: Block5dGripKindsDelta @state(class: PERSISTENT)
-  grips: Block5dGripsDelta @state(class: PERSISTENT)
-  compatibility: Block5dCompatibilityDelta @state(class: PERSISTENT)
-  attributes: Block5dAttributesDelta @state(class: PERSISTENT)
-  authors: Block5dAuthorList @state(class: PERSISTENT)
-  camera2d: BlockCamera2d @state(class: PERSISTENT)
-  camera3d: BlockCamera3d @state(class: PERSISTENT)
-  meta: BlockMeta @state(class: PERSISTENT)
-  selectedIds: Block5dStringList @state(class: SHARED_UI)
-  locale: String @state(class: LOCAL_UI)
+  artifact: Block5dArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  partKind: BlockKindIdentity @state(class: ARTIFACT)
+  part2d: Block5dPart2d @state(class: ARTIFACT)
+  part3d: Block5dPart3d @state(class: ARTIFACT)
+  representations: Block5dRepresentationsDelta @state(class: ARTIFACT)
+  gripKinds: Block5dGripKindsDelta @state(class: ARTIFACT)
+  grips: Block5dGripsDelta @state(class: ARTIFACT)
+  compatibility: Block5dCompatibilityDelta @state(class: ARTIFACT)
+  attributes: Block5dAttributesDelta @state(class: ARTIFACT)
+  authors: Block5dAuthorList @state(class: ARTIFACT)
+  camera2d: BlockCamera2d @state(class: ARTIFACT)
+  camera3d: BlockCamera3d @state(class: ARTIFACT)
+  meta: BlockMeta @state(class: ARTIFACT)
+  selectedIds: Block5dStringList @state(class: PRESENCE)
+  locale: String @state(class: CONFIG)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

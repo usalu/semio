@@ -4,21 +4,21 @@ package semio.s.reasoning.wires.diff;
 // 🧬️ Wires diff schema — sparse field delta.
 
 message WiresDiff {
-  // @state persistent
+  // @state artifact
   optional WiresArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional DslValue wires_fixture = 2;
-  // @state persistent
+  // @state artifact
   optional DslValue board_fixture = 3;
-  // @state shared-ui
+  // @state presence
   optional WiresStringList selected_ids = 4;
-  // @state preview
+  // @state artifact
   optional string drag_node_id = 5;
-  // @state preview
+  // @state artifact
   optional double drag_last_x = 6;
-  // @state preview
+  // @state artifact
   optional double drag_last_y = 7;
-  // @state local-ui
+  // @state config
   optional string locale = 8;
 }
 

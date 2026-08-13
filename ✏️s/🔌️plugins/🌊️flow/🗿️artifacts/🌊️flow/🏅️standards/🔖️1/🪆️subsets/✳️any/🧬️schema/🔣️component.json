@@ -27,106 +27,106 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera": {
       "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "widgets": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Widget"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "synapses": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SynapseSpec"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "layout": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/WidgetLayout"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedNodeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedEdgeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedHandleIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "previewOffNodeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "lodMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "proximityDistance": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridVisible": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSnapEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridFactor": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "catalogueSectionsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "automationEnabledJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "generationJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

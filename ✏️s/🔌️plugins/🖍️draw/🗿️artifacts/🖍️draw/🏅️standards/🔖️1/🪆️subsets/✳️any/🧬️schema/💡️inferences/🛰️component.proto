@@ -4,7 +4,7 @@ package semio.s.draw.draw.inference;
 // 💡️ Draw inference schema — layer-tree topology (structural pre-order + nesting depth).
 
 message DrawInference {
-  // @state inferred
+  // @derived
   DrawTopology topology = 1;
 }
 

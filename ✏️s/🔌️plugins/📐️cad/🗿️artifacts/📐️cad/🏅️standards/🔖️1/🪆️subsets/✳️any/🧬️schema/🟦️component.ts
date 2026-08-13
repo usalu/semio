@@ -1,103 +1,103 @@
 /** 🧬️ CadArtifact schema. */
 
 export interface CadArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   objects: CadObject[];
-  /** @state persistent */
+  /** @state artifact */
   buildingObjects: CadObject[];
-  /** @state persistent */
+  /** @state artifact */
   energyObjects: CadObject[];
-  /** @state persistent */
+  /** @state artifact */
   structureClassicObjects: CadObject[];
-  /** @state persistent */
+  /** @state artifact */
   referencesByModelDefinitionId: Record<string, CadReferenceList>;
-  /** @state persistent */
+  /** @state artifact */
   nodes: CadNode[];
-  /** @state persistent */
+  /** @state artifact */
   shapeGeometry?: CadGeometry;
-  /** @state persistent */
+  /** @state artifact */
   buildingGeometry?: CadGeometry;
-  /** @state persistent */
+  /** @state artifact */
   energyGeometry?: CadGeometry;
-  /** @state persistent */
+  /** @state artifact */
   structureClassicGeometry?: CadGeometry;
-  /** @state persistent */
+  /** @state artifact */
   activeModelDefinitionId: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   componentSelection: CadComponentSelection;
-  /** @state shared-ui */
+  /** @state presence */
   selectedReferenceModelDefinitionId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedReferenceId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedPrimitiveId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedPrimitiveKind?: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeExampleId?: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   engagementStep: string;
-  /** @state local-ui */
+  /** @state config */
   engagementPane?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementSessionJson?: string;
-  /** @state local-ui */
+  /** @state config */
   lastFinalizedInteractionId?: string;
-  /** @state local-ui */
+  /** @state config */
   sunEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   sunAzimuth: number;
-  /** @state local-ui */
+  /** @state config */
   sunElevation: number;
-  /** @state local-ui */
+  /** @state config */
   sunIntensity: number;
-  /** @state local-ui */
+  /** @state config */
   sunColor: string;
-  /** @state local-ui */
+  /** @state config */
   camera: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraBuilding: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraEnergy: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraStructureClassic: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   dislocateShape: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateBuilding: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateEnergy: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateStructureClassic: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   terminology: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredObjectId?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetObjectId?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetMode?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetId?: number;
 }
 

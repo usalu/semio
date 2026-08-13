@@ -12,36 +12,36 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp")]
 pub struct BmpArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub header_size: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub row_order: BmpRowOrder,
-    #[state(persistent)]
+    #[state(artifact)]
     pub planes: u16,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bits_per_pixel: u16,
-    #[state(persistent)]
+    #[state(artifact)]
     pub compression: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub image_size: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub x_pixels_per_meter: i32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub y_pixels_per_meter: i32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub colors_used: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub colors_important: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub palette: Vec<BmpPaletteEntry>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixels: Vec<u8>,
 }

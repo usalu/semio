@@ -1,7 +1,7 @@
 # 💡️ Wires inference schema — topology (node/edge/component counts + cycle-freedom) over the board graph.
 
 type WiresInference {
-  topology: WiresTopology! @state(class: INFERRED)
+  topology: WiresTopology! @derived
 }
 
 type WiresTopology {

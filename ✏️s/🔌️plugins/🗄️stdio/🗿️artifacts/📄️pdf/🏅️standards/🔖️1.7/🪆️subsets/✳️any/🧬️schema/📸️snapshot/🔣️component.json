@@ -62,11 +62,11 @@
   "type": "object",
   "required": ["schema", "declaredVersion", "pages", "info", "objects", "trailer"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "declaredVersion": { "type": "string", "x-semio-state": "persistent" },
-    "pages": { "type": "array", "items": { "$ref": "#/$defs/PdfPage" }, "x-semio-state": "persistent" },
-    "info": { "$ref": "#/$defs/PdfInfo", "x-semio-state": "persistent" },
-    "objects": { "type": "array", "items": { "$ref": "#/$defs/PdfIndirectObject" }, "x-semio-state": "persistent" },
-    "trailer": { "type": "array", "items": { "$ref": "#/$defs/PdfDictEntry" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "declaredVersion": { "type": "string", "x-semio-state": "artifact" },
+    "pages": { "type": "array", "items": { "$ref": "#/$defs/PdfPage" }, "x-semio-state": "artifact" },
+    "info": { "$ref": "#/$defs/PdfInfo", "x-semio-state": "artifact" },
+    "objects": { "type": "array", "items": { "$ref": "#/$defs/PdfIndirectObject" }, "x-semio-state": "artifact" },
+    "trailer": { "type": "array", "items": { "$ref": "#/$defs/PdfDictEntry" }, "x-semio-state": "artifact" }
   }
 }

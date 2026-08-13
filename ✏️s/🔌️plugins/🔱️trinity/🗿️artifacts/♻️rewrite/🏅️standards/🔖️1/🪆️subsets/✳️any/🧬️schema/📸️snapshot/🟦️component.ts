@@ -1,15 +1,15 @@
 /** 🧬️ Rewrite snapshot schema — persistent fields only. */
 
 export interface RewriteSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   beforeFixtureJson: string;
-  /** @state persistent */
+  /** @state artifact */
   lhsJson: string;
-  /** @state persistent */
+  /** @state artifact */
   rhsJson: string;
-  /** @state persistent */
+  /** @state artifact */
   parameterBindings: Record<string, PropertyValue>;
-  /** @state persistent */
+  /** @state artifact */
   ruleLayout: Record<string, LayoutPoint>;
 }
 

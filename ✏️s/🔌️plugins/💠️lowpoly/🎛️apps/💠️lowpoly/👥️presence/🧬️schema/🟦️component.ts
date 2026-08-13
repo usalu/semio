@@ -1,35 +1,35 @@
 /** 🧬️ LowpolyPresence */
 export interface LowpolyPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectionMode: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectionIds: number[];
-  /** @state shared-ui */
+  /** @state presence */
   selectionTargetsMesh: boolean;
-  /** @state shared-ui */
+  /** @state presence */
   selectionTargetsVertex: boolean;
-  /** @state shared-ui */
+  /** @state presence */
   selectionTargetsEdge: boolean;
-  /** @state shared-ui */
+  /** @state presence */
   selectionTargetsFace: boolean;
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredTargetObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredTargetMode?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredTargetId?: number;
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraPosition: number[];
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraTarget: number[];
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraFov: number;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state shared-ui */
+  /** @state presence */
   paintUtility: string;
 }

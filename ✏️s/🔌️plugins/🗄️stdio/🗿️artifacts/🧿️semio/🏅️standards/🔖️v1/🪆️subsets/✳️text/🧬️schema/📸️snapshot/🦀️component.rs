@@ -71,9 +71,9 @@ pub struct SemioTextRun {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.text")]
 pub struct SemioTextSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub runs: Vec<SemioTextRun>,
 }

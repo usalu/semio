@@ -1,7 +1,7 @@
 # 💡️ Gltf inference schema — mesh-primitive POSITION-accessor-derived bounding box.
 
 type GltfInference {
-  bounds: GltfBounds! @state(class: INFERRED)
+  bounds: GltfBounds! @derived
 }
 
 type GltfBounds {

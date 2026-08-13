@@ -4,7 +4,7 @@ package semio.s.remodel.remodel.inference;
 // 💡️ Remodel inference schema — reconstructed-mesh bounds (bounding box + vertex/face counts).
 
 message RemodelInference {
-  // @state inferred
+  // @derived
   RemodelBounds bounds = 1;
 }
 

@@ -15,35 +15,35 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "path": {
       "$ref": "#/$defs/ImperativePath",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "seed": {
       "type": "object",
       "additionalProperties": true,
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedStepIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "runOutputJson": {
       "type": "string",
-      "x-semio-state": "effect"
+      "x-semio-state": "transient"
     }
   },
   "$defs": {

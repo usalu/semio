@@ -8,12 +8,12 @@ use crate::apps::procedural3d::config::Procedural3dPreviewCamera;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.procedural.3d.presence")]
 pub struct Procedural3dPresence {
-    #[state(shared_ui)] pub selected_node_ids: Vec<String>,
-    #[state(shared_ui)] pub hovered_node_id: Option<String>,
-    #[state(shared_ui)] pub camera: CameraJson,
-    #[state(shared_ui)] pub preview_camera: Procedural3dPreviewCamera,
-    #[state(shared_ui)] pub selection_method: String,
-    #[state(shared_ui)] pub active_utility_id: String,
-    #[state(shared_ui)] pub show_mode: String,
+    #[state(presence)] pub selected_node_ids: Vec<String>,
+    #[state(presence)] pub hovered_node_id: Option<String>,
+    #[state(presence)] pub camera: CameraJson,
+    #[state(presence)] pub preview_camera: Procedural3dPreviewCamera,
+    #[state(presence)] pub selection_method: String,
+    #[state(presence)] pub active_utility_id: String,
+    #[state(presence)] pub show_mode: String,
 }
 

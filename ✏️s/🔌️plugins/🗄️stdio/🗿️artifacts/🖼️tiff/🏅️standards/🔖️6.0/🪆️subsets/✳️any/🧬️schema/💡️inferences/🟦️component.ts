@@ -9,6 +9,6 @@ export interface TiffDimensions {
 }
 
 export interface TiffInference {
-  /** @state inferred */
+  /** @derived */
   dimensions: TiffDimensions;
 }

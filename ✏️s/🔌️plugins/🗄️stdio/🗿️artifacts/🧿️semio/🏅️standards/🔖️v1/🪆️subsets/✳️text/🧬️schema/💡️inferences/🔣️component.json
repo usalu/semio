@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["profile"],
   "properties": {
-    "profile": { "$ref": "#/$defs/SemioTextProfile", "x-semio-state": "inferred" }
+    "profile": { "$ref": "#/$defs/SemioTextProfile", "x-semio-derived": true }
   },
   "$defs": {
     "SemioTextProfile": {

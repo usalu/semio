@@ -4,7 +4,7 @@ package semio.s.stdio.html.inference;
 // 💡️ Html inference schema — document outline (element count, max depth, text length).
 
 message HtmlInference {
-  // @state inferred
+  // @derived
   HtmlOutline outline = 1;
 }
 

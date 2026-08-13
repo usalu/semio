@@ -1,0 +1,145 @@
+### cargo check -p semio-s-plugin-cad --all-targets
+warning: `semio-framework-plugin` (lib) generated 39 warnings
+error: could not compile `semio-framework-plugin` (lib) due to 3 previous errors; 39 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+warning: unused import: `ArenaId`
+ --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🌳️bvh/🦀️component.rs:3:26
+  |
+3 | use crate::brep::arena::{ArenaId, EdgeId, FaceId, SolidId};
+  |                          ^^^^^^^
+
+warning: unused variable: `tolerance`
+    --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1300:55
+     |
+1300 |     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+     |                                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tolerance`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `loop_uv_polygon` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:152:4
+    |
+152 | fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: trait `Midpoint` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:449:7
+    |
+449 | trait Midpoint {
+    |       ^^^^^^^^
+
+warning: method `triangle_count` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📦️mesh-io/🦀️component.rs:435:8
+    |
+434 | impl TriangleMesh {
+    | ----------------- method in this implementation
+435 |     fn triangle_count(&self) -> usize {
+    |        ^^^^^^^^^^^^^^
+
+warning: `semio-framework-3d` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-3d` to apply 11 suggestions)
+
+### cargo check -p semio-s-plugin-gis --all-targets
+17 |     ParamDomain, PointClassification, Vec3, Vec3 as EVec3,
+   |                                       ^^^^
+
+warning: unused import: `ArenaId`
+ --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🌳️bvh/🦀️component.rs:3:26
+  |
+3 | use crate::brep::arena::{ArenaId, EdgeId, FaceId, SolidId};
+  |                          ^^^^^^^
+
+warning: unused variable: `tolerance`
+    --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1300:55
+     |
+1300 |     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+     |                                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tolerance`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `loop_uv_polygon` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:152:4
+    |
+152 | fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: trait `Midpoint` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:449:7
+    |
+449 | trait Midpoint {
+    |       ^^^^^^^^
+
+warning: method `triangle_count` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📦️mesh-io/🦀️component.rs:435:8
+    |
+434 | impl TriangleMesh {
+    | ----------------- method in this implementation
+435 |     fn triangle_count(&self) -> usize {
+    |        ^^^^^^^^^^^^^^
+
+warning: `semio-framework-3d` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-3d` to apply 11 suggestions)
+
+### cargo check -p semio-s-plugin-demonstrator --all-targets
+    |
+532 - fn curve_point(curve: &crate::brep::curve::Curve3, u: f64) -> Pnt3 {
+532 + fn curve_point(curve: &Curve3, u: f64) -> Pnt3 {
+    |
+
+warning: unused import: `solid_volume`
+  --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🎨️blend/🦀️component.rs:14:41
+   |
+14 | use crate::brep::measure::{edge_length, solid_volume};
+   |                                         ^^^^^^^^^^^^
+
+warning: unused import: `make_box`
+  --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🎨️blend/🦀️component.rs:15:31
+   |
+15 | use crate::brep::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+   |                               ^^^^^^^^
+
+warning: unused import: `Vec3`
+  --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:17:39
+   |
+17 |     ParamDomain, PointClassification, Vec3, Vec3 as EVec3,
+   |                                       ^^^^
+
+warning: unused import: `ArenaId`
+ --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🌳️bvh/🦀️component.rs:3:26
+  |
+3 | use crate::brep::arena::{ArenaId, EdgeId, FaceId, SolidId};
+  |                          ^^^^^^^
+
+warning: unused variable: `tolerance`
+    --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🧰️kernel/🦀️component.rs:1300:55
+     |
+1300 |     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+     |                                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tolerance`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `triangle_count` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/📦️mesh-io/🦀️component.rs:435:8
+    |
+434 | impl TriangleMesh {
+    | ----------------- method in this implementation
+435 |     fn triangle_count(&self) -> usize {
+    |        ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `loop_uv_polygon` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:152:4
+    |
+152 | fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
+    |    ^^^^^^^^^^^^^^^
+
+warning: trait `Midpoint` is never used
+   --> 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/./../../📐️brep/🏷️classify/🦀️component.rs:449:7
+    |
+449 | trait Midpoint {
+    |       ^^^^^^^^
+
+warning: `semio-framework-3d` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-3d` to apply 11 suggestions)

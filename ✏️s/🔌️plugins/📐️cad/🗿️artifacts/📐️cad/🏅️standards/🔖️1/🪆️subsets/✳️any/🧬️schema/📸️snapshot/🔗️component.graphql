@@ -1,19 +1,19 @@
 # 🧬️ CadSnapshot schema.
 
 type CadSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  id: String! @state(class: PERSISTENT)
-  objects: [CadObject!]! @state(class: PERSISTENT)
-  buildingObjects: [CadObject!]! @state(class: PERSISTENT)
-  energyObjects: [CadObject!]! @state(class: PERSISTENT)
-  structureClassicObjects: [CadObject!]! @state(class: PERSISTENT)
-  referencesByModelDefinitionId: [CadReferenceListEntry!]! @state(class: PERSISTENT)
-  nodes: [CadNode!]! @state(class: PERSISTENT)
-  shapeGeometry: CadGeometry @state(class: PERSISTENT)
-  buildingGeometry: CadGeometry @state(class: PERSISTENT)
-  energyGeometry: CadGeometry @state(class: PERSISTENT)
-  structureClassicGeometry: CadGeometry @state(class: PERSISTENT)
-  activeModelDefinitionId: String! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  objects: [CadObject!]! @state(class: ARTIFACT)
+  buildingObjects: [CadObject!]! @state(class: ARTIFACT)
+  energyObjects: [CadObject!]! @state(class: ARTIFACT)
+  structureClassicObjects: [CadObject!]! @state(class: ARTIFACT)
+  referencesByModelDefinitionId: [CadReferenceListEntry!]! @state(class: ARTIFACT)
+  nodes: [CadNode!]! @state(class: ARTIFACT)
+  shapeGeometry: CadGeometry @state(class: ARTIFACT)
+  buildingGeometry: CadGeometry @state(class: ARTIFACT)
+  energyGeometry: CadGeometry @state(class: ARTIFACT)
+  structureClassicGeometry: CadGeometry @state(class: ARTIFACT)
+  activeModelDefinitionId: String! @state(class: ARTIFACT)
 }
 
 type CadObject { id: String! }

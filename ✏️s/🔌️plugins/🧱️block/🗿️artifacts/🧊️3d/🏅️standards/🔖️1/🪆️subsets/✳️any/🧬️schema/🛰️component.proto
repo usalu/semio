@@ -4,47 +4,47 @@ package semio.s.block.block3d.artifact;
 // 🧬️ Block3d artifact schema — every field with its state class.
 
 message Block3dArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   BlockKindIdentity object_kind = 2;
-  // @state persistent
+  // @state artifact
   repeated BlockRepresentation representations = 3;
-  // @state persistent
+  // @state artifact
   repeated Block3dVortexKind vortex_kinds = 4;
-  // @state persistent
+  // @state artifact
   repeated Block3dVortexTemplate vortices = 5;
-  // @state persistent
+  // @state artifact
   repeated BlockCompatibilityRule compatibility = 6;
-  // @state persistent
+  // @state artifact
   repeated BlockAttribute attributes = 7;
-  // @state persistent
+  // @state artifact
   repeated BlockAuthor authors = 8;
-  // @state persistent
+  // @state artifact
   BlockCamera3d camera3d = 9;
-  // @state persistent
+  // @state artifact
   BlockMeta meta = 10;
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 11;
-  // @state shared-ui
+  // @state presence
   optional string active_representation_id = 12;
-  // @state shared-ui
+  // @state presence
   repeated string wanted_tags = 13;
-  // @state local-ui
+  // @state config
   string locale = 14;
-  // @state local-ui
+  // @state config
   repeated Block3dWindowView windows = 15;
-  // @state local-ui
+  // @state config
   optional string brush_vortex_kind_id = 16;
-  // @state local-ui
+  // @state config
   double brush_radius = 17;
-  // @state local-ui
+  // @state config
   bool brush_flip = 18;
-  // @state preview
+  // @state artifact
   optional Block3dBrushPreview brush_preview = 19;
-  // @state local-ui
+  // @state config
   optional BlockCamera3d camera = 20;
-  // @state preview
+  // @state artifact
   optional string hovered_vortex_full_id = 21;
 }
 

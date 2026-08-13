@@ -103,15 +103,15 @@ pub struct Mp4Box {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4")]
 pub struct Mp4Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default = "default_schema")]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub ftyp: Mp4Ftyp,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub tracks: Vec<Mp4Track>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub unknown_boxes: Vec<Mp4Box>,
 }

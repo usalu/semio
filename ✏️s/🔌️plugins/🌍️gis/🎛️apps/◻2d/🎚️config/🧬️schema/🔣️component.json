@@ -21,53 +21,53 @@
     "selectedIds": {
       "type": "array",
       "items": { "type": "string" },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "layerVisibility": {
       "type": "object",
       "additionalProperties": { "type": "boolean" },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "renderMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "vectorStyle": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "featureSelectionJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoverJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "layerStrokeScale": {
       "type": "object",
       "additionalProperties": { "type": "number" },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   }
 }

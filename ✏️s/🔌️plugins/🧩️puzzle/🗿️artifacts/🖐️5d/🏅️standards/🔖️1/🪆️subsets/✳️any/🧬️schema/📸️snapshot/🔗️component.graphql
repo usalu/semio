@@ -1,14 +1,14 @@
 # 🧬️ Puzzle5d snapshot schema — persistent fields only.
 
 type Puzzle5dSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  domain: String! @state(class: PERSISTENT)
-  label: String @state(class: PERSISTENT)
-  meta: Puzzle5dMeta! @state(class: PERSISTENT)
-  kindCatalogs: Puzzle5dKindCatalogs @state(class: PERSISTENT)
-  kindCompatibility: [Puzzle5dKindCompatibility!]! @state(class: PERSISTENT)
-  parts: [Puzzle5dPart!]! @state(class: PERSISTENT)
-  fasteners: [Puzzle5dFastener!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  domain: String! @state(class: ARTIFACT)
+  label: String @state(class: ARTIFACT)
+  meta: Puzzle5dMeta! @state(class: ARTIFACT)
+  kindCatalogs: Puzzle5dKindCatalogs @state(class: ARTIFACT)
+  kindCompatibility: [Puzzle5dKindCompatibility!]! @state(class: ARTIFACT)
+  parts: [Puzzle5dPart!]! @state(class: ARTIFACT)
+  fasteners: [Puzzle5dFastener!]! @state(class: ARTIFACT)
 }
 
 

@@ -231,49 +231,49 @@ pub enum PngChunkMarker {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png")]
 pub struct PngSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     // IHDR (§11.2.2) — compression method / filter method are always 0, validated on decode,
     // never modeled as mutable fields.
-    #[state(persistent)]
+    #[state(artifact)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bit_depth: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     pub color_type: PngColorType,
-    #[state(persistent)]
+    #[state(artifact)]
     pub interlace: bool,
     // PLTE (§11.2.3) — index-keyed collection, optional.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub plte: Option<Vec<PngRgb>>,
     // tRNS (§11.3.3).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub trns: Option<PngTransparency>,
     // Typed ancillary set (§11.3.5-11.3.6).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub gama: Option<u32>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub chrm: Option<PngChromaticities>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub srgb: Option<PngSrgbIntent>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub phys: Option<PngPhysicalDims>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub time: Option<PngTimestamp>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub bkgd: Option<PngBackground>,
     // tEXt/zTXt/iTXt (§11.3.4) — index-keyed, see `PngTextChunk` doc for why.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub text_chunks: Vec<PngTextChunk>,
     // Decoded raster payload — legitimate `Vec<u8>` exception (the format's payload IS
@@ -281,14 +281,14 @@ pub struct PngSnapshot {
     // top-to-bottom, non-interlaced regardless of the source file's own encoding (see the
     // engine's `EncodeScopeNote` — decode fully supports every color type/bit depth/Adam7,
     // encode always canonicalizes).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixels: Vec<u8>,
     // Chunk order + raw retention — see `PngChunkMarker`/`PngChunk` docs.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub chunk_order: Vec<PngChunkMarker>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub unknown_chunks: Vec<PngChunk>,
 }

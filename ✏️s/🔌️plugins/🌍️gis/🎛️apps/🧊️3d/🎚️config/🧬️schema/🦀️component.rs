@@ -6,9 +6,9 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gis3d.config")]
 pub struct Gis3dConfig {
-    #[state(local_ui)] pub camera_json: String,
-    #[state(local_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub camera_json: String,
+    #[state(config)] pub selected_ids: Vec<String>,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema descriptor

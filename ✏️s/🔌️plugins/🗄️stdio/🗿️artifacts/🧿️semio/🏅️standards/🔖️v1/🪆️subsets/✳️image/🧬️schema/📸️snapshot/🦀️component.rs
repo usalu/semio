@@ -67,26 +67,26 @@ pub struct SemioImageMetadataEntry {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.image")]
 pub struct SemioImageSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub colorspace: SemioColorspace,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub bit_depth: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub frames: Vec<SemioImageFrame>,
     /// 🎨️ Embedded ICC color profile bytes, verbatim — `None` when the source carried none.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub icc: Option<Vec<u8>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub metadata: Vec<SemioImageMetadataEntry>,
 }

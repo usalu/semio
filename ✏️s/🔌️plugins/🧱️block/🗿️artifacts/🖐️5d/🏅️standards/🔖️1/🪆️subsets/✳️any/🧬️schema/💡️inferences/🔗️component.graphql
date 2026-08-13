@@ -1,7 +1,7 @@
 # 💡️ Block5d inference schema — bounds (bounding box + vertex count) over the part kind's rim grip templates' 3d placements.
 
 type Block5dInference {
-  bounds: Block5dBounds! @state(class: INFERRED)
+  bounds: Block5dBounds! @derived
 }
 
 type Block5dBounds {

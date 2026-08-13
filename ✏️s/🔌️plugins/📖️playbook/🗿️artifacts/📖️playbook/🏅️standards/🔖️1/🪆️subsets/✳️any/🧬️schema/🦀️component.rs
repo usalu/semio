@@ -10,21 +10,21 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub version: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub title: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub steps: Vec<PlaybookStep>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub contributions_json: String,
 }
 //#endregion 🔖️Artifact

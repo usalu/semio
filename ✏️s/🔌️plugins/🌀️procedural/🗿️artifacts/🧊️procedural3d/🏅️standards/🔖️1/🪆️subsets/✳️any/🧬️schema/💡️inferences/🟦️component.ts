@@ -9,6 +9,6 @@ export interface Procedural3dTopology {
 }
 
 export interface Procedural3dInference {
-  /** @state inferred */
+  /** @derived */
   topology: Procedural3dTopology;
 }

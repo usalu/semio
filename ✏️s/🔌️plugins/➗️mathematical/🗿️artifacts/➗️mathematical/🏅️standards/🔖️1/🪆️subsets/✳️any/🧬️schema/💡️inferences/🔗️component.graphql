@@ -1,7 +1,7 @@
 # 💡️ Mathematical inference schema — topology (graph topological order).
 
 type MathematicalInference {
-  topology: MathematicalTopology! @state(class: INFERRED)
+  topology: MathematicalTopology! @derived
 }
 
 type MathematicalTopology {

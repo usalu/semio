@@ -6,6 +6,6 @@ type SemioGraphEdgeListDiff {
   values: [SemioGraphEdge!]!
 }
 type SemioGraphDiff {
-  nodes: SemioGraphNodeListDiff @state(class: PERSISTENT)
-  edges: SemioGraphEdgeListDiff @state(class: PERSISTENT)
+  nodes: SemioGraphNodeListDiff @state(class: ARTIFACT)
+  edges: SemioGraphEdgeListDiff @state(class: ARTIFACT)
 }

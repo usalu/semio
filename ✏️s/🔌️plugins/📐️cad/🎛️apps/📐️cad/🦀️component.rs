@@ -34,7 +34,7 @@ use crate::artifacts::cad::mutations::change_active_model_definition::mutation::
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
-use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView,
@@ -1356,7 +1356,7 @@ pub(crate) mod testkit {
     pub fn drive_with_config(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadMutation, CadConfigMutation> {
         let _ = app;
         let history = empty_history();
-        let doc = ArtifactView { snapshot: scene, history: &history };
+        let doc = ArtifactView::new(scene, &history);
         let cfg = ConfigView { snapshot: config };
         let draft_state = NoDraft::default();
         let draft = DraftView { snapshot: &draft_state };
@@ -1701,7 +1701,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = forest_play_scene();
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &scene, history: &history };
+        let doc = ArtifactView::new(&scene, &history);
         for body_key in [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY] {
             let node = render_direct(&app, body_key, &doc, &CadConfig::default());
             let json = serde_json::to_string(&node).unwrap();
@@ -1889,7 +1889,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &scene, history: &history };
+        let doc = ArtifactView::new(&scene, &history);
         let config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
         let node = render_direct(&app, shape::BODY_KEY, &doc, &config);
         let json = serde_json::to_string(&node).unwrap();
@@ -1910,7 +1910,7 @@ mod tests {
         let emit = drive_with_config(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })), &base_config);
         let config = config_after(&emit, &base_config);
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &scene, history: &history };
+        let doc = ArtifactView::new(&scene, &history);
         let shape = render_direct(&app, shape::BODY_KEY, &doc, &config);
         let building = render_direct(&app, building::BODY_KEY, &doc, &config);
         let shape_json = serde_json::to_string(&shape).unwrap();
@@ -1926,7 +1926,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &scene, history: &history };
+        let doc = ArtifactView::new(&scene, &history);
         let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
         let empty_config = CadConfig::default();
 
@@ -1947,7 +1947,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &scene, history: &history };
+        let doc = ArtifactView::new(&scene, &history);
         let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
         let empty_config = CadConfig::default();
 
@@ -1970,7 +1970,7 @@ mod tests {
         let emit = drive(&app, &scene, "setDislocateOption", Some(json!({ "pane": "building", "option": "rotate", "pressed": false })));
         let config = config_after(&emit, &CadConfig::default());
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &scene, history: &history };
+        let doc = ArtifactView::new(&scene, &history);
         let measures = window_measures_direct(&app, &doc, &config);
         let rotate_pressed = |window_id: &str| {
             measures.get(window_id).and_then(|items| {
@@ -2024,7 +2024,7 @@ mod tests {
         assert!(!base_config.sun.enabled, "sun must be off by default");
         let scene = default_document();
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &scene, history: &history };
+        let doc = ArtifactView::new(&scene, &history);
         let measures = window_measures_direct(&app, &doc, &base_config);
         for window_kind in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
             assert!(measures.contains_key(window_kind), "missing sun measures for {window_kind}");

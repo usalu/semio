@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/SemioCadBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/SemioCadBounds", "x-semio-derived": true }
   },
   "$defs": {
     "SemioPoint2": {

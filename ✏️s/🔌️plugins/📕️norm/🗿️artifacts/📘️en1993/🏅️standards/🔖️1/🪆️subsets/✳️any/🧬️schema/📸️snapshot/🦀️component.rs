@@ -12,199 +12,199 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.en1993", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1993")]
 pub struct En1993Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: AnnexChoice,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_ed_knm: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_ed_kn: f64,
     #[dsl(unit = "mm2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_mm2: f64,
     #[dsl(unit = "mm2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_v_mm2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub w_pl_mm3: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_y_mpa: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_u_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub chi: f64,
     #[dsl(unit = "mm2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_net_mm2: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub tension_n_ed_kn: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_thickness_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_rating: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_massivity: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_mu_0: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_design_temperature_c: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub cf_b_bar_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub cf_t_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub cf_k_sigma: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub cf_psi: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub cf_n_ed_kn: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub cf_gross_resistance_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub stainless_m_ed_knm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub stainless_w_pl_mm3: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub stainless_f_y_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub plated_lambda_p: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub plated_sigma_ed_mpa: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub silo_t_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub silo_r_mm: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub shell_sigma_x_ed_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub silo_k: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub silo_gamma_kn_m3: f64,
     #[dsl(unit = "m")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub silo_depth_m: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_f_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_n_bolts: u32,
     #[dsl(unit = "mm2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_a_s_mm2: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_e1_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_e2_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_d0_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_d_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_t_mm: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_f_u_mpa: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bolt_f_ub_mpa: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub weld_a_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub weld_l_mm: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub weld_f_u_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub weld_steel_grade: String,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub weld_f_ed_kn: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub delta_sigma_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fatigue_category: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fatigue_method: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub t10_steel_subgrade: String,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub t10_actual_thickness_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub t10_t_ed_c: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub tension_component_f_uk_kn: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub tension_component_f_k_kn: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub tension_component_n_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub hss_w_el_mm3: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub hss_f_y_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub hss_section_class: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     pub hss_m_ed_knm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bridge_lambda: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bridge_phi_2: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bridge_delta_sigma_p_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub tower_wind_factor: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub tower_n_ed_kn: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub pile_sigma_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub pile_k_red: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub pile_n_ed_kn: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub crane_f_z_ed_kn: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub crane_wheel_contact_length_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub crane_dispersion_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub crane_t_w_mm: f64,
 }
 //#region 🔖️HandcraftedArtifactCodecs

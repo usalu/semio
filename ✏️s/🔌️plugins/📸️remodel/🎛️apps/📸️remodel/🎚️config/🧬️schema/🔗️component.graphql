@@ -1,33 +1,33 @@
 type RemodelWorldCamera {
-  position: [Float!]! @state(class: LOCAL_UI)
-  target: [Float!]! @state(class: LOCAL_UI)
-  fov: Float! @state(class: LOCAL_UI)
+  position: [Float!]! @state(class: CONFIG)
+  target: [Float!]! @state(class: CONFIG)
+  fov: Float! @state(class: CONFIG)
 }
 
 type RemodelSelection {
-  mode: String! @state(class: LOCAL_UI)
-  ids: [String!]! @state(class: LOCAL_UI)
+  mode: String! @state(class: CONFIG)
+  ids: [String!]! @state(class: CONFIG)
 }
 
 type RemodelLayerVisibility {
-  mesh: Boolean! @state(class: LOCAL_UI)
-  dense: Boolean! @state(class: LOCAL_UI)
-  sparse: Boolean! @state(class: LOCAL_UI)
-  cameras: Boolean! @state(class: LOCAL_UI)
-  gcps: Boolean! @state(class: LOCAL_UI)
+  mesh: Boolean! @state(class: CONFIG)
+  dense: Boolean! @state(class: CONFIG)
+  sparse: Boolean! @state(class: CONFIG)
+  cameras: Boolean! @state(class: CONFIG)
+  gcps: Boolean! @state(class: CONFIG)
 }
 
 type RemodelFrameCursor {
-  streamId: String @state(class: LOCAL_UI)
-  frameIndex: Int! @state(class: LOCAL_UI)
+  streamId: String @state(class: CONFIG)
+  frameIndex: Int! @state(class: CONFIG)
 }
 
 type RemodelConfig {
-  camera: RemodelWorldCamera! @state(class: LOCAL_UI)
-  selection: RemodelSelection! @state(class: LOCAL_UI)
-  layers: RemodelLayerVisibility! @state(class: LOCAL_UI)
-  frameCursor: RemodelFrameCursor! @state(class: LOCAL_UI)
-  reportTable: String! @state(class: LOCAL_UI)
-  activeUtilityId: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  camera: RemodelWorldCamera! @state(class: CONFIG)
+  selection: RemodelSelection! @state(class: CONFIG)
+  layers: RemodelLayerVisibility! @state(class: CONFIG)
+  frameCursor: RemodelFrameCursor! @state(class: CONFIG)
+  reportTable: String! @state(class: CONFIG)
+  activeUtilityId: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

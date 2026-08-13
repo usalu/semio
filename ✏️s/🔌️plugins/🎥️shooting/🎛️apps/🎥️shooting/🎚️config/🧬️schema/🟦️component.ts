@@ -1,30 +1,30 @@
 /** 🧬️ ShootingConfig */
 export interface ShootingConfig {
-  /** @state local-ui */
+  /** @state config */
   defaultShotFormat: string;
-  /** @state local-ui */
+  /** @state config */
   defaultShotShape: string;
-  /** @state local-ui */
+  /** @state config */
   defaultAssetFormat: string;
-  /** @state local-ui */
+  /** @state config */
   selectedShotIds: string[];
-  /** @state local-ui */
+  /** @state config */
   selectedAssetIds: string[];
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredAssetId?: string;
-  /** @state local-ui */
+  /** @state config */
   centerModel: boolean;
-  /** @state local-ui */
+  /** @state config */
   fitRevision: number;
-  /** @state local-ui */
+  /** @state config */
   cameraDraftLabel: string;
-  /** @state local-ui */
+  /** @state config */
   camera: ShootingCamera;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

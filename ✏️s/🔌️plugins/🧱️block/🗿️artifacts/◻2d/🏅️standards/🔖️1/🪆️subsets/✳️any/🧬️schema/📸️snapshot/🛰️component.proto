@@ -4,25 +4,25 @@ package semio.s.block.block2d.snapshot;
 // 🧬️ Block2d snapshot schema — persistent fields only.
 
 message Block2dSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   BlockKindIdentity node_kind = 2;
-  // @state persistent
+  // @state artifact
   Block2dPresentation presentation = 3;
-  // @state persistent
+  // @state artifact
   repeated Block2dHandleKind handle_kinds = 4;
-  // @state persistent
+  // @state artifact
   repeated Block2dHandleTemplate handles = 5;
-  // @state persistent
+  // @state artifact
   repeated BlockCompatibilityRule compatibility = 6;
-  // @state persistent
+  // @state artifact
   repeated BlockAttribute attributes = 7;
-  // @state persistent
+  // @state artifact
   repeated BlockAuthor authors = 8;
-  // @state persistent
+  // @state artifact
   BlockCamera2d camera2d = 9;
-  // @state persistent
+  // @state artifact
   BlockMeta meta = 10;
 }
 

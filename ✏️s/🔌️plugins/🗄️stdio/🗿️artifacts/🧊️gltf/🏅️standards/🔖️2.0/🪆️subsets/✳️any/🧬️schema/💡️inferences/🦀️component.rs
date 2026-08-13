@@ -19,7 +19,7 @@ use super::bounds::{compute_gltf_bounds, GltfBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gltf.inference")]
 pub struct GltfInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: GltfBounds,
 }
 

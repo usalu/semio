@@ -4,7 +4,7 @@ package semio.s.norm.vdi3805.inference;
 // 💡️ Vdi3805 inference schema — document outline (field/section list + entry count).
 
 message Vdi3805Inference {
-  // @state inferred
+  // @derived
   Vdi3805Outline outline = 1;
 }
 

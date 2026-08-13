@@ -13,17 +13,17 @@ use std::collections::BTreeMap;
 #[dsl(extension = "rewrite", layout = "lines")]
 #[artifact_schema(id = "s.trinity.rewrite")]
 pub struct RewriteSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub before_fixture_json: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub lhs_json: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[dsl(lang = "json")]
     pub rhs_json: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub parameter_bindings: BTreeMap<String, PropertyValue>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub rule_layout: BTreeMap<String, LayoutPoint>,
 }

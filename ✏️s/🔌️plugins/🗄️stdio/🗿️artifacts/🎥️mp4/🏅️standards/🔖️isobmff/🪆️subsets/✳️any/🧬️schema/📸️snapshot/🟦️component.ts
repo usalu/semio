@@ -27,8 +27,8 @@ export interface Mp4Box {
   data: number[];
 }
 export interface Mp4Snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ ftyp: Mp4Ftyp;
-  /** @state persistent */ tracks: Mp4Track[];
-  /** @state persistent */ unknownBoxes: Mp4Box[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ ftyp: Mp4Ftyp;
+  /** @state artifact */ tracks: Mp4Track[];
+  /** @state artifact */ unknownBoxes: Mp4Box[];
 }

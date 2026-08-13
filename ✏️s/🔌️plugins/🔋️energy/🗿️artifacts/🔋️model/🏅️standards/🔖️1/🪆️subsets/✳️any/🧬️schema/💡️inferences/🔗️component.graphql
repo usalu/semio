@@ -1,7 +1,7 @@
 # 💡️ EnergyModel inference schema — opaque-container census of the persisted `modelJson` body.
 
 type EnergyModelInference {
-  entries: EnergyModelEntries! @state(class: INFERRED)
+  entries: EnergyModelEntries! @derived
 }
 
 type EnergyModelEntries {

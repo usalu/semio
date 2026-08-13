@@ -3,8 +3,8 @@
 scalar DslValue
 
 type WiresMutation {
-  wiresFixture: DslValue! @state(class: PERSISTENT)
-  boardFixture: DslValue! @state(class: PERSISTENT)
+  wiresFixture: DslValue! @state(class: ARTIFACT)
+  boardFixture: DslValue! @state(class: ARTIFACT)
 }
 
 type WiresStringList {

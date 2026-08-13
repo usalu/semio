@@ -7,16 +7,16 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hasHeader": {
       "type": "boolean",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "description": "Whether records[0] is a header row (RFC 4180's own optional convention)."
     },
     "records": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": { "$ref": "#/$defs/CsvRecord" }
     }
   },

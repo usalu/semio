@@ -18,7 +18,7 @@ use super::outline::TxtOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt.inference")]
 pub struct TxtInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: TxtOutline,
 }
 

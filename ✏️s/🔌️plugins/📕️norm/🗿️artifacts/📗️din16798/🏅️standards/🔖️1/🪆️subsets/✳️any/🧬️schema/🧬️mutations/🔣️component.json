@@ -70,306 +70,306 @@
   "properties": {
     "annex": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "occupancy": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "comfortCategory": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "tOpC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "rhPercent": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "airSpeedMS": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "thetaRmC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "co2Ppm": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "dfPercent": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "lAeqDb": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "persons": {
       "type": "integer",
       "format": "uint32",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "idaClass": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "ventilationM3H": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "floorAreaM2": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "bedrooms": {
       "type": "integer",
       "format": "uint32",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "dwellingVentilationM3H": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "occupants": {
       "type": "integer",
       "format": "uint32",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "residentialVentilationM3H": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sfpWM3S": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sfpRequiredClass": {
       "type": "integer",
       "format": "uint32",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "heatRecoveryEta": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "heatRecoveryEtaMin": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "systemType": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "yearsSinceInspection": {
       "type": "integer",
       "format": "uint32",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "humidificationRequiredKgH": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "humidificationProvidedKgH": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fanQVM3S": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fanTRunH": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fanEnergyReferenceKwh": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nightSetbackK": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hrMDotKgS": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hrCpJKgk": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hrDeltaTC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hrTH": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hrSavingsReferenceKwh": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "n50HInv": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "volumeM3": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "infiltrationAllowanceM3H": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "cellarAreaM2": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "cellarVentilationM3H": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hTrWK": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hVeWK": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "thetaEC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "thetaSetC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "coolingDeltaTH": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "coolingGainsKwh": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "coolingUtilizationFactor": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "coolingReferenceKwh": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "chillerType": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "eerActual": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "qCKwh": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "generationReferenceKwh": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "dataCenterSupplyC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "hStWK": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "thetaStC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "thetaAmbC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "storageTH": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "storageAllowanceKwh": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "dhwDeliveryC": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "ductClass": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "ductTestPressurePa": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "ductLeakageM3SM2": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   }
 }

@@ -1,13 +1,13 @@
 type RewriteConfig {
-  selectedNodeIds: [String!]! @state(class: LOCAL_UI)
-  beforePaneCamera: Camera! @state(class: LOCAL_UI)
-  reorganizeEpoch: Int! @state(class: LOCAL_UI)
-  activeHoverVar: String! @state(class: LOCAL_UI)
-  hoverEpoch: Int! @state(class: LOCAL_UI)
-  activeSelectVar: String! @state(class: LOCAL_UI)
-  selectEpoch: Int! @state(class: LOCAL_UI)
-  lodModeByWindow: [StringEntry!]! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedNodeIds: [String!]! @state(class: CONFIG)
+  beforePaneCamera: Camera! @state(class: CONFIG)
+  reorganizeEpoch: Int! @state(class: CONFIG)
+  activeHoverVar: String! @state(class: CONFIG)
+  hoverEpoch: Int! @state(class: CONFIG)
+  activeSelectVar: String! @state(class: CONFIG)
+  selectEpoch: Int! @state(class: CONFIG)
+  lodModeByWindow: [StringEntry!]! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 
 type StringEntry {

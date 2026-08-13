@@ -113,9 +113,9 @@ enum PdfPathSegmentKind {
 }
 
 type PdfDiff {
-  declaredVersion: String @state(class: PERSISTENT)
-  info: PdfInfo @state(class: PERSISTENT)
-  pages: PdfPagesDiff @state(class: PERSISTENT)
-  objects: PdfObjectsDiff @state(class: PERSISTENT)
-  trailer: PdfDictDiff @state(class: PERSISTENT)
+  declaredVersion: String @state(class: ARTIFACT)
+  info: PdfInfo @state(class: ARTIFACT)
+  pages: PdfPagesDiff @state(class: ARTIFACT)
+  objects: PdfObjectsDiff @state(class: ARTIFACT)
+  trailer: PdfDictDiff @state(class: ARTIFACT)
 }

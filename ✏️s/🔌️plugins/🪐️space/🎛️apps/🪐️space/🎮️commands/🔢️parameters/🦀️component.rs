@@ -167,7 +167,7 @@ mod tests {
     fn patch_parameter_action_updates_value() {
         let projection = demo_space_projection();
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
         let config = SpaceConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = patch_parameter::handle(&patch_parameter::PatchParameter { parameter_id: "param-brush-size".into(), field: "value".into(), value: "48".into() }, &doc, &cfg).expect("handle");
@@ -187,12 +187,12 @@ mod tests {
         let node = projection.graph.nodes.first().expect("node").clone();
         let parameter_id = parameter_entity_id(projection.parameters.first().expect("parameter")).to_string();
         let history = HistoryView::empty();
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
         let cfg = ConfigView { snapshot: &config };
         let emit = bind_parameter_field::handle(&bind_parameter_field::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id }, &doc, &cfg).expect("handle");
         projection = apply_mutations(&projection, &emit.artifact_mutations);
         assert!(projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
         let emit = unbind_parameter_field::handle(&unbind_parameter_field::UnbindParameterField { node_id: node.id.clone(), field_path: "label".into() }, &doc, &cfg).expect("handle");
         projection = apply_mutations(&projection, &emit.artifact_mutations);
         assert!(!projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));

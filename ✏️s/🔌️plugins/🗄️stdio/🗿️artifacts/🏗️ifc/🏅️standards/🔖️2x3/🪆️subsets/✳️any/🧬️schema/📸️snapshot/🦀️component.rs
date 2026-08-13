@@ -28,9 +28,9 @@ pub const IFC2X3_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ifc.2x3";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.2x3")]
 pub struct Ifc2x3Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub document: Part21Document,
 }

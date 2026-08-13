@@ -1,7 +1,7 @@
 # 💡️ Xlsx inference schema — document outline (sheet names/count, cell count).
 
 type XlsxInference {
-  outline: XlsxOutline! @state(class: INFERRED)
+  outline: XlsxOutline! @derived
 }
 
 type XlsxOutline {

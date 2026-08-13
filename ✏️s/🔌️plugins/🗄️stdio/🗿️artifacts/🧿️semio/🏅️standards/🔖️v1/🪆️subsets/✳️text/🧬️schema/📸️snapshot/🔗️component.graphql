@@ -13,6 +13,6 @@ type SemioTextRun {
 }
 
 type SemioTextSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  runs: [SemioTextRun!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  runs: [SemioTextRun!]! @state(class: ARTIFACT)
 }

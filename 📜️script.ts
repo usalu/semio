@@ -803,10 +803,11 @@ export class VerifyScript extends Script {
     }
     console.log("[verify] window capability taxonomy…");
     {
-      const windowBreaches = policyWindowCompletenessBreaches(this.root, policyDiscoverCrateDirs(this.root));
+      const crateDirs = policyDiscoverCrateDirs(this.root);
+      const windowBreaches = [...policyWindowCompletenessBreaches(this.root, crateDirs), ...policyModeCompletenessBreaches(this.root, crateDirs)];
       if (windowBreaches.length > 0) {
         for (const breach of windowBreaches) console.error(`[verify] ${breach.kind}: ${breach.summary}`);
-        throw new Error(`[verify] ${windowBreaches.length} window capability taxonomy breach(es)`);
+        throw new Error(`[verify] ${windowBreaches.length} window/mode capability taxonomy breach(es)`);
       }
     }
     console.log("[verify] dsl fixture laws…");
@@ -4304,6 +4305,83 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
 }
 
 /**
+ * 📏️Mode completeness: the twin of {@link policyWindowCompletenessBreaches} one level up. A mode is a
+ * state-owning scope, so it declares every `modeChildDirs` member explicitly — its `🪟️windows`
+ * collection plus its own three state lanes (`🎚️config` persisted-local, `👥️presence`
+ * ephemeral-shared, `🫧️transient` ephemeral-local). An empty child is valid and carries only the
+ * tracked `windowEmptyFacetFilename` marker; an absent child is not, and a child that is both empty
+ * and populated is a contradiction. Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION
+ * wave A0: before it, `modeChildDirs` did not exist at all and a mode declared no children whatsoever.
+ */
+export function policyModeCompletenessBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
+  const taxonomy = loadTaxonomy();
+  const required: readonly string[] = taxonomy.modeChildDirs ?? [];
+  const breaches: BreachRecord[] = [];
+  if (required.length === 0) return breaches;
+  for (const crate of crates) {
+    if (crate.shape !== "taxonomy") continue;
+    const scopeId = crate.pluginId || policyStripEmoji(crate.ownerRel.split("/").pop() ?? "");
+    const walk = (relDir: string): void => {
+      for (const entry of policyReaddirSafe(repoRoot, relDir).filter((candidate) => candidate.isDirectory)) {
+        const childRel = `${relDir}/${entry.name}`;
+        if (entry.name === taxonomy.modesDirName) {
+          for (const mode of policyReaddirSafe(repoRoot, childRel).filter((candidate) => candidate.isDirectory)) {
+            const modeDir = `${childRel}/${mode.name}`;
+            const actual = new Set(policyReaddirSafe(repoRoot, modeDir).filter((candidate) => candidate.isDirectory).map((candidate) => candidate.name));
+            for (const child of required) {
+              const childDir = `${modeDir}/${child}`;
+              const markerRel = `${childDir}/${taxonomy.windowEmptyFacetFilename}`;
+              if (!actual.has(child)) {
+                breaches.push({
+                  id: `taxonomy-mode-completeness-${modeDir}-${child}`,
+                  summary: `"${modeDir}" is missing required mode child dir "${child}"`,
+                  kind: "taxonomy/mode-completeness",
+                  scope: `${scopeId}/${policyStripEmoji(mode.name)}`,
+                  priority: "high",
+                  reason: `Every mode must explicitly carry ${required.join(", ")}; an empty child is valid, an absent child is not.`,
+                  solution: `Add ${childDir}/${taxonomy.windowEmptyFacetFilename}; replace the marker with specific item directories when the child gains members.`,
+                });
+                continue;
+              }
+              const members = policyReaddirSafe(repoRoot, childDir).filter((candidate) => candidate.isDirectory);
+              if (members.length === 0) {
+                if (!existsSync(join(repoRoot, markerRel))) {
+                  breaches.push({
+                    id: `taxonomy-mode-empty-child-${childDir}`,
+                    summary: `Empty mode child "${childDir}" is missing marker "${taxonomy.windowEmptyFacetFilename}"`,
+                    kind: "taxonomy/mode-empty-child",
+                    scope: `${scopeId}/${policyStripEmoji(mode.name)}/${policyStripEmoji(child)}`,
+                    priority: "high",
+                    reason: `An empty required child must remain tracked without pretending that the child itself is a specific component.`,
+                    solution: `Add ${markerRel}.`,
+                  });
+                }
+                continue;
+              }
+              if (existsSync(join(repoRoot, markerRel))) {
+                breaches.push({
+                  id: `taxonomy-mode-populated-child-marker-${childDir}`,
+                  summary: `Populated mode child "${childDir}" still contains empty marker "${taxonomy.windowEmptyFacetFilename}"`,
+                  kind: "taxonomy/mode-empty-child",
+                  scope: `${scopeId}/${policyStripEmoji(mode.name)}/${policyStripEmoji(child)}`,
+                  priority: "high",
+                  reason: `A child cannot be both empty and populated with specific items.`,
+                  solution: `Remove ${markerRel}.`,
+                });
+              }
+            }
+          }
+          continue;
+        }
+        walk(childRel);
+      }
+    };
+    walk(`${crate.ownerRel}/${taxonomy.appsDirName}`);
+  }
+  return breaches;
+}
+
+/**
  * 📏️ Per-example unit shape: `📚️examples/<emoji-slug>/{definition leaves, 🖼️assets/, 🧪️tests/}` under
  * every artifact and every app (apps own examples directly — never under `⚙️engine`). Plugin-root
  * `📚️examples` and plural facet dirs are forbidden.
@@ -4808,10 +4886,20 @@ function policyEmojiEntryIsRenamable(relDir: string, name: string, isDirectory: 
   return !fixedFilenames.has(name) && !taxonomy.packagingFileSuffixes.some((suffix) => name.endsWith(suffix));
 }
 
-/** 🎭️Families whose shared leading emoji is a structural kind marker rather than a sibling identity. */
-function policyEmojiSiblingIdentityIsStructural(relDir: string, name: string): boolean {
-  const parent = relDir.split("/").pop() ?? "";
-  return name === "📝️text" || name === "💾️binary" || parent === "🏅️standards" || parent === "🪆️subsets" || parent === "💡️inferences" || parent === "🗿️artifacts" || parent === "📚️examples" || parent === "🎛️apps" || relDir.split("/").includes("🖼️assets");
+/** 🎭️Families whose shared leading emoji is a structural kind marker rather than a sibling identity.
+ *
+ * 🪟️ A window's and a mode's children are entirely taxonomy VOCABULARY (`windowChildDirs` /
+ * `modeChildDirs`) — nobody authored those names locally, so they carry no local visual identity to
+ * keep unique, and the vocabulary itself is free to spell two related capabilities with one family
+ * emoji (`🎚️options` beside the `🎚️config` state lane). Renaming either at a site would break the
+ * vocabulary it is a member of, so uniqueness is the wrong instrument here. */
+function policyEmojiSiblingIdentityIsStructural(relDir: string, name: string, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
+  const segments = relDir.split("/");
+  const parent = segments[segments.length - 1] ?? "";
+  const grandparent = segments[segments.length - 2] ?? "";
+  if (grandparent === taxonomy.windowsDirName && taxonomy.windowChildDirs.includes(name)) return true;
+  if (grandparent === taxonomy.modesDirName && (taxonomy.modeChildDirs ?? []).includes(name)) return true;
+  return name === "📝️text" || name === "💾️binary" || parent === "🏅️standards" || parent === "🪆️subsets" || parent === "💡️inferences" || parent === "🗿️artifacts" || parent === "📚️examples" || parent === "🎛️apps" || segments.includes("🖼️assets");
 }
 
 /** 🧬️Migration slug families whose bare-symbol presentation is enforced by their dedicated policy. */
@@ -4870,7 +4958,7 @@ export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
           solution: `Rename the leading emoji so it includes U+FE0F, preserving the stem and references.`,
         });
       }
-      if (renamable && hasPrefix && !policyEmojiSiblingIdentityIsStructural(relDir, entry.name)) {
+      if (renamable && hasPrefix && !policyEmojiSiblingIdentityIsStructural(relDir, entry.name, taxonomy)) {
         const prefix = policyLeadingEmojiPrefix(entry.name).replaceAll(POLICY_VS16, "");
         const previous = seen.get(prefix);
         if (previous) {
@@ -5070,7 +5158,6 @@ const POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS: Readonly<Record<string, string>> 
   "✏️s/🔌️plugins/🌊️flow/🔨️modules": "Move 🔨️modules/🧮️compute/🟦️component.ts into 🗿️artifacts/<flowcompute-kind>/🏅️standards/🔖️1/⚙️engine/compute/ (artifact-kind name needs an owner decision) — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🌊️flow/🧩️extensions": "Extension-crate axis (role=extension, extends=flow, 9 crates) — sanctioned third axis pending the §6 ruling in 📓️w0-census.md; not auto-relocatable.",
   "✏️s/🔌️plugins/🌍️gis/🔨️modules": "Move 🔨️modules/🏔️terrain/🦀️component.rs into 🗿️artifacts/gismap/🏅️standards/🔖️1/⚙️engine/terrain/ — 📓️w0-b-plugin-shape.md §5.",
-  "✏️s/🔌️plugins/🎪️demonstrator/🎪️panes": "Move each pane into 🎛️apps/<app>/📌️panels/ once the single owning app is identified (not yet enumerated) — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🏗️fem/➗️formulation": "Fold into 🗿️artifacts/fem/🏅️standards/🔖️1/⚙️engine/formulation/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🏗️fem/🏗️model": "Fold into 🗿️artifacts/fem/🏅️standards/🔖️1/⚙️engine/model/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🏗️fem/📏️elements2d": "Fold into 🗿️artifacts/fem/🏅️standards/🔖️1/⚙️engine/elements2d/ — 📓️w0-b-plugin-shape.md §5.",
@@ -5484,7 +5571,7 @@ function policyRegistrationBreach(relPath: string, lineNo: number, isEngine: boo
     scope: relPath,
     line: lineNo,
     priority: "medium",
-    reason: 'APA: registration/IO for a kind belongs to that kind\'s own artifact ⚙️engine — a 🔧️setup facet, app file, pane, panel, command handler, or plugin root calling the global registration family (or reaching into semio_framework_os::) mutates OS-host state from the wrong layer, and can register a kind the caller doesn\'t even own (💠️lowpoly registering "3d.mesh"; 🎪️demonstrator registering process/procedural/gis/cad kinds it never declares — w0-a §2b-§2d).',
+    reason: 'APA: registration/IO for a kind belongs to that kind\'s own artifact ⚙️engine — a 🔧️setup facet, app file, pane, panel, command handler, or plugin root calling the global registration family (or reaching into semio_framework_os::) mutates OS-host state from the wrong layer, and can register a kind the caller doesn\'t even own (💠️lowpoly registering "3d.mesh" — w0-a §2b-§2d; the 🎪️demonstrator half of that exemplar is RESOLVED, ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2 moved its process/procedural/gis/cad registrations to those owners and dropped its semio-framework-os dependency, so a demonstrator hit here is now a regression, not a known backlog).',
     solution: `Delete the ${what} call at ${relPath}:${lineNo} and move the registration into the owning artifact's own 🗿️artifacts/<kind>/…/⚙️engine/ (or, for register_app_io/register_os_fixture_json, into the app's own declarative registration path once M1 lands).`,
   };
 }
@@ -5495,8 +5582,10 @@ function policyRegistrationBreach(relPath: string, lineNo: number, isEngine: boo
  * `setup: Option<fn()>`); (b) any call to the exhaustive global registration family; (c) any
  * `semio_framework_os::` path reference (the OS host crate is forbidden to plugins). (b)/(c) are split into
  * two separable kinds: a call inside the owning artifact's own `⚙️engine` is the currently-compliant
- * interim shape (migration backlog); the same call anywhere else (`🔧️setup/`, `🎛️apps/`, `🎪️panes/`,
- * `📌️panels/`, `🎮️commands/`, or the plugin root) is a live architecture violation.
+ * interim shape (migration backlog); the same call anywhere else (`🔧️setup/`, `🎛️apps/`, `📌️panels/`,
+ * `🎮️commands/`, or the plugin root) is a live architecture violation. (`🎪️panes/` used to head that
+ * list; the repo's only pane facet, 🎪️demonstrator's, was dissolved into `🎛️apps` by ticket
+ * 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D3.)
  */
 function policyDeclarativeRegistrationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -5560,11 +5649,16 @@ const POLICY_PLUGIN_DEP_SERDE_RE = /^serde(_json|-wasm-bindgen)?$/;
 const POLICY_PLUGIN_DEP_OS_SYMBOLS: Readonly<Record<string, readonly string[]>> = {
   "✒️writer": [],
   "🌀️procedural": ["register_mesh_dwg_import_handler"],
-  "🌍️gis": ["DwgColor", "DwgEntity"],
-  "🎪️demonstrator": ["register_2d_export_handlers", "register_dwg_import_handler", "register_mesh_dwg_export_handler", "register_mesh_dwg_import_handler", "register_mesh_exporter", "register_mesh_importer", "register_solid_exporter", "register_solid_importer"],
+  "🌍️gis": ["DwgColor", "DwgEntity", "register_2d_export_handlers", "register_dwg_import_handler"],
+  // 🎪️ BANNED, not downgraded (ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION
+  // D2): the demonstrator's twelve foreign-kind registrations moved to their owners (📐️cad, 🌍️gis),
+  // and `semio-framework-os` is gone from its Cargo.toml. The empty array is the ratchet — if the
+  // dependency is ever reintroduced, `policyPluginDependencyAllowlistBreaches` flags it with no
+  // carve-out to soften the message.
+  "🎪️demonstrator": [],
   "🏭️process": ["register_mesh_dwg_import_handler"],
   "📏️layout": ["DwgColor", "DwgDrawing", "DwgEntity", "DwgGeometry"],
-  "📐️cad": [],
+  "📐️cad": ["register_dwg_import_handler", "register_mesh_dwg_export_handler", "register_mesh_exporter", "register_mesh_importer", "register_solid_exporter", "register_solid_importer"],
   "🎥️shooting": ["rasterize_svg_to_png_base64"],
   "🎞️animate": ["dwg_drawing_to_svg", "rasterize_svg_to_png_base64", "title_card_svg"],
   "💠️lowpoly": ["register_mesh_dwg_export_handler", "register_mesh_dwg_import_handler", "register_mesh_exporter", "register_mesh_importer"],
@@ -7661,7 +7755,7 @@ function policyInferenceAssemblyCoverageBreaches(repoRoot: string): BreachRecord
         kind: "inference-migration/assembly-coverage",
         scope: artRel,
         priority: "medium",
-        reason: `Every 💡️inferences/<slug> dir must be assembled into a #[state(inferred)] field of ${structName} — a slug dir the family root never references is dead weight.`,
+        reason: `Every 💡️inferences/<slug> dir must be assembled into a #[derived] field of ${structName} — a slug dir the family root never references is dead weight.`,
         solution: `Add a field on ${structName} named or typed after "${policyStripEmoji(slug)}", or delete ${inferencesRel}/${slug} if it is stale.`,
       });
     }
@@ -7683,13 +7777,17 @@ function policyInferenceAssemblyCoverageBreaches(repoRoot: string): BreachRecord
 }
 
 /**
- * 📏️`POLICY_INFERENCE_STATE`: `#[state(inferred)]` may appear only inside `💡️inferences/`, never in a
- * `📸️snapshot` facet — a snapshot field is persisted input; marking it `inferred` would blur derived
- * compute into stored state, which is exactly the escape hatch the dep-hash cache design closes.
+ * 📏️`POLICY_DERIVED_MARKER`: `#[derived]` may appear only inside `💡️inferences/`, never in a
+ * `📸️snapshot` facet — a snapshot field is persisted input; marking it derived would blur computed
+ * values into stored state, which is exactly the escape hatch the dep-hash cache design closes.
+ *
+ * Derivation is its OWN axis, orthogonal to the four state lanes (`artifact`/`config`/`presence`/
+ * `transient`) — it deliberately no longer rides on a `StateClass` variant, so this rule now watches
+ * the `#[derived]` attribute (JSON Schema twin: `x-semio-derived: true`) instead of a state token.
  */
-const POLICY_INFERENCE_STATE = "#[state(inferred)]";
+const POLICY_DERIVED_MARKER = "#[derived]";
 
-function policyInferenceStateLeakBreaches(repoRoot: string): BreachRecord[] {
+function policyDerivedMarkerLeakBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const files = policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => {
     if (name !== POLICY_RS_COMPONENT_LEAF_NAME) return false;
@@ -7698,17 +7796,17 @@ function policyInferenceStateLeakBreaches(repoRoot: string): BreachRecord[] {
   });
   for (const relPath of files) {
     const content = policyReadFileSafe(repoRoot, relPath);
-    const idx = content.indexOf(POLICY_INFERENCE_STATE);
+    const idx = content.indexOf(POLICY_DERIVED_MARKER);
     if (idx < 0) continue;
     breaches.push({
-      id: `inference-state-leak-${relPath}`,
-      summary: `"${relPath}" declares ${POLICY_INFERENCE_STATE} inside a 📸️snapshot facet`,
+      id: `derived-marker-leak-${relPath}`,
+      summary: `"${relPath}" declares ${POLICY_DERIVED_MARKER} inside a 📸️snapshot facet`,
       kind: "inference-migration/state-leak",
       scope: relPath,
       line: policyLineOfIndex(content, idx),
       priority: "medium",
-      reason: "#[state(inferred)] marks a field as derived-and-cached; that contract belongs exclusively to 💡️inferences/ — a snapshot facet field is persisted input and must never carry it.",
-      solution: `Move the inferred field out of ${relPath} into a 💡️inferences/<slug>/${POLICY_RS_COMPONENT_LEAF_NAME} sibling.`,
+      reason: "#[derived] marks a field as computed-and-cached; that contract belongs exclusively to 💡️inferences/ — a snapshot facet field is persisted input and must never carry it.",
+      solution: `Move the derived field out of ${relPath} into a 💡️inferences/<slug>/${POLICY_RS_COMPONENT_LEAF_NAME} sibling.`,
     });
   }
   return breaches;
@@ -7722,7 +7820,7 @@ function policyInferenceFamilyBreaches(repoRoot: string): BreachRecord[] {
     ...policyInferenceImplPresenceBreaches(repoRoot),
     ...policyInferenceEmojiUniquenessBreaches(repoRoot),
     ...policyInferenceAssemblyCoverageBreaches(repoRoot),
-    ...policyInferenceStateLeakBreaches(repoRoot),
+    ...policyDerivedMarkerLeakBreaches(repoRoot),
   ];
 }
 //#endregion 🔧️PolicyRuleInferenceFamily
@@ -8377,7 +8475,7 @@ function policyArtifactSchemaFieldParityBreaches(repoRoot: string): BreachRecord
 }
 
 /**
- * 📏️State-class parity: snapshot facet fields equal exactly the persistent fields of the artifact facet.
+ * 📏️State-class parity: snapshot facet fields equal exactly the `artifact`-lane fields of the artifact facet.
  */
 function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -8390,7 +8488,7 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
     const artJson = artLeaves.find((l) => l.formatId === "🔣️jsonschema")?.extract;
     const snapJson = snapLeaves.find((l) => l.formatId === "🔣️jsonschema")?.extract;
     if (!artJson || !snapJson) continue;
-    const persistent = artJson.fields.filter((f) => f.state === "persistent");
+    const persistent = artJson.fields.filter((f) => f.state === "artifact");
     const snapMap = new Map(snapJson.fields.map((f) => [f.name, f]));
     const persMap = new Map(persistent.map((f) => [f.name, f]));
     for (const f of persistent) {
@@ -8398,11 +8496,11 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
       if (!s) {
         breaches.push({
           id: `artifact-schema-state-parity-missing-${artRel}-${f.name}`,
-          summary: `Snapshot facet is missing persistent artifact field "${f.name}"`,
+          summary: `Snapshot facet is missing artifact-lane field "${f.name}"`,
           kind: "artifact-schema/state-parity",
           scope: artRel,
           priority: "high",
-          reason: "XSnapshot must equal exactly the persistent fields of XArtifact (equality, not subset).",
+          reason: "XSnapshot must equal exactly the artifact-lane fields of XArtifact (equality, not subset).",
           solution: `Add "${f.name}" to ${snapshotFacet}/🔣️component.json (and the other four leaves) matching the artifact facet.`,
         });
         continue;
@@ -8410,11 +8508,11 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
       if (s.optional !== f.optional || s.cardinality !== f.cardinality) {
         breaches.push({
           id: `artifact-schema-state-parity-shape-${artRel}-${f.name}`,
-          summary: `Snapshot field "${f.name}" shape differs from persistent artifact field`,
+          summary: `Snapshot field "${f.name}" shape differs from the artifact-lane field`,
           kind: "artifact-schema/state-parity",
           scope: artRel,
           priority: "high",
-          reason: `Persistent artifact field "${f.name}" is optional=${f.optional}, cardinality=${f.cardinality}; snapshot has optional=${s.optional}, cardinality=${s.cardinality}.`,
+          reason: `Artifact-lane field "${f.name}" is optional=${f.optional}, cardinality=${f.cardinality}; snapshot has optional=${s.optional}, cardinality=${s.cardinality}.`,
           solution: `Align "${f.name}" in ${snapshotFacet}/🔣️component.json with ${artifactFacet}/🔣️component.json.`,
         });
       }
@@ -8423,12 +8521,12 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
       if (persMap.has(name)) continue;
       breaches.push({
         id: `artifact-schema-state-parity-extra-${artRel}-${name}`,
-        summary: `Snapshot facet has non-persistent field "${name}"`,
+        summary: `Snapshot facet has non-artifact-lane field "${name}"`,
         kind: "artifact-schema/state-parity",
         scope: artRel,
         priority: "high",
-        reason: "XSnapshot may only contain the persistent fields of XArtifact.",
-        solution: `Remove "${name}" from ${snapshotFacet}/🔣️component.json, or mark it persistent on the artifact facet if it belongs there.`,
+        reason: "XSnapshot may only contain the artifact-lane fields of XArtifact.",
+        solution: `Remove "${name}" from ${snapshotFacet}/🔣️component.json, or move it into the artifact lane on the artifact facet if it belongs there.`,
       });
     }
   }
@@ -8436,7 +8534,7 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
 }
 
 /**
- * 📏️Diff coverage: every non-effect artifact field has a diff entry; no effect field does; `artifact` exists.
+ * 📏️Diff coverage: every non-transient artifact field has a diff entry; no transient field does; `artifact` exists.
  */
 function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -8460,15 +8558,15 @@ function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecor
       });
     }
     for (const f of artJson.fields) {
-      if (f.state === "effect") {
+      if (f.state === "transient") {
         if (diffNames.has(f.name)) {
           breaches.push({
             id: `artifact-schema-diff-effect-${artRel}-${f.name}`,
-            summary: `Diff facet must not cover effect field "${f.name}"`,
+            summary: `Diff facet must not cover transient field "${f.name}"`,
             kind: "artifact-schema/diff-coverage",
             scope: artRel,
             priority: "high",
-            reason: "Effect fields are fire-and-forget and must not appear in XDiff.",
+            reason: "Transient fields are ephemeral local-only UI state — never shared, never diffed — and must not appear in XDiff.",
             solution: `Remove "${f.name}" from ${diffFacet}/🔣️component.json.`,
           });
         }
@@ -8477,11 +8575,11 @@ function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecor
       if (!diffNames.has(f.name)) {
         breaches.push({
           id: `artifact-schema-diff-coverage-${artRel}-${f.name}`,
-          summary: `Diff facet is missing entry for non-effect artifact field "${f.name}"`,
+          summary: `Diff facet is missing entry for non-transient artifact field "${f.name}"`,
           kind: "artifact-schema/diff-coverage",
           scope: artRel,
           priority: "high",
-          reason: "Every artifact field whose state class is not effect must have a same-named diff entry.",
+          reason: "Every artifact field whose state lane is not transient must have a same-named diff entry.",
           solution: `Add sparse diff entry "${f.name}" to ${diffFacet}/🔣️component.json matching §7.3 cardinality rules.`,
         });
       }
@@ -8888,7 +8986,7 @@ function policyAppSchemaConfigFidelityBreaches(repoRoot: string): BreachRecord[]
 }
 
 /**
- * 📏️State purity: every config-facet field is `local-ui`; every presence-facet field is `shared-ui`.
+ * 📏️State purity: every config-facet field is `config`; every presence-facet field is `presence`.
  */
 function policyAppSchemaStatePurityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -8896,13 +8994,13 @@ function policyAppSchemaStatePurityBreaches(repoRoot: string): BreachRecord[] {
     const checks: { facetAbs: string; expectedState: string; expectedTypeName: string; label: string }[] = [
       {
         facetAbs: `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`,
-        expectedState: "local-ui",
+        expectedState: "config",
         expectedTypeName: owner.configType,
         label: "config",
       },
       {
         facetAbs: `${owner.presenceRel}/${POLICY_APP_SCHEMA_FACET}`,
-        expectedState: "shared-ui",
+        expectedState: "presence",
         expectedTypeName: owner.presenceType,
         label: "presence",
       },
@@ -12381,6 +12479,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyAppCouplingBreaches(repoRoot, crateDirs));
   breaches.push(...policyTaxonomyDirsBreaches(repoRoot, crateDirs));
   breaches.push(...policyWindowCompletenessBreaches(repoRoot, crateDirs));
+  breaches.push(...policyModeCompletenessBreaches(repoRoot, crateDirs));
   breaches.push(...policySemioArtifactExamplesBreaches(repoRoot, crateDirs));
   breaches.push(...policyDeadExampleLeafBreaches(repoRoot, crateDirs));
   breaches.push(...policyComponentFileBreaches(repoRoot, crateDirs));

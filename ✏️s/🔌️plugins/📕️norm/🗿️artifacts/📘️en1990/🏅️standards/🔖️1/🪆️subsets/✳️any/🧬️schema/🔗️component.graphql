@@ -1,11 +1,11 @@
 # 🧬️ En1990 artifact schema — every field with its state class.
 
 type En1990Artifact {
-  gK: Float! @state(class: PERSISTENT)
-  qK: [qKItem!]! @state(class: PERSISTENT)
-  resistanceKn: Float! @state(class: PERSISTENT)
-  consequenceClass: Int! @state(class: PERSISTENT)
-  annex: String! @state(class: PERSISTENT)
-  seismicAEdKn: Float! @state(class: PERSISTENT)
-  selectedCheckIndex: Int @state(class: SHARED_UI)
+  gK: Float! @state(class: ARTIFACT)
+  qK: [qKItem!]! @state(class: ARTIFACT)
+  resistanceKn: Float! @state(class: ARTIFACT)
+  consequenceClass: Int! @state(class: ARTIFACT)
+  annex: String! @state(class: ARTIFACT)
+  seismicAEdKn: Float! @state(class: ARTIFACT)
+  selectedCheckIndex: Int @state(class: PRESENCE)
 }

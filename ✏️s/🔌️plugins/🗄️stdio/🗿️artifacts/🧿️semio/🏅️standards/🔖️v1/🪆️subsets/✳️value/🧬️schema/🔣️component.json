@@ -4,9 +4,9 @@
   "description": "Full artifact state — mirrors SemioValueSnapshot field for field.",
   "type": "value",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "root": { "type": "value", "x-semio-state": "persistent" },
-    "nodes": { "type": "array", "x-semio-state": "persistent", "items": { "type": "value" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "root": { "type": "value", "x-semio-state": "artifact" },
+    "nodes": { "type": "array", "x-semio-state": "artifact", "items": { "type": "value" } }
   },
   "required": ["schema", "root", "nodes"]
 }

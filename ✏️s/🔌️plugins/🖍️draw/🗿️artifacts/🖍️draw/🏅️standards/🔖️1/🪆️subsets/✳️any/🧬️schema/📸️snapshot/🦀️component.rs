@@ -12,20 +12,20 @@ use std::collections::BTreeMap;
 #[dsl(id = "draw.draw", layout = "lines")]
 #[artifact_schema(id = "s.draw.draw")]
 pub struct DrawSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[dsl(statements, block)]
     pub layers: Vec<DrawLayerNode>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub assets: BTreeMap<String, DrawImageAsset>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[dsl(block)]
     pub artboard: Option<DrawArtboard>,

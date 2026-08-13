@@ -1,16 +1,16 @@
 /** 🧬️ Procedural2dConfig */
 export interface Procedural2dConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   camera: CameraJson;
-  /** @state local-ui */
+  /** @state config */
   showMode: string;
-  /** @state local-ui */
+  /** @state config */
   selectedGenerationId?: string;
-  /** @state local-ui */
+  /** @state config */
   generationPreviewText?: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

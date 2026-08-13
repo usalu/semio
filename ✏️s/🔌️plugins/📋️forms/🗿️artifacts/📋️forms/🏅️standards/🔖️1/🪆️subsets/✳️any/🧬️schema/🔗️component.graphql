@@ -1,16 +1,16 @@
 # @emoji 🧬️ Shared @state directive is defined in the framework schema module.
 
 type FormsArtifact {
-  schema: String! @state(class: PERSISTENT)
-  id: String! @state(class: PERSISTENT)
-  version: String! @state(class: PERSISTENT)
-  title: String @state(class: PERSISTENT)
-  steps: [FormStep!]! @state(class: PERSISTENT)
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  currentStepIndex: Int! @state(class: LOCAL_UI)
-  tryValuesJson: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
-  contributionsJson: String! @state(class: LOCAL_UI)
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  version: String! @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  steps: [FormStep!]! @state(class: ARTIFACT)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  currentStepIndex: Int! @state(class: CONFIG)
+  tryValuesJson: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+  contributionsJson: String! @state(class: CONFIG)
 }
 
 type FormStep {

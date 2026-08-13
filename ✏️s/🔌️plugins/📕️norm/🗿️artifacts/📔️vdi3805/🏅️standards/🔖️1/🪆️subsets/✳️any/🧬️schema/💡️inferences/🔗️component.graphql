@@ -1,7 +1,7 @@
 # 💡️ Vdi3805 inference schema — document outline (field/section list + entry count).
 
 type Vdi3805Inference {
-  outline: Vdi3805Outline! @state(class: INFERRED)
+  outline: Vdi3805Outline! @derived
 }
 
 type Vdi3805Outline {

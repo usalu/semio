@@ -180,7 +180,7 @@ pub struct JpgSegment {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.jpg")]
 pub struct JpgSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
 
     // Decoded raster payload — legitimate `Vec<u8>` exception (the format's payload IS pixels):
@@ -189,18 +189,18 @@ pub struct JpgSnapshot {
     // from `frame.width`/`frame.height` (u16 on-disk SOF values, only present after a real
     // decode/encode); the two agree for any engine-produced snapshot but a freshly hand-authored
     // one (via `SetPixels`) has no `frame` yet and still needs its own dimensions.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixels: Vec<u8>,
     /// 🎚️ Quality parameter `engine::encode_jpg` scales the Annex K quantization tables by
     /// (IJG convention, `1..=100`). `None` = the engine's own default (90).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub re_encode_quality: Option<u8>,
 
@@ -208,49 +208,49 @@ pub struct JpgSnapshot {
     // carries exactly one of these; a never-decoded snapshot keeps the spec's own defaults
     // (version 1.01, aspect-ratio units, 1x1 density, no thumbnail) — `engine::encode_jpg`
     // writes them out unconditionally, matching every real JFIF encoder.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub jfif_version: (u8, u8),
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub jfif_density_units: JfifDensityUnits,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub jfif_x_density: u16,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub jfif_y_density: u16,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub jfif_thumbnail: Option<JfifThumbnail>,
 
     // SOF (T.81 §B.2.2) — see the struct doc for why `frame`/`sof_marker`/`arithmetic` keep
     // their pre-existing shapes/names.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub frame: Option<JpgFrameHeader>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub sof_marker: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub arithmetic: bool,
 
     // DQT (T.81 §B.2.4.1) / DHT (T.81 §B.2.4.2) — id-keyed (DHT compound-keyed by class+id).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub quant_tables: Vec<JpgQuantTable>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub huffman_tables: Vec<JpgHuffmanTable>,
 
     // DRI (T.81 §B.2.4.4) — `None` = no restart interval segment was present.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub restart_interval: Option<u16>,
 
     // Verbatim-retained other APPn/COM segments, in encounter order (§`JpgSegment` doc).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub other_segments: Vec<JpgSegment>,
 }

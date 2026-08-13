@@ -11,30 +11,30 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "puzzle.puzzle3d", layout = "lines")]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
 pub struct Puzzle3dSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub domain: String,
     #[serde(default)]
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: Puzzle3dMeta,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub objects: Vec<Puzzle3dObject>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub attractions: Vec<Puzzle3dAttraction>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub target_volumes: Vec<Puzzle3dTargetVolume>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub references: Vec<Puzzle3dReference>,
 }
 //#endregion 🔖️Snapshot

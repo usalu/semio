@@ -1,21 +1,21 @@
 /** 🧬️ En1990 diff schema — sparse field delta. */
 
 export interface En1990Diff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: En1990Artifact;
-  /** @state persistent */
+  /** @state artifact */
   gK?: number;
-  /** @state persistent */
+  /** @state artifact */
   qK?: En1990QkList;
-  /** @state persistent */
+  /** @state artifact */
   resistanceKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   consequenceClass?: number;
-  /** @state persistent */
+  /** @state artifact */
   annex?: string;
-  /** @state persistent */
+  /** @state artifact */
   seismicAEdKn?: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }
 

@@ -1,19 +1,19 @@
 /** 🧬️ Puzzle3d snapshot schema — persistent fields only. */
 
 export interface Puzzle3dSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   domain: string;
-  /** @state persistent */
+  /** @state artifact */
   meta: Puzzle3dMeta;
-  /** @state persistent */
+  /** @state artifact */
   objects: Puzzle3dObject[];
-  /** @state persistent */
+  /** @state artifact */
   attractions: Puzzle3dAttraction[];
-  /** @state persistent */
+  /** @state artifact */
   targetVolumes: Puzzle3dTargetVolume[];
-  /** @state persistent */
+  /** @state artifact */
   references: Puzzle3dReference[];
 }
 

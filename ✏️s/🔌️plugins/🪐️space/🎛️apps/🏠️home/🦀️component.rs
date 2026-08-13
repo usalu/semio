@@ -475,7 +475,7 @@ mod tests {
         let history = empty_history();
         let home = HomeApp;
         let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
-        let home_view = ArtifactView { snapshot: &home_doc, history: &history };
+        let home_view = ArtifactView::new(&home_doc, &history);
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let home_node = HomeApp::render(crate::apps::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);
@@ -487,7 +487,7 @@ mod tests {
         let history = empty_history();
         let home = HomeApp;
         let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
-        let home_view = ArtifactView { snapshot: &home_doc, history: &history };
+        let home_view = ArtifactView::new(&home_doc, &history);
         let config = HomeConfig { locale: "de".into(), ..HomeConfig::default() };
         let cfg = ConfigView { snapshot: &config };
         let home_node = HomeApp::render(crate::apps::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);

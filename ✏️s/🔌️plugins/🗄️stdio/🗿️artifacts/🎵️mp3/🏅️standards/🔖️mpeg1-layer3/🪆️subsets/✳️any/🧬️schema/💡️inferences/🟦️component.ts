@@ -7,6 +7,6 @@ export interface Mp3Duration {
 }
 
 export interface Mp3Inference {
-  /** @state inferred */
+  /** @derived */
   duration: Mp3Duration;
 }

@@ -6,8 +6,8 @@ export interface BoundingBox {
 }
 
 export interface Process3dInference {
-  /** @state inferred */
+  /** @derived */
   stockBounds: BoundingBox;
-  /** @state inferred */
+  /** @derived */
   stepCount: number;
 }

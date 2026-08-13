@@ -8,9 +8,9 @@ type SemioAudioTag {
   value: String!
 }
 type SemioAudioSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  sampleRate: Int! @state(class: PERSISTENT)
-  format: SemioAudioFormat! @state(class: PERSISTENT)
-  channels: [SemioAudioChannel!]! @state(class: PERSISTENT)
-  tags: [SemioAudioTag!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  sampleRate: Int! @state(class: ARTIFACT)
+  format: SemioAudioFormat! @state(class: ARTIFACT)
+  channels: [SemioAudioChannel!]! @state(class: ARTIFACT)
+  tags: [SemioAudioTag!]! @state(class: ARTIFACT)
 }

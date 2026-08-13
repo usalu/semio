@@ -5,15 +5,15 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": { "title": "SequenceArtifact", "type": "object", "x-semio-state": "persistent" },
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "steps": { "$ref": "#/$defs/SequenceStepsDelta", "x-semio-state": "persistent" },
-    "edges": { "$ref": "#/$defs/SequenceEdgesDelta", "x-semio-state": "persistent" },
-    "selectedStepIds": { "$ref": "#/$defs/SequenceStringList", "x-semio-state": "shared-ui" },
-    "lastRunJson": { "type": "string", "x-semio-state": "local-ui" },
-    "orientation": { "type": "string", "x-semio-state": "local-ui" },
-    "camera": { "$ref": "#/$defs/SequenceCamera", "x-semio-state": "local-ui" },
-    "locale": { "type": "string", "x-semio-state": "local-ui" }
+    "artifact": { "title": "SequenceArtifact", "type": "object", "x-semio-state": "artifact" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "steps": { "$ref": "#/$defs/SequenceStepsDelta", "x-semio-state": "artifact" },
+    "edges": { "$ref": "#/$defs/SequenceEdgesDelta", "x-semio-state": "artifact" },
+    "selectedStepIds": { "$ref": "#/$defs/SequenceStringList", "x-semio-state": "presence" },
+    "lastRunJson": { "type": "string", "x-semio-state": "config" },
+    "orientation": { "type": "string", "x-semio-state": "config" },
+    "camera": { "$ref": "#/$defs/SequenceCamera", "x-semio-state": "config" },
+    "locale": { "type": "string", "x-semio-state": "config" }
   },
   "$defs": {
     "SequenceStringList": {

@@ -105,9 +105,9 @@ export type PdfPathSegment =
 /** 🔺️ Diff for `stdio.pdf.1.7`. `schema` is an identity field and never appears here. `info` is
  *  a WEAK value struct (whole-value replaced, never sub-diffed). */
 export interface PdfDiff {
-  /** @state persistent */ declaredVersion?: string;
-  /** @state persistent */ info?: PdfInfo;
-  /** @state persistent */ pages?: PdfPagesDiff;
-  /** @state persistent */ objects?: PdfObjectsDiff;
-  /** @state persistent */ trailer?: PdfDictDiff;
+  /** @state artifact */ declaredVersion?: string;
+  /** @state artifact */ info?: PdfInfo;
+  /** @state artifact */ pages?: PdfPagesDiff;
+  /** @state artifact */ objects?: PdfObjectsDiff;
+  /** @state artifact */ trailer?: PdfDictDiff;
 }

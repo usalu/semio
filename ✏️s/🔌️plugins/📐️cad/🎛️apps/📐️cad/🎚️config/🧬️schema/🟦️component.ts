@@ -40,64 +40,64 @@ export interface CadDislocateOptions {
 
 
 export interface CadConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedObjectIds: string[];
-  /** @state local-ui */
+  /** @state config */
   selectedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredObjectId?: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredTarget?: CadHoverTarget;
-  /** @state local-ui */
+  /** @state config */
   activeObjectId?: string;
-  /** @state local-ui */
+  /** @state config */
   componentSelection: CadComponentSelection;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   engagementStep: string;
-  /** @state local-ui */
+  /** @state config */
   activeExampleId?: string;
-  /** @state local-ui */
+  /** @state config */
   selectedReferenceModelDefinitionId?: string;
-  /** @state local-ui */
+  /** @state config */
   selectedReferenceId?: string;
-  /** @state local-ui */
+  /** @state config */
   selectedPrimitiveId?: string;
-  /** @state local-ui */
+  /** @state config */
   selectedPrimitiveKind?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementPane?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementSessionJson?: string;
-  /** @state local-ui */
+  /** @state config */
   lastFinalizedInteractionId?: string;
-  /** @state local-ui */
+  /** @state config */
   sun: CadSunConfig;
-  /** @state local-ui */
+  /** @state config */
   camera: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraBuilding: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraEnergy: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   cameraStructureClassic: CadCamera;
-  /** @state local-ui */
+  /** @state config */
   dislocateShape: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateBuilding: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateEnergy: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   dislocateStructureClassic: CadDislocateOptions;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   terminology: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }

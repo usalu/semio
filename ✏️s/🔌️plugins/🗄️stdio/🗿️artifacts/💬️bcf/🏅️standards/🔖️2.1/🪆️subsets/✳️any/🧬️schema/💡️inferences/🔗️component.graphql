@@ -1,7 +1,7 @@
 # 💡️ Bcf inference schema — topic/comment/viewpoint/author counts derived from the topic tree.
 
 type BcfInference {
-  topicStats: BcfTopicStats! @state(class: INFERRED)
+  topicStats: BcfTopicStats! @derived
 }
 
 type BcfTopicStats {

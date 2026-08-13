@@ -4,47 +4,47 @@ package semio.s.trinity.jack.artifact;
 // 🧬️ Jack artifact schema — every field with its state class.
 
 message JackArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string name = 2;
-  // @state persistent
+  // @state artifact
   optional string manifest_id = 3;
-  // @state persistent
+  // @state artifact
   Manifest manifest = 4;
-  // @state persistent
+  // @state artifact
   Camera camera = 5;
-  // @state persistent
+  // @state artifact
   repeated Node nodes = 6;
-  // @state persistent
+  // @state artifact
   repeated Edge edges = 7;
-  // @state persistent
+  // @state artifact
   optional string root_node_id = 8;
-  // @state shared-ui
+  // @state presence
   repeated string selected_node_ids = 9;
-  // @state shared-ui
+  // @state presence
   string active_fixture_id = 10;
-  // @state shared-ui
+  // @state presence
   string jack_query = 11;
-  // @state shared-ui
+  // @state presence
   map<string, string> lod_mode_by_window = 12;
-  // @state local-ui
+  // @state config
   Camera viewport_camera = 13;
-  // @state local-ui
+  // @state config
   string jack_result_json = 14;
-  // @state local-ui
+  // @state config
   string editor_engagement_input = 15;
-  // @state local-ui
+  // @state config
   string graph_engagement_input = 16;
-  // @state local-ui
+  // @state config
   string results_engagement_input = 17;
-  // @state local-ui
+  // @state config
   int64 reorganize_epoch = 18;
-  // @state local-ui
+  // @state config
   optional JackEditorSelection editor_selection = 19;
-  // @state local-ui
+  // @state config
   int64 revision = 20;
-  // @state local-ui
+  // @state config
   string locale = 21;
 }
 

@@ -6,13 +6,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.remodel.remodel.presence")]
 pub struct RemodelPresence {
-    #[state(shared_ui)] pub selection_mode: String,
-    #[state(shared_ui)] pub selection_ids: Vec<String>,
-    #[state(shared_ui)] pub world_camera_position: [f64; 3],
-    #[state(shared_ui)] pub world_camera_target: [f64; 3],
-    #[state(shared_ui)] pub world_camera_fov: f64,
-    #[state(shared_ui)] pub frame_stream_id: Option<String>,
-    #[state(shared_ui)] pub frame_index: u32,
-    #[state(shared_ui)] pub active_utility_id: String,
-    #[state(shared_ui)] pub report_table: String,
+    #[state(presence)] pub selection_mode: String,
+    #[state(presence)] pub selection_ids: Vec<String>,
+    #[state(presence)] pub world_camera_position: [f64; 3],
+    #[state(presence)] pub world_camera_target: [f64; 3],
+    #[state(presence)] pub world_camera_fov: f64,
+    #[state(presence)] pub frame_stream_id: Option<String>,
+    #[state(presence)] pub frame_index: u32,
+    #[state(presence)] pub active_utility_id: String,
+    #[state(presence)] pub report_table: String,
 }

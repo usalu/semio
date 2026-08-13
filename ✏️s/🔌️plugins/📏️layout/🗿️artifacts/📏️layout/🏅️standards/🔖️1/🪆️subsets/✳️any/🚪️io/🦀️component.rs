@@ -221,11 +221,25 @@ pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String
 /// previous side-by-side thumbnail layout), each nesting the page boundary plus every visible
 /// frame as a rect-shaped `DrawNode::Path` — `Frame::Rect` keeps its real fill/stroke, `Text`/
 /// `Image` frames get a neutral outline (mirrors the blueprint chrome colors the app engine's scene
-/// module already uses for the same frame kinds).
+/// module already uses for the same frame kinds). Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
+/// wave 4: if the document has a composed `background_drawing` child AND that child's content is
+/// still live in the working-scene scratch cache (`artifacts::layout::background_drawing_content`),
+/// its layers are merged in first (behind every page layer) — the real consumer of that cache, so an
+/// imported DWG/DXF/SVG trace an author draws pages on top of actually reaches SVG export instead of
+/// only ever informing page-boundary framing at import time.
 fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
     const PAGE_GAP: f64 = 24.0;
     let mut styles = vec![DrawStyle { name: "page".into(), fill: None, stroke: Some(SemioRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
     let mut layers = Vec::with_capacity(doc.pages.len());
+
+    if let Some(background) = crate::artifacts::layout::background_drawing_content(doc) {
+        for mut layer in background.layers {
+            layer.id = format!("background-{}", layer.id);
+            layers.push(layer);
+        }
+        styles.extend(background.styles);
+    }
+
     let mut x_offset = 0.0f64;
     let mut canvas_width = 0.0f64;
     let mut canvas_height = 0.0f64;
@@ -320,9 +334,16 @@ fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
     }
 }
 
-/// 📥️ Builds a schema-valid layout document from a parsed DWG drawing, framing one page per rectangular boundary found — routed through the real `SemioDrawingSnapshot`/`DrawNode` shape (`dwg_drawing_to_semio_drawing`/`path_bounds`) rather than a bespoke tuple list.
+/// 📥️ Builds a schema-valid layout document from a parsed DWG drawing, framing one page per rectangular boundary found — routed through the real `SemioDrawingSnapshot`/`DrawNode` shape (`dwg_drawing_to_semio_drawing`/`path_bounds`) rather than a bespoke tuple list. Ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: this used to build `drawing_snapshot` only
+/// to read `path_bounds` back out of it for page framing, then discard the rest of the decoded DWG
+/// geometry entirely. It now also mints a real content-addressed `background_drawing` composed child
+/// from the FULL drawing and caches its content in the working-scene scratch (see the artifact
+/// root's `🔖️WorkingScene` region) — nothing imported is thrown away anymore.
 pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let drawing_snapshot = dwg_drawing_to_semio_drawing(drawing);
+    let background_child = crate::artifacts::layout::background_drawing_child_handle("dwg", &drawing_snapshot);
+    crate::artifacts::layout::cache_background_drawing_content(&background_child.child_id, drawing_snapshot.clone());
     let root_children: &[DrawNode] = match drawing_snapshot.layers.first().map(|layer| &layer.root) {
         Some(DrawNode::Group { children, .. }) => children,
         _ => &[],
@@ -371,6 +392,8 @@ pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
         pages,
         print_target: None,
         data_fields_json: None,
+        background_drawing: Some(background_child),
+        referenced_model: None,
     };
     serde_json::to_value(document).map_err(|e| e.to_string())
 }
@@ -420,6 +443,46 @@ mod media_import_export_tests {
         assert_eq!(document.pages.len(), 1);
         assert_eq!(document.pages[0].width, 200.0);
         assert_eq!(document.pages[0].height, 150.0);
+    }
+
+    /// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: DWG import now mints a real
+    /// `background_drawing` composed child from the FULL decoded drawing (not just page-boundary
+    /// rects) instead of discarding it — this asserts the mint, the handle shape, and that the
+    /// content actually landed in the working-scene scratch cache the mint call populates.
+    #[test]
+    fn dwg_import_mints_and_caches_a_real_background_drawing_child() {
+        let mut drawing = DwgDrawing::default();
+        drawing.entities.push(DwgEntity {
+            layer: 0,
+            color: DwgColor::ByLayer,
+            geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] },
+        });
+        let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
+        let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
+        let child = document.background_drawing.as_ref().expect("dwg import mints a background_drawing child");
+        assert_eq!(child.target.dialect.subset, "drawing");
+        let cached = crate::artifacts::layout::background_drawing_content(&document).expect("mint call cached real content");
+        assert_eq!(cached.layers.len(), 1, "one imported layer, matching dwg_drawing_to_semio_drawing's single 'imported' layer");
+    }
+
+    /// 🌉️ The real consumer of the working-scene cache: SVG export merges the cached background
+    /// content's layers in behind the document's own page layers, so an imported trace an author
+    /// draws pages on top of survives export instead of only ever informing import-time framing.
+    #[test]
+    fn svg_export_merges_cached_background_drawing_behind_pages() {
+        ensure_stdio_semio_drawing_registered();
+        let mut drawing = DwgDrawing::default();
+        drawing.entities.push(DwgEntity {
+            layer: 0,
+            color: DwgColor::ByLayer,
+            geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] },
+        });
+        let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
+        let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
+        assert!(document.background_drawing.is_some());
+        let (svg, _width, _height) = layout_document_json_to_svg(&serde_json::to_value(&document).expect("doc to json")).expect("svg export succeeds");
+        assert!(svg.starts_with("<svg"));
+        assert!(svg.contains("<path"));
     }
 
     /// 🌉️ Real end-to-end proof that `layout_document_json_to_svg` composes through stdio's actual

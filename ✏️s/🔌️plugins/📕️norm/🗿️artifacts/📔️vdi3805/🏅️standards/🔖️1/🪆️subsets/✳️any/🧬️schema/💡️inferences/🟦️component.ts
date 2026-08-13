@@ -7,6 +7,6 @@ export interface Vdi3805Outline {
 }
 
 export interface Vdi3805Inference {
-  /** @state inferred */
+  /** @derived */
   outline: Vdi3805Outline;
 }

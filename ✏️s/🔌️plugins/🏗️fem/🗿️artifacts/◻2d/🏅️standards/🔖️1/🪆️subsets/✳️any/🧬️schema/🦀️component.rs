@@ -10,22 +10,22 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dArtifact {
-    #[state(persistent)] pub nodes: Vec<FemNode>,
-    #[state(persistent)] pub elements: Vec<FemElement>,
-    #[state(persistent)] pub regions: Vec<FemRegion>,
-    #[state(persistent)] pub materials: Vec<FemMaterial>,
-    #[state(persistent)] pub sections: Vec<FemSection>,
-    #[state(persistent)] pub supports: Vec<FemSupport>,
-    #[state(persistent)] pub load_cases: Vec<FemLoadCase>,
-    #[state(persistent)] pub combinations: Vec<FemCombination>,
-    #[state(persistent)] pub analysis: FemAnalysisSettings,
-    #[state(shared_ui)] pub result_source_id: Option<String>,
-    #[state(shared_ui)] pub result_mode: String,
-    #[state(shared_ui)] pub result_mode_index: u32,
-    #[state(local_ui)] pub camera: FemCamera,
-    #[state(local_ui)] pub locale: String,
-    #[state(preview)] pub solver_results_json: String,
-    #[state(preview)] pub mesh_preview_json: String,
+    #[state(artifact)] pub nodes: Vec<FemNode>,
+    #[state(artifact)] pub elements: Vec<FemElement>,
+    #[state(artifact)] pub regions: Vec<FemRegion>,
+    #[state(artifact)] pub materials: Vec<FemMaterial>,
+    #[state(artifact)] pub sections: Vec<FemSection>,
+    #[state(artifact)] pub supports: Vec<FemSupport>,
+    #[state(artifact)] pub load_cases: Vec<FemLoadCase>,
+    #[state(artifact)] pub combinations: Vec<FemCombination>,
+    #[state(artifact)] pub analysis: FemAnalysisSettings,
+    #[state(presence)] pub result_source_id: Option<String>,
+    #[state(presence)] pub result_mode: String,
+    #[state(presence)] pub result_mode_index: u32,
+    #[state(config)] pub camera: FemCamera,
+    #[state(config)] pub locale: String,
+    #[state(artifact)] pub solver_results_json: String,
+    #[state(artifact)] pub mesh_preview_json: String,
 }
 //#endregion 🔖️Artifact
 

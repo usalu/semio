@@ -4,6 +4,6 @@ type Semio_semio_image_mutationsEntry {
   value: String!
 }
 type Semio_semio_image_mutations {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_image_mutationsEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Semio_semio_image_mutationsEntry!]! @state(class: ARTIFACT)
 }

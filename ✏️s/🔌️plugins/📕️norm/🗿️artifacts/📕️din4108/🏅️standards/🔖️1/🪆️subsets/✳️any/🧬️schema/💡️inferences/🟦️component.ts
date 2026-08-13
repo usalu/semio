@@ -7,6 +7,6 @@ export interface Din4108Outline {
 }
 
 export interface Din4108Inference {
-  /** @state inferred */
+  /** @derived */
   outline: Din4108Outline;
 }

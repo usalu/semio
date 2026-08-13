@@ -4,7 +4,7 @@ package semio.s.stdio.xml.inference;
 // 💡️ Xml inference schema — document outline (element count, max depth, hasDoctype).
 
 message XmlInference {
-  // @state inferred
+  // @derived
   XmlOutline outline = 1;
 }
 

@@ -19,8 +19,8 @@
   "type": "object",
   "required": ["schema"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "solidName": { "type": "string", "x-semio-state": "persistent" },
-    "triangles": { "type": "array", "items": { "$ref": "#/$defs/StlTriangle" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "solidName": { "type": "string", "x-semio-state": "artifact" },
+    "triangles": { "type": "array", "items": { "$ref": "#/$defs/StlTriangle" }, "x-semio-state": "artifact" }
   }
 }

@@ -1,11 +1,11 @@
 /** 🧬️ Imperative snapshot schema — persistent fields only. */
 
 export interface ImperativeSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   path: ImperativePath;
-  /** @state persistent */
+  /** @state artifact */
   seed: Record<string, unknown>;
 }
 

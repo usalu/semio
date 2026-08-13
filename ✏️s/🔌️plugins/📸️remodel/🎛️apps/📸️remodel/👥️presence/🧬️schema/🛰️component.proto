@@ -2,22 +2,22 @@ syntax = "proto3";
 package semio.app.remodel.remodel;
 
 message RemodelPresence {
-  // @state shared-ui
+  // @state presence
   string selection_mode = 1;
-  // @state shared-ui
+  // @state presence
   repeated string selection_ids = 2;
-  // @state shared-ui
+  // @state presence
   repeated double world_camera_position = 3;
-  // @state shared-ui
+  // @state presence
   repeated double world_camera_target = 4;
-  // @state shared-ui
+  // @state presence
   double world_camera_fov = 5;
-  // @state shared-ui
+  // @state presence
   optional string frame_stream_id = 6;
-  // @state shared-ui
+  // @state presence
   uint32 frame_index = 7;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 8;
-  // @state shared-ui
+  // @state presence
   string report_table = 9;
 }

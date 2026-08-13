@@ -62,10 +62,10 @@ type PdfInfo {
 }
 
 type PdfSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  declaredVersion: String! @state(class: PERSISTENT)
-  pages: [PdfPage!]! @state(class: PERSISTENT)
-  info: PdfInfo! @state(class: PERSISTENT)
-  objects: [PdfIndirectObject!]! @state(class: PERSISTENT)
-  trailer: [PdfDictEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  declaredVersion: String! @state(class: ARTIFACT)
+  pages: [PdfPage!]! @state(class: ARTIFACT)
+  info: PdfInfo! @state(class: ARTIFACT)
+  objects: [PdfIndirectObject!]! @state(class: ARTIFACT)
+  trailer: [PdfDictEntry!]! @state(class: ARTIFACT)
 }

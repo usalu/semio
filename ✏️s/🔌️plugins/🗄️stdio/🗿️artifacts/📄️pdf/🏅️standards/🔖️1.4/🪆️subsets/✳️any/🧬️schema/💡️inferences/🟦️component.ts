@@ -7,6 +7,6 @@ export interface PdfOutline {
 }
 
 export interface PdfInference {
-  /** @state inferred */
+  /** @derived */
   outline: PdfOutline;
 }

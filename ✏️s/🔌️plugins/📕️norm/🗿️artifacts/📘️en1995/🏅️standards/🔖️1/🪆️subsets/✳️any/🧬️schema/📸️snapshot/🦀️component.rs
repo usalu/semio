@@ -11,45 +11,45 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.en1995", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1995")]
 pub struct En1995Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: crate::document::AnnexChoice,
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_ed_knm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub w_mm3: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_mm2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub b_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_m_k: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_c_0_k: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub service_class: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub load_duration: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_crit_knm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_ef_mm2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_v_k: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_duration_min: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub section_depth_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_vert_m_s2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_cycles_bridge: f64,
 }
 //#endregion 🔖️Snapshot

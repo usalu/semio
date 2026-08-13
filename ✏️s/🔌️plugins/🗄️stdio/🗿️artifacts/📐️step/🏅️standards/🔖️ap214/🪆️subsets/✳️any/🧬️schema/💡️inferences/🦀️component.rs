@@ -22,7 +22,7 @@ use super::bounds::{compute_step_bounds, StepBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step.inference")]
 pub struct StepInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: StepBounds,
 }
 

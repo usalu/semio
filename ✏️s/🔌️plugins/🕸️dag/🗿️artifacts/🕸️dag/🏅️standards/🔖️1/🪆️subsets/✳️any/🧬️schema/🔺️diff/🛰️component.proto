@@ -1,15 +1,15 @@
 syntax = "proto3";
 package semio.s.dag.dag.diff;
 message DagDiff {
-  optional DagArtifact artifact = 1; // @state persistent
-  optional string schema = 2; // @state persistent
-  optional DagNodesDelta nodes = 3; // @state persistent
-  optional DagEdgesDelta edges = 4; // @state persistent
-  optional DagNodeSpecList set_nodes = 5; // @state persistent
-  optional DagFixtureEdgeList set_edges = 6; // @state persistent
-  optional DagStringList selected_node_ids = 7; // @state shared-ui
-  optional DagCamera camera = 8; // @state local-ui
-  optional string locale = 9; // @state local-ui
+  optional DagArtifact artifact = 1; // @state artifact
+  optional string schema = 2; // @state artifact
+  optional DagNodesDelta nodes = 3; // @state artifact
+  optional DagEdgesDelta edges = 4; // @state artifact
+  optional DagNodeSpecList set_nodes = 5; // @state artifact
+  optional DagFixtureEdgeList set_edges = 6; // @state artifact
+  optional DagStringList selected_node_ids = 7; // @state presence
+  optional DagCamera camera = 8; // @state config
+  optional string locale = 9; // @state config
 }
 message DagStringList { repeated string values = 1; }
 message DagNodeSpecList { repeated DagNodeSpec values = 1; }

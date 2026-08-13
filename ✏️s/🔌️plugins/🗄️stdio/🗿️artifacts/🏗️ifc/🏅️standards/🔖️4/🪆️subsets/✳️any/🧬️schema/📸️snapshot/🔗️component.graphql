@@ -44,7 +44,7 @@ type IfcHeader {
 
 # 🧬️ IfcSnapshot
 type IfcSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  header: IfcHeader! @state(class: PERSISTENT)
-  entities: [IfcEntity!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  header: IfcHeader! @state(class: ARTIFACT)
+  entities: [IfcEntity!]! @state(class: ARTIFACT)
 }

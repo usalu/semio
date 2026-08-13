@@ -19,54 +19,54 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "editorSelection": {
       "$ref": "#/$defs/WriterEditorSelection",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "formatSignal": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lintSignal": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "revision": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "editorSettings": {
       "$ref": "#/$defs/WriterEditorSettings",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "treeHoveredAstId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "editorHoverOffset": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera": {
       "$ref": "#/$defs/WriterCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

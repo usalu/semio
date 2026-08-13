@@ -4,7 +4,7 @@ package semio.s.architect.program.inference;
 // 💡️ Architect program inference schema — topology (hierarchy shape of elements via parentId).
 
 message ProgramInference {
-  // @state inferred
+  // @derived
   ProgramTopology topology = 1;
 }
 

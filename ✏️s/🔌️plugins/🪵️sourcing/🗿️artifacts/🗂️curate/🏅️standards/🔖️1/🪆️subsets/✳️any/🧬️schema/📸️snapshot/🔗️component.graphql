@@ -68,6 +68,6 @@ type CuratedItem {
 }
 
 type CurateSnapshot {
-  stock: [ObjectKind!]! @state(class: PERSISTENT)
-  curated: [CuratedItem!]! @state(class: PERSISTENT)
+  stock: [ObjectKind!]! @state(class: ARTIFACT)
+  curated: [CuratedItem!]! @state(class: ARTIFACT)
 }

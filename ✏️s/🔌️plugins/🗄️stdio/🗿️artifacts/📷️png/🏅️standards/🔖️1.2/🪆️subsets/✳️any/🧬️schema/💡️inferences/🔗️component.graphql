@@ -1,7 +1,7 @@
 # 💡️ Png inference schema — IHDR-derived raster geometry.
 
 type PngInference {
-  dimensions: PngDimensions! @state(class: INFERRED)
+  dimensions: PngDimensions! @derived
 }
 
 type PngDimensions {

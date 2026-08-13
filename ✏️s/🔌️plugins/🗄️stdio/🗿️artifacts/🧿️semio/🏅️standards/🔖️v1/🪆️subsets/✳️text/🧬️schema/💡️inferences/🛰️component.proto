@@ -4,7 +4,7 @@ package semio.s.stdio.semio.text.inference;
 // 💡️ Semio text inference schema — word/mark census + distinct languages used.
 
 message SemioTextInference {
-  // @state inferred
+  // @derived
   SemioTextProfile profile = 1;
 }
 

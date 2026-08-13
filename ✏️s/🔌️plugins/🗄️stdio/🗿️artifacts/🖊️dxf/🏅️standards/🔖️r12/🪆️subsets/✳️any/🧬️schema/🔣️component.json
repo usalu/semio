@@ -4,12 +4,12 @@
   "description": "Full artifact state — same persisted fields as DxfSnapshot (see snapshot.json for the shared $defs).",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "headerVars": { "type": "array", "x-semio-state": "persistent" },
-    "tables": { "type": "object", "x-semio-state": "persistent" },
-    "otherTables": { "type": "array", "x-semio-state": "persistent" },
-    "blocks": { "type": "array", "x-semio-state": "persistent" },
-    "entities": { "type": "array", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "headerVars": { "type": "array", "x-semio-state": "artifact" },
+    "tables": { "type": "object", "x-semio-state": "artifact" },
+    "otherTables": { "type": "array", "x-semio-state": "artifact" },
+    "blocks": { "type": "array", "x-semio-state": "artifact" },
+    "entities": { "type": "array", "x-semio-state": "artifact" }
   },
   "required": ["schema", "headerVars", "tables", "otherTables", "blocks", "entities"]
 }

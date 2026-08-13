@@ -4,7 +4,7 @@ package semio.s.dag.dag.inference;
 // 💡️ Dag inference schema — topology (topological order + depth + cycle-freedom) over nodes/edges.
 
 message DagInference {
-  // @state inferred
+  // @derived
   DagTopology topology = 1;
 }
 

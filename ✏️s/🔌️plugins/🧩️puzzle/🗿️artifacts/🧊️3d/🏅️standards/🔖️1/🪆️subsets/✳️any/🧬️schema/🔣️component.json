@@ -44,203 +44,203 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "domain": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/Puzzle3dMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "objects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle3dObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "attractions": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle3dAttraction"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "targetVolumes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle3dTargetVolume"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "references": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle3dReference"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedObjectIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedVortexIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedAttractionIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedTargetVolumeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedReferenceIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "cameraPositionX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraPositionY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraPositionZ": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraTargetX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraTargetY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraTargetZ": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraZoom": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionModeDefault": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridVisible": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSnapEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSpacing": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "overlapBudget": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "fillCount": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushCandidateIndex": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodAutomatic": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodDepthVariable": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodManual": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "proximityRadius": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "runtimeExtrasJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredObjectId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredVortexFullId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredKindId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "previewSeq": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

@@ -28,7 +28,7 @@ type HtmlNode {
 }
 
 type HtmlSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  doctype: String @state(class: PERSISTENT)
-  root: HtmlNode! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  doctype: String @state(class: ARTIFACT)
+  root: HtmlNode! @state(class: ARTIFACT)
 }

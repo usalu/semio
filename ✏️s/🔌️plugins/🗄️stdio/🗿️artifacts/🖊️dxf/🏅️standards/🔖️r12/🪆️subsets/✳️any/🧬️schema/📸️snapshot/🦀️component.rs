@@ -277,26 +277,26 @@ pub struct DxfBlock {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf")]
 pub struct DxfSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 🏷️ `HEADER` section — every `$VAR`, name-keyed.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub header_vars: Vec<DxfHeaderVar>,
     /// 🗂️ `TABLES` section — the three typed table kinds.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub tables: DxfTables,
     /// 🕳️ `TABLES` section — every other table kind, raw-retained.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub other_tables: Vec<DxfOtherTable>,
     /// 🧱 `BLOCKS` section.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub blocks: Vec<DxfBlock>,
     /// 📐️ `ENTITIES` section.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entities: Vec<DxfEntity>,
 }

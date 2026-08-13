@@ -9,13 +9,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.home")]
 pub struct SHomeArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub catalog_generation: u64,
-    #[state(local_ui)]
+    #[state(config)]
     pub active_panel_tab: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Artifact

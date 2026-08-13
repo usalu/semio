@@ -6,6 +6,6 @@ export interface SemioKind {
 }
 
 export interface SemioInference {
-  /** @state inferred */
+  /** @derived */
   kind: SemioKind;
 }

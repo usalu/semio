@@ -1,7 +1,7 @@
 # 💡️ Tsv inference schema — document outline (record/column counts).
 
 type TsvInference {
-  outline: TsvOutline! @state(class: INFERRED)
+  outline: TsvOutline! @derived
 }
 
 type TsvOutline {

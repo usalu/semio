@@ -40,181 +40,181 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "objects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/LowpolyObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activeObjectId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selection": {
       "$ref": "#/$defs/LowpolySelection",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedObjectIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "paintUtility": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activePaintLayer": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "showEdges": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunAzimuth": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunElevation": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunIntensity": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunColor": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraPositionX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraPositionY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraPositionZ": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraTargetX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraTargetY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraTargetZ": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "worldCameraFov": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "utilityParamsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintColorR": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintColorG": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintColorB": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "paintColorA": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionModeDefault": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredObjectId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetObjectId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetMode": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetId": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "strokeDragActive": {
       "type": "boolean",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "transformDragActive": {
       "type": "boolean",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "previewSeq": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

@@ -4,6 +4,6 @@ package semio.s.demonstrator.playground.mutation;
 // 🧬️ Playground mutation schema — persistent fields only.
 
 message PlaygroundMutation {
-  // @state persistent
+  // @state artifact
   string schema = 1;
 }

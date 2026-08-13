@@ -12,42 +12,42 @@ use std::collections::BTreeMap;
 #[dsl(id = "note.note", layout = "lines")]
 #[artifact_schema(id = "s.note.note")]
 pub struct NoteSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(statements, block)]
     pub blocks: Vec<NoteBlockNode>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grid_visible: Option<bool>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grid_spacing: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grid_subdivisions: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grid_opacity: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub snap_enabled: Option<bool>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub snap_grid_spacing: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pencil_width: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub eraser_radius: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub assets: BTreeMap<String, NoteImageAsset>,
 }

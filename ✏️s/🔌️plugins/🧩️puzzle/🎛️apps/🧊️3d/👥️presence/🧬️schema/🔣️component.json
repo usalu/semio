@@ -20,43 +20,43 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedVortexIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedAttractionIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedTargetVolumeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedReferenceIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredObjectId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredVortexFullId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "cameraPosition": {
       "type": "array",
@@ -65,7 +65,7 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "cameraTarget": {
       "type": "array",
@@ -74,19 +74,19 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "cameraZoom": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeToolId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

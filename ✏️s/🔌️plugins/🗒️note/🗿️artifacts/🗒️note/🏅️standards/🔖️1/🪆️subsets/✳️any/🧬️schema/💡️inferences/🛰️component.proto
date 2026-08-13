@@ -4,7 +4,7 @@ package semio.s.note.note.inference;
 // 💡️ Note inference schema — block outline (flattened block names + word/block counts).
 
 message NoteInference {
-  // @state inferred
+  // @derived
   NoteOutline outline = 1;
 }
 

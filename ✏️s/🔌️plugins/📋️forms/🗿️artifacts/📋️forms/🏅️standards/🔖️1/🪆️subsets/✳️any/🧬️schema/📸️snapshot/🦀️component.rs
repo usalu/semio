@@ -10,16 +10,16 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub version: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub steps: Vec<FormStep>,
 }
 

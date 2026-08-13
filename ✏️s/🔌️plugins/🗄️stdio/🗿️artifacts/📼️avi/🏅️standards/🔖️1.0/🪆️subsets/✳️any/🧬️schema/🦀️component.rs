@@ -9,16 +9,16 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.avi")]
 pub struct AviArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub main_header: AviMainHeader,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub streams: Vec<AviStream>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub idx1_present: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub unknown_chunks: Vec<RiffChunk>,
 }

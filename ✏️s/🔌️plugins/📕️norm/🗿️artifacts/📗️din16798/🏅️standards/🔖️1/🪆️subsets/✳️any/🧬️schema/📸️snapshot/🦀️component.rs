@@ -12,151 +12,151 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.din16798", layout = "lines")]
 #[artifact_schema(id = "s.norm.din16798")]
 pub struct Din16798Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: AnnexChoice,
-    #[state(persistent)]
+    #[state(artifact)]
     pub occupancy: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub comfort_category: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub t_op_c: f64,
     #[dsl(unit = "pct")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub rh_percent: f64,
     #[dsl(unit = "m/s")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub air_speed_m_s: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub theta_rm_c: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub co2_ppm: f64,
     #[dsl(unit = "pct")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub df_percent: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub l_aeq_db: f64,
 
-    #[state(persistent)]
+    #[state(artifact)]
     pub persons: u32,
     // Not `#[dsl(ident)]`: values like `"2"` are bare digits, which the lexer always tokenizes as
     // an integer, never as an identifier — quoted `Text` (the default String shape) has no such
     // ambiguity.
-    #[state(persistent)]
+    #[state(artifact)]
     pub ida_class: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub ventilation_m3_h: f64,
     #[dsl(unit = "m2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub floor_area_m2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bedrooms: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub dwelling_ventilation_m3_h: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub occupants: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub residential_ventilation_m3_h: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sfp_w_m3_s: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sfp_required_class: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     pub heat_recovery_eta: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub heat_recovery_eta_min: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub system_type: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub years_since_inspection: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub humidification_required_kg_h: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub humidification_provided_kg_h: f64,
 
-    #[state(persistent)]
+    #[state(artifact)]
     pub fan_q_v_m3_s: f64,
     #[dsl(unit = "h")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub fan_t_run_h: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fan_energy_reference_kwh: f64,
     #[dsl(unit = "K")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub night_setback_k: f64,
 
-    #[state(persistent)]
+    #[state(artifact)]
     pub hr_m_dot_kg_s: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub hr_cp_j_kgk: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub hr_delta_t_c: f64,
     #[dsl(unit = "h")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub hr_t_h: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub hr_savings_reference_kwh: f64,
 
-    #[state(persistent)]
+    #[state(artifact)]
     pub n50_h_inv: f64,
     #[dsl(unit = "m3")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub volume_m3: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub infiltration_allowance_m3_h: f64,
     #[dsl(unit = "m2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub cellar_area_m2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub cellar_ventilation_m3_h: f64,
 
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_tr_w_k: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_ve_w_k: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub theta_e_c: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub theta_set_c: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub cooling_delta_t_h: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub cooling_gains_kwh: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub cooling_utilization_factor: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub cooling_reference_kwh: f64,
 
-    #[state(persistent)]
+    #[state(artifact)]
     pub chiller_type: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub eer_actual: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub q_c_kwh: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub generation_reference_kwh: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub data_center_supply_c: f64,
 
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_st_w_k: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub theta_st_c: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub theta_amb_c: f64,
     #[dsl(unit = "h")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub storage_t_h: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub storage_allowance_kwh: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub dhw_delivery_c: f64,
 
-    #[state(persistent)]
+    #[state(artifact)]
     pub duct_class: String,
     #[dsl(unit = "Pa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub duct_test_pressure_pa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub duct_leakage_m3_s_m2: f64,
 }
 //#region 🔖️HandcraftedArtifactCodecs

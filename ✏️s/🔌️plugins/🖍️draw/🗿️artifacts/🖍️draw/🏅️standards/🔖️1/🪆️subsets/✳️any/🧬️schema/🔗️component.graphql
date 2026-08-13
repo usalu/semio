@@ -1,20 +1,20 @@
 # 🧬️ Draw artifact schema — every field with its state class.
 
 type DrawArtifact {
-  schema: String! @state(class: PERSISTENT)
-  id: String! @state(class: PERSISTENT)
-  title: String @state(class: PERSISTENT)
-  layers: [DrawLayerNode!]! @state(class: PERSISTENT)
-  assets: [DrawImageAssetEntry!]! @state(class: PERSISTENT)
-  artboard: DrawArtboard @state(class: PERSISTENT)
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  activeUtilityId: String! @state(class: SHARED_UI)
-  engagementInput: String! @state(class: LOCAL_UI)
-  cameraX: Float! @state(class: LOCAL_UI)
-  cameraY: Float! @state(class: LOCAL_UI)
-  cameraZoom: Float! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
-  hoveredId: String @state(class: PREVIEW)
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  layers: [DrawLayerNode!]! @state(class: ARTIFACT)
+  assets: [DrawImageAssetEntry!]! @state(class: ARTIFACT)
+  artboard: DrawArtboard @state(class: ARTIFACT)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  activeUtilityId: String! @state(class: PRESENCE)
+  engagementInput: String! @state(class: CONFIG)
+  cameraX: Float! @state(class: CONFIG)
+  cameraY: Float! @state(class: CONFIG)
+  cameraZoom: Float! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+  hoveredId: String @state(class: ARTIFACT)
 }
 
 type DrawLayerNode {

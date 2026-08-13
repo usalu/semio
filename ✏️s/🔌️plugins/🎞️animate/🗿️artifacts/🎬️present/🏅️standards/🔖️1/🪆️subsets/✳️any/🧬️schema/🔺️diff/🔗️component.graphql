@@ -1,12 +1,12 @@
 # 🔺️ Present diff schema.
 type PresentDiff {
-  artifact: PresentArtifact @state(class: PERSISTENT)
-  schema: String @state(class: PERSISTENT)
-  source: FigureTileSource @state(class: PERSISTENT)
-  tiles: PresentTilesDelta @state(class: PERSISTENT)
-  selectedIds: PresentStringList @state(class: SHARED_UI)
-  engagementInput: String @state(class: LOCAL_UI)
-  locale: String @state(class: LOCAL_UI)
+  artifact: PresentArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  source: FigureTileSource @state(class: ARTIFACT)
+  tiles: PresentTilesDelta @state(class: ARTIFACT)
+  selectedIds: PresentStringList @state(class: PRESENCE)
+  engagementInput: String @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
 }
 type PresentStringList { values: [String!]! }
 type PresentTilesDelta { added: [FigureTileDraft!]! removed: [String!]! patched: [PresentTilePatchEntry!]! reordered: [String!] }

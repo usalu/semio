@@ -1,49 +1,49 @@
 /** 🧬️ Jack diff schema — sparse field delta. */
 
 export interface JackDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: JackArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   name?: string;
-  /** @state persistent */
+  /** @state artifact */
   manifestId?: string | null;
-  /** @state persistent */
+  /** @state artifact */
   manifest?: Manifest;
-  /** @state persistent */
+  /** @state artifact */
   camera?: Camera;
-  /** @state persistent */
+  /** @state artifact */
   nodes?: JackNodesDelta;
-  /** @state persistent */
+  /** @state artifact */
   edges?: JackEdgesDelta;
-  /** @state persistent */
+  /** @state artifact */
   rootNodeId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds?: JackStringList;
-  /** @state shared-ui */
+  /** @state presence */
   activeFixtureId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   jackQuery?: string;
-  /** @state shared-ui */
+  /** @state presence */
   lodModeByWindow?: Record<string, string | null>;
-  /** @state local-ui */
+  /** @state config */
   viewportCamera?: Camera;
-  /** @state local-ui */
+  /** @state config */
   jackResultJson?: string;
-  /** @state local-ui */
+  /** @state config */
   editorEngagementInput?: string;
-  /** @state local-ui */
+  /** @state config */
   graphEngagementInput?: string;
-  /** @state local-ui */
+  /** @state config */
   resultsEngagementInput?: string;
-  /** @state local-ui */
+  /** @state config */
   reorganizeEpoch?: number;
-  /** @state local-ui */
+  /** @state config */
   editorSelection?: JackEditorSelection | null;
-  /** @state local-ui */
+  /** @state config */
   revision?: number;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

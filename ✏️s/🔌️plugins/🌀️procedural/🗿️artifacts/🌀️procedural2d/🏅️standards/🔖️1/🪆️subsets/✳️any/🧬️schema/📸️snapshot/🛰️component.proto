@@ -4,9 +4,9 @@ package semio.s.procedural.procedural2d.snapshot;
 // 🧬️ Procedural2d snapshot schema — persistent fields only.
 
 message Procedural2dSnapshot {
-  // @state persistent
+  // @state artifact
   FlowFixture fixture = 1;
-  // @state persistent
+  // @state artifact
   GenerationPlayState generation = 2;
 }
 

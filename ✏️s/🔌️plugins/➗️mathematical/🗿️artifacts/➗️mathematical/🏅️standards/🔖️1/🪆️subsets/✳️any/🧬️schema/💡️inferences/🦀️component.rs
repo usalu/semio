@@ -20,9 +20,9 @@ use super::topology::{compute_mathematical_topology, MathematicalTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.mathematical.mathematical.inference")]
 pub struct MathematicalInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: MathematicalTopology,
-    #[state(inferred)]
+    #[derived]
     pub roots: Vec<MathematicalRoot>,
 }
 

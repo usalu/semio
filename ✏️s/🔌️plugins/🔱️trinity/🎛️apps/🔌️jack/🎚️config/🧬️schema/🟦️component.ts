@@ -1,30 +1,30 @@
 /** 🧬️ JackConfig */
 export interface JackConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   camera: Camera;
-  /** @state local-ui */
+  /** @state config */
   activeFixtureId: string;
-  /** @state local-ui */
+  /** @state config */
   jackQuery: string;
-  /** @state local-ui */
+  /** @state config */
   jackResultJson: string;
-  /** @state local-ui */
+  /** @state config */
   editorEngagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   graphEngagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   resultsEngagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   reorganizeEpoch: number;
-  /** @state local-ui */
+  /** @state config */
   editorSelection?: JackEditorSelection;
-  /** @state local-ui */
+  /** @state config */
   lodModeByWindow: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   revision: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

@@ -47,7 +47,7 @@ pub struct ByteSplice {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary.diff")]
 pub struct BinaryDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub splices: Vec<ByteSplice>,
 }

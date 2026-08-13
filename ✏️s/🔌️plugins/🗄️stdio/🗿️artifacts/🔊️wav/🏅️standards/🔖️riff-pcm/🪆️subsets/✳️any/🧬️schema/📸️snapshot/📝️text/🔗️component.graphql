@@ -4,6 +4,6 @@ type Semio_wav_snapshotEntry {
   value: String!
 }
 type Semio_wav_snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_wav_snapshotEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Semio_wav_snapshotEntry!]! @state(class: ARTIFACT)
 }

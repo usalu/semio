@@ -571,10 +571,13 @@ mod tests {
     //#region 🔖️MediaPorts
     #[test]
     fn export_media_layout_out_returns_svg_of_first_page() {
+        // 🌉️ Same pre-existing per-process registration gap as `🎮️commands/🐚️export`'s
+        // `export_actions_wire_to_real_layout_exporters` test — see that test's comment.
+        crate::artifacts::layout::io::ensure_stdio_semio_drawing_registered();
         let app = layout_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let app = LayoutPlayApp::default();
         let media = LayoutPlayApp::export_media("layout:out", &doc).expect("export layout:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
@@ -588,7 +591,7 @@ mod tests {
         let app = layout_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let app = LayoutPlayApp::default();
         let media = LayoutPlayApp::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };

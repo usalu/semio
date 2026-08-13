@@ -14,31 +14,31 @@
     "beforeFixtureJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "lhsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "rhsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "parameterBindings": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/PropertyValue"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "ruleLayout": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/LayoutPoint"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

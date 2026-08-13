@@ -70,44 +70,44 @@ pub enum DwgDecodeStatus {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg")]
 pub struct DwgSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub version: String,
     /// 🗓️ `maint_version` (RC, plain preamble byte 0x12) — cross-checked against LibreDWG's
     /// `header.spec` (`FIELD_RC (maint_version, 0);` right after `dwg_version` at 0x11) and
     /// verified on the real `architectural.dwg` fixture (byte 0x12 == 0x02).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub maintenance_version: u8,
     /// 🌐 `codepage` (RS, plain preamble bytes 0x13-0x14, little-endian) — LibreDWG's
     /// `header.spec` documents this exact offset with `//@0x13: 29/30 for ANSI_1252`; the real
     /// `architectural.dwg` fixture reads `30` there, an exact match.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub codepage: u16,
     /// 🔒 The complete, untouched original file bytes -- ALWAYS the lossless source of truth for
     /// `encode_dwg`, regardless of `decode_status`. Nothing this codec doesn't understand is ever
     /// dropped: undecoded content is implicitly retained here even where `sections` below is
     /// empty or partial.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(base64)]
     pub bytes: Vec<u8>,
     /// 🧮 DERIVED from `sections` (never independently diffed -- see the diff module's own doc
     /// comment): kept as a field for back-compat with existing readers, always recomputed by
     /// `decode_dwg`/`derive_section_names` and by every `sections`-mutating diff/mutation.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub section_names: Vec<String>,
     /// 🗂️ Real D1/D2 structural decode: every located named section, with page content
     /// decompressed where reachable. Read-only insight layered on top of `bytes` -- never
     /// consulted by `encode_dwg`.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub sections: Vec<DwgSection>,
     /// 🧮 DERIVED from `sections` (never independently diffed -- see `derive_decode_status`).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub decode_status: DwgDecodeStatus,
 }

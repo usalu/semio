@@ -1,9 +1,9 @@
 /** 🧬️ Gis3dConfig */
 export interface Gis3dConfig {
-  /** @state local-ui */
+  /** @state config */
   cameraJson: string;
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

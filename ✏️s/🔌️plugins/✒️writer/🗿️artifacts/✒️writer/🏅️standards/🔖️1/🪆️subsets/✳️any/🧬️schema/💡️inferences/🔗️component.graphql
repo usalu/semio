@@ -1,7 +1,7 @@
 # 💡️ Writer inference schema — document outline (markdown headings + word/line counts).
 
 type WriterInference {
-  outline: WriterOutline! @state(class: INFERRED)
+  outline: WriterOutline! @derived
 }
 
 type WriterOutline {

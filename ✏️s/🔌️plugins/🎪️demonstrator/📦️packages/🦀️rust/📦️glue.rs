@@ -278,27 +278,17 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎪️Panes
+//#region 🎛️Apps
+// 🎪️ Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D3 dissolved the
+// seven-file `🎪️panes/` facet into this single `🎛️apps` component — see its module doc for why the
+// panes were NOT relocated into the source plugins' `🎛️apps/<app>/📌️panels/`.
 #[path = "."]
-pub mod panes {
-    #[path = "../../🎪️panes/🦀️component.rs"]
+pub mod apps {
+    #[path = "../../🎛️apps/🦀️component.rs"]
     mod component;
     pub use component::*;
-
-    #[path = "../../🎪️panes/🌱️generator/🦀️component.rs"]
-    pub mod generator;
-    #[path = "../../🎪️panes/📐️koordinator/🦀️component.rs"]
-    pub mod koordinator;
-    #[path = "../../🎪️panes/🧩️aggregator/🦀️component.rs"]
-    pub mod aggregator;
-    #[path = "../../🎪️panes/🗂️aussuchen/🦀️component.rs"]
-    pub mod aussuchen;
-    #[path = "../../🎪️panes/🏭️bearbeiten/🦀️component.rs"]
-    pub mod bearbeiten;
-    #[path = "../../🎪️panes/🗺️verfolgen/🦀️component.rs"]
-    pub mod verfolgen;
 }
-//#endregion 🎪️Panes
+//#endregion 🎛️Apps
 
 //#region 🔖️Manifest
 #[path = "../../🦀️component.rs"]

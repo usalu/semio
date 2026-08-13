@@ -1,18 +1,18 @@
 /** 🧬️ Procedural3dPresence */
 export interface Procedural3dPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredNodeId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   camera: CameraJson;
-  /** @state shared-ui */
+  /** @state presence */
   previewCamera: Procedural3dPreviewCamera;
-  /** @state shared-ui */
+  /** @state presence */
   selectionMethod: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state shared-ui */
+  /** @state presence */
   showMode: string;
 }
 

@@ -1,7 +1,7 @@
 # 💡️ deflate inference schema — real RFC1950 zlib header semantics (CMF window size, FLG.FLEVEL, FDICT).
 
 type DeflateInference {
-  window: DeflateWindow! @state(class: INFERRED)
+  window: DeflateWindow! @derived
 }
 
 type DeflateWindow {

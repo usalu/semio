@@ -4,7 +4,7 @@ package semio.s.stdio.tsv.inference;
 // 💡️ Tsv inference schema — document outline (record/column counts).
 
 message TsvInference {
-  // @state inferred
+  // @derived
   TsvOutline outline = 1;
 }
 

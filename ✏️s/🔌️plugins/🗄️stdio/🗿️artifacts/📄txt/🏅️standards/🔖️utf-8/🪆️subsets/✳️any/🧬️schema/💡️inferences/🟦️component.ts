@@ -7,6 +7,6 @@ export interface TxtOutline {
 }
 
 export interface TxtInference {
-  /** @state inferred */
+  /** @derived */
   outline: TxtOutline;
 }

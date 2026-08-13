@@ -1,25 +1,25 @@
 /** 🧬️ Block3d snapshot schema — persistent fields only. */
 
 export interface Block3dSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   objectKind: BlockKindIdentity;
-  /** @state persistent */
+  /** @state artifact */
   representations: BlockRepresentation[];
-  /** @state persistent */
+  /** @state artifact */
   vortexKinds: Block3dVortexKind[];
-  /** @state persistent */
+  /** @state artifact */
   vortices: Block3dVortexTemplate[];
-  /** @state persistent */
+  /** @state artifact */
   compatibility: BlockCompatibilityRule[];
-  /** @state persistent */
+  /** @state artifact */
   attributes: BlockAttribute[];
-  /** @state persistent */
+  /** @state artifact */
   authors: BlockAuthor[];
-  /** @state persistent */
+  /** @state artifact */
   camera3d: BlockCamera3d;
-  /** @state persistent */
+  /** @state artifact */
   meta: BlockMeta;
 }
 

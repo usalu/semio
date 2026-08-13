@@ -58,8 +58,8 @@
   },
   "description": "Sparse diff for stdio.tiff. Every field present = changed to a value. No tri-state fields at this level.",
   "properties": {
-    "byteOrder": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffByteOrder", "x-semio-state": "persistent" },
-    "ifds": { "$ref": "#/$defs/TiffIfdsDiff", "x-semio-state": "persistent" },
-    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "persistent" }
+    "byteOrder": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffByteOrder", "x-semio-state": "artifact" },
+    "ifds": { "$ref": "#/$defs/TiffIfdsDiff", "x-semio-state": "artifact" },
+    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "artifact" }
   }
 }

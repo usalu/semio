@@ -25,6 +25,6 @@ export interface SemioVideoStream {
 }
 
 export interface SemioVideoSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ streams: SemioVideoStream[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ streams: SemioVideoStream[];
 }

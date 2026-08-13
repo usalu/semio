@@ -4,7 +4,7 @@ package semio.s.fem.fem3d.inference;
 // 💡️ Fem3d inference schema — bounds (3d extent + node/element counts).
 
 message Fem3dInference {
-  // @state inferred
+  // @derived
   Fem3dBounds bounds = 1;
 }
 

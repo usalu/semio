@@ -1,21 +1,21 @@
 /** 🧬️ Process3dPresence */
 export interface Process3dPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedFaceId?: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectionMethod: string;
-  /** @state shared-ui */
+  /** @state presence */
   engagementInput: string;
-  /** @state shared-ui */
+  /** @state presence */
   cameraPosition: number[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraTarget: number[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraFov: number;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
 }

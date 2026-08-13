@@ -4,6 +4,6 @@ type Semio_wav_diffEntry {
   value: String!
 }
 type Semio_wav_diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_wav_diffEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Semio_wav_diffEntry!]! @state(class: ARTIFACT)
 }

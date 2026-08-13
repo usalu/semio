@@ -1,14 +1,14 @@
 /** 🔺️ DAG diff schema — sparse field delta. */
 export interface DagDiff {
-  /** @state persistent */ artifact?: DagArtifact;
-  /** @state persistent */ schema?: string;
-  /** @state persistent */ nodes?: DagNodesDelta;
-  /** @state persistent */ edges?: DagEdgesDelta;
-    /** @state persistent */ setNodes?: DagNodeSpecList;
-    /** @state persistent */ setEdges?: DagFixtureEdgeList;
-  /** @state shared-ui */ selectedNodeIds?: DagStringList;
-  /** @state local-ui */ camera?: DagCamera;
-  /** @state local-ui */ locale?: string;
+  /** @state artifact */ artifact?: DagArtifact;
+  /** @state artifact */ schema?: string;
+  /** @state artifact */ nodes?: DagNodesDelta;
+  /** @state artifact */ edges?: DagEdgesDelta;
+    /** @state artifact */ setNodes?: DagNodeSpecList;
+    /** @state artifact */ setEdges?: DagFixtureEdgeList;
+  /** @state presence */ selectedNodeIds?: DagStringList;
+  /** @state config */ camera?: DagCamera;
+  /** @state config */ locale?: string;
 }
 export interface DagStringList { values: string[]; }
 export interface DagNodesDelta { added: DagNodeSpec[]; removed: string[]; patched: DagNodePatchEntry[]; reordered?: string[]; }

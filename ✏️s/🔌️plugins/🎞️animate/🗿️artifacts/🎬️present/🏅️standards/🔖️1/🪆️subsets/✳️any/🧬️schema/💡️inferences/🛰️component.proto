@@ -4,7 +4,7 @@ package semio.s.animate.present.inference;
 // 💡️ Present inference schema — topology derived from the persisted tile order.
 
 message PresentInference {
-  // @state inferred
+  // @derived
   PresentTopology topology = 1;
 }
 

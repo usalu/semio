@@ -8,6 +8,6 @@ export interface RasterTopology {
 }
 
 export interface RasterInference {
-  /** @state inferred */
+  /** @derived */
   topology: RasterTopology;
 }

@@ -7,12 +7,12 @@ use flow::CameraJson;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.2d.config")]
 pub struct Procedural2dConfig {
-    #[state(local_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub camera: CameraJson,
-    #[state(local_ui)] pub show_mode: String,
-    #[state(local_ui)] pub selected_generation_id: Option<String>,
-    #[state(local_ui)] pub generation_preview_text: Option<String>,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_ids: Vec<String>,
+    #[state(config)] pub camera: CameraJson,
+    #[state(config)] pub show_mode: String,
+    #[state(config)] pub selected_generation_id: Option<String>,
+    #[state(config)] pub generation_preview_text: Option<String>,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema self-registration

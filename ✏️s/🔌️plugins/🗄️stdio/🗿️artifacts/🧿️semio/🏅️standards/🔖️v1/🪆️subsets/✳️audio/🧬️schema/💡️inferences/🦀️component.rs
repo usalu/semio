@@ -19,7 +19,7 @@ use super::duration::{compute_semio_audio_duration, SemioAudioDuration};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.audio.inference")]
 pub struct SemioAudioInference {
-    #[state(inferred)]
+    #[derived]
     pub duration: SemioAudioDuration,
 }
 

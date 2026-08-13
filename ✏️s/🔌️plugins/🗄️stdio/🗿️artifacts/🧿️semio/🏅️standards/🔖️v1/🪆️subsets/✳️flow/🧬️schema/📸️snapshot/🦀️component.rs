@@ -72,14 +72,14 @@ pub const STDIO_SEMIOFLOW_DOCUMENT_SCHEMA: &str = "stdio.semio.flow";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.flow")]
 pub struct SemioFlowSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 🆔️ Id-keyed strong collection — sparse-diffed via `🧰️triples::NamedTripleDiff`.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub nodes: Vec<FlowNode>,
     /// 🆔️ Id-keyed strong collection — sparse-diffed via `🧰️triples::NamedTripleDiff`.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub edges: Vec<FlowEdge>,
 }

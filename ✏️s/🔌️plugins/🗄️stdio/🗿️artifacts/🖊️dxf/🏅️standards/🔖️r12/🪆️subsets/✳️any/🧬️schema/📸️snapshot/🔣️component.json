@@ -93,12 +93,12 @@
     }
   },
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "headerVars": { "type": "array", "items": { "$ref": "#/$defs/DxfHeaderVar" }, "x-semio-state": "persistent" },
-    "tables": { "$ref": "#/$defs/DxfTables", "x-semio-state": "persistent" },
-    "otherTables": { "type": "array", "items": { "$ref": "#/$defs/DxfOtherTable" }, "x-semio-state": "persistent" },
-    "blocks": { "type": "array", "items": { "$ref": "#/$defs/DxfBlock" }, "x-semio-state": "persistent" },
-    "entities": { "type": "array", "items": { "$ref": "#/$defs/DxfEntity" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "headerVars": { "type": "array", "items": { "$ref": "#/$defs/DxfHeaderVar" }, "x-semio-state": "artifact" },
+    "tables": { "$ref": "#/$defs/DxfTables", "x-semio-state": "artifact" },
+    "otherTables": { "type": "array", "items": { "$ref": "#/$defs/DxfOtherTable" }, "x-semio-state": "artifact" },
+    "blocks": { "type": "array", "items": { "$ref": "#/$defs/DxfBlock" }, "x-semio-state": "artifact" },
+    "entities": { "type": "array", "items": { "$ref": "#/$defs/DxfEntity" }, "x-semio-state": "artifact" }
   },
   "required": ["schema", "headerVars", "tables", "otherTables", "blocks", "entities"]
 }

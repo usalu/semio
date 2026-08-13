@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["outline"],
   "properties": {
-    "outline": { "$ref": "#/$defs/Din4108Outline", "x-semio-state": "inferred" }
+    "outline": { "$ref": "#/$defs/Din4108Outline", "x-semio-derived": true }
   },
   "$defs": {
     "Din4108Outline": {

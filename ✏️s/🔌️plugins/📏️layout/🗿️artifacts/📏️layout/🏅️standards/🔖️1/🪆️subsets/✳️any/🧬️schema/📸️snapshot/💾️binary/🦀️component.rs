@@ -51,6 +51,8 @@ mod tests {
             pages: Vec::new(),
             print_target: None,
             data_fields_json: None,
+            background_drawing: None,
+            referenced_model: None,
         };
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
@@ -90,6 +92,8 @@ mod tests {
             }],
             print_target: None,
             data_fields_json: None,
+            background_drawing: None,
+            referenced_model: None,
         };
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }

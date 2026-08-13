@@ -62,7 +62,7 @@ export interface StepEntity {
 
 /** 📸️ Persisted `stdio.step` snapshot. */
 export interface StepSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ header: StepHeader;
-  /** @state persistent */ entities: StepEntity[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ header: StepHeader;
+  /** @state artifact */ entities: StepEntity[];
 }

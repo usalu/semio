@@ -16,13 +16,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Diff {
-    #[state(persistent)] pub g_k: Option<f64>,
-    #[state(persistent)] pub q_k: Option<En1990QkChild>,
-    #[state(persistent)] pub resistance_kn: Option<f64>,
-    #[state(persistent)] pub consequence_class: Option<u8>,
-    #[state(persistent)] pub annex: Option<crate::document::AnnexChoice>,
-    #[state(persistent)] pub seismic_a_ed_kn: Option<f64>,
-    #[state(shared_ui)] pub selected_check_index: Option<Option<u32>>,
+    #[state(artifact)] pub g_k: Option<f64>,
+    #[state(artifact)] pub q_k: Option<En1990QkChild>,
+    #[state(artifact)] pub resistance_kn: Option<f64>,
+    #[state(artifact)] pub consequence_class: Option<u8>,
+    #[state(artifact)] pub annex: Option<crate::document::AnnexChoice>,
+    #[state(artifact)] pub seismic_a_ed_kn: Option<f64>,
+    #[state(presence)] pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

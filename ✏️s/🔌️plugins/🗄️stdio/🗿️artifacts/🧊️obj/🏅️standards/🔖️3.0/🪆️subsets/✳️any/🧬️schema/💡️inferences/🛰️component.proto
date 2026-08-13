@@ -4,7 +4,7 @@ package semio.s.stdio.obj.inference;
 // 💡️ Obj inference schema — vertex-derived bounding box.
 
 message ObjInference {
-  // @state inferred
+  // @derived
   ObjBounds bounds = 1;
 }
 

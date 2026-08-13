@@ -10,23 +10,23 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.imperative.imperative")]
 pub struct ImperativeArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub flow: ImperativeFlowChild,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.text")]
     pub text: ImperativeTextChild,
-    #[state(shared_ui)]
+    #[state(presence)]
     #[serde(default)]
     pub selected_step_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
-    #[state(local_ui)]
+    #[state(config)]
     #[serde(default = "default_contributions_json")]
     pub contributions_json: String,
-    #[state(effect)]
+    #[state(transient)]
     #[serde(default)]
     pub run_output_json: String,
 }

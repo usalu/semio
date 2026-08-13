@@ -12,21 +12,21 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf")]
 pub struct DxfArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub header_vars: Vec<DxfHeaderVar>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub tables: DxfTables,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub other_tables: Vec<DxfOtherTable>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub blocks: Vec<DxfBlock>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entities: Vec<DxfEntity>,
 }

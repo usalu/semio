@@ -1,7 +1,7 @@
 # 💡️ Din4108 inference schema — document outline (field/section list + entry count).
 
 type Din4108Inference {
-  outline: Din4108Outline! @state(class: INFERRED)
+  outline: Din4108Outline! @derived
 }
 
 type Din4108Outline {

@@ -38,100 +38,100 @@
   "properties": {
     "selection": {
       "$ref": "#/$defs/Puzzle3dSelection",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredObjectId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredVortexFullId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "suggestionMenu": {
       "$ref": "#/$defs/Puzzle3dSuggestionMenu",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "overlapBudget": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "fillCount": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushCandidateIndex": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "objectKindWeights": {
       "type": "object",
       "additionalProperties": {
         "type": "number"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "vortexKindWeights": {
       "type": "object",
       "additionalProperties": {
         "type": "number"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodAutomatic": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodDepthVariable": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridVisible": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodManual": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSnapEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSpacing": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectableKinds": {
       "$ref": "#/$defs/Puzzle3dSelectableKinds",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredKindId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionModeDefault": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "proximityRadius": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "chunkSize": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "voxelDims": {
       "type": "array",
@@ -141,64 +141,64 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "transformMove": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "transformRotate": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "vortexShow": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "vortexDirection": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sun": {
       "$ref": "#/$defs/WorldSunConfig",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera": {
       "$ref": "#/$defs/Puzzle3dCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "windowOptions": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/Puzzle3dWindowOptions"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeUtilityByWindowId": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeToolId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "terminology": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "windowIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

@@ -1,16 +1,16 @@
 /** 🧬️ DrawConfig */
 export interface DrawConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   hoveredId?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   camera: DrawCamera;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 export interface DrawCamera { x: number; y: number; zoom: number; }

@@ -10,26 +10,26 @@ enum AdjacencyKind {
 }
 
 message ArchitectConfig {
-  // @state local-ui
+  // @state config
   repeated string selected_ids = 1;
-  // @state local-ui
+  // @state config
   string active_register = 2;
-  // @state local-ui
+  // @state config
   string search_query = 3;
-  // @state local-ui
+  // @state config
   string search_history_json = 4;
-  // @state local-ui
+  // @state config
   string active_report_json = 5;
-  // @state local-ui
+  // @state config
   string last_result_json = 6;
-  // @state local-ui
+  // @state config
   string last_analysis_json = 7;
-  // @state local-ui
+  // @state config
   optional AdjacencyKind adjacency_kind_filter = 8;
-  // @state local-ui
+  // @state config
   double graph_camera_x = 9;
-  // @state local-ui
+  // @state config
   double graph_camera_y = 10;
-  // @state local-ui
+  // @state config
   double graph_camera_zoom = 11;
 }

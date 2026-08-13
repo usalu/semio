@@ -15,43 +15,43 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "domain": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/Puzzle3dMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "objects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle3dObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "attractions": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle3dAttraction"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "targetVolumes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle3dTargetVolume"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "references": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle3dReference"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

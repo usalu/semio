@@ -6,12 +6,12 @@
   "properties": {
     "nodes": {
       "type": ["object", "null"],
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "properties": { "values": { "type": "array", "items": { "type": "object" } } }
     },
     "edges": {
       "type": ["object", "null"],
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "properties": { "values": { "type": "array", "items": { "type": "object" } } }
     }
   }

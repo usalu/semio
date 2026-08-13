@@ -72,13 +72,13 @@ fn semio_transform_from_raster(transform: &RasterTransform) -> SemioTransform {
 /// 🖼️ Builds one real `DrawNode` per visible pixel layer (its embedded asset bytes, positioned/
 /// scaled/rotated by the layer's own `RasterTransform`), recursing into group layers; adjustment
 /// layers carry no geometry of their own and are honestly skipped.
-fn draw_node_for_raster_layer(layer: &RasterLayerNode, assets: &std::collections::BTreeMap<String, RasterImageAsset>) -> Option<DrawNode> {
+fn draw_node_for_raster_layer(layer: &RasterLayerNode, assets: &std::collections::BTreeMap<String, crate::artifacts::raster::RasterAssetChild>) -> Option<DrawNode> {
     match layer {
         RasterLayerNode::Pixel { visible, transform, width, height, image_key, .. } => {
             if !*visible {
                 return None;
             }
-            let asset = image_key.as_ref().and_then(|key| assets.get(key))?;
+            let asset = image_key.as_ref().and_then(|key| crate::artifacts::raster::raster_asset(assets, key))?;
             let w = width.unwrap_or(0) as f64;
             let h = height.unwrap_or(0) as f64;
             if w <= 0.0 || h <= 0.0 {
@@ -178,7 +178,7 @@ fn dispatch_drawing_to_svg(snapshot: &SemioDrawingSnapshot) -> Result<String, St
 
 /// 🚪️ Dispatches real `png` bytes → `s.stdio.semio/v1/image` through stdio's real PNG deserializer
 /// (`io_dispatch`) — the honest, structured way to learn a decoded image's real width/height/pixels.
-fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
+pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
     let png_snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
@@ -190,7 +190,7 @@ fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot
 
 /// 🚪️ Dispatches `s.stdio.semio/v1/image` → real `png` bytes through stdio's real PNG serializer
 /// (`io_dispatch`) plus its own real byte encoder — never a hand-rolled PNG writer.
-fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
+pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
     ensure_stdio_semio_and_png_registered();
     let payload = IoPayload::Binary(<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
@@ -198,6 +198,24 @@ fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, Str
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
     let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
     semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
+}
+
+/// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: real bidirectional CHILD-CONTENT
+/// converters between this plugin's own `RasterImageAsset` (mime+bytes, the mutation-payload/
+/// working-scene shape) and the composed `s.stdio.semio/v1/image` child's real content
+/// (`SemioImageSnapshot`, decoded RGBA8 pixels) — reuses the SAME real png↔semio/image bridge above,
+/// never a stub. Only `image/png` is lossless today (the only mime this plugin ever produces, via
+/// `raster_document_json_from_dwg`/`raster_image_layer_and_asset` below); any other mime is honestly
+/// reported as an error, never silently coerced.
+pub fn semio_image_snapshot_from_raster_asset(asset: &RasterImageAsset) -> Result<SemioImageSnapshot, String> {
+    if asset.mime != "image/png" {
+        return Err(format!("semio_image_snapshot_from_raster_asset: unsupported mime {:?} (only image/png round-trips today)", asset.mime));
+    }
+    semio_image_from_png_bytes(&asset.data)
+}
+
+pub fn raster_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<RasterImageAsset, String> {
+    Ok(RasterImageAsset { mime: "image/png".into(), data: png_bytes_from_semio_image(image)? })
 }
 
 /// 🌉️🌉️ Round-trips raw PNG bytes through `s.stdio.semio/v1/image` (import then export) via the
@@ -254,8 +272,10 @@ pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
     }
+    let asset = RasterImageAsset { mime: "image/png".into(), data };
+    let handle = crate::artifacts::raster::mint_and_stash_asset(&asset_key, &asset);
     let mut assets = std::collections::BTreeMap::new();
-    assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data });
+    assets.insert(asset_key, handle);
     let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::artifacts::raster::schema::create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
     serde_json::to_value(&document).map_err(|error| error.to_string())
 }

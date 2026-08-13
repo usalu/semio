@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["duration"],
   "properties": {
-    "duration": { "$ref": "#/$defs/Mp3Duration", "x-semio-state": "inferred" }
+    "duration": { "$ref": "#/$defs/Mp3Duration", "x-semio-derived": true }
   },
   "$defs": {
     "Mp3Duration": {

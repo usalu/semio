@@ -20,7 +20,7 @@ use super::topology::{compute_playground_topology, PlaygroundTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.demonstrator.playground.inference")]
 pub struct PlaygroundInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: PlaygroundTopology,
 }
 

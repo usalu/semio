@@ -1,8 +1,8 @@
 //! 🧬️ Layout artifact schema — every field of the artifact with its state class.
 
 use crate::artifacts::layout::{
-    CharacterStyle, GridSettings, ImageLink, LayoutDropPreviewState, Page, ParagraphStyle, ParentPage, Spread, TextStory,
-    LAYOUT_DOCUMENT_SCHEMA,
+    CharacterStyle, GridSettings, ImageLink, LayoutDropPreviewState, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread,
+    TextStory, LAYOUT_DOCUMENT_SCHEMA,
 };
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -13,53 +13,61 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub name: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub grid: GridSettings,
-    #[state(persistent)]
+    #[state(artifact)]
     pub paragraph_styles: Vec<ParagraphStyle>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub character_styles: Vec<CharacterStyle>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub stories: Vec<TextStory>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub links: Vec<ImageLink>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub parent_pages: Vec<ParentPage>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub spreads: Vec<Spread>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub pages: Vec<Page>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub print_target: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub data_fields_json: Option<String>,
-    #[state(shared_ui)]
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.drawing")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub background_drawing: Option<LayoutDrawingChild>,
+    #[state(artifact)]
+    #[link_slot(roles("model"))]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub referenced_model: Option<store::ArtifactLink>,
+    #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub active_page_id: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub engagement_input: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_x: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_y: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera_zoom: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub preview_camera_x: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub preview_camera_y: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub preview_camera_zoom: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub drop_preview: LayoutDropPreviewState,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
-    #[state(preview)]
+    #[state(artifact)]
     pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
@@ -80,6 +88,8 @@ impl Default for LayoutArtifact {
             pages: Vec::new(),
             print_target: None,
             data_fields_json: None,
+            background_drawing: None,
+            referenced_model: None,
             selected_ids: Vec::new(),
             active_page_id: "page-1".into(),
             engagement_input: String::new(),
@@ -112,6 +122,8 @@ impl LayoutArtifact {
             pages: self.pages.clone(),
             print_target: self.print_target.clone(),
             data_fields_json: self.data_fields_json.clone(),
+            background_drawing: self.background_drawing.clone(),
+            referenced_model: self.referenced_model.clone(),
         }
     }
 
@@ -130,6 +142,8 @@ impl LayoutArtifact {
             pages: snapshot.pages,
             print_target: snapshot.print_target,
             data_fields_json: snapshot.data_fields_json,
+            background_drawing: snapshot.background_drawing,
+            referenced_model: snapshot.referenced_model,
             ..Self::default()
         }
     }
@@ -148,6 +162,8 @@ impl LayoutArtifact {
         self.pages = snapshot.pages;
         self.print_target = snapshot.print_target;
         self.data_fields_json = snapshot.data_fields_json;
+        self.background_drawing = snapshot.background_drawing;
+        self.referenced_model = snapshot.referenced_model;
     }
 }
 //#endregion 🔖️Conversions
@@ -449,6 +465,8 @@ fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
         ],
         print_target: None,
         data_fields_json: None,
+        background_drawing: None,
+        referenced_model: None,
     }
 }
 
@@ -496,6 +514,8 @@ mod document_tests {
             pages: Vec::new(),
             print_target: None,
             data_fields_json: None,
+            background_drawing: None,
+            referenced_model: None,
         }
     }
 

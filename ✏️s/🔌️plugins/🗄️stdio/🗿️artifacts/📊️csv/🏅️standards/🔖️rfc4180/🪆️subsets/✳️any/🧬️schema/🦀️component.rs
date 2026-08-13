@@ -11,12 +11,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
 pub struct CsvArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub has_header: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub records: Vec<CsvRecord>,
 }

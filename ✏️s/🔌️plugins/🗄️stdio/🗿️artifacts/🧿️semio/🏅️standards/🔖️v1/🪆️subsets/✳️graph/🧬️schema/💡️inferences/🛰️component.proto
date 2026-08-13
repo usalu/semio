@@ -4,7 +4,7 @@ package semio.s.stdio.semio.graph.inference;
 // 💡️ Semio graph inference schema — node/edge topological order (Kahn's algorithm).
 
 message SemioGraphInference {
-  // @state inferred
+  // @derived
   SemioGraphTopology topology = 1;
 }
 

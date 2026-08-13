@@ -477,7 +477,7 @@ impl DrawingStore {
 
     pub fn export_dwg_sync(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
         let scene = self.flatten_scene_sync(handle)?;
-        let mut drawing = semio_framework::DwgDrawing::default();
+        let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
         for node in &scene.nodes {
             if node.opacity <= 0.0 {
@@ -485,35 +485,35 @@ impl DrawingStore {
             }
             if let DrawingNode::Circle { cx, cy, r } = &node.node {
                 let center = affine_apply_point(node.transform, [*cx, *cy]);
-                drawing.entities.push(semio_framework::DwgEntity {
+                drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
                     layer,
-                    color: semio_framework::DwgColor::ByLayer,
-                    geometry: semio_framework::DwgGeometry::Circle { center: [center[0], center[1], 0.0], radius: r * node.transform.0[0].abs(), normal: [0.0, 0.0, 1.0] },
+                    color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
+                    geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::Circle { center: [center[0], center[1], 0.0], radius: r * node.transform.0[0].abs(), normal: [0.0, 0.0, 1.0] },
                 });
                 continue;
             }
             if let DrawingNode::Text { x, y, content, size } = &node.node {
                 let at = affine_apply_point(node.transform, [*x, *y]);
-                drawing.entities.push(semio_framework::DwgEntity {
+                drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
                     layer,
-                    color: semio_framework::DwgColor::ByLayer,
-                    geometry: semio_framework::DwgGeometry::Text { at: [at[0], at[1], 0.0], height: *size, rotation: 0.0, content: content.clone() },
+                    color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
+                    geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::Text { at: [at[0], at[1], 0.0], height: *size, rotation: 0.0, content: content.clone() },
                 });
                 continue;
             }
             if let Some(segments) = scene_node_world_segments(node) {
-                let dwg_segments: Vec<semio_framework::DwgPathSegment> = segments.iter().map(engine_segment_to_dwg).collect();
-                let mut sub = semio_framework::paths_to_dwg_drawing(&[dwg_segments]);
+                let dwg_segments: Vec<semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment> = segments.iter().map(engine_segment_to_dwg).collect();
+                let mut sub = semio_s_plugin_stdio::artifacts::dwg::paths_to_dwg_drawing(&[dwg_segments]);
                 drawing.entities.append(&mut sub.entities);
             }
         }
-        semio_framework::dwg_to_bytes(&drawing).map_err(semio_framework_2d::DrawingError::InvalidInput)
+        semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing).map_err(semio_framework_2d::DrawingError::InvalidInput)
     }
 
     pub fn import_dwg_sync(&mut self, data: &[u8]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        let drawing = semio_framework::dwg_from_bytes(data).map_err(semio_framework_2d::DrawingError::InvalidInput)?;
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(data).map_err(semio_framework_2d::DrawingError::InvalidInput)?;
         let mut children = Vec::new();
-        for path in semio_framework::dwg_drawing_to_paths(&drawing) {
+        for path in semio_s_plugin_stdio::artifacts::dwg::dwg_drawing_to_paths(&drawing) {
             let segments: Vec<semio_framework_2d::PathSegment> = path.iter().map(dwg_segment_to_engine).collect();
             if segments.len() < 2 {
                 continue;
@@ -521,7 +521,7 @@ impl DrawingStore {
             children.push(self.register(DrawingKind::Path, DrawingNode::Path { segments })?);
         }
         for entity in &drawing.entities {
-            if let semio_framework::DwgGeometry::Text { at, height, content, .. } = &entity.geometry {
+            if let semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::Text { at, height, content, .. } = &entity.geometry {
                 children.push(self.register(DrawingKind::Text, DrawingNode::Text { x: at[0], y: at[1], content: content.clone(), size: *height })?);
             }
         }
@@ -583,8 +583,8 @@ fn scene_node_world_segments(node: &SceneNode) -> Option<Vec<semio_framework_2d:
     )
 }
 
-fn engine_segment_to_dwg(segment: &semio_framework_2d::PathSegment) -> semio_framework::DwgPathSegment {
-    use semio_framework::DwgPathSegment;
+fn engine_segment_to_dwg(segment: &semio_framework_2d::PathSegment) -> semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment {
+    use semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment;
     use semio_framework_2d::PathSegment;
     match segment {
         PathSegment::Move { to } => DwgPathSegment::Move { to: *to },
@@ -596,8 +596,8 @@ fn engine_segment_to_dwg(segment: &semio_framework_2d::PathSegment) -> semio_fra
     }
 }
 
-fn dwg_segment_to_engine(segment: &semio_framework::DwgPathSegment) -> semio_framework_2d::PathSegment {
-    use semio_framework::DwgPathSegment;
+fn dwg_segment_to_engine(segment: &semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment) -> semio_framework_2d::PathSegment {
+    use semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment;
     use semio_framework_2d::PathSegment;
     match segment {
         DwgPathSegment::Move { to } => PathSegment::Move { to: *to },
@@ -1586,8 +1586,8 @@ mod drawing_kernel_tests {
     #[test]
     fn import_dwg_of_empty_drawing_returns_degenerate_path() {
         let mut store = DrawingStore::new();
-        let empty = semio_framework::DwgDrawing::default();
-        let bytes = semio_framework::dwg_to_bytes(&empty).expect("encode empty dwg");
+        let empty = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
+        let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&empty).expect("encode empty dwg");
         let imported = store.import_dwg_sync(&bytes).expect("import empty dwg");
         assert_eq!(block_on(store.kind(&imported)).unwrap(), DrawingKind::Path);
     }

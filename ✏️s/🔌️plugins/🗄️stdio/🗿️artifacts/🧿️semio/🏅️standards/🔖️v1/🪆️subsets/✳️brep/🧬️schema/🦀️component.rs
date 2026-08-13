@@ -11,24 +11,24 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.brep")]
 pub struct SemioBrepArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub vertices: Vec<BrepVertex>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub edges: Vec<BrepEdge>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub loops: Vec<BrepLoop>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub faces: Vec<BrepFace>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub shells: Vec<BrepShell>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub solids: Vec<BrepSolid>,
 }

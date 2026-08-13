@@ -4,7 +4,7 @@ package semio.s.stdio.semio.flow.inference;
 // 💡️ Semio flow inference schema — node/edge topological order (Kahn's algorithm).
 
 message SemioFlowInference {
-  // @state inferred
+  // @derived
   SemioFlowTopology topology = 1;
 }
 

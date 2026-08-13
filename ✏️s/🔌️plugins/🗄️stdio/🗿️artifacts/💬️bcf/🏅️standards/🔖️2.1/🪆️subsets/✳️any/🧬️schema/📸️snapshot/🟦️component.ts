@@ -4,6 +4,6 @@ export interface BcfEntry {
   data: number[];
 }
 export interface BcfSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: BcfEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: BcfEntry[];
 }

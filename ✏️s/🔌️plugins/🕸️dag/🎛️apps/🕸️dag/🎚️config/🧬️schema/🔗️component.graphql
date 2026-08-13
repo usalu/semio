@@ -1,7 +1,7 @@
 type DagConfig {
-  selectedNodeIds: [String!]! @state(class: LOCAL_UI)
-  cameraX: Float! @state(class: LOCAL_UI)
-  cameraY: Float! @state(class: LOCAL_UI)
-  cameraZoom: Float! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedNodeIds: [String!]! @state(class: CONFIG)
+  cameraX: Float! @state(class: CONFIG)
+  cameraY: Float! @state(class: CONFIG)
+  cameraZoom: Float! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

@@ -13,29 +13,29 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera": {
       "$ref": "#/$defs/Puzzle2dCamera",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle2dNode"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "edges": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Puzzle2dEdge"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/Puzzle2dMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

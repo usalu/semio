@@ -1,0 +1,112 @@
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:533:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2793:19: warning: method `set_envelope` is never used
+warning: `semio-framework-os-kernel` (lib) generated 8 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 4 suggestions)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:732:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:737:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:740:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:740:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:740:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:745:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:745:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:780:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:819:45: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:820:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:824:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:827:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:827:60: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:827:100: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:829:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:832:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:835:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:836:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:838:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:838:51: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:846:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:847:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:869:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:878:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:963:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:968:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:971:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:971:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:971:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:976:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:976:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1011:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1072:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1077:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1080:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1080:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1080:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1085:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1085:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1120:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1170:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1175:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1178:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1178:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1178:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1183:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1183:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1218:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1264:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1269:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1272:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1272:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1272:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1277:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1277:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1312:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1350:45: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1351:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1355:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1358:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1358:60: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1358:100: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1360:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1363:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1366:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1367:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1369:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1369:51: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1377:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1378:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1400:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1409:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1459:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1464:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1467:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1467:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1467:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1472:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1472:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1507:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1551:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1556:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1559:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1559:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1559:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1564:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1564:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1599:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:244:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:249:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:249:82: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:250:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:398:15: warning: constant `EXAMPLES_DIR_NAME` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:399:15: warning: constant `ASSETS_DIR_NAME` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:402:12: warning: function `repo_root` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:414:8: warning: function `collect_files` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:431:12: warning: function `find_example_asset` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:468:12: warning: function `read_example_asset_text` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:474:12: warning: function `read_example_asset_bytes` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:480:12: warning: function `artifact_dir` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:645:13: warning: field `plugin` is never read
+warning: `semio-framework-os-kernel` (lib test) generated 109 warnings (8 duplicates) (run `cargo fix --lib -p semio-framework-os-kernel --tests` to apply 92 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.31s

@@ -23,76 +23,76 @@
     "beforeFixtureJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "lhsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "rhsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "parameterBindings": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/PropertyValue"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "ruleLayout": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/LayoutPoint"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedNodeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeHoverVar": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeSelectVar": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "lodModeByWindow": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "beforePaneCamera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "reorganizeEpoch": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoverEpoch": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectEpoch": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

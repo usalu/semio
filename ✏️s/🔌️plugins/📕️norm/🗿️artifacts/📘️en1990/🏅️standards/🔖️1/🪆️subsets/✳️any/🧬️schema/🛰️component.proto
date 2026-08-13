@@ -4,19 +4,19 @@ package semio.s.norm.en1990.artifact;
 // 🧬️ En1990 artifact schema — every field with its state class.
 
 message En1990Artifact {
-  // @state persistent
+  // @state artifact
   double g_k = 1;
-  // @state persistent
+  // @state artifact
   repeated En1990QkEntry q_k = 2;
-  // @state persistent
+  // @state artifact
   double resistance_kn = 3;
-  // @state persistent
+  // @state artifact
   uint32 consequence_class = 4;
-  // @state persistent
+  // @state artifact
   string annex = 5;
-  // @state persistent
+  // @state artifact
   double seismic_a_ed_kn = 6;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 7;
 }
 

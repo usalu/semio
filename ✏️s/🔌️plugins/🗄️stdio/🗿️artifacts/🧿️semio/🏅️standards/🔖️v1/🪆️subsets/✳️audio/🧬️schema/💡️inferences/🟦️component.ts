@@ -7,6 +7,6 @@ export interface SemioAudioDuration {
 }
 
 export interface SemioAudioInference {
-  /** @state inferred */
+  /** @derived */
   duration: SemioAudioDuration;
 }

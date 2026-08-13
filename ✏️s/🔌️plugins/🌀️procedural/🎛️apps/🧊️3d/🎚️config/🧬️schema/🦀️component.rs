@@ -8,19 +8,19 @@ use super::Procedural3dPreviewCamera;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.3d.config")]
 pub struct Procedural3dConfig {
-    #[state(local_ui)] pub selected_node_ids: Vec<String>,
-    #[state(local_ui)] pub lod_mode: String,
-    #[state(local_ui)] pub show_mode: String,
-    #[state(local_ui)] pub selection_method: String,
-    #[state(local_ui)] pub hovered_node_id: Option<String>,
-    #[state(local_ui)] pub camera: CameraJson,
-    #[state(local_ui)] pub preview_camera: Procedural3dPreviewCamera,
-    #[state(local_ui)] pub sun_json: String,
-    #[state(local_ui)] pub selected_generation_id: Option<String>,
-    #[state(local_ui)] pub generation_preview_text: Option<String>,
-    #[state(local_ui)] pub active_utility_id: String,
-    #[state(local_ui)] pub locale: String,
-    #[state(local_ui)] pub contributions_json: String,
+    #[state(config)] pub selected_node_ids: Vec<String>,
+    #[state(config)] pub lod_mode: String,
+    #[state(config)] pub show_mode: String,
+    #[state(config)] pub selection_method: String,
+    #[state(config)] pub hovered_node_id: Option<String>,
+    #[state(config)] pub camera: CameraJson,
+    #[state(config)] pub preview_camera: Procedural3dPreviewCamera,
+    #[state(config)] pub sun_json: String,
+    #[state(config)] pub selected_generation_id: Option<String>,
+    #[state(config)] pub generation_preview_text: Option<String>,
+    #[state(config)] pub active_utility_id: String,
+    #[state(config)] pub locale: String,
+    #[state(config)] pub contributions_json: String,
 }
 
 //region 📎 App-schema self-registration

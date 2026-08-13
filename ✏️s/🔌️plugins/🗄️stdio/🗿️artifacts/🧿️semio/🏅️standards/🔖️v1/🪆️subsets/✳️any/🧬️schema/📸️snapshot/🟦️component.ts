@@ -37,6 +37,6 @@ export type SemioSubsetSnapshot =
   | { subset: "flow"; flow: SemioFlowSnapshot };
 
 export interface SemioSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ subset: SemioSubsetSnapshot;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ subset: SemioSubsetSnapshot;
 }

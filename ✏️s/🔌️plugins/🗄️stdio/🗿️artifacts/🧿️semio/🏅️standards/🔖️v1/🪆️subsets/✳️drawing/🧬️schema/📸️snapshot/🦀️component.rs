@@ -120,14 +120,14 @@ pub const STDIO_SEMIODRAWING_DOCUMENT_SCHEMA: &str = "stdio.semio.drawing";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.drawing")]
 pub struct SemioDrawingSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub canvas: DrawCanvas,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub styles: Vec<DrawStyle>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub layers: Vec<DrawLayer>,
 }

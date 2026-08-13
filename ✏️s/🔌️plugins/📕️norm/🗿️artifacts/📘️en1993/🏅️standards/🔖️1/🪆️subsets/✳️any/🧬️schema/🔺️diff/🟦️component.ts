@@ -1,157 +1,157 @@
 /** 🧬️ En1993 diff schema — sparse field delta. */
 
 export interface En1993Diff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: En1993Artifact;
-  /** @state persistent */
+  /** @state artifact */
   annex?: string;
-  /** @state persistent */
+  /** @state artifact */
   nEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   mEdKnm?: number;
-  /** @state persistent */
+  /** @state artifact */
   vEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   aMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   aVMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   wPlMm3?: number;
-  /** @state persistent */
+  /** @state artifact */
   fYMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   fUMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   chi?: number;
-  /** @state persistent */
+  /** @state artifact */
   aNetMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   tensionNEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireThicknessMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireRating?: string;
-  /** @state persistent */
+  /** @state artifact */
   fireMassivity?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireMu0?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireDesignTemperatureC?: number;
-  /** @state persistent */
+  /** @state artifact */
   cfBBarMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   cfTMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   cfKSigma?: number;
-  /** @state persistent */
+  /** @state artifact */
   cfPsi?: number;
-  /** @state persistent */
+  /** @state artifact */
   cfNEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   cfGrossResistanceKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   stainlessMEdKnm?: number;
-  /** @state persistent */
+  /** @state artifact */
   stainlessWPlMm3?: number;
-  /** @state persistent */
+  /** @state artifact */
   stainlessFYMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   platedLambdaP?: number;
-  /** @state persistent */
+  /** @state artifact */
   platedSigmaEdMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloTMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloRMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   shellSigmaXEdMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloK?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloGammaKnM3?: number;
-  /** @state persistent */
+  /** @state artifact */
   siloDepthM?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltFEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltNBolts?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltASMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltE1Mm?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltE2Mm?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltD0Mm?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltDMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltTMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltFUMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   boltFUbMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   weldAMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   weldLMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   weldFUMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   weldSteelGrade?: string;
-  /** @state persistent */
+  /** @state artifact */
   weldFEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   deltaSigmaMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   fatigueCategory?: number;
-  /** @state persistent */
+  /** @state artifact */
   fatigueMethod?: string;
-  /** @state persistent */
+  /** @state artifact */
   t10SteelSubgrade?: string;
-  /** @state persistent */
+  /** @state artifact */
   t10ActualThicknessMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   t10TEdC?: number;
-  /** @state persistent */
+  /** @state artifact */
   tensionComponentFUkKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   tensionComponentFKKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   tensionComponentNEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   hssWElMm3?: number;
-  /** @state persistent */
+  /** @state artifact */
   hssFYMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   hssSectionClass?: number;
-  /** @state persistent */
+  /** @state artifact */
   hssMEdKnm?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeLambda?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgePhi2?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeDeltaSigmaPMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   towerWindFactor?: number;
-  /** @state persistent */
+  /** @state artifact */
   towerNEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   pileSigmaMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   pileKRed?: number;
-  /** @state persistent */
+  /** @state artifact */
   pileNEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   craneFZEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   craneWheelContactLengthMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   craneDispersionMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   craneTWMm?: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }
 

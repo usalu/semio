@@ -223,10 +223,10 @@ pub struct PptxOpcDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pptx.diff")]
 pub struct PptxDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub opc: Option<PptxOpcDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub presentation: Option<PptxPresentationDiff>,
 }

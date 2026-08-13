@@ -4,7 +4,7 @@ package semio.s.raster.raster.inference;
 // 💡️ Raster inference schema — layer-tree topology (structural pre-order + nesting depth).
 
 message RasterInference {
-  // @state inferred
+  // @derived
   RasterTopology topology = 1;
 }
 

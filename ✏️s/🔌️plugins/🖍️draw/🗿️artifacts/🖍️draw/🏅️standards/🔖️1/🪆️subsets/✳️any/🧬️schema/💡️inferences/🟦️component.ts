@@ -8,6 +8,6 @@ export interface DrawTopology {
 }
 
 export interface DrawInference {
-  /** @state inferred */
+  /** @derived */
   topology: DrawTopology;
 }

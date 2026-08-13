@@ -1,16 +1,16 @@
 /** 🧬️ VCS snapshot schema — persistent fields only. */
 
 export interface VcsSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   title: string;
-  /** @state persistent */
+  /** @state artifact */
   counter: number;
-  /** @state persistent */
+  /** @state artifact */
   notes: string;
-  /** @state persistent */
+  /** @state artifact */
   status: string;
-  /** @state persistent */
+  /** @state artifact */
   tags: string[];
 }

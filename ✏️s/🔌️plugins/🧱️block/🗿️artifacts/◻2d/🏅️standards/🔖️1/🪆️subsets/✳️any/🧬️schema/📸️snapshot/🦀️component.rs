@@ -12,42 +12,42 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "block.block2d", layout = "lines")]
 #[artifact_schema(id = "s.block.block2d")]
 pub struct Block2dSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub node_kind: BlockKindIdentity,
     #[dsl(block)]
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub presentation: Block2dPresentation,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub handle_kinds: Vec<Block2dHandleKind>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub handles: Vec<Block2dHandleTemplate>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub compatibility: Vec<BlockCompatibilityRule>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub attributes: Vec<BlockAttribute>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub authors: Vec<BlockAuthor>,
     #[dsl(block)]
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub camera2d: BlockCamera2d,
     #[dsl(block)]
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: BlockMeta,
 }
 //#endregion 🔖️Snapshot

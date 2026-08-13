@@ -10,31 +10,31 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw")]
 pub struct EpwArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub location: EpwLocation,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub design_conditions: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub typical_extreme_periods: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub ground_temperatures: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub holidays_dst: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comments_1: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comments_2: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub data_periods: EpwDataPeriods,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub records: Vec<EpwRecord>,
 }

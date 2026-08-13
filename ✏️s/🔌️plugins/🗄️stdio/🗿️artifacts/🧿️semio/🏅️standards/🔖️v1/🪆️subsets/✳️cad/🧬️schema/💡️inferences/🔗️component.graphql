@@ -1,7 +1,7 @@
 # 💡️ Semio cad inference schema — entity-derived planar bounding box.
 
 type SemioCadInference {
-  bounds: SemioCadBounds! @state(class: INFERRED)
+  bounds: SemioCadBounds! @derived
 }
 
 type SemioCadBounds {

@@ -26,40 +26,40 @@
       "items": {
         "$ref": "#/$defs/GisMapFeature"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "routes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/GisMapFeature"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "regions": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/GisMapFeature"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "featureSelectionJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "layerVisibility": {
       "type": "object",
       "additionalProperties": {
         "type": "boolean"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "layerStrokeScale": {
       "type": "object",
@@ -67,41 +67,41 @@
         "type": "number",
         "format": "double"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "cameraJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "renderMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "vectorStyle": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoverJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

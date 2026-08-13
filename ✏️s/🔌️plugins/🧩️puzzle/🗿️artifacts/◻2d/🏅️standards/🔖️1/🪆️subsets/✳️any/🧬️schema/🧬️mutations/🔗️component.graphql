@@ -1,11 +1,11 @@
 # 🧬️ Puzzle2d mutation schema — persistent fields only.
 
 type Puzzle2dMutation {
-  schema: String! @state(class: PERSISTENT)
-  camera: Puzzle2dCamera! @state(class: PERSISTENT)
-  nodes: [Puzzle2dNode!]! @state(class: PERSISTENT)
-  edges: [Puzzle2dEdge!]! @state(class: PERSISTENT)
-  meta: Puzzle2dMeta! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  camera: Puzzle2dCamera! @state(class: ARTIFACT)
+  nodes: [Puzzle2dNode!]! @state(class: ARTIFACT)
+  edges: [Puzzle2dEdge!]! @state(class: ARTIFACT)
+  meta: Puzzle2dMeta! @state(class: ARTIFACT)
 }
 
 

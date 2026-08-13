@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/SemioModelBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/SemioModelBounds", "x-semio-derived": true }
   },
   "$defs": {
     "SemioModelBounds": {

@@ -8,55 +8,55 @@
     "artifact": {
       "title": "Block2dArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodeKind": {
       "$ref": "#/$defs/BlockKindIdentity",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "presentation": {
       "$ref": "#/$defs/Block2dPresentation",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "handleKinds": {
       "$ref": "#/$defs/Block2dHandleKindsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "handles": {
       "$ref": "#/$defs/Block2dHandlesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "compatibility": {
       "$ref": "#/$defs/Block2dCompatibilityDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "attributes": {
       "$ref": "#/$defs/Block2dAttributesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "authors": {
       "$ref": "#/$defs/Block2dAuthorList",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera2d": {
       "$ref": "#/$defs/BlockCamera2d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/BlockMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "$ref": "#/$defs/Block2dStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

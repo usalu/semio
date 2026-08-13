@@ -7,6 +7,6 @@ export interface IfcBounds {
 }
 
 export interface IfcInference {
-  /** @state inferred */
+  /** @derived */
   bounds: IfcBounds;
 }

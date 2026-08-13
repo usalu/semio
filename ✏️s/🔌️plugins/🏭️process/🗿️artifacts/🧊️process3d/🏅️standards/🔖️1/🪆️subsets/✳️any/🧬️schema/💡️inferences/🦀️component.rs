@@ -23,8 +23,7 @@ use crate::artifacts::process3d::{
 };
 use protocol::Inference;
 use schema::ArtifactSchema;
-use semio_framework_3d::brep::kernel::Brep;
-use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
@@ -45,12 +44,12 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.process3d.inference")]
 pub struct Process3dInference {
-    #[state(inferred)]
+    #[derived]
     pub stock_bounds: BoundingBox,
     /// 🌉️ Documented gap (see file doc comment): a plain `Process3dSnapshot` cannot see its
     /// composed `steps` child's content without a resolver, so this is always 0. Use
     /// `ProcessWorkingScene::steps.len()` for the real count when a working scene is in hand.
-    #[state(inferred)]
+    #[derived]
     pub step_count: u64,
 }
 
@@ -165,21 +164,21 @@ fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
 /// 📦️ Builds a posed kernel solid for a spec via `*_prim_sync` → `rotate_sync` → `translate_sync`.
 fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
     let base = match spec {
-        WorkingSolid::Box { width, depth, height } => semio_framework_3d::brep::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
-        WorkingSolid::Cylinder { radius, height } => semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
-        WorkingSolid::Sphere { radius } => semio_framework_3d::brep::engine::block_on(kernel.sphere_prim(*radius)).ok()?,
+        WorkingSolid::Box { width, depth, height } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
+        WorkingSolid::Cylinder { radius, height } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
+        WorkingSolid::Sphere { radius } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.sphere_prim(*radius)).ok()?,
         WorkingSolid::ImportedSolid { solid_handle } => {
             let handle = GeometryHandle(solid_handle.clone());
-            semio_framework_3d::brep::engine::block_on(kernel.kind(&handle)).ok()?;
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.kind(&handle)).ok()?;
             handle
         }
         // 🖼️ A GLB-imported reference mesh has no real B-Rep topology in the kernel, so it cannot
         // serve as a CSG operand (stock or tool); the stock-level fallback handles display instead.
         WorkingSolid::ImportedMesh { .. } => return None,
     };
-    let rotated = if pose.angle != 0.0 { semio_framework_3d::brep::engine::block_on(kernel.rotate(&base, pose.axis, pose.angle)).ok()? } else { base };
+    let rotated = if pose.angle != 0.0 { semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.rotate(&base, pose.axis, pose.angle)).ok()? } else { base };
     if pose.position != [0.0, 0.0, 0.0] {
-        semio_framework_3d::brep::engine::block_on(kernel.translate(&rotated, pose.position)).ok()
+        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.translate(&rotated, pose.position)).ok()
     } else {
         Some(rotated)
     }
@@ -226,8 +225,8 @@ pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingS
     for (index, step) in enabled_steps.iter().enumerate().skip(start) {
         let tool = tool_solid_for_measure(session.kernel_mut(), &step.measure)?;
         let next = match step.measure {
-            ProcessMeasure::Attach { .. } => semio_framework_3d::brep::engine::block_on(session.kernel_mut().fuse(&handle, &tool)).ok()?,
-            _ => semio_framework_3d::brep::engine::block_on(session.kernel_mut().cut(&handle, &tool)).ok()?,
+            ProcessMeasure::Attach { .. } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel_mut().fuse(&handle, &tool)).ok()?,
+            _ => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel_mut().cut(&handle, &tool)).ok()?,
         };
         handle = next;
         session.tables.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
@@ -243,7 +242,7 @@ pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingS
 pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_framework_plugin::MeshData> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
-    let mesh = semio_framework_3d::brep::engine::block_on(session.kernel().tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
+    let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
     Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
@@ -251,7 +250,7 @@ pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>
 pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
-    semio_framework_3d::brep::engine::block_on(session.kernel().volume(&handle)).ok()
+    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().volume(&handle)).ok()
 }
 //#endregion 🔖️KernelReplay
 
@@ -453,7 +452,7 @@ mod tests {
 
     fn session_volume(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> f64 {
         let handle = replay_process(session, scene, resolved_up_to).expect("replayed handle");
-        semio_framework_3d::brep::engine::block_on(session.kernel().volume(&handle)).expect("replayed volume")
+        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().volume(&handle)).expect("replayed volume")
     }
 
     #[test]
@@ -511,8 +510,8 @@ mod tests {
     #[test]
     fn box_primitive_spans_from_local_origin_corner() {
         let mut kernel = Brep::new();
-        let handle = semio_framework_3d::brep::engine::block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box prim");
-        let mesh = semio_framework_3d::brep::engine::block_on(kernel.tessellate(&handle, 0.1)).expect("tessellate");
+        let handle = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box prim");
+        let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.tessellate(&handle, 0.1)).expect("tessellate");
         let axis_bounds = |offset: usize| -> (f32, f32) {
             let values: Vec<f32> = mesh.position.iter().skip(offset).step_by(3).copied().collect();
             (values.iter().copied().fold(f32::INFINITY, f32::min), values.iter().copied().fold(f32::NEG_INFINITY, f32::max))

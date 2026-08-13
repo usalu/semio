@@ -4,6 +4,6 @@ export interface SemioAudioArtifactEntry {
   data: number[];
 }
 export interface SemioAudioArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: SemioAudioArtifactEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: SemioAudioArtifactEntry[];
 }

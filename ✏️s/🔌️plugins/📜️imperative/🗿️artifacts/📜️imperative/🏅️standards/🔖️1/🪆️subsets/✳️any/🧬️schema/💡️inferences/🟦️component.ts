@@ -8,6 +8,6 @@ export interface ImperativeTopology {
 }
 
 export interface ImperativeInference {
-  /** @state inferred */
+  /** @derived */
   topology: ImperativeTopology;
 }

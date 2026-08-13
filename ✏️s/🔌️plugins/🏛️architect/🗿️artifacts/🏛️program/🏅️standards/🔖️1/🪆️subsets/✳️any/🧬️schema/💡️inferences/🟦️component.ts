@@ -9,6 +9,6 @@ export interface ProgramTopology {
 }
 
 export interface ProgramInference {
-  /** @state inferred */
+  /** @derived */
   topology: ProgramTopology;
 }

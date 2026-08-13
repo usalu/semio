@@ -18,7 +18,7 @@ use super::topology::{compute_playbook_topology, PlaybookTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.playbook.playbook.inference")]
 pub struct PlaybookInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: PlaybookTopology,
 }
 

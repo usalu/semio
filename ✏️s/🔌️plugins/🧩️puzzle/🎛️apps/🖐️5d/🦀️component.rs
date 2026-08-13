@@ -2561,7 +2561,7 @@ mod tests {
         let app = Puzzle5dPlayApp::default();
         let projection = Puzzle5dPlayApp::initial_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
 
         let fragment = json!({
             "schema": "manifest",
@@ -2623,7 +2623,7 @@ mod tests {
 
         for _ in 0..2 {
             let doc_projection = Puzzle5dPlaySnapshot(current.clone());
-            let doc = ArtifactView { snapshot: &doc_projection, history: &history };
+            let doc = ArtifactView::new(&doc_projection, &history);
             let emit = Puzzle5dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
             for operation in &emit.artifact_mutations {
                 current = protocol::Mutation::<Value>::diff(operation, &current).apply(&current);

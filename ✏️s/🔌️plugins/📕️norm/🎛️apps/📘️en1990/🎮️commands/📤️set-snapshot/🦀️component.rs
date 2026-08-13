@@ -57,7 +57,7 @@ mod tests {
         let text = crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default()));
         let emit = handle(
             &ReplaceSnapshot { text },
-            &ArtifactView { snapshot: &projection, history: &HistoryView::empty() },
+            &ArtifactView::new(&projection, &HistoryView::empty()),
             &ConfigView { snapshot: &config },
         )
         .expect("handle");

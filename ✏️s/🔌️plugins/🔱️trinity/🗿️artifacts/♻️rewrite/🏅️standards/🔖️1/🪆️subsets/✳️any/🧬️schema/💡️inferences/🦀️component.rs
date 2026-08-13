@@ -21,7 +21,7 @@ use super::bounds::{compute_bounds, RewriteBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewrite.inference")]
 pub struct RewriteInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: RewriteBounds,
 }
 

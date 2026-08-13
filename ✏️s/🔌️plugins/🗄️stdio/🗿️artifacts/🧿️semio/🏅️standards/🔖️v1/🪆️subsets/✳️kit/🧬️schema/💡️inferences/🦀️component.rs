@@ -21,7 +21,7 @@ use super::entries::{compute_semio_kit_entries, SemioKitEntries};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.kit.inference")]
 pub struct SemioKitInference {
-    #[state(inferred)]
+    #[derived]
     pub entries: SemioKitEntries,
 }
 

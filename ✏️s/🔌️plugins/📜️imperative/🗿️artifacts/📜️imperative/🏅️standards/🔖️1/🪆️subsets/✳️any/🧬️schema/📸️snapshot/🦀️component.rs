@@ -16,12 +16,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.imperative.imperative")]
 pub struct ImperativeSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub flow: ImperativeFlowChild,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.text")]
     pub text: ImperativeTextChild,
 }

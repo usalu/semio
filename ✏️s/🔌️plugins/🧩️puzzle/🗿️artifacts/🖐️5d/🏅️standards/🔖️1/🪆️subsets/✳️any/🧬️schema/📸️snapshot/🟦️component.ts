@@ -1,21 +1,21 @@
 /** 🧬️ Puzzle5d snapshot schema — persistent fields only. */
 
 export interface Puzzle5dSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   domain: string;
-  /** @state persistent */
+  /** @state artifact */
   label?: string;
-  /** @state persistent */
+  /** @state artifact */
   meta: Puzzle5dMeta;
-  /** @state persistent */
+  /** @state artifact */
   kindCatalogs?: Puzzle5dKindCatalogs;
-  /** @state persistent */
+  /** @state artifact */
   kindCompatibility: Puzzle5dKindCompatibility[];
-  /** @state persistent */
+  /** @state artifact */
   parts: Puzzle5dPart[];
-  /** @state persistent */
+  /** @state artifact */
   fasteners: Puzzle5dFastener[];
 }
 

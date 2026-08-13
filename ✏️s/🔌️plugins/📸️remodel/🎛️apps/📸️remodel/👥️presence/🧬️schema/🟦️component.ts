@@ -1,21 +1,21 @@
 /** 🧬️ RemodelPresence */
 export interface RemodelPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectionMode: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectionIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraPosition: number[];
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraTarget: number[];
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraFov: number;
-  /** @state shared-ui */
+  /** @state presence */
   frameStreamId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   frameIndex: number;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state shared-ui */
+  /** @state presence */
   reportTable: string;
 }

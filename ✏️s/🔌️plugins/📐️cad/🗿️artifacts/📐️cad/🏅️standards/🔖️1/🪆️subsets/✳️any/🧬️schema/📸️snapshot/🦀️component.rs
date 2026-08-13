@@ -17,38 +17,38 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shape_model: Option<CadModelChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub building_model: Option<CadModelChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub energy_model: Option<CadModelChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub structure_classic_model: Option<CadModelChild>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]
     #[serde(default)]
     pub drawings: Vec<CadDrawingChild>,
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub nodes: Vec<CadNode>,
     #[serde(default = "default_model_definition_id")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub active_model_definition_id: String,
 }
 

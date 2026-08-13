@@ -5,7 +5,7 @@ package semio.s.demonstrator.playground.inference;
 // entities exist yet on PlaygroundSnapshot).
 
 message PlaygroundInference {
-  // @state inferred
+  // @derived
   PlaygroundTopology topology = 1;
 }
 

@@ -85,9 +85,9 @@ pub const STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA: &str = "stdio.semio.video";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.video")]
 pub struct SemioVideoSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub streams: Vec<SemioVideoStream>,
 }

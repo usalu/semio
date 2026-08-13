@@ -88,7 +88,7 @@ pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     }
     /// @emoji 🗂️ Which durability/visibility class this operation's diffs belong to.
     fn state_class(&self) -> crate::os_spr::StateClass {
-        crate::os_spr::StateClass::Persistent
+        crate::os_spr::StateClass::Artifact
     }
     /// @emoji 🤝️ Post-materialization reconciliation pass (e.g. cross-document studio graph checks).
     /// Defaults to a no-op so every existing document kind keeps its exact prior behavior.
@@ -756,7 +756,7 @@ mod tests {
         assert_eq!(op.undo_policy(), crate::os_spr::UndoPolicy::ExactBaseOnly);
         assert_eq!(op.merge_strategy(), crate::os_spr::MergeStrategyKind::LwwRegister);
         assert_eq!(op.conflict_rule(), crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::LwwRegister));
-        assert_eq!(op.state_class(), crate::os_spr::StateClass::Persistent);
+        assert_eq!(op.state_class(), crate::os_spr::StateClass::Artifact);
         assert!(op.validate(&0).is_ok());
         let (snapshot, reports) = op.reconcile(42);
         assert_eq!(snapshot, 42);
@@ -981,7 +981,7 @@ mod tests {
     #[test]
     fn mutation_descriptor_with_semantics_attaches_without_changing_fingerprint() {
         let semantics = SemanticDescriptor { verb: "rename", entity: "widget", kind: "rename-widget", record: "RenamedWidget" };
-        let base = MutationDescriptor::new(crate::os_spr::ids::SchemaId("demo.rename-widget".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Persistent, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::LwwRegister));
+        let base = MutationDescriptor::new(crate::os_spr::ids::SchemaId("demo.rename-widget".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::LwwRegister));
         let fingerprint_before = base.fingerprint;
         let with_semantics = base.with_semantics(&semantics);
         assert_eq!(with_semantics.fingerprint, fingerprint_before, "attaching semantics must not change the fingerprint");
@@ -1076,12 +1076,14 @@ mod tests {
     #[test]
     fn operation_descriptor_fingerprint_is_golden_pinned() {
         let descriptor =
-            MutationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Persistent, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::TextSequence));
+            MutationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact, crate::os_spr::ConflictRule::Merge(crate::os_spr::MergeStrategyKind::TextSequence));
         let hex: String = descriptor.fingerprint.iter().map(|b| format!("{b:02x}")).collect();
         // Golden pin computed once from `descriptor_fingerprint`'s canonical-JSON+blake3 encoding;
         // any change to that encoding (or to serde's field order/derives on the id/enum types it
         // hashes) is a breaking change to every persisted `MutationDescriptor` and must update this.
-        assert_eq!(hex, "8c6c0b22512540811343d8caa8d147f48e936728105861c4360bb202f626d517");
+        // Re-pinned when `StateClass` collapsed onto its four canonical lanes and this descriptor's
+        // hashed variant name went `Persistent` -> `Artifact`.
+        assert_eq!(hex, "2fe60b82fe1f81e30c2c67123e629cf30d04824b3df6b009de648f7bf7818890");
     }
     //#endregion 🧪️DescriptorLaws
 
@@ -1222,7 +1224,7 @@ mod tests {
 
     #[test]
     fn operation_event_serde_round_trip() {
-        let event = MutationEvent { mutation_id: crate::os_spr::ids::MutationId("op-1".into()), state_class: crate::os_spr::StateClass::Effect, payload: serde_json::json!({ "kind": "toast", "text": "saved" }) };
+        let event = MutationEvent { mutation_id: crate::os_spr::ids::MutationId("op-1".into()), state_class: crate::os_spr::StateClass::Transient, payload: serde_json::json!({ "kind": "toast", "text": "saved" }) };
         let json = serde_json::to_string(&event).expect("serialize");
         let round_tripped: MutationEvent = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(round_tripped, event);

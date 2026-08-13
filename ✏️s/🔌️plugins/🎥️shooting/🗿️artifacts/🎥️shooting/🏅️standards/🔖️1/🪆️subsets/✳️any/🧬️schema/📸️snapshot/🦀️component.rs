@@ -1,7 +1,15 @@
 //! 🧬️ Shooting snapshot schema — persistent fields only.
+//!
+//! `emblem: Option<ShootingEmblemChild>` is the ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
+//! composed `s.stdio.semio.image` child (see `🗿️artifacts/🎥️shooting/🦀️component.rs`'s `🔖️Composition`
+//! region for the full design/converters). `store::ArtifactChild<S>` has no `dsl::DslField` impl (the
+//! same wall every wave-4 exemplar hit), so it cannot join `ShootingSnapshotDsl`'s `#[derive(dsl::DslRecord)]`
+//! fields directly — it is instead carried through that derive as an opaque hex/bracket-encoded
+//! `Option<String>` (`🔖️ChildCodecPrimitives` below), letting the REST of the document (the readable
+//! `assets`/`shots`/`savedCameras` table grammar) keep its existing derive-generated codec untouched.
 
 use crate::artifacts::shooting::{
-    ShootingAsset, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, SHOOTING_DOCUMENT_SCHEMA,
+    ShootingAsset, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, SHOOTING_DOCUMENT_SCHEMA,
 };
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -12,26 +20,32 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting")]
 pub struct ShootingSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub assets: Vec<ShootingAsset>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub saved_cameras: Vec<ShootingSavedCamera>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub scene: ShootingSceneLighting,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub shots: Vec<ShootingShot>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub active_shot_id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub active_asset_id: String,
+    /// 🕸️ Composed `s.stdio.semio.image` child — the scene's emblem overlay, genuinely absent for
+    /// most documents (no default fixture sets one). See `🔖️Composition` in the artifact root.
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.image")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub emblem: Option<ShootingEmblemChild>,
 }
 
 impl Default for ShootingSnapshot {
@@ -44,6 +58,7 @@ impl Default for ShootingSnapshot {
             shots: Vec::new(),
             active_shot_id: String::new(),
             active_asset_id: String::new(),
+            emblem: None,
         }
     }
 }
@@ -69,6 +84,9 @@ struct ShootingSnapshotDsl {
     shots: Vec<ShootingShot>,
     #[dsl(table)]
     saved_cameras: Vec<ShootingSavedCamera>,
+    /// 🕸️ Opaque hex/bracket-encoded `emblem: Option<ShootingEmblemChild>` handle — see this file's
+    /// module doc comment and `🔖️ChildCodecPrimitives` below.
+    emblem: Option<String>,
 }
 
 fn shooting_snapshot_to_dsl(snapshot: &ShootingSnapshot) -> ShootingSnapshotDsl {
@@ -80,11 +98,13 @@ fn shooting_snapshot_to_dsl(snapshot: &ShootingSnapshot) -> ShootingSnapshotDsl 
         assets: snapshot.assets.clone(),
         shots: snapshot.shots.clone(),
         saved_cameras: snapshot.saved_cameras.clone(),
+        emblem: snapshot.emblem.as_ref().map(enc_child),
     }
 }
 
-fn shooting_snapshot_from_dsl(dsl_snapshot: ShootingSnapshotDsl) -> ShootingSnapshot {
-    ShootingSnapshot {
+fn shooting_snapshot_from_dsl(dsl_snapshot: ShootingSnapshotDsl) -> Result<ShootingSnapshot, String> {
+    let emblem = dsl_snapshot.emblem.as_deref().map(dec_child).transpose()?;
+    Ok(ShootingSnapshot {
         schema: dsl_snapshot.schema,
         assets: dsl_snapshot.assets,
         saved_cameras: dsl_snapshot.saved_cameras,
@@ -92,9 +112,44 @@ fn shooting_snapshot_from_dsl(dsl_snapshot: ShootingSnapshotDsl) -> ShootingSnap
         shots: dsl_snapshot.shots,
         active_shot_id: dsl_snapshot.active_shot_id,
         active_asset_id: dsl_snapshot.active_asset_id,
-    }
+        emblem,
+    })
 }
 //#endregion 🔖️DslMirror
+
+//#region 🔖️ChildCodecPrimitives
+/// 🧪️ Hex/bracket child-handle codec — same convention every wave-4 exemplar uses
+/// (`process3d`/`gismap`'s own `enc_child`/`dec_child`), reduced to exactly the two strings a
+/// `ShootingEmblemChild` carries (`child_id`, `target` as its URI form) and packed into ONE opaque
+/// string so it can ride through `ShootingSnapshotDsl`'s existing derive-generated `Option<String>`
+/// field handling untouched.
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+fn enc_hex_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+fn dec_hex_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+fn enc_child(c: &ShootingEmblemChild) -> String {
+    format!("[{},{}]", enc_hex_str(&c.child_id), enc_hex_str(&c.target.to_uri()))
+}
+fn dec_child(s: &str) -> Result<ShootingEmblemChild, String> {
+    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("child handle: expected [child_id,target], got {s:?}"))?;
+    let parts: Vec<&str> = inner.splitn(2, ',').collect();
+    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
+    let target_uri = dec_hex_str(target)?;
+    let target = store::os_io::ArtifactRef::parse_uri(&target_uri).map_err(|e| e.to_string())?;
+    Ok(store::ArtifactChild::new(dec_hex_str(child_id)?, target))
+}
+//#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
@@ -166,7 +221,7 @@ impl store::ArtifactDsl for ShootingSnapshot {
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let parsed = <ShootingSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
-        Ok(shooting_snapshot_from_dsl(parsed))
+        shooting_snapshot_from_dsl(parsed).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         <ShootingSnapshotDsl as store::ArtifactDsl>::print_dsl(&shooting_snapshot_to_dsl(self))
@@ -179,7 +234,7 @@ impl store::ArtifactPack for ShootingSnapshot {
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let parsed = <ShootingSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
-        Ok(shooting_snapshot_from_dsl(parsed))
+        shooting_snapshot_from_dsl(parsed).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

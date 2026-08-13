@@ -5,9 +5,9 @@ package semio.s.lowpoly.lowpoly.inference;
 // position.
 
 message LowpolyInference {
-  // @state inferred
+  // @derived
   uint64 object_count = 1;
-  // @state inferred
+  // @derived
   LowpolyBounds bounds = 2;
 }
 

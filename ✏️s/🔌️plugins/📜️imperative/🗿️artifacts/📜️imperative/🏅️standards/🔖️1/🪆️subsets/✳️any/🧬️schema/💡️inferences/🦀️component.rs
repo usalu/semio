@@ -18,7 +18,7 @@ use super::topology::{compute_imperative_topology, ImperativeTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.imperative.imperative.inference")]
 pub struct ImperativeInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: ImperativeTopology,
 }
 

@@ -8,15 +8,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tsv")]
 pub struct TsvArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub records: Vec<Vec<String>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub trailing_newline: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub line_ending: LineEnding,
 }

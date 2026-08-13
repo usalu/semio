@@ -580,7 +580,7 @@ pub(crate) mod testkit {
         STUDIO_TEST_APP.with(|app| {
             let _app = app.borrow();
             let history = empty_history();
-            let doc = ArtifactView { snapshot: projection, history: &history };
+            let doc = ArtifactView::new(projection, &history);
             let cfg = ConfigView { snapshot: config };
             let draft = DraftView { snapshot: &NoDraft::default() };
             let engines = EngineHandles::empty();
@@ -762,7 +762,7 @@ mod tests {
     fn space_labels_resolve_native_english_by_default() {
         let projection = demo_space_projection();
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
         let config = SpaceConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let app = SpaceApp::default();
@@ -780,7 +780,7 @@ mod tests {
     fn space_labels_resolve_native_german_locale() {
         let projection = demo_space_projection();
         let history = empty_history();
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
         let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
         let cfg = ConfigView { snapshot: &config };
         let app = SpaceApp::default();

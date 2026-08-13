@@ -7,6 +7,6 @@ export interface CsvOutline {
 }
 
 export interface CsvInference {
-  /** @state inferred */
+  /** @derived */
   outline: CsvOutline;
 }

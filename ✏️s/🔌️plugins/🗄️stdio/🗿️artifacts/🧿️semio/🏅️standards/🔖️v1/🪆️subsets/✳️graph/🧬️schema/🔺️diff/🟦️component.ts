@@ -6,6 +6,6 @@ export interface SemioGraphEdgeListDiff {
   values: import("../📸️snapshot/🟦️component.ts").SemioGraphEdge[];
 }
 export interface SemioGraphDiff {
-  /** @state persistent */ nodes?: SemioGraphNodeListDiff | null;
-  /** @state persistent */ edges?: SemioGraphEdgeListDiff | null;
+  /** @state artifact */ nodes?: SemioGraphNodeListDiff | null;
+  /** @state artifact */ edges?: SemioGraphEdgeListDiff | null;
 }

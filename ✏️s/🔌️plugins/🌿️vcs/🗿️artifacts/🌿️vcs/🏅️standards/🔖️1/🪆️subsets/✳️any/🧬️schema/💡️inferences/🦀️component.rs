@@ -23,7 +23,7 @@ use super::summary::compute_vcs_summary;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.vcs.vcs.inference")]
 pub struct VcsInference {
-    #[state(inferred)]
+    #[derived]
     pub summary: VcsSummary,
 }
 

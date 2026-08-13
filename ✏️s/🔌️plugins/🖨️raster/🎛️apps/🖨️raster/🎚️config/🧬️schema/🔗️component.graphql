@@ -1,21 +1,21 @@
 type RasterCamera {
-  x: Float! @state(class: LOCAL_UI)
-  y: Float! @state(class: LOCAL_UI)
-  zoom: Float! @state(class: LOCAL_UI)
+  x: Float! @state(class: CONFIG)
+  y: Float! @state(class: CONFIG)
+  zoom: Float! @state(class: CONFIG)
 }
 
 type RasterConfigViewportSize {
-  width: Float! @state(class: LOCAL_UI)
-  height: Float! @state(class: LOCAL_UI)
+  width: Float! @state(class: CONFIG)
+  height: Float! @state(class: CONFIG)
 }
 
 type RasterConfig {
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  hoveredId: String @state(class: LOCAL_UI)
-  brushSize: Float! @state(class: LOCAL_UI)
-  brushOpacity: Float! @state(class: LOCAL_UI)
-  compositeViewport: RasterConfigViewportSize @state(class: LOCAL_UI)
-  camera: RasterCamera! @state(class: LOCAL_UI)
-  activeUtilityId: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedIds: [String!]! @state(class: CONFIG)
+  hoveredId: String @state(class: CONFIG)
+  brushSize: Float! @state(class: CONFIG)
+  brushOpacity: Float! @state(class: CONFIG)
+  compositeViewport: RasterConfigViewportSize @state(class: CONFIG)
+  camera: RasterCamera! @state(class: CONFIG)
+  activeUtilityId: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

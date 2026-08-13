@@ -4,7 +4,7 @@ package semio.s.mathematical.mathematical.inference;
 // 💡️ Mathematical inference schema — topology (graph topological order).
 
 message MathematicalInference {
-  // @state inferred
+  // @derived
   MathematicalTopology topology = 1;
 }
 

@@ -1,37 +1,37 @@
 /** 🧬️ Procedural3d diff schema — sparse field delta. */
 
 export interface Procedural3dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Procedural3dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   fixture?: FlowFixture;
-  /** @state persistent */
+  /** @state artifact */
   generation?: GenerationPlayState;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds?: Procedural3dStringList;
-  /** @state local-ui */
+  /** @state config */
   lodMode?: string;
-  /** @state local-ui */
+  /** @state config */
   showMode?: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredNodeId?: string | null;
-  /** @state local-ui */
+  /** @state config */
   graphCamera?: CameraJson;
-  /** @state local-ui */
+  /** @state config */
   previewCamera?: Procedural3dPreviewCamera;
-  /** @state local-ui */
+  /** @state config */
   sunJson?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedGenerationId?: string | null;
-  /** @state preview */
+  /** @state artifact */
   generationPreviewText?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId?: string;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson?: string;
 }
 

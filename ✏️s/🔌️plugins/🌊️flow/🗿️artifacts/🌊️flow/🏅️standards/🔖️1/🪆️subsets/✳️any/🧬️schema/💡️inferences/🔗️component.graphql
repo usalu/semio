@@ -1,7 +1,7 @@
 # 💡️ Flow inference schema — topology (topological order + depth + cycle-freedom) over widgets/synapses.
 
 type FlowInference {
-  topology: FlowTopology! @state(class: INFERRED)
+  topology: FlowTopology! @derived
 }
 
 type FlowTopology {

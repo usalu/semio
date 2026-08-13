@@ -20,7 +20,7 @@ use super::topology::{compute_sequence_topology, SequenceTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence.inference")]
 pub struct SequenceInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: SequenceTopology,
 }
 

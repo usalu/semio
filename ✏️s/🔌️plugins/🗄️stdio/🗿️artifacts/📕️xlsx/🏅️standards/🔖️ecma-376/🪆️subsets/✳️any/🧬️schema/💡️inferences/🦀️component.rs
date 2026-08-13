@@ -18,7 +18,7 @@ use super::outline::XlsxOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xlsx.inference")]
 pub struct XlsxInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: XlsxOutline,
 }
 

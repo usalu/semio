@@ -19,7 +19,7 @@ use super::dimensions::{compute_semio_image_dimensions, SemioImageDimensions};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.image.inference")]
 pub struct SemioImageInference {
-    #[state(inferred)]
+    #[derived]
     pub dimensions: SemioImageDimensions,
 }
 

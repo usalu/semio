@@ -1,7 +1,7 @@
 # 💡️ Semio audio inference schema — sample-count-derived playback duration.
 
 type SemioAudioInference {
-  duration: SemioAudioDuration! @state(class: INFERRED)
+  duration: SemioAudioDuration! @derived
 }
 
 type SemioAudioDuration {

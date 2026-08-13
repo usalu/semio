@@ -1,6 +1,6 @@
 type WiresPresence {
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  dragNodeId: String @state(class: SHARED_UI)
-  dragLastX: Float! @state(class: SHARED_UI)
-  dragLastY: Float! @state(class: SHARED_UI)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  dragNodeId: String @state(class: PRESENCE)
+  dragLastX: Float! @state(class: PRESENCE)
+  dragLastY: Float! @state(class: PRESENCE)
 }

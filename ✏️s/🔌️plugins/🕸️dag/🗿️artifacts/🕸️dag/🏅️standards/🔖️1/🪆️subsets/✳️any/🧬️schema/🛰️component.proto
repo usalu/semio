@@ -1,12 +1,12 @@
 syntax = "proto3";
 package semio.s.dag.dag.artifact;
 message DagArtifact {
-  string schema = 1; // @state persistent
-  repeated DagNodeSpec nodes = 2; // @state persistent
-  repeated DagFixtureEdge edges = 3; // @state persistent
-  repeated string selected_node_ids = 4; // @state shared-ui
-  DagCamera camera = 5; // @state local-ui
-  string locale = 6; // @state local-ui
+  string schema = 1; // @state artifact
+  repeated DagNodeSpec nodes = 2; // @state artifact
+  repeated DagFixtureEdge edges = 3; // @state artifact
+  repeated string selected_node_ids = 4; // @state presence
+  DagCamera camera = 5; // @state config
+  string locale = 6; // @state config
 }
 message DagNodeSpec { string id = 1; }
 message DagFixtureEdge { string id = 1; string source = 2; string target = 3; }

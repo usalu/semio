@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.sourcing.curate.presence")]
 pub struct SourcingCuratePresence {
-    #[state(shared_ui)] pub selected_object_id: Option<String>,
-    #[state(shared_ui)] pub world_camera_position: [f64; 3],
-    #[state(shared_ui)] pub world_camera_target: [f64; 3],
-    #[state(shared_ui)] pub world_camera_fov: f64,
+    #[state(presence)] pub selected_object_id: Option<String>,
+    #[state(presence)] pub world_camera_position: [f64; 3],
+    #[state(presence)] pub world_camera_target: [f64; 3],
+    #[state(presence)] pub world_camera_fov: f64,
 }

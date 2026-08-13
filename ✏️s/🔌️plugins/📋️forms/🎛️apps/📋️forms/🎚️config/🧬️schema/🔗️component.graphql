@@ -1,7 +1,7 @@
 type FormsConfig {
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  currentStepIndex: Int! @state(class: LOCAL_UI)
-  tryValuesJson: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
-  contributionsJson: String! @state(class: LOCAL_UI)
+  selectedIds: [String!]! @state(class: CONFIG)
+  currentStepIndex: Int! @state(class: CONFIG)
+  tryValuesJson: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+  contributionsJson: String! @state(class: CONFIG)
 }

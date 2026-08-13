@@ -22,7 +22,7 @@ use super::window::{compute_deflate_window, DeflateWindow};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate.inference")]
 pub struct DeflateInference {
-    #[state(inferred)]
+    #[derived]
     pub window: DeflateWindow,
 }
 

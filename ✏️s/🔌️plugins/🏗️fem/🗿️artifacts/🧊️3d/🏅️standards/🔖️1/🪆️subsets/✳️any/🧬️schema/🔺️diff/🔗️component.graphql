@@ -1,22 +1,22 @@
 # 🧬️ Fem3d diff schema — sparse field delta.
 
 type Fem3dDiff {
-  artifact: Fem3dArtifact @state(class: PERSISTENT)
-  nodes: Fem3dNodesDelta @state(class: PERSISTENT)
-  elements: Fem3dElementsDelta @state(class: PERSISTENT)
-  materials: Fem3dMaterialsDelta @state(class: PERSISTENT)
-  sections: Fem3dSectionsDelta @state(class: PERSISTENT)
-  solids: Fem3dSolidsDelta @state(class: PERSISTENT)
-  supports: Fem3dSupportsDelta @state(class: PERSISTENT)
-  loadCases: Fem3dLoadCasesDelta @state(class: PERSISTENT)
-  combinations: Fem3dCombinationsDelta @state(class: PERSISTENT)
-  analysis: FemAnalysisSettings @state(class: PERSISTENT)
-  resultSourceId: String @state(class: SHARED_UI)
-  resultMode: String @state(class: SHARED_UI)
-  resultModeIndex: Int @state(class: SHARED_UI)
-  camera: FemCamera @state(class: LOCAL_UI)
-  solverResultsJson: String @state(class: PREVIEW)
-  meshPreviewJson: String @state(class: PREVIEW)
+  artifact: Fem3dArtifact @state(class: ARTIFACT)
+  nodes: Fem3dNodesDelta @state(class: ARTIFACT)
+  elements: Fem3dElementsDelta @state(class: ARTIFACT)
+  materials: Fem3dMaterialsDelta @state(class: ARTIFACT)
+  sections: Fem3dSectionsDelta @state(class: ARTIFACT)
+  solids: Fem3dSolidsDelta @state(class: ARTIFACT)
+  supports: Fem3dSupportsDelta @state(class: ARTIFACT)
+  loadCases: Fem3dLoadCasesDelta @state(class: ARTIFACT)
+  combinations: Fem3dCombinationsDelta @state(class: ARTIFACT)
+  analysis: FemAnalysisSettings @state(class: ARTIFACT)
+  resultSourceId: String @state(class: PRESENCE)
+  resultMode: String @state(class: PRESENCE)
+  resultModeIndex: Int @state(class: PRESENCE)
+  camera: FemCamera @state(class: CONFIG)
+  solverResultsJson: String @state(class: ARTIFACT)
+  meshPreviewJson: String @state(class: ARTIFACT)
 }
 
 type Fem3dNodesDelta {

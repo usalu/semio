@@ -1,12 +1,12 @@
 syntax = "proto3";
 package semio.s.animate.present.artifact;
 message PresentArtifact {
-  string schema = 1; // @state persistent
-  FigureTileSource source = 2; // @state persistent
-  repeated FigureTileDraft tiles = 3; // @state persistent
-  repeated string selected_ids = 4; // @state shared-ui
-  string engagement_input = 5; // @state local-ui
-  string locale = 6; // @state local-ui
+  string schema = 1; // @state artifact
+  FigureTileSource source = 2; // @state artifact
+  repeated FigureTileDraft tiles = 3; // @state artifact
+  repeated string selected_ids = 4; // @state presence
+  string engagement_input = 5; // @state config
+  string locale = 6; // @state config
 }
 message FigureTileFrame { double x = 1; double y = 2; double width = 3; double height = 4; }
 message FigureTileSource { string src = 1; string kind = 2; FigureTileFrame frame = 3; optional double source_aspect = 4; optional uint32 pdf_page = 5; }

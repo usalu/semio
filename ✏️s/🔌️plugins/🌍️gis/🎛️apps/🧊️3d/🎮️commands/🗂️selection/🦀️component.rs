@@ -74,7 +74,7 @@ mod tests {
     fn both_rows_write_the_same_selection() {
         let document = crate::artifacts::gisterrain::schema::default_terrain_document();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let config = Gis3dConfig::default();
         let cfg = ConfigView { snapshot: &config };
 

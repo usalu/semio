@@ -12,11 +12,11 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.2x3")]
 pub struct Ifc2x3Artifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 📦️ The full, lossless generic Part-21 graph, wrapped in this standard's own
     /// [`Ifc2x3Snapshot`] type — the actual persisted state.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub document: crate::artifacts::step::engine::part21::Part21Document,
 }

@@ -754,7 +754,7 @@ mod tests {
         let app = WriterPlayApp;
         let document = crate::artifacts::writer::dsl::jack_example_document();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = ArtifactView { snapshot: &document, history: &history };
+        let doc_view = ArtifactView::new(&document, &history);
         let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "text.document");
@@ -768,7 +768,7 @@ mod tests {
         let app = WriterPlayApp;
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = ArtifactView { snapshot: &document, history: &history };
+        let doc_view = ArtifactView::new(&document, &history);
         assert!(matches!(WriterPlayApp::export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
     }
     //#endregion 🔖️PortTests
@@ -783,7 +783,7 @@ mod tests {
         let document = crate::artifacts::writer::dsl::jack_example_document();
         let config = WriterConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let cfg = ConfigView { snapshot: &config };
         let registry = AppActionRegistry::from_definition(&create_writer_app().definition);
         let request = ContextMenuRequest {

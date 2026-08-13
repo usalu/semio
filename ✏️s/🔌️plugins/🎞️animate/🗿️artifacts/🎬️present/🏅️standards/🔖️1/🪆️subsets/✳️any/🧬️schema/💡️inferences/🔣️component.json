@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["topology"],
   "properties": {
-    "topology": { "$ref": "#/$defs/PresentTopology", "x-semio-state": "inferred" }
+    "topology": { "$ref": "#/$defs/PresentTopology", "x-semio-derived": true }
   },
   "$defs": {
     "PresentTopology": {

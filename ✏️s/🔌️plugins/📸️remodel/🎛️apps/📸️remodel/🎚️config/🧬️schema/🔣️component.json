@@ -29,7 +29,7 @@
           },
           "minItems": 3,
           "maxItems": 3,
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         },
         "target": {
           "type": "array",
@@ -38,14 +38,14 @@
           },
           "minItems": 3,
           "maxItems": 3,
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         },
         "fov": {
           "type": "number",
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         }
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selection": {
       "type": "object",
@@ -57,17 +57,17 @@
       "properties": {
         "mode": {
           "type": "string",
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         },
         "ids": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         }
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "layers": {
       "type": "object",
@@ -82,26 +82,26 @@
       "properties": {
         "mesh": {
           "type": "boolean",
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         },
         "dense": {
           "type": "boolean",
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         },
         "sparse": {
           "type": "boolean",
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         },
         "cameras": {
           "type": "boolean",
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         },
         "gcps": {
           "type": "boolean",
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         }
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "frameCursor": {
       "type": "object",
@@ -112,27 +112,27 @@
       "properties": {
         "streamId": {
           "type": "string",
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         },
         "frameIndex": {
           "type": "integer",
           "minimum": 0,
-          "x-semio-state": "local-ui"
+          "x-semio-state": "config"
         }
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "reportTable": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   }
 }

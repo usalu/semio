@@ -343,7 +343,7 @@ mod tests {
         let app = PlaybookPlayApp;
         let spec = crate::artifacts::playbook::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = ArtifactView { snapshot: &spec, history: &history };
+        let doc_view = ArtifactView::new(&spec, &history);
         let media = chapter_media("MATCH (a) RETURN a", "Jack Query");
         let emit = PlaybookPlayApp::import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
         assert_eq!(emit.artifact_mutations.len(), 2, "creates the imported step, then the note block");
@@ -365,7 +365,7 @@ mod tests {
         let mut spec = crate::artifacts::playbook::empty_playbook_snapshot();
         spec.steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = ArtifactView { snapshot: &spec, history: &history };
+        let doc_view = ArtifactView::new(&spec, &history);
         let media = chapter_media("second chapter", "Second");
         let emit = PlaybookPlayApp::import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
         assert_eq!(emit.artifact_mutations.len(), 1, "the imported step already exists, only the block is added");
@@ -377,7 +377,7 @@ mod tests {
         let app = PlaybookPlayApp;
         let spec = crate::artifacts::playbook::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc_view = ArtifactView { snapshot: &spec, history: &history };
+        let doc_view = ArtifactView::new(&spec, &history);
         assert!(matches!(PlaybookPlayApp::import_media("nonsense:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::NotImplemented)));
         let bad_media = Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: "not json".into() } };
         assert!(matches!(PlaybookPlayApp::import_media("chapters:in", &bad_media, &doc_view), Err(MediaError::Payload(..))));

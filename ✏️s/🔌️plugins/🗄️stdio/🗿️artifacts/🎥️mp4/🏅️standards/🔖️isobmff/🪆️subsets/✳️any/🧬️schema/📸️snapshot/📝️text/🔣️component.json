@@ -5,13 +5,13 @@
   "type": "object",
   "required": ["schema", "ftyp", "tracks", "unknownBoxes"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
     "ftyp": {
-      "type": "object", "x-semio-state": "persistent",
+      "type": "object", "x-semio-state": "artifact",
       "properties": { "majorBrand": { "type": "string" }, "minorVersion": { "type": "integer" }, "compatibleBrands": { "type": "array", "items": { "type": "string" } } }
     },
     "tracks": {
-      "type": "array", "x-semio-state": "persistent",
+      "type": "array", "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "properties": {
@@ -28,6 +28,6 @@
         }
       }
     },
-    "unknownBoxes": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array", "items": { "type": "integer" } } } } }
+    "unknownBoxes": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array", "items": { "type": "integer" } } } } }
   }
 }

@@ -1,5 +1,5 @@
 /** 🧬️ PlaybookPresence */
 export interface PlaybookPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
 }

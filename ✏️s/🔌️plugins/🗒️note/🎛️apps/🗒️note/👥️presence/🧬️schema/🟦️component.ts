@@ -1,15 +1,15 @@
 /** 🧬️ NotePresence */
 export interface NotePresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedBlockIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraX: number;
-  /** @state shared-ui */
+  /** @state presence */
   cameraY: number;
-  /** @state shared-ui */
+  /** @state presence */
   cameraZoom: number;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredBlockId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
 }

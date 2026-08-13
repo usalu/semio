@@ -8,15 +8,15 @@
     "artifact": {
       "title": "JackArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "name": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "manifestId": {
       "oneOf": [
@@ -27,23 +27,23 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "manifest": {
       "$ref": "#/$defs/Manifest",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "$ref": "#/$defs/JackNodesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "edges": {
       "$ref": "#/$defs/JackEdgesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "rootNodeId": {
       "oneOf": [
@@ -54,19 +54,19 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedNodeIds": {
       "$ref": "#/$defs/JackStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeFixtureId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "jackQuery": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "lodModeByWindow": {
       "type": "object",
@@ -80,32 +80,32 @@
           }
         ]
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "viewportCamera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "jackResultJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "editorEngagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "graphEngagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "resultsEngagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "reorganizeEpoch": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "editorSelection": {
       "oneOf": [
@@ -116,16 +116,16 @@
           "$ref": "#/$defs/JackEditorSelection"
         }
       ],
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "revision": {
       "type": "integer",
       "format": "int64",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

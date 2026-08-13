@@ -115,15 +115,15 @@ pub struct PlyElement {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply")]
 pub struct PlySnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub format: PlyFormat,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub comments: Vec<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub elements: Vec<PlyElement>,
 }

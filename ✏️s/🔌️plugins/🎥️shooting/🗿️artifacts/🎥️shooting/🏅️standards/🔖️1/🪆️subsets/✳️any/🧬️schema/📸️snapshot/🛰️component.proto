@@ -4,19 +4,19 @@ package semio.s.shooting.shooting.snapshot;
 // 🧬️ Shooting snapshot schema — persistent fields only.
 
 message ShootingSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   repeated ShootingAsset assets = 2;
-  // @state persistent
+  // @state artifact
   repeated ShootingSavedCamera saved_cameras = 3;
-  // @state persistent
+  // @state artifact
   ShootingSceneLighting scene = 4;
-  // @state persistent
+  // @state artifact
   repeated ShootingShot shots = 5;
-  // @state persistent
+  // @state artifact
   string active_shot_id = 6;
-  // @state persistent
+  // @state artifact
   string active_asset_id = 7;
 }
 

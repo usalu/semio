@@ -1,13 +1,13 @@
 # 🔺️ Mathematical diff schema.
 
 type MathematicalDiff {
-  artifact: MathematicalArtifact @state(class: PERSISTENT)
-  graph: MathematicalGraph @state(class: PERSISTENT)
-  geometry: MathematicalGeometry @state(class: PERSISTENT)
-  cameraX: Float @state(class: LOCAL_UI)
-  cameraY: Float @state(class: LOCAL_UI)
-  cameraZoom: Float @state(class: LOCAL_UI)
-  locale: String @state(class: LOCAL_UI)
+  artifact: MathematicalArtifact @state(class: ARTIFACT)
+  graph: MathematicalGraph @state(class: ARTIFACT)
+  geometry: MathematicalGeometry @state(class: ARTIFACT)
+  cameraX: Float @state(class: CONFIG)
+  cameraY: Float @state(class: CONFIG)
+  cameraZoom: Float @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
 }
 
 type MathematicalArtifact {

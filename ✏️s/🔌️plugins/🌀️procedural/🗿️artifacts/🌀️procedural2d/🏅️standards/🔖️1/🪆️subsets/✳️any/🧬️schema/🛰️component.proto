@@ -4,21 +4,21 @@ package semio.s.procedural.procedural2d.artifact;
 // 🧬️ Procedural2d artifact schema — every field with its state class.
 
 message Procedural2dArtifact {
-  // @state persistent
+  // @state artifact
   FlowFixture fixture = 1;
-  // @state persistent
+  // @state artifact
   GenerationPlayState generation = 2;
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 3;
-  // @state local-ui
+  // @state config
   CameraJson graph_camera = 4;
-  // @state local-ui
+  // @state config
   string show_mode = 5;
-  // @state shared-ui
+  // @state presence
   optional string selected_generation_id = 6;
-  // @state preview
+  // @state artifact
   optional string generation_preview_text = 7;
-  // @state local-ui
+  // @state config
   string locale = 8;
 }
 

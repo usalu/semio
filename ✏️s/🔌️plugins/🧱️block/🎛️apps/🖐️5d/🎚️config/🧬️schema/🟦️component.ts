@@ -1,7 +1,7 @@
 /** 🧬️ Block5dConfig */
 export interface Block5dConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

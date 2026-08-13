@@ -7,8 +7,8 @@ export interface LowpolyBounds {
 }
 
 export interface LowpolyInference {
-  /** @state inferred */
+  /** @derived */
   objectCount: number;
-  /** @state inferred */
+  /** @derived */
   bounds: LowpolyBounds | null;
 }

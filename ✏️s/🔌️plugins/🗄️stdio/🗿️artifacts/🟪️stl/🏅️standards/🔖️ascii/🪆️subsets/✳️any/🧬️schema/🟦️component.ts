@@ -4,7 +4,7 @@ export interface StlTriangle {
   vertices: [[number, number, number], [number, number, number], [number, number, number]];
 }
 export interface StlArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ solidName: string;
-  /** @state persistent */ triangles: StlTriangle[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ solidName: string;
+  /** @state artifact */ triangles: StlTriangle[];
 }

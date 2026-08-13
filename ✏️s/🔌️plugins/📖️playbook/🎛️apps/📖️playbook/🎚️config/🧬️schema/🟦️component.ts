@@ -1,9 +1,9 @@
 /** 🧬️ PlaybookConfig */
 export interface PlaybookConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }

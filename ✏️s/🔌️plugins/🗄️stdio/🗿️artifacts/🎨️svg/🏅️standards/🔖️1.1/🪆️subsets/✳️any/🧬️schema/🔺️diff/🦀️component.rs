@@ -30,17 +30,17 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.stdio.svg.diff")]
 pub struct SvgDiff {
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = declaration removed, `Some(Some(d))` = set.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub declaration: Option<Option<XmlDeclaration>>,
     /// 📜️ Tri-state: `None` = unchanged, `Some(None)` = doctype removed, `Some(Some(s))` = set.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doctype: Option<Option<String>>,
     /// 🌳 `None` = root subtree unchanged; `Some(diff)` = the root changed (recursive, possibly
     /// down to a deeply nested leaf via `diff_at_path`, or a wholesale `Replace` incl. root
     /// presence/absence itself).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root: Option<SvgNodeDiff>,
 }

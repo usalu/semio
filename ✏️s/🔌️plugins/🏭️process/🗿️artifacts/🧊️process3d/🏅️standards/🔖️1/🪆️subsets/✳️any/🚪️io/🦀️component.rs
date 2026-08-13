@@ -136,7 +136,7 @@ pub use derived_composition::*;
 //#region 🔖️MediaImportExport
 use base64::Engine as _;
 use crate::artifacts::process3d::{Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
-use semio_framework_3d::brep::kernel::{ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use semio_framework_plugin::{MeshExporter, MeshImporter};
 use serde_json::Value;
 

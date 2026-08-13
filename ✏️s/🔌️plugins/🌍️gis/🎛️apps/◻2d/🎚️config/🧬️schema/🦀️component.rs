@@ -7,18 +7,18 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gis2d.config")]
 pub struct Gis2dConfig {
-    #[state(local_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub layer_visibility: BTreeMap<String, bool>,
-    #[state(local_ui)] pub camera_json: String,
-    #[state(local_ui)] pub render_mode: String,
-    #[state(local_ui)] pub vector_style: String,
-    #[state(local_ui)] pub lod_mode: String,
-    #[state(local_ui)] pub feature_selection_json: String,
-    #[state(local_ui)] pub hover_json: String,
-    #[state(local_ui)] pub selection_method: String,
-    #[state(local_ui)] pub selection_mode: String,
-    #[state(local_ui)] pub layer_stroke_scale: BTreeMap<String, f64>,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_ids: Vec<String>,
+    #[state(config)] pub layer_visibility: BTreeMap<String, bool>,
+    #[state(config)] pub camera_json: String,
+    #[state(config)] pub render_mode: String,
+    #[state(config)] pub vector_style: String,
+    #[state(config)] pub lod_mode: String,
+    #[state(config)] pub feature_selection_json: String,
+    #[state(config)] pub hover_json: String,
+    #[state(config)] pub selection_method: String,
+    #[state(config)] pub selection_mode: String,
+    #[state(config)] pub layer_stroke_scale: BTreeMap<String, f64>,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema descriptor

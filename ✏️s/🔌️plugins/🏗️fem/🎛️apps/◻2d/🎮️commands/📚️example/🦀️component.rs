@@ -48,7 +48,7 @@ mod tests {
     fn set_active_example_loads_default_fixture_2d() {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem2dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "default".into() }, &doc, &cfg).expect("handle");
@@ -64,7 +64,7 @@ mod tests {
     fn set_active_example_unknown_id_resets_to_empty_document_2d() {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem2dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");

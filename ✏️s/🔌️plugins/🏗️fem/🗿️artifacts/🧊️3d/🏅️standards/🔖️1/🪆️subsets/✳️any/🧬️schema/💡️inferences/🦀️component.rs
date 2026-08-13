@@ -18,7 +18,7 @@ use super::bounds::{compute_fem3d_bounds, Fem3dBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem3d.inference")]
 pub struct Fem3dInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: Fem3dBounds,
 }
 

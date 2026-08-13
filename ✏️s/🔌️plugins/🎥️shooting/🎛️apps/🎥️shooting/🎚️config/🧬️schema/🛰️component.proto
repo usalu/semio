@@ -1,31 +1,31 @@
 syntax = "proto3";
 package semio.app.shooting.shooting;
 message ShootingConfig {
-  // @state local-ui
+  // @state config
   string default_shot_format = 1;
-  // @state local-ui
+  // @state config
   string default_shot_shape = 2;
-  // @state local-ui
+  // @state config
   string default_asset_format = 3;
-  // @state local-ui
+  // @state config
   repeated string selected_shot_ids = 4;
-  // @state local-ui
+  // @state config
   repeated string selected_asset_ids = 5;
-  // @state local-ui
+  // @state config
   string selection_method = 6;
-  // @state local-ui
+  // @state config
   optional string hovered_asset_id = 7;
-  // @state local-ui
+  // @state config
   bool center_model = 8;
-  // @state local-ui
+  // @state config
   uint32 fit_revision = 9;
-  // @state local-ui
+  // @state config
   string camera_draft_label = 10;
-  // @state local-ui
+  // @state config
   ShootingCamera camera = 11;
-  // @state local-ui
+  // @state config
   string active_utility_id = 12;
-  // @state local-ui
+  // @state config
   string locale = 13;
 }
 

@@ -1,23 +1,23 @@
 /** 🧬️ Procedural2d diff schema — sparse field delta. */
 
 export interface Procedural2dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Procedural2dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   fixture?: FlowFixture;
-  /** @state persistent */
+  /** @state artifact */
   generation?: GenerationPlayState;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds?: Procedural2dStringList;
-  /** @state local-ui */
+  /** @state config */
   graphCamera?: CameraJson;
-  /** @state local-ui */
+  /** @state config */
   showMode?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedGenerationId?: string | null;
-  /** @state preview */
+  /** @state artifact */
   generationPreviewText?: string | null;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

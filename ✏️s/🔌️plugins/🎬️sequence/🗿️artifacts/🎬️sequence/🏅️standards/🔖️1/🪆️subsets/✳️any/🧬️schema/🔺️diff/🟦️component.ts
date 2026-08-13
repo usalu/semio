@@ -1,14 +1,14 @@
 /** 🧬️ Sequence diff schema — sparse field delta. */
 export interface SequenceDiff {
-  /** @state persistent */ artifact?: SequenceArtifact;
-  /** @state persistent */ schema?: string;
-  /** @state persistent */ steps?: SequenceStepsDelta;
-  /** @state persistent */ edges?: SequenceEdgesDelta;
-  /** @state shared-ui */ selectedStepIds?: SequenceStringList;
-  /** @state local-ui */ lastRunJson?: string;
-  /** @state local-ui */ orientation?: string;
-  /** @state local-ui */ camera?: SequenceCamera;
-  /** @state local-ui */ locale?: string;
+  /** @state artifact */ artifact?: SequenceArtifact;
+  /** @state artifact */ schema?: string;
+  /** @state artifact */ steps?: SequenceStepsDelta;
+  /** @state artifact */ edges?: SequenceEdgesDelta;
+  /** @state presence */ selectedStepIds?: SequenceStringList;
+  /** @state config */ lastRunJson?: string;
+  /** @state config */ orientation?: string;
+  /** @state config */ camera?: SequenceCamera;
+  /** @state config */ locale?: string;
 }
 export interface SequenceStringList { values: string[]; }
 export interface SequenceStepsDelta { added: SequenceStep[]; removed: string[]; patched: SequenceStepPatchEntry[]; reordered?: string[]; }

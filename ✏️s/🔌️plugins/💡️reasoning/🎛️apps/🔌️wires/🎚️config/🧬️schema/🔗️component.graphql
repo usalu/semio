@@ -1,7 +1,7 @@
 type WiresConfig {
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  dragNodeId: String @state(class: LOCAL_UI)
-  dragLastX: Float! @state(class: LOCAL_UI)
-  dragLastY: Float! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedIds: [String!]! @state(class: CONFIG)
+  dragNodeId: String @state(class: CONFIG)
+  dragLastX: Float! @state(class: CONFIG)
+  dragLastY: Float! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

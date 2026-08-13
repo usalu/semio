@@ -11,19 +11,19 @@
   "properties": {
     "filters": {
       "$ref": "#/$defs/Filters",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectedObjectId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

@@ -497,16 +497,16 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.diff")]
 pub struct IfcDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_description: Option<Vec<IfcValue>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_name: Option<Vec<IfcValue>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_schema: Option<Vec<IfcValue>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entities: Option<IfcEntitiesDiff>,
 }

@@ -4,15 +4,15 @@ package semio.s.trinity.rewrite.mutation;
 // 🧬️ Rewrite mutation schema — persistent fields only.
 
 message RewriteMutation {
-  // @state persistent
+  // @state artifact
   string before_fixture_json = 1;
-  // @state persistent
+  // @state artifact
   string lhs_json = 2;
-  // @state persistent
+  // @state artifact
   string rhs_json = 3;
-  // @state persistent
+  // @state artifact
   map<string, string> parameter_bindings = 4;
-  // @state persistent
+  // @state artifact
   map<string, LayoutPoint> rule_layout = 5;
 }
 

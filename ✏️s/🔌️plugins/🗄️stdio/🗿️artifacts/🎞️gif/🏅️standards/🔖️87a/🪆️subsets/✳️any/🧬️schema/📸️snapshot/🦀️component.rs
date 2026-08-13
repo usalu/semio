@@ -79,23 +79,23 @@ impl GifImage {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif")]
 pub struct GifSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     #[dsl(block)]
     pub gct: Option<GifColorTable>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub background_color_index: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixel_aspect_ratio: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub images: Vec<GifImage>,
 }

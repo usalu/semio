@@ -6,10 +6,10 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.imperative.imperative.config")]
 pub struct ImperativeConfig {
-    #[state(local_ui)] pub selected_step_ids: Vec<String>,
-    #[state(local_ui)] pub run_output_json: String,
-    #[state(local_ui)] pub locale: String,
-    #[state(local_ui)] pub contributions_json: String,
+    #[state(config)] pub selected_step_ids: Vec<String>,
+    #[state(config)] pub run_output_json: String,
+    #[state(config)] pub locale: String,
+    #[state(config)] pub contributions_json: String,
 }
 
 //region 📎 App-schema descriptor

@@ -4,6 +4,6 @@ type Mp3DiffEntry {
   value: String!
 }
 type Mp3Diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Mp3DiffEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Mp3DiffEntry!]! @state(class: ARTIFACT)
 }

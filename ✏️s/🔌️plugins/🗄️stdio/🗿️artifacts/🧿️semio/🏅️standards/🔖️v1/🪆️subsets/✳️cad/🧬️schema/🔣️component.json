@@ -4,10 +4,10 @@
   "description": "Full artifact state, mirrors SemioCadSnapshot field for field.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "layers": { "type": "array", "x-semio-state": "persistent" },
-    "blocks": { "type": "array", "x-semio-state": "persistent" },
-    "entities": { "type": "array", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "layers": { "type": "array", "x-semio-state": "artifact" },
+    "blocks": { "type": "array", "x-semio-state": "artifact" },
+    "entities": { "type": "array", "x-semio-state": "artifact" }
   },
   "required": ["schema", "layers", "blocks", "entities"]
 }

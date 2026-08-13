@@ -17,53 +17,53 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeRepresentationId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "wantedTags": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "windows": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Block3dWindowView"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushVortexKindId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushRadius": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushFlip": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushPreview": {
       "$ref": "#/$defs/Block3dBrushPreview",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera": {
       "$ref": "#/$defs/BlockCamera3d",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredVortexFullId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

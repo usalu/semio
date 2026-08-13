@@ -1,27 +1,27 @@
 /** 🧬️ Gis2dConfig */
 export interface Gis2dConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   layerVisibility: Record<string, boolean>;
-  /** @state local-ui */
+  /** @state config */
   cameraJson: string;
-  /** @state local-ui */
+  /** @state config */
   renderMode: string;
-  /** @state local-ui */
+  /** @state config */
   vectorStyle: string;
-  /** @state local-ui */
+  /** @state config */
   lodMode: string;
-  /** @state local-ui */
+  /** @state config */
   featureSelectionJson: string;
-  /** @state local-ui */
+  /** @state config */
   hoverJson: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMode: string;
-  /** @state local-ui */
+  /** @state config */
   layerStrokeScale: Record<string, number>;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

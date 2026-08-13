@@ -18,23 +18,23 @@ pub fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.vcs.vcs")]
 pub struct VcsArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub title: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub counter: i64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub notes: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub status: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub tags: Vec<String>,
-    #[state(shared_ui)]
+    #[state(presence)]
     #[serde(default)]
     pub selected_checkpoint_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Artifact

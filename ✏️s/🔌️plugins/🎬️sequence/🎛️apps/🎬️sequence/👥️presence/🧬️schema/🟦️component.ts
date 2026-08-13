@@ -1,10 +1,10 @@
 /** 🧬️ SequencePresence */
 export interface SequencePresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedStepIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   orientation: string;
-  /** @state shared-ui */
+  /** @state presence */
   camera: SequenceCamera;
 }
 export interface SequenceCamera { x: number; y: number; zoom: number; }

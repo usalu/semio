@@ -1,31 +1,31 @@
 /** 🧬️ Note snapshot schema — persistent fields only. */
 
 export interface NoteSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   title?: string;
-  /** @state persistent */
+  /** @state artifact */
   blocks: NoteBlockNode[];
-  /** @state persistent */
+  /** @state artifact */
   gridVisible?: boolean;
-  /** @state persistent */
+  /** @state artifact */
   gridSpacing?: number;
-  /** @state persistent */
+  /** @state artifact */
   gridSubdivisions?: number;
-  /** @state persistent */
+  /** @state artifact */
   gridOpacity?: number;
-  /** @state persistent */
+  /** @state artifact */
   snapEnabled?: boolean;
-  /** @state persistent */
+  /** @state artifact */
   snapGridSpacing?: number;
-  /** @state persistent */
+  /** @state artifact */
   pencilWidth?: number;
-  /** @state persistent */
+  /** @state artifact */
   eraserRadius?: number;
-  /** @state persistent */
+  /** @state artifact */
   assets: Record<string, NoteImageAsset>;
 }
 

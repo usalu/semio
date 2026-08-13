@@ -30,10 +30,23 @@ export type ArtifactInferenceDescriptor = {
 //#endregion 🔖️ArtifactInferenceDescriptor
 
 //#region 🔖️GraphQlStatePreamble
-/** 🔗 Shared GraphQL `@state` SDL preamble — declared once, never repeated per artifact. */
+/** 🔗 Shared GraphQL `@state`/`@derived` SDL preamble — TS twin of Rust `GRAPHQL_STATE_PREAMBLE`.
+ * `@state` names one of the four state lanes; `@derived` is the ORTHOGONAL derivation marker, never
+ * a fifth lane — a derived field is computed from a snapshot, so it is not state at all. */
 export const GRAPHQL_STATE_PREAMBLE =
-  "enum StateClass { PERSISTENT SHARED_UI LOCAL_UI PREVIEW EFFECT INFERRED }\n" +
-  "directive @state(class: StateClass!) on FIELD_DEFINITION";
+  "enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }\n" +
+  "directive @state(class: StateClass!) on FIELD_DEFINITION\n" +
+  "directive @derived on FIELD_DEFINITION";
+
+/** 🗂️ The four — and only four — state lanes, TS twin of Rust `StateClass`. `artifact` = persisted
+ * shared, `config` = persisted local-only, `presence` = ephemeral shared, `transient` = ephemeral
+ * local-only UI state. Spelled in the canonical kebab `x-semio-state` vocabulary. */
+export const STATE_CLASSES = ["artifact", "config", "presence", "transient"] as const;
+export type StateClass = (typeof STATE_CLASSES)[number];
+
+/** 🏷️ Canonical JSON Schema key carrying the derivation marker, sibling of `x-semio-state` on the
+ * orthogonal axis. Its only legal value is `true`; an absent key means "not derived". */
+export const JSON_SCHEMA_DERIVED_KEY = "x-semio-derived";
 //#endregion 🔖️GraphQlStatePreamble
 
 //#region 🔖️ArtifactCompositionSpec

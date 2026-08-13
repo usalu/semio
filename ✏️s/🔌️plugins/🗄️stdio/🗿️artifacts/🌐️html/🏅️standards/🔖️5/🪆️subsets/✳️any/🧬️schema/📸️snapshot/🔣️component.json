@@ -4,9 +4,9 @@
   "type": "object",
   "required": ["schema", "root"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "doctype": { "type": "string", "x-semio-state": "persistent", "description": "raw content between '<!' and '>', e.g. \"DOCTYPE html\"" },
-    "root": { "$ref": "#/$defs/HtmlNode", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "doctype": { "type": "string", "x-semio-state": "artifact", "description": "raw content between '<!' and '>', e.g. \"DOCTYPE html\"" },
+    "root": { "$ref": "#/$defs/HtmlNode", "x-semio-state": "artifact" }
   },
   "$defs": {
     "HtmlAttr": {

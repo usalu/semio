@@ -10,17 +10,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.draw.draw.config")]
 pub struct DrawConfig {
-    #[state(local_ui)]
+    #[state(config)]
     pub selected_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub hovered_id: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub engagement_input: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera: DrawCamera,
-    #[state(local_ui)]
+    #[state(config)]
     pub active_utility_id: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Config

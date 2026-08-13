@@ -67,9 +67,9 @@
   },
   "type": "object",
   "properties": {
-    "fileDescription": { "$ref": "#/$defs/StepFileDescription", "x-semio-state": "persistent" },
-    "fileName": { "$ref": "#/$defs/StepFileName", "x-semio-state": "persistent" },
-    "fileSchema": { "$ref": "#/$defs/StepFileSchema", "x-semio-state": "persistent" },
-    "entities": { "$ref": "#/$defs/StepEntitiesDiff", "x-semio-state": "persistent" }
+    "fileDescription": { "$ref": "#/$defs/StepFileDescription", "x-semio-state": "artifact" },
+    "fileName": { "$ref": "#/$defs/StepFileName", "x-semio-state": "artifact" },
+    "fileSchema": { "$ref": "#/$defs/StepFileSchema", "x-semio-state": "artifact" },
+    "entities": { "$ref": "#/$defs/StepEntitiesDiff", "x-semio-state": "artifact" }
   }
 }

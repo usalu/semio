@@ -6,7 +6,7 @@ type StlTriangle {
 }
 
 type StlSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  solidName: String! @state(class: PERSISTENT)
-  triangles: [StlTriangle!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  solidName: String! @state(class: ARTIFACT)
+  triangles: [StlTriangle!]! @state(class: ARTIFACT)
 }

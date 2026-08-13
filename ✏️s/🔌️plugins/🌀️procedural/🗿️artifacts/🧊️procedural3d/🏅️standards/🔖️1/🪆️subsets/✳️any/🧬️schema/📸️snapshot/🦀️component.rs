@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.procedural.procedural3d")]
 
 pub struct Procedural3dSnapshot {
-    #[state(persistent)] pub fixture: FlowFixture,
-    #[state(persistent)] pub generation: GenerationPlayState}
+    #[state(artifact)] pub fixture: FlowFixture,
+    #[state(artifact)] pub generation: GenerationPlayState}
 //#endregion 🔖️Procedural3dSnapshot
 
 impl Default for Procedural3dSnapshot {

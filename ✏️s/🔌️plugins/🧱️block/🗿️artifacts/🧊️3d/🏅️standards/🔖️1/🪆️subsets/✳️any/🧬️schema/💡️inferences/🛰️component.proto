@@ -4,7 +4,7 @@ package semio.s.block.block3d.inference;
 // 💡️ Block3d inference schema — bounds (bounding box + vertex count) over the object kind's rim vortex templates.
 
 message Block3dInference {
-  // @state inferred
+  // @derived
   Block3dBounds bounds = 1;
 }
 

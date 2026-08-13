@@ -1,0 +1,7 @@
+test artifacts::gismap::component::tests::map_artifact_kind_matches_the_map_out_interchange_kind ... ok
+test artifacts::gismap::component::tests::the_map_snapshot_defaults_to_empty_feature_collections ... ok
+test artifacts::gismap::component::tests::gis_owns_the_host_io_registration_for_its_own_kind ... ok
+thread 'artifacts::gismap::standards::v1::subsets::any::schema::component::relocated_engine_tests::svg_export_of_an_empty_document_still_renders_a_bare_canvas' (302171203) panicked at ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:94:5:
+thread 'artifacts::gismap::standards::v1::subsets::any::schema::component::relocated_engine_tests::svg_export_renders_real_svg_text_through_the_stdio_drawing_bridge' (302171204) panicked at ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:667:14:
+test result: FAILED. 170 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+error: test failed, to rerun pass `-p semio-s-plugin-gis --lib`

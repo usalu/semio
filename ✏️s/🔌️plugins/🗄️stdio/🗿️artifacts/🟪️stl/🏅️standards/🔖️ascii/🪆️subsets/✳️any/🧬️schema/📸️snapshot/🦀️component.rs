@@ -62,12 +62,12 @@ impl Default for StlTriangle {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl")]
 pub struct StlSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub solid_name: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub triangles: Vec<StlTriangle>,
 }

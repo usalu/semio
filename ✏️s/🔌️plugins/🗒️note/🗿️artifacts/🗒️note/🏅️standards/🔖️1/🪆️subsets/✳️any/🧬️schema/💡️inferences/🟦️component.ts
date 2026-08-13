@@ -7,6 +7,6 @@ export interface NoteOutline {
 }
 
 export interface NoteInference {
-  /** @state inferred */
+  /** @derived */
   outline: NoteOutline;
 }

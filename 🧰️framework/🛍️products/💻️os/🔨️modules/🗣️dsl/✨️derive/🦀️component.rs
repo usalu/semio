@@ -1045,7 +1045,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
                 ::protocol::MutationDescriptor::new(
                     ::protocol::SchemaId(format!("{}#{}", #schema, <#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS.kind)),
                     ::protocol::SchemaVersion(1),
-                    ::protocol::StateClass::Persistent,
+                    ::protocol::StateClass::Artifact,
                     ::protocol::ConflictRule::Merge(::protocol::MergeStrategyKind::LwwRegister),
                 )
                 .with_semantics(&<#payload_ty as ::protocol::MutationKind<#snapshot_ty, #name>>::SEMANTICS),

@@ -17,8 +17,8 @@ type Filters {
 }
 
 type SourcingCurateConfig {
-  filters: Filters! @state(class: LOCAL_UI)
-  selectedObjectId: String @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
-  contributionsJson: String! @state(class: LOCAL_UI)
+  filters: Filters! @state(class: CONFIG)
+  selectedObjectId: String @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+  contributionsJson: String! @state(class: CONFIG)
 }

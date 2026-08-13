@@ -11,6 +11,6 @@ export interface LasBounds {
 }
 
 export interface LasInference {
-  /** @state inferred */
+  /** @derived */
   bounds: LasBounds;
 }

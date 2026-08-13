@@ -1,0 +1,38 @@
+2026-08-13 16:13:49
+### semio-framework-os-kernel
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:91:36: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs:876:35: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs:876:59: error[E0599]: no variant, associated function, or constant named `SharedUi` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs:876:81: error[E0599]: no variant, associated function, or constant named `LocalUi` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs:876:102: error[E0599]: no variant, associated function, or constant named `Preview` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1041:77: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs:876:123: error[E0599]: no variant, associated function, or constant named `Effect` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:759:65: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs:876:143: error[E0599]: no variant, associated function, or constant named `Inferred` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 7 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1079:154: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:984:168: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1225:137: error[E0599]: no variant, associated function, or constant named `Effect` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+error: could not compile `semio-framework-os-kernel` (lib test) due to 12 previous errors; 99 warnings emitted
+(exit: )
+### semio-framework-plugin
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:91:36: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 7 warnings emitted
+(exit: )
+### semio-framework-os
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:91:36: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 7 warnings emitted
+(exit: )
+### semio-s-plugin-cad
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:91:36: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 7 warnings emitted
+(exit: )
+### semio-s-plugin-gis
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:91:36: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 7 warnings emitted
+(exit: )
+### semio-s-plugin-demonstrator
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:91:36: error[E0599]: no variant, associated function, or constant named `Persistent` found for enum `wire::codec::StateClass` in the current scope: variant, associated function, or constant not found in `wire::codec::StateClass`
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 7 warnings emitted
+(exit: )

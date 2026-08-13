@@ -126,9 +126,9 @@ pub struct AnimTimeline {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.animation")]
 pub struct SemioAnimationSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub timelines: Vec<AnimTimeline>,
 }

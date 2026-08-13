@@ -11,24 +11,24 @@ use serde_json::Value;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub wires_fixture: DslValue,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.graph")]
     pub content: crate::artifacts::wires::WiresContentChild,
-    #[state(persistent)]
+    #[state(artifact)]
     pub camera: DslValue,
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: DslValue,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(preview)]
+    #[state(artifact)]
     pub drag_node_id: Option<String>,
-    #[state(preview)]
+    #[state(artifact)]
     pub drag_last_x: f64,
-    #[state(preview)]
+    #[state(artifact)]
     pub drag_last_y: f64,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Artifact

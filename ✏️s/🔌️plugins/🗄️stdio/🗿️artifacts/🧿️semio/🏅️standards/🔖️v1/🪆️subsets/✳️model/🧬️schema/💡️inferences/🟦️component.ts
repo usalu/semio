@@ -13,6 +13,6 @@ export interface SemioModelBounds {
 }
 
 export interface SemioModelInference {
-  /** @state inferred */
+  /** @derived */
   bounds: SemioModelBounds;
 }

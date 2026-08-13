@@ -10,26 +10,26 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg")]
 pub struct DwgArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub version: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub maintenance_version: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub codepage: u16,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub bytes: Vec<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub section_names: Vec<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub sections: Vec<DwgSection>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub decode_status: DwgDecodeStatus,
 }

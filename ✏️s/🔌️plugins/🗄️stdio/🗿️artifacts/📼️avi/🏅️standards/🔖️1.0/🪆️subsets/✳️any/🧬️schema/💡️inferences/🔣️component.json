@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["duration"],
   "properties": {
-    "duration": { "$ref": "#/$defs/AviDuration", "x-semio-state": "inferred" }
+    "duration": { "$ref": "#/$defs/AviDuration", "x-semio-derived": true }
   },
   "$defs": {
     "AviDuration": {

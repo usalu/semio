@@ -1,7 +1,7 @@
 # 💡️ Semio kit inference schema — catalog census over the kit's own collections.
 
 type SemioKitInference {
-  entries: SemioKitEntries! @state(class: INFERRED)
+  entries: SemioKitEntries! @derived
 }
 
 type SemioKitEntries {

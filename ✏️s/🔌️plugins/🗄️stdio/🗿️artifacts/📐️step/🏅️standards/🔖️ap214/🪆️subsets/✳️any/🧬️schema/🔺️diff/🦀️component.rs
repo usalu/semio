@@ -494,16 +494,16 @@ fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step.diff")]
 pub struct StepDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_description: Option<StepFileDescription>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_name: Option<StepFileName>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_schema: Option<StepFileSchema>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entities: Option<StepEntitiesDiff>,
 }

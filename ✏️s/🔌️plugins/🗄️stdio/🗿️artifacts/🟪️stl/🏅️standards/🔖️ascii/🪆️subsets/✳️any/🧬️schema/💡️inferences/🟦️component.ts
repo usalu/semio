@@ -7,6 +7,6 @@ export interface StlBounds {
 }
 
 export interface StlInference {
-  /** @state inferred */
+  /** @derived */
   bounds: StlBounds;
 }

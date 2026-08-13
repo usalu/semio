@@ -20,7 +20,7 @@ use super::climate::{compute_epw_climate_summary, EpwClimateSummary};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw.inference")]
 pub struct EpwInference {
-    #[state(inferred)]
+    #[derived]
     pub climate: EpwClimateSummary,
 }
 

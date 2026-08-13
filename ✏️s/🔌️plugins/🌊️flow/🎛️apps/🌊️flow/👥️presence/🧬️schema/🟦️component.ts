@@ -1,14 +1,14 @@
 /** 🧬️ FlowPresence */
 export interface FlowPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedEdgeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedHandleIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   previewOffNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   camera: CameraJson;
 }
 

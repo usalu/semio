@@ -5,8 +5,8 @@
   "additionalProperties": false,
   "required": ["topology", "flatPosition"],
   "properties": {
-    "topology": { "$ref": "#/$defs/JackTopology", "x-semio-state": "inferred" },
-    "flatPosition": { "$ref": "#/$defs/JackFlatPosition", "x-semio-state": "inferred" }
+    "topology": { "$ref": "#/$defs/JackTopology", "x-semio-derived": true },
+    "flatPosition": { "$ref": "#/$defs/JackFlatPosition", "x-semio-derived": true }
   },
   "$defs": {
     "JackTopology": {

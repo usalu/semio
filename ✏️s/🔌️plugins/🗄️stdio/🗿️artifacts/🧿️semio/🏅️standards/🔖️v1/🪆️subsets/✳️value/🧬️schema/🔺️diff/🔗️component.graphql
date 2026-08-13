@@ -42,6 +42,6 @@ type NodesTripleDiff {
 }
 
 type SemioValueTreeDiff {
-  root: SemioValueDiff @state(class: PERSISTENT)
-  nodes: NodesTripleDiff @state(class: PERSISTENT)
+  root: SemioValueDiff @state(class: ARTIFACT)
+  nodes: NodesTripleDiff @state(class: ARTIFACT)
 }

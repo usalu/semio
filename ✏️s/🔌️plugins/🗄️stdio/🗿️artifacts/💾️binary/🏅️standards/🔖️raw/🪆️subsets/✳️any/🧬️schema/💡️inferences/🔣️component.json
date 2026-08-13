@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["extent"],
   "properties": {
-    "extent": { "$ref": "#/$defs/BinaryExtent", "x-semio-state": "inferred" }
+    "extent": { "$ref": "#/$defs/BinaryExtent", "x-semio-derived": true }
   },
   "$defs": {
     "BinaryExtent": {

@@ -12,11 +12,11 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.present")]
 pub struct PresentSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub source: FigureTileSource,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub tiles: Vec<FigureTileDraft>,
 }

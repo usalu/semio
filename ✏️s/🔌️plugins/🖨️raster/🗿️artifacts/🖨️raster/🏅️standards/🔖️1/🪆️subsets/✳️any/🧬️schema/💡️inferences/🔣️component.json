@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["topology"],
   "properties": {
-    "topology": { "$ref": "#/$defs/RasterTopology", "x-semio-state": "inferred" }
+    "topology": { "$ref": "#/$defs/RasterTopology", "x-semio-derived": true }
   },
   "$defs": {
     "RasterTopology": {

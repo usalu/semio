@@ -1,5 +1,5 @@
 /** 🧬️ Block2dPresence */
 export interface Block2dPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
 }

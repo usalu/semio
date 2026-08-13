@@ -4,7 +4,7 @@ package semio.s.reasoning.wires.inference;
 // 💡️ Wires inference schema — topology (node/edge/component counts + cycle-freedom) over the board graph.
 
 message WiresInference {
-  // @state inferred
+  // @derived
   WiresTopology topology = 1;
 }
 

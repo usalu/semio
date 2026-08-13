@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.demonstrator.playground")]
 pub struct PlaygroundArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
 }
 //#endregion 🔖️Artifact

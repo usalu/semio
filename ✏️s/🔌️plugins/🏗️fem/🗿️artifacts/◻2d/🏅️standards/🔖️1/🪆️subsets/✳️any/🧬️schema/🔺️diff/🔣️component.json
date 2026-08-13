@@ -9,43 +9,43 @@
     "artifact": {
       "title": "Fem2dArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "$ref": "#/$defs/Fem2dNodesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "elements": {
       "$ref": "#/$defs/Fem2dElementsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "regions": {
       "$ref": "#/$defs/Fem2dRegionsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "materials": {
       "$ref": "#/$defs/Fem2dMaterialsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sections": {
       "$ref": "#/$defs/Fem2dSectionsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "supports": {
       "$ref": "#/$defs/Fem2dSupportsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "loadCases": {
       "$ref": "#/$defs/Fem2dLoadCasesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "combinations": {
       "$ref": "#/$defs/Fem2dCombinationsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "analysis": {
       "$ref": "#/$defs/FemAnalysisSettings",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resultSourceId": {
       "oneOf": [
@@ -56,35 +56,35 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "resultMode": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "resultModeIndex": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "camera": {
       "$ref": "#/$defs/FemCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "solverResultsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "meshPreviewJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

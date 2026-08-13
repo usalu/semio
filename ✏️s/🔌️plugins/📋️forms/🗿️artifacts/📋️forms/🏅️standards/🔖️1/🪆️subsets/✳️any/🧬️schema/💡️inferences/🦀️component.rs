@@ -18,7 +18,7 @@ use super::topology::{compute_forms_topology, FormsTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms.inference")]
 pub struct FormsInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: FormsTopology,
 }
 

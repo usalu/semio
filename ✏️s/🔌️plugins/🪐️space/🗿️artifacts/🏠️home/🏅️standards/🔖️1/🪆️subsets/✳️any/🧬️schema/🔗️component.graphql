@@ -1,8 +1,8 @@
 # 🧬️ S Home artifact schema — every field with its state class.
 
 type SHomeArtifact {
-  schema: String! @state(class: PERSISTENT)
-  catalogGeneration: Long! @state(class: PERSISTENT)
-  activePanelTab: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  schema: String! @state(class: ARTIFACT)
+  catalogGeneration: Long! @state(class: ARTIFACT)
+  activePanelTab: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

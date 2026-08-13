@@ -15,6 +15,6 @@ export interface SemioValueCensus {
 }
 
 export interface SemioValueInference {
-  /** @state inferred */
+  /** @derived */
   census: SemioValueCensus;
 }

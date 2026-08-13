@@ -7,7 +7,7 @@
   "properties": {
     "topology": {
       "$ref": "#/$defs/PlaybookTopology",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

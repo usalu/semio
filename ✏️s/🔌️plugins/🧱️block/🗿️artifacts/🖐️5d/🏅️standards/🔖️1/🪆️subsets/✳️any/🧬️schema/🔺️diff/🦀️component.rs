@@ -11,22 +11,22 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.block.block5d")]
 pub struct Block5dDiff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::block5d::schema::Block5dArtifact>>,
-    #[state(persistent)] pub schema: Option<String>,
-    #[state(persistent)] pub part_kind: Option<BlockKindIdentity>,
-    #[state(persistent)] pub part_2d: Option<Block5dPart2d>,
-    #[state(persistent)] pub part_3d: Option<Block5dPart3d>,
-    #[state(persistent)] pub representations: Option<Block5dRepresentationsDelta>,
-    #[state(persistent)] pub grip_kinds: Option<Block5dGripKindsDelta>,
-    #[state(persistent)] pub grips: Option<Block5dGripsDelta>,
-    #[state(persistent)] pub compatibility: Option<Block5dCompatibilityDelta>,
-    #[state(persistent)] pub attributes: Option<Block5dAttributesDelta>,
-    #[state(persistent)] pub authors: Option<Block5dAuthorList>,
-    #[state(persistent)] pub camera2d: Option<BlockCamera2d>,
-    #[state(persistent)] pub camera3d: Option<BlockCamera3d>,
-    #[state(persistent)] pub meta: Option<BlockMeta>,
-    #[state(shared_ui)] pub selected_ids: Option<Block5dStringList>,
-    #[state(local_ui)] pub locale: Option<String>,
+    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::block5d::schema::Block5dArtifact>>,
+    #[state(artifact)] pub schema: Option<String>,
+    #[state(artifact)] pub part_kind: Option<BlockKindIdentity>,
+    #[state(artifact)] pub part_2d: Option<Block5dPart2d>,
+    #[state(artifact)] pub part_3d: Option<Block5dPart3d>,
+    #[state(artifact)] pub representations: Option<Block5dRepresentationsDelta>,
+    #[state(artifact)] pub grip_kinds: Option<Block5dGripKindsDelta>,
+    #[state(artifact)] pub grips: Option<Block5dGripsDelta>,
+    #[state(artifact)] pub compatibility: Option<Block5dCompatibilityDelta>,
+    #[state(artifact)] pub attributes: Option<Block5dAttributesDelta>,
+    #[state(artifact)] pub authors: Option<Block5dAuthorList>,
+    #[state(artifact)] pub camera2d: Option<BlockCamera2d>,
+    #[state(artifact)] pub camera3d: Option<BlockCamera3d>,
+    #[state(artifact)] pub meta: Option<BlockMeta>,
+    #[state(presence)] pub selected_ids: Option<Block5dStringList>,
+    #[state(config)] pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

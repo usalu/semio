@@ -1,49 +1,49 @@
 /** 🧬️ Block3d diff schema — sparse field delta. */
 
 export interface Block3dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Block3dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   objectKind?: BlockKindIdentity;
-  /** @state persistent */
+  /** @state artifact */
   representations?: Block3dRepresentationsDelta;
-  /** @state persistent */
+  /** @state artifact */
   vortexKinds?: Block3dVortexKindsDelta;
-  /** @state persistent */
+  /** @state artifact */
   vortices?: Block3dVorticesDelta;
-  /** @state persistent */
+  /** @state artifact */
   compatibility?: Block3dCompatibilityDelta;
-  /** @state persistent */
+  /** @state artifact */
   attributes?: Block3dAttributesDelta;
-  /** @state persistent */
+  /** @state artifact */
   authors?: Block3dAuthorList;
-  /** @state persistent */
+  /** @state artifact */
   camera3d?: BlockCamera3d;
-  /** @state persistent */
+  /** @state artifact */
   meta?: BlockMeta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds?: Block3dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   activeRepresentationId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   wantedTags?: Block3dStringList;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state local-ui */
+  /** @state config */
   windows?: Block3dWindowsList;
-  /** @state local-ui */
+  /** @state config */
   brushVortexKindId?: string | null;
-  /** @state local-ui */
+  /** @state config */
   brushRadius?: number;
-  /** @state local-ui */
+  /** @state config */
   brushFlip?: boolean;
-  /** @state preview */
+  /** @state artifact */
   brushPreview?: Block3dBrushPreview | null;
-  /** @state local-ui */
+  /** @state config */
   camera?: BlockCamera3d | null;
-  /** @state preview */
+  /** @state artifact */
   hoveredVortexFullId?: string | null;
 }
 

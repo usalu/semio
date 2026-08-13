@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn semantic_kinds_cover_every_variant() {
-        assert_eq!(MathematicalMutation::kinds().len(), 14);
+        assert_eq!(MathematicalMutation::kinds().len(), 15);
         let mutation = MathematicalMutation::ChangeGraphDirected(change_graph_directed::mutation::ChangeGraphDirected { new_directed: false });
         assert_eq!(mutation.semantics().kind, "change-graph-directed");
         assert_eq!(mutation.semantics().record, "ChangedGraphDirected");
@@ -231,6 +231,40 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::RemovePoint(remove_point::mutation::RemovePoint { index: 0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+    }
+
+    #[test]
+    fn change_coefficient_obeys_the_inverse_law() {
+        // 🔎️ Default `equation` is the integer literal `0` at label 0 — a numeric leaf, so this
+        // exercises the real replace/restore path, not the no-op branch.
+        let base = MathematicalSnapshot::default();
+        let label = base.equation.expr.label;
+        let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label, numer: "5".into(), denom: "2".into() });
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+    }
+
+    #[test]
+    fn change_coefficient_sets_the_targeted_numeric_leaf() {
+        let base = MathematicalSnapshot::default();
+        let label = base.equation.expr.label;
+        let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label, numer: "7".into(), denom: "1".into() });
+        let after = mutation.diff(&base).apply(&base);
+        assert_eq!(
+            after.equation.find(label).map(|node| node.kind.clone()),
+            Some(crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeKind::Integer { lexeme: "7".to_string() })
+        );
+    }
+
+    #[test]
+    fn change_coefficient_at_an_unknown_label_is_a_no_op() {
+        // 🔎️ Diff computed from `(payload, base)` — a stale/foreign label leaves `equation`
+        // byte-identical to `base`'s, never a panic or a silently-inserted wrong node.
+        let base = MathematicalSnapshot::default();
+        let unknown_label = crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel(999);
+        let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label: unknown_label, numer: "7".into(), denom: "1".into() });
+        let after = mutation.diff(&base).apply(&base);
+        assert_eq!(after.equation, base.equation);
+        assert_eq!(mutation.inverse(&base), Vec::new(), "no target ⇒ nothing to undo");
     }
     //#endregion ⚖️SemanticLaws
 }

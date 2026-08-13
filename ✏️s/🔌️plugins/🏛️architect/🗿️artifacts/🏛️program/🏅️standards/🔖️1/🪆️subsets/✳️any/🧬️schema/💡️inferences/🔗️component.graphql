@@ -1,7 +1,7 @@
 # 💡️ Architect program inference schema — topology (hierarchy shape of elements via parentId).
 
 type ProgramInference {
-  topology: ProgramTopology! @state(class: INFERRED)
+  topology: ProgramTopology! @derived
 }
 
 type ProgramTopology {

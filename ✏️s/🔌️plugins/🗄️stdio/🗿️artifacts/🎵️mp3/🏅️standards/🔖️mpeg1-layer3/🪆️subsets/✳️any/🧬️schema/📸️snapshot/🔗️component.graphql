@@ -4,6 +4,6 @@ type Mp3SnapshotEntry {
   value: String!
 }
 type Mp3Snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Mp3SnapshotEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Mp3SnapshotEntry!]! @state(class: ARTIFACT)
 }

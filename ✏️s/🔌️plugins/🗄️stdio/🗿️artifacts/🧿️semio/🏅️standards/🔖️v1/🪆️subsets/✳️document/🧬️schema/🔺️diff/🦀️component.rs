@@ -205,13 +205,13 @@ impl Default for DocBlockDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.document.diff")]
 pub struct SemioDocumentDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub styles: Option<StylesDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub images: Option<ImagesDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub blocks: Option<BlocksDiff>,
 }

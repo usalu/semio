@@ -1,9 +1,9 @@
 type FlowPresence {
-  selectedNodeIds: [String!]! @state(class: SHARED_UI)
-  selectedEdgeIds: [String!]! @state(class: SHARED_UI)
-  selectedHandleIds: [String!]! @state(class: SHARED_UI)
-  previewOffNodeIds: [String!]! @state(class: SHARED_UI)
-  camera: CameraJson! @state(class: SHARED_UI)
+  selectedNodeIds: [String!]! @state(class: PRESENCE)
+  selectedEdgeIds: [String!]! @state(class: PRESENCE)
+  selectedHandleIds: [String!]! @state(class: PRESENCE)
+  previewOffNodeIds: [String!]! @state(class: PRESENCE)
+  camera: CameraJson! @state(class: PRESENCE)
 }
 
 type CameraJson {

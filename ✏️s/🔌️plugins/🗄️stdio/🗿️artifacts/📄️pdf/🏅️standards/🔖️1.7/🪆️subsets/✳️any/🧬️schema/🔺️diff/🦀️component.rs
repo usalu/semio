@@ -818,19 +818,19 @@ pub fn diff_at_object_path(id: ObjRef, path: &[PdfPathSegment], is_root_stream: 
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7.diff")]
 pub struct PdfDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub declared_version: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub info: Option<PdfInfo>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pages: Option<PdfPagesDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub objects: Option<PdfObjectsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trailer: Option<PdfDictDiff>,
 }

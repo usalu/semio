@@ -1,0 +1,79 @@
+2026-08-13 16:21:05
+### semio-s-plugin-cad
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:533:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1077:9: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2975:19: warning: method `set_envelope` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:210:164: warning: unused imports: `ChildGenesis`, `GroupReceipt`, and `OwnerRef`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:465:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:474:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:478:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:480:36: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:491:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:512:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:513:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:517:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:518:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:538:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:546:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:557:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:558:18: warning: unnecessary qualification
+### semio-s-plugin-gis
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:533:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1077:9: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2975:19: warning: method `set_envelope` is never used
+🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/../../🦀️component.rs:13:5: warning: unused import: `std::sync::OnceLock`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:5:38: warning: unused import: `Level`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:17:5: warning: unused import: `crate::wgpu::IconName`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:94:52: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:9:26: warning: unused import: `Level`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:438:42: warning: unused import: `render_select_menu`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:210:164: warning: unused imports: `ChildGenesis`, `GroupReceipt`, and `OwnerRef`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:465:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:474:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:478:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:480:36: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:491:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:512:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:513:18: warning: unnecessary qualification
+### semio-s-plugin-demonstrator
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:533:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1077:9: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2975:19: warning: method `set_envelope` is never used
+🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/../../🦀️component.rs:13:5: warning: unused import: `std::sync::OnceLock`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:5:38: warning: unused import: `Level`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:17:5: warning: unused import: `crate::wgpu::IconName`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:94:52: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:9:26: warning: unused import: `Level`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:438:42: warning: unused import: `render_select_menu`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1: warning: unused extern crate: unused
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:210:164: warning: unused imports: `ChildGenesis`, `GroupReceipt`, and `OwnerRef`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:465:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:474:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:478:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:480:36: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:491:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:512:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:513:18: warning: unnecessary qualification

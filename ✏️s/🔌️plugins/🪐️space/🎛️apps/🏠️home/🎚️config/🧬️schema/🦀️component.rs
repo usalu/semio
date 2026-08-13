@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.home.config")]
 pub struct HomeConfig {
-    #[state(local_ui)] pub active_panel_tab: String,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub active_panel_tab: String,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema descriptor

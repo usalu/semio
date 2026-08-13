@@ -1,21 +1,21 @@
 /** 🧬️ Playbook artifact schema — every field with its state class. */
 
 export interface PlaybookArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   version: string;
-  /** @state persistent */
+  /** @state artifact */
   title?: string;
-  /** @state persistent */
+  /** @state artifact */
   steps: PlaybookStep[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }
 

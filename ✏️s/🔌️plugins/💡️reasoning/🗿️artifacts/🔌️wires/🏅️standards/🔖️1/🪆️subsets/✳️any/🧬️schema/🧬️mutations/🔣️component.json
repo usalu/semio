@@ -11,12 +11,12 @@
     "wiresFixture": {
       "title": "DslValue",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "boardFixture": {
       "title": "DslValue",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

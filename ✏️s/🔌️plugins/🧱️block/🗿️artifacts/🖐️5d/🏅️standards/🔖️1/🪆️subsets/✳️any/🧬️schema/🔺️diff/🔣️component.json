@@ -8,67 +8,67 @@
     "artifact": {
       "title": "Block5dArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "partKind": {
       "$ref": "#/$defs/BlockKindIdentity",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "part2d": {
       "$ref": "#/$defs/Block5dPart2d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "part3d": {
       "$ref": "#/$defs/Block5dPart3d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "representations": {
       "$ref": "#/$defs/Block5dRepresentationsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "gripKinds": {
       "$ref": "#/$defs/Block5dGripKindsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "grips": {
       "$ref": "#/$defs/Block5dGripsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "compatibility": {
       "$ref": "#/$defs/Block5dCompatibilityDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "attributes": {
       "$ref": "#/$defs/Block5dAttributesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "authors": {
       "$ref": "#/$defs/Block5dAuthorList",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera2d": {
       "$ref": "#/$defs/BlockCamera2d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera3d": {
       "$ref": "#/$defs/BlockCamera3d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/BlockMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "$ref": "#/$defs/Block5dStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

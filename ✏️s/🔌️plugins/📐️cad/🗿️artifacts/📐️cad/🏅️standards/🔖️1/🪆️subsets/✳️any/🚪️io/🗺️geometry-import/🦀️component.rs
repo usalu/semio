@@ -12,8 +12,9 @@
 //! rule for `EngineRep`-class types — the same class of transient bridge this module's sibling
 //! (`step_text` ↔ `SemioBrepSnapshot`, in `🚪️io/🦀️component.rs`) already uses for STEP.
 
-use semio_framework_3d::brep::kernel::mesh_data_from_mesh_transfer;
-use semio_framework_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, Vec3};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
+use semio_framework_3d::brep::engine::Vec3;
 use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use serde_json::Value;
@@ -681,7 +682,7 @@ pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<Cad
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_3d::brep::kernel::Brep;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
 
     fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
         let i0 = mesh.indices[triangle_index * 3] as usize;

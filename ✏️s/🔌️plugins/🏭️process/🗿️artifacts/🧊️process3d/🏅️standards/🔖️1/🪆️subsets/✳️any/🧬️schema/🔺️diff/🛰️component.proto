@@ -4,55 +4,55 @@ package semio.s.process.process3d.diff;
 // 🧬️ Process3d diff schema — sparse field delta over the artifact.
 
 message Process3dDiff {
-  // @state persistent
+  // @state artifact
   optional Process3dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional Process3dWorkshop workshop = 2;
-  // @state persistent
+  // @state artifact
   optional Process3dStock stock = 3;
-  // @state persistent
+  // @state artifact
   optional Process3dStepsDelta steps = 4;
-  // @state persistent
+  // @state artifact
   optional uint32 resolved_up_to = 5;
-  // @state shared-ui
+  // @state presence
   optional string selected_id = 6;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_face_id = 7;
-  // @state shared-ui
+  // @state presence
   optional string active_utility_id = 8;
-  // @state local-ui
+  // @state config
   optional string selection_method = 9;
-  // @state local-ui
+  // @state config
   optional string engagement_input = 10;
-  // @state local-ui
+  // @state config
   optional double camera_position_x = 11;
-  // @state local-ui
+  // @state config
   optional double camera_position_y = 12;
-  // @state local-ui
+  // @state config
   optional double camera_position_z = 13;
-  // @state local-ui
+  // @state config
   optional double camera_target_x = 14;
-  // @state local-ui
+  // @state config
   optional double camera_target_y = 15;
-  // @state local-ui
+  // @state config
   optional double camera_target_z = 16;
-  // @state local-ui
+  // @state config
   optional double camera_fov = 17;
-  // @state local-ui
+  // @state config
   optional bool sun_enabled = 18;
-  // @state local-ui
+  // @state config
   optional double sun_azimuth = 19;
-  // @state local-ui
+  // @state config
   optional double sun_elevation = 20;
-  // @state local-ui
+  // @state config
   optional double sun_intensity = 21;
-  // @state local-ui
+  // @state config
   optional string sun_color = 22;
-  // @state local-ui
+  // @state config
   optional string locale = 23;
-  // @state local-ui
+  // @state config
   optional string contributions_json = 24;
-  // @state preview
+  // @state artifact
   optional string hovered_id = 25;
 }
 

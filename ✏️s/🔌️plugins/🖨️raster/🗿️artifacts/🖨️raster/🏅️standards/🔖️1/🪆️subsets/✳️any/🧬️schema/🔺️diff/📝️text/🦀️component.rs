@@ -180,7 +180,7 @@ impl RasterDiff {
             for (key, value) in &assets.entries {
                 match value {
                     Some(asset) => {
-                        next.assets.insert(key.clone(), asset.clone());
+                        next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
                     }
                     None => {
                         next.assets.remove(key);
@@ -267,7 +267,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
             for (key, value) in &assets.entries {
                 match value {
                     Some(asset) => {
-                        next.assets.insert(key.clone(), asset.clone());
+                        next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
                     }
                     None => {
                         next.assets.remove(key);

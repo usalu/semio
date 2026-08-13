@@ -4,7 +4,7 @@ package semio.s.puzzle.puzzle3d.inference;
 // 💡️ Puzzle3d inference schema — flatPosition (plane + center) per object.
 
 message Puzzle3dInference {
-  // @state inferred
+  // @derived
   map<string, FlattenPose> flat_positions = 1;
 }
 

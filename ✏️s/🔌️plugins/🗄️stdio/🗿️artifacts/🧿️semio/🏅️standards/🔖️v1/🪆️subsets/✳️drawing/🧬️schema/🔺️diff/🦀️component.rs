@@ -29,13 +29,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.drawing.diff")]
 pub struct SemioDrawingDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub canvas: Option<DrawCanvasDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub styles: Option<NamedTripleDiff<String, DrawStyleDiff, DrawStyle>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub layers: Option<IndexedTripleDiff<DrawLayerDiff, DrawLayer>>,
 }

@@ -4,10 +4,10 @@
   "description": "Full artifact state, mirrors SemioMeshSnapshot field for field.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "meshes": { "type": "array", "x-semio-state": "persistent" },
-    "materials": { "type": "array", "x-semio-state": "persistent" },
-    "textures": { "type": "array", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "meshes": { "type": "array", "x-semio-state": "artifact" },
+    "materials": { "type": "array", "x-semio-state": "artifact" },
+    "textures": { "type": "array", "x-semio-state": "artifact" }
   },
   "required": ["schema", "meshes", "materials", "textures"]
 }

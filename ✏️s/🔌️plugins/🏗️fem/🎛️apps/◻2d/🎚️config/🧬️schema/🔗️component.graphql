@@ -5,9 +5,9 @@ type FemCamera {
 }
 
 type Fem2dConfig {
-  resultSourceId: String @state(class: LOCAL_UI)
-  resultMode: String! @state(class: LOCAL_UI)
-  resultModeIndex: Int! @state(class: LOCAL_UI)
-  camera: FemCamera! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  resultSourceId: String @state(class: CONFIG)
+  resultMode: String! @state(class: CONFIG)
+  resultModeIndex: Int! @state(class: CONFIG)
+  camera: FemCamera! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

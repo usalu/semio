@@ -1,11 +1,11 @@
 /** 🧬️ ImperativeConfig */
 export interface ImperativeConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedStepIds: string[];
-  /** @state local-ui */
+  /** @state config */
   runOutputJson: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }

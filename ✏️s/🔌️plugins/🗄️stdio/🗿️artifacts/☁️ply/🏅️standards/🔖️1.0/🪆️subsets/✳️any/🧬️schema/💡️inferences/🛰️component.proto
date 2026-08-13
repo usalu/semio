@@ -4,7 +4,7 @@ package semio.s.stdio.ply.inference;
 // 💡️ Ply inference schema — vertex-element bounding box plus vertex/face counts.
 
 message PlyInference {
-  // @state inferred
+  // @derived
   PlyBounds bounds = 1;
 }
 

@@ -1,12 +1,12 @@
 type LayoutConfig {
-  activePageId: String! @state(class: LOCAL_UI)
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  hoveredId: String @state(class: LOCAL_UI)
-  dropPreview: LayoutDropPreviewState! @state(class: LOCAL_UI)
-  engagementInput: String! @state(class: LOCAL_UI)
-  camera: LayoutCamera! @state(class: LOCAL_UI)
-  previewCamera: LayoutCamera! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  activePageId: String! @state(class: CONFIG)
+  selectedIds: [String!]! @state(class: CONFIG)
+  hoveredId: String @state(class: CONFIG)
+  dropPreview: LayoutDropPreviewState! @state(class: CONFIG)
+  engagementInput: String! @state(class: CONFIG)
+  camera: LayoutCamera! @state(class: CONFIG)
+  previewCamera: LayoutCamera! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 type LayoutDropPreviewState {
   kind: String!

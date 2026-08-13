@@ -255,10 +255,10 @@ fn base_len_hint(
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv.diff")]
 pub struct CsvDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub has_header: Option<bool>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub records: Option<CsvRecordsDiff>,
 }

@@ -1,10 +1,10 @@
 type Procedural2dConfig {
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  camera: CameraJson! @state(class: LOCAL_UI)
-  showMode: String! @state(class: LOCAL_UI)
-  selectedGenerationId: String @state(class: LOCAL_UI)
-  generationPreviewText: String @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedIds: [String!]! @state(class: CONFIG)
+  camera: CameraJson! @state(class: CONFIG)
+  showMode: String! @state(class: CONFIG)
+  selectedGenerationId: String @state(class: CONFIG)
+  generationPreviewText: String @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 type CameraJson {
   x: Float!

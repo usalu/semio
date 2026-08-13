@@ -4,33 +4,33 @@ package semio.s.draw.draw.artifact;
 // 🧬️ Draw artifact schema — every field with its state class.
 
 message DrawArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string id = 2;
-  // @state persistent
+  // @state artifact
   optional string title = 3;
-  // @state persistent
+  // @state artifact
   repeated DrawLayerNode layers = 4;
-  // @state persistent
+  // @state artifact
   map<string, DrawImageAsset> assets = 5;
-  // @state persistent
+  // @state artifact
   optional DrawArtboard artboard = 6;
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 7;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 8;
-  // @state local-ui
+  // @state config
   string engagement_input = 9;
-  // @state local-ui
+  // @state config
   double camera_x = 10;
-  // @state local-ui
+  // @state config
   double camera_y = 11;
-  // @state local-ui
+  // @state config
   double camera_zoom = 12;
-  // @state local-ui
+  // @state config
   string locale = 13;
-  // @state preview
+  // @state artifact
   optional string hovered_id = 14;
 }
 

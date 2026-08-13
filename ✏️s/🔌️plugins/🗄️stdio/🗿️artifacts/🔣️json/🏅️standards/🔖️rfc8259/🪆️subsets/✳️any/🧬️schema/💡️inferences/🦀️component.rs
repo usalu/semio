@@ -19,7 +19,7 @@ use super::outline::JsonOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.json.inference")]
 pub struct JsonInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: JsonOutline,
 }
 

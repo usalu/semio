@@ -1,8 +1,8 @@
 # AviArtifact — full artifact state, mirrors AviSnapshot field for field.
 type AviArtifact {
-  schema: String! @state(class: PERSISTENT)
-  mainHeader: AviMainHeader! @state(class: PERSISTENT)
-  streams: [AviStream!]! @state(class: PERSISTENT)
-  idx1Present: Boolean! @state(class: PERSISTENT)
-  unknownChunks: [RiffChunk!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  mainHeader: AviMainHeader! @state(class: ARTIFACT)
+  streams: [AviStream!]! @state(class: ARTIFACT)
+  idx1Present: Boolean! @state(class: ARTIFACT)
+  unknownChunks: [RiffChunk!]! @state(class: ARTIFACT)
 }

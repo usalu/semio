@@ -13,6 +13,6 @@ export interface RewriteBounds {
 }
 
 export interface RewriteInference {
-  /** @state inferred */
+  /** @derived */
   bounds: RewriteBounds;
 }

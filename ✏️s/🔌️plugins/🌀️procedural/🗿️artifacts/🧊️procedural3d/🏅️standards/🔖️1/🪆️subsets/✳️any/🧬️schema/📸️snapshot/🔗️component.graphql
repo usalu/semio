@@ -1,8 +1,8 @@
 # 🧬️ Procedural3d snapshot schema — persistent fields only.
 
 type Procedural3dSnapshot {
-  fixture: FlowFixture! @state(class: PERSISTENT)
-  generation: GenerationPlayState! @state(class: PERSISTENT)
+  fixture: FlowFixture! @state(class: ARTIFACT)
+  generation: GenerationPlayState! @state(class: ARTIFACT)
 }
 
 type CameraJson {

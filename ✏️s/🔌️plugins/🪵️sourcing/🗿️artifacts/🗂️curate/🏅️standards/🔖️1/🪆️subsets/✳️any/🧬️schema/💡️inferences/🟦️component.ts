@@ -7,6 +7,6 @@ export interface CurateEntries {
 }
 
 export interface CurateInference {
-  /** @state inferred */
+  /** @derived */
   entries: CurateEntries;
 }

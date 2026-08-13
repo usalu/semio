@@ -7,11 +7,11 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence.config")]
 pub struct SequenceConfig {
-    #[state(local_ui)] pub selected_step_ids: Vec<String>,
-    #[state(local_ui)] pub last_run_json: String,
-    #[state(local_ui)] pub orientation: String,
-    #[state(local_ui)] pub camera: SequenceCamera,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_step_ids: Vec<String>,
+    #[state(config)] pub last_run_json: String,
+    #[state(config)] pub orientation: String,
+    #[state(config)] pub camera: SequenceCamera,
+    #[state(config)] pub locale: String,
 }
 
 //region 📎 App-schema self-registration

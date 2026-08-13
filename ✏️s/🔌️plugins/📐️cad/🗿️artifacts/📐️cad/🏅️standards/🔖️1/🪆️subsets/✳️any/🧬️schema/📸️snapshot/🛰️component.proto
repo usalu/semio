@@ -4,31 +4,31 @@ package semio.s.cad.cad.snapshot;
 // 🧬️ CadSnapshot schema.
 
 message CadSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string id = 2;
-  // @state persistent
+  // @state artifact
   repeated CadObject objects = 3;
-  // @state persistent
+  // @state artifact
   repeated CadObject building_objects = 4;
-  // @state persistent
+  // @state artifact
   repeated CadObject energy_objects = 5;
-  // @state persistent
+  // @state artifact
   repeated CadObject structure_classic_objects = 6;
-  // @state persistent
+  // @state artifact
   map<string, CadReferenceList> references_by_model_definition_id = 7;
-  // @state persistent
+  // @state artifact
   repeated CadNode nodes = 8;
-  // @state persistent
+  // @state artifact
   optional CadGeometry shape_geometry = 9;
-  // @state persistent
+  // @state artifact
   optional CadGeometry building_geometry = 10;
-  // @state persistent
+  // @state artifact
   optional CadGeometry energy_geometry = 11;
-  // @state persistent
+  // @state artifact
   optional CadGeometry structure_classic_geometry = 12;
-  // @state persistent
+  // @state artifact
   string active_model_definition_id = 13;
 }
 

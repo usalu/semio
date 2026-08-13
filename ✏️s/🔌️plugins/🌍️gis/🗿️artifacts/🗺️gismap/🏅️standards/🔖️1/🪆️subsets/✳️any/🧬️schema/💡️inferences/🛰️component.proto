@@ -4,13 +4,13 @@ package semio.s.gis.gismap.inference;
 // 💡️ GIS map inference schema — per-collection feature counts + geographic bounding box.
 
 message GisMapInference {
-  // @state inferred
+  // @derived
   uint64 position_count = 1;
-  // @state inferred
+  // @derived
   uint64 route_count = 2;
-  // @state inferred
+  // @derived
   uint64 region_count = 3;
-  // @state inferred
+  // @derived
   GisMapBounds bounds = 4;
 }
 

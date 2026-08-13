@@ -1,35 +1,35 @@
 /** 🧬️ Process3dConfig */
 export interface Process3dConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedId?: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredId?: string;
-  /** @state local-ui */
+  /** @state config */
   selectedFaceId?: number;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   cameraPosition: number[];
-  /** @state local-ui */
+  /** @state config */
   cameraTarget: number[];
-  /** @state local-ui */
+  /** @state config */
   cameraFov: number;
-  /** @state local-ui */
+  /** @state config */
   sunEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   sunAzimuth: number;
-  /** @state local-ui */
+  /** @state config */
   sunElevation: number;
-  /** @state local-ui */
+  /** @state config */
   sunIntensity: number;
-  /** @state local-ui */
+  /** @state config */
   sunColor: string;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }

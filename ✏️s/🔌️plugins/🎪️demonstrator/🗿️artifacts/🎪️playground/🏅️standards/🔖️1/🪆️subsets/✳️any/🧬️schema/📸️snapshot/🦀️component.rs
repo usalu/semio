@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(extension = "playground")]
 #[dsl(layout = "lines")]
 pub struct PlaygroundSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
 }
 

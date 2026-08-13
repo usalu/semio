@@ -62,6 +62,6 @@ type ZipEntriesDiff {
 }
 
 type ZipDiff {
-  comment: String @state(class: PERSISTENT)
-  entries: ZipEntriesDiff @state(class: PERSISTENT)
+  comment: String @state(class: ARTIFACT)
+  entries: ZipEntriesDiff @state(class: ARTIFACT)
 }

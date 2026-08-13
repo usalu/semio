@@ -21,7 +21,7 @@ use super::topology::{compute_draw_topology, DrawTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.draw.draw.inference")]
 pub struct DrawInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: DrawTopology,
 }
 

@@ -9,15 +9,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp3")]
 pub struct Mp3Artifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub id3v2: Option<Id3v2Tag>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub frames: Vec<Mp3Frame>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub id3v1: Option<Id3v1Tag>,
 }

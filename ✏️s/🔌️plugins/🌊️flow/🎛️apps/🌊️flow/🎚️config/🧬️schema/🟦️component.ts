@@ -1,34 +1,34 @@
 /** 🧬️ FlowConfig */
 export interface FlowConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   selectedEdgeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   selectedHandleIds: string[];
-  /** @state local-ui */
+  /** @state config */
   previewOffNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   camera: CameraJson;
-  /** @state local-ui */
+  /** @state config */
   lodMode: string;
-  /** @state local-ui */
+  /** @state config */
   proximityDistance: number;
-  /** @state local-ui */
+  /** @state config */
   gridVisible: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridFactor: number;
-  /** @state local-ui */
+  /** @state config */
   catalogueSectionsJson: string;
-  /** @state local-ui */
+  /** @state config */
   automationEnabledJson: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
-  /** @state local-ui */
+  /** @state config */
   generationJson: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

@@ -12,31 +12,31 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dSnapshot {
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub nodes: Vec<FemNode>,
     #[dsl(statements, block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub elements: Vec<FemElement>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub regions: Vec<FemRegion>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub materials: Vec<FemMaterial>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub sections: Vec<FemSection>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub supports: Vec<FemSupport>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub load_cases: Vec<FemLoadCase>,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub combinations: Vec<FemCombination>,
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub analysis: FemAnalysisSettings,
 }
 //#region 🔖️HandcraftedArtifactCodecs

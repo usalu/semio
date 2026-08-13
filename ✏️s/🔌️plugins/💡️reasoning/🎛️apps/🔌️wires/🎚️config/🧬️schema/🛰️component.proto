@@ -1,14 +1,14 @@
 syntax = "proto3";
 package semio.app.reasoning.wires;
 message WiresConfig {
-  // @state local-ui
+  // @state config
   repeated string selected_ids = 1;
-  // @state local-ui
+  // @state config
   optional string drag_node_id = 2;
-  // @state local-ui
+  // @state config
   double drag_last_x = 3;
-  // @state local-ui
+  // @state config
   double drag_last_y = 4;
-  // @state local-ui
+  // @state config
   string locale = 5;
 }

@@ -16,29 +16,29 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "brushSize": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "brushOpacity": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "camera": {
       "$ref": "#/$defs/RasterCamera",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   },
   "$defs": {

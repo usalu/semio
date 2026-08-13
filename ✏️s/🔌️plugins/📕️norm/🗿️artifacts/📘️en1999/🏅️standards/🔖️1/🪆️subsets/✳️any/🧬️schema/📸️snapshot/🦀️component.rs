@@ -11,57 +11,57 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.en1999", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1999")]
 pub struct En1999Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_ed_knm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_mm2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub w_el_mm3: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub alloy: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub chi: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub i_t_mm4: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub l_cr_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub theta_c: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub delta_sigma_ed: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub delta_sigma_c: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fatigue_m: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_cycles: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_weld_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub weld_throat_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub weld_length_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub beta_w: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sheet_b_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sheet_t_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sheet_k_sigma: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sheet_w_el_mm3: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sheet_m_ed_knm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub shell_t_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub shell_r_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub sigma_ed_shell_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: crate::document::AnnexChoice,
 }
 //#endregion 🔖️Snapshot

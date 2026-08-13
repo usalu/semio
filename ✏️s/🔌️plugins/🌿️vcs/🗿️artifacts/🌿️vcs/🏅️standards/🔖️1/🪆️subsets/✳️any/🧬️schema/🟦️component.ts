@@ -1,20 +1,20 @@
 /** 🧬️ VCS artifact schema — every field with its state class. */
 
 export interface VcsArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   title: string;
-  /** @state persistent */
+  /** @state artifact */
   counter: number;
-  /** @state persistent */
+  /** @state artifact */
   notes: string;
-  /** @state persistent */
+  /** @state artifact */
   status: string;
-  /** @state persistent */
+  /** @state artifact */
   tags: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckpointIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

@@ -360,13 +360,13 @@ fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>)
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff.diff")]
 pub struct TiffDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub byte_order: Option<TiffByteOrder>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ifds: Option<TiffIfdsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pixels: Option<Vec<u8>>,
 }

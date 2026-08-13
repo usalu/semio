@@ -6,11 +6,11 @@ export {
 import { BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex } from "./📸️snapshot/🟦️component.ts";
 
 export interface SemioBrepArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ vertices: BrepVertex[];
-  /** @state persistent */ edges: BrepEdge[];
-  /** @state persistent */ loops: BrepLoop[];
-  /** @state persistent */ faces: BrepFace[];
-  /** @state persistent */ shells: BrepShell[];
-  /** @state persistent */ solids: BrepSolid[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ vertices: BrepVertex[];
+  /** @state artifact */ edges: BrepEdge[];
+  /** @state artifact */ loops: BrepLoop[];
+  /** @state artifact */ faces: BrepFace[];
+  /** @state artifact */ shells: BrepShell[];
+  /** @state artifact */ solids: BrepSolid[];
 }

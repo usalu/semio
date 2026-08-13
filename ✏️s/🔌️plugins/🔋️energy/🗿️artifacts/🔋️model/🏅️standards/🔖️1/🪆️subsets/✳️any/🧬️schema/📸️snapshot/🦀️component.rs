@@ -12,9 +12,9 @@ use serde::{Deserialize, Serialize};
 #[dsl(extension = "energy")]
 #[dsl(layout = "lines")]
 pub struct EnergyModelSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub model_json: String,
 }

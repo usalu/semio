@@ -42,9 +42,9 @@
   },
   "required": ["schema", "byteOrder", "ifds", "pixels"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "byteOrder": { "$ref": "#/$defs/TiffByteOrder", "x-semio-state": "persistent" },
-    "ifds": { "type": "array", "items": { "$ref": "#/$defs/TiffIfd" }, "x-semio-state": "persistent" },
-    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "byteOrder": { "$ref": "#/$defs/TiffByteOrder", "x-semio-state": "artifact" },
+    "ifds": { "type": "array", "items": { "$ref": "#/$defs/TiffIfd" }, "x-semio-state": "artifact" },
+    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "artifact" }
   }
 }

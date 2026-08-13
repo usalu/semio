@@ -4,7 +4,7 @@ package semio.s.stdio.json.inference;
 // 💡️ Json inference schema — document outline (node count, max depth, root kind).
 
 message JsonInference {
-  // @state inferred
+  // @derived
   JsonOutline outline = 1;
 }
 

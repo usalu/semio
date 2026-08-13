@@ -18,7 +18,7 @@ use super::outline::DocxOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.docx.inference")]
 pub struct DocxInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: DocxOutline,
 }
 

@@ -1,9 +1,9 @@
 /** 📸️ Mathematical snapshot schema — persistent fields only. */
 
 export interface MathematicalSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   graph: MathematicalGraph;
-  /** @state persistent */
+  /** @state artifact */
   geometry: MathematicalGeometry;
 }
 

@@ -26,88 +26,88 @@
       "items": {
         "$ref": "#/$defs/FemNode"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "elements": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemElement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "materials": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemMaterial"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sections": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemSection"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "solids": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemSolid"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "supports": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemSupport"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "loadCases": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemLoadCase"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "combinations": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemCombination"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "analysis": {
       "$ref": "#/$defs/FemAnalysisSettings",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resultSourceId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "resultMode": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "resultModeIndex": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "camera": {
       "$ref": "#/$defs/FemCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "solverResultsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "meshPreviewJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

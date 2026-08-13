@@ -4,10 +4,10 @@
   "description": "Full artifact state, mirrors AviSnapshot field for field.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "mainHeader": { "type": "object", "x-semio-state": "persistent" },
-    "streams": { "type": "array", "x-semio-state": "persistent" },
-    "idx1Present": { "type": "boolean", "x-semio-state": "persistent" },
-    "unknownChunks": { "type": "array", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "mainHeader": { "type": "object", "x-semio-state": "artifact" },
+    "streams": { "type": "array", "x-semio-state": "artifact" },
+    "idx1Present": { "type": "boolean", "x-semio-state": "artifact" },
+    "unknownChunks": { "type": "array", "x-semio-state": "artifact" }
   }
 }

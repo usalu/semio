@@ -9,75 +9,75 @@ export type Puzzle5dCompatSpecificity = "general" | "part" | "fastener" | "grip"
 /** 🧬️ Puzzle5d diff schema — sparse field delta. */
 
 export interface Puzzle5dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Puzzle5dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   domain?: string;
-  /** @state persistent */
+  /** @state artifact */
   label?: string | null;
-  /** @state persistent */
+  /** @state artifact */
   meta?: Puzzle5dMeta;
-  /** @state persistent */
+  /** @state artifact */
   kindCatalogs?: Puzzle5dKindCatalogs | null;
-  /** @state persistent */
+  /** @state artifact */
   kindCompatibility?: Puzzle5dKindCompatibilityList;
-  /** @state persistent */
+  /** @state artifact */
   parts?: Puzzle5dPartsDelta;
-  /** @state persistent */
+  /** @state artifact */
   fasteners?: Puzzle5dFastenersDelta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedPartIds?: Puzzle5dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedGripIds?: Puzzle5dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedFastenerIds?: Puzzle5dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId?: string;
-  /** @state local-ui */
+  /** @state config */
   camera2dX?: number;
-  /** @state local-ui */
+  /** @state config */
   camera2dY?: number;
-  /** @state local-ui */
+  /** @state config */
   camera2dZoom?: number;
-  /** @state local-ui */
+  /** @state config */
   camera3dPositionX?: number;
-  /** @state local-ui */
+  /** @state config */
   camera3dPositionY?: number;
-  /** @state local-ui */
+  /** @state config */
   camera3dPositionZ?: number;
-  /** @state local-ui */
+  /** @state config */
   camera3dTargetX?: number;
-  /** @state local-ui */
+  /** @state config */
   camera3dTargetY?: number;
-  /** @state local-ui */
+  /** @state config */
   camera3dTargetZ?: number;
-  /** @state local-ui */
+  /** @state config */
   camera3dZoom?: number;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod?: string;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled?: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridFactor?: number;
-  /** @state local-ui */
+  /** @state config */
   suggestionOffset?: number;
-  /** @state local-ui */
+  /** @state config */
   overlapBudget?: number;
-  /** @state local-ui */
+  /** @state config */
   fillCount?: number;
-  /** @state local-ui */
+  /** @state config */
   brushCandidateIndex?: number;
-  /** @state local-ui */
+  /** @state config */
   lodMode?: string;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state local-ui */
+  /** @state config */
   runtimeExtrasJson?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredPartId?: string | null;
-  /** @state preview */
+  /** @state artifact */
   previewSeq?: number;
 }
 

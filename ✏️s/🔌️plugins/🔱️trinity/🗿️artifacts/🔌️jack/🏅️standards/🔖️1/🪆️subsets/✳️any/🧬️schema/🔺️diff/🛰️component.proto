@@ -4,49 +4,49 @@ package semio.s.trinity.jack.diff;
 // 🧬️ Jack diff schema — sparse field delta.
 
 message JackDiff {
-  // @state persistent
+  // @state artifact
   optional JackArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional string name = 3;
-  // @state persistent
+  // @state artifact
   optional string manifest_id = 4;
-  // @state persistent
+  // @state artifact
   optional Manifest manifest = 5;
-  // @state persistent
+  // @state artifact
   optional Camera camera = 6;
-  // @state persistent
+  // @state artifact
   optional JackNodesDelta nodes = 7;
-  // @state persistent
+  // @state artifact
   optional JackEdgesDelta edges = 8;
-  // @state persistent
+  // @state artifact
   optional string root_node_id = 9;
-  // @state shared-ui
+  // @state presence
   optional JackStringList selected_node_ids = 10;
-  // @state shared-ui
+  // @state presence
   optional string active_fixture_id = 11;
-  // @state shared-ui
+  // @state presence
   optional string jack_query = 12;
-  // @state shared-ui
+  // @state presence
   optional map<string, string> lod_mode_by_window = 13;
-  // @state local-ui
+  // @state config
   optional Camera viewport_camera = 14;
-  // @state local-ui
+  // @state config
   optional string jack_result_json = 15;
-  // @state local-ui
+  // @state config
   optional string editor_engagement_input = 16;
-  // @state local-ui
+  // @state config
   optional string graph_engagement_input = 17;
-  // @state local-ui
+  // @state config
   optional string results_engagement_input = 18;
-  // @state local-ui
+  // @state config
   optional int64 reorganize_epoch = 19;
-  // @state local-ui
+  // @state config
   optional JackEditorSelection editor_selection = 20;
-  // @state local-ui
+  // @state config
   optional int64 revision = 21;
-  // @state local-ui
+  // @state config
   optional string locale = 22;
 }
 

@@ -1,5 +1,5 @@
 /** 🧬️ PresentPresence */
 export interface PresentPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
 }

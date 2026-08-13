@@ -69,16 +69,16 @@ message CuratedItem {
 }
 
 message CurateArtifact {
-  // @state persistent
+  // @state artifact
   repeated ObjectKind stock = 1;
-  // @state persistent
+  // @state artifact
   repeated CuratedItem curated = 2;
-  // @state local-ui
+  // @state config
   Filters filters = 3;
-  // @state shared-ui
+  // @state presence
   optional string selected_object_id = 4;
-  // @state local-ui
+  // @state config
   string locale = 5;
-  // @state local-ui
+  // @state config
   string contributions_json = 6;
 }

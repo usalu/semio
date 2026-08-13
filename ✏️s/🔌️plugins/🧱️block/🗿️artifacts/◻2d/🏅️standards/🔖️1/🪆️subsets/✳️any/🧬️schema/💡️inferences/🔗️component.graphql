@@ -1,7 +1,7 @@
 # 💡️ Block2d inference schema — bounds (bounding box + vertex count) over the node kind's rim handle templates.
 
 type Block2dInference {
-  bounds: Block2dBounds! @state(class: INFERRED)
+  bounds: Block2dBounds! @derived
 }
 
 type Block2dBounds {

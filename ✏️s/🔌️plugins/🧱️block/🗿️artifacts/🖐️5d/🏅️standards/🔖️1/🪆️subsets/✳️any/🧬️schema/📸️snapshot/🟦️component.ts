@@ -1,31 +1,31 @@
 /** 🧬️ Block5d snapshot schema — persistent fields only. */
 
 export interface Block5dSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   partKind: BlockKindIdentity;
-  /** @state persistent */
+  /** @state artifact */
   part2d: Block5dPart2d;
-  /** @state persistent */
+  /** @state artifact */
   part3d: Block5dPart3d;
-  /** @state persistent */
+  /** @state artifact */
   representations: BlockRepresentation[];
-  /** @state persistent */
+  /** @state artifact */
   gripKinds: Block5dGripKind[];
-  /** @state persistent */
+  /** @state artifact */
   grips: Block5dGripTemplate[];
-  /** @state persistent */
+  /** @state artifact */
   compatibility: BlockCompatibilityRule[];
-  /** @state persistent */
+  /** @state artifact */
   attributes: BlockAttribute[];
-  /** @state persistent */
+  /** @state artifact */
   authors: BlockAuthor[];
-  /** @state persistent */
+  /** @state artifact */
   camera2d: BlockCamera2d;
-  /** @state persistent */
+  /** @state artifact */
   camera3d: BlockCamera3d;
-  /** @state persistent */
+  /** @state artifact */
   meta: BlockMeta;
 }
 

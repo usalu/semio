@@ -25,7 +25,7 @@ pub use super::entries::CurateEntries;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curate.inference")]
 pub struct CurateInference {
-    #[state(inferred)]
+    #[derived]
     pub entries: CurateEntries,
 }
 

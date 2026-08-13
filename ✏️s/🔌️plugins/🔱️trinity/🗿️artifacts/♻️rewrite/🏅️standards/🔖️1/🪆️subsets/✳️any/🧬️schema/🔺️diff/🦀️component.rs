@@ -12,20 +12,20 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.trinity.rewrite")]
 pub struct RewriteDiff {
-    #[state(persistent)] pub before_fixture_json: Option<String>,
-    #[state(persistent)] pub lhs_json: Option<String>,
-    #[state(persistent)] pub rhs_json: Option<String>,
-    #[state(persistent)] pub parameter_bindings: Option<BTreeMap<String, Option<PropertyValue>>>,
-    #[state(persistent)] pub rule_layout: Option<BTreeMap<String, Option<LayoutPoint>>>,
-    #[state(shared_ui)] pub selected_node_ids: Option<RewriteStringList>,
-    #[state(shared_ui)] pub active_hover_var: Option<String>,
-    #[state(shared_ui)] pub active_select_var: Option<String>,
-    #[state(shared_ui)] pub lod_mode_by_window: Option<BTreeMap<String, Option<String>>>,
-    #[state(local_ui)] pub before_pane_camera: Option<Camera>,
-    #[state(local_ui)] pub reorganize_epoch: Option<u64>,
-    #[state(local_ui)] pub hover_epoch: Option<u64>,
-    #[state(local_ui)] pub select_epoch: Option<u64>,
-    #[state(local_ui)] pub locale: Option<String>,
+    #[state(artifact)] pub before_fixture_json: Option<String>,
+    #[state(artifact)] pub lhs_json: Option<String>,
+    #[state(artifact)] pub rhs_json: Option<String>,
+    #[state(artifact)] pub parameter_bindings: Option<BTreeMap<String, Option<PropertyValue>>>,
+    #[state(artifact)] pub rule_layout: Option<BTreeMap<String, Option<LayoutPoint>>>,
+    #[state(presence)] pub selected_node_ids: Option<RewriteStringList>,
+    #[state(presence)] pub active_hover_var: Option<String>,
+    #[state(presence)] pub active_select_var: Option<String>,
+    #[state(presence)] pub lod_mode_by_window: Option<BTreeMap<String, Option<String>>>,
+    #[state(config)] pub before_pane_camera: Option<Camera>,
+    #[state(config)] pub reorganize_epoch: Option<u64>,
+    #[state(config)] pub hover_epoch: Option<u64>,
+    #[state(config)] pub select_epoch: Option<u64>,
+    #[state(config)] pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

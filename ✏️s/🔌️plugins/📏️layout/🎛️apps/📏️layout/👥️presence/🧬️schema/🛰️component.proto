@@ -1,17 +1,17 @@
 syntax = "proto3";
 package semio.app.layout.layout;
 message LayoutPresence {
-  // @state shared-ui
+  // @state presence
   string active_page_id = 1;
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 2;
-  // @state shared-ui
+  // @state presence
   optional string hovered_id = 3;
-  // @state shared-ui
+  // @state presence
   LayoutDropPreviewState drop_preview = 4;
-  // @state shared-ui
+  // @state presence
   LayoutCamera camera = 5;
-  // @state shared-ui
+  // @state presence
   LayoutCamera preview_camera = 6;
 }
 message LayoutDropPreviewState {

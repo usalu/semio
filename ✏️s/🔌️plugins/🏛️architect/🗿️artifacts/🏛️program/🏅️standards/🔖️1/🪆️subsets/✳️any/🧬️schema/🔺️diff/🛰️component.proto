@@ -3,169 +3,169 @@ package semio.s.architect.program.diff;
 
 // 🧬️ Program diff schema
 message ProgramDiff {
-  // @state persistent
+  // @state artifact
   optional ProgramArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional ProgramMeta meta = 3;
-  // @state persistent
+  // @state artifact
   optional ProjectDefinition project = 4;
-  // @state persistent
+  // @state artifact
   optional ProgramStakeholdersDelta stakeholders = 5;
-  // @state persistent
+  // @state artifact
   optional ProgramUsersDelta users = 6;
-  // @state persistent
+  // @state artifact
   optional ProgramActivitiesDelta activities = 7;
-  // @state persistent
+  // @state artifact
   optional ProgramFunctionsDelta functions = 8;
-  // @state persistent
+  // @state artifact
   optional ProgramElementsDelta elements = 9;
-  // @state persistent
+  // @state artifact
   optional ProgramQuantitiesDelta quantities = 10;
-  // @state persistent
+  // @state artifact
   optional ProgramRelationshipsDelta relationships = 11;
-  // @state persistent
+  // @state artifact
   optional ProgramAdjacenciesDelta adjacencies = 12;
-  // @state persistent
+  // @state artifact
   optional ProgramProcessesDelta processes = 13;
-  // @state persistent
+  // @state artifact
   optional ProgramFlowsDelta flows = 14;
-  // @state persistent
+  // @state artifact
   optional ProgramAccessRulesDelta access_rules = 15;
-  // @state persistent
+  // @state artifact
   optional ProgramOperationsDelta operations = 16;
-  // @state persistent
+  // @state artifact
   optional ProgramEquipmentDelta equipment = 17;
-  // @state persistent
+  // @state artifact
   optional ProgramResourcesDelta resources = 18;
-  // @state persistent
+  // @state artifact
   optional ProgramStorageDelta storage = 19;
-  // @state persistent
+  // @state artifact
   optional ProgramEnvironmentalDelta environmental = 20;
-  // @state persistent
+  // @state artifact
   optional ProgramHumanFactorsDelta human_factors = 21;
-  // @state persistent
+  // @state artifact
   optional ProgramAccessibilityDelta accessibility = 22;
-  // @state persistent
+  // @state artifact
   optional ProgramPrivacyDelta privacy = 23;
-  // @state persistent
+  // @state artifact
   optional ProgramSafetyDelta safety = 24;
-  // @state persistent
+  // @state artifact
   optional ProgramSecurityDelta security = 25;
-  // @state persistent
+  // @state artifact
   optional ProgramRegulatoryDelta regulatory = 26;
-  // @state persistent
+  // @state artifact
   optional ProgramSiteContextDelta site_context = 27;
-  // @state persistent
+  // @state artifact
   optional ProgramOrganizationalDelta organizational = 28;
-  // @state persistent
+  // @state artifact
   optional ProgramServicesDelta services = 29;
-  // @state persistent
+  // @state artifact
   optional ProgramInfrastructureDelta infrastructure = 30;
-  // @state persistent
+  // @state artifact
   optional ProgramInformationDelta information = 31;
-  // @state persistent
+  // @state artifact
   optional ProgramCommunicationDelta communication = 32;
-  // @state persistent
+  // @state artifact
   optional ProgramWayfindingDelta wayfinding = 33;
-  // @state persistent
+  // @state artifact
   optional ProgramSchedulesDelta schedules = 34;
-  // @state persistent
+  // @state artifact
   optional ProgramFlexibilityDelta flexibility = 35;
-  // @state persistent
+  // @state artifact
   optional ProgramGrowthDelta growth = 36;
-  // @state persistent
+  // @state artifact
   optional ProgramSustainabilityDelta sustainability = 37;
-  // @state persistent
+  // @state artifact
   optional ProgramResilienceDelta resilience = 38;
-  // @state persistent
+  // @state artifact
   optional ProgramCostsDelta costs = 39;
-  // @state persistent
+  // @state artifact
   optional ProgramDeliveryDelta delivery = 40;
-  // @state persistent
+  // @state artifact
   optional ProgramRisksDelta risks = 41;
-  // @state persistent
+  // @state artifact
   optional ProgramConflictsDelta conflicts = 42;
-  // @state persistent
+  // @state artifact
   optional ProgramRequirementsDelta requirements = 43;
-  // @state persistent
+  // @state artifact
   optional ProgramPrioritiesDelta priorities = 44;
-  // @state persistent
+  // @state artifact
   optional ProgramScenariosDelta scenarios = 45;
-  // @state persistent
+  // @state artifact
   optional ProgramOptionsDelta options = 46;
-  // @state persistent
+  // @state artifact
   optional ProgramDecisionsDelta decisions = 47;
-  // @state persistent
+  // @state artifact
   optional ProgramValidationsDelta validations = 48;
-  // @state persistent
+  // @state artifact
   optional ProgramPerformanceDelta performance = 49;
-  // @state persistent
+  // @state artifact
   optional ProgramQualityDelta quality = 50;
-  // @state persistent
+  // @state artifact
   optional ProgramDocumentsDelta documents = 51;
-  // @state persistent
+  // @state artifact
   optional ProgramAssumptionsDelta assumptions = 52;
-  // @state persistent
+  // @state artifact
   optional ProgramConstraintsDelta constraints = 53;
-  // @state persistent
+  // @state artifact
   optional ProgramComplianceRecordsDelta compliance_records = 54;
-  // @state persistent
+  // @state artifact
   optional ProgramApprovalsDelta approvals = 55;
-  // @state persistent
+  // @state artifact
   optional ProgramMeetingsDelta meetings = 56;
-  // @state persistent
+  // @state artifact
   optional ProgramChangesDelta changes = 57;
-  // @state persistent
+  // @state artifact
   optional ProgramCollaborationDelta collaboration = 58;
-  // @state persistent
+  // @state artifact
   optional ProgramAnalysesDelta analyses = 59;
-  // @state persistent
+  // @state artifact
   optional ProgramReportsDelta reports = 60;
-  // @state persistent
+  // @state artifact
   optional ProgramSearchFiltersDelta search_filters = 61;
-  // @state persistent
+  // @state artifact
   optional ProgramStatusRecordsDelta status_records = 62;
-  // @state persistent
+  // @state artifact
   optional ProgramWorkshopsDelta workshops = 63;
-  // @state persistent
+  // @state artifact
   optional ProgramSurveysDelta surveys = 64;
-  // @state persistent
+  // @state artifact
   optional ProgramIssuesDelta issues = 65;
-  // @state persistent
+  // @state artifact
   optional ProgramAuditEventsDelta audit_events = 66;
-  // @state persistent
+  // @state artifact
   optional ProgramTemplatesDelta templates = 67;
-  // @state persistent
+  // @state artifact
   optional ProgramKnowledgeDelta knowledge = 68;
-  // @state persistent
+  // @state artifact
   optional ProgramBenchmarksDelta benchmarks = 69;
-  // @state persistent
+  // @state artifact
   optional ProgramTracesDelta traces = 70;
-  // @state persistent
+  // @state artifact
   optional Governance governance = 71;
-  // @state shared-ui
+  // @state presence
   optional string selected_ids = 72;
-  // @state shared-ui
+  // @state presence
   optional string active_register = 73;
-  // @state shared-ui
+  // @state presence
   optional AdjacencyKind adjacency_kind_filter = 74;
-  // @state shared-ui
+  // @state presence
   optional string active_report_json = 75;
-  // @state local-ui
+  // @state config
   optional string search_query = 76;
-  // @state local-ui
+  // @state config
   optional string search_history_json = 77;
-  // @state local-ui
+  // @state config
   optional string last_result_json = 78;
-  // @state local-ui
+  // @state config
   optional string last_analysis_json = 79;
-  // @state local-ui
+  // @state config
   optional double graph_camera_x = 80;
-  // @state local-ui
+  // @state config
   optional double graph_camera_y = 81;
-  // @state local-ui
+  // @state config
   optional double graph_camera_zoom = 82;
 }
 

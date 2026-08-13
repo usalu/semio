@@ -2,157 +2,157 @@ syntax = "proto3";
 package semio.s.norm.en1993.diff;
 
 message En1993Diff {
-  // @state persistent
+  // @state artifact
   optional En1993Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string annex = 2;
-  // @state persistent
+  // @state artifact
   optional double n_ed_kn = 3;
-  // @state persistent
+  // @state artifact
   optional double m_ed_knm = 4;
-  // @state persistent
+  // @state artifact
   optional double v_ed_kn = 5;
-  // @state persistent
+  // @state artifact
   optional double a_mm2 = 6;
-  // @state persistent
+  // @state artifact
   optional double a_v_mm2 = 7;
-  // @state persistent
+  // @state artifact
   optional double w_pl_mm3 = 8;
-  // @state persistent
+  // @state artifact
   optional double f_y_mpa = 9;
-  // @state persistent
+  // @state artifact
   optional double f_u_mpa = 10;
-  // @state persistent
+  // @state artifact
   optional double chi = 11;
-  // @state persistent
+  // @state artifact
   optional double a_net_mm2 = 12;
-  // @state persistent
+  // @state artifact
   optional double tension_n_ed_kn = 13;
-  // @state persistent
+  // @state artifact
   optional double fire_thickness_mm = 14;
-  // @state persistent
+  // @state artifact
   optional string fire_rating = 15;
-  // @state persistent
+  // @state artifact
   optional double fire_massivity = 16;
-  // @state persistent
+  // @state artifact
   optional double fire_mu_0 = 17;
-  // @state persistent
+  // @state artifact
   optional double fire_design_temperature_c = 18;
-  // @state persistent
+  // @state artifact
   optional double cf_b_bar_mm = 19;
-  // @state persistent
+  // @state artifact
   optional double cf_t_mm = 20;
-  // @state persistent
+  // @state artifact
   optional double cf_k_sigma = 21;
-  // @state persistent
+  // @state artifact
   optional double cf_psi = 22;
-  // @state persistent
+  // @state artifact
   optional double cf_n_ed_kn = 23;
-  // @state persistent
+  // @state artifact
   optional double cf_gross_resistance_kn = 24;
-  // @state persistent
+  // @state artifact
   optional double stainless_m_ed_knm = 25;
-  // @state persistent
+  // @state artifact
   optional double stainless_w_pl_mm3 = 26;
-  // @state persistent
+  // @state artifact
   optional double stainless_f_y_mpa = 27;
-  // @state persistent
+  // @state artifact
   optional double plated_lambda_p = 28;
-  // @state persistent
+  // @state artifact
   optional double plated_sigma_ed_mpa = 29;
-  // @state persistent
+  // @state artifact
   optional double silo_t_mm = 30;
-  // @state persistent
+  // @state artifact
   optional double silo_r_mm = 31;
-  // @state persistent
+  // @state artifact
   optional double shell_sigma_x_ed_mpa = 32;
-  // @state persistent
+  // @state artifact
   optional double silo_k = 33;
-  // @state persistent
+  // @state artifact
   optional double silo_gamma_kn_m3 = 34;
-  // @state persistent
+  // @state artifact
   optional double silo_depth_m = 35;
-  // @state persistent
+  // @state artifact
   optional double bolt_f_ed_kn = 36;
-  // @state persistent
+  // @state artifact
   optional uint32 bolt_n_bolts = 37;
-  // @state persistent
+  // @state artifact
   optional double bolt_a_s_mm2 = 38;
-  // @state persistent
+  // @state artifact
   optional double bolt_e1_mm = 39;
-  // @state persistent
+  // @state artifact
   optional double bolt_e2_mm = 40;
-  // @state persistent
+  // @state artifact
   optional double bolt_d0_mm = 41;
-  // @state persistent
+  // @state artifact
   optional double bolt_d_mm = 42;
-  // @state persistent
+  // @state artifact
   optional double bolt_t_mm = 43;
-  // @state persistent
+  // @state artifact
   optional double bolt_f_u_mpa = 44;
-  // @state persistent
+  // @state artifact
   optional double bolt_f_ub_mpa = 45;
-  // @state persistent
+  // @state artifact
   optional double weld_a_mm = 46;
-  // @state persistent
+  // @state artifact
   optional double weld_l_mm = 47;
-  // @state persistent
+  // @state artifact
   optional double weld_f_u_mpa = 48;
-  // @state persistent
+  // @state artifact
   optional string weld_steel_grade = 49;
-  // @state persistent
+  // @state artifact
   optional double weld_f_ed_kn = 50;
-  // @state persistent
+  // @state artifact
   optional double delta_sigma_mpa = 51;
-  // @state persistent
+  // @state artifact
   optional uint32 fatigue_category = 52;
-  // @state persistent
+  // @state artifact
   optional string fatigue_method = 53;
-  // @state persistent
+  // @state artifact
   optional string t10_steel_subgrade = 54;
-  // @state persistent
+  // @state artifact
   optional double t10_actual_thickness_mm = 55;
-  // @state persistent
+  // @state artifact
   optional double t10_t_ed_c = 56;
-  // @state persistent
+  // @state artifact
   optional double tension_component_f_uk_kn = 57;
-  // @state persistent
+  // @state artifact
   optional double tension_component_f_k_kn = 58;
-  // @state persistent
+  // @state artifact
   optional double tension_component_n_ed_kn = 59;
-  // @state persistent
+  // @state artifact
   optional double hss_w_el_mm3 = 60;
-  // @state persistent
+  // @state artifact
   optional double hss_f_y_mpa = 61;
-  // @state persistent
+  // @state artifact
   optional uint32 hss_section_class = 62;
-  // @state persistent
+  // @state artifact
   optional double hss_m_ed_knm = 63;
-  // @state persistent
+  // @state artifact
   optional double bridge_lambda = 64;
-  // @state persistent
+  // @state artifact
   optional double bridge_phi_2 = 65;
-  // @state persistent
+  // @state artifact
   optional double bridge_delta_sigma_p_mpa = 66;
-  // @state persistent
+  // @state artifact
   optional double tower_wind_factor = 67;
-  // @state persistent
+  // @state artifact
   optional double tower_n_ed_kn = 68;
-  // @state persistent
+  // @state artifact
   optional double pile_sigma_mpa = 69;
-  // @state persistent
+  // @state artifact
   optional double pile_k_red = 70;
-  // @state persistent
+  // @state artifact
   optional double pile_n_ed_kn = 71;
-  // @state persistent
+  // @state artifact
   optional double crane_f_z_ed_kn = 72;
-  // @state persistent
+  // @state artifact
   optional double crane_wheel_contact_length_mm = 73;
-  // @state persistent
+  // @state artifact
   optional double crane_dispersion_mm = 74;
-  // @state persistent
+  // @state artifact
   optional double crane_t_w_mm = 75;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 76;
 }
 

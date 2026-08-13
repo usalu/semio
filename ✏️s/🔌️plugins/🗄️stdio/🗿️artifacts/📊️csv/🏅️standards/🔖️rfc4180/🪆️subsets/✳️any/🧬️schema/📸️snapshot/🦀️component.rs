@@ -44,13 +44,13 @@ pub struct CsvRecord {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
 pub struct CsvSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 📑 Whether the first record is a header row (RFC 4180's own optional convention).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default = "default_true")]
     pub has_header: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub records: Vec<CsvRecord>,
 }

@@ -3,7 +3,7 @@
   "title": "JsonDiff",
   "type": "object",
   "properties": {
-    "value": { "$ref": "#/$defs/JsonValueDiff", "x-semio-state": "persistent" }
+    "value": { "$ref": "#/$defs/JsonValueDiff", "x-semio-state": "artifact" }
   },
   "$defs": {
     "JsonValue": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/JsonValue" },

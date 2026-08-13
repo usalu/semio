@@ -19,7 +19,7 @@ use super::outline::Din18599Outline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599.inference")]
 pub struct Din18599Inference {
-    #[state(inferred)]
+    #[derived]
     pub outline: Din18599Outline,
 }
 

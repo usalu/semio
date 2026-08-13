@@ -4,8 +4,8 @@
   "type": "object",
   "required": ["schema", "value"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "value": { "$ref": "#/$defs/JsonValue", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "value": { "$ref": "#/$defs/JsonValue", "x-semio-state": "artifact" }
   },
   "$defs": {
     "JsonMember": {

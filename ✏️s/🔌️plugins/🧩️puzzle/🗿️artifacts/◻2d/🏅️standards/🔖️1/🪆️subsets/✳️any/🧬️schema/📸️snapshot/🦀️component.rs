@@ -11,23 +11,23 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "puzzle.puzzle2d", layout = "lines")]
 #[artifact_schema(id = "s.puzzle.puzzle2d")]
 pub struct Puzzle2dSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     #[serde(default)]
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub camera: Puzzle2dCamera,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub nodes: Vec<Puzzle2dNode>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub edges: Vec<Puzzle2dEdge>,
     #[serde(default)]
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: Puzzle2dMeta,
 }
 //#endregion 🔖️Snapshot

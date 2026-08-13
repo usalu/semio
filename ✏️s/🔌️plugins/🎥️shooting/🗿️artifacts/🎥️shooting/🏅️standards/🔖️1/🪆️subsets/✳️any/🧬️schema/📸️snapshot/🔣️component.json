@@ -15,40 +15,40 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "assets": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ShootingAsset"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "savedCameras": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ShootingSavedCamera"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "scene": {
       "$ref": "#/$defs/ShootingSceneLighting",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "shots": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ShootingShot"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activeShotId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activeAssetId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

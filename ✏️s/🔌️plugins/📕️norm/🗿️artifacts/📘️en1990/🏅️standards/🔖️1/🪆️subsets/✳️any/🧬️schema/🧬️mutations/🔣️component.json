@@ -15,33 +15,33 @@
     "gK": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "qK": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/En1990QkEntry"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resistanceKn": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "consequenceClass": {
       "type": "integer",
       "format": "uint32",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "annex": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "seismicAEdKn": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

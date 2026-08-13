@@ -203,7 +203,7 @@ mod tests {
     /// that is not listed here fails `command_ids_cover_every_row`.
     fn every_command() -> Vec<En1990Command> {
         vec![
-            En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { json: serde_json::to_string(&En1990Snapshot::default()).expect("serialize default document") }),
+            En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default())) }),
             En1990Command::Evaluate(evaluate::Evaluate {}),
             En1990Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         ]
@@ -288,7 +288,7 @@ mod tests {
     #[test]
     fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { json: serde_json::to_string(&En1990Snapshot::default()).expect("serialize default document") }));
+        testkit::dispatch(&mut app, En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default())) }));
         let host = NormHost::<En1990Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
@@ -323,7 +323,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
-        testkit::dispatch(&mut app, En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { json: serde_json::to_string(&En1990Snapshot::default()).expect("serialize default document") }));
+        testkit::dispatch(&mut app, En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default())) }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
         assert_eq!(app.snapshot().expect("projection"), En1990Snapshot::default());

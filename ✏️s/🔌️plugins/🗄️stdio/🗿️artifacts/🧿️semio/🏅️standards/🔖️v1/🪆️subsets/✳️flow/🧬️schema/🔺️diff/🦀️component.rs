@@ -75,10 +75,10 @@ pub struct FlowEdgeDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.flow.diff")]
 pub struct SemioFlowDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nodes: Option<FlowNodesDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edges: Option<FlowEdgesDiff>,
 }

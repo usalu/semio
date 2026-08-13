@@ -1,21 +1,21 @@
 /** 🧬️ Jack snapshot schema — persistent fields only. */
 
 export interface JackSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   name: string;
-  /** @state persistent */
+  /** @state artifact */
   manifestId?: string;
-  /** @state persistent */
+  /** @state artifact */
   manifest: Manifest;
-  /** @state persistent */
+  /** @state artifact */
   camera: Camera;
-  /** @state persistent */
+  /** @state artifact */
   nodes: Node[];
-  /** @state persistent */
+  /** @state artifact */
   edges: Edge[];
-  /** @state persistent */
+  /** @state artifact */
   rootNodeId?: string;
 }
 

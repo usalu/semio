@@ -7,6 +7,6 @@ export interface ZipEntries {
 }
 
 export interface ZipInference {
-  /** @state inferred */
+  /** @derived */
   entries: ZipEntries;
 }

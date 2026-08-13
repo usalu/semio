@@ -54,10 +54,10 @@
   },
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "layers": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/layer" } },
-    "blocks": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/block" } },
-    "entities": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/entityRecord" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "layers": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/layer" } },
+    "blocks": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/block" } },
+    "entities": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/entityRecord" } }
   },
   "required": ["schema", "layers", "blocks", "entities"]
 }

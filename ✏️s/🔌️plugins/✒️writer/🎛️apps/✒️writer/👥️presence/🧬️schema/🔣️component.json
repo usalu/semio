@@ -13,24 +13,24 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "editorSelection": {
       "$ref": "#/$defs/WriterEditorSelection",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "treeHoveredAstId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "editorHoverOffset": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "camera": {
       "$ref": "#/$defs/WriterCamera",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   },
   "$defs": {

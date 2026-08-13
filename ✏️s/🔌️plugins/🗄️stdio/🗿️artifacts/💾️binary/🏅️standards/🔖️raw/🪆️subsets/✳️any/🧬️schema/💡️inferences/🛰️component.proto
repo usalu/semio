@@ -4,7 +4,7 @@ package semio.s.stdio.binary.inference;
 // 💡️ binary inference schema — a raw opaque byte blob's honest real extent.
 
 message BinaryInference {
-  // @state inferred
+  // @derived
   BinaryExtent extent = 1;
 }
 

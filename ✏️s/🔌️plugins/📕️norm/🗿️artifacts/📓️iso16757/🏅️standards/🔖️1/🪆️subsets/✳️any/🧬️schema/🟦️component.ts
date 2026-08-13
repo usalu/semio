@@ -1,22 +1,22 @@
 /** 🧬️ Iso16757 artifact schema — every field with its state class. */
 
 export interface Iso16757Artifact {
-  /** @state persistent */
+  /** @state artifact */
   catalogue: string;
-  /** @state persistent */
+  /** @state artifact */
   dictionary: string;
-  /** @state persistent */
+  /** @state artifact */
   geometry: string;
-  /** @state persistent */
+  /** @state artifact */
   selection: string;
-  /** @state persistent */
+  /** @state artifact */
   partNumberRule: string;
-  /** @state persistent */
+  /** @state artifact */
   partNumberInputs: Record<string, string>;
-  /** @state persistent */
+  /** @state artifact */
   scriptLimits: string;
-  /** @state persistent */
+  /** @state artifact */
   exchangeProcess: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }

@@ -10,19 +10,19 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.animate.present")]
 pub struct PresentDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::present::schema::PresentArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub source: Option<FigureTileSource>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub tiles: Option<PresentTilesDelta>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_ids: Option<PresentStringList>,
-    #[state(local_ui)]
+    #[state(config)]
     pub engagement_input: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

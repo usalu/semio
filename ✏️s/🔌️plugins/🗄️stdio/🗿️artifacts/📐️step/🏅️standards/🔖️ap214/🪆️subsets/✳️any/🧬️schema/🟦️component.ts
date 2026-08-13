@@ -1,5 +1,5 @@
 /** 🧬️ StepArtifact schema. */
 export interface StepArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ PLACEHOLDER_TEXT_COLON string;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ PLACEHOLDER_TEXT_COLON string;
 }

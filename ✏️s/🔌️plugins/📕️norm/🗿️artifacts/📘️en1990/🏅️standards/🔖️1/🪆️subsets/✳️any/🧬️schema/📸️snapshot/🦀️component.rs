@@ -17,19 +17,19 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub g_k: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub q_k: En1990QkChild,
-    #[state(persistent)]
+    #[state(artifact)]
     pub resistance_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub consequence_class: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: AnnexChoice,
     /// 🌍️ Seismic accidental action A_Ed [kN] combined per Eq. 6.12b; 0.0 disables the seismic situation.
-    #[state(persistent)]
+    #[state(artifact)]
     pub seismic_a_ed_kn: f64,
 }
 

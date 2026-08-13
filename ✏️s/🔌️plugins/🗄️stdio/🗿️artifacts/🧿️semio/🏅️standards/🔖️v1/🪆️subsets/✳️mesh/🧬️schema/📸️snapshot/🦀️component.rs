@@ -105,15 +105,15 @@ pub const STDIO_SEMIOMESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.mesh")]
 pub struct SemioMeshSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub meshes: Vec<SemioMesh>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub materials: Vec<SemioMaterial>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub textures: Vec<SemioTexture>,
 }

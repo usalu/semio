@@ -1,48 +1,48 @@
 /** 🧬️ EN 1995 diff schema. */
 
 export interface En1995Diff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: En1995Artifact;
-  /** @state persistent */
+  /** @state artifact */
   annex?: number;
-  /** @state persistent */
+  /** @state artifact */
   mEdKnm?: number;
-  /** @state persistent */
+  /** @state artifact */
   nEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   vEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   wMm3?: number;
-  /** @state persistent */
+  /** @state artifact */
   aMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   bMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   hMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   fMK?: number;
-  /** @state persistent */
+  /** @state artifact */
   fC0K?: number;
-  /** @state persistent */
+  /** @state artifact */
   serviceClass?: number;
-  /** @state persistent */
+  /** @state artifact */
   loadDuration?: number;
-  /** @state persistent */
+  /** @state artifact */
   mCritKnm?: number;
-  /** @state persistent */
+  /** @state artifact */
   fEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   aEfMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   fVK?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireDurationMin?: number;
-  /** @state persistent */
+  /** @state artifact */
   sectionDepthMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   aVertMS2?: number;
-  /** @state persistent */
+  /** @state artifact */
   nCyclesBridge?: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null | null;
 }

@@ -1,8 +1,8 @@
 /** 🧬️ GIS terrain snapshot schema — persistent fields only. */
 
 export interface GisTerrainSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   exaggeration: number;
-  /** @state persistent */
+  /** @state artifact */
   importedFeaturesJson: string;
 }

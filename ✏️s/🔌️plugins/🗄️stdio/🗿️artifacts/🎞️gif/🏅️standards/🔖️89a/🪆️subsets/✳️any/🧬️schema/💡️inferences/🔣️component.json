@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["dimensions"],
   "properties": {
-    "dimensions": { "$ref": "#/$defs/GifDimensions", "x-semio-state": "inferred" }
+    "dimensions": { "$ref": "#/$defs/GifDimensions", "x-semio-derived": true }
   },
   "$defs": {
     "GifDimensions": {

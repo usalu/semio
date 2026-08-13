@@ -443,13 +443,13 @@ fn absorb_elements(d1: Option<PlyElementsDiff>, d2: Option<PlyElementsDiff>) -> 
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply.diff")]
 pub struct PlyDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<PlyFormat>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comments: Option<Vec<String>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub elements: Option<PlyElementsDiff>,
 }

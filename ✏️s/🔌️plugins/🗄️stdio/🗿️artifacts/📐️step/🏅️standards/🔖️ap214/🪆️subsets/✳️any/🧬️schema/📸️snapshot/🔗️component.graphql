@@ -59,7 +59,7 @@ type StepEntity {
 }
 
 type StepSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  header: StepHeader! @state(class: PERSISTENT)
-  entities: [StepEntity!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  header: StepHeader! @state(class: ARTIFACT)
+  entities: [StepEntity!]! @state(class: ARTIFACT)
 }

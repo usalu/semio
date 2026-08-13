@@ -291,7 +291,8 @@
     "⚙️engine",
     "🎮️commands",
     "🎚️config",
-    "👥️presence"
+    "👥️presence",
+    "🫧️transient"
   ],
   "appChildDirs": [
     "⚙️engine",
@@ -300,9 +301,16 @@
     "📌️panels",
     "🎚️config",
     "👥️presence",
+    "🫧️transient",
     "🗣️terminology",
     "🌉️wasm",
     "📚️examples"
+  ],
+  "modeChildDirs": [
+    "🪟️windows",
+    "🎚️config",
+    "👥️presence",
+    "🫧️transient"
   ],
   "semioDataLeafPrefix": "🧬️component.",
   "semioFileExtension": "semio",
@@ -324,7 +332,8 @@
   },
   "appSchemaSpecFilenames": {
     "🎚️config/🧬️schema": "🔣️component.json",
-    "👥️presence/🧬️schema": "🔣️component.json"
+    "👥️presence/🧬️schema": "🔣️component.json",
+    "🫧️transient/🧬️schema": "🔣️component.json"
   },
   "windowChildDirs": [
     "🍱️panes",
@@ -332,13 +341,17 @@
     "🪛️utilities",
     "🎬️actions",
     "🎚️options",
-    "👥️presence"
+    "🎚️config",
+    "👥️presence",
+    "🫧️transient"
   ],
   "windowRequiredChildDirs": [
     "🎬️actions",
     "🪛️utilities",
     "🎚️options",
-    "👥️presence"
+    "🎚️config",
+    "👥️presence",
+    "🫧️transient"
   ],
   "windowComponentLangs": [
     "🦀️rust",
@@ -370,6 +383,7 @@
     "📌️panels",
     "🎚️config",
     "👥️presence",
+    "🫧️transient",
     "📥️import",
     "📤️export",
     "🚪️io",
@@ -461,6 +475,9 @@
   "presenceChildDirs": [
     "🧬️schema"
   ],
+  "transientChildDirs": [
+    "🧬️schema"
+  ],
   "schemaChildDirs": [
     "📸️snapshot",
     "🔺️diff",
@@ -497,5 +514,6 @@
     "🦀️component.rs",
     "🟦️component.ts"
   ],
+  "_stateLaneComment": "🫧️ Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION wave A0: exactly four state mechanisms exist, enforced by API and policy — 🗿️artifacts = persisted shared, 🎚️config = persisted local-only, 👥️presence = ephemeral shared, 🫧️transient = ephemeral local-only UI state. Every state-owning scope (app, mode, window) carries the same three non-artifact lanes as sibling facet dirs, each shaped by configChildDirs/presenceChildDirs/transientChildDirs. modeChildDirs did not exist before this wave: modes had no declared children at all, so a mode-scoped config/presence/transient facet had nowhere legal to live. Draftness is a LANE property (which store a record lives in), never a field annotation, so `preview` folded into the artifact lane; `effect` was deleted (effects are Emit.effects, not state); and `inferred` left the state axis entirely for the orthogonal `#[derived]` / `x-semio-derived` marker.",
   "_stdioFacetComment": "Stdio IO: io/{import/🧩️deserializers,export/🧵️serializers}/artifacts/<stdio>/."
 }

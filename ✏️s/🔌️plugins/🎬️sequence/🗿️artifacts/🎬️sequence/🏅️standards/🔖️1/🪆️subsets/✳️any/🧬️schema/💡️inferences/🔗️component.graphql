@@ -2,7 +2,7 @@
 # step DAG (steps + edges).
 
 type SequenceInference {
-  topology: SequenceTopology! @state(class: INFERRED)
+  topology: SequenceTopology! @derived
 }
 
 type SequenceTopology {

@@ -9,43 +9,43 @@
     "artifact": {
       "title": "Fem3dArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "$ref": "#/$defs/Fem3dNodesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "elements": {
       "$ref": "#/$defs/Fem3dElementsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "materials": {
       "$ref": "#/$defs/Fem3dMaterialsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sections": {
       "$ref": "#/$defs/Fem3dSectionsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "solids": {
       "$ref": "#/$defs/Fem3dSolidsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "supports": {
       "$ref": "#/$defs/Fem3dSupportsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "loadCases": {
       "$ref": "#/$defs/Fem3dLoadCasesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "combinations": {
       "$ref": "#/$defs/Fem3dCombinationsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "analysis": {
       "$ref": "#/$defs/FemAnalysisSettings",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resultSourceId": {
       "oneOf": [
@@ -56,31 +56,31 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "resultMode": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "resultModeIndex": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "camera": {
       "$ref": "#/$defs/FemCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "solverResultsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "meshPreviewJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

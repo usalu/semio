@@ -6,6 +6,6 @@ type SemioTableRowListDiff {
   values: [SemioTableRow!]!
 }
 type SemioTableDiff {
-  columns: SemioTableColumnListDiff @state(class: PERSISTENT)
-  rows: SemioTableRowListDiff @state(class: PERSISTENT)
+  columns: SemioTableColumnListDiff @state(class: ARTIFACT)
+  rows: SemioTableRowListDiff @state(class: ARTIFACT)
 }

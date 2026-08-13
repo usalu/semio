@@ -13,15 +13,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.iso16757")]
 pub struct Iso16757Artifact {
-    #[state(persistent)] pub catalogue: crate::artifacts::iso16757::part_1::Catalogue,
-    #[state(persistent)] pub dictionary: crate::artifacts::iso16757::part_4::Dictionary,
-    #[state(persistent)] pub geometry: crate::artifacts::iso16757::part_2::GeometryCatalogue,
-    #[state(persistent)] pub selection: crate::artifacts::iso16757::part_1::SelectionRequest,
-    #[state(persistent)] pub part_number_rule: crate::artifacts::iso16757::part_5::PartNumberRule,
-    #[state(persistent)] pub part_number_inputs: BTreeMap<String, CatalogueValue>,
-    #[state(persistent)] pub script_limits: crate::artifacts::iso16757::part_5::ScriptLimits,
-    #[state(persistent)] pub exchange_process: crate::artifacts::iso16757::part_5::ExchangeProcess,
-    #[state(shared_ui)] pub selected_check_index: Option<u32>,
+    #[state(artifact)] pub catalogue: crate::artifacts::iso16757::part_1::Catalogue,
+    #[state(artifact)] pub dictionary: crate::artifacts::iso16757::part_4::Dictionary,
+    #[state(artifact)] pub geometry: crate::artifacts::iso16757::part_2::GeometryCatalogue,
+    #[state(artifact)] pub selection: crate::artifacts::iso16757::part_1::SelectionRequest,
+    #[state(artifact)] pub part_number_rule: crate::artifacts::iso16757::part_5::PartNumberRule,
+    #[state(artifact)] pub part_number_inputs: BTreeMap<String, CatalogueValue>,
+    #[state(artifact)] pub script_limits: crate::artifacts::iso16757::part_5::ScriptLimits,
+    #[state(artifact)] pub exchange_process: crate::artifacts::iso16757::part_5::ExchangeProcess,
+    #[state(presence)] pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 

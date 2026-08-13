@@ -1,5 +1,5 @@
 /** 🧬️ NormConfig */
 export interface NormConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedCheckIndex?: number;
 }

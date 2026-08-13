@@ -1,7 +1,7 @@
 # 💡️ Shooting inference schema — topology derived from the shot→camera reference graph.
 
 type ShootingInference {
-  topology: ShootingTopology! @state(class: INFERRED)
+  topology: ShootingTopology! @derived
 }
 
 type ShootingTopology {

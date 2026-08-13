@@ -845,15 +845,15 @@ impl Default for GltfDocument {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gltf")]
 pub struct GltfSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub document: GltfDocument,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub buffers: Vec<Vec<u8>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub source_form: GltfSourceForm,
 }

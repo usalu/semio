@@ -3,9 +3,9 @@
   "title": "LasArtifact",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "header": { "$ref": "snapshot.json#/definitions/LasHeader", "x-semio-state": "persistent" },
-    "vlrs": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/LasVlr" }, "x-semio-state": "persistent" },
-    "points": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/LasPoint" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "header": { "$ref": "snapshot.json#/definitions/LasHeader", "x-semio-state": "artifact" },
+    "vlrs": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/LasVlr" }, "x-semio-state": "artifact" },
+    "points": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/LasPoint" }, "x-semio-state": "artifact" }
   }
 }

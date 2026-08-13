@@ -9,8 +9,8 @@ export interface GisTerrainBounds {
 }
 
 export interface GisTerrainInference {
-  /** @state inferred */
+  /** @derived */
   positionCount: number;
-  /** @state inferred */
+  /** @derived */
   bounds: GisTerrainBounds | null;
 }

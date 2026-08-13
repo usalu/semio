@@ -12,17 +12,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Diff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::vdi3805::schema::Vdi3805Artifact>>,
-    #[state(persistent)] pub manufacturer_file: Option<ManufacturerFile>,
-    #[state(persistent)] pub catalog: Option<ManufacturerCatalog>,
-    #[state(persistent)] pub edition_profile: Option<BTreeMap<String, EditionProfileChoice>>,
-    #[state(persistent)] pub correction_as_of: Option<EditionId>,
-    #[state(persistent)] pub strict_mode: Option<bool>,
-    #[state(persistent)] pub index: Option<CatalogIndex>,
-    #[state(persistent)] pub geometry: Option<BTreeMap<String, ParametricGeometry>>,
-    #[state(persistent)] pub curves: Option<BTreeMap<String, CharacteristicCurve>>,
-    #[state(persistent)] pub limits: Option<SecurityLimits>,
-    #[state(shared_ui)] pub selected_check_index: Option<Option<u32>>,
+    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::vdi3805::schema::Vdi3805Artifact>>,
+    #[state(artifact)] pub manufacturer_file: Option<ManufacturerFile>,
+    #[state(artifact)] pub catalog: Option<ManufacturerCatalog>,
+    #[state(artifact)] pub edition_profile: Option<BTreeMap<String, EditionProfileChoice>>,
+    #[state(artifact)] pub correction_as_of: Option<EditionId>,
+    #[state(artifact)] pub strict_mode: Option<bool>,
+    #[state(artifact)] pub index: Option<CatalogIndex>,
+    #[state(artifact)] pub geometry: Option<BTreeMap<String, ParametricGeometry>>,
+    #[state(artifact)] pub curves: Option<BTreeMap<String, CharacteristicCurve>>,
+    #[state(artifact)] pub limits: Option<SecurityLimits>,
+    #[state(presence)] pub selected_check_index: Option<Option<u32>>,
 }
 //#endregion 🔖️Diff
 

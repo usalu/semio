@@ -4,9 +4,9 @@
   "type": "object",
   "required": ["schema", "format", "comments", "elements"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "format": { "type": "string", "enum": ["ascii", "binaryLittleEndian", "binaryBigEndian"], "x-semio-state": "persistent" },
-    "comments": { "type": "array", "items": { "type": "string" }, "x-semio-state": "persistent" },
-    "elements": { "type": "array", "items": { "$ref": "snapshot.json#/$defs/PlyElement" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "format": { "type": "string", "enum": ["ascii", "binaryLittleEndian", "binaryBigEndian"], "x-semio-state": "artifact" },
+    "comments": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "elements": { "type": "array", "items": { "$ref": "snapshot.json#/$defs/PlyElement" }, "x-semio-state": "artifact" }
   }
 }

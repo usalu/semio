@@ -61,7 +61,7 @@
     }
   },
   "properties": {
-    "nodes": { "$ref": "#/definitions/FlowNodesDiff", "x-semio-state": "persistent" },
-    "edges": { "$ref": "#/definitions/FlowEdgesDiff", "x-semio-state": "persistent" }
+    "nodes": { "$ref": "#/definitions/FlowNodesDiff", "x-semio-state": "artifact" },
+    "edges": { "$ref": "#/definitions/FlowEdgesDiff", "x-semio-state": "artifact" }
   }
 }

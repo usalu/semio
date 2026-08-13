@@ -5,6 +5,6 @@ export interface Semio_mp3_mutationsEntry {
   value: string;
 }
 export interface Semio_mp3_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_mp3_mutationsEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: Semio_mp3_mutationsEntry[];
 }

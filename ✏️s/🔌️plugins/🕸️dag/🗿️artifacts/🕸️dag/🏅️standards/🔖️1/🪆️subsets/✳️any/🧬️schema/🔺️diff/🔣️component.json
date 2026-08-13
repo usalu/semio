@@ -5,15 +5,15 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": { "title": "DagArtifact", "type": "object", "x-semio-state": "persistent" },
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "nodes": { "$ref": "#/$defs/DagNodesDelta", "x-semio-state": "persistent" },
-    "edges": { "$ref": "#/$defs/DagEdgesDelta", "x-semio-state": "persistent" },
-    "setNodes": { "$ref": "#/$defs/DagNodeSpecList", "x-semio-state": "persistent" },
-    "setEdges": { "$ref": "#/$defs/DagFixtureEdgeList", "x-semio-state": "persistent" },
-    "selectedNodeIds": { "$ref": "#/$defs/DagStringList", "x-semio-state": "shared-ui" },
-    "camera": { "$ref": "#/$defs/DagCamera", "x-semio-state": "local-ui" },
-    "locale": { "type": "string", "x-semio-state": "local-ui" }
+    "artifact": { "title": "DagArtifact", "type": "object", "x-semio-state": "artifact" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "nodes": { "$ref": "#/$defs/DagNodesDelta", "x-semio-state": "artifact" },
+    "edges": { "$ref": "#/$defs/DagEdgesDelta", "x-semio-state": "artifact" },
+    "setNodes": { "$ref": "#/$defs/DagNodeSpecList", "x-semio-state": "artifact" },
+    "setEdges": { "$ref": "#/$defs/DagFixtureEdgeList", "x-semio-state": "artifact" },
+    "selectedNodeIds": { "$ref": "#/$defs/DagStringList", "x-semio-state": "presence" },
+    "camera": { "$ref": "#/$defs/DagCamera", "x-semio-state": "config" },
+    "locale": { "type": "string", "x-semio-state": "config" }
   },
   "$defs": {
     "DagNodeSpecList": {

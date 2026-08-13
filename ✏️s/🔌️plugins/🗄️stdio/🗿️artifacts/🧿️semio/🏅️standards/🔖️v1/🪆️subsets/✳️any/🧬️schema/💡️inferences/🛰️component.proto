@@ -4,7 +4,7 @@ package semio.s.stdio.semio.inference;
 // 💡️ Semio envelope inference schema — the wrapped subset's dispatch tag/ordinal.
 
 message SemioInference {
-  // @state inferred
+  // @derived
   SemioKind kind = 1;
 }
 

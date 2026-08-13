@@ -1,15 +1,15 @@
 type WriterConfig {
-  selectedAstIds: [String!]! @state(class: LOCAL_UI)
-  editorSelection: WriterEditorSelection @state(class: LOCAL_UI)
-  formatSignal: Int! @state(class: LOCAL_UI)
-  lintSignal: Int! @state(class: LOCAL_UI)
-  revision: Int! @state(class: LOCAL_UI)
-  editorSettings: WriterEditorSettings! @state(class: LOCAL_UI)
-  treeHoveredAstId: String @state(class: LOCAL_UI)
-  editorHoverOffset: Int @state(class: LOCAL_UI)
-  engagementInput: String! @state(class: LOCAL_UI)
-  camera: WriterCamera! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedAstIds: [String!]! @state(class: CONFIG)
+  editorSelection: WriterEditorSelection @state(class: CONFIG)
+  formatSignal: Int! @state(class: CONFIG)
+  lintSignal: Int! @state(class: CONFIG)
+  revision: Int! @state(class: CONFIG)
+  editorSettings: WriterEditorSettings! @state(class: CONFIG)
+  treeHoveredAstId: String @state(class: CONFIG)
+  editorHoverOffset: Int @state(class: CONFIG)
+  engagementInput: String! @state(class: CONFIG)
+  camera: WriterCamera! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 
 type WriterEditorSelection {

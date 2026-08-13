@@ -4,7 +4,7 @@ package semio.s.stdio.semio.kit.inference;
 // 💡️ Semio kit inference schema — catalog census over the kit's own collections.
 
 message SemioKitInference {
-  // @state inferred
+  // @derived
   SemioKitEntries entries = 1;
 }
 

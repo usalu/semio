@@ -19,7 +19,7 @@ use super::duration::{compute_wav_duration, WavDuration};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.wav.inference")]
 pub struct WavInference {
-    #[state(inferred)]
+    #[derived]
     pub duration: WavDuration,
 }
 

@@ -7,6 +7,6 @@ export interface WriterOutline {
 }
 
 export interface WriterInference {
-  /** @state inferred */
+  /** @derived */
   outline: WriterOutline;
 }

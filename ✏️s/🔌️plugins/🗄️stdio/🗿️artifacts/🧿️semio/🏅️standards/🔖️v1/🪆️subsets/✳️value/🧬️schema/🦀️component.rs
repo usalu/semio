@@ -9,11 +9,11 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value")]
 pub struct SemioValueArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub root: SemioValue,
-    #[state(persistent)]
+    #[state(artifact)]
     pub nodes: Vec<SemioValueNode>,
 }
 

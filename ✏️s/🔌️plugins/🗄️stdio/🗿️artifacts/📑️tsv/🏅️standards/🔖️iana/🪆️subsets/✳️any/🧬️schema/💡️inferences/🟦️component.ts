@@ -6,6 +6,6 @@ export interface TsvOutline {
 }
 
 export interface TsvInference {
-  /** @state inferred */
+  /** @derived */
   outline: TsvOutline;
 }

@@ -1,11 +1,11 @@
 type Procedural3dPresence {
-  selectedNodeIds: [String!]! @state(class: SHARED_UI)
-  hoveredNodeId: String @state(class: SHARED_UI)
-  camera: CameraJson! @state(class: SHARED_UI)
-  previewCamera: Procedural3dPreviewCamera! @state(class: SHARED_UI)
-  selectionMethod: String! @state(class: SHARED_UI)
-  activeUtilityId: String! @state(class: SHARED_UI)
-  showMode: String! @state(class: SHARED_UI)
+  selectedNodeIds: [String!]! @state(class: PRESENCE)
+  hoveredNodeId: String @state(class: PRESENCE)
+  camera: CameraJson! @state(class: PRESENCE)
+  previewCamera: Procedural3dPreviewCamera! @state(class: PRESENCE)
+  selectionMethod: String! @state(class: PRESENCE)
+  activeUtilityId: String! @state(class: PRESENCE)
+  showMode: String! @state(class: PRESENCE)
 }
 type CameraJson {
   x: Float!

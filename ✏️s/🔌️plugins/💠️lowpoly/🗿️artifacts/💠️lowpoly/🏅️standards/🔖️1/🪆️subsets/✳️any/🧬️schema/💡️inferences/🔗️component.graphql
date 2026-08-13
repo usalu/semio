@@ -2,8 +2,8 @@
 # position.
 
 type LowpolyInference {
-  objectCount: Int! @state(class: INFERRED)
-  bounds: LowpolyBounds @state(class: INFERRED)
+  objectCount: Int! @derived
+  bounds: LowpolyBounds @derived
 }
 
 type LowpolyBounds {

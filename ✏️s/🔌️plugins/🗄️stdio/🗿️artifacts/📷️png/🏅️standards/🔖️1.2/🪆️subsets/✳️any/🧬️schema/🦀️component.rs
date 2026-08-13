@@ -13,52 +13,52 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png")]
 pub struct PngArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub width: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub height: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bit_depth: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     pub color_type: PngColorType,
-    #[state(persistent)]
+    #[state(artifact)]
     pub interlace: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub plte: Option<Vec<PngRgb>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub trns: Option<PngTransparency>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub gama: Option<u32>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub chrm: Option<PngChromaticities>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub srgb: Option<PngSrgbIntent>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub phys: Option<PngPhysicalDims>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub time: Option<PngTimestamp>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub bkgd: Option<PngBackground>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub text_chunks: Vec<PngTextChunk>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pixels: Vec<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub chunk_order: Vec<PngChunkMarker>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub unknown_chunks: Vec<PngChunk>,
 }

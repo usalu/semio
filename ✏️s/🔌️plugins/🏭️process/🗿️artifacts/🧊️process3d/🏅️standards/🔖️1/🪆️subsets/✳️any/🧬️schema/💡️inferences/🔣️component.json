@@ -5,8 +5,8 @@
   "additionalProperties": false,
   "required": ["stockBounds", "stepCount"],
   "properties": {
-    "stockBounds": { "$ref": "#/$defs/BoundingBox", "x-semio-state": "inferred" },
-    "stepCount": { "type": "integer", "minimum": 0, "x-semio-state": "inferred" }
+    "stockBounds": { "$ref": "#/$defs/BoundingBox", "x-semio-derived": true },
+    "stepCount": { "type": "integer", "minimum": 0, "x-semio-derived": true }
   },
   "$defs": {
     "BoundingBox": {

@@ -4,103 +4,103 @@ package semio.s.cad.cad.artifact;
 // 🧬️ CadArtifact schema.
 
 message CadArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string id = 2;
-  // @state persistent
+  // @state artifact
   repeated CadObject objects = 3;
-  // @state persistent
+  // @state artifact
   repeated CadObject building_objects = 4;
-  // @state persistent
+  // @state artifact
   repeated CadObject energy_objects = 5;
-  // @state persistent
+  // @state artifact
   repeated CadObject structure_classic_objects = 6;
-  // @state persistent
+  // @state artifact
   map<string, CadReferenceList> references_by_model_definition_id = 7;
-  // @state persistent
+  // @state artifact
   repeated CadNode nodes = 8;
-  // @state persistent
+  // @state artifact
   optional CadGeometry shape_geometry = 9;
-  // @state persistent
+  // @state artifact
   optional CadGeometry building_geometry = 10;
-  // @state persistent
+  // @state artifact
   optional CadGeometry energy_geometry = 11;
-  // @state persistent
+  // @state artifact
   optional CadGeometry structure_classic_geometry = 12;
-  // @state persistent
+  // @state artifact
   string active_model_definition_id = 13;
-  // @state shared-ui
+  // @state presence
   repeated string selected_object_ids = 14;
-  // @state shared-ui
+  // @state presence
   repeated string selected_node_ids = 15;
-  // @state shared-ui
+  // @state presence
   optional string active_object_id = 16;
-  // @state shared-ui
+  // @state presence
   CadComponentSelection component_selection = 17;
-  // @state shared-ui
+  // @state presence
   optional string selected_reference_model_definition_id = 18;
-  // @state shared-ui
+  // @state presence
   optional string selected_reference_id = 19;
-  // @state shared-ui
+  // @state presence
   optional string selected_primitive_id = 20;
-  // @state shared-ui
+  // @state presence
   optional string selected_primitive_kind = 21;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 22;
-  // @state shared-ui
+  // @state presence
   optional string active_example_id = 23;
-  // @state local-ui
+  // @state config
   string selection_method = 24;
-  // @state local-ui
+  // @state config
   string engagement_input = 25;
-  // @state local-ui
+  // @state config
   string engagement_step = 26;
-  // @state local-ui
+  // @state config
   optional string engagement_pane = 27;
-  // @state local-ui
+  // @state config
   optional string engagement_session_json = 28;
-  // @state local-ui
+  // @state config
   optional string last_finalized_interaction_id = 29;
-  // @state local-ui
+  // @state config
   bool sun_enabled = 30;
-  // @state local-ui
+  // @state config
   double sun_azimuth = 31;
-  // @state local-ui
+  // @state config
   double sun_elevation = 32;
-  // @state local-ui
+  // @state config
   double sun_intensity = 33;
-  // @state local-ui
+  // @state config
   string sun_color = 34;
-  // @state local-ui
+  // @state config
   CadCamera camera = 35;
-  // @state local-ui
+  // @state config
   CadCamera camera_building = 36;
-  // @state local-ui
+  // @state config
   CadCamera camera_energy = 37;
-  // @state local-ui
+  // @state config
   CadCamera camera_structure_classic = 38;
-  // @state local-ui
+  // @state config
   CadDislocateOptions dislocate_shape = 39;
-  // @state local-ui
+  // @state config
   CadDislocateOptions dislocate_building = 40;
-  // @state local-ui
+  // @state config
   CadDislocateOptions dislocate_energy = 41;
-  // @state local-ui
+  // @state config
   CadDislocateOptions dislocate_structure_classic = 42;
-  // @state local-ui
+  // @state config
   string locale = 43;
-  // @state local-ui
+  // @state config
   string terminology = 44;
-  // @state local-ui
+  // @state config
   string contributions_json = 45;
-  // @state preview
+  // @state artifact
   optional string hovered_object_id = 46;
-  // @state preview
+  // @state artifact
   optional string hovered_target_object_id = 47;
-  // @state preview
+  // @state artifact
   optional string hovered_target_mode = 48;
-  // @state preview
+  // @state artifact
   optional uint32 hovered_target_id = 49;
 }
 

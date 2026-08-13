@@ -1,35 +1,35 @@
 /** 🧬️ GIS map artifact schema — every field with its state class. */
 
 export interface GisMapArtifact {
-  /** @state persistent */
+  /** @state artifact */
   positions: GisMapFeature[];
-  /** @state persistent */
+  /** @state artifact */
   routes: GisMapFeature[];
-  /** @state persistent */
+  /** @state artifact */
   regions: GisMapFeature[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   featureSelectionJson: string;
-  /** @state shared-ui */
+  /** @state presence */
   layerVisibility: Record<string, boolean>;
-  /** @state shared-ui */
+  /** @state presence */
   layerStrokeScale: Record<string, number>;
-  /** @state local-ui */
+  /** @state config */
   cameraJson: string;
-  /** @state local-ui */
+  /** @state config */
   renderMode: string;
-  /** @state local-ui */
+  /** @state config */
   vectorStyle: string;
-  /** @state local-ui */
+  /** @state config */
   lodMode: string;
-  /** @state local-ui */
+  /** @state config */
   hoverJson: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMode: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

@@ -1,0 +1,24 @@
+2026-08-13 16:44:41
+### cargo check -p semio-s-plugin-procedural --lib (peer blocker probe)
+91
+### cargo test -p semio-s-plugin-demonstrator
+error[E0252]: the name `change_schema` is defined multiple times
+error[E0252]: the name `clear_widget_layout` is defined multiple times
+error[E0252]: the name `connect_synapse` is defined multiple times
+error[E0252]: the name `create_widget` is defined multiple times
+error[E0252]: the name `delete_widget` is defined multiple times
+error[E0252]: the name `disconnect_synapse` is defined multiple times
+error[E0252]: the name `move_widget` is defined multiple times
+error[E0432]: unresolved import `create_generation::create_generation`
+error[E0432]: unresolved import `delete_generation::delete_generation`
+error[E0432]: unresolved import `rename_generation::rename_generation`
+error[E0432]: unresolved import `change_generation_value::change_generation_value`
+error[E0432]: unresolved import `replace_widget::replace_widget`
+error[E0432]: unresolved import `replace_synapse::replace_synapse`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`
+error[E0432]: unresolved import `crate::artifacts::procedural2d::widget_index`

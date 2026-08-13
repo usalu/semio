@@ -1,6 +1,6 @@
 # 🧬️ SemioArtifact schema — full artifact state, mirrors `SemioSnapshot` field for field (see the
 # `📸️snapshot/🔗️component.graphql` sibling for the real `SemioSubsetSnapshot` union shape).
 type SemioArtifact {
-  schema: String! @state(class: PERSISTENT)
-  subset: SemioSubsetSnapshot! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  subset: SemioSubsetSnapshot! @state(class: ARTIFACT)
 }

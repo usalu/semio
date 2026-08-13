@@ -1,15 +1,15 @@
 syntax = "proto3";
 package semio.s.sequence.sequence.diff;
 message SequenceDiff {
-  optional SequenceArtifact artifact = 1; // @state persistent
-  optional string schema = 2; // @state persistent
-  optional SequenceStepsDelta steps = 3; // @state persistent
-  optional SequenceEdgesDelta edges = 4; // @state persistent
-  optional SequenceStringList selected_step_ids = 5; // @state shared-ui
-  optional string last_run_json = 6; // @state local-ui
-  optional string orientation = 7; // @state local-ui
-  optional SequenceCamera camera = 8; // @state local-ui
-  optional string locale = 9; // @state local-ui
+  optional SequenceArtifact artifact = 1; // @state artifact
+  optional string schema = 2; // @state artifact
+  optional SequenceStepsDelta steps = 3; // @state artifact
+  optional SequenceEdgesDelta edges = 4; // @state artifact
+  optional SequenceStringList selected_step_ids = 5; // @state presence
+  optional string last_run_json = 6; // @state config
+  optional string orientation = 7; // @state config
+  optional SequenceCamera camera = 8; // @state config
+  optional string locale = 9; // @state config
 }
 message SequenceStringList { repeated string values = 1; }
 message SequenceStepsDelta { repeated SequenceStep added = 1; repeated string removed = 2; repeated SequenceStepPatchEntry patched = 3; repeated string reordered = 4; }

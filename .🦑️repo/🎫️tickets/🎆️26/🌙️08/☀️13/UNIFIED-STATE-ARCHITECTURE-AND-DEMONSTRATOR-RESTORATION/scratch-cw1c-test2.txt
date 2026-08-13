@@ -1,0 +1,1275 @@
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:732:46
+    |
+732 |     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+732 -     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+732 +     fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:737:22
+    |
+737 |         let record = crate::os_dsl::parse(
+    |                      ^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+737 -         let record = crate::os_dsl::parse(
+737 +         let record = parse(
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:740:14
+    |
+740 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+740 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+740 +             &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:740:52
+    |
+740 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+740 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+740 +             &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:740:92
+    |
+740 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+740 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+740 +             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Document },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:745:20
+    |
+745 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+    |                    ^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+745 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+745 +         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:745:87
+    |
+745 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+    |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+745 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+745 +         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:780:32
+    |
+780 |     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+780 -     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+780 +     fn record_spec() -> Option<RecordSpec> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:819:45
+    |
+819 |     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+819 -     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
+819 +     fn parse_op(line: &str) -> Result<Self, TextError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:820:24
+    |
+820 |         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+820 -         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+820 +         let variants = <Self as DslVariants>::variants();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:824:30
+    |
+824 |                 let record = crate::os_dsl::parse(
+    |                              ^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+824 -                 let record = crate::os_dsl::parse(
+824 +                 let record = parse(
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:827:22
+    |
+827 | ...   &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+827 -                     &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+827 +                     &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:827:60
+    |
+827 | ...   &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+827 -                     &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+827 +                     &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:827:100
+    |
+827 | ...   &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+    |                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+827 -                     &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+827 +                     &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Inline },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:829:24
+    |
+829 |                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+829 -                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+829 +                 return <Self as DslVariants>::from_named_record(keyword, &record);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:832:13
+    |
+832 |         Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+832 -         Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+832 +         Err(__rt::field_error(format!("unknown operation line '{line}'")))
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:835:33
+    |
+835 |         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+835 -         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+835 +         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:836:24
+    |
+836 |         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+836 -         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+836 +         let variants = <Self as DslVariants>::variants();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:838:9
+    |
+838 |         crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    |         ^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+838 -         crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+838 +         print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:838:51
+    |
+838 |         crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+    |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+838 -         crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+838 +         crate::os_dsl::print(&record, &spec_fn(), JoinMode::Inline)
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:846:33
+    |
+846 |         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+846 -         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+846 +         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:847:24
+    |
+847 |         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+847 -         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+847 +         let variants = <Self as DslVariants>::variants();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:869:24
+    |
+869 |         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+869 -         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+869 +         let variants = <Self as DslVariants>::variants();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:878:9
+    |
+878 | ...   <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malfo...
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+878 -         <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+878 +         <Self as DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:963:46
+    |
+963 |     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+963 -     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+963 +     fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:968:22
+    |
+968 |         let record = crate::os_dsl::parse(
+    |                      ^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+968 -         let record = crate::os_dsl::parse(
+968 +         let record = parse(
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:971:14
+    |
+971 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+971 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+971 +             &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:971:52
+    |
+971 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+971 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+971 +             &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:971:92
+    |
+971 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+    |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+971 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+971 +             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Document },
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:976:20
+    |
+976 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+    |                    ^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+976 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+976 +         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:976:87
+    |
+976 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+    |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+976 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+976 +         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1011:32
+     |
+1011 |     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1011 -     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+1011 +     fn record_spec() -> Option<RecordSpec> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1072:46
+     |
+1072 |     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1072 -     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+1072 +     fn parse_dsl(text: &str) -> Result<Self, TextError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1077:22
+     |
+1077 |         let record = crate::os_dsl::parse(
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1077 -         let record = crate::os_dsl::parse(
+1077 +         let record = parse(
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1080:14
+     |
+1080 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1080 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1080 +             &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1080:52
+     |
+1080 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1080 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1080 +             &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1080:92
+     |
+1080 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1080 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1080 +             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1085:20
+     |
+1085 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                    ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1085 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1085 +         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1085:87
+     |
+1085 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1085 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1085 +         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1120:32
+     |
+1120 |     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1120 -     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+1120 +     fn record_spec() -> Option<RecordSpec> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1170:46
+     |
+1170 |     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1170 -     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+1170 +     fn parse_dsl(text: &str) -> Result<Self, TextError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1175:22
+     |
+1175 |         let record = crate::os_dsl::parse(
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1175 -         let record = crate::os_dsl::parse(
+1175 +         let record = parse(
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1178:14
+     |
+1178 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1178 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1178 +             &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1178:52
+     |
+1178 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1178 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1178 +             &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1178:92
+     |
+1178 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1178 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1178 +             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1183:20
+     |
+1183 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                    ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1183 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1183 +         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1183:87
+     |
+1183 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1183 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1183 +         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1218:32
+     |
+1218 |     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1218 -     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+1218 +     fn record_spec() -> Option<RecordSpec> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1264:46
+     |
+1264 |     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1264 -     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+1264 +     fn parse_dsl(text: &str) -> Result<Self, TextError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1269:22
+     |
+1269 |         let record = crate::os_dsl::parse(
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1269 -         let record = crate::os_dsl::parse(
+1269 +         let record = parse(
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1272:14
+     |
+1272 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1272 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1272 +             &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1272:52
+     |
+1272 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1272 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1272 +             &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1272:92
+     |
+1272 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1272 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1272 +             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1277:20
+     |
+1277 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                    ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1277 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1277 +         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1277:87
+     |
+1277 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1277 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1277 +         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1312:32
+     |
+1312 |     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1312 -     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+1312 +     fn record_spec() -> Option<RecordSpec> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1350:45
+     |
+1350 |     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1350 -     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
+1350 +     fn parse_op(line: &str) -> Result<Self, TextError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1351:24
+     |
+1351 |         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1351 -         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+1351 +         let variants = <Self as DslVariants>::variants();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1355:30
+     |
+1355 |                 let record = crate::os_dsl::parse(
+     |                              ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1355 -                 let record = crate::os_dsl::parse(
+1355 +                 let record = parse(
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1358:22
+     |
+1358 | ...   &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1358 -                     &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+1358 +                     &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1358:60
+     |
+1358 | ...   &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1358 -                     &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+1358 +                     &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1358:100
+     |
+1358 | ...   &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+     |                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1358 -                     &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
+1358 +                     &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Inline },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1360:24
+     |
+1360 |                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1360 -                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+1360 +                 return <Self as DslVariants>::from_named_record(keyword, &record);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1363:13
+     |
+1363 |         Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1363 -         Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+1363 +         Err(__rt::field_error(format!("unknown operation line '{line}'")))
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1366:33
+     |
+1366 |         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1366 -         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+1366 +         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1367:24
+     |
+1367 |         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1367 -         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+1367 +         let variants = <Self as DslVariants>::variants();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1369:9
+     |
+1369 |         crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+     |         ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1369 -         crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+1369 +         print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1369:51
+     |
+1369 |         crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1369 -         crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+1369 +         crate::os_dsl::print(&record, &spec_fn(), JoinMode::Inline)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1377:33
+     |
+1377 |         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1377 -         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+1377 +         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1378:24
+     |
+1378 |         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1378 -         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+1378 +         let variants = <Self as DslVariants>::variants();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1400:24
+     |
+1400 |         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1400 -         let variants = <Self as crate::os_dsl::DslVariants>::variants();
+1400 +         let variants = <Self as DslVariants>::variants();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1409:9
+     |
+1409 | ...   <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malf...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1409 -         <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+1409 +         <Self as DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1459:46
+     |
+1459 |     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1459 -     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+1459 +     fn parse_dsl(text: &str) -> Result<Self, TextError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1464:22
+     |
+1464 |         let record = crate::os_dsl::parse(
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1464 -         let record = crate::os_dsl::parse(
+1464 +         let record = parse(
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1467:14
+     |
+1467 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1467 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1467 +             &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1467:52
+     |
+1467 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1467 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1467 +             &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1467:92
+     |
+1467 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1467 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1467 +             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1472:20
+     |
+1472 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                    ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1472 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1472 +         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1472:87
+     |
+1472 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1472 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1472 +         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1507:32
+     |
+1507 |     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1507 -     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+1507 +     fn record_spec() -> Option<RecordSpec> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1551:46
+     |
+1551 |     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1551 -     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
+1551 +     fn parse_dsl(text: &str) -> Result<Self, TextError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1556:22
+     |
+1556 |         let record = crate::os_dsl::parse(
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1556 -         let record = crate::os_dsl::parse(
+1556 +         let record = parse(
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1559:14
+     |
+1559 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1559 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1559 +             &ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1559:52
+     |
+1559 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1559 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1559 +             &crate::os_dsl::ParseOptions { limits: Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1559:92
+     |
+1559 |             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+     |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1559 -             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
+1559 +             &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: SourceMode::Document },
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1564:20
+     |
+1564 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                    ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1564 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1564 +         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1564:87
+     |
+1564 |         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+     |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1564 -         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+1564 +         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1599:32
+     |
+1599 |     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1599 -     fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+1599 +     fn record_spec() -> Option<RecordSpec> {
+     |
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11
+    |
+319 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11
+    |
+325 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:245:24
+    |
+245 |         let ops_text = crate::os_spr::history::print_ops_text(&log).unwrap();
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+245 -         let ops_text = crate::os_spr::history::print_ops_text(&log).unwrap();
+245 +         let ops_text = print_ops_text(&log).unwrap();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:250:20
+    |
+250 | ...   assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap(), crate::os_spr::history::parse_ops_text(&ops_text).un...
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+250 -         assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap(), crate::os_spr::history::parse_ops_text(&ops_text).unwrap());
+250 +         assert_eq!(parse_ops_text(&decompiled).unwrap(), crate::os_spr::history::parse_ops_text(&ops_text).unwrap());
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:250:82
+    |
+250 | ...   assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap(), crate::os_spr::history::parse_ops_text(&ops_text).un...
+    |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+250 -         assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap(), crate::os_spr::history::parse_ops_text(&ops_text).unwrap());
+250 +         assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap(), parse_ops_text(&ops_text).unwrap());
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:251:20
+    |
+251 |         assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+251 -         assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
+251 +         assert_eq!(parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:16
+    |
+492 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+492 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:47
+    |
+492 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+492 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:533:16
+    |
+533 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+533 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+533 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1077:9
+     |
+1077 |     let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, di...
+     |         ----^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2975:19
+     |
+2869 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+2870 | | where
+2871 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+2872 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+2975 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: constant `EXAMPLES_DIR_NAME` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:398:15
+    |
+398 |     pub const EXAMPLES_DIR_NAME: &str = "📚️examples";
+    |               ^^^^^^^^^^^^^^^^^
+
+warning: constant `ASSETS_DIR_NAME` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:399:15
+    |
+399 |     pub const ASSETS_DIR_NAME: &str = "🖼️assets";
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `repo_root` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:402:12
+    |
+402 |     pub fn repo_root() -> PathBuf {
+    |            ^^^^^^^^^
+
+warning: function `collect_files` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:414:8
+    |
+414 |     fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    |        ^^^^^^^^^^^^^
+
+warning: function `find_example_asset` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:431:12
+    |
+431 |     pub fn find_example_asset(artifact_dir: &Path, suffix: &str) -> Option<PathBuf> {
+    |            ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_example_asset_text` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:468:12
+    |
+468 |     pub fn read_example_asset_text(artifact_dir: &Path, suffix: &str) -> Option<String> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `read_example_asset_bytes` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:474:12
+    |
+474 |     pub fn read_example_asset_bytes(artifact_dir: &Path, suffix: &str) -> Option<Vec<u8>> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `artifact_dir` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:480:12
+    |
+480 |     pub fn artifact_dir(plugin: &str, artifact: &str) -> PathBuf {
+    |            ^^^^^^^^^^^^
+
+warning: field `plugin` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:645:13
+    |
+644 |     pub struct DiscoveredGrammarFacet {
+    |                ---------------------- field in this struct
+645 |         pub plugin: String,
+    |             ^^^^^^
+    |
+    = note: `DiscoveredGrammarFacet` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-framework-os-kernel` (lib test) generated 110 warnings (run `cargo fix --lib -p semio-framework-os-kernel --tests` to apply 97 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.43s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_os_kernel-d64e7b0a7fea73c1)
+
+running 9 tests
+test os_store::component::tests::composition_graph_owns_forest_rejects_second_owner_and_cycle ... ok
+test os_store::component::tests::composition_graph_links_reject_cycle_but_allow_converging_dag_edges ... ok
+test os_spr::history::tests::a_log_without_composition_writes_no_composition_record ... ok
+test os_spr::history::tests::composition_overlay_round_trips_through_the_binary_log ... ok
+test os_store::component::tests::typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child ... ok
+test os_dsl::schema::tests::glue_removes_the_key_equals_space_for_every_composite_shape ... ok
+test os_store::component::tests::member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pins ... ok
+test os_store::component::tests::pack_at_checkpoint_reads_history_without_moving_the_live_cursor ... ok
+test os_store::component::tests::typed_child_store_factory_round_trips_a_child_through_create_persist_open ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 826 filtered out; finished in 0.01s
+

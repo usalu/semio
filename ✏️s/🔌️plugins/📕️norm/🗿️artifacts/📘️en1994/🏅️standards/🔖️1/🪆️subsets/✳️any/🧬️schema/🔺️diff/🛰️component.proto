@@ -2,53 +2,53 @@ syntax = "proto3";
 package semio.s.norm.en1994.diff;
 
 message En1994Diff {
-  // @state persistent
+  // @state artifact
   optional En1994Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string annex = 2;
-  // @state persistent
+  // @state artifact
   optional double m_ed_knm = 3;
-  // @state persistent
+  // @state artifact
   optional double v_ed_kn = 4;
-  // @state persistent
+  // @state artifact
   optional double m_pla = 5;
-  // @state persistent
+  // @state artifact
   optional double m_pl_rd = 6;
-  // @state persistent
+  // @state artifact
   optional double eta = 7;
-  // @state persistent
+  // @state artifact
   optional double v_l_rd = 8;
-  // @state persistent
+  // @state artifact
   optional double insulation_thickness_mm = 9;
-  // @state persistent
+  // @state artifact
   optional string fire_rating = 10;
-  // @state persistent
+  // @state artifact
   optional string deck_type = 11;
-  // @state persistent
+  // @state artifact
   optional double delta_sigma_mpa = 12;
-  // @state persistent
+  // @state artifact
   optional string fatigue_detail = 13;
-  // @state persistent
+  // @state artifact
   optional double d_mm = 14;
-  // @state persistent
+  // @state artifact
   optional double h_sc_mm = 15;
-  // @state persistent
+  // @state artifact
   optional double f_ck_mpa = 16;
-  // @state persistent
+  // @state artifact
   optional double f_u_mpa = 17;
-  // @state persistent
+  // @state artifact
   optional double e_cm_mpa = 18;
-  // @state persistent
+  // @state artifact
   optional double v_ed_per_stud_kn = 19;
-  // @state persistent
+  // @state artifact
   optional double span_m = 20;
-  // @state persistent
+  // @state artifact
   optional double f_y_mpa = 21;
-  // @state persistent
+  // @state artifact
   optional double n_cycles_stud = 22;
-  // @state persistent
+  // @state artifact
   optional double delta_tau_stud_mpa = 23;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 24;
 }
 

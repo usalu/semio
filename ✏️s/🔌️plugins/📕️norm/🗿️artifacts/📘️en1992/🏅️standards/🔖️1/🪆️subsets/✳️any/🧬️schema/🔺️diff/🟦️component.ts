@@ -1,79 +1,79 @@
 /** 🧬️ En1992 diff schema — sparse field delta. */
 
 export interface En1992Diff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: En1992Artifact;
-  /** @state persistent */
+  /** @state artifact */
   annex?: string;
-  /** @state persistent */
+  /** @state artifact */
   mEdKnm?: number;
-  /** @state persistent */
+  /** @state artifact */
   vEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   fCk?: number;
-  /** @state persistent */
+  /** @state artifact */
   bMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   dMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   aSMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   fYk?: number;
-  /** @state persistent */
+  /** @state artifact */
   rhoL?: number;
-  /** @state persistent */
+  /** @state artifact */
   nEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   pKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   aCMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   useFem?: boolean;
-  /** @state persistent */
+  /** @state artifact */
   spanM?: number;
-  /** @state persistent */
+  /** @state artifact */
   udlKnM?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireRating?: string;
-  /** @state persistent */
+  /** @state artifact */
   providedAxisDistanceMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeSigmaCMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   bridgeDeltaSigmaSMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   tightnessClass?: string;
-  /** @state persistent */
+  /** @state artifact */
   hdOverH?: number;
-  /** @state persistent */
+  /** @state artifact */
   liquidSigmaSMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   liquidRhoPEff?: number;
-  /** @state persistent */
+  /** @state artifact */
   liquidFCtEffMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   liquidESMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   liquidSRMaxMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   anchorHEfMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   anchorCracked?: boolean;
-  /** @state persistent */
+  /** @state artifact */
   anchorFUkMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   anchorFYkMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   anchorASMm2?: number;
-  /** @state persistent */
+  /** @state artifact */
   anchorDMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   anchorC1Mm?: number;
-  /** @state persistent */
+  /** @state artifact */
   anchorNEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   anchorVEdKn?: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }
 

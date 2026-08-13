@@ -3,19 +3,19 @@
 export type DslValue = Record<string, unknown>;
 
 export interface WiresArtifact {
-  /** @state persistent */
+  /** @state artifact */
   wiresFixture: DslValue;
-  /** @state persistent */
+  /** @state artifact */
   boardFixture: DslValue;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state preview */
+  /** @state artifact */
   dragNodeId?: string;
-  /** @state preview */
+  /** @state artifact */
   dragLastX: number;
-  /** @state preview */
+  /** @state artifact */
   dragLastY: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

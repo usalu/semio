@@ -1,20 +1,20 @@
 /** 🧬️ Iso16757 snapshot schema — persistent fields only. */
 
 export interface Iso16757Snapshot {
-  /** @state persistent */
+  /** @state artifact */
   catalogue: string;
-  /** @state persistent */
+  /** @state artifact */
   dictionary: string;
-  /** @state persistent */
+  /** @state artifact */
   geometry: string;
-  /** @state persistent */
+  /** @state artifact */
   selection: string;
-  /** @state persistent */
+  /** @state artifact */
   partNumberRule: string;
-  /** @state persistent */
+  /** @state artifact */
   partNumberInputs: Record<string, string>;
-  /** @state persistent */
+  /** @state artifact */
   scriptLimits: string;
-  /** @state persistent */
+  /** @state artifact */
   exchangeProcess: string;
 }

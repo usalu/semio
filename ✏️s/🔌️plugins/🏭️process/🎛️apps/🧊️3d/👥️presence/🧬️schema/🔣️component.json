@@ -14,24 +14,24 @@
   "properties": {
     "selectedId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedFaceId": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "cameraPosition": {
       "type": "array",
@@ -40,7 +40,7 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "cameraTarget": {
       "type": "array",
@@ -49,15 +49,15 @@
       },
       "minItems": 3,
       "maxItems": 3,
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "cameraFov": {
       "type": "number",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

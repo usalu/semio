@@ -20,7 +20,7 @@ use super::entries::{compute_zip_entries, ZipEntries};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.zip.inference")]
 pub struct ZipInference {
-    #[state(inferred)]
+    #[derived]
     pub entries: ZipEntries,
 }
 

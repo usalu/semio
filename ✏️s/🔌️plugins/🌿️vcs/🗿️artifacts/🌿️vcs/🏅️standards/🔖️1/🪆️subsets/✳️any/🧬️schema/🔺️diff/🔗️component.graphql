@@ -1,15 +1,15 @@
 # 🧬️ VCS diff schema — sparse field delta over the artifact.
 
 type VcsDiff {
-  artifact: VcsArtifact @state(class: PERSISTENT)
-  schema: String @state(class: PERSISTENT)
-  title: String @state(class: PERSISTENT)
-  counter: Long @state(class: PERSISTENT)
-  notes: String @state(class: PERSISTENT)
-  status: String @state(class: PERSISTENT)
-  tags: VcsTagsDelta @state(class: PERSISTENT)
-  selectedCheckpointIds: VcsStringList @state(class: SHARED_UI)
-  locale: String @state(class: LOCAL_UI)
+  artifact: VcsArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  counter: Long @state(class: ARTIFACT)
+  notes: String @state(class: ARTIFACT)
+  status: String @state(class: ARTIFACT)
+  tags: VcsTagsDelta @state(class: ARTIFACT)
+  selectedCheckpointIds: VcsStringList @state(class: PRESENCE)
+  locale: String @state(class: CONFIG)
 }
 
 type VcsStringList {

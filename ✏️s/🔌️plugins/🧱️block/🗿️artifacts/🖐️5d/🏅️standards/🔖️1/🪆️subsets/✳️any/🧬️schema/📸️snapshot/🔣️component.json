@@ -21,73 +21,73 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "partKind": {
       "$ref": "#/$defs/BlockKindIdentity",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "part2d": {
       "$ref": "#/$defs/Block5dPart2d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "part3d": {
       "$ref": "#/$defs/Block5dPart3d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "representations": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BlockRepresentation"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "gripKinds": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Block5dGripKind"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "grips": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Block5dGripTemplate"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "compatibility": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BlockCompatibilityRule"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "attributes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BlockAttribute"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "authors": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BlockAuthor"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera2d": {
       "$ref": "#/$defs/BlockCamera2d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera3d": {
       "$ref": "#/$defs/BlockCamera3d",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/BlockMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

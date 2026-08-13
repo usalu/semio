@@ -3,106 +3,106 @@ syntax = "proto3";
 package semio.s.norm.en1998.diff;
 
 message En1998Diff {
-  // @state persistent
+  // @state artifact
   optional En1998Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional uint32 seismic_zone = 2;
-  // @state persistent
+  // @state artifact
   optional double ground_type = 3;
-  // @state persistent
+  // @state artifact
   optional double importance_class = 4;
-  // @state persistent
+  // @state artifact
   optional double structural_system = 5;
-  // @state persistent
+  // @state artifact
   optional double t1_s = 6;
-  // @state persistent
+  // @state artifact
   optional double mass_t = 7;
-  // @state persistent
+  // @state artifact
   optional double v_rd_kn = 8;
-  // @state persistent
+  // @state artifact
   optional double drift_mm = 9;
-  // @state persistent
+  // @state artifact
   optional double height_m = 10;
-  // @state persistent
+  // @state artifact
   optional bool multiple_resisting_systems = 11;
-  // @state persistent
+  // @state artifact
   optional double annex = 12;
-  // @state persistent
+  // @state artifact
   optional double en_a_gr = 13;
-  // @state persistent
+  // @state artifact
   optional double en_ground_type = 14;
-  // @state persistent
+  // @state artifact
   optional double en_spectrum_type = 15;
-  // @state persistent
+  // @state artifact
   optional double period_ratio = 16;
-  // @state persistent
+  // @state artifact
   optional double bridge_v_rd_kn = 17;
-  // @state persistent
+  // @state artifact
   optional double bearing_d_ed_mm = 18;
-  // @state persistent
+  // @state artifact
   optional double bearing_d_rd_mm = 19;
-  // @state persistent
+  // @state artifact
   optional double retrofit_knowledge_level = 20;
-  // @state persistent
+  // @state artifact
   optional double retrofit_limit_state = 21;
-  // @state persistent
+  // @state artifact
   optional double retrofit_e_d_kn = 22;
-  // @state persistent
+  // @state artifact
   optional double retrofit_r_k_kn = 23;
-  // @state persistent
+  // @state artifact
   optional double retrofit_gamma_el = 24;
-  // @state persistent
+  // @state artifact
   optional double silo_height_m = 25;
-  // @state persistent
+  // @state artifact
   optional double silo_radius_m = 26;
-  // @state persistent
+  // @state artifact
   optional double silo_n_rd_kn = 27;
-  // @state persistent
+  // @state artifact
   optional double silo_v_ed_kn = 28;
-  // @state persistent
+  // @state artifact
   optional double silo_v_rd_kn = 29;
-  // @state persistent
+  // @state artifact
   optional double silo_q_nominal = 30;
-  // @state persistent
+  // @state artifact
   optional double tank_height_m = 31;
-  // @state persistent
+  // @state artifact
   optional double tank_radius_m = 32;
-  // @state persistent
+  // @state artifact
   optional double tank_mass_t = 33;
-  // @state persistent
+  // @state artifact
   optional double tank_v_rd_kn = 34;
-  // @state persistent
+  // @state artifact
   optional double tower_m_ed_knm = 35;
-  // @state persistent
+  // @state artifact
   optional double tower_m_rd_knm = 36;
-  // @state persistent
+  // @state artifact
   optional bool tower_is_chimney = 37;
-  // @state persistent
+  // @state artifact
   optional double tower_q_nominal = 38;
-  // @state persistent
+  // @state artifact
   optional double tower_mass_t = 39;
-  // @state persistent
+  // @state artifact
   optional double foundation_area_m2 = 40;
-  // @state persistent
+  // @state artifact
   optional double foundation_p_rd_kpa = 41;
-  // @state persistent
+  // @state artifact
   optional double foundation_h_ed_kn = 42;
-  // @state persistent
+  // @state artifact
   optional double foundation_h_rd_kn = 43;
-  // @state persistent
+  // @state artifact
   optional double k_foundation = 44;
-  // @state persistent
+  // @state artifact
   optional double k_soil = 45;
-  // @state persistent
+  // @state artifact
   optional double wall_height_m = 46;
-  // @state persistent
+  // @state artifact
   optional double wall_phi_deg = 47;
-  // @state persistent
+  // @state artifact
   optional double wall_soil_gamma_kn_m3 = 48;
-  // @state persistent
+  // @state artifact
   optional double wall_r = 49;
-  // @state persistent
+  // @state artifact
   optional double wall_h_rd_kn = 50;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 51;
 }

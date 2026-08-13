@@ -4,8 +4,8 @@ package semio.s.space.home.snapshot;
 // 🧬️ S Home snapshot schema — persistent fields only.
 
 message SHomeSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   uint64 catalog_generation = 2;
 }

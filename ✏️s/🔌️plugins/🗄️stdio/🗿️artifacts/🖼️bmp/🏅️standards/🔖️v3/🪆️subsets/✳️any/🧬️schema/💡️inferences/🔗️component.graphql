@@ -1,7 +1,7 @@
 # 💡️ Bmp inference schema — BITMAPINFOHEADER-derived raster geometry.
 
 type BmpInference {
-  dimensions: BmpDimensions! @state(class: INFERRED)
+  dimensions: BmpDimensions! @derived
 }
 
 type BmpDimensions {

@@ -10,19 +10,19 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.sourcing.curate")]
 pub struct CurateDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::curate::schema::CurateArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub stock: Option<CurateStockDelta>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub curated: Option<CurateCuratedDelta>,
-    #[state(local_ui)]
+    #[state(config)]
     pub filters: Option<Filters>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_object_id: Option<Option<String>>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff

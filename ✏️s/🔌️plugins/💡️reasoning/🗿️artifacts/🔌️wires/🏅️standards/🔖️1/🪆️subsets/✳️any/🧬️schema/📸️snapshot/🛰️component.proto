@@ -4,9 +4,9 @@ package semio.s.reasoning.wires.snapshot;
 // 🧬️ Wires snapshot schema.
 
 message WiresSnapshot {
-  // @state persistent
+  // @state artifact
   DslValue wires_fixture = 1;
-  // @state persistent
+  // @state artifact
   DslValue board_fixture = 2;
 }
 

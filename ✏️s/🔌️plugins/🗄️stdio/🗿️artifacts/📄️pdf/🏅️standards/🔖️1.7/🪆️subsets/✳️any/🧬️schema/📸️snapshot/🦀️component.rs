@@ -163,21 +163,21 @@ pub struct PdfInfo {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7")]
 pub struct PdfSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub declared_version: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub pages: Vec<PdfPage>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub info: PdfInfo,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub objects: Vec<PdfIndirectObject>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub trailer: Vec<PdfDictEntry>,
 }

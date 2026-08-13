@@ -8,7 +8,7 @@
     "selectedCheckIndex": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   }
 }

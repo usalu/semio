@@ -4,13 +4,13 @@ package semio.s.imperative.imperative.diff;
 // 🧬️ Imperative diff schema — sparse field delta over the artifact.
 
 message ImperativeDiff {
-  optional ImperativeArtifact artifact = 1; // @state persistent
-  optional string schema = 2; // @state persistent
-  optional ImperativePathDelta path = 3; // @state persistent
-  optional map<string, string> seed = 4; // @state persistent
-  optional ImperativeStringList selected_step_ids = 5; // @state shared-ui
-  optional string locale = 6; // @state local-ui
-  optional string contributions_json = 7; // @state local-ui
+  optional ImperativeArtifact artifact = 1; // @state artifact
+  optional string schema = 2; // @state artifact
+  optional ImperativePathDelta path = 3; // @state artifact
+  optional map<string, string> seed = 4; // @state artifact
+  optional ImperativeStringList selected_step_ids = 5; // @state presence
+  optional string locale = 6; // @state config
+  optional string contributions_json = 7; // @state config
 }
 
 message ImperativeStringList {

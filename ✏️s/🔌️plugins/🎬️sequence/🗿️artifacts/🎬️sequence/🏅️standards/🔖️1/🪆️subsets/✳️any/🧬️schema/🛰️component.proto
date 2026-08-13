@@ -1,14 +1,14 @@
 syntax = "proto3";
 package semio.s.sequence.sequence.artifact;
 message SequenceArtifact {
-  string schema = 1; // @state persistent
-  repeated SequenceStep steps = 2; // @state persistent
-  repeated SequenceEdge edges = 3; // @state persistent
-  repeated string selected_step_ids = 4; // @state shared-ui
-  string last_run_json = 5; // @state local-ui
-  string orientation = 6; // @state local-ui
-  SequenceCamera camera = 7; // @state local-ui
-  string locale = 8; // @state local-ui
+  string schema = 1; // @state artifact
+  repeated SequenceStep steps = 2; // @state artifact
+  repeated SequenceEdge edges = 3; // @state artifact
+  repeated string selected_step_ids = 4; // @state presence
+  string last_run_json = 5; // @state config
+  string orientation = 6; // @state config
+  SequenceCamera camera = 7; // @state config
+  string locale = 8; // @state config
 }
 message SequenceStep { string id = 1; string kind = 2; string params_json = 3; double x = 4; double y = 5; optional SlotRef slot = 6; bool collapsed = 7; }
 message SequenceEdge { string id = 1; string from = 2; string to = 3; }

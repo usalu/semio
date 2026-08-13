@@ -20,7 +20,7 @@ use super::bounds::{compute_ply_bounds, PlyBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply.inference")]
 pub struct PlyInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: PlyBounds,
 }
 

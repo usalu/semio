@@ -1,8 +1,8 @@
 # 💡️ Process3d inference schema — stockBounds (world-space AABB) + stepCount.
 
 type Process3dInference {
-  stockBounds: BoundingBox! @state(class: INFERRED)
-  stepCount: Int! @state(class: INFERRED)
+  stockBounds: BoundingBox! @derived
+  stepCount: Int! @derived
 }
 
 type BoundingBox {

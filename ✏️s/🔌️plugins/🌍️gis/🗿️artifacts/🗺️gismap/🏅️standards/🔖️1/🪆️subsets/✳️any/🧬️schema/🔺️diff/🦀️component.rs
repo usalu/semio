@@ -11,22 +11,22 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapDiff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::gismap::schema::GisMapArtifact>>,
-    #[state(persistent)] pub positions: Option<GisMapFeaturesDelta>,
-    #[state(persistent)] pub routes: Option<GisMapFeaturesDelta>,
-    #[state(persistent)] pub regions: Option<GisMapFeaturesDelta>,
-    #[state(shared_ui)] pub selected_ids: Option<GisMapStringList>,
-    #[state(shared_ui)] pub feature_selection_json: Option<String>,
-    #[state(shared_ui)] pub layer_visibility: Option<GisMapBoolMapDelta>,
-    #[state(shared_ui)] pub layer_stroke_scale: Option<GisMapNumberMapDelta>,
-    #[state(local_ui)] pub camera_json: Option<String>,
-    #[state(local_ui)] pub render_mode: Option<String>,
-    #[state(local_ui)] pub vector_style: Option<String>,
-    #[state(local_ui)] pub lod_mode: Option<String>,
-    #[state(local_ui)] pub hover_json: Option<String>,
-    #[state(local_ui)] pub selection_method: Option<String>,
-    #[state(local_ui)] pub selection_mode: Option<String>,
-    #[state(local_ui)] pub locale: Option<String>,
+    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::gismap::schema::GisMapArtifact>>,
+    #[state(artifact)] pub positions: Option<GisMapFeaturesDelta>,
+    #[state(artifact)] pub routes: Option<GisMapFeaturesDelta>,
+    #[state(artifact)] pub regions: Option<GisMapFeaturesDelta>,
+    #[state(presence)] pub selected_ids: Option<GisMapStringList>,
+    #[state(presence)] pub feature_selection_json: Option<String>,
+    #[state(presence)] pub layer_visibility: Option<GisMapBoolMapDelta>,
+    #[state(presence)] pub layer_stroke_scale: Option<GisMapNumberMapDelta>,
+    #[state(config)] pub camera_json: Option<String>,
+    #[state(config)] pub render_mode: Option<String>,
+    #[state(config)] pub vector_style: Option<String>,
+    #[state(config)] pub lod_mode: Option<String>,
+    #[state(config)] pub hover_json: Option<String>,
+    #[state(config)] pub selection_method: Option<String>,
+    #[state(config)] pub selection_mode: Option<String>,
+    #[state(config)] pub locale: Option<String>,
 }
 //#endregion 🔹Diff
 

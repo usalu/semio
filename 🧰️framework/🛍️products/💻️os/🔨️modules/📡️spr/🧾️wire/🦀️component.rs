@@ -184,21 +184,23 @@ pub enum ConflictRule {
 //#endregion 🔖️Policies
 
 //#region 🔖️StateClass
-// New: the explicit persistent/shared-ui/local-ui/preview/effect separation the db spec requires.
-// Carried on MutationDescriptor (protocol_command) and on wire envelopes (protocol_wire).
+// The four — and only four — state mechanisms the architecture admits, spanning the
+// durability × visibility square. Carried on MutationDescriptor (protocol_command) and on wire
+// envelopes (protocol_wire).
 
-/// @emoji 🗂️ Which durability/visibility class an operation's diffs belong to.
+/// @emoji 🗂️ Which of the four state lanes an operation's diffs belong to. Exhaustive by
+/// construction: `Artifact` = persisted shared, `Config` = persisted local-only, `Presence` =
+/// ephemeral shared, `Transient` = ephemeral local-only UI state.
+///
+/// Draftness is a LANE property — which store a record lives in — never a field annotation, so a
+/// draft artifact's fields are still [`StateClass::Artifact`]. Derivation travels on its own axis
+/// (`#[derived]` / `x-semio-derived`), never as a state class: a derived field is not state at all.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum StateClass {
-    Persistent,
-    SharedUi,
-    LocalUi,
-    Preview,
-    Effect,
-    /// @emoji 💡️ Derivable-from-snapshot state — never authored, never diffed/mutated, only
-    /// (optionally) cached. Used exclusively by `💡️inference` schema facets; a
-    /// `Mutation::state_class()` must never return this (see `📜️script.ts`'s `POLICY_INFERENCE_STATE`).
-    Inferred,
+    Artifact,
+    Config,
+    Presence,
+    Transient,
 }
 //#endregion 🔖️StateClass
 
@@ -871,10 +873,12 @@ mod tests {
             let json = serde_json::to_string(&policy).unwrap();
             assert_eq!(serde_json::from_str::<UndoPolicy>(&json).unwrap(), policy);
         }
-        for class in [StateClass::Persistent, StateClass::SharedUi, StateClass::LocalUi, StateClass::Preview, StateClass::Effect, StateClass::Inferred] {
+        let lanes = [StateClass::Artifact, StateClass::Config, StateClass::Presence, StateClass::Transient];
+        for class in lanes {
             let json = serde_json::to_string(&class).unwrap();
             assert_eq!(serde_json::from_str::<StateClass>(&json).unwrap(), class);
         }
+        assert_eq!(lanes.len(), 4, "the state square admits exactly four lanes");
     }
     //#endregion 🔖️Policies
 

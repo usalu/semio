@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["shape"],
   "properties": {
-    "shape": { "$ref": "#/$defs/SemioTableShape", "x-semio-state": "inferred" }
+    "shape": { "$ref": "#/$defs/SemioTableShape", "x-semio-derived": true }
   },
   "$defs": {
     "SemioTableShape": {

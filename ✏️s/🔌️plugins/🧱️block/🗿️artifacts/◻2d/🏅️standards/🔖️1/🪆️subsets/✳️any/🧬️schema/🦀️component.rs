@@ -11,18 +11,18 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block2d")]
 pub struct Block2dArtifact {
-    #[state(persistent)] pub schema: String,
-    #[state(persistent)] pub node_kind: BlockKindIdentity,
-    #[state(persistent)] pub presentation: Block2dPresentation,
-    #[state(persistent)] pub handle_kinds: Vec<Block2dHandleKind>,
-    #[state(persistent)] pub handles: Vec<Block2dHandleTemplate>,
-    #[state(persistent)] pub compatibility: Vec<BlockCompatibilityRule>,
-    #[state(persistent)] pub attributes: Vec<BlockAttribute>,
-    #[state(persistent)] pub authors: Vec<BlockAuthor>,
-    #[state(persistent)] pub camera2d: BlockCamera2d,
-    #[state(persistent)] pub meta: BlockMeta,
-    #[state(shared_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub locale: String,
+    #[state(artifact)] pub schema: String,
+    #[state(artifact)] pub node_kind: BlockKindIdentity,
+    #[state(artifact)] pub presentation: Block2dPresentation,
+    #[state(artifact)] pub handle_kinds: Vec<Block2dHandleKind>,
+    #[state(artifact)] pub handles: Vec<Block2dHandleTemplate>,
+    #[state(artifact)] pub compatibility: Vec<BlockCompatibilityRule>,
+    #[state(artifact)] pub attributes: Vec<BlockAttribute>,
+    #[state(artifact)] pub authors: Vec<BlockAuthor>,
+    #[state(artifact)] pub camera2d: BlockCamera2d,
+    #[state(artifact)] pub meta: BlockMeta,
+    #[state(presence)] pub selected_ids: Vec<String>,
+    #[state(config)] pub locale: String,
 }
 //#endregion 🔖️Artifact
 

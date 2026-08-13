@@ -5,6 +5,6 @@ export interface Semio_wav_mutationsEntry {
   value: string;
 }
 export interface Semio_wav_mutations {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_wav_mutationsEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: Semio_wav_mutationsEntry[];
 }

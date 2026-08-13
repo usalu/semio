@@ -4,37 +4,37 @@ package semio.s.block.block5d.diff;
 // 🧬️ Block5d diff schema — sparse field delta.
 
 message Block5dDiff {
-  // @state persistent
+  // @state artifact
   optional Block5dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional BlockKindIdentity part_kind = 3;
-  // @state persistent
+  // @state artifact
   optional Block5dPart2d part2d = 4;
-  // @state persistent
+  // @state artifact
   optional Block5dPart3d part3d = 5;
-  // @state persistent
+  // @state artifact
   optional Block5dRepresentationsDelta representations = 6;
-  // @state persistent
+  // @state artifact
   optional Block5dGripKindsDelta grip_kinds = 7;
-  // @state persistent
+  // @state artifact
   optional Block5dGripsDelta grips = 8;
-  // @state persistent
+  // @state artifact
   optional Block5dCompatibilityDelta compatibility = 9;
-  // @state persistent
+  // @state artifact
   optional Block5dAttributesDelta attributes = 10;
-  // @state persistent
+  // @state artifact
   optional Block5dAuthorList authors = 11;
-  // @state persistent
+  // @state artifact
   optional BlockCamera2d camera2d = 12;
-  // @state persistent
+  // @state artifact
   optional BlockCamera3d camera3d = 13;
-  // @state persistent
+  // @state artifact
   optional BlockMeta meta = 14;
-  // @state shared-ui
+  // @state presence
   optional Block5dStringList selected_ids = 15;
-  // @state local-ui
+  // @state config
   optional string locale = 16;
 }
 

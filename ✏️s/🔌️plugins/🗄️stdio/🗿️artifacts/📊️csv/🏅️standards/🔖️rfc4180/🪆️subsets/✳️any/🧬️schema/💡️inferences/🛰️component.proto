@@ -4,7 +4,7 @@ package semio.s.stdio.csv.inference;
 // 💡️ Csv inference schema — document outline (record/column counts + hasHeader).
 
 message CsvInference {
-  // @state inferred
+  // @derived
   CsvOutline outline = 1;
 }
 

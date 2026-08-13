@@ -52,5 +52,5 @@ export interface JsonObjectDiff {
 }
 
 export interface JsonDiff {
-  /** @state persistent */ value?: JsonValueDiff;
+  /** @state artifact */ value?: JsonValueDiff;
 }

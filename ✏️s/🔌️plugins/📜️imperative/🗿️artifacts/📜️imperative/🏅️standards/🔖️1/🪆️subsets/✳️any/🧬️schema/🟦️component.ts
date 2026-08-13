@@ -1,19 +1,19 @@
 /** 🧬️ Imperative artifact schema — every field with its state class. */
 
 export interface ImperativeArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   path: ImperativePath;
-  /** @state persistent */
+  /** @state artifact */
   seed: Record<string, unknown>;
-  /** @state shared-ui */
+  /** @state presence */
   selectedStepIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
-  /** @state effect */
+  /** @state transient */
   runOutputJson: string;
 }
 

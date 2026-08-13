@@ -1,13 +1,13 @@
 # 🧬️ Imperative diff schema — sparse field delta over the artifact.
 
 type ImperativeDiff {
-  artifact: ImperativeArtifact @state(class: PERSISTENT)
-  schema: String @state(class: PERSISTENT)
-  path: ImperativePathDelta @state(class: PERSISTENT)
-  seed: [ImperativeSeedEntry!] @state(class: PERSISTENT)
-  selectedStepIds: ImperativeStringList @state(class: SHARED_UI)
-  locale: String @state(class: LOCAL_UI)
-  contributionsJson: String @state(class: LOCAL_UI)
+  artifact: ImperativeArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  path: ImperativePathDelta @state(class: ARTIFACT)
+  seed: [ImperativeSeedEntry!] @state(class: ARTIFACT)
+  selectedStepIds: ImperativeStringList @state(class: PRESENCE)
+  locale: String @state(class: CONFIG)
+  contributionsJson: String @state(class: CONFIG)
 }
 
 type ImperativeStringList {

@@ -10,22 +10,22 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dDiff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::fem3d::schema::Fem3dArtifact>>,
-    #[state(persistent)] pub nodes: Option<Fem3dNodesDelta>,
-    #[state(persistent)] pub elements: Option<Fem3dElementsDelta>,
-    #[state(persistent)] pub materials: Option<Fem3dMaterialsDelta>,
-    #[state(persistent)] pub sections: Option<Fem3dSectionsDelta>,
-    #[state(persistent)] pub solids: Option<Fem3dSolidsDelta>,
-    #[state(persistent)] pub supports: Option<Fem3dSupportsDelta>,
-    #[state(persistent)] pub load_cases: Option<Fem3dLoadCasesDelta>,
-    #[state(persistent)] pub combinations: Option<Fem3dCombinationsDelta>,
-    #[state(persistent)] pub analysis: Option<FemAnalysisSettings>,
-    #[state(shared_ui)] pub result_source_id: Option<Option<String>>,
-    #[state(shared_ui)] pub result_mode: Option<String>,
-    #[state(shared_ui)] pub result_mode_index: Option<u32>,
-    #[state(local_ui)] pub camera: Option<FemCamera>,
-    #[state(preview)] pub solver_results_json: Option<String>,
-    #[state(preview)] pub mesh_preview_json: Option<String>,
+    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::fem3d::schema::Fem3dArtifact>>,
+    #[state(artifact)] pub nodes: Option<Fem3dNodesDelta>,
+    #[state(artifact)] pub elements: Option<Fem3dElementsDelta>,
+    #[state(artifact)] pub materials: Option<Fem3dMaterialsDelta>,
+    #[state(artifact)] pub sections: Option<Fem3dSectionsDelta>,
+    #[state(artifact)] pub solids: Option<Fem3dSolidsDelta>,
+    #[state(artifact)] pub supports: Option<Fem3dSupportsDelta>,
+    #[state(artifact)] pub load_cases: Option<Fem3dLoadCasesDelta>,
+    #[state(artifact)] pub combinations: Option<Fem3dCombinationsDelta>,
+    #[state(artifact)] pub analysis: Option<FemAnalysisSettings>,
+    #[state(presence)] pub result_source_id: Option<Option<String>>,
+    #[state(presence)] pub result_mode: Option<String>,
+    #[state(presence)] pub result_mode_index: Option<u32>,
+    #[state(config)] pub camera: Option<FemCamera>,
+    #[state(artifact)] pub solver_results_json: Option<String>,
+    #[state(artifact)] pub mesh_preview_json: Option<String>,
 }
 //#endregion 🔖️Diff
 

@@ -313,6 +313,75 @@ pub trait LinkResolver {
     fn resolve(&self, link: &ArtifactLink) -> LinkState;
 }
 
+/// @emoji 🗂️ The read-only directory a `MemberLinkResolver` resolves against — whatever holds the
+/// live members (a `SpaceHost`, or a test fixture). Returns owned PACK bytes rather than a
+/// `&dyn SpaceMember` so the resolver can be OWNED and stored (a borrowed member reference could
+/// never live in a long-lived host field), and `Option<Result<..>>` distinguishes "no such member"
+/// (→ `LinkState::Missing`) from "member exists but reading it failed" (→ a real error, never
+/// silently reported as absent).
+pub trait MemberDirectory {
+    fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>>;
+    fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>>;
+}
+
+impl MemberDirectory for SpaceHost {
+    fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
+        self.member(artifact_id).map(|member| member.document_pack_bytes())
+    }
+
+    fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
+        self.member(artifact_id).map(|member| member.pack_at_checkpoint(checkpoint_id))
+    }
+}
+
+/// @emoji 🕵️ The one production `LinkResolver`: resolves each `LinkPin` against a `MemberDirectory`
+/// (plus an optional `BlobStore` for escrowed snapshot pins). This is what makes "referenced
+/// artifacts with their own version history" real — `Head` reads the target's live tip, while
+/// `Checkpoint` reads the target's content AS OF that checkpoint, so a pinned reference keeps
+/// showing what it was pinned to no matter how far the target has since moved.
+///
+/// A `Snapshot` pin with no blob store, or whose bytes are not in the store, degrades to
+/// `PinnedOnly` — the blob reference is still known and displayable (a chip can render "pinned to
+/// <hash>" without the content), which is precisely the state `LinkState::PinnedOnly` exists for.
+/// A read error is never laundered into `Missing`: absence and failure are different answers, and
+/// only absence is benign.
+pub struct MemberLinkResolver<D> {
+    directory: D,
+    blobs: Option<Arc<dyn BlobStore>>,
+}
+
+impl<D: MemberDirectory> MemberLinkResolver<D> {
+    /// 🏗️ Resolver without blob escrow — `LinkPin::Snapshot` always degrades to `PinnedOnly`.
+    pub fn new(directory: D) -> Self {
+        Self { directory, blobs: None }
+    }
+
+    /// 🏗️ Resolver that can also materialize content-addressed `LinkPin::Snapshot` blobs.
+    pub fn with_blobs(directory: D, blobs: Arc<dyn BlobStore>) -> Self {
+        Self { directory, blobs: Some(blobs) }
+    }
+}
+
+impl<D: MemberDirectory> LinkResolver for MemberLinkResolver<D> {
+    fn resolve(&self, link: &ArtifactLink) -> LinkState {
+        let dialect = link.target.dialect.clone();
+        match &link.pin {
+            LinkPin::Head => match self.directory.head_pack(&link.target.artifact_id) {
+                Some(Ok(pack_bytes)) => LinkState::Resolved { pack_bytes, dialect },
+                Some(Err(_)) | None => LinkState::Missing,
+            },
+            LinkPin::Checkpoint { id } => match self.directory.checkpoint_pack(&link.target.artifact_id, id) {
+                Some(Ok(pack_bytes)) => LinkState::Resolved { pack_bytes, dialect },
+                Some(Err(_)) | None => LinkState::Missing,
+            },
+            LinkPin::Snapshot { blob } => match self.blobs.as_ref().and_then(|blobs| blobs.get(&blob.hash).ok().flatten()) {
+                Some(pack_bytes) => LinkState::Resolved { pack_bytes, dialect },
+                None => LinkState::PinnedOnly { blob: blob.clone() },
+            },
+        }
+    }
+}
+
 /// @emoji 🏭️ Type-erased per-artifact-kind child store constructor, the composition sibling of
 /// `ArtifactCodec`/`register_document_codec` above. `create` mints a brand-new child store from a
 /// freshly-baked initial pack (composition genesis, see `CompositionCoordinator::dispatch_group`);
@@ -343,6 +412,80 @@ pub fn register_child_store_factory(kind: crate::os_io::ArtifactKindId, factory:
 pub fn child_store_factory(kind: &crate::os_io::ArtifactKindId) -> Option<Arc<dyn ChildStoreFactory>> {
     let registry = child_store_factory_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.get(kind.as_str()).cloned()
+}
+
+/// @emoji 🏭️ The one production `ChildStoreFactory`: a `(P, Mutation)` pair plus the `schema` string
+/// its envelopes carry, monomorphized once per composable artifact kind at registration time so a
+/// plugin registers a child kind with a single line and never hand-writes a factory. `create` bakes
+/// a genesis child (`initial_pack` decoded as `P`, empty rejected — a genesis caller always has an
+/// initial snapshot, and silently substituting `P::default()` would mint a child whose content
+/// nobody chose); `open` reconstructs a previously-persisted child from its full envelope pack via
+/// the same `parse_document_pack` → `reset(envelope, applied, redo)` path `apply_ops_binary` uses,
+/// so a reloaded child restores its exact undo/redo cursor position, not merely its content.
+///
+/// Both stamp `dialect`: `create` from its argument, `open` fail-closed from the persisted envelope.
+/// The invariant is `owner.is_some() ⇒ dialect.is_some()` — every envelope that is somebody's child
+/// knows which dialect it materializes as, which is what lets `ArtifactView.children` type a child
+/// without consulting the parent. (Making `ArtifactEnvelope.dialect` non-`Option` repo-wide is a
+/// separate mechanical slice, deliberately not bundled here — see this ticket's plan.)
+pub struct TypedChildStoreFactory<P, Mutation> {
+    schema: String,
+    _types: PhantomData<fn() -> (P, Mutation)>,
+}
+
+impl<P, Mutation> TypedChildStoreFactory<P, Mutation> {
+    /// 🏗️ Names the `ArtifactEnvelope.schema` every child this factory mints will carry.
+    pub fn new(schema: impl Into<String>) -> Self {
+        Self { schema: schema.into(), _types: PhantomData }
+    }
+}
+
+// 🧵️ `PhantomData<fn() -> (P, Mutation)>` (not `PhantomData<(P, Mutation)>`) keeps this `Send +
+// Sync` — required by `ChildStoreFactory` — for ANY `P`/`Mutation`, since a fn-pointer marker owns
+// no `P`/`Mutation` value. The bounds below still demand `Send` on both, because the produced
+// `Box<dyn SpaceMember>` genuinely carries them; the phantom simply must not add a second,
+// stricter-than-needed constraint on the factory type itself.
+impl<P, Mutation> ChildStoreFactory for TypedChildStoreFactory<P, Mutation>
+where
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
+{
+    fn create(&self, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
+        if initial_pack.is_empty() {
+            return Err(VcsError::Deserialize(format!("child genesis for {id} carries an empty initial pack")));
+        }
+        let initial = P::decode_pack(initial_pack).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let mut envelope = create_document_envelope::<P, Mutation>(&self.schema, id, initial, None);
+        envelope.dialect = Some(dialect.clone());
+        Ok(Box::new(ArtifactStore::new(envelope)))
+    }
+
+    fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
+        let (pack, spr) = decode_document_pack_bytes(envelope_pack)?;
+        let parsed = parse_document_pack::<P, Mutation>(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let envelope = parsed.envelope;
+        if envelope.owner.is_some() && envelope.dialect.is_none() {
+            return Err(VcsError::Deserialize(format!("owned child {} carries no dialect", envelope.id)));
+        }
+        let (applied, redo) = match &envelope.cursor {
+            Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+            None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+        };
+        let mut store = ArtifactStore::new(envelope.clone());
+        store.reset(envelope, applied, redo)?;
+        Ok(Box::new(store))
+    }
+}
+
+/// @emoji 📝️ Registers `TypedChildStoreFactory::<P, Mutation>` for `kind` — the single line a plugin
+/// writes per composable artifact kind. Idempotent, same call-once-at-init contract as
+/// `register_child_store_factory` (which this wraps) and `register_document_codec`.
+pub fn register_typed_child_store_factory<P, Mutation>(kind: crate::os_io::ArtifactKindId, schema: impl Into<String>)
+where
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
+{
+    register_child_store_factory(kind, Arc::new(TypedChildStoreFactory::<P, Mutation>::new(schema)));
 }
 
 //#region 🔖️CompositionDsl
@@ -1670,6 +1813,43 @@ pub fn append_history_edits_to_spr(spr: &[u8], edits: &[crate::os_spr::HistoryEd
     crate::os_spr::encode_history(&log, &options).map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
+/// @emoji 🧩️ Projects an envelope's composition facts (`owner`, `dialect`, and every checkpoint's
+/// `composition_pins`) into the durable `HistoryComposition` overlay, or `None` when the document
+/// has none — which is the overwhelming majority, so an ordinary leaf document's `.spr` gains not a
+/// single byte from this record existing. `ArtifactRef`s cross the boundary as their `to_uri()`
+/// wire string, the same "own the codec at this edge" convention `CompositionPin`/`ArtifactChild`
+/// already use rather than coupling `ArtifactRef` into the protocol crate.
+fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Option<crate::os_spr::HistoryComposition> {
+    let owner = envelope.owner.as_ref().map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone()));
+    let dialect = envelope.dialect.as_ref().map(|dialect| (dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone()));
+    let checkpoint_pins: Vec<(String, Vec<(String, String)>)> = envelope
+        .vcs
+        .checkpoints
+        .iter()
+        .filter(|checkpoint| !checkpoint.composition_pins.is_empty())
+        .map(|checkpoint| (checkpoint.id.clone(), checkpoint.composition_pins.iter().map(|pin| (pin.child_ref.to_uri(), pin.checkpoint_id.clone())).collect()))
+        .collect();
+    if owner.is_none() && dialect.is_none() && checkpoint_pins.is_empty() {
+        return None;
+    }
+    Some(crate::os_spr::HistoryComposition { owner, dialect, checkpoint_pins })
+}
+
+/// @emoji 🧩️ Inverse of `history_composition_from_envelope`: stamps a decoded overlay back onto a
+/// freshly-parsed envelope. A malformed `ArtifactRef` uri is DROPPED rather than failing the whole
+/// parse — an unreadable ownership stamp degrades that one document to "not visibly owned", which
+/// the fail-closed check in `TypedChildStoreFactory::open` then catches, whereas failing the parse
+/// would make one bad pin unable to open an otherwise-valid document at all.
+fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &crate::os_spr::HistoryComposition) {
+    envelope.owner = composition.owner.as_ref().and_then(|(parent, slot, child_id)| crate::os_io::ArtifactRef::parse_uri(parent).ok().map(|parent| OwnerRef { parent, slot: slot.clone(), child_id: child_id.clone() }));
+    envelope.dialect = composition.dialect.as_ref().map(|(artifact_kind, standard, subset)| crate::os_io::ArtifactDialect { artifact_kind: artifact_kind.clone(), standard: standard.clone(), subset: subset.clone() });
+    for (checkpoint_id, pins) in &composition.checkpoint_pins {
+        if let Some(checkpoint) = envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == *checkpoint_id) {
+            checkpoint.composition_pins = pins.iter().filter_map(|(child_uri, pin_checkpoint_id)| crate::os_io::ArtifactRef::parse_uri(child_uri).ok().map(|child_ref| crate::os_vcs::CompositionPin { child_ref, checkpoint_id: pin_checkpoint_id.clone() })).collect();
+        }
+    }
+}
+
 pub fn print_document_spr<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<Vec<u8>, VcsError>
 where
     Mutation: OpBinary,
@@ -1699,6 +1879,7 @@ where
         alternatives: envelope.vcs.alternatives.iter().map(|alternative| crate::os_spr::HistoryAlternative { id: alternative.id.clone(), name: alternative.name.clone(), checkpoint_ids: alternative.checkpoint_ids.clone() }).collect(),
         active_alternative_id: envelope.active_alternative_id.clone(),
         cursor: envelope.cursor.as_ref().map(|cursor| crate::os_spr::HistoryCursor { applied_edit_ids: cursor.applied_edit_ids.clone(), redo_edit_ids: cursor.redo_edit_ids.clone(), checkpoint_id: cursor.checkpoint_id.clone() }),
+        composition: history_composition_from_envelope(envelope),
     };
     let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
     crate::os_spr::encode_history(&log, &options).map_err(|error| VcsError::Serialize(error.to_string()))
@@ -1773,7 +1954,7 @@ where
     }
 
     let cursor = log.cursor.map(|cursor| ArtifactCursor { applied_edit_ids: cursor.applied_edit_ids, redo_edit_ids: cursor.redo_edit_ids, checkpoint_id: cursor.checkpoint_id });
-    let envelope = ArtifactEnvelope {
+    let mut envelope = ArtifactEnvelope {
         schema: log.schema,
         id: log.doc_id,
         vcs: ArtifactVcs {
@@ -1794,7 +1975,8 @@ where
                     // composition pins yet — extending that codec is out of this wave's scope (see
                     // `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b1-spr-vcs-report.md`
                     // sharedFileRequests). `composition_pins` is therefore in-memory-only until a
-                    // later wave threads it through `history_op_meta`-style encode/decode.
+                    // 🧩️ Filled below by `apply_history_composition` from the `REC_COMPOSITION`
+                    // overlay, which is decoded per-document rather than per-checkpoint.
                     composition_pins: Vec::new(),
                 })
                 .collect(),
@@ -1803,14 +1985,14 @@ where
         backbone: None,
         active_alternative_id: log.active_alternative_id,
         cursor: cursor.clone(),
+        // 🧩️ Both stamped below by `apply_history_composition` from the `REC_COMPOSITION` overlay.
         dialect: None,
         migrated_from: None,
-        // 🎯️ `crate::os_spr::HistoryLog` (the `.spr` durable form) does not carry the owner stamp
-        // yet either — same in-memory-only deferral as `composition_pins` above (see
-        // `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b2-store-composition-report.md`
-        // sharedFileRequests) until a later wave threads `OwnerRef` through the history codec.
         owner: None,
     };
+    if let Some(composition) = &log.composition {
+        apply_history_composition(&mut envelope, composition);
+    }
 
     let snapshot = if let Some(cursor) = &cursor {
         let mut folded = envelope.vcs.initial_snapshot.clone();
@@ -2827,6 +3009,19 @@ where
         self.current_checkpoint_id = Some(checkpoint_id);
         self.tail_undo_cache = None;
         self.current = self.fold_current().expect("checkout: fold_current should not fail for a consistent envelope");
+    }
+
+    /// @emoji 📌️ Records the composed children a checkpoint was taken against. Not reachable through
+    /// an ordinary `Apply` (no mutation can touch checkpoint metadata), so — like `set_owner` — it
+    /// needs its own setter. Called by `VcsArtifactApp`'s checkpoint cascade right after the
+    /// checkpoint is created, since a pin can only name a child checkpoint that already exists.
+    /// Re-derives `content_addressed_checkpoint_id` so the checkpoint's identity actually covers its
+    /// pins rather than merely storing them beside it.
+    pub fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<crate::os_vcs::CompositionPin>) {
+        if let Some(checkpoint) = self.envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == checkpoint_id) {
+            checkpoint.composition_pins = pins;
+        }
+        self.bump();
     }
 
     /// @emoji ⚡️ The live snapshot: `Mutation::reconcile` applied to the incrementally-maintained
@@ -3978,6 +4173,29 @@ pub trait SpaceMember: Send {
     /// VCS/dispatch surface — no ordinary `Apply` mutation can reach envelope metadata — so it needs
     /// its own object-safe setter.
     fn set_owner(&mut self, owner: Option<OwnerRef>);
+
+    // 📖️ Object-safe READ surface (this ticket's CW1-1b). Everything above either mutates a member
+    // or reports a scalar about it; nothing could get a member's CONTENT back out without
+    // downcasting through `as_any_mut` to a concrete `ArtifactStore<P, Mutation>` the caller must
+    // already know the types of. That is exactly what a composition parent cannot do (its children
+    // are heterogeneous and plugin-defined), so `ArtifactView.children` and `LinkResolver` both
+    // dead-ended here. All three return PACK bytes rather than a typed value for the same reason
+    // `dispatch_wire` takes bytes: no generic method can appear on a trait object.
+    /// @emoji 📦️ This member's CURRENT materialized snapshot, pack-encoded — the live content a
+    /// composition parent reads through `ArtifactView.children` and a `LinkPin::Head` resolves to.
+    /// Reads through the live store, so it cannot go stale behind an undo/redo/checkout the way the
+    /// `thread_local!` child caches this replaces did.
+    fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError>;
+    /// @emoji 🗄️ This member's WHOLE envelope (initial snapshot pack + `.spr` op log, in
+    /// `encode_document_pack_bytes` framing) — what gets persisted for a child and handed back to
+    /// `ChildStoreFactory::open` on reload. The full history, not just the current content.
+    fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError>;
+    /// @emoji ⏮️📦️ This member's snapshot AS OF `checkpoint_id`, pack-encoded, without disturbing the
+    /// live cursor — replays exactly the edit ids that checkpoint's changes cover, the same set
+    /// `checkout_checkpoint_internal` would install. This is what makes `LinkPin::Checkpoint` real:
+    /// a pinned reference resolves to the target's historical content rather than silently
+    /// degrading to its head.
+    fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError>;
 }
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
@@ -4093,6 +4311,21 @@ where
 
     fn set_owner(&mut self, owner: Option<OwnerRef>) {
         self.envelope.owner = owner;
+    }
+
+    fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+        Ok(self.snapshot()?.encode_pack())
+    }
+
+    fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
+        let files = print_document_pack(self.envelope())?;
+        Ok(encode_document_pack_bytes(&files.pack, &files.spr))
+    }
+
+    fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
+        let checkpoint = self.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.to_string()))?;
+        let edit_ids = edit_ids_for_changes(self.envelope(), &checkpoint.change_ids);
+        Ok(materialize_document_snapshot(self.envelope(), &edit_ids)?.encode_pack())
     }
 }
 //#endregion SpaceMember
@@ -7191,19 +7424,30 @@ impl OpBinary for TimestampedMutation {
         }
     }
 
-    /// @emoji 🏭️ Minimal `ChildStoreFactory` fixture: `create` seeds a `DemoSnapshot` store
-    /// (decoding `initial_pack` when non-empty, defaulting to `n: 0` otherwise); `open` is not
-    /// exercised by these tests, so it stays a stub.
+    /// @emoji 🏭️ `ChildStoreFactory` fixture for the composition tests. Delegates wholly to the
+    /// production `TypedChildStoreFactory<DemoSnapshot, DemoMutation>` so these fixtures exercise
+    /// the REAL create/open code paths rather than a parallel stub that could drift from them —
+    /// only the genesis-with-empty-pack convenience (`n: 0`) is fixture-local, because the
+    /// production factory deliberately rejects an empty initial pack.
     struct DemoChildFactory;
+    impl DemoChildFactory {
+        fn inner() -> TypedChildStoreFactory<DemoSnapshot, DemoMutation> {
+            TypedChildStoreFactory::new("demo/v1")
+        }
+    }
     impl ChildStoreFactory for DemoChildFactory {
-        fn create(&self, id: &str, _dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
-            let initial = if initial_pack.is_empty() { DemoSnapshot { n: 0 } } else { DemoSnapshot::decode_pack(initial_pack).map_err(|error| VcsError::Deserialize(error.to_string()))? };
-            let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, initial, None);
-            Ok(Box::new(ArtifactStore::new(envelope)))
+        fn create(&self, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
+            let seeded = if initial_pack.is_empty() { DemoSnapshot { n: 0 }.encode_pack() } else { initial_pack.to_vec() };
+            Self::inner().create(id, dialect, &seeded)
         }
-        fn open(&self, _envelope_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
-            Err(VcsError::Deserialize("DemoChildFactory::open is not exercised by these fixtures".into()))
+        fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn SpaceMember>, VcsError> {
+            Self::inner().open(envelope_pack)
         }
+    }
+
+    /// 🎯️ The dialect every composition fixture below mints children under.
+    fn demo_child_dialect() -> crate::os_io::ArtifactDialect {
+        crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "1".into(), subset: "*".into() }
     }
 
     #[test]
@@ -7262,6 +7506,89 @@ impl OpBinary for TimestampedMutation {
         let snapshot = LeafSnapshot;
         assert!(snapshot.child_refs().is_empty());
         assert!(snapshot.links().is_empty());
+    }
+
+    #[test]
+    fn typed_child_store_factory_round_trips_a_child_through_create_persist_open() {
+        let factory = TypedChildStoreFactory::<DemoSnapshot, DemoMutation>::new("demo/v1");
+        let dialect = demo_child_dialect();
+
+        let mut child = factory.create("child-round-trip", &dialect, &DemoSnapshot { n: 7 }.encode_pack()).expect("create");
+        child.dispatch_wire(&build_apply_command_bytes(&[DemoMutation::SetN { n: 9 }.encode_op().expect("encode op")], Some("bump"))).expect("apply");
+        child.undo().expect("undo");
+        child.dispatch_wire(&build_apply_command_bytes(&[DemoMutation::SetN { n: 11 }.encode_op().expect("encode op")], None)).expect("re-apply");
+
+        let persisted = child.envelope_pack_bytes().expect("envelope pack");
+        let reopened = factory.open(&persisted).expect("open");
+
+        assert_eq!(reopened.document_id(), "child-round-trip");
+        assert_eq!(reopened.document_pack_bytes().expect("head pack"), child.document_pack_bytes().expect("head pack"), "reopened child's live content diverged from the persisted one");
+        assert_eq!(DemoSnapshot::decode_pack(&reopened.document_pack_bytes().expect("head pack")).expect("decode"), DemoSnapshot { n: 11 }, "reopen restored the wrong cursor position");
+    }
+
+    #[test]
+    fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child() {
+        let factory = TypedChildStoreFactory::<DemoSnapshot, DemoMutation>::new("demo/v1");
+        assert!(matches!(factory.create("child-empty", &demo_child_dialect(), &[]), Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
+
+        // 🏠️ owner ⇒ dialect: an envelope that is somebody's child but names no dialect cannot be
+        // typed by its parent, so `open` must fail closed rather than hand back an untypable member.
+        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "child-no-dialect", DemoSnapshot { n: 1 }, None);
+        envelope.owner = Some(OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
+        let files = print_document_pack(&envelope).expect("print");
+        let orphan = encode_document_pack_bytes(&files.pack, &files.spr);
+        assert!(matches!(factory.open(&orphan), Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
+    }
+
+    #[test]
+    fn pack_at_checkpoint_reads_history_without_moving_the_live_cursor() {
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "pinned-target", DemoSnapshot { n: 1 }, None));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply");
+        let checkpoint = SpaceMember::commit_checkpoint(&mut store, "v1".into(), Vec::new()).expect("checkpoint");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 3 }], description: None }).expect("apply after checkpoint");
+
+        let historical = DemoSnapshot::decode_pack(&store.pack_at_checkpoint(&checkpoint).expect("pack at checkpoint")).expect("decode");
+        let live = DemoSnapshot::decode_pack(&store.document_pack_bytes().expect("head pack")).expect("decode");
+        assert_eq!(historical, DemoSnapshot { n: 2 }, "checkpoint read did not return the pinned content");
+        assert_eq!(live, DemoSnapshot { n: 3 }, "reading a checkpoint moved the live cursor");
+        assert!(matches!(store.pack_at_checkpoint("no-such-checkpoint"), Err(VcsError::UnknownChange(_))));
+    }
+
+    #[test]
+    fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pins() {
+        struct FixtureDirectory {
+            member: ArtifactStore<DemoSnapshot, DemoMutation>,
+        }
+        impl MemberDirectory for FixtureDirectory {
+            fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
+                (artifact_id == "linked-doc").then(|| self.member.document_pack_bytes())
+            }
+            fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
+                (artifact_id == "linked-doc").then(|| self.member.pack_at_checkpoint(checkpoint_id))
+            }
+        }
+
+        let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "linked-doc", DemoSnapshot { n: 1 }, None));
+        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 42 }], description: None }).expect("apply");
+        let pinned = SpaceMember::commit_checkpoint(&mut member, "pinned".into(), Vec::new()).expect("checkpoint");
+        member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 99 }], description: None }).expect("apply after pin");
+
+        let resolver = MemberLinkResolver::new(FixtureDirectory { member });
+        let target = crate::os_io::ArtifactRef { artifact_id: "linked-doc".into(), dialect: demo_child_dialect() };
+        let link_of = |pin: LinkPin| ArtifactLink { target: target.clone(), pin, role: "representation".into() };
+        let decode = |state: LinkState| match state {
+            LinkState::Resolved { pack_bytes, .. } => DemoSnapshot::decode_pack(&pack_bytes).expect("decode"),
+            other => panic!("expected Resolved, found {other:?}"),
+        };
+
+        assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Head))), DemoSnapshot { n: 99 }, "a Head pin must follow the target's live tip");
+        assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Checkpoint { id: pinned }))), DemoSnapshot { n: 42 }, "a Checkpoint pin must keep resolving to the pinned history, not the tip");
+
+        let blob = BlobRef { hash: "deadbeef".into(), size: 3, media_type: "application/octet-stream".into() };
+        assert!(matches!(resolver.resolve(&link_of(LinkPin::Snapshot { blob })), LinkState::PinnedOnly { .. }), "a snapshot pin with no blob store must degrade to PinnedOnly, never Missing");
+
+        let absent = ArtifactLink { target: crate::os_io::ArtifactRef { artifact_id: "gone".into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "representation".into() };
+        assert_eq!(resolver.resolve(&absent), LinkState::Missing);
     }
 
     #[test]

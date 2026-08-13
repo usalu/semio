@@ -17,7 +17,7 @@ use super::dimensions::{compute_jpg_dimensions, JpgDimensions};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.jpg.inference")]
 pub struct JpgInference {
-    #[state(inferred)]
+    #[derived]
     pub dimensions: JpgDimensions,
 }
 

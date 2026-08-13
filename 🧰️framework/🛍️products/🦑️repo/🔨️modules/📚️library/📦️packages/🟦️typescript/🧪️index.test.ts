@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyEmojiPrefixBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
+import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -88,9 +88,14 @@ describe("window completeness policy", () => {
     const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
     try {
       mkdirSync(window, { recursive: true });
+      // 🔣️ The required set is taxonomy-driven, never a literal here — adding a lane to
+      // windowRequiredChildDirs must not require editing this assertion.
+      const required = loadTaxonomy().windowRequiredChildDirs;
       const missingFacets = policyWindowCompletenessBreaches(root, [crate]);
-      expect(missingFacets.filter((breach) => breach.kind === "taxonomy/window-completeness")).toHaveLength(4);
-      for (const facet of ["🎬️actions", "🪛️utilities", "🎚️options", "👥️presence"] as const) {
+      expect(missingFacets.filter((breach) => breach.kind === "taxonomy/window-completeness")).toHaveLength(required.length);
+      expect(required).toContain("🎚️config");
+      expect(required).toContain("🫧️transient");
+      for (const facet of required) {
         const dir = join(window, facet);
         mkdirSync(dir, { recursive: true });
         writeFileSync(join(dir, "📌️empty.md"), "");
@@ -110,6 +115,33 @@ describe("window completeness policy", () => {
       rmSync(join(action, "🟦️component.ts"));
       const missingMirror = policyWindowCompletenessBreaches(root, [crate]);
       expect(missingMirror.map((breach) => breach.kind)).toEqual(["taxonomy/window-component"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("requires every mode to declare its windows collection and its three state lanes", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-mode-policy-"));
+    const ownerRel = "🧪️owner";
+    const mode = join(root, ownerRel, "🎛️apps", "🧪️app", "🎭️modes", "🧪️mode");
+    const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
+    try {
+      mkdirSync(mode, { recursive: true });
+      const required = loadTaxonomy().modeChildDirs;
+      expect(required).toEqual(["🪟️windows", "🎚️config", "👥️presence", "🫧️transient"]);
+      expect(policyModeCompletenessBreaches(root, [crate]).filter((breach) => breach.kind === "taxonomy/mode-completeness")).toHaveLength(required.length);
+      for (const child of required) {
+        mkdirSync(join(mode, child), { recursive: true });
+      }
+      expect(policyModeCompletenessBreaches(root, [crate]).map((breach) => breach.kind)).toEqual(required.map(() => "taxonomy/mode-empty-child"));
+      for (const child of required) {
+        writeFileSync(join(mode, child, "📌️empty.md"), "");
+      }
+      expect(policyModeCompletenessBreaches(root, [crate])).toEqual([]);
+      mkdirSync(join(mode, "🪟️windows", "🧪️window"), { recursive: true });
+      expect(policyModeCompletenessBreaches(root, [crate]).map((breach) => breach.kind)).toEqual(["taxonomy/mode-empty-child"]);
+      rmSync(join(mode, "🪟️windows", "📌️empty.md"));
+      expect(policyModeCompletenessBreaches(root, [crate])).toEqual([]);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -1228,8 +1260,13 @@ describe("loadTaxonomy", () => {
     });
     expect(taxonomy.artifactSpecFilenames["📸️snapshot/🎒️pack"]).toBe("📡️component.protocol.semio");
     expect("🎒️pack" in taxonomy.artifactSpecFilenames).toBe(false);
-    expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "👥️presence"]);
-    expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "🎚️options", "👥️presence"]);
+    expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "🎚️config", "👥️presence", "🫧️transient"]);
+    expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "🎚️options", "🎚️config", "👥️presence", "🫧️transient"]);
+    expect(taxonomy.modeChildDirs).toEqual(["🪟️windows", "🎚️config", "👥️presence", "🫧️transient"]);
+    expect(taxonomy.transientChildDirs).toEqual(["🧬️schema"]);
+    expect(taxonomy.appComponentDirs).toContain("🫧️transient");
+    expect(taxonomy.appChildDirs).toContain("🫧️transient");
+    expect(taxonomy.appSchemaSpecFilenames["🫧️transient/🧬️schema"]).toBe("🔣️component.json");
     expect(taxonomy.windowComponentLangs).toEqual(["🦀️rust", "🟦️typescript"]);
     expect(taxonomy.windowEmptyFacetFilename).toBe("📌️empty.md");
     expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
@@ -1397,6 +1434,17 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy(missing).some((problem) => problem.includes("windowRequiredChildDirs must be a non-empty array"))).toBe(true);
     const outsideAllowlist = { ...taxonomy, windowRequiredChildDirs: [...taxonomy.windowRequiredChildDirs, "🧪️unknown"] };
     expect(validateTaxonomy(outsideAllowlist).some((problem) => problem.includes('"🧪️unknown" is missing from windowChildDirs'))).toBe(true);
+  });
+
+  test("reports a state lane missing from any state-owning scope", () => {
+    const taxonomy = loadTaxonomy();
+    expect(validateTaxonomy(taxonomy).filter((problem) => problem.includes("state lane"))).toEqual([]);
+    const droppedFromModes = { ...taxonomy, modeChildDirs: taxonomy.modeChildDirs.filter((dir) => dir !== "🫧️transient") };
+    expect(validateTaxonomy(droppedFromModes).some((problem) => problem.includes('modeChildDirs must include the state lane "🫧️transient"'))).toBe(true);
+    const droppedFromWindows = { ...taxonomy, windowRequiredChildDirs: taxonomy.windowRequiredChildDirs.filter((dir) => dir !== "🎚️config") };
+    expect(validateTaxonomy(droppedFromWindows).some((problem) => problem.includes('windowRequiredChildDirs must include the state lane "🎚️config"'))).toBe(true);
+    const modelessWindows = { ...taxonomy, modeChildDirs: taxonomy.modeChildDirs.filter((dir) => dir !== taxonomy.windowsDirName) };
+    expect(validateTaxonomy(modelessWindows).some((problem) => problem.includes("modeChildDirs must include"))).toBe(true);
   });
 
   test("reports an invalid window component language set", () => {

@@ -1,7 +1,7 @@
 # 🧬️ SemioCadArtifact schema — full artifact state, mirrors SemioCadSnapshot field for field.
 type SemioCadArtifact {
-  schema: String! @state(class: PERSISTENT)
-  layers: [CadLayer!]! @state(class: PERSISTENT)
-  blocks: [CadBlock!]! @state(class: PERSISTENT)
-  entities: [CadEntityRecord!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  layers: [CadLayer!]! @state(class: ARTIFACT)
+  blocks: [CadBlock!]! @state(class: ARTIFACT)
+  entities: [CadEntityRecord!]! @state(class: ARTIFACT)
 }

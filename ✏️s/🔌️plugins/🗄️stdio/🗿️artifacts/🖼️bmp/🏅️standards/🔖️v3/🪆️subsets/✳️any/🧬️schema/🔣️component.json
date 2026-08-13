@@ -9,27 +9,27 @@
     "colorsImportant", "palette", "pixels"
   ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "headerSize": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "width": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "height": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "rowOrder": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpRowOrder", "x-semio-state": "persistent" },
-    "planes": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "bitsPerPixel": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "compression": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "imageSize": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "xPixelsPerMeter": { "type": "integer", "x-semio-state": "persistent" },
-    "yPixelsPerMeter": { "type": "integer", "x-semio-state": "persistent" },
-    "colorsUsed": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "colorsImportant": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "headerSize": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "width": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "height": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "rowOrder": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpRowOrder", "x-semio-state": "artifact" },
+    "planes": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "bitsPerPixel": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "compression": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "imageSize": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "xPixelsPerMeter": { "type": "integer", "x-semio-state": "artifact" },
+    "yPixelsPerMeter": { "type": "integer", "x-semio-state": "artifact" },
+    "colorsUsed": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "colorsImportant": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
     "palette": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpPaletteEntry" }
     },
     "pixels": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": { "type": "integer", "minimum": 0, "maximum": 255 }
     }
   }

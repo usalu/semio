@@ -4,22 +4,22 @@ package semio.s.norm.iso16757.artifact;
 // 🧬️ Iso16757 artifact schema — every field with its state class.
 
 message Iso16757Artifact {
-  // @state persistent
+  // @state artifact
   string catalogue = 1;
-  // @state persistent
+  // @state artifact
   string dictionary = 2;
-  // @state persistent
+  // @state artifact
   string geometry = 3;
-  // @state persistent
+  // @state artifact
   string selection = 4;
-  // @state persistent
+  // @state artifact
   string part_number_rule = 5;
-  // @state persistent
+  // @state artifact
   map<string, string> part_number_inputs = 6;
-  // @state persistent
+  // @state artifact
   string script_limits = 7;
-  // @state persistent
+  // @state artifact
   string exchange_process = 8;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 9;
 }

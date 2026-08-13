@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/RewriteBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/RewriteBounds", "x-semio-derived": true }
   },
   "$defs": {
     "RewriteBoundingBox": {

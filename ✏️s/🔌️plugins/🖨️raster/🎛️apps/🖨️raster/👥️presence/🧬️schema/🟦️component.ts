@@ -1,24 +1,24 @@
 /** 🧬️ RasterPresence */
 export interface RasterPresenceCamera {
-  /** @state shared-ui */
+  /** @state presence */
   x: number;
-  /** @state shared-ui */
+  /** @state presence */
   y: number;
-  /** @state shared-ui */
+  /** @state presence */
   zoom: number;
 }
 
 export interface RasterPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   brushSize: number;
-  /** @state shared-ui */
+  /** @state presence */
   brushOpacity: number;
-  /** @state shared-ui */
+  /** @state presence */
   camera: RasterPresenceCamera;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
 }

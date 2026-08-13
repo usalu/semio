@@ -5982,6 +5982,8 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs"]
+                            pub mod engine;
                             #[path = "."]
                             pub mod snapshot {
                                 #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/🦀️component.rs"]

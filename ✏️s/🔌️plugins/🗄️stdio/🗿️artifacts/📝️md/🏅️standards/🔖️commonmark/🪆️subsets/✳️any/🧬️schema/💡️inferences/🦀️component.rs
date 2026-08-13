@@ -18,7 +18,7 @@ use super::outline::MdOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.md.inference")]
 pub struct MdInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: MdOutline,
 }
 

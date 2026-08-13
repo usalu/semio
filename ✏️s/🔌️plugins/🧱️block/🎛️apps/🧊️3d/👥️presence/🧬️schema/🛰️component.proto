@@ -1,8 +1,8 @@
 syntax = "proto3";
 package semio.app.block.3d.presence;
 message Block3dPresence {
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 1;
-  // @state shared-ui
+  // @state presence
   optional string hovered_vortex_full_id = 2;
 }

@@ -5,6 +5,6 @@ export interface Semio_wav_diffEntry {
   value: string;
 }
 export interface Semio_wav_diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Semio_wav_diffEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: Semio_wav_diffEntry[];
 }

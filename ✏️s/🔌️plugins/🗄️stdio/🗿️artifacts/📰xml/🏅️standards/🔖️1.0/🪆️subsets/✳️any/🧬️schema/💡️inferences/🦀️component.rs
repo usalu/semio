@@ -18,7 +18,7 @@ use super::outline::XmlOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xml.inference")]
 pub struct XmlInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: XmlOutline,
 }
 

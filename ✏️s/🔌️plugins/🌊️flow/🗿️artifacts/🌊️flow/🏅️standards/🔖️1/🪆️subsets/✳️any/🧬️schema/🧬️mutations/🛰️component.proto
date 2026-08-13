@@ -4,15 +4,15 @@ package semio.s.flow.flow.mutation;
 // 🧬️ Flow mutation schema — persistent fields only.
 
 message FlowMutation {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   CameraJson camera = 2;
-  // @state persistent
+  // @state artifact
   repeated Widget widgets = 3;
-  // @state persistent
+  // @state artifact
   repeated SynapseSpec synapses = 4;
-  // @state persistent
+  // @state artifact
   map<string, WidgetLayout> layout = 5;
 }
 

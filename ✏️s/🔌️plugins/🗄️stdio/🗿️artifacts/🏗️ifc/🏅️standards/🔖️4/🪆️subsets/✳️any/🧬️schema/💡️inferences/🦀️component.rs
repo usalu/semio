@@ -21,7 +21,7 @@ use super::bounds::{compute_ifc_bounds, IfcBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.inference")]
 pub struct IfcInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: IfcBounds,
 }
 

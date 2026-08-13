@@ -17,7 +17,7 @@ use super::dimensions::{compute_png_dimensions, PngDimensions};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png.inference")]
 pub struct PngInference {
-    #[state(inferred)]
+    #[derived]
     pub dimensions: PngDimensions,
 }
 

@@ -13,16 +13,16 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Artifact {
-    #[state(persistent)] pub manufacturer_file: ManufacturerFile,
-    #[state(persistent)] pub catalog: ManufacturerCatalog,
-    #[state(persistent)] pub edition_profile: BTreeMap<String, EditionProfileChoice>,
-    #[state(persistent)] pub correction_as_of: EditionId,
-    #[state(persistent)] pub strict_mode: bool,
-    #[state(persistent)] pub index: CatalogIndex,
-    #[state(persistent)] pub geometry: BTreeMap<String, ParametricGeometry>,
-    #[state(persistent)] pub curves: BTreeMap<String, CharacteristicCurve>,
-    #[state(persistent)] pub limits: SecurityLimits,
-    #[state(shared_ui)] pub selected_check_index: Option<u32>,
+    #[state(artifact)] pub manufacturer_file: ManufacturerFile,
+    #[state(artifact)] pub catalog: ManufacturerCatalog,
+    #[state(artifact)] pub edition_profile: BTreeMap<String, EditionProfileChoice>,
+    #[state(artifact)] pub correction_as_of: EditionId,
+    #[state(artifact)] pub strict_mode: bool,
+    #[state(artifact)] pub index: CatalogIndex,
+    #[state(artifact)] pub geometry: BTreeMap<String, ParametricGeometry>,
+    #[state(artifact)] pub curves: BTreeMap<String, CharacteristicCurve>,
+    #[state(artifact)] pub limits: SecurityLimits,
+    #[state(presence)] pub selected_check_index: Option<u32>,
 }
 //#endregion 🔖️Artifact
 

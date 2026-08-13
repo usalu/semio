@@ -1,22 +1,22 @@
 /** 🧬️ RewriteConfig */
 export interface RewriteConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   beforePaneCamera: Camera;
-  /** @state local-ui */
+  /** @state config */
   reorganizeEpoch: number;
-  /** @state local-ui */
+  /** @state config */
   activeHoverVar: string;
-  /** @state local-ui */
+  /** @state config */
   hoverEpoch: number;
-  /** @state local-ui */
+  /** @state config */
   activeSelectVar: string;
-  /** @state local-ui */
+  /** @state config */
   selectEpoch: number;
-  /** @state local-ui */
+  /** @state config */
   lodModeByWindow: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

@@ -296,10 +296,10 @@ fn absorb_triangles(d1: Option<StlTrianglesDiff>, d2: Option<StlTrianglesDiff>) 
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl.diff")]
 pub struct StlDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub solid_name: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub triangles: Option<StlTrianglesDiff>,
 }

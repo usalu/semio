@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["climate"],
   "properties": {
-    "climate": { "$ref": "#/$defs/EpwClimateSummary", "x-semio-state": "inferred" }
+    "climate": { "$ref": "#/$defs/EpwClimateSummary", "x-semio-derived": true }
   },
   "$defs": {
     "EpwClimateSummary": {

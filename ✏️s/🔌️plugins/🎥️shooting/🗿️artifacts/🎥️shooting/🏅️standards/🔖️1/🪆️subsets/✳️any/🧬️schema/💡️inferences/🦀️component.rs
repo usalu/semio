@@ -20,7 +20,7 @@ use super::topology::{compute_shooting_topology, ShootingTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting.inference")]
 pub struct ShootingInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: ShootingTopology,
 }
 

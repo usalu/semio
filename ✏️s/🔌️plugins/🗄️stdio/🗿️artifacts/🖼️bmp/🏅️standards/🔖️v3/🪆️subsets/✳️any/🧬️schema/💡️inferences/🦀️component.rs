@@ -17,7 +17,7 @@ use super::dimensions::{compute_bmp_dimensions, BmpDimensions};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp.inference")]
 pub struct BmpInference {
-    #[state(inferred)]
+    #[derived]
     pub dimensions: BmpDimensions,
 }
 

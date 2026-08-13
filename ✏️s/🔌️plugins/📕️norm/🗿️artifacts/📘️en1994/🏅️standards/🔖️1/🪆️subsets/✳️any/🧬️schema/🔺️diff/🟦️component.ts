@@ -1,53 +1,53 @@
 /** 🧬️ En1994 diff schema — sparse field delta. */
 
 export interface En1994Diff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: En1994Artifact;
-  /** @state persistent */
+  /** @state artifact */
   annex?: string;
-  /** @state persistent */
+  /** @state artifact */
   mEdKnm?: number;
-  /** @state persistent */
+  /** @state artifact */
   vEdKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   mPla?: number;
-  /** @state persistent */
+  /** @state artifact */
   mPlRd?: number;
-  /** @state persistent */
+  /** @state artifact */
   eta?: number;
-  /** @state persistent */
+  /** @state artifact */
   vLRd?: number;
-  /** @state persistent */
+  /** @state artifact */
   insulationThicknessMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   fireRating?: string;
-  /** @state persistent */
+  /** @state artifact */
   deckType?: string;
-  /** @state persistent */
+  /** @state artifact */
   deltaSigmaMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   fatigueDetail?: string;
-  /** @state persistent */
+  /** @state artifact */
   dMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   hScMm?: number;
-  /** @state persistent */
+  /** @state artifact */
   fCkMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   fUMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   eCmMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   vEdPerStudKn?: number;
-  /** @state persistent */
+  /** @state artifact */
   spanM?: number;
-  /** @state persistent */
+  /** @state artifact */
   fYMpa?: number;
-  /** @state persistent */
+  /** @state artifact */
   nCyclesStud?: number;
-  /** @state persistent */
+  /** @state artifact */
   deltaTauStudMpa?: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }
 

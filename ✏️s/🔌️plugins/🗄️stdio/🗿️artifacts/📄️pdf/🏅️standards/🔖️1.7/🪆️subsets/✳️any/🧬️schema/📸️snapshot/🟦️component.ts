@@ -57,10 +57,10 @@ export interface PdfInfo {
 
 /** 🧬️ `stdio.pdf` (1.7) persistent snapshot. */
 export interface PdfSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ declaredVersion: string;
-  /** @state persistent */ pages: PdfPage[];
-  /** @state persistent */ info: PdfInfo;
-  /** @state persistent */ objects: PdfIndirectObject[];
-  /** @state persistent */ trailer: PdfDictEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ declaredVersion: string;
+  /** @state artifact */ pages: PdfPage[];
+  /** @state artifact */ info: PdfInfo;
+  /** @state artifact */ objects: PdfIndirectObject[];
+  /** @state artifact */ trailer: PdfDictEntry[];
 }

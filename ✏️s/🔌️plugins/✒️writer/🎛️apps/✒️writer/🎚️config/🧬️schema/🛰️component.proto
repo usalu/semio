@@ -1,27 +1,27 @@
 syntax = "proto3";
 package semio.app.writer.writer;
 message WriterConfig {
-  // @state local-ui
+  // @state config
   repeated string selected_ast_ids = 1;
-  // @state local-ui
+  // @state config
   optional WriterEditorSelection editor_selection = 2;
-  // @state local-ui
+  // @state config
   uint32 format_signal = 3;
-  // @state local-ui
+  // @state config
   uint32 lint_signal = 4;
-  // @state local-ui
+  // @state config
   uint32 revision = 5;
-  // @state local-ui
+  // @state config
   WriterEditorSettings editor_settings = 6;
-  // @state local-ui
+  // @state config
   optional string tree_hovered_ast_id = 7;
-  // @state local-ui
+  // @state config
   optional uint32 editor_hover_offset = 8;
-  // @state local-ui
+  // @state config
   string engagement_input = 9;
-  // @state local-ui
+  // @state config
   WriterCamera camera = 10;
-  // @state local-ui
+  // @state config
   string locale = 11;
 }
 

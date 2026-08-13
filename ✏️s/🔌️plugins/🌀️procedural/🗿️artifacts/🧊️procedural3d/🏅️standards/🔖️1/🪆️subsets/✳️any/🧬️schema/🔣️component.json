@@ -20,68 +20,68 @@
   "properties": {
     "fixture": {
       "$ref": "#/$defs/FlowFixture",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "generation": {
       "$ref": "#/$defs/GenerationPlayState",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedNodeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "lodMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "showMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredNodeId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "graphCamera": {
       "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "previewCamera": {
       "$ref": "#/$defs/Procedural3dPreviewCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectedGenerationId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "generationPreviewText": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

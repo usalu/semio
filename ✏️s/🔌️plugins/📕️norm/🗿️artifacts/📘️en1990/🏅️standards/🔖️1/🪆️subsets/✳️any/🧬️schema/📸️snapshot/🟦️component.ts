@@ -1,16 +1,16 @@
 /** 🧬️ En1990 snapshot schema — persistent fields only. */
 
 export interface En1990Snapshot {
-  /** @state persistent */
+  /** @state artifact */
   gK: number;
-  /** @state persistent */
+  /** @state artifact */
   qK: qK[];
-  /** @state persistent */
+  /** @state artifact */
   resistanceKn: number;
-  /** @state persistent */
+  /** @state artifact */
   consequenceClass: number;
-  /** @state persistent */
+  /** @state artifact */
   annex: string;
-  /** @state persistent */
+  /** @state artifact */
   seismicAEdKn: number;
 }

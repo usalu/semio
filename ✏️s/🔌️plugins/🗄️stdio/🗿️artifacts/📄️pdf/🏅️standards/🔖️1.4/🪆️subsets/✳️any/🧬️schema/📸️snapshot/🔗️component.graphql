@@ -5,6 +5,6 @@ type PageDoc {
   text: String!
 }
 type PdfSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  page: PageDoc! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  page: PageDoc! @state(class: ARTIFACT)
 }

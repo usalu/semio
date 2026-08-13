@@ -3,23 +3,23 @@ package semio.s.fem.fem3d.snapshot;
 
 // 🧬️ Fem3d snapshot schema
 message Fem3dSnapshot {
-  // @state persistent
+  // @state artifact
   repeated FemNode nodes = 1;
-  // @state persistent
+  // @state artifact
   repeated FemElement elements = 2;
-  // @state persistent
+  // @state artifact
   repeated FemMaterial materials = 3;
-  // @state persistent
+  // @state artifact
   repeated FemSection sections = 4;
-  // @state persistent
+  // @state artifact
   repeated FemSolid solids = 5;
-  // @state persistent
+  // @state artifact
   repeated FemSupport supports = 6;
-  // @state persistent
+  // @state artifact
   repeated FemLoadCase load_cases = 7;
-  // @state persistent
+  // @state artifact
   repeated FemCombination combinations = 8;
-  // @state persistent
+  // @state artifact
   FemAnalysisSettings analysis = 9;
 }
 

@@ -1,21 +1,21 @@
 /** 🧬️ Procedural2d artifact schema — every field with its state class. */
 
 export interface Procedural2dArtifact {
-  /** @state persistent */
+  /** @state artifact */
   fixture: FlowFixture;
-  /** @state persistent */
+  /** @state artifact */
   generation: GenerationPlayState;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   graphCamera: CameraJson;
-  /** @state local-ui */
+  /** @state config */
   showMode: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedGenerationId?: string;
-  /** @state preview */
+  /** @state artifact */
   generationPreviewText?: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

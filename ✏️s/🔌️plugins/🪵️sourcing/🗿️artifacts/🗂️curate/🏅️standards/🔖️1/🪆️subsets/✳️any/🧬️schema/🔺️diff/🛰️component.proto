@@ -97,18 +97,18 @@ message CurateCuratedDelta {
 }
 
 message CurateDiff {
-  // @state persistent
+  // @state artifact
   optional CurateArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional CurateStockDelta stock = 2;
-  // @state persistent
+  // @state artifact
   optional CurateCuratedDelta curated = 3;
-  // @state local-ui
+  // @state config
   optional Filters filters = 4;
-  // @state shared-ui
+  // @state presence
   optional string selected_object_id = 5;
-  // @state local-ui
+  // @state config
   optional string locale = 6;
-  // @state local-ui
+  // @state config
   optional string contributions_json = 7;
 }

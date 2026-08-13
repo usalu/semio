@@ -50,13 +50,13 @@
     "brepSolid": { "type": "object", "properties": { "id": { "type": "string" }, "shells": { "type": "array", "items": { "$ref": "#/$defs/brepSolidShell" } } }, "required": ["id", "shells"] }
   },
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "vertices": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/brepVertex" } },
-    "edges": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/brepEdge" } },
-    "loops": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/brepLoop" } },
-    "faces": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/brepFace" } },
-    "shells": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/brepShell" } },
-    "solids": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/brepSolid" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "vertices": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/brepVertex" } },
+    "edges": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/brepEdge" } },
+    "loops": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/brepLoop" } },
+    "faces": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/brepFace" } },
+    "shells": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/brepShell" } },
+    "solids": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/brepSolid" } }
   },
   "required": ["schema", "vertices", "edges", "loops", "faces", "shells", "solids"]
 }

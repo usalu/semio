@@ -4,6 +4,6 @@ type WavDiffEntry {
   value: String!
 }
 type WavDiff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [WavDiffEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [WavDiffEntry!]! @state(class: ARTIFACT)
 }

@@ -24,7 +24,7 @@ use super::validation_report::{BrepValidationDiagnostic, BrepValidationReport};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.brep.inference")]
 pub struct SemioBrepInference {
-    #[state(inferred)]
+    #[derived]
     pub validation_report: Vec<BrepValidationDiagnostic>,
 }
 

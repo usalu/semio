@@ -1,10 +1,10 @@
 type LayoutPresence {
-  activePageId: String! @state(class: SHARED_UI)
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  hoveredId: String @state(class: SHARED_UI)
-  dropPreview: LayoutDropPreviewState! @state(class: SHARED_UI)
-  camera: LayoutCamera! @state(class: SHARED_UI)
-  previewCamera: LayoutCamera! @state(class: SHARED_UI)
+  activePageId: String! @state(class: PRESENCE)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  hoveredId: String @state(class: PRESENCE)
+  dropPreview: LayoutDropPreviewState! @state(class: PRESENCE)
+  camera: LayoutCamera! @state(class: PRESENCE)
+  previewCamera: LayoutCamera! @state(class: PRESENCE)
 }
 type LayoutDropPreviewState {
   kind: String!

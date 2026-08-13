@@ -4,47 +4,47 @@ package semio.s.shooting.shooting.diff;
 // 🧬️ Shooting diff schema — sparse field delta over the artifact.
 
 message ShootingDiff {
-  // @state persistent
+  // @state artifact
   optional ShootingArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional ShootingAssetsDelta assets = 3;
-  // @state persistent
+  // @state artifact
   optional ShootingSavedCamerasDelta saved_cameras = 4;
-  // @state persistent
+  // @state artifact
   optional ShootingSceneLighting scene = 5;
-  // @state persistent
+  // @state artifact
   optional ShootingShotsDelta shots = 6;
-  // @state persistent
+  // @state artifact
   optional string active_shot_id = 7;
-  // @state persistent
+  // @state artifact
   optional string active_asset_id = 8;
-  // @state shared-ui
+  // @state presence
   optional ShootingStringList selected_shot_ids = 9;
-  // @state shared-ui
+  // @state presence
   optional ShootingStringList selected_asset_ids = 10;
-  // @state shared-ui
+  // @state presence
   optional string active_utility_id = 11;
-  // @state local-ui
+  // @state config
   optional string default_shot_format = 12;
-  // @state local-ui
+  // @state config
   optional string default_shot_shape = 13;
-  // @state local-ui
+  // @state config
   optional string default_asset_format = 14;
-  // @state local-ui
+  // @state config
   optional string selection_method = 15;
-  // @state local-ui
+  // @state config
   optional bool center_model = 16;
-  // @state local-ui
+  // @state config
   optional uint32 fit_revision = 17;
-  // @state local-ui
+  // @state config
   optional string camera_draft_label = 18;
-  // @state local-ui
+  // @state config
   optional ShootingCamera camera = 19;
-  // @state local-ui
+  // @state config
   optional string locale = 20;
-  // @state preview
+  // @state artifact
   optional string hovered_asset_id = 21;
 }
 

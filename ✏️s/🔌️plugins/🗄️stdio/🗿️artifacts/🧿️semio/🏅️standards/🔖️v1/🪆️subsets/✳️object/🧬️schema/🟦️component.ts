@@ -6,9 +6,9 @@ export interface SemioTransform {
 }
 export interface ArtifactChildHandle { childId: string; target: string; }
 export interface SemioObjectArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ transform: SemioTransform;
-  /** @state persistent @child kind=s.stdio.semio.brep */ brep?: ArtifactChildHandle;
-  /** @state persistent @child kind=s.stdio.semio.mesh */ mesh?: ArtifactChildHandle;
-  /** @state persistent @child kind=s.stdio.semio.value */ properties?: ArtifactChildHandle;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ transform: SemioTransform;
+  /** @state artifact @child kind=s.stdio.semio.brep */ brep?: ArtifactChildHandle;
+  /** @state artifact @child kind=s.stdio.semio.mesh */ mesh?: ArtifactChildHandle;
+  /** @state artifact @child kind=s.stdio.semio.value */ properties?: ArtifactChildHandle;
 }

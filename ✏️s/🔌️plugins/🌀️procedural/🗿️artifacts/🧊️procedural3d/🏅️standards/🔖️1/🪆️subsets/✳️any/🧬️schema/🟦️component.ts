@@ -1,35 +1,35 @@
 /** 🧬️ Procedural3d artifact schema — every field with its state class. */
 
 export interface Procedural3dArtifact {
-  /** @state persistent */
+  /** @state artifact */
   fixture: FlowFixture;
-  /** @state persistent */
+  /** @state artifact */
   generation: GenerationPlayState;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   lodMode: string;
-  /** @state local-ui */
+  /** @state config */
   showMode: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredNodeId?: string;
-  /** @state local-ui */
+  /** @state config */
   graphCamera: CameraJson;
-  /** @state local-ui */
+  /** @state config */
   previewCamera: Procedural3dPreviewCamera;
-  /** @state local-ui */
+  /** @state config */
   sunJson: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedGenerationId?: string;
-  /** @state preview */
+  /** @state artifact */
   generationPreviewText?: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }
 

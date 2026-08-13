@@ -4,7 +4,7 @@ package semio.s.puzzle.puzzle2d.inference;
 // 💡️ Puzzle2d inference schema — flatPosition (BFS-resolved node position) per node.
 
 message Puzzle2dInference {
-  // @state inferred
+  // @derived
   Puzzle2dFlatPosition flat_position = 1;
 }
 

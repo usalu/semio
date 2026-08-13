@@ -1,8 +1,8 @@
 # 📸️ Present snapshot schema.
 type PresentSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  source: FigureTileSource! @state(class: PERSISTENT)
-  tiles: [FigureTileDraft!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  source: FigureTileSource! @state(class: ARTIFACT)
+  tiles: [FigureTileDraft!]! @state(class: ARTIFACT)
 }
 type FigureTileFrame { x: Float! y: Float! width: Float! height: Float! }
 type FigureTileSource { src: String! kind: String! frame: FigureTileFrame! sourceAspect: Float pdfPage: Int }

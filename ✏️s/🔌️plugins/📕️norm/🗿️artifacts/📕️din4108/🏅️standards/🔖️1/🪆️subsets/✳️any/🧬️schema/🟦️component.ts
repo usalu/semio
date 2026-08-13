@@ -1,43 +1,43 @@
 /** 🧬️ Din4108 artifact schema — every field with its state class. */
 
 export interface Din4108Artifact {
-  /** @state persistent */
+  /** @state artifact */
   category: string;
-  /** @state persistent */
+  /** @state artifact */
   layers: Din4108LayerDocument[];
-  /** @state persistent */
+  /** @state artifact */
   climate: string;
-  /** @state persistent */
+  /** @state artifact */
   airtightnessN50: number;
-  /** @state persistent */
+  /** @state artifact */
   psiTimesLSum: number;
-  /** @state persistent */
+  /** @state artifact */
   rhInt: number;
-  /** @state persistent */
+  /** @state artifact */
   catalogId: string;
-  /** @state persistent */
+  /** @state artifact */
   materialId: string;
-  /** @state persistent */
+  /** @state artifact */
   airtightnessClass: string;
-  /** @state persistent */
+  /** @state artifact */
   tIntC: number;
-  /** @state persistent */
+  /** @state artifact */
   solarAbsorptance: number;
-  /** @state persistent */
+  /** @state artifact */
   irradianceWM2: number;
-  /** @state persistent */
+  /** @state artifact */
   moistureMuExterior: number;
-  /** @state persistent */
+  /** @state artifact */
   moistureMuInterior: number;
-  /** @state persistent */
+  /** @state artifact */
   envelopeAreaM2: number;
-  /** @state persistent */
+  /** @state artifact */
   bb2DetailsConform: boolean;
-  /** @state persistent */
+  /** @state artifact */
   applicationType: string;
-  /** @state persistent */
+  /** @state artifact */
   declaredApplicationClass: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }
 export interface Din4108LayerDocument { thicknessM: number; lambdaWMk: number; }

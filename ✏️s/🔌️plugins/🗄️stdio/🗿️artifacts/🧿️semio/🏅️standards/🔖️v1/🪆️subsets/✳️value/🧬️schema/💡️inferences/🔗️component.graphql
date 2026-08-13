@@ -1,7 +1,7 @@
 # 💡️ Semio value inference schema — real variant census + max depth over the value graph.
 
 type SemioValueInference {
-  census: SemioValueCensus! @state(class: INFERRED)
+  census: SemioValueCensus! @derived
 }
 
 type SemioValueCensus {

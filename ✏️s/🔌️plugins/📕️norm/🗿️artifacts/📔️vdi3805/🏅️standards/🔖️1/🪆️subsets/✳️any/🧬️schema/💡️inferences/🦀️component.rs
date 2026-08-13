@@ -19,7 +19,7 @@ use super::outline::Vdi3805Outline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805.inference")]
 pub struct Vdi3805Inference {
-    #[state(inferred)]
+    #[derived]
     pub outline: Vdi3805Outline,
 }
 

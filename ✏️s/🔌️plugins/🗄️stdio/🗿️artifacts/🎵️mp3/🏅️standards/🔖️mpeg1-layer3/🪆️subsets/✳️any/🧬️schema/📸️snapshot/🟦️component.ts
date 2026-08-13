@@ -5,6 +5,6 @@ export interface Mp3SnapshotEntry {
   value: string;
 }
 export interface Mp3Snapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Mp3SnapshotEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: Mp3SnapshotEntry[];
 }

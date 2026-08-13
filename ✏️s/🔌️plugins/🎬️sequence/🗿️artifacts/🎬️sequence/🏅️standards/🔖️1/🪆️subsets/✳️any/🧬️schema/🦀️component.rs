@@ -14,20 +14,20 @@ use store::ArtifactDsl;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub content: SequenceContentChild,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_step_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub last_run_json: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub orientation: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub camera: SequenceCamera,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Artifact

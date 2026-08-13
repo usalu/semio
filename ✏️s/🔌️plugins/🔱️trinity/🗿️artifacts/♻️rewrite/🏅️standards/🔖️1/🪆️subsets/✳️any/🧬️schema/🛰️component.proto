@@ -4,33 +4,33 @@ package semio.s.trinity.rewrite.artifact;
 // 🧬️ Rewrite artifact schema — every field with its state class.
 
 message RewriteArtifact {
-  // @state persistent
+  // @state artifact
   string before_fixture_json = 1;
-  // @state persistent
+  // @state artifact
   string lhs_json = 2;
-  // @state persistent
+  // @state artifact
   string rhs_json = 3;
-  // @state persistent
+  // @state artifact
   map<string, string> parameter_bindings = 4;
-  // @state persistent
+  // @state artifact
   map<string, LayoutPoint> rule_layout = 5;
-  // @state shared-ui
+  // @state presence
   repeated string selected_node_ids = 6;
-  // @state shared-ui
+  // @state presence
   string active_hover_var = 7;
-  // @state shared-ui
+  // @state presence
   string active_select_var = 8;
-  // @state shared-ui
+  // @state presence
   map<string, string> lod_mode_by_window = 9;
-  // @state local-ui
+  // @state config
   Camera before_pane_camera = 10;
-  // @state local-ui
+  // @state config
   int64 reorganize_epoch = 11;
-  // @state local-ui
+  // @state config
   int64 hover_epoch = 12;
-  // @state local-ui
+  // @state config
   int64 select_epoch = 13;
-  // @state local-ui
+  // @state config
   string locale = 14;
 }
 

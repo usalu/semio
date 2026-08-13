@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["schema", "runs"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "runs": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "runs": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } }
   }
 }

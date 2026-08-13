@@ -4,59 +4,59 @@ package semio.s.puzzle.puzzle2d.artifact;
 // 🧬️ Puzzle2d artifact schema — every field with its state class.
 
 message Puzzle2dArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   Puzzle2dCamera camera = 2;
-  // @state persistent
+  // @state artifact
   repeated Puzzle2dNode nodes = 3;
-  // @state persistent
+  // @state artifact
   repeated Puzzle2dEdge edges = 4;
-  // @state persistent
+  // @state artifact
   Puzzle2dMeta meta = 5;
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 6;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 7;
-  // @state local-ui
+  // @state config
   double camera_x = 8;
-  // @state local-ui
+  // @state config
   double camera_y = 9;
-  // @state local-ui
+  // @state config
   double camera_zoom = 10;
-  // @state local-ui
+  // @state config
   string selection_method = 11;
-  // @state local-ui
+  // @state config
   bool grid_snap_enabled = 12;
-  // @state local-ui
+  // @state config
   double grid_factor = 13;
-  // @state local-ui
+  // @state config
   double suggestion_offset = 14;
-  // @state local-ui
+  // @state config
   uint32 fill_count = 15;
-  // @state local-ui
+  // @state config
   uint32 brush_candidate_index = 16;
-  // @state local-ui
+  // @state config
   string brush_candidate_source_handle_id = 17;
-  // @state local-ui
+  // @state config
   string locale = 18;
-  // @state local-ui
+  // @state config
   string terminology = 19;
-  // @state local-ui
+  // @state config
   string lod_mode_by_pane_json = 20;
-  // @state local-ui
+  // @state config
   string engagement_input_by_pane_json = 21;
-  // @state local-ui
+  // @state config
   string brush_candidates_json = 22;
-  // @state local-ui
+  // @state config
   string node_kind_weights_json = 23;
-  // @state local-ui
+  // @state config
   string handle_kind_weights_json = 24;
-  // @state local-ui
+  // @state config
   string active_utility_by_window_id_json = 25;
-  // @state preview
+  // @state artifact
   optional string hovered_node_id = 26;
-  // @state preview
+  // @state artifact
   int64 preview_seq = 27;
 }
 

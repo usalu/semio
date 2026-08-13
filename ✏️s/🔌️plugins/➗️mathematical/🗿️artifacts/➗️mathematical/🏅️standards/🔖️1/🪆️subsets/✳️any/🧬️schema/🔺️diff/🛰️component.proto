@@ -5,13 +5,13 @@ message MathematicalDiff {
   optional MathematicalArtifact artifact = 1;
   optional MathematicalGraph graph = 2;
   optional MathematicalGeometry geometry = 3;
-  // @state local-ui
+  // @state config
   optional double camera_x = 4;
-  // @state local-ui
+  // @state config
   optional double camera_y = 5;
-  // @state local-ui
+  // @state config
   optional double camera_zoom = 6;
-  // @state local-ui
+  // @state config
   optional string locale = 7;
 }
 

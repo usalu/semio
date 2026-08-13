@@ -4,7 +4,7 @@ package semio.s.stdio.bmp.inference;
 // 💡️ Bmp inference schema — BITMAPINFOHEADER-derived raster geometry.
 
 message BmpInference {
-  // @state inferred
+  // @derived
   BmpDimensions dimensions = 1;
 }
 

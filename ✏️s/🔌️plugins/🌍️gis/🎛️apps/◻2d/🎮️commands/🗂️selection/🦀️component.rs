@@ -236,7 +236,7 @@ mod tests {
         const PIN: &str = "p_institut_de_botanique_ulg_liege";
         let document = crate::artifacts::gismap::schema::default_document();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
 
         let base = Gis2dConfig::default();
         let all = select_all::handle(&select_all::SelectAll {}, &doc, &ConfigView { snapshot: &base }).expect("selectAll");

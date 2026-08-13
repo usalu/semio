@@ -4,7 +4,7 @@ package semio.s.stdio.deflate.inference;
 // 💡️ deflate inference schema — real RFC1950 zlib header semantics (CMF window size, FLG.FLEVEL, FDICT).
 
 message DeflateInference {
-  // @state inferred
+  // @derived
   DeflateWindow window = 1;
 }
 

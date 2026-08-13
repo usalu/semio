@@ -12,6 +12,6 @@ export interface RemodelBounds {
 }
 
 export interface RemodelInference {
-  /** @state inferred */
+  /** @derived */
   bounds: RemodelBounds;
 }

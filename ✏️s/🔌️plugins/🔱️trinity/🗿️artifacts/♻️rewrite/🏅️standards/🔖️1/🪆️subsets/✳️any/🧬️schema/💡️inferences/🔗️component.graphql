@@ -1,7 +1,7 @@
 # 💡️ Rewrite inference schema — bounds (bounding box + node count) over `ruleLayout`.
 
 type RewriteInference {
-  bounds: RewriteBounds! @state(class: INFERRED)
+  bounds: RewriteBounds! @derived
 }
 
 type RewriteBounds {

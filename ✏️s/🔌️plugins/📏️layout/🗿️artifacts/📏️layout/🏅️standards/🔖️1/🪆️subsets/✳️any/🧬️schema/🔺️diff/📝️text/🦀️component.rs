@@ -106,6 +106,12 @@ impl LayoutDiff {
         if let Some(value) = &self.data_fields_json {
             next.data_fields_json = value.clone();
         }
+        if let Some(value) = &self.background_drawing {
+            next.background_drawing = value.clone();
+        }
+        if let Some(value) = &self.referenced_model {
+            next.referenced_model = value.clone();
+        }
         if let Some(list) = &self.selected_ids {
             next.selected_ids = list.values.clone();
         }
@@ -176,6 +182,12 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
         if let Some(value) = &self.data_fields_json {
             next.data_fields_json = value.clone();
         }
+        if let Some(value) = &self.background_drawing {
+            next.background_drawing = value.clone();
+        }
+        if let Some(value) = &self.referenced_model {
+            next.referenced_model = value.clone();
+        }
         next
     }
 
@@ -238,6 +250,8 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
         take!(grid);
         take!(print_target);
         take!(data_fields_json);
+        take!(background_drawing);
+        take!(referenced_model);
         take!(selected_ids);
         take!(active_page_id);
         take!(engagement_input);
@@ -285,6 +299,8 @@ mod tests {
             pages: Vec::new(),
             print_target: None,
             data_fields_json: None,
+            background_drawing: None,
+            referenced_model: None,
         };
         let operation = crate::artifacts::layout::mutations::LayoutMutation::ChangeDataFields(
             crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields { new_json: Some("{}".into()) },
@@ -310,6 +326,8 @@ mod tests {
             pages: Vec::new(),
             print_target: None,
             data_fields_json: None,
+            background_drawing: None,
+            referenced_model: None,
         };
         diff.absorb(diff_set_snapshot(&snap));
         assert!(diff.artifact.is_some());

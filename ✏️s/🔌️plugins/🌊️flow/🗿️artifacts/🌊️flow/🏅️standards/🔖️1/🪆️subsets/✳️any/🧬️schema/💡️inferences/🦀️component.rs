@@ -18,7 +18,7 @@ use super::topology::{compute_flow_topology, FlowTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow.inference")]
 pub struct FlowInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: FlowTopology,
 }
 

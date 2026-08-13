@@ -3,37 +3,37 @@ package semio.s.fem.fem2d.artifact;
 
 // 🧬️ Fem2d artifact schema
 message Fem2dArtifact {
-  // @state persistent
+  // @state artifact
   repeated FemNode nodes = 1;
-  // @state persistent
+  // @state artifact
   repeated FemElement elements = 2;
-  // @state persistent
+  // @state artifact
   repeated FemRegion regions = 3;
-  // @state persistent
+  // @state artifact
   repeated FemMaterial materials = 4;
-  // @state persistent
+  // @state artifact
   repeated FemSection sections = 5;
-  // @state persistent
+  // @state artifact
   repeated FemSupport supports = 6;
-  // @state persistent
+  // @state artifact
   repeated FemLoadCase load_cases = 7;
-  // @state persistent
+  // @state artifact
   repeated FemCombination combinations = 8;
-  // @state persistent
+  // @state artifact
   FemAnalysisSettings analysis = 9;
-  // @state shared-ui
+  // @state presence
   optional string result_source_id = 10;
-  // @state shared-ui
+  // @state presence
   string result_mode = 11;
-  // @state shared-ui
+  // @state presence
   uint32 result_mode_index = 12;
-  // @state local-ui
+  // @state config
   FemCamera camera = 13;
-  // @state local-ui
+  // @state config
   string locale = 14;
-  // @state preview
+  // @state artifact
   string solver_results_json = 15;
-  // @state preview
+  // @state artifact
   string mesh_preview_json = 16;
 }
 

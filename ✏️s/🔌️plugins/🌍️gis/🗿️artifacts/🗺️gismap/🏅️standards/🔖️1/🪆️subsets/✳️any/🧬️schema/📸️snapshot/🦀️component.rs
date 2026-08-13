@@ -20,27 +20,27 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub positions: Vec<MapFeature>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub routes: Vec<MapFeature>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub regions: Vec<MapFeature>,
     /// 🕸️ Composed `s.stdio.semio.drawing` child — see `crate::artifacts::gismap::🦀️component.rs`'s
     /// `🔖️Composition` region for the full design (derived, re-minted on every edit).
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]
     pub drawing: GisMapDrawingChild,
     /// 🕸️ Composed `s.stdio.semio.image` child — always absent today (see `🔖️Composition`'s doc).
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.image")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
     /// 🕸️ Composed `s.stdio.semio.value` child — the lossless `{positions,routes,regions}` mirror.
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
     pub value: GisMapValueChild,
 }

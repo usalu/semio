@@ -8,6 +8,6 @@ export interface LayoutTopology {
 }
 
 export interface LayoutInference {
-  /** @state inferred */
+  /** @derived */
   topology: LayoutTopology;
 }

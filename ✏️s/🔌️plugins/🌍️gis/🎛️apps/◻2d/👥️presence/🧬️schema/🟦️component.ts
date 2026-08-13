@@ -1,15 +1,15 @@
 /** 🧬️ Gis2dPresence */
 export interface Gis2dPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraJson: string;
-  /** @state shared-ui */
+  /** @state presence */
   featureSelectionJson: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoverJson: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectionMethod: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectionMode: string;
 }

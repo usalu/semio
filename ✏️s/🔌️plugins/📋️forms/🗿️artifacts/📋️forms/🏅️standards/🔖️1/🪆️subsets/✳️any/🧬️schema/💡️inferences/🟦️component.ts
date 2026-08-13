@@ -8,6 +8,6 @@ export interface FormsTopology {
 }
 
 export interface FormsInference {
-  /** @state inferred */
+  /** @derived */
   topology: FormsTopology;
 }

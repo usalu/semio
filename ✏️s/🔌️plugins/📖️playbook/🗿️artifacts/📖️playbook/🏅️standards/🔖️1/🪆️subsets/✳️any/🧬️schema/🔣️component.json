@@ -13,22 +13,22 @@
     "contributionsJson"
   ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "id": { "type": "string", "x-semio-state": "persistent" },
-    "version": { "type": "string", "x-semio-state": "persistent" },
-    "title": { "type": "string", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "id": { "type": "string", "x-semio-state": "artifact" },
+    "version": { "type": "string", "x-semio-state": "artifact" },
+    "title": { "type": "string", "x-semio-state": "artifact" },
     "steps": {
       "type": "array",
       "items": { "$ref": "#/$defs/PlaybookStep" },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "type": "array",
       "items": { "type": "string" },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
-    "locale": { "type": "string", "x-semio-state": "local-ui" },
-    "contributionsJson": { "type": "string", "x-semio-state": "local-ui" }
+    "locale": { "type": "string", "x-semio-state": "config" },
+    "contributionsJson": { "type": "string", "x-semio-state": "config" }
   },
   "$defs": {
     "PlaybookStep": {

@@ -66,6 +66,6 @@ type FlowEdgesDiff {
   added: [FlowEdge!]!
 }
 type SemioFlowDiff {
-  nodes: FlowNodesDiff @state(class: PERSISTENT)
-  edges: FlowEdgesDiff @state(class: PERSISTENT)
+  nodes: FlowNodesDiff @state(class: ARTIFACT)
+  edges: FlowEdgesDiff @state(class: ARTIFACT)
 }

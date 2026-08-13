@@ -4,19 +4,19 @@ package semio.s.puzzle.puzzle3d.mutation;
 // 🧬️ Puzzle3d mutation schema — persistent fields only.
 
 message Puzzle3dMutation {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string domain = 2;
-  // @state persistent
+  // @state artifact
   Puzzle3dMeta meta = 3;
-  // @state persistent
+  // @state artifact
   repeated Puzzle3dObject objects = 4;
-  // @state persistent
+  // @state artifact
   repeated Puzzle3dAttraction attractions = 5;
-  // @state persistent
+  // @state artifact
   repeated Puzzle3dTargetVolume target_volumes = 6;
-  // @state persistent
+  // @state artifact
   repeated Puzzle3dReference references = 7;
 }
 

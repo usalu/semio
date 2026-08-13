@@ -1,9 +1,9 @@
 type RewritePresence {
-  selectedNodeIds: [String!]! @state(class: SHARED_UI)
-  activeHoverVar: String! @state(class: SHARED_UI)
-  activeSelectVar: String! @state(class: SHARED_UI)
-  beforePaneCamera: Camera! @state(class: SHARED_UI)
-  lodModeByWindow: [StringEntry!]! @state(class: SHARED_UI)
+  selectedNodeIds: [String!]! @state(class: PRESENCE)
+  activeHoverVar: String! @state(class: PRESENCE)
+  activeSelectVar: String! @state(class: PRESENCE)
+  beforePaneCamera: Camera! @state(class: PRESENCE)
+  lodModeByWindow: [StringEntry!]! @state(class: PRESENCE)
 }
 
 type StringEntry {

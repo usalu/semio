@@ -4,7 +4,7 @@ package semio.s_stdio_step.inference;
 // 💡️ STEP AP214 inference schema — CARTESIAN_POINT-derived spatial bounding box.
 
 message StepInference {
-  // @state inferred
+  // @derived
   StepBounds bounds = 1;
 }
 

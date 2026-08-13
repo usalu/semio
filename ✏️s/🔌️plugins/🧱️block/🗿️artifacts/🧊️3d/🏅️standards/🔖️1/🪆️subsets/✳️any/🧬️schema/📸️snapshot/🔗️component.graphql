@@ -1,16 +1,16 @@
 # 🧬️ Block3d snapshot schema — persistent fields only.
 
 type Block3dSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  objectKind: BlockKindIdentity! @state(class: PERSISTENT)
-  representations: [BlockRepresentation!]! @state(class: PERSISTENT)
-  vortexKinds: [Block3dVortexKind!]! @state(class: PERSISTENT)
-  vortices: [Block3dVortexTemplate!]! @state(class: PERSISTENT)
-  compatibility: [BlockCompatibilityRule!]! @state(class: PERSISTENT)
-  attributes: [BlockAttribute!]! @state(class: PERSISTENT)
-  authors: [BlockAuthor!]! @state(class: PERSISTENT)
-  camera3d: BlockCamera3d! @state(class: PERSISTENT)
-  meta: BlockMeta! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  objectKind: BlockKindIdentity! @state(class: ARTIFACT)
+  representations: [BlockRepresentation!]! @state(class: ARTIFACT)
+  vortexKinds: [Block3dVortexKind!]! @state(class: ARTIFACT)
+  vortices: [Block3dVortexTemplate!]! @state(class: ARTIFACT)
+  compatibility: [BlockCompatibilityRule!]! @state(class: ARTIFACT)
+  attributes: [BlockAttribute!]! @state(class: ARTIFACT)
+  authors: [BlockAuthor!]! @state(class: ARTIFACT)
+  camera3d: BlockCamera3d! @state(class: ARTIFACT)
+  meta: BlockMeta! @state(class: ARTIFACT)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

@@ -1,11 +1,11 @@
 /** 🧬️ WiresPresence */
 export interface WiresPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   dragNodeId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   dragLastX: number;
-  /** @state shared-ui */
+  /** @state presence */
   dragLastY: number;
 }

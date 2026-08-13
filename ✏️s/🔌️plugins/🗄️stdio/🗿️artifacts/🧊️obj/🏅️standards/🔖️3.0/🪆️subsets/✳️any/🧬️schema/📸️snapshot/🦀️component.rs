@@ -135,36 +135,36 @@ pub struct ObjUnknownStatement {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.obj")]
 pub struct ObjSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub vertices: Vec<ObjVertex>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub texcoords: Vec<ObjTexCoord>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub normals: Vec<ObjNormal>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub faces: Vec<ObjFace>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub groups: Vec<ObjGroup>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub objects: Vec<ObjObject>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtllib: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub usemtl: Vec<ObjUsemtlRange>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub smoothing_groups: Vec<ObjSmoothingRange>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub unknown_statements: Vec<ObjUnknownStatement>,
 }

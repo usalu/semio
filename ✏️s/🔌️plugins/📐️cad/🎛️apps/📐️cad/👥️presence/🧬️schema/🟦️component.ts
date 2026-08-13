@@ -1,44 +1,44 @@
 /** 🧬️ CadPresence */
 
 export interface CadPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredTargetObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredTargetMode?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredTargetId?: number;
-  /** @state shared-ui */
+  /** @state presence */
   activeObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   componentSelectionMode: string;
-  /** @state shared-ui */
+  /** @state presence */
   componentSelectionIds: number[];
-  /** @state shared-ui */
+  /** @state presence */
   componentSelectionTargetsMesh: boolean;
-  /** @state shared-ui */
+  /** @state presence */
   componentSelectionTargetsVertex: boolean;
-  /** @state shared-ui */
+  /** @state presence */
   componentSelectionTargetsEdge: boolean;
-  /** @state shared-ui */
+  /** @state presence */
   componentSelectionTargetsFace: boolean;
-  /** @state shared-ui */
+  /** @state presence */
   cameraPosition: number[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraTarget: number[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraZoom: number;
-  /** @state shared-ui */
+  /** @state presence */
   cameraFov: number;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state shared-ui */
+  /** @state presence */
   engagementStep: string;
-  /** @state shared-ui */
+  /** @state presence */
   engagementPane?: string;
 }

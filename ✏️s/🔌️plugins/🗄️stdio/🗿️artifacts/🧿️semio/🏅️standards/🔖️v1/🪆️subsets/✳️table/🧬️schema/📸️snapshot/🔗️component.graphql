@@ -11,7 +11,7 @@ type SemioTableRow {
 }
 
 type SemioTableSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  columns: [SemioTableColumn!]! @state(class: PERSISTENT)
-  rows: [SemioTableRow!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  columns: [SemioTableColumn!]! @state(class: ARTIFACT)
+  rows: [SemioTableRow!]! @state(class: ARTIFACT)
 }

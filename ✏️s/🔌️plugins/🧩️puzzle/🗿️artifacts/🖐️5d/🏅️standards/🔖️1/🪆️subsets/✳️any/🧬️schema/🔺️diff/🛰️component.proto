@@ -4,75 +4,75 @@ package semio.s.puzzle.puzzle5d.diff;
 // 🧬️ Puzzle5d diff schema — sparse field delta.
 
 message Puzzle5dDiff {
-  // @state persistent
+  // @state artifact
   optional Puzzle5dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
-  // @state persistent
+  // @state artifact
   optional string domain = 3;
-  // @state persistent
+  // @state artifact
   optional string label = 4;
-  // @state persistent
+  // @state artifact
   optional Puzzle5dMeta meta = 5;
-  // @state persistent
+  // @state artifact
   optional Puzzle5dKindCatalogs kind_catalogs = 6;
-  // @state persistent
+  // @state artifact
   optional Puzzle5dKindCompatibilityDelta kind_compatibility = 7;
-  // @state persistent
+  // @state artifact
   optional Puzzle5dPartsDelta parts = 8;
-  // @state persistent
+  // @state artifact
   optional Puzzle5dFastenersDelta fasteners = 9;
-  // @state shared-ui
+  // @state presence
   optional Puzzle5dStringList selected_part_ids = 10;
-  // @state shared-ui
+  // @state presence
   optional Puzzle5dStringList selected_grip_ids = 11;
-  // @state shared-ui
+  // @state presence
   optional Puzzle5dStringList selected_fastener_ids = 12;
-  // @state shared-ui
+  // @state presence
   optional string active_utility_id = 13;
-  // @state local-ui
+  // @state config
   optional double camera2d_x = 14;
-  // @state local-ui
+  // @state config
   optional double camera2d_y = 15;
-  // @state local-ui
+  // @state config
   optional double camera2d_zoom = 16;
-  // @state local-ui
+  // @state config
   optional double camera3d_position_x = 17;
-  // @state local-ui
+  // @state config
   optional double camera3d_position_y = 18;
-  // @state local-ui
+  // @state config
   optional double camera3d_position_z = 19;
-  // @state local-ui
+  // @state config
   optional double camera3d_target_x = 20;
-  // @state local-ui
+  // @state config
   optional double camera3d_target_y = 21;
-  // @state local-ui
+  // @state config
   optional double camera3d_target_z = 22;
-  // @state local-ui
+  // @state config
   optional double camera3d_zoom = 23;
-  // @state local-ui
+  // @state config
   optional string selection_method = 24;
-  // @state local-ui
+  // @state config
   optional bool grid_snap_enabled = 25;
-  // @state local-ui
+  // @state config
   optional double grid_factor = 26;
-  // @state local-ui
+  // @state config
   optional double suggestion_offset = 27;
-  // @state local-ui
+  // @state config
   optional double overlap_budget = 28;
-  // @state local-ui
+  // @state config
   optional uint32 fill_count = 29;
-  // @state local-ui
+  // @state config
   optional uint32 brush_candidate_index = 30;
-  // @state local-ui
+  // @state config
   optional string lod_mode = 31;
-  // @state local-ui
+  // @state config
   optional string locale = 32;
-  // @state local-ui
+  // @state config
   optional string runtime_extras_json = 33;
-  // @state preview
+  // @state artifact
   optional string hovered_part_id = 34;
-  // @state preview
+  // @state artifact
   optional int64 preview_seq = 35;
 }
 

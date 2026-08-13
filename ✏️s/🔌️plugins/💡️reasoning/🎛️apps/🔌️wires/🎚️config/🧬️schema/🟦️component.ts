@@ -1,13 +1,13 @@
 /** 🧬️ WiresConfig */
 export interface WiresConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   dragNodeId?: string;
-  /** @state local-ui */
+  /** @state config */
   dragLastX: number;
-  /** @state local-ui */
+  /** @state config */
   dragLastY: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

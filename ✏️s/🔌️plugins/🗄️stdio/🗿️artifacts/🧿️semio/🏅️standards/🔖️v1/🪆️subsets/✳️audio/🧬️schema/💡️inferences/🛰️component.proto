@@ -4,7 +4,7 @@ package semio.s.stdio.semio.audio.inference;
 // 💡️ Semio audio inference schema — sample-count-derived playback duration.
 
 message SemioAudioInference {
-  // @state inferred
+  // @derived
   SemioAudioDuration duration = 1;
 }
 

@@ -8,15 +8,15 @@
     "selectedStepIds": {
       "type": "array",
       "items": { "type": "string" },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "orientation": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "camera": {
       "$ref": "#/$defs/SequenceCamera",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   },
   "$defs": {

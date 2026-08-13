@@ -79,481 +79,481 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meta": {
       "$ref": "#/$defs/ProgramMeta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "project": {
       "$ref": "#/$defs/ProjectDefinition",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "stakeholders": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Stakeholder"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "users": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/UserProfile"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activities": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Activity"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "functions": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Function"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "elements": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ProgramElement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "quantities": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/QuantityRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "relationships": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Relationship"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "adjacencies": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Adjacency"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "processes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Process"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "flows": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FlowRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "accessRules": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/AccessRule"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "operations": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/OperationalRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "equipment": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Equipment"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resources": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Resource"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "storage": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/StorageRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "environmental": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/EnvironmentalRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "humanFactors": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/HumanFactorRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "accessibility": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/AccessibilityRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "privacy": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PrivacyRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "safety": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SafetyRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "security": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SecurityRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "regulatory": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/RegulatoryRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "siteContext": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SiteContext"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "organizational": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/OrganizationalRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "services": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ServiceRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "infrastructure": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/InfrastructureRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "information": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/InformationRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "communication": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CommunicationRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "wayfinding": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/WayfindingRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schedules": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ScheduleRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "flexibility": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FlexibilityRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "growth": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/GrowthPlan"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sustainability": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SustainabilityRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resilience": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ResilienceRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "costs": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CostRequirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "delivery": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/DeliveryConstraint"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "risks": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Risk"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "conflicts": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Conflict"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "requirements": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Requirement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "priorities": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PriorityRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "scenarios": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Scenario"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "options": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/OptionEvaluation"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "decisions": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Decision"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "validations": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ValidationRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "performance": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PerformanceCriterion"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "quality": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/QualityRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "documents": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/DocumentRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "assumptions": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Assumption"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "constraints": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ConstraintRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "complianceRecords": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ComplianceRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "approvals": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ApprovalRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "meetings": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/MeetingRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "changes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ChangeRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "collaboration": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CollaborationRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "analyses": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/AnalysisRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "reports": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ReportRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "searchFilters": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/SearchFilter"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "statusRecords": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/StatusRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "workshops": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Workshop"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "surveys": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Survey"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "issues": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Issue"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "auditEvents": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/AuditEvent"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "templates": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/TemplateRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "knowledge": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/KnowledgeRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "benchmarks": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BenchmarkRecord"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "traces": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/TraceLink"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "governance": {
       "$ref": "#/$defs/Governance",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

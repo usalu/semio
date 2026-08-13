@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn set_active_example_loads_default_fixture_3d() {
         let (snapshot, history) = empty_view();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "default".into() }, &doc, &cfg).expect("handle");
@@ -81,7 +81,7 @@ mod tests {
     #[test]
     fn set_active_example_unknown_id_resets_to_empty_document() {
         let (snapshot, history) = empty_view();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");

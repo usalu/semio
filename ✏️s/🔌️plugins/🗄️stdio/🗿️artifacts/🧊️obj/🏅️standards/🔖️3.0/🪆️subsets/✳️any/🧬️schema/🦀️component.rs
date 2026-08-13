@@ -10,36 +10,36 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.obj")]
 pub struct ObjArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub vertices: Vec<crate::artifacts::obj::schema::snapshot::ObjVertex>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub texcoords: Vec<crate::artifacts::obj::schema::snapshot::ObjTexCoord>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub normals: Vec<crate::artifacts::obj::schema::snapshot::ObjNormal>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub faces: Vec<crate::artifacts::obj::schema::snapshot::ObjFace>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub groups: Vec<crate::artifacts::obj::schema::snapshot::ObjGroup>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub objects: Vec<crate::artifacts::obj::schema::snapshot::ObjObject>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtllib: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub usemtl: Vec<crate::artifacts::obj::schema::snapshot::ObjUsemtlRange>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub smoothing_groups: Vec<crate::artifacts::obj::schema::snapshot::ObjSmoothingRange>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub unknown_statements: Vec<crate::artifacts::obj::schema::snapshot::ObjUnknownStatement>,
 }

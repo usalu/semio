@@ -7,6 +7,6 @@ export interface StepBounds {
 }
 
 export interface StepInference {
-  /** @state inferred */
+  /** @derived */
   bounds: StepBounds;
 }

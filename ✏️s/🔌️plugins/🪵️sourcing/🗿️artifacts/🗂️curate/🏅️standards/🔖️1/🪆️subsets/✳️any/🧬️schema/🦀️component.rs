@@ -13,17 +13,17 @@ use std::sync::Mutex;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curate")]
 pub struct CurateArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub stock: Vec<ObjectKind>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub curated: Vec<CuratedItem>,
-    #[state(local_ui)]
+    #[state(config)]
     pub filters: Filters,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_object_id: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub contributions_json: String,
 }
 //#endregion 🔖️Artifact

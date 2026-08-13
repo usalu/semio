@@ -1,37 +1,37 @@
 /** 🧬️ GIS map diff schema — sparse field delta. */
 
 export interface GisMapDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: GisMapArtifact;
-  /** @state persistent */
+  /** @state artifact */
   positions?: GisMapFeaturesDelta;
-  /** @state persistent */
+  /** @state artifact */
   routes?: GisMapFeaturesDelta;
-  /** @state persistent */
+  /** @state artifact */
   regions?: GisMapFeaturesDelta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds?: GisMapStringList;
-  /** @state shared-ui */
+  /** @state presence */
   featureSelectionJson?: string;
-  /** @state shared-ui */
+  /** @state presence */
   layerVisibility?: GisMapBoolMapDelta;
-  /** @state shared-ui */
+  /** @state presence */
   layerStrokeScale?: GisMapNumberMapDelta;
-  /** @state local-ui */
+  /** @state config */
   cameraJson?: string;
-  /** @state local-ui */
+  /** @state config */
   renderMode?: string;
-  /** @state local-ui */
+  /** @state config */
   vectorStyle?: string;
-  /** @state local-ui */
+  /** @state config */
   lodMode?: string;
-  /** @state local-ui */
+  /** @state config */
   hoverJson?: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod?: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMode?: string;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

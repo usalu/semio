@@ -1,7 +1,7 @@
 # 💡️ Raster inference schema — layer-tree topology (structural pre-order + nesting depth).
 
 type RasterInference {
-  topology: RasterTopology! @state(class: INFERRED)
+  topology: RasterTopology! @derived
 }
 
 type RasterTopology {

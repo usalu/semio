@@ -1,12 +1,12 @@
 /** 🔺️ Present diff schema — sparse field delta. */
 export interface PresentDiff {
-  /** @state persistent */ artifact?: PresentArtifact | null;
-  /** @state persistent */ schema?: string | null;
-  /** @state persistent */ source?: FigureTileSource | null;
-  /** @state persistent */ tiles?: PresentTilesDelta | null;
-  /** @state shared-ui */ selectedIds?: PresentStringList | null;
-  /** @state local-ui */ engagementInput?: string | null;
-  /** @state local-ui */ locale?: string | null;
+  /** @state artifact */ artifact?: PresentArtifact | null;
+  /** @state artifact */ schema?: string | null;
+  /** @state artifact */ source?: FigureTileSource | null;
+  /** @state artifact */ tiles?: PresentTilesDelta | null;
+  /** @state presence */ selectedIds?: PresentStringList | null;
+  /** @state config */ engagementInput?: string | null;
+  /** @state config */ locale?: string | null;
 }
 export interface PresentStringList { values: string[]; }
 export interface PresentTilesDelta { added: FigureTileDraft[]; removed: string[]; patched: PresentTilePatchEntry[]; reordered?: string[] | null; }

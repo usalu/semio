@@ -4,6 +4,6 @@ export interface PptxEntry {
   data: number[];
 }
 export interface PptxArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: PptxEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: PptxEntry[];
 }

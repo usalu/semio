@@ -4,19 +4,19 @@ package semio.s.imperative.imperative.artifact;
 // 🧬️ Imperative artifact schema — every field with its state class.
 
 message ImperativeArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   ImperativePath path = 2;
-  // @state persistent
+  // @state artifact
   map<string, string> seed = 3;
-  // @state shared-ui
+  // @state presence
   repeated string selected_step_ids = 4;
-  // @state local-ui
+  // @state config
   string locale = 5;
-  // @state local-ui
+  // @state config
   string contributions_json = 6;
-  // @state effect
+  // @state transient
   string run_output_json = 7;
 }
 

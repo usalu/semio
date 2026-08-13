@@ -1,41 +1,41 @@
 /** 🧬️ Writer artifact schema. */
 
 export interface WriterArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   languageId: string;
-  /** @state persistent */
+  /** @state artifact */
   uri: string;
-  /** @state persistent */
+  /** @state artifact */
   text: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedAstIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   editorSelection?: WriterEditorSelection;
-  /** @state shared-ui */
+  /** @state presence */
   editorSettings: WriterEditorSettings;
-  /** @state local-ui */
+  /** @state config */
   formatSignal: number;
-  /** @state local-ui */
+  /** @state config */
   lintSignal: number;
-  /** @state local-ui */
+  /** @state config */
   revision: number;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   cameraX: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state preview */
+  /** @state artifact */
   treeHoveredAstId?: string;
-  /** @state preview */
+  /** @state artifact */
   editorHoverOffset?: number;
 }
 

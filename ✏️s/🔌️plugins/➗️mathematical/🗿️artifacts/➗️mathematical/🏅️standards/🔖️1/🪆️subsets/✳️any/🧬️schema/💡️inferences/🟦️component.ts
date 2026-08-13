@@ -8,6 +8,6 @@ export interface MathematicalTopology {
 }
 
 export interface MathematicalInference {
-  /** @state inferred */
+  /** @derived */
   topology: MathematicalTopology;
 }

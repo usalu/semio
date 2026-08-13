@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["topology"],
   "properties": {
-    "topology": { "$ref": "#/$defs/PlaygroundTopology", "x-semio-state": "inferred" }
+    "topology": { "$ref": "#/$defs/PlaygroundTopology", "x-semio-derived": true }
   },
   "$defs": {
     "PlaygroundTopology": {

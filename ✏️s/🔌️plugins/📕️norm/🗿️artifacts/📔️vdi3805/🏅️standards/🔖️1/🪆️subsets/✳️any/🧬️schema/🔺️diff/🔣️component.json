@@ -8,52 +8,52 @@
     "artifact": {
       "title": "Vdi3805Artifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "manufacturerFile": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "catalog": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "editionProfile": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "correctionAsOf": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "strictMode": {
       "type": "boolean",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "index": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "geometry": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "curves": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "limits": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedCheckIndex": {
       "oneOf": [
@@ -66,7 +66,7 @@
           "minimum": 0
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   }
 }

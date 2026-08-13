@@ -3,7 +3,7 @@
   "title": "SemioAudioDiff",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "bytes": { "type": "string", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "bytes": { "type": "string", "x-semio-state": "artifact" }
   }
 }

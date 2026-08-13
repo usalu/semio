@@ -125,14 +125,14 @@ pub struct IfcHeader {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc")]
 pub struct IfcSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub header: IfcHeader,
     /// 🆔️ Id-keyed, order-preserving — the strong collection this artifact's diff/mutations work
     /// against (see `schema::diff::IfcEntitiesDiff`).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entities: Vec<IfcEntity>,
 }

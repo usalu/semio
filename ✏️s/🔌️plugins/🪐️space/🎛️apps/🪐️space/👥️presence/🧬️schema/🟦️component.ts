@@ -1,18 +1,18 @@
 /** 🧬️ SpacePresence */
 export interface SpacePresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredNodeId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   camera: Record<string, SpaceWindowCamera>;
-  /** @state shared-ui */
+  /** @state presence */
   activeNodeId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   focusedNodeId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   collapsedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   previewOffNodeIds: string[];
 }
 

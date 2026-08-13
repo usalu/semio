@@ -75,27 +75,27 @@ pub struct SemioKitDesign {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.kit")]
 pub struct SemioKitSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub types: Vec<SemioKitType>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub designs: Vec<SemioKitDesign>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.object")]
     #[serde(default)]
     pub objects: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
     #[serde(default)]
     pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[link_slot(roles("representation"))]
     #[serde(default)]
     pub representations: Vec<store::ArtifactLink>,

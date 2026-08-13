@@ -25,7 +25,7 @@ use super::digest::compute_content_digest;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.home.inference")]
 pub struct SHomeInference {
-    #[state(inferred)]
+    #[derived]
     pub content_digest: String,
 }
 

@@ -23,7 +23,7 @@ use super::flat_position::{compute_flat_position, Puzzle2dFlatPosition};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d.inference")]
 pub struct Puzzle2dInference {
-    #[state(inferred)]
+    #[derived]
     pub flat_position: Puzzle2dFlatPosition,
 }
 

@@ -1,7 +1,7 @@
 # 💡️ Curate inference schema — a real census over the stock catalog and curated bill of quantities.
 
 type CurateInference {
-  entries: CurateEntries! @state(class: INFERRED)
+  entries: CurateEntries! @derived
 }
 
 type CurateEntries {

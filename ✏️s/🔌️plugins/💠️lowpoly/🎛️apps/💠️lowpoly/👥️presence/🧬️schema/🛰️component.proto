@@ -1,36 +1,36 @@
 syntax = "proto3";
 package semio.app.lowpoly.lowpoly;
 message LowpolyPresence {
-  // @state shared-ui
+  // @state presence
   string selection_mode = 1;
-  // @state shared-ui
+  // @state presence
   repeated uint32 selection_ids = 2;
-  // @state shared-ui
+  // @state presence
   bool selection_targets_mesh = 3;
-  // @state shared-ui
+  // @state presence
   bool selection_targets_vertex = 4;
-  // @state shared-ui
+  // @state presence
   bool selection_targets_edge = 5;
-  // @state shared-ui
+  // @state presence
   bool selection_targets_face = 6;
-  // @state shared-ui
+  // @state presence
   repeated string selected_object_ids = 7;
-  // @state shared-ui
+  // @state presence
   optional string hovered_object_id = 8;
-  // @state shared-ui
+  // @state presence
   optional string hovered_target_object_id = 9;
-  // @state shared-ui
+  // @state presence
   optional string hovered_target_mode = 10;
-  // @state shared-ui
+  // @state presence
   optional uint32 hovered_target_id = 11;
-  // @state shared-ui
+  // @state presence
   repeated double world_camera_position = 12;
-  // @state shared-ui
+  // @state presence
   repeated double world_camera_target = 13;
-  // @state shared-ui
+  // @state presence
   double world_camera_fov = 14;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 15;
-  // @state shared-ui
+  // @state presence
   string paint_utility = 16;
 }

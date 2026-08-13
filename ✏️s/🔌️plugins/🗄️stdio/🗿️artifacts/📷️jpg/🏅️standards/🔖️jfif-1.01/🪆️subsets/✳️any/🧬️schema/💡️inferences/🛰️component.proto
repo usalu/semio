@@ -4,7 +4,7 @@ package semio.s.stdio.jpg.inference;
 // 💡️ Jpg inference schema — canonical raster geometry.
 
 message JpgInference {
-  // @state inferred
+  // @derived
   JpgDimensions dimensions = 1;
 }
 

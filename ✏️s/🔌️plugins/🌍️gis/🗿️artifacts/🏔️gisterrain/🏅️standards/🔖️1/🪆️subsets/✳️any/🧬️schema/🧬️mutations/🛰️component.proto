@@ -4,8 +4,8 @@ package semio.s.gis.gisterrain.mutation;
 // 🧬️ GIS terrain mutation schema — persistent fields only.
 
 message GisTerrainMutation {
-  // @state persistent
+  // @state artifact
   double exaggeration = 1;
-  // @state persistent
+  // @state artifact
   string imported_features_json = 2;
 }

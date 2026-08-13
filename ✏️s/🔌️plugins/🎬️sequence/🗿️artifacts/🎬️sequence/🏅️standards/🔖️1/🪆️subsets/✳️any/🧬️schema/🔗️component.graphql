@@ -1,13 +1,13 @@
 # 🧬️ Sequence artifact schema.
 type SequenceArtifact {
-  schema: String! @state(class: PERSISTENT)
-  steps: [SequenceStep!]! @state(class: PERSISTENT)
-  edges: [SequenceEdge!]! @state(class: PERSISTENT)
-  selectedStepIds: [String!]! @state(class: SHARED_UI)
-  lastRunJson: String! @state(class: LOCAL_UI)
-  orientation: String! @state(class: LOCAL_UI)
-  camera: SequenceCamera! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  schema: String! @state(class: ARTIFACT)
+  steps: [SequenceStep!]! @state(class: ARTIFACT)
+  edges: [SequenceEdge!]! @state(class: ARTIFACT)
+  selectedStepIds: [String!]! @state(class: PRESENCE)
+  lastRunJson: String! @state(class: CONFIG)
+  orientation: String! @state(class: CONFIG)
+  camera: SequenceCamera! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 type SequenceStep { id: String! kind: String! params: JSON! x: Float! y: Float! slot: SlotRef collapsed: Boolean! }
 type SequenceEdge { id: String! from: String! to: String! }

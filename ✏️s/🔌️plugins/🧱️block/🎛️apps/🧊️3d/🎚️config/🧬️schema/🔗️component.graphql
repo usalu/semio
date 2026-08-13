@@ -1,15 +1,15 @@
 type Block3dConfig {
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  activeRepresentationId: String @state(class: LOCAL_UI)
-  wantedTags: [String!]! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
-  windows: [Block3dWindowView!]! @state(class: LOCAL_UI)
-  brushVortexKindId: String @state(class: LOCAL_UI)
-  brushRadius: Float! @state(class: LOCAL_UI)
-  brushFlip: Boolean! @state(class: LOCAL_UI)
-  brushPreview: Block3dBrushPreview @state(class: LOCAL_UI)
-  camera: BlockCamera3d @state(class: LOCAL_UI)
-  hoveredVortexFullId: String @state(class: LOCAL_UI)
+  selectedIds: [String!]! @state(class: CONFIG)
+  activeRepresentationId: String @state(class: CONFIG)
+  wantedTags: [String!]! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+  windows: [Block3dWindowView!]! @state(class: CONFIG)
+  brushVortexKindId: String @state(class: CONFIG)
+  brushRadius: Float! @state(class: CONFIG)
+  brushFlip: Boolean! @state(class: CONFIG)
+  brushPreview: Block3dBrushPreview @state(class: CONFIG)
+  camera: BlockCamera3d @state(class: CONFIG)
+  hoveredVortexFullId: String @state(class: CONFIG)
 }
 
 type Block3dWindowView { _placeholder: Boolean }

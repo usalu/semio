@@ -29,7 +29,7 @@ use super::aabb::{aabb_key, SemioAabb};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.mesh.inference")]
 pub struct SemioMeshInference {
-    #[state(inferred)]
+    #[derived]
     pub aabb: BTreeMap<String, SemioAabb>,
 }
 

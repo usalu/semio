@@ -1,6 +1,6 @@
 # 🧬️ Playground diff schema — sparse field delta over the artifact.
 
 type PlaygroundDiff {
-  artifact: PlaygroundArtifact @state(class: PERSISTENT)
-  schema: String @state(class: PERSISTENT)
+  artifact: PlaygroundArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
 }

@@ -3,6 +3,6 @@ type GifEntry {
   data: [Int!]!
 }
 type GifSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [GifEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [GifEntry!]! @state(class: ARTIFACT)
 }

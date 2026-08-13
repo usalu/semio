@@ -21,7 +21,7 @@ use super::shape::{compute_semio_table_shape, SemioTableShape};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.table.inference")]
 pub struct SemioTableInference {
-    #[state(inferred)]
+    #[derived]
     pub shape: SemioTableShape,
 }
 

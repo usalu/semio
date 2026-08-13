@@ -4,6 +4,6 @@ export interface XlsxEntry {
   data: number[];
 }
 export interface XlsxArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: XlsxEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: XlsxEntry[];
 }

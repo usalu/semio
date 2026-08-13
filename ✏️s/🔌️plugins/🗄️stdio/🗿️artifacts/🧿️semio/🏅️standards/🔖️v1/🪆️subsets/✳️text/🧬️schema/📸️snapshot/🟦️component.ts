@@ -15,6 +15,6 @@ export interface SemioTextRun {
 }
 
 export interface SemioTextSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ runs: SemioTextRun[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ runs: SemioTextRun[];
 }

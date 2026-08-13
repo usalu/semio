@@ -69,7 +69,7 @@ mod tests {
         let json = serde_json::to_string(&replacement).unwrap();
         let snapshot = default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = LowpolyConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut scratch = LowpolyScratch::default();

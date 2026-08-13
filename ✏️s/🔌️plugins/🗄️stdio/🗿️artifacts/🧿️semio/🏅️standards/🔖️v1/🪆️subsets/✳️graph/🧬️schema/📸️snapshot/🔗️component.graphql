@@ -27,7 +27,7 @@ type SemioGraphEdge {
 }
 
 type SemioGraphSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  nodes: [SemioGraphNode!]! @state(class: PERSISTENT)
-  edges: [SemioGraphEdge!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  nodes: [SemioGraphNode!]! @state(class: ARTIFACT)
+  edges: [SemioGraphEdge!]! @state(class: ARTIFACT)
 }

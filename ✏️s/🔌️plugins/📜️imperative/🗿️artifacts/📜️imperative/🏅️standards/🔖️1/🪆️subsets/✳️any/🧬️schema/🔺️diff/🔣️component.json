@@ -8,32 +8,32 @@
     "artifact": {
       "title": "ImperativeArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "path": {
       "$ref": "#/$defs/ImperativePathDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "seed": {
       "type": "object",
       "additionalProperties": true,
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedStepIds": {
       "$ref": "#/$defs/ImperativeStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

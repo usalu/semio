@@ -1,22 +1,22 @@
 # 🧬️ GIS map diff schema — sparse field delta.
 
 type GisMapDiff {
-  artifact: GisMapArtifact @state(class: PERSISTENT)
-  positions: GisMapFeaturesDelta @state(class: PERSISTENT)
-  routes: GisMapFeaturesDelta @state(class: PERSISTENT)
-  regions: GisMapFeaturesDelta @state(class: PERSISTENT)
-  selectedIds: GisMapStringList @state(class: SHARED_UI)
-  featureSelectionJson: String @state(class: SHARED_UI)
-  layerVisibility: GisMapBoolMapDelta @state(class: SHARED_UI)
-  layerStrokeScale: GisMapNumberMapDelta @state(class: SHARED_UI)
-  cameraJson: String @state(class: LOCAL_UI)
-  renderMode: String @state(class: LOCAL_UI)
-  vectorStyle: String @state(class: LOCAL_UI)
-  lodMode: String @state(class: LOCAL_UI)
-  hoverJson: String @state(class: LOCAL_UI)
-  selectionMethod: String @state(class: LOCAL_UI)
-  selectionMode: String @state(class: LOCAL_UI)
-  locale: String @state(class: LOCAL_UI)
+  artifact: GisMapArtifact @state(class: ARTIFACT)
+  positions: GisMapFeaturesDelta @state(class: ARTIFACT)
+  routes: GisMapFeaturesDelta @state(class: ARTIFACT)
+  regions: GisMapFeaturesDelta @state(class: ARTIFACT)
+  selectedIds: GisMapStringList @state(class: PRESENCE)
+  featureSelectionJson: String @state(class: PRESENCE)
+  layerVisibility: GisMapBoolMapDelta @state(class: PRESENCE)
+  layerStrokeScale: GisMapNumberMapDelta @state(class: PRESENCE)
+  cameraJson: String @state(class: CONFIG)
+  renderMode: String @state(class: CONFIG)
+  vectorStyle: String @state(class: CONFIG)
+  lodMode: String @state(class: CONFIG)
+  hoverJson: String @state(class: CONFIG)
+  selectionMethod: String @state(class: CONFIG)
+  selectionMode: String @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
 }
 
 type GisMapArtifact {

@@ -7,10 +7,10 @@ enum DeflateLevelHint {
 }
 
 type DeflateSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  compressionMethod: Int! @state(class: PERSISTENT)
-  windowBits: Int! @state(class: PERSISTENT)
-  compressionLevelHint: DeflateLevelHint! @state(class: PERSISTENT)
-  dictId: Int @state(class: PERSISTENT)
-  payload: [Int!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  compressionMethod: Int! @state(class: ARTIFACT)
+  windowBits: Int! @state(class: ARTIFACT)
+  compressionLevelHint: DeflateLevelHint! @state(class: ARTIFACT)
+  dictId: Int @state(class: ARTIFACT)
+  payload: [Int!]! @state(class: ARTIFACT)
 }

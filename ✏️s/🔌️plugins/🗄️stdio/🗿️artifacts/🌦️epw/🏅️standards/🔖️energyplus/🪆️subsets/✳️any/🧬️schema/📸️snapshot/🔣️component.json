@@ -5,16 +5,16 @@
   "additionalProperties": false,
   "required": ["schema", "location", "designConditions", "typicalExtremePeriods", "groundTemperatures", "holidaysDst", "comments1", "comments2", "dataPeriods", "records"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "location": { "$ref": "#/$defs/EpwLocation", "x-semio-state": "persistent" },
-    "designConditions": { "type": "string", "x-semio-state": "persistent" },
-    "typicalExtremePeriods": { "type": "string", "x-semio-state": "persistent" },
-    "groundTemperatures": { "type": "string", "x-semio-state": "persistent" },
-    "holidaysDst": { "type": "string", "x-semio-state": "persistent" },
-    "comments1": { "type": "string", "x-semio-state": "persistent" },
-    "comments2": { "type": "string", "x-semio-state": "persistent" },
-    "dataPeriods": { "$ref": "#/$defs/EpwDataPeriods", "x-semio-state": "persistent" },
-    "records": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/EpwRecord" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "location": { "$ref": "#/$defs/EpwLocation", "x-semio-state": "artifact" },
+    "designConditions": { "type": "string", "x-semio-state": "artifact" },
+    "typicalExtremePeriods": { "type": "string", "x-semio-state": "artifact" },
+    "groundTemperatures": { "type": "string", "x-semio-state": "artifact" },
+    "holidaysDst": { "type": "string", "x-semio-state": "artifact" },
+    "comments1": { "type": "string", "x-semio-state": "artifact" },
+    "comments2": { "type": "string", "x-semio-state": "artifact" },
+    "dataPeriods": { "$ref": "#/$defs/EpwDataPeriods", "x-semio-state": "artifact" },
+    "records": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/EpwRecord" } }
   },
   "$defs": {
     "EpwLocation": {

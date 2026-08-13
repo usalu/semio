@@ -1,7 +1,7 @@
 # 💡️ Semio object inference schema — composition census + own placement.
 
 type SemioObjectInference {
-  composition: SemioObjectComposition! @state(class: INFERRED)
+  composition: SemioObjectComposition! @derived
 }
 
 type SemioObjectComposition {

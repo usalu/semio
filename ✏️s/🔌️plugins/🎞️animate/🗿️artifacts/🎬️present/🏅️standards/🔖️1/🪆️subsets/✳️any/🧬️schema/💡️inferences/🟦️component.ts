@@ -8,6 +8,6 @@ export interface PresentTopology {
 }
 
 export interface PresentInference {
-  /** @state inferred */
+  /** @derived */
   topology: PresentTopology;
 }

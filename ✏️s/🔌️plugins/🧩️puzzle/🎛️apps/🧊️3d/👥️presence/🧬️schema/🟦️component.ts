@@ -1,27 +1,27 @@
 /** 🧬️ Puzzle3dPresence */
 export interface Puzzle3dPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedVortexIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedAttractionIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedTargetVolumeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedReferenceIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredVortexFullId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   cameraPosition: number[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraTarget: number[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraZoom: number;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeToolId?: string;
 }

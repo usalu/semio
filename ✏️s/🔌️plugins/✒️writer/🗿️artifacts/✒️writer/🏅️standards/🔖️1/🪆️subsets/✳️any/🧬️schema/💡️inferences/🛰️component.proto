@@ -4,7 +4,7 @@ package semio.s.writer.writer.inference;
 // 💡️ Writer inference schema — document outline (markdown headings + word/line counts).
 
 message WriterInference {
-  // @state inferred
+  // @derived
   WriterOutline outline = 1;
 }
 

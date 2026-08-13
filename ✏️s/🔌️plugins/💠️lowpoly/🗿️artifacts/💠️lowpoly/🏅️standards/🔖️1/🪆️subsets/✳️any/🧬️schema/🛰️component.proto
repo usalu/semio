@@ -4,79 +4,79 @@ package semio.s.lowpoly.lowpoly.artifact;
 // 🧬️ Lowpoly artifact schema — every field with its state class.
 
 message LowpolyArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   repeated LowpolyObject objects = 2;
-  // @state shared-ui
+  // @state presence
   optional string active_object_id = 3;
-  // @state shared-ui
+  // @state presence
   LowpolySelection selection = 4;
-  // @state shared-ui
+  // @state presence
   repeated string selected_object_ids = 5;
-  // @state shared-ui
+  // @state presence
   string paint_utility = 6;
-  // @state shared-ui
+  // @state presence
   uint32 active_paint_layer = 7;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 8;
-  // @state local-ui
+  // @state config
   bool show_edges = 9;
-  // @state local-ui
+  // @state config
   bool sun_enabled = 10;
-  // @state local-ui
+  // @state config
   double sun_azimuth = 11;
-  // @state local-ui
+  // @state config
   double sun_elevation = 12;
-  // @state local-ui
+  // @state config
   double sun_intensity = 13;
-  // @state local-ui
+  // @state config
   string sun_color = 14;
-  // @state local-ui
+  // @state config
   double world_camera_position_x = 15;
-  // @state local-ui
+  // @state config
   double world_camera_position_y = 16;
-  // @state local-ui
+  // @state config
   double world_camera_position_z = 17;
-  // @state local-ui
+  // @state config
   double world_camera_target_x = 18;
-  // @state local-ui
+  // @state config
   double world_camera_target_y = 19;
-  // @state local-ui
+  // @state config
   double world_camera_target_z = 20;
-  // @state local-ui
+  // @state config
   double world_camera_fov = 21;
-  // @state local-ui
+  // @state config
   string utility_params_json = 22;
-  // @state local-ui
+  // @state config
   uint32 paint_color_r = 23;
-  // @state local-ui
+  // @state config
   uint32 paint_color_g = 24;
-  // @state local-ui
+  // @state config
   uint32 paint_color_b = 25;
-  // @state local-ui
+  // @state config
   uint32 paint_color_a = 26;
-  // @state local-ui
+  // @state config
   string selection_method = 27;
-  // @state local-ui
+  // @state config
   string selection_mode_default = 28;
-  // @state local-ui
+  // @state config
   string engagement_input = 29;
-  // @state local-ui
+  // @state config
   string locale = 30;
-  // @state preview
+  // @state artifact
   optional string hovered_object_id = 31;
-  // @state preview
+  // @state artifact
   optional string hovered_target_object_id = 32;
-  // @state preview
+  // @state artifact
   optional string hovered_target_mode = 33;
-  // @state preview
+  // @state artifact
   optional uint32 hovered_target_id = 34;
-  // @state preview
+  // @state artifact
   bool stroke_drag_active = 35;
-  // @state preview
+  // @state artifact
   bool transform_drag_active = 36;
-  // @state preview
+  // @state artifact
   int64 preview_seq = 37;
 }
 

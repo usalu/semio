@@ -1,7 +1,7 @@
 # 🧬️ SemioMeshArtifact schema — full artifact state, mirrors SemioMeshSnapshot field for field.
 type SemioMeshArtifact {
-  schema: String! @state(class: PERSISTENT)
-  meshes: [SemioMesh!]! @state(class: PERSISTENT)
-  materials: [SemioMaterial!]! @state(class: PERSISTENT)
-  textures: [SemioTexture!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  meshes: [SemioMesh!]! @state(class: ARTIFACT)
+  materials: [SemioMaterial!]! @state(class: ARTIFACT)
+  textures: [SemioTexture!]! @state(class: ARTIFACT)
 }

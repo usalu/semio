@@ -1,8 +1,8 @@
 # 📸️ DAG snapshot schema.
 type DagSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  nodes: [DagNodeSpec!]! @state(class: PERSISTENT)
-  edges: [DagFixtureEdge!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  nodes: [DagNodeSpec!]! @state(class: ARTIFACT)
+  edges: [DagFixtureEdge!]! @state(class: ARTIFACT)
 }
 type DagNodeSpec { id: String! }
 type DagFixtureEdge { id: String! source: String! target: String! }

@@ -68,10 +68,10 @@ type CuratedItem {
 }
 
 type CurateArtifact {
-  stock: [ObjectKind!]! @state(class: PERSISTENT)
-  curated: [CuratedItem!]! @state(class: PERSISTENT)
-  filters: Filters! @state(class: LOCAL_UI)
-  selectedObjectId: String @state(class: SHARED_UI)
-  locale: String! @state(class: LOCAL_UI)
-  contributionsJson: String! @state(class: LOCAL_UI)
+  stock: [ObjectKind!]! @state(class: ARTIFACT)
+  curated: [CuratedItem!]! @state(class: ARTIFACT)
+  filters: Filters! @state(class: CONFIG)
+  selectedObjectId: String @state(class: PRESENCE)
+  locale: String! @state(class: CONFIG)
+  contributionsJson: String! @state(class: CONFIG)
 }

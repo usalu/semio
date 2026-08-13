@@ -1,8 +1,8 @@
 type Procedural2dPresence {
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  camera: CameraJson! @state(class: SHARED_UI)
-  showMode: String! @state(class: SHARED_UI)
-  selectedGenerationId: String @state(class: SHARED_UI)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  camera: CameraJson! @state(class: PRESENCE)
+  showMode: String! @state(class: PRESENCE)
+  selectedGenerationId: String @state(class: PRESENCE)
 }
 type CameraJson {
   x: Float!

@@ -7,89 +7,89 @@
   "properties": {
     "artifact": {
       "$ref": "#/$defs/FlowArtifact",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "camera": {
       "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "widgets": {
       "$ref": "#/$defs/FlowWidgetsDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "synapses": {
       "$ref": "#/$defs/FlowSynapsesDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "layout": {
       "$ref": "#/$defs/FlowLayoutMapDelta",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedNodeIds": {
       "$ref": "#/$defs/FlowStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedEdgeIds": {
       "$ref": "#/$defs/FlowStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedHandleIds": {
       "$ref": "#/$defs/FlowStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "previewOffNodeIds": {
       "$ref": "#/$defs/FlowStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "lodMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "proximityDistance": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridVisible": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSnapEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridFactor": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "catalogueSectionsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "automationEnabledJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "generationJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

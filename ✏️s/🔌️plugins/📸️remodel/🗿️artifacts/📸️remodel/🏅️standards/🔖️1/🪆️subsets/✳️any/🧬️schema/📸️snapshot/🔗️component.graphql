@@ -1,15 +1,15 @@
 # 🧬️ Remodel snapshot schema — persistent fields only.
 
 type RemodelSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  id: String! @state(class: PERSISTENT)
-  streams: [MediaStream!]! @state(class: PERSISTENT)
-  assets: [ImageAssetEntry!]! @state(class: PERSISTENT)
-  calibration: CalibrationState! @state(class: PERSISTENT)
-  params: ReconstructionParams! @state(class: PERSISTENT)
-  gcps: [GroundControlPoint!]! @state(class: PERSISTENT)
-  job: ReconstructionJob! @state(class: PERSISTENT)
-  results: ReconstructionResults! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  streams: [MediaStream!]! @state(class: ARTIFACT)
+  assets: [ImageAssetEntry!]! @state(class: ARTIFACT)
+  calibration: CalibrationState! @state(class: ARTIFACT)
+  params: ReconstructionParams! @state(class: ARTIFACT)
+  gcps: [GroundControlPoint!]! @state(class: ARTIFACT)
+  job: ReconstructionJob! @state(class: ARTIFACT)
+  results: ReconstructionResults! @state(class: ARTIFACT)
 }
 
 type MediaStream { id: String! }

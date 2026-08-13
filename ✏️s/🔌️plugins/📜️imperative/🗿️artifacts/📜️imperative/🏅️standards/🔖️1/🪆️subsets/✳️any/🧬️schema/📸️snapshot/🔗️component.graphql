@@ -1,9 +1,9 @@
 # 🧬️ Imperative snapshot schema — persistent fields only.
 
 type ImperativeSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  path: ImperativePath! @state(class: PERSISTENT)
-  seed: [ImperativeSeedEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  path: ImperativePath! @state(class: ARTIFACT)
+  seed: [ImperativeSeedEntry!]! @state(class: ARTIFACT)
 }
 
 type ImperativePath {

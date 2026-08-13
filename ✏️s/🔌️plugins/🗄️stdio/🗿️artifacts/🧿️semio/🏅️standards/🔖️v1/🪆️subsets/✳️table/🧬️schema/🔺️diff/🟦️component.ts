@@ -6,6 +6,6 @@ export interface SemioTableRowListDiff {
   values: import("../📸️snapshot/🟦️component.ts").SemioTableRow[];
 }
 export interface SemioTableDiff {
-  /** @state persistent */ columns?: SemioTableColumnListDiff | null;
-  /** @state persistent */ rows?: SemioTableRowListDiff | null;
+  /** @state artifact */ columns?: SemioTableColumnListDiff | null;
+  /** @state artifact */ rows?: SemioTableRowListDiff | null;
 }

@@ -24,7 +24,7 @@ use super::kind::{compute_semio_kind, SemioKind};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.inference")]
 pub struct SemioInference {
-    #[state(inferred)]
+    #[derived]
     pub kind: SemioKind,
 }
 

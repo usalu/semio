@@ -1,14 +1,14 @@
 # 🧬️ Playbook artifact schema — every field with its state class.
 
 type PlaybookArtifact {
-  schema: String! @state(class: PERSISTENT)
-  id: String! @state(class: PERSISTENT)
-  version: String! @state(class: PERSISTENT)
-  title: String @state(class: PERSISTENT)
-  steps: [PlaybookStep!]! @state(class: PERSISTENT)
-  selectedIds: [String!]! @state(class: SHARED_UI)
-  locale: String! @state(class: LOCAL_UI)
-  contributionsJson: String! @state(class: LOCAL_UI)
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  version: String! @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  steps: [PlaybookStep!]! @state(class: ARTIFACT)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  locale: String! @state(class: CONFIG)
+  contributionsJson: String! @state(class: CONFIG)
 }
 
 type PlaybookStep {

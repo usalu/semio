@@ -1,14 +1,14 @@
 /** 🧬️ DrawPresence */
 export interface DrawPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   engagementInput: string;
-  /** @state shared-ui */
+  /** @state presence */
   camera: DrawCamera;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
 }
 export interface DrawCamera { x: number; y: number; zoom: number; }

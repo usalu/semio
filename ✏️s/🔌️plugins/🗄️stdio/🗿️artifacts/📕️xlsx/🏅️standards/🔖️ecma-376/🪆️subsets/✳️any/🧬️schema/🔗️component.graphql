@@ -3,6 +3,6 @@ type XlsxEntry {
   data: [Int!]!
 }
 type XlsxArtifact {
-  schema: String! @state(class: PERSISTENT)
-  entries: [XlsxEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [XlsxEntry!]! @state(class: ARTIFACT)
 }

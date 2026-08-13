@@ -1,9 +1,9 @@
 /** 🧬️ Procedural2d snapshot schema — persistent fields only. */
 
 export interface Procedural2dSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   fixture: FlowFixture;
-  /** @state persistent */
+  /** @state artifact */
   generation: GenerationPlayState;
 }
 

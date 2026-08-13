@@ -15,20 +15,20 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewrite")]
 pub struct RewriteArtifact {
-    #[state(persistent)] pub before_fixture_json: String,
-    #[state(persistent)] pub lhs_json: String,
-    #[state(persistent)] pub rhs_json: String,
-    #[state(persistent)] pub parameter_bindings: BTreeMap<String, PropertyValue>,
-    #[state(persistent)] pub rule_layout: BTreeMap<String, LayoutPoint>,
-    #[state(shared_ui)] pub selected_node_ids: Vec<String>,
-    #[state(shared_ui)] pub active_hover_var: String,
-    #[state(shared_ui)] pub active_select_var: String,
-    #[state(shared_ui)] pub lod_mode_by_window: BTreeMap<String, String>,
-    #[state(local_ui)] pub before_pane_camera: Camera,
-    #[state(local_ui)] pub reorganize_epoch: u64,
-    #[state(local_ui)] pub hover_epoch: u64,
-    #[state(local_ui)] pub select_epoch: u64,
-    #[state(local_ui)] pub locale: String,
+    #[state(artifact)] pub before_fixture_json: String,
+    #[state(artifact)] pub lhs_json: String,
+    #[state(artifact)] pub rhs_json: String,
+    #[state(artifact)] pub parameter_bindings: BTreeMap<String, PropertyValue>,
+    #[state(artifact)] pub rule_layout: BTreeMap<String, LayoutPoint>,
+    #[state(presence)] pub selected_node_ids: Vec<String>,
+    #[state(presence)] pub active_hover_var: String,
+    #[state(presence)] pub active_select_var: String,
+    #[state(presence)] pub lod_mode_by_window: BTreeMap<String, String>,
+    #[state(config)] pub before_pane_camera: Camera,
+    #[state(config)] pub reorganize_epoch: u64,
+    #[state(config)] pub hover_epoch: u64,
+    #[state(config)] pub select_epoch: u64,
+    #[state(config)] pub locale: String,
 }
 //#endregion 🔖️Artifact
 

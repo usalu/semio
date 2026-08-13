@@ -48,5 +48,5 @@ type JsonObjectDiff {
 }
 
 type JsonDiff {
-  value: JsonValueDiff @state(class: PERSISTENT)
+  value: JsonValueDiff @state(class: ARTIFACT)
 }

@@ -1,9 +1,9 @@
 type DrawConfig {
-  selectedIds: [String!]! @state(class: LOCAL_UI)
-  hoveredId: String @state(class: LOCAL_UI)
-  engagementInput: String! @state(class: LOCAL_UI)
-  camera: DrawCamera! @state(class: LOCAL_UI)
-  activeUtilityId: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedIds: [String!]! @state(class: CONFIG)
+  hoveredId: String @state(class: CONFIG)
+  engagementInput: String! @state(class: CONFIG)
+  camera: DrawCamera! @state(class: CONFIG)
+  activeUtilityId: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 type DrawCamera { x: Float! y: Float! zoom: Float! }

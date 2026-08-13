@@ -5,12 +5,12 @@
   "type": "object",
   "required": ["schema"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "types": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object", "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "category": { "type": "string" } } } },
-    "designs": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } },
-    "objects": { "type": "array", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.object", "items": { "type": "object" } },
-    "models": { "type": "array", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.model", "items": { "type": "object" } },
-    "properties": { "type": "object", "x-semio-state": "persistent", "x-semio-child": "s.stdio.semio.value" },
-    "representations": { "type": "array", "x-semio-state": "persistent", "x-semio-link": "representation", "items": { "type": "object" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "types": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object", "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "category": { "type": "string" } } } },
+    "designs": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } },
+    "objects": { "type": "array", "x-semio-state": "artifact", "x-semio-child": "s.stdio.semio.object", "items": { "type": "object" } },
+    "models": { "type": "array", "x-semio-state": "artifact", "x-semio-child": "s.stdio.semio.model", "items": { "type": "object" } },
+    "properties": { "type": "object", "x-semio-state": "artifact", "x-semio-child": "s.stdio.semio.value" },
+    "representations": { "type": "array", "x-semio-state": "artifact", "x-semio-link": "representation", "items": { "type": "object" } }
   }
 }

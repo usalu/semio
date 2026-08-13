@@ -1,7 +1,7 @@
 # 💡️ En1994 inference schema — document outline (field/section list + entry count).
 
 type En1994Inference {
-  outline: En1994Outline! @state(class: INFERRED)
+  outline: En1994Outline! @derived
 }
 
 type En1994Outline {

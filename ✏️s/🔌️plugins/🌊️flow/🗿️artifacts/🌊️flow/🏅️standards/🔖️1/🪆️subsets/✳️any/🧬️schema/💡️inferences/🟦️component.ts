@@ -8,6 +8,6 @@ export interface FlowTopology {
 }
 
 export interface FlowInference {
-  /** @state inferred */
+  /** @derived */
   topology: FlowTopology;
 }

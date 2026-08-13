@@ -8,6 +8,6 @@ export interface BcfTopicStats {
 }
 
 export interface BcfInference {
-  /** @state inferred */
+  /** @derived */
   topicStats: BcfTopicStats;
 }

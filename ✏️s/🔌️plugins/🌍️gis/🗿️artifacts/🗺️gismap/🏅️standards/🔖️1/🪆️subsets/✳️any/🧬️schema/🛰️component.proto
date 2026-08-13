@@ -4,35 +4,35 @@ package semio.s.gis.gismap.artifact;
 // 🧬️ GIS map artifact schema — every field with its state class.
 
 message GisMapArtifact {
-  // @state persistent
+  // @state artifact
   repeated GisMapFeature positions = 1;
-  // @state persistent
+  // @state artifact
   repeated GisMapFeature routes = 2;
-  // @state persistent
+  // @state artifact
   repeated GisMapFeature regions = 3;
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 4;
-  // @state shared-ui
+  // @state presence
   string feature_selection_json = 5;
-  // @state shared-ui
+  // @state presence
   map<string, bool> layer_visibility = 6;
-  // @state shared-ui
+  // @state presence
   map<string, double> layer_stroke_scale = 7;
-  // @state local-ui
+  // @state config
   string camera_json = 8;
-  // @state local-ui
+  // @state config
   string render_mode = 9;
-  // @state local-ui
+  // @state config
   string vector_style = 10;
-  // @state local-ui
+  // @state config
   string lod_mode = 11;
-  // @state local-ui
+  // @state config
   string hover_json = 12;
-  // @state local-ui
+  // @state config
   string selection_method = 13;
-  // @state local-ui
+  // @state config
   string selection_mode = 14;
-  // @state local-ui
+  // @state config
   string locale = 15;
 }
 

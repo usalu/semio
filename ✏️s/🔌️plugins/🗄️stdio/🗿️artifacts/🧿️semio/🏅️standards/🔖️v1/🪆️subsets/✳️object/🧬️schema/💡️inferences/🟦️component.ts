@@ -14,6 +14,6 @@ export interface SemioObjectComposition {
 }
 
 export interface SemioObjectInference {
-  /** @state inferred */
+  /** @derived */
   composition: SemioObjectComposition;
 }

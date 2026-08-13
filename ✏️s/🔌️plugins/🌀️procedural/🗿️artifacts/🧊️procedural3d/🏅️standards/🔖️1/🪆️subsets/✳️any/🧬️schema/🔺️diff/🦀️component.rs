@@ -15,22 +15,22 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.procedural.procedural3d")]
 
 pub struct Procedural3dDiff {
-    #[state(persistent)] pub artifact: Option<Box<Procedural3dArtifact>>,
-    #[state(persistent)] pub fixture: Option<FlowFixture>,
-    #[state(persistent)] pub generation: Option<GenerationPlayState>,
-    #[state(shared_ui)] pub selected_node_ids: Option<Procedural3dStringList>,
-    #[state(local_ui)] pub lod_mode: Option<String>,
-    #[state(local_ui)] pub show_mode: Option<String>,
-    #[state(local_ui)] pub selection_method: Option<String>,
-    #[state(preview)] pub hovered_node_id: Option<Option<String>>,
-    #[state(local_ui)] pub graph_camera: Option<CameraJson>,
-    #[state(local_ui)] pub preview_camera: Option<Procedural3dPreviewCamera>,
-    #[state(local_ui)] pub sun_json: Option<String>,
-    #[state(shared_ui)] pub selected_generation_id: Option<Option<String>>,
-    #[state(preview)] pub generation_preview_text: Option<Option<String>>,
-    #[state(shared_ui)] pub active_utility_id: Option<String>,
-    #[state(local_ui)] pub locale: Option<String>,
-    #[state(local_ui)] pub contributions_json: Option<String>}
+    #[state(artifact)] pub artifact: Option<Box<Procedural3dArtifact>>,
+    #[state(artifact)] pub fixture: Option<FlowFixture>,
+    #[state(artifact)] pub generation: Option<GenerationPlayState>,
+    #[state(presence)] pub selected_node_ids: Option<Procedural3dStringList>,
+    #[state(config)] pub lod_mode: Option<String>,
+    #[state(config)] pub show_mode: Option<String>,
+    #[state(config)] pub selection_method: Option<String>,
+    #[state(artifact)] pub hovered_node_id: Option<Option<String>>,
+    #[state(config)] pub graph_camera: Option<CameraJson>,
+    #[state(config)] pub preview_camera: Option<Procedural3dPreviewCamera>,
+    #[state(config)] pub sun_json: Option<String>,
+    #[state(presence)] pub selected_generation_id: Option<Option<String>>,
+    #[state(artifact)] pub generation_preview_text: Option<Option<String>>,
+    #[state(presence)] pub active_utility_id: Option<String>,
+    #[state(config)] pub locale: Option<String>,
+    #[state(config)] pub contributions_json: Option<String>}
 //#endregion 🔖️Procedural3dDiff
 
 //#region 🔖️Helpers

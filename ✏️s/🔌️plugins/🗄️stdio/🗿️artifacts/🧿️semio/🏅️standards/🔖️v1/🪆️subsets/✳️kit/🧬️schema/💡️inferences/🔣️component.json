@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["entries"],
   "properties": {
-    "entries": { "$ref": "#/$defs/SemioKitEntries", "x-semio-state": "inferred" }
+    "entries": { "$ref": "#/$defs/SemioKitEntries", "x-semio-derived": true }
   },
   "$defs": {
     "SemioKitEntries": {

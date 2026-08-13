@@ -4,7 +4,7 @@ package semio.s.stdio.dwg.ac1024.inference;
 // 💡️ Dwg (ac1024) inference schema — structural byte/section/page statistics over the real D1/D2 section-page decode.
 
 message DwgInference {
-  // @state inferred
+  // @derived
   DwgStructure structure = 1;
 }
 

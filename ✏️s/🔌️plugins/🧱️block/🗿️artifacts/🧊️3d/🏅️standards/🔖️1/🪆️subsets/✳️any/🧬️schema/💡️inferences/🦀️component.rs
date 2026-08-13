@@ -25,7 +25,7 @@ use super::bounds::{compute_block3d_bounds, Block3dBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block3d.inference")]
 pub struct Block3dInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: Block3dBounds,
 }
 

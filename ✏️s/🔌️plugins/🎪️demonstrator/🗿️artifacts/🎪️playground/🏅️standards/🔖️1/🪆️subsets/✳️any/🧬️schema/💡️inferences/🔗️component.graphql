@@ -2,7 +2,7 @@
 # entities exist yet on PlaygroundSnapshot).
 
 type PlaygroundInference {
-  topology: PlaygroundTopology! @state(class: INFERRED)
+  topology: PlaygroundTopology! @derived
 }
 
 type PlaygroundTopology {

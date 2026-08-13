@@ -4,9 +4,9 @@ package semio.s.procedural.procedural3d.mutation;
 // 🧬️ Procedural3d mutation schema — persistent fields only.
 
 message Procedural3dMutation {
-  // @state persistent
+  // @state artifact
   FlowFixture fixture = 1;
-  // @state persistent
+  // @state artifact
   GenerationPlayState generation = 2;
 }
 

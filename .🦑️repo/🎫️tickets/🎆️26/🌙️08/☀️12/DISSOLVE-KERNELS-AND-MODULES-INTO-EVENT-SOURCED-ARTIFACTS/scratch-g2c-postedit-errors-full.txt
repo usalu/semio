@@ -1,0 +1,158 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1090:35: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1112:35: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1176:27: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1188:26: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1192:144: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1214:30: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1215:30: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1220:30: error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1221:30: error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`: not found in `store::test_support`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:853:39: error[E0308]: mismatched types: expected `DslValue`, found `Value`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1103:23: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1107:24: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1145:84: error[E0433]: cannot find module or crate `vcs` in this scope: use of unresolved module or unlinked crate `vcs`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:45: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:67: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2187:79: error[E0425]: cannot find type `EvalError` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:48: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2190:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:112: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:46: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2194:94: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:47: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2198:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2201:194: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:113: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:45: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2203:95: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2206:167: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:116: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:48: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2207:98: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2210:107: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2211:98: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2212:23: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2214:13: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2245:19: error[E0616]: field `registry` of struct `FlowExtensionRegistryState` is private: private field
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2246:19: error[E0616]: field `generation` of struct `FlowExtensionRegistryState` is private: private field
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2326:39: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2327:35: error[E0425]: cannot find function `slider_widget_height` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2329:36: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2331:34: error[E0425]: cannot find function `computation_node_width` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2333:40: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2600:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:159: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:177: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:38: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2601:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:41: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2602:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2603:26: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:101: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:154: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:172: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:40: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2604:77: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2605:24: error[E0422]: cannot find struct, variant or union type `EvalChannels` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2619:48: error[E0425]: cannot find type `HashMap` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2619:64: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2631:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:157: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:175: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:38: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2632:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:148: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:166: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:41: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:75: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2633:99: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2640:27: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2643:13: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:102: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:126: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:183: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:201: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:34: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2644:58: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2646:24: error[E0422]: cannot find struct, variant or union type `EvalChannels` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2646:56: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:20: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:57: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2662:75: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2664:35: error[E0433]: cannot find type `DagPreviewContent` in this scope: use of undeclared type `DagPreviewContent`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:20: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:55: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2670:73: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2673:13: error[E0433]: cannot find type `DagPreviewContent` in this scope: use of undeclared type `DagPreviewContent`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2684:37: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2713:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2813:25: error[E0433]: cannot find type `Evaluator` in this scope: use of undeclared type `Evaluator`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2814:45: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2815:25: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:114: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:132: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:39: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2816:64: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2866:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2868:21: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2978:37: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2996:38: error[E0425]: cannot find function `create_document_envelope` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2998:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2998:49: error[E0425]: cannot find value `mutations` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3001:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3006:24: error[E0433]: cannot find type `ArtifactCommand` in this scope: use of undeclared type `ArtifactCommand`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3030:229: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:57: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:79: error[E0425]: cannot find type `Dictionary` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3037:91: error[E0425]: cannot find type `EvalError` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:23: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:73: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3040:91: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3043:24: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3045:94: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3049:24: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3051:26: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3053:108: error[E0433]: cannot find type `EvalError` in this scope: use of undeclared type `EvalError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3056:12: error[E0425]: cannot find function `channel_output` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3067:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3068:101: error[E0433]: cannot find type `BTreeSet` in this scope: use of undeclared type `BTreeSet`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3068:72: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3075:21: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3131:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3150:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3194:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3228:13: error[E0433]: cannot find type `DagNodeKind` in this scope: use of undeclared type `DagNodeKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3335:30: error[E0433]: cannot find type `BTreeMap` in this scope: use of undeclared type `BTreeMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3338:13: error[E0425]: cannot find function `fit_node_size` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3485:101: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3486:99: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3487:93: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3557:102: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3558:90: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3559:88: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3766:21: error[E0422]: cannot find struct, variant or union type `Tree` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:109: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:156: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:174: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:17: error[E0433]: cannot find type `Neuron` in this scope: use of undeclared type `Neuron`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:43: error[E0425]: cannot find value `INPUT_KIND` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:55: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3768:91: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:113: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:162: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:17: error[E0433]: cannot find type `Neuron` in this scope: use of undeclared type `Neuron`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:180: error[E0433]: cannot find type `Atom` in this scope: use of undeclared type `Atom`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:46: error[E0425]: cannot find value `OUTPUT_KIND` in this scope: not found in this scope
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:59: error[E0433]: cannot find type `Dictionary` in this scope: use of undeclared type `Dictionary`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3769:95: error[E0433]: cannot find type `NeuralValue` in this scope: use of undeclared type `NeuralValue`
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3774:70: error[E0433]: cannot find type `HashMap` in this scope: use of undeclared type `HashMap`

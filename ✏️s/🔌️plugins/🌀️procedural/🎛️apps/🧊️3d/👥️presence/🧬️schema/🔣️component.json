@@ -17,31 +17,31 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "hoveredNodeId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "camera": {
       "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "previewCamera": {
       "$ref": "#/$defs/Procedural3dPreviewCamera",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "showMode": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   },
   "$defs": {

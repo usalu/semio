@@ -20,10 +20,10 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub exaggeration: f64,
     /// 🔌️ `map:in`'s insertion point — last-imported `2d.map` descriptor JSON.
-    #[state(persistent)]
+    #[state(artifact)]
     pub imported_features_json: String,
     /// 🕸️ Owned CHILD handle for this terrain's composed mesh representation (`s.stdio.semio.mesh`,
     /// ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`). Content-addressed off
@@ -34,7 +34,7 @@ pub struct GisTerrainSnapshot {
     /// `gis_terrain_mesh_from_snapshot` would actually build. Replaces the placeholder-only
     /// `3d.mesh` `ArtifactKindSpec` this artifact used to re-declare (see
     /// `crate::artifacts::gisterrain::🦀️component.rs`'s removal comment).
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,

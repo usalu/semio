@@ -4,10 +4,10 @@
   "description": "streams{kind,codec,width,height,rate,samples{pts,key,data}} — container-typed, payload-opaque.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
     "streams": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": {
         "title": "SemioVideoStream",
         "type": "object",

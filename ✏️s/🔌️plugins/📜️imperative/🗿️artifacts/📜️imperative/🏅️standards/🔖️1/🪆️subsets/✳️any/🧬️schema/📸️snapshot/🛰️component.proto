@@ -4,11 +4,11 @@ package semio.s.imperative.imperative.snapshot;
 // 🧬️ Imperative snapshot schema — persistent fields only.
 
 message ImperativeSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   ImperativePath path = 2;
-  // @state persistent
+  // @state artifact
   map<string, string> seed = 3;
 }
 

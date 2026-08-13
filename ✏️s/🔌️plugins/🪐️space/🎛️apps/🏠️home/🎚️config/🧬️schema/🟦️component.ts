@@ -1,7 +1,7 @@
 /** 🧬️ HomeConfig */
 export interface HomeConfig {
-  /** @state local-ui */
+  /** @state config */
   activePanelTab: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

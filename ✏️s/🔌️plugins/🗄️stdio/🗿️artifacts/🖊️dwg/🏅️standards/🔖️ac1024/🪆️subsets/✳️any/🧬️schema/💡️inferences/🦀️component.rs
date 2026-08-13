@@ -31,7 +31,7 @@ use super::structure::{compute_dwg_structure, DwgStructure};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg.inference")]
 pub struct DwgInference {
-    #[state(inferred)]
+    #[derived]
     pub structure: DwgStructure,
 }
 

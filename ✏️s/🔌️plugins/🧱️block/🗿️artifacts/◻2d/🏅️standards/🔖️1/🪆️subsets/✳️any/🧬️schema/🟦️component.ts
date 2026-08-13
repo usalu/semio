@@ -1,29 +1,29 @@
 /** 🧬️ Block2d artifact schema — every field with its state class. */
 
 export interface Block2dArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   nodeKind: BlockKindIdentity;
-  /** @state persistent */
+  /** @state artifact */
   presentation: Block2dPresentation;
-  /** @state persistent */
+  /** @state artifact */
   handleKinds: Block2dHandleKind[];
-  /** @state persistent */
+  /** @state artifact */
   handles: Block2dHandleTemplate[];
-  /** @state persistent */
+  /** @state artifact */
   compatibility: BlockCompatibilityRule[];
-  /** @state persistent */
+  /** @state artifact */
   attributes: BlockAttribute[];
-  /** @state persistent */
+  /** @state artifact */
   authors: BlockAuthor[];
-  /** @state persistent */
+  /** @state artifact */
   camera2d: BlockCamera2d;
-  /** @state persistent */
+  /** @state artifact */
   meta: BlockMeta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

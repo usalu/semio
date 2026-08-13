@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["composition"],
   "properties": {
-    "composition": { "$ref": "#/$defs/SemioObjectComposition", "x-semio-state": "inferred" }
+    "composition": { "$ref": "#/$defs/SemioObjectComposition", "x-semio-derived": true }
   },
   "$defs": {
     "SemioObjectComposition": {

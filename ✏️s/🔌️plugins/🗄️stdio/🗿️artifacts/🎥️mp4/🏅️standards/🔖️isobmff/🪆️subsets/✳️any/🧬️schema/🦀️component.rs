@@ -9,14 +9,14 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4")]
 pub struct Mp4Artifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub ftyp: Mp4Ftyp,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub tracks: Vec<Mp4Track>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub unknown_boxes: Vec<Mp4Box>,
 }

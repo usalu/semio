@@ -1,47 +1,47 @@
 /** 🧬️ Jack artifact schema — every field with its state class. */
 
 export interface JackArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   name: string;
-  /** @state persistent */
+  /** @state artifact */
   manifestId?: string;
-  /** @state persistent */
+  /** @state artifact */
   manifest: Manifest;
-  /** @state persistent */
+  /** @state artifact */
   camera: Camera;
-  /** @state persistent */
+  /** @state artifact */
   nodes: Node[];
-  /** @state persistent */
+  /** @state artifact */
   edges: Edge[];
-  /** @state persistent */
+  /** @state artifact */
   rootNodeId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeFixtureId: string;
-  /** @state shared-ui */
+  /** @state presence */
   jackQuery: string;
-  /** @state shared-ui */
+  /** @state presence */
   lodModeByWindow: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   viewportCamera: Camera;
-  /** @state local-ui */
+  /** @state config */
   jackResultJson: string;
-  /** @state local-ui */
+  /** @state config */
   editorEngagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   graphEngagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   resultsEngagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   reorganizeEpoch: number;
-  /** @state local-ui */
+  /** @state config */
   editorSelection?: JackEditorSelection;
-  /** @state local-ui */
+  /** @state config */
   revision: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

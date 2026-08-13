@@ -7,6 +7,6 @@ export interface XmlOutline {
 }
 
 export interface XmlInference {
-  /** @state inferred */
+  /** @derived */
   outline: XmlOutline;
 }

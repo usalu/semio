@@ -12,6 +12,6 @@ export interface SemioKitEntries {
 }
 
 export interface SemioKitInference {
-  /** @state inferred */
+  /** @derived */
   entries: SemioKitEntries;
 }

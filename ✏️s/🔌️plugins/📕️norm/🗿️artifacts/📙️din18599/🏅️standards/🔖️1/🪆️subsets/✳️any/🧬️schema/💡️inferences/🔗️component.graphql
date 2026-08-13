@@ -1,7 +1,7 @@
 # 💡️ Din18599 inference schema — document outline (field/section list + entry count).
 
 type Din18599Inference {
-  outline: Din18599Outline! @state(class: INFERRED)
+  outline: Din18599Outline! @derived
 }
 
 type Din18599Outline {

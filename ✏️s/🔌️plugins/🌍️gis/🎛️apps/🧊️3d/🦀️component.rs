@@ -429,7 +429,7 @@ mod tests {
         let app = app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let media = Gis3dPlayApp::export_media("scene:out", &doc).expect("scene:out export");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "3d.mesh");
@@ -441,7 +441,7 @@ mod tests {
         let app = app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming.clone() } };
         let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");

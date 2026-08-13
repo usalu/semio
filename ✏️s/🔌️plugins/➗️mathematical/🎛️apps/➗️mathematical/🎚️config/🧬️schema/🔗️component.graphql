@@ -5,6 +5,6 @@ type MathematicalCamera {
 }
 
 type MathematicalConfig {
-  camera: MathematicalCamera! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  camera: MathematicalCamera! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

@@ -8,11 +8,11 @@
     "objectCount": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     },
     "bounds": {
       "oneOf": [{ "$ref": "#/$defs/LowpolyBounds" }, { "type": "null" }],
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

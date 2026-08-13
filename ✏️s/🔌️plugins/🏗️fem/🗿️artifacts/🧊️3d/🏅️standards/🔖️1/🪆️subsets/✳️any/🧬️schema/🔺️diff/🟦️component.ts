@@ -1,37 +1,37 @@
 /** 🧬️ Fem3d diff schema — sparse field delta. */
 
 export interface Fem3dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Fem3dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   nodes?: Fem3dNodesDelta;
-  /** @state persistent */
+  /** @state artifact */
   elements?: Fem3dElementsDelta;
-  /** @state persistent */
+  /** @state artifact */
   materials?: Fem3dMaterialsDelta;
-  /** @state persistent */
+  /** @state artifact */
   sections?: Fem3dSectionsDelta;
-  /** @state persistent */
+  /** @state artifact */
   solids?: Fem3dSolidsDelta;
-  /** @state persistent */
+  /** @state artifact */
   supports?: Fem3dSupportsDelta;
-  /** @state persistent */
+  /** @state artifact */
   loadCases?: Fem3dLoadCasesDelta;
-  /** @state persistent */
+  /** @state artifact */
   combinations?: Fem3dCombinationsDelta;
-  /** @state persistent */
+  /** @state artifact */
   analysis?: FemAnalysisSettings;
-  /** @state shared-ui */
+  /** @state presence */
   resultSourceId?: string | null;
-  /** @state shared-ui */
+  /** @state presence */
   resultMode?: string;
-  /** @state shared-ui */
+  /** @state presence */
   resultModeIndex?: number;
-  /** @state local-ui */
+  /** @state config */
   camera?: FemCamera;
-  /** @state preview */
+  /** @state artifact */
   solverResultsJson?: string;
-  /** @state preview */
+  /** @state artifact */
   meshPreviewJson?: string;
 }
 

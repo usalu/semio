@@ -1,43 +1,43 @@
 syntax = "proto3";
 package semio.app.puzzle.puzzle5d;
 message Puzzle5dConfig {
-  // @state local-ui
+  // @state config
   Puzzle5dCamera2d camera2d = 1;
-  // @state local-ui
+  // @state config
   Puzzle5dCamera3d camera3d = 2;
-  // @state local-ui
+  // @state config
   Puzzle5dSelection selection = 3;
-  // @state local-ui
+  // @state config
   string selection_method = 4;
-  // @state local-ui
+  // @state config
   optional string hovered_part_id = 5;
-  // @state local-ui
+  // @state config
   uint32 fill_count = 6;
-  // @state local-ui
+  // @state config
   uint64 brush_candidate_index = 7;
-  // @state local-ui
+  // @state config
   double overlap_budget = 8;
-  // @state local-ui
+  // @state config
   string lod_mode = 9;
-  // @state local-ui
+  // @state config
   double suggestion_offset = 10;
-  // @state local-ui
+  // @state config
   bool grid_snap_enabled = 11;
-  // @state local-ui
+  // @state config
   double grid_factor = 12;
-  // @state local-ui
+  // @state config
   map<string, string> engagement_input_by_window = 13;
-  // @state local-ui
+  // @state config
   map<string, double> object_kind_weights = 14;
-  // @state local-ui
+  // @state config
   map<string, double> vortex_kind_weights = 15;
-  // @state local-ui
+  // @state config
   WorldSunConfig sun = 16;
-  // @state local-ui
+  // @state config
   map<string, string> active_utility_by_window_id = 17;
-  // @state local-ui
+  // @state config
   string terminology = 18;
-  // @state local-ui
+  // @state config
   string locale = 19;
 }
 

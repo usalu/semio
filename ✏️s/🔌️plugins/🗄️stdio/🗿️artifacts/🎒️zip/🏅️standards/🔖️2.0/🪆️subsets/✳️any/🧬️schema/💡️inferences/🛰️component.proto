@@ -4,7 +4,7 @@ package semio.s.stdio.zip.inference;
 // 💡️ zip inference schema — real central-directory-style census over decompressed `entries`.
 
 message ZipInference {
-  // @state inferred
+  // @derived
   ZipEntries entries = 1;
 }
 

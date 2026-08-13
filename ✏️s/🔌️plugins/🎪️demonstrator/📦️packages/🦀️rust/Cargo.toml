@@ -110,9 +110,14 @@ path = "📦️glue.rs"
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+# 🚪️ NO `semio-framework-os` / `semio-framework-3d` here, deliberately (ticket
+# 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2). The demonstrator used to
+# reach into the OS host crate to register `"3d.cad"`'s ten solid/mesh/dwg codecs and `"2d.map"`'s
+# two media codecs — kinds it neither declares nor owns — making plugin load order decide the winner
+# for a process-global key. Those registrations now live with 📐️cad and 🌍️gis, so this crate needs
+# neither the host crate nor the BRep kernel it passed to it. `POLICY_PLUGIN_DEP_OS_SYMBOLS` carries
+# no carve-out for `🎪️demonstrator` any more: reintroducing the dependency is a plain breach.
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 

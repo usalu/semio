@@ -13,14 +13,14 @@
       "items": {
         "$ref": "#/$defs/ObjectKind"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "curated": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CuratedItem"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

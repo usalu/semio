@@ -1,85 +1,85 @@
 /** 🧬️ Puzzle3d diff schema — sparse field delta. */
 
 export interface Puzzle3dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Puzzle3dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   domain?: string;
-  /** @state persistent */
+  /** @state artifact */
   meta?: Puzzle3dMeta;
-  /** @state persistent */
+  /** @state artifact */
   objects?: Puzzle3dObjectsDelta;
-  /** @state persistent */
+  /** @state artifact */
   attractions?: Puzzle3dAttractionsDelta;
-  /** @state persistent */
+  /** @state artifact */
   targetVolumes?: Puzzle3dTargetVolumesDelta;
-  /** @state persistent */
+  /** @state artifact */
   references?: Puzzle3dReferencesDelta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectIds?: Puzzle3dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedVortexIds?: Puzzle3dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedAttractionIds?: Puzzle3dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedTargetVolumeIds?: Puzzle3dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   selectedReferenceIds?: Puzzle3dStringList;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId?: string;
-  /** @state local-ui */
+  /** @state config */
   cameraPositionX?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraPositionY?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraPositionZ?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraTargetX?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraTargetY?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraTargetZ?: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom?: number;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod?: string;
-  /** @state local-ui */
+  /** @state config */
   selectionModeDefault?: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput?: string;
-  /** @state local-ui */
+  /** @state config */
   gridVisible?: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled?: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridSpacing?: number;
-  /** @state local-ui */
+  /** @state config */
   overlapBudget?: number;
-  /** @state local-ui */
+  /** @state config */
   fillCount?: number;
-  /** @state local-ui */
+  /** @state config */
   brushCandidateIndex?: number;
-  /** @state local-ui */
+  /** @state config */
   lodAutomatic?: boolean;
-  /** @state local-ui */
+  /** @state config */
   lodDepthVariable?: boolean;
-  /** @state local-ui */
+  /** @state config */
   lodManual?: number;
-  /** @state local-ui */
+  /** @state config */
   proximityRadius?: number;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
-  /** @state local-ui */
+  /** @state config */
   runtimeExtrasJson?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredObjectId?: string | null;
-  /** @state preview */
+  /** @state artifact */
   hoveredVortexFullId?: string | null;
-  /** @state preview */
+  /** @state artifact */
   hoveredKindId?: string | null;
-  /** @state preview */
+  /** @state artifact */
   previewSeq?: number;
 }
 

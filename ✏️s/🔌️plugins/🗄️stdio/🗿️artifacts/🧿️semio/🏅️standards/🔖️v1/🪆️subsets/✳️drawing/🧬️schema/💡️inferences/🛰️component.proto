@@ -5,7 +5,7 @@ package semio.s.stdio.semio.drawing.inference;
 // scene-graph entity, keyed by its structural address.
 
 message SemioDrawingInference {
-  // @state inferred
+  // @derived
   map<string, FlattenedNode> flattened_scene = 1;
 }
 

@@ -4,7 +4,7 @@ package semio.s.norm.din18599.inference;
 // 💡️ Din18599 inference schema — document outline (field/section list + entry count).
 
 message Din18599Inference {
-  // @state inferred
+  // @derived
   Din18599Outline outline = 1;
 }
 

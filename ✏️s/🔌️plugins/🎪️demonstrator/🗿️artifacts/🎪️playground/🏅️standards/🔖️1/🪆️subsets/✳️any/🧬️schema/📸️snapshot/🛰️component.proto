@@ -4,6 +4,6 @@ package semio.s.demonstrator.playground.snapshot;
 // 🧬️ Playground snapshot schema — persistent fields only.
 
 message PlaygroundSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
 }

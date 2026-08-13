@@ -5,22 +5,22 @@
   "type": "object",
   "required": ["schema", "styles", "images", "blocks"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
     "styles": {
-      "type": "array", "x-semio-state": "persistent",
+      "type": "array", "x-semio-state": "artifact",
       "items": {
         "type": "object", "required": ["id", "name"],
         "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "basedOn": { "type": "string" } }
       }
     },
     "images": {
-      "type": "array", "x-semio-state": "persistent",
+      "type": "array", "x-semio-state": "artifact",
       "items": {
         "type": "object", "required": ["id", "mime", "bytes"],
         "properties": { "id": { "type": "string" }, "mime": { "type": "string" }, "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } } }
       }
     },
-    "blocks": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/docBlock" } }
+    "blocks": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/docBlock" } }
   },
   "$defs": {
     "runStyle": {

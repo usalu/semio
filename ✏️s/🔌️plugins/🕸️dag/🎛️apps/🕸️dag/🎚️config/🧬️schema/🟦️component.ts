@@ -1,13 +1,13 @@
 /** 🧬️ DagConfig */
 export interface DagConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   cameraX: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

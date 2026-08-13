@@ -25,14 +25,14 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub wires_fixture: DslValue,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.graph")]
     pub content: WiresContentChild,
-    #[state(persistent)]
+    #[state(artifact)]
     pub camera: DslValue,
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: DslValue,
 }
 //#endregion 🔖️Snapshot

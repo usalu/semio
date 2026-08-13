@@ -8,6 +8,6 @@ export interface WiresTopology {
 }
 
 export interface WiresInference {
-  /** @state inferred */
+  /** @derived */
   topology: WiresTopology;
 }

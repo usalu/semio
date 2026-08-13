@@ -859,21 +859,36 @@ pub mod app {
         /// unconstrained-standard/unconstrained-subset `Dialect` (`StandardId("*")`/`SubsetId::ANY`
         /// — a child slot names only a `kind`, per `ChildSlotSpec.kind: &'static str`, never a
         /// specific standard/subset, so "any standard, any subset of this kind" is the literal
-        /// reading of "this slot accepts the kind's dialect family"). Memoized per-`Spec`
-        /// monomorphization via a generic-fn-local `OnceLock` — `ArtifactComposer::reads()`'s
-        /// signature is fixed to `&'static [Dialect]` by the pre-existing (non-composition) trait,
-        /// and `Spec::Children::slots()` is only knowable at runtime (a trait associated fn call,
-        /// not a `const`), so the union must be computed once and leaked into a `'static` lifetime
-        /// rather than built as a `const`. A leaf `Spec::Children = NoChildren<_>` (`slots()` = `&[]`)
-        /// degrades to exactly `Spec::Composition::reads()`, byte-identical to the pre-C1 behavior.
+        /// reading of "this slot accepts the kind's dialect family").
+        ///
+        /// `ArtifactComposer::reads()`'s signature is fixed to `&'static [Dialect]` by the
+        /// pre-existing (non-composition) trait, while `Spec::Children::slots()` is only knowable at
+        /// runtime (a trait associated fn call, not a `const`) — so the union must be computed once
+        /// and leaked into a `'static` lifetime rather than built as a `const`.
+        ///
+        /// ⚠️ Memoized in a `TypeId`-keyed table, NOT in a function-local `static`: a `static`
+        /// declared inside a generic function is NOT monomorphized per type parameter — Rust gives
+        /// every instantiation of `reads()` the SAME storage. With a plain `OnceLock` there, the
+        /// first artifact kind to call `reads()` anywhere in the process would win and hand its
+        /// answer to every other artifact kind forever (a composing artifact silently reporting a
+        /// leaf's empty reads, or vice versa, depending purely on call order).
+        ///
+        /// A leaf `Spec::Children = NoChildren<_>` (`slots()` = `&[]`) still degrades to exactly
+        /// `Spec::Composition::reads()`.
         fn reads() -> &'static [Dialect] {
-            static UNION: std::sync::OnceLock<Vec<Dialect>> = std::sync::OnceLock::new();
-            UNION.get_or_init(|| {
+            static UNIONS: std::sync::OnceLock<std::sync::Mutex<HashMap<std::any::TypeId, &'static [Dialect]>>> = std::sync::OnceLock::new();
+            let unions = UNIONS.get_or_init(|| std::sync::Mutex::new(HashMap::new()));
+            let key = std::any::TypeId::of::<Spec>();
+            let mut unions = unions.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            unions.entry(key).or_insert_with(|| {
                 let mut reads: Vec<Dialect> = <Spec::Composition as ArtifactComposition>::reads().to_vec();
                 for slot in <Spec::Children as ArtifactChildren>::slots() {
                     reads.push(Dialect { artifact_kind: slot.kind, standard: StandardId("*"), subset: SubsetId::ANY });
                 }
-                reads
+                // 🎯️ Leaked deliberately: one small `Vec` per artifact-kind monomorphization, minted
+                // once for the process lifetime — the `&'static [Dialect]` return type admits no
+                // other option, and the count is bounded by the number of artifact kinds.
+                Box::leak(reads.into_boxed_slice()) as &'static [Dialect]
             })
         }
 
@@ -2745,9 +2760,13 @@ pub mod app {
             };
             for app in &apps {
                 assert!(app.join(leaf).is_file(), "taxonomy gate: app {} is missing its {leaf}", app.display());
+                // ⚙️ `appComponentDirs` puts the headless engine directly under the app; app examples
+                // live at the APP root (`🎛️apps/<app>/📚️examples`), never inside the engine — the
+                // registry's `validateTaxonomyTree` flags `⚙️engine/📚️examples` for exactly that reason,
+                // so this twin requires the engine dir itself instead of an engine-owned examples dir.
                 assert!(
-                    app.join("⚙️engine").join(examples).is_dir(),
-                    "taxonomy gate: app {} is missing ⚙️engine/{examples}",
+                    app.join("⚙️engine").is_dir(),
+                    "taxonomy gate: app {} is missing ⚙️engine/",
                     app.display()
                 );
                 assert!(
@@ -3959,6 +3978,78 @@ pub mod app {
     pub struct ArtifactView<'a, P> {
         pub snapshot: &'a P,
         pub history: &'a HistoryView,
+        /// 🧸️ Read access to this document's OWNED CHILDREN, each of which is its own envelope with
+        /// its own `ArtifactVcs` history (never an inline subtree). See {@link ChildContentView}.
+        pub children: ChildContentView<'a>,
+    }
+
+    impl<'a, P> ArtifactView<'a, P> {
+        /// 🏗️ A view over a document with no composed children — the overwhelming majority, and the
+        /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
+        /// over time, and a constructor absorbs that growth without touching every call site.
+        pub fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
+            Self { snapshot, history, children: ChildContentView::EMPTY }
+        }
+
+        /// 🏗️ A view over a composing document, wired to its live child stores.
+        pub fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView<'a>) -> Self {
+            Self { snapshot, history, children }
+        }
+    }
+
+    /// @emoji 🧸️ Read-only access to a composing document's live child stores, keyed `(slot,
+    /// child_id)` exactly as the parent's `ArtifactChild` handles name them.
+    ///
+    /// This is the seam that replaces the `thread_local!`/session `HashMap<child_id, content>`
+    /// caches every composed plugin used to carry. Those caches went STALE the moment anything
+    /// moved a child's history without going through `ArtifactApp::handle` — store-level undo/redo
+    /// and checkout do exactly that. Reading straight through the live `SpaceMember` cannot go
+    /// stale by construction: there is no second copy to fall out of date. That is a stronger
+    /// guarantee than the fail-closed staleness checks it supersedes, which could only DETECT the
+    /// divergence after it happened.
+    ///
+    /// `Copy` + `Default` (`EMPTY`) so a leaf app's view costs nothing and needs no ceremony.
+    #[derive(Clone, Copy, Default)]
+    pub struct ChildContentView<'a> {
+        children: Option<&'a HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>>,
+    }
+
+    impl<'a> ChildContentView<'a> {
+        /// 🈳️ The view a document with no children gets.
+        pub const EMPTY: Self = Self { children: None };
+
+        /// 🏗️ Wraps a live child-store map (built by {@link VcsArtifactApp} before each dispatch).
+        pub fn new(children: &'a HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>) -> Self {
+            Self { children: Some(children) }
+        }
+
+        /// 📦️ The child's CURRENT content, pack-encoded — reads through the live store, so it always
+        /// reflects the child's present state including any undo/redo/checkout it has undergone.
+        pub fn pack(&self, slot: &str, child_id: &str) -> Result<Vec<u8>, Fault> {
+            let member = self.children.and_then(|children| children.get(&(slot.to_string(), child_id.to_string()))).ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))?;
+            member.1.document_pack_bytes().map_err(|error| plugin_sdk_fault(error.to_string()))
+        }
+
+        /// 🧩️ {@link Self::pack} decoded as the child's snapshot type — what a composing app's
+        /// `handle`/`render` actually calls.
+        pub fn typed<S: ArtifactPack>(&self, slot: &str, child_id: &str) -> Result<S, Fault> {
+            S::decode_pack(&self.pack(slot, child_id)?).map_err(|error| plugin_sdk_fault(error.to_string()))
+        }
+
+        /// 🎯️ The dialect a child materializes as, for a caller that must route by kind.
+        pub fn dialect(&self, slot: &str, child_id: &str) -> Option<store::os_io::ArtifactDialect> {
+            self.children.and_then(|children| children.get(&(slot.to_string(), child_id.to_string()))).map(|(dialect, _)| dialect.clone())
+        }
+
+        /// 📋️ Every `(slot, child_id)` currently live under this document.
+        pub fn slots(&self) -> Vec<(String, String)> {
+            self.children.map(|children| children.keys().cloned().collect()).unwrap_or_default()
+        }
+
+        /// 🈳️ Whether this document has any live children at all.
+        pub fn is_empty(&self) -> bool {
+            self.children.map(HashMap::is_empty).unwrap_or(true)
+        }
     }
 
     /// @emoji 🧮️ Read-only view of an app's config snapshot — same role as {@link ArtifactView} for the
@@ -4903,7 +4994,8 @@ pub mod app {
         fn dispatch_forwards_to_the_payload_modules_own_handle() {
             let snapshot = 0u32;
             let config = ();
-            let doc = ArtifactView { snapshot: &snapshot, history: &HistoryView::empty() };
+            let history = HistoryView::empty();
+            let doc = ArtifactView::new(&snapshot, &history);
             let cfg = ConfigView { snapshot: &config };
 
             let emit: Emit<String, NoConfigMutation> = TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).dispatch(&doc, &cfg).expect("dispatch add-widget");
@@ -4971,7 +5063,8 @@ pub mod app {
         fn ctx_is_threaded_through_dispatch_into_every_handler() {
             let snapshot = 0u32;
             let config = ();
-            let doc = ArtifactView { snapshot: &snapshot, history: &HistoryView::empty() };
+            let history = HistoryView::empty();
+            let doc = ArtifactView::new(&snapshot, &history);
             let cfg = ConfigView { snapshot: &config };
             let mut ctx = 41u32;
             let emit: Emit<String, NoConfigMutation> = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "neuron".into() }).dispatch(&doc, &cfg, &mut ctx).expect("dispatch");
@@ -5299,6 +5392,13 @@ pub mod app {
         fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
         /// 🧮️ Object-safe counterpart to `load_document_pack`, targeting the config store.
         fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
+        /// 🧸️ Adopts one owned child's persisted envelope into a live child store — the
+        /// `AppCommand::LoadChildren` handler. A composing document restores its children through
+        /// this, one call per child, after its own `load_document_pack`.
+        fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault>;
+        /// 🧸️ Every live owned child's current envelope, for persistence — the `ReadChildren`
+        /// handler and the child-side twin of `document_pack`.
+        fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault>;
         /// 🧮️ Dispatches one binary-encoded `store::ArtifactCommand<Self::ConfigMutation>` against the
         /// config store — the `AppCommand::ConfigCommand` wire frame's real handler (replaces the deleted
         /// `apply_config_bytes` whole-record-replace legacy path).
@@ -5699,6 +5799,12 @@ pub mod app {
         /// object-safe dialect getter — see `dispatch_emit_group`'s own doc comment), so a
         /// `store::ChildDispatch`/`store::ArtifactRef` can be rebuilt for it without re-deriving one.
         pub(crate) children: HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>,
+        /// 📌️ Checkout pins for children that were NOT open when a checkpoint cascade ran. Draining
+        /// this on `open_child` is what keeps a lazily-adopted child from silently sitting at head
+        /// while the rest of the composition sits at a pinned checkpoint — the alternative (dropping
+        /// the pin) would make a checked-out composition quietly inconsistent, which is exactly the
+        /// class of bug the cascade exists to prevent.
+        pub(crate) pending_child_pins: Vec<vcs::CompositionPin>,
         /// 🧩️ STATEFUL by design (owns the incrementally-maintained `store::CompositionGraph`) — see
         /// `store::CompositionCoordinator`'s own doc comment. One coordinator per `VcsArtifactApp`
         /// instance (i.e. per document), exactly like `store`/`config_store`/`draft_store` are
@@ -5768,6 +5874,7 @@ pub mod app {
                 log_generation: 0,
                 history_filter: HistoryCommandFilter::default(),
                 children: HashMap::new(),
+                pending_child_pins: Vec::new(),
                 composition: CompositionCoordinator::new(),
             }
         }
@@ -5788,9 +5895,15 @@ pub mod app {
             let child_id = child_id.into();
             let kind = ArtifactKindId::parse(&dialect.artifact_kind).map_err(plugin_sdk_fault)?;
             let factory = child_store_factory(&kind).ok_or_else(|| plugin_sdk_fault(format!("open_child: no ChildStoreFactory registered for kind {}", dialect.artifact_kind)))?;
-            let member = factory.open(envelope_pack).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            let mut member = factory.open(envelope_pack).map_err(|error| plugin_sdk_fault(error.to_string()))?;
             let parent_id = self.store.envelope().id.clone();
             self.composition.graph_mut().insert_owns(&parent_id, &slot, &child_id).map_err(plugin_sdk_fault)?;
+            // 📌️ Drain any checkout pin this child missed by not being open at cascade time.
+            if let Some(index) = self.pending_child_pins.iter().position(|pin| pin.child_ref.artifact_id == child_id) {
+                let pin = self.pending_child_pins.remove(index);
+                let alternative_id = member.current_alternative_id().unwrap_or_default();
+                let _ = member.checkout(&pin.checkpoint_id, &alternative_id);
+            }
             self.children.insert((slot, child_id), (dialect, member));
             Ok(())
         }
@@ -5821,9 +5934,73 @@ pub mod app {
             Ok(())
         }
 
+        //#region 🔖️CheckpointCascade
+        /// @emoji 📌️ Leaves-first half of a composing document's checkpoint: commits every DIRTY
+        /// child (a clean child is already pinned at its current checkpoint, and committing it again
+        /// would mint an empty checkpoint per parent commit) and returns the `CompositionPin`s the
+        /// parent's own about-to-be-created checkpoint must carry.
+        ///
+        /// A child with no checkpoint at all after committing contributes no pin rather than
+        /// aborting the parent's checkpoint: a pin that named nothing would be worse than an absent
+        /// one, and the parent's history is still perfectly valid without it.
+        fn commit_children_for_checkpoint(&mut self, message: Option<String>, authors: Vec<vcs::Author>) -> Result<Vec<vcs::CompositionPin>, Fault> {
+            let message = message.unwrap_or_else(|| "checkpoint".to_string());
+            let mut pins = Vec::new();
+            for ((_, child_id), (dialect, member)) in self.children.iter_mut() {
+                if member.is_dirty() {
+                    member.commit_checkpoint(message.clone(), authors.clone()).map_err(|error| error.into_fault())?;
+                }
+                if let Some(checkpoint_id) = member.current_checkpoint_id() {
+                    pins.push(vcs::CompositionPin { child_ref: store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() }, checkpoint_id });
+                }
+            }
+            pins.sort_by(|left, right| left.child_ref.artifact_id.cmp(&right.child_ref.artifact_id));
+            Ok(pins)
+        }
+
+        /// @emoji 📌️ Records `pins` on the checkpoint the parent's dispatch just created. Runs AFTER
+        /// that dispatch because the checkpoint does not exist until then, and `composition_pins`
+        /// participates in `content_addressed_checkpoint_id`, so the pins must be present on the
+        /// envelope that gets persisted.
+        fn stamp_checkpoint_composition_pins(&mut self, pins: Vec<vcs::CompositionPin>) {
+            if pins.is_empty() {
+                return;
+            }
+            if let Some(checkpoint_id) = self.store.current_checkpoint_id().map(str::to_string) {
+                self.store.set_checkpoint_composition_pins(&checkpoint_id, pins);
+            }
+        }
+
+        /// @emoji ⏮️ Checkout half of the cascade: restores every live child to the checkpoint the
+        /// parent's now-current checkpoint pinned it at. A pin naming a child that is not currently
+        /// open is QUEUED (`pending_child_pins`) rather than dropped, so a child adopted later still
+        /// lands on its pinned state instead of silently staying at head — see `open_child`.
+        fn cascade_checkout_to_children(&mut self) {
+            let Some(checkpoint_id) = self.store.current_checkpoint_id().map(str::to_string) else { return };
+            let Some(pins) = self.store.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map(|checkpoint| checkpoint.composition_pins.clone()) else { return };
+            self.pending_child_pins.clear();
+            for pin in pins {
+                match self.children.iter_mut().find(|((_, child_id), _)| *child_id == pin.child_ref.artifact_id) {
+                    Some((_, (_, member))) => {
+                        let alternative_id = member.current_alternative_id().unwrap_or_default();
+                        let _ = member.checkout(&pin.checkpoint_id, &alternative_id);
+                    }
+                    None => self.pending_child_pins.push(pin),
+                }
+            }
+        }
+        //#endregion 🔖️CheckpointCascade
+
         #[cfg(test)]
         pub(crate) fn test_snapshot(&self) -> A::Snapshot {
             self.store.snapshot().expect("materialize snapshot")
+        }
+
+        /// @emoji 🧪️ The document store itself — needed to assert on checkpoint metadata
+        /// (`composition_pins`), which no snapshot-level accessor exposes.
+        #[cfg(test)]
+        pub(crate) fn test_store(&self) -> &store::ArtifactStore<A::Snapshot, A::Mutation> {
+            &self.store
         }
 
         /// @emoji 🧪️ The config-store twin of `test_snapshot`.
@@ -6558,8 +6735,21 @@ pub mod app {
                     }
                 }
                 let command = Self::history_command(action, args).ok_or_else(|| format!("history action {action} missing required argument"))?;
+                // 📌️ Composition cascade, BEFORE the parent's own dispatch: a checkpoint on a
+                // composing document must pin what its children looked like at that moment, and a
+                // checkout must restore them to their pinned state. Both run leaves-first — commit
+                // the children, THEN record their resulting checkpoint ids on the parent's
+                // checkpoint — because the pin can only name a child checkpoint that already exists.
+                let pending_pins = match &command {
+                    ArtifactCommand::CommitCheckpoint { message, authors } => self.commit_children_for_checkpoint(message.clone(), authors.clone())?,
+                    _ => Vec::new(),
+                };
                 match self.store.dispatch(command) {
                     Ok(_) => {
+                        self.stamp_checkpoint_composition_pins(pending_pins);
+                        if action == "checkoutCheckpoint" {
+                            self.cascade_checkout_to_children();
+                        }
                         self.cache = None;
                         // 🧾️ Undo/redo/checkpoint/alternative are pure cursor motion (`edit_id: None`) —
                         // append-only: this NEVER removes a prior entry, including undo's.
@@ -6679,9 +6869,9 @@ pub mod app {
             } else if CLIPBOARD_ACTION_IDS.contains(&action) {
                 self.refresh_cache()?;
                 let emit = {
-                    let VcsArtifactApp { app, cache, .. } = self;
+                    let VcsArtifactApp { app, cache, children, .. } = self;
                     let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-                    let doc = ArtifactView { snapshot, history };
+                    let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                     let cfg = ConfigView { snapshot: config };
                     match action {
                         "copy" => match A::copy_fragment(&doc, &cfg) {
@@ -6763,9 +6953,9 @@ pub mod app {
             self.refresh_cache()?;
             let draft_snapshot = self.draft_store.snapshot().map_err(|error| error.into_fault())?;
                 let (verb, emit) = {
-                let VcsArtifactApp { app, cache, .. } = self;
+                let VcsArtifactApp { app, cache, children, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = ArtifactView { snapshot, history };
+                let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                 let cfg = ConfigView { snapshot: config };
                 let draft = DraftView { snapshot: &draft_snapshot };
                 let engines = EngineHandles::empty();
@@ -6799,9 +6989,9 @@ pub mod app {
         fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.refresh_cache()?;
             let emit = {
-                let VcsArtifactApp { app, cache, .. } = self;
+                let VcsArtifactApp { app, cache, children, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = ArtifactView { snapshot, history };
+                let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                 let _cfg = ConfigView { snapshot: config };
                 A::import_media(port, media, &doc).map_err(|error| plugin_sdk_fault(error.to_string()))?
             };
@@ -6920,6 +7110,27 @@ pub mod app {
             store::print_document_pack(self.config_store.envelope()).map_err(|error| error.into_fault())
         }
 
+        fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+            self.open_child(slot, child_id, dialect, envelope_pack)?;
+            self.cache = None;
+            Ok(())
+        }
+
+        fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault> {
+            // 🔢️ Sorted by `(slot, child_id)`: the map's iteration order is not stable, and a
+            // persisted child list that reshuffles between reads would make every save look like a
+            // change to anything diffing it.
+            let mut entries: Vec<protocol::ChildPackEntry> = self
+                .children
+                .iter()
+                .map(|((slot, child_id), (dialect, member))| {
+                    member.envelope_pack_bytes().map(|envelope_pack| protocol::ChildPackEntry { slot: slot.clone(), child_id: child_id.clone(), dialect: dialect.to_coordinate(), envelope_pack }).map_err(|error| error.into_fault())
+                })
+                .collect::<Result<_, Fault>>()?;
+            entries.sort_by(|left, right| (&left.slot, &left.child_id).cmp(&(&right.slot, &right.child_id)));
+            Ok(entries)
+        }
+
         fn load_config_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Config, A::ConfigMutation> = store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.into_fault())?;
             let (applied, redo) = match &parsed.envelope.cursor {
@@ -7016,14 +7227,14 @@ pub mod app {
             if let Some(json) = snapshot_override_json {
                 let snapshot: A::Snapshot = serde_json::from_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 let history = self.build_history_view();
-                let doc = ArtifactView { snapshot: &snapshot, history: &history };
+                let doc = ArtifactView::new(&snapshot, &history);
                 let config = self.config_store.snapshot().unwrap_or_else(|_| A::Config::default());
                 let cfg = ConfigView { snapshot: &config };
                 return Ok(A::render(&effective_body_key, &doc, &cfg));
             }
-            let VcsArtifactApp { app, cache, .. } = self;
+            let VcsArtifactApp { app, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView { snapshot, history };
+            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let cfg = ConfigView { snapshot: config };
             Ok(A::render(&effective_body_key, &doc, &cfg))
         }
@@ -7033,7 +7244,7 @@ pub mod app {
                 return HashMap::new();
             }
             let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView { snapshot, history };
+            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(&self.children));
             let cfg = ConfigView { snapshot: config };
             A::window_engagements(&doc, &cfg)
         }
@@ -7043,7 +7254,7 @@ pub mod app {
                 return HashMap::new();
             }
             let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView { snapshot, history };
+            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(&self.children));
             let cfg = ConfigView { snapshot: config };
             A::window_measures(&doc, &cfg)
         }
@@ -7052,9 +7263,9 @@ pub mod app {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
-            let VcsArtifactApp { app, cache, .. } = self;
+            let VcsArtifactApp { app, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView { snapshot, history };
+            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let cfg = ConfigView { snapshot: config };
             A::tool_measures(&doc, &cfg)
         }
@@ -7063,9 +7274,9 @@ pub mod app {
             if self.refresh_cache().is_err() {
                 return Vec::new();
             }
-            let VcsArtifactApp { app, cache, .. } = self;
+            let VcsArtifactApp { app, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView { snapshot, history };
+            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let cfg = ConfigView { snapshot: config };
             A::pending_effects(&doc, &cfg)
         }
@@ -7077,9 +7288,9 @@ pub mod app {
             if self.refresh_cache().is_err() {
                 return Vec::new();
             }
-            let VcsArtifactApp { app, cache, registry, .. } = self;
+            let VcsArtifactApp { app, cache, registry, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView { snapshot, history };
+            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let cfg = ConfigView { snapshot: config };
             let items = A::context_menu(request, &doc, &cfg, registry);
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
@@ -7087,9 +7298,9 @@ pub mod app {
 
         fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
             self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-            let VcsArtifactApp { app, cache, .. } = self;
+            let VcsArtifactApp { app, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView { snapshot, history };
+            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let _cfg = ConfigView { snapshot: config };
             A::export_media(port, &doc)
         }
@@ -7102,9 +7313,9 @@ pub mod app {
 
         fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
             self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-            let VcsArtifactApp { app, cache, .. } = self;
+            let VcsArtifactApp { app, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView { snapshot, history };
+            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let _cfg = ConfigView { snapshot: config };
             A::media_fingerprint(port, &doc)
         }
@@ -8002,6 +8213,37 @@ pub mod plugin_runtime {
                     Ok(files) => frames.push(protocol::AppFrame::Document { in_reply_to: seq, pack: files.pack, spr: files.spr, ops: files.ops }),
                     Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                 },
+                // 🧸️ Composed children are their own envelopes with their own histories, so they
+                // need their own load/read pair — a parent's `LoadDocument`/`Document` carries none
+                // of them, and before this existed a genesis child lived only until the process
+                // ended.
+                protocol::AppCommand::LoadChildren { seq, entries } => {
+                    let loaded = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        for entry in &entries {
+                            let dialect = store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), error))?;
+                            instance.app.load_child_pack(&entry.slot, &entry.child_id, dialect, &entry.envelope_pack)?;
+                        }
+                        Ok(())
+                    });
+                    match loaded {
+                        Ok(()) => {
+                            mutated = true;
+                            frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                        }
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                    }
+                }
+                protocol::AppCommand::ReadChildren { seq } => {
+                    let read = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        instance.app.child_packs()
+                    });
+                    match read {
+                        Ok(entries) => frames.push(protocol::AppFrame::Children { in_reply_to: seq, entries }),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                    }
+                }
                 protocol::AppCommand::LoadConfig { seq, pack, spr } => {
                     // 🧮️ B1: real work — loads straight into the config `ArtifactStore` (was routed
                     // through the deleted `apply_config_bytes` whole-record-replace legacy path).
@@ -9027,6 +9269,88 @@ pub mod plugin_runtime {
             let history = app.test_history();
             let row = history.commands.iter().find(|entry| entry.action_id == "compositeEdit").expect("composite edit logged");
             assert_eq!(row.child_edit_ids.len(), 1);
+        }
+
+        /// 🧪️ Registers the production `TypedChildStoreFactory` for the test child kind, so the
+        /// paths below go through the SAME factory a real plugin uses rather than a test-only stub.
+        fn register_test_child_factory() {
+            store::register_typed_child_store_factory::<TestSnapshot, TestMutation>(store::os_io::ArtifactKindId::parse("s.test.child").expect("canonical kind"), "semio.test/v1");
+        }
+
+        #[test]
+        fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
+            register_test_child_factory();
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1")).expect("register child");
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("composite edit");
+
+            // 📤️ Persist exactly what the host would: the parent's document pack plus one
+            // `ChildPackEntry` per live child.
+            let entries = PluginApp::child_packs(&app).expect("child packs");
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].slot, "slot");
+            assert_eq!(entries[0].child_id, "child-1");
+            assert_eq!(entries[0].dialect, test_child_dialect().to_coordinate());
+
+            // 📥️ Reload into a FRESH app, the way `LoadDocument` + `LoadChildren` would.
+            let mut reloaded = VcsArtifactApp::new(TestApp::default());
+            for entry in &entries {
+                let dialect = store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
+                PluginApp::load_child_pack(&mut reloaded, &entry.slot, &entry.child_id, dialect, &entry.envelope_pack).expect("load child pack");
+            }
+
+            // The child came back as its OWN live store, at the value its own history ended on —
+            // and reload went through the real factory, not a cache.
+            let child = reloaded.child_store("slot", "child-1").expect("child restored");
+            let restored: TestSnapshot = <TestSnapshot as store::ArtifactPack>::decode_pack(&child.document_pack_bytes().expect("child pack")).expect("decode child");
+            assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
+        }
+
+        #[test]
+        fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
+            register_test_child_factory();
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1")).expect("register child");
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("first composite edit");
+
+            // 📌️ Checkpoint the parent: the cascade must commit the dirty child first, then pin the
+            // child checkpoint that commit produced.
+            app.dispatch_action("commitCheckpoint", Some(&serde_json::json!({ "message": "v1" })), &meta()).expect("checkpoint");
+            let pinned_checkpoint = app.test_store().current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
+            let pins = app.test_store().envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
+            assert_eq!(pins.len(), 1, "a composing document's checkpoint must pin its children");
+            assert_eq!(pins[0].child_ref.artifact_id, "child-1");
+
+            // ⏭️ Move both forward, past the pin.
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 42 }, &meta()).expect("second composite edit");
+            let live = reads_child_count(&app);
+            assert_eq!(live, 42);
+
+            // ⏮️ Checking the parent out to the pinned checkpoint must drag the child back with it —
+            // otherwise a restored composition silently mixes an old parent with a new child.
+            app.dispatch_action("checkoutCheckpoint", Some(&serde_json::json!({ "checkpointId": pinned_checkpoint })), &meta()).expect("checkout");
+            assert_eq!(reads_child_count(&app), 7, "checkout did not cascade to the pinned child");
+        }
+
+        /// 🧪️ The child's current `count`, read through the same `ChildContentView` seam an app uses.
+        fn reads_child_count(app: &VcsArtifactApp<TestApp>) -> i32 {
+            let view = crate::app::ChildContentView::new(&app.children);
+            view.typed::<TestSnapshot>("slot", "child-1").expect("child readable through the view").count
+        }
+
+        #[test]
+        fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            app.register_child("slot", "child-1", test_child_dialect(), new_test_child("child-1")).expect("register child");
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).expect("composite edit");
+            assert_eq!(reads_child_count(&app), 7);
+
+            // ↩️ Store-level undo bypasses `ArtifactApp::handle` entirely — this is exactly where the
+            // `thread_local!` child caches this view replaces used to go stale.
+            app.dispatch_action("undo", None, &meta()).expect("undo");
+            assert_eq!(reads_child_count(&app), 0, "the view must reflect the child's undone state");
+            app.dispatch_action("redo", None, &meta()).expect("redo");
+            assert_eq!(reads_child_count(&app), 7, "the view must reflect the child's redone state");
         }
 
         #[test]

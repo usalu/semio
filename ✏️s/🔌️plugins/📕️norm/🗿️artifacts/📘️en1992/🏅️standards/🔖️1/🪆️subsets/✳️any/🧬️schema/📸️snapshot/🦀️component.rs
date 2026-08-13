@@ -17,98 +17,98 @@ pub mod part_3 {
 #[dsl(id = "norm.en1992", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: AnnexChoice,
-    #[state(persistent)]
+    #[state(artifact)]
     pub m_ed_knm: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_ck: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub b_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub d_mm: f64,
     #[dsl(unit = "mm2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_s_mm2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub f_yk: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub rho_l: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_ed_kn: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub p_kn: f64,
     #[dsl(unit = "mm2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub a_c_mm2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub use_fem: bool,
     #[dsl(unit = "m")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub span_m: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub udl_kn_m: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub fire_rating: part_1_2::FireRating,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub provided_axis_distance_mm: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bridge_sigma_c_mpa: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub bridge_delta_sigma_s_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub tightness_class: part_3::TightnessClass,
-    #[state(persistent)]
+    #[state(artifact)]
     pub hd_over_h: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub liquid_sigma_s_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub liquid_rho_p_eff: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub liquid_f_ct_eff_mpa: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub liquid_e_s_mpa: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub liquid_s_r_max_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_h_ef_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_cracked: bool,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_f_uk_mpa: f64,
     #[dsl(unit = "MPa")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_f_yk_mpa: f64,
     #[dsl(unit = "mm2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_a_s_mm2: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_d_mm: f64,
     #[dsl(unit = "mm")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_c1_mm: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_n_ed_kn: f64,
     #[dsl(unit = "kN")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub anchor_v_ed_kn: f64,
 }
 //#region 🔖️HandcraftedArtifactCodecs

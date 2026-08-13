@@ -1,15 +1,15 @@
 syntax = "proto3";
 package semio.app.trinity.rewrite;
 message RewritePresence {
-  // @state shared-ui
+  // @state presence
   repeated string selected_node_ids = 1;
-  // @state shared-ui
+  // @state presence
   string active_hover_var = 2;
-  // @state shared-ui
+  // @state presence
   string active_select_var = 3;
-  // @state shared-ui
+  // @state presence
   Camera before_pane_camera = 4;
-  // @state shared-ui
+  // @state presence
   map<string, string> lod_mode_by_window = 5;
 }
 

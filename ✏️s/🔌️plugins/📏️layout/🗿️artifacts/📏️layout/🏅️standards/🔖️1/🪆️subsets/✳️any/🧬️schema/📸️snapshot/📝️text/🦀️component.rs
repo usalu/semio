@@ -43,6 +43,8 @@ mod tests {
             pages: Vec::new(),
             print_target: None,
             data_fields_json: None,
+            background_drawing: None,
+            referenced_model: None,
         }
     }
 
@@ -80,6 +82,8 @@ mod tests {
             }],
             print_target: None,
             data_fields_json: None,
+            background_drawing: None,
+            referenced_model: None,
         }
     }
 
@@ -119,19 +123,19 @@ mod tests {
         store::os_store::test_support::assert_dsl_round_trip(&overrides_frame_flags_document());
     }
 
+    /// 🧪️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: the `dsl::` derive-engine
+    /// parser is gone (dropped alongside the `dsl::DslArtifact` derive — see `📸️snapshot/🦀️component.rs`'s
+    /// doc comment on why), replaced by the hand-rolled `key=<hex-or-json-hex>` line codec. These
+    /// assertions now exercise THAT codec's real failure modes instead of the old grammar's.
     #[test]
-    fn parse_dsl_reports_engine_parser_errors() {
-        // The hand-rolled lexer/parser (and its bespoke error messages) is gone — parsing now goes
-        // through the `dsl::` derive engine directly, so these assert only on the public
-        // `store::ArtifactDsl` surface, generically on failure rather than on exact internal wording
-        // that no longer exists.
-        assert!(parse_dsl("").is_err(), "empty text must fail: a document has required fields");
-        assert!(parse_dsl("not a document at all").is_err(), "unrecognized leading token must fail");
-        assert!(parse_dsl("schema=\"layout.layout\" name=\"t\"").is_err(), "quoted schema must fail: schema is a bare ident");
-        assert!(parse_dsl("schema=layout.layout name=unquoted").is_err(), "unquoted name must fail: name is a quoted string");
-        assert!(parse_dsl("schema=layout.layout name=\"t\" grid { baselineGrid=notanumber baselineOffset=0 snapToBaseline=true }").is_err(), "non-numeric grid field must fail");
-        let bad_bool = "schema=layout.layout name=\"t\" grid { baselineGrid=12 baselineOffset=0 snapToBaseline=maybe }";
-        assert!(parse_dsl(bad_bool).is_err(), "non-boolean grid flag must fail");
+    fn parse_dsl_reports_hand_rolled_codec_errors() {
+        assert!(parse_dsl("").is_err(), "empty text must fail: no schema line at all");
+        assert!(parse_dsl("not a document at all").is_err(), "a line with no recognized key= prefix must fail");
+        assert!(parse_dsl("name=74").is_err(), "a document missing its required schema= line must fail");
+        let odd_hex = format!("schema={}\nname=1", super::super::enc_str(LAYOUT_DOCUMENT_SCHEMA));
+        assert!(parse_dsl(&odd_hex).is_err(), "an odd-length hex value must fail to decode");
+        let bad_json_grid = format!("schema={}\ngrid={}", super::super::enc_str(LAYOUT_DOCUMENT_SCHEMA), super::super::enc_str("not json"));
+        assert!(parse_dsl(&bad_json_grid).is_err(), "a grid= line whose hex decodes to non-JSON must fail");
     }
 }
 //#endregion 🧪️Tests

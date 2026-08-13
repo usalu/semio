@@ -181,13 +181,13 @@ pub struct SlideDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.presentation.diff")]
 pub struct SemioPresentationDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub masters: Option<SlideMastersDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub layouts: Option<SlideLayoutsDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub slides: Option<SlidesDiff>,
 }

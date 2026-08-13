@@ -1,9 +1,9 @@
 type ShootingPresence {
-  selectedShotIds: [String!]! @state(class: SHARED_UI)
-  selectedAssetIds: [String!]! @state(class: SHARED_UI)
-  hoveredAssetId: String @state(class: SHARED_UI)
-  camera: ShootingCamera! @state(class: SHARED_UI)
-  activeUtilityId: String! @state(class: SHARED_UI)
+  selectedShotIds: [String!]! @state(class: PRESENCE)
+  selectedAssetIds: [String!]! @state(class: PRESENCE)
+  hoveredAssetId: String @state(class: PRESENCE)
+  camera: ShootingCamera! @state(class: PRESENCE)
+  activeUtilityId: String! @state(class: PRESENCE)
 }
 
 type ShootingCamera {

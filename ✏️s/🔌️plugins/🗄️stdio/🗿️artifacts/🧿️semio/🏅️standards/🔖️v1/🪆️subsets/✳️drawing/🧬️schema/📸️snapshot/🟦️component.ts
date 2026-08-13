@@ -48,8 +48,8 @@ export interface DrawCanvas {
 }
 
 export interface SemioDrawingSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ canvas: DrawCanvas;
-  /** @state persistent */ styles: DrawStyle[];
-  /** @state persistent */ layers: DrawLayer[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ canvas: DrawCanvas;
+  /** @state artifact */ styles: DrawStyle[];
+  /** @state artifact */ layers: DrawLayer[];
 }

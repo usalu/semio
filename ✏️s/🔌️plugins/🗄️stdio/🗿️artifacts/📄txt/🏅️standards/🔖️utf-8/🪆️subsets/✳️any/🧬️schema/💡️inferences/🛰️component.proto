@@ -4,7 +4,7 @@ package semio.s.stdio.txt.inference;
 // 💡️ Txt inference schema — document outline (line/word/char counts).
 
 message TxtInference {
-  // @state inferred
+  // @derived
   TxtOutline outline = 1;
 }
 

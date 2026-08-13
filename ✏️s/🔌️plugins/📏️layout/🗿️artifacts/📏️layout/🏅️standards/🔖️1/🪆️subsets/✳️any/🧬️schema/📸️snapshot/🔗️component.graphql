@@ -1,5 +1,5 @@
 # 🧬️ JsonSnapshot
 type JsonSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  value: String! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  value: String! @state(class: ARTIFACT)
 }

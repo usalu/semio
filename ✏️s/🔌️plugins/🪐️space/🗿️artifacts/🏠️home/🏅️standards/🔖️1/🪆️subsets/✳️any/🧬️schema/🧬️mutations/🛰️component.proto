@@ -4,8 +4,8 @@ package semio.s.space.home.mutation;
 // 🧬️ S Home mutation schema — persistent fields only.
 
 message SHomeMutation {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   uint64 catalog_generation = 2;
 }

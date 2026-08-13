@@ -4,7 +4,7 @@ package semio.s.stdio.semio.animation.inference;
 // 💡️ Semio animation inference schema — keyframe-derived playback duration.
 
 message SemioAnimationInference {
-  // @state inferred
+  // @derived
   SemioAnimationDuration duration = 1;
 }
 

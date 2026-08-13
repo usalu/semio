@@ -1,79 +1,79 @@
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
 
 export interface LowpolyArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   objects: LowpolyObject[];
-  /** @state shared-ui */
+  /** @state presence */
   activeObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selection: LowpolySelection;
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   paintUtility: string;
-  /** @state shared-ui */
+  /** @state presence */
   activePaintLayer: number;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   showEdges: boolean;
-  /** @state local-ui */
+  /** @state config */
   sunEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   sunAzimuth: number;
-  /** @state local-ui */
+  /** @state config */
   sunElevation: number;
-  /** @state local-ui */
+  /** @state config */
   sunIntensity: number;
-  /** @state local-ui */
+  /** @state config */
   sunColor: string;
-  /** @state local-ui */
+  /** @state config */
   worldCameraPositionX: number;
-  /** @state local-ui */
+  /** @state config */
   worldCameraPositionY: number;
-  /** @state local-ui */
+  /** @state config */
   worldCameraPositionZ: number;
-  /** @state local-ui */
+  /** @state config */
   worldCameraTargetX: number;
-  /** @state local-ui */
+  /** @state config */
   worldCameraTargetY: number;
-  /** @state local-ui */
+  /** @state config */
   worldCameraTargetZ: number;
-  /** @state local-ui */
+  /** @state config */
   worldCameraFov: number;
-  /** @state local-ui */
+  /** @state config */
   utilityParamsJson: string;
-  /** @state local-ui */
+  /** @state config */
   paintColorR: number;
-  /** @state local-ui */
+  /** @state config */
   paintColorG: number;
-  /** @state local-ui */
+  /** @state config */
   paintColorB: number;
-  /** @state local-ui */
+  /** @state config */
   paintColorA: number;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   selectionModeDefault: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredObjectId?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetObjectId?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetMode?: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredTargetId?: number;
-  /** @state preview */
+  /** @state artifact */
   strokeDragActive: boolean;
-  /** @state preview */
+  /** @state artifact */
   transformDragActive: boolean;
-  /** @state preview */
+  /** @state artifact */
   previewSeq: number;
 }
 

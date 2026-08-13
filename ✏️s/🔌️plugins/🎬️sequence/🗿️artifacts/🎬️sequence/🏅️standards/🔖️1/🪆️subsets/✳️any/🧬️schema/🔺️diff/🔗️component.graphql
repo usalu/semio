@@ -1,14 +1,14 @@
 # 🧬️ Sequence diff schema.
 type SequenceDiff {
-  artifact: SequenceArtifact @state(class: PERSISTENT)
-  schema: String @state(class: PERSISTENT)
-  steps: SequenceStepsDelta @state(class: PERSISTENT)
-  edges: SequenceEdgesDelta @state(class: PERSISTENT)
-  selectedStepIds: SequenceStringList @state(class: SHARED_UI)
-  lastRunJson: String @state(class: LOCAL_UI)
-  orientation: String @state(class: LOCAL_UI)
-  camera: SequenceCamera @state(class: LOCAL_UI)
-  locale: String @state(class: LOCAL_UI)
+  artifact: SequenceArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  steps: SequenceStepsDelta @state(class: ARTIFACT)
+  edges: SequenceEdgesDelta @state(class: ARTIFACT)
+  selectedStepIds: SequenceStringList @state(class: PRESENCE)
+  lastRunJson: String @state(class: CONFIG)
+  orientation: String @state(class: CONFIG)
+  camera: SequenceCamera @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
 }
 type SequenceStringList { values: [String!]! }
 type SequenceStepsDelta { added: [SequenceStep!]! removed: [String!]! patched: [SequenceStepPatchEntry!]! reordered: [String!] }

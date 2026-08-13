@@ -1,15 +1,15 @@
 /** 🧬️ Flow snapshot schema — persistent fields only. */
 
 export interface FlowSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   camera: CameraJson;
-  /** @state persistent */
+  /** @state artifact */
   widgets: Widget[];
-  /** @state persistent */
+  /** @state artifact */
   synapses: SynapseSpec[];
-  /** @state persistent */
+  /** @state artifact */
   layout: Record<string, WidgetLayout>;
 }
 

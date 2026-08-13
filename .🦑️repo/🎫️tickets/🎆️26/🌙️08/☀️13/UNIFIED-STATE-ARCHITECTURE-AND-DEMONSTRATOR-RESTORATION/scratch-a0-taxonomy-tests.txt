@@ -1,0 +1,775 @@
+bun test v1.3.14 (0d9b296a)
+
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:
+87 |     const window = join(root, ownerRel, "🎛️apps", "🧪️app", "🎭️modes", "🧪️mode", "🪟️windows", "🧪️window");
+88 |     const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
+89 |     try {
+90 |       mkdirSync(window, { recursive: true });
+91 |       const missingFacets = policyWindowCompletenessBreaches(root, [crate]);
+92 |       expect(missingFacets.filter((breach) => breach.kind === "taxonomy/window-completeness")).toHaveLength(4);
+                                                                                                    ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 4
+Received length: 6
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:92:96)
+(fail) window completeness policy > requires item-only capability facets and their language mirrors [3.09ms]
+208 |   test("gitRepoRoot uses monorepo toplevel from repo/lib/js", async () => {
+209 |     const { gitRepoRoot } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+210 |     const { spawnSync } = await import("node:child_process");
+211 |     const top = gitRepoRoot(import.meta.dir);
+212 |     const n = Number(spawnSync("git", ["ls-files"], { cwd: top, encoding: "utf8" }).stdout?.split("\n").filter(Boolean).length ?? 0);
+213 |     expect(n).toBeGreaterThan(1000);
+                    ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 1000
+Received: 0
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:213:15)
+(fail) bundle-script > gitRepoRoot uses monorepo toplevel from repo/lib/js [105.13ms]
+257 | 
+258 |   test("flags direct third-party import outside adapter", () => {
+259 |     const content = `import { z } from "zod";\nexport const a = 1;\n`;
+260 |     const file = "compose/client/lib/js/boundary-probe.ts";
+261 |     const breachs = dependencyBoundaryBreachesForFile(new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"), file, content, file);
+262 |     expect(breachs.length).toBeGreaterThan(0);
+                                 ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 0
+Received: 0
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:262:28)
+(fail) dependency-boundary > flags direct third-party import outside adapter [0.34ms]
+279 | });
+280 | 
+281 | describe("ui scrollbar styling", () => {
+282 |   test("🎨️ui.css defines scrollbar tokens and native plus Scrollable rules", () => {
+283 |     const repoRoot = findRepoRoot(import.meta.dir);
+284 |     const css = readFileSync(join(repoRoot, "framework/module/ui/styling/js/🎨️ui.css"), "utf8");
+                      ^
+error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/framework/module/ui/styling/js/🎨️ui.css'
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:284:17)
+(fail) ui scrollbar styling > 🎨️ui.css defines scrollbar tokens and native plus Scrollable rules [0.61ms]
+344 |   test("bumpCounterFromHistory preserves selector-free history with canonical output", async () => {
+345 |     const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+346 |     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
+347 |     const bumped = bumpCounterFromHistory(["🦢️other🎆️26🌙️07☀️31🚩️999", "🐙️ueli🎆️26🌙️06☀️04🚩️397", "🐙️ueli🎆️26🌙️06☀️04🚩️396"], contributor, new Date("2026-07-31T12:00:00"));
+348 |     expect(bumped).toEqual({ line1Base: "🐙️ueli🎆️26🌙️06☀️04", nnn: "398" });
+349 |     expect(() => bumpCounterFromHistory(["🐙️ueli🎆️26🌙️6☀️04🚩️397"], contributor, new Date("2026-07-31T12:00:00"))).toThrow("refusing to reset counter to 001");
+                                                                                                                            ^
+error: expect(received).toThrow(expected)
+
+Expected substring: "refusing to reset counter to 001"
+
+Received function did not throw
+Received value: {
+  line1Base: "🐙️ueli🎆️26🌙️07☀️31",
+  nnn: "001",
+}
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:349:119)
+(fail) micro-commit > bumpCounterFromHistory preserves selector-free history with canonical output [0.67ms]
+469 |   });
+470 | 
+471 |   test("isUlocCachePlausible rejects partial caches", async () => {
+472 |     const { isUlocCachePlausible, gitRepoRoot } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+473 |     const root = gitRepoRoot(process.cwd());
+474 |     expect(isUlocCachePlausible(root, { TypeScript: 3000, JavaScript: 78, Markdown: 44, JSON: 43 })).toBe(false);
+                                                                                                           ^
+error: expect(received).toBe(expected)
+
+Expected: false
+Received: true
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:474:102)
+(fail) micro-commit > isUlocCachePlausible rejects partial caches [154.33ms]
+(fail) micro-commit > validateBulletsAgainstStaged rejects bullets that ignore staged product code [31701.23ms]
+  ^ this test timed out after 5000ms.
+614 |       writeMicroCommitTemplates(root, msg);
+615 |       writeFileSync(join(root, ".git/gkcommittemplate-099.txt"), "stale numbered", "utf8");
+616 |       wipeAfterCommit(root);
+617 |       const tpl = spawnSync("git", ["config", "--local", "--get", "commit.template"], { cwd: root, encoding: "utf8" });
+618 |       expect(tpl.status).toBe(0);
+619 |       expect(tpl.stdout?.trim()).toContain("gkcommittemplate.txt");
+                                       ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "gkcommittemplate.txt"
+Received: ""
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:619:34)
+(fail) micro-commit > wipeAfterCommit clears all GK templates and prepare state [739.29ms]
+639 |       const msg = buildMicroCommitMessage(root, { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" }, ["🎆️bullet"], {
+640 |         countRepoByLanguage: () => ({ TypeScript: 1 }),
+641 |       });
+642 |       writeMicroCommitTemplates(root, msg);
+643 |       const gk = readdirSync(join(root, ".git")).filter((n) => n.startsWith("gkcommittemplate"));
+644 |       expect(gk).toEqual(["gkcommittemplate.txt"]);
+                       ^
+error: expect(received).toEqual(expected)
+
+- [
+-   "gkcommittemplate.txt",
+- ]
++ []
+
+- Expected  - 3
++ Received  + 1
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:644:18)
+(fail) micro-commit > writeMicroCommitTemplates uses single gkcommittemplate.txt [365.47ms]
+1892 | });
+1893 | 
+1894 | /** @emoji 🔌️ Local dev port for a playground host. */
+1895 | export function playgroundDevPort(kind: PlaygroundHostKind): number {
+1896 |   const spec = resolvePlaygroundPorts()[kind];
+1897 |   if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
+                                                                           ^
+error: unknown playground host kind: cad
+      at playgroundDevPort (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1897:69)
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:664:12)
+(fail) playground static sites > PLAYGROUND_PORTS keeps cad and dag on distinct reserved dev ports [0.71ms]
+681 |   });
+682 | 
+683 |   test("frameworkOsPlaygroundDevEnv defaults wgpu renderer and resolves catalog dev port", () => {
+684 |     const catalog = loadFrameworkOsPlaygroundCatalog();
+685 |     const dagEnv = frameworkOsPlaygroundDevEnv(catalog, "dag", {}, {});
+686 |     expect(dagEnv.SEMIO_RENDERER).toBe("wgpu");
+                                        ^
+error: expect(received).toBe(expected)
+
+Expected: "wgpu"
+Received: "react"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:686:35)
+(fail) playground static sites > frameworkOsPlaygroundDevEnv defaults wgpu renderer and resolves catalog dev port [1.69ms]
+769 |     expect(files).toEqual([]);
+770 |   });
+771 | 
+772 |   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
+773 |     const indexPath = join(repoRoot, "framework/product/os/module/renderer/js/react/index.tsx");
+774 |     const indexSource = readFileSync(indexPath, "utf8");
+                              ^
+error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/framework/product/os/module/renderer/js/react/index.tsx'
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:774:25)
+(fail) package boundary guards > framework renderer host has no per-technology registerUi surface host APIs [0.40ms]
+893 |       spawnSync("git", ["add", "-A"], { cwd: root });
+894 |       const msg = join(root, "mc.txt");
+895 |       writeFileSync(msg, "🐙️ueli🎆️26🌙️06☀️01🚩️001\n\n🎆️26🌙️06☀️04⏰️12⌚️00⏱️00\n🔧️Work\n", "utf8");
+896 |       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", msg], { cwd: root });
+897 |       const bundles = parseCommitBundleBody("📚️repo🔧️js\n🎆️26🌙️06☀️04\n🔧️Only repo");
+898 |       expect(() => validateBundleCommitAttribution(root, wip, "HEAD", bundles)).toThrow(/not attributed to any bundle|do not add up/);
+                                                                                      ^
+error: expect(received).toThrow(expected)
+
+Expected pattern: /not attributed to any bundle|do not add up/
+
+Received function did not throw
+Received value: undefined
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:898:81)
+(fail) commit > validateBundleCommitAttribution requires bundle headers to sum to range total [2013.98ms]
+923 |       writeFileSync(join(root, "repo/js/a.ts"), "a\n", "utf8");
+924 |       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
+925 |       writeFileSync(join(root, "mc2.txt"), "🐙️ueli🎆️26🌙️06☀️01🚩️002\n\n🎆️26🌙️06☀️04⏰️12⌚️01⏱️00\n🔧️Net fewer lines\n", "utf8");
+926 |       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", join(root, "mc2.txt")], { cwd: root });
+927 |       const bundles = parseCommitBundleBody("📚️repo🔧️js\n🎆️26🌙️06☀️04\n🔧️Net\n🎆️26🌙️06☀️03\n🔧️Add");
+928 |       expect(() => validateBundleCommitAttribution(root, wip, "HEAD", bundles)).toThrow(/does not add up/);
+                                                                                      ^
+error: expect(received).toThrow(expected)
+
+Expected pattern: /does not add up/
+
+Received function did not throw
+Received value: undefined
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:928:81)
+(fail) commit > validateBundleCommitAttribution rejects listed days when micro-commit churn does not net to range [1618.99ms]
+979 |       writeFileSync(msg2, "🐙️ueli🎆️26🌙️06☀️01🚩️002\n\n🎆️26🌙️06☀️04⏰️12⌚️01⏱️00\n🔧️Day four\n", "utf8");
+980 |       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", msg2], { cwd: root });
+981 |       const contributor = { alias: "ueli", emoji: "🐙️", name: "U", email: "u@e.com" };
+982 |       const bundles = parseCommitBundleBody("📚️repo🔧️js\n🎆️26🌙️06☀️04\n🔧️Day four\n🎆️26🌙️06☀️03\n🔧️Day three");
+983 |       const msg = buildCommitMessage(root, contributor, bundles, wip, "HEAD");
+984 |       expect(msg).toMatch(/🎆️26🌙️06☀️04📊️uloc💯️.*🟰️\d+/);
+                        ^
+error: expect(received).toMatch(expected)
+
+Expected substring or pattern: /\uD83C\uDF86\uFE0F26\uD83C\uDF19\uFE0F06\u2600\uFE0F04\uD83D\uDCCA\uFE0Fuloc\uD83D\uDCAF\uFE0F.*\uD83D\uDFF0\uFE0F\d+/
+Received: "🐙️ueli🎆️26🌙️08☀️13🔀️\n\n📚️repo🔧️js📊️uloc\n🎆️26🌙️06☀️04📊️uloc\n🔧️Day four\n🎆️26🌙️06☀️03📊️uloc\n🔧️Day three\nSigned-off-by: U <u@e.com>\n"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:984:19)
+(fail) commit > buildCommitMessage appends per-day uloc from micro-commit dates [2097.60ms]
+1018 |       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "delta"], { cwd: root });
+1019 |       const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
+1020 |       const bundles = [mk("🏘️compose"), mk("🖱️ui"), mk("🥅️framework")];
+1021 |       const paths = [["compose/a.ts"], ["ui/b.ts"], ["framework/c.ts"]];
+1022 |       const sorted = sortCommitBundlesByEditTotal(root, base, head, bundles, paths);
+1023 |       expect(sorted.bundles.map((b) => b.label)).toEqual(["🖱️ui", "🏘️compose", "🥅️framework"]);
+                                                        ^
+error: expect(received).toEqual(expected)
+
+@@ -1,5 +1,5 @@
+  [
+-   "🖱️ui",
+    "🏘️compose",
++   "🖱️ui",
+    "🥅️framework",
+
+- Expected  - 1
++ Received  + 1
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1023:50)
+(fail) commit > sortCommitBundlesByEditTotal orders bundles by descending gitDeltaLineTotal [842.45ms]
+1096 | 
+1097 |   test("kills a command that exceeds its explicit budget", () => {
+1098 |     const start = Date.now();
+1099 |     const result = spawnBudgetedSleep(250);
+1100 |     expect(result.status).not.toBe(0);
+1101 |     expect(result.stderr).toContain("[budget]");
+                                 ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "[budget]"
+Received: ""
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1101:27)
+(fail) command budgets > kills a command that exceeds its explicit budget [85.52ms]
+1103 |   });
+1104 | 
+1105 |   test("SEMIO_CMD_BUDGET_MS env override kills a command with no explicit budget", () => {
+1106 |     const result = spawnBudgetedSleep(-1, { SEMIO_CMD_BUDGET_MS: "250" });
+1107 |     expect(result.status).not.toBe(0);
+1108 |     expect(result.stderr).toContain("[budget]");
+                                 ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "[budget]"
+Received: ""
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1108:27)
+(fail) command budgets > SEMIO_CMD_BUDGET_MS env override kills a command with no explicit budget [38.30ms]
+1170 |   });
+1171 | 
+1172 |   test("runProbe captures stdout under budget", () => {
+1173 |     const { status, stdout } = runProbe(process.execPath, ["-e", "console.log('probe-ok')"]);
+1174 |     expect(status).toBe(0);
+1175 |     expect(stdout.trim()).toBe("probe-ok");
+                                 ^
+error: expect(received).toBe(expected)
+
+Expected: "probe-ok"
+Received: ""
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1175:27)
+(fail) command budgets > runProbe captures stdout under budget [25.45ms]
+1193 | });
+1194 | 
+1195 | describe("resolveCargoPackageName", () => {
+1196 |   test("resolves short lib names to full package names", () => {
+1197 |     const root = process.cwd();
+1198 |     expect(resolveCargoPackageName("db_actor", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/📦️packages/🦀️rust"))).toBe("semio-framework-os-kernel-db-actor");
+                                                                                                                                                  ^
+error: expect(received).toBe(expected)
+
+Expected: "semio-framework-os-kernel-db-actor"
+Received: "db_actor"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1198:140)
+(fail) resolveCargoPackageName > resolves short lib names to full package names [951.38ms]
+1201 |   });
+1202 | 
+1203 |   test("resolves empty package list to local Cargo.toml package name", () => {
+1204 |     const root = process.cwd();
+1205 |     const dbActorDir = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/📦️packages/🦀️rust");
+1206 |     expect(resolveCargoPackageNames([], dbActorDir)).toEqual(["semio-framework-os-kernel-db-actor"]);
+                                                            ^
+error: expect(received).toEqual(expected)
+
+- [
+-   "semio-framework-os-kernel-db-actor",
+- ]
++ []
+
+- Expected  - 3
++ Received  + 1
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1206:54)
+(fail) resolveCargoPackageName > resolves empty package list to local Cargo.toml package name [0.43ms]
+1210 | describe("loadTaxonomy", () => {
+1211 |   test("parses 🔣️taxonomy.json into the expected shape", () => {
+1212 |     const taxonomy = loadTaxonomy();
+1213 |     expect(taxonomy.artifactComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
+1214 |     expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
+1215 |     expect(taxonomy.snapshotChildDirs).toEqual(["🧬️schema", "🎒️pack"]);
+                                              ^
+error: expect(received).toEqual(expected)
+
+- [
+-   "🧬️schema",
+-   "🎒️pack",
+- ]
++ undefined
+
+- Expected  - 4
++ Received  + 1
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1215:40)
+(fail) loadTaxonomy > parses 🔣️taxonomy.json into the expected shape [0.43ms]
+1280 |   test("describes the per-example assets/tests shape instead of plural facet dirs", () => {
+1281 |     const taxonomy = loadTaxonomy();
+1282 |     expect(taxonomy.exampleAssetsDirName).toBe("🖼️assets");
+1283 |     expect(taxonomy.exampleTestsDirName).toBe("🧪️tests");
+1284 |     expect(taxonomy.exampleSlugPattern).toBe("^.+\\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$");
+1285 |     expect(taxonomy.exampleAssetKindPrefixes).toEqual({
+                                                     ^
+error: expect(received).toEqual(expected)
+
+@@ -2,7 +2,7 @@
+    "cmd": "🎮️",
+-   "diff": "🔺️",
+-   "dsl": "🗣️",
+-   "op": "🔧️",
+-   "pack": "🎒️",
+-   "spr": "📡️",
++   "diff-text": "🔺️",
++   "mutations-binary": "📡️",
++   "mutations-text": "🔧️",
++   "snapshot-binary": "🎒️",
++   "snapshot-text": "🗣️",
+  }
+
+- Expected  - 5
++ Received  + 5
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1285:47)
+(fail) loadTaxonomy > describes the per-example assets/tests shape instead of plural facet dirs [0.24ms]
+1370 |   });
+1371 | 
+1372 |   test("reports a completeness dir missing from the structural set", () => {
+1373 |     const taxonomy = loadTaxonomy();
+1374 |     const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "📡️spr") };
+1375 |     expect(validateTaxonomy(broken).some((problem) => problem.includes("📡️spr"))).toBe(true);
+                                                                                         ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1375:83)
+(fail) validateTaxonomy > reports a completeness dir missing from the structural set [0.59ms]
+1577 |     const root = getWorkspaceRoot();
+1578 |     const catalog = discoverPackages(root);
+1579 |     const pluginOwners = [...new Set(catalog.filter((pkg) => pkg.role === "plugin").map((pkg) => pkg.ownerRel))].sort();
+1580 |     expect(pluginOwners).toEqual(migratedPluginDirs(root));
+1581 |     const writerEntry = catalog.find((pkg) => pkg.ownerRel === "✏️s/🔌️plugins/✒️writer");
+1582 |     expect(writerEntry?.area).toBe("mixed");
+                                     ^
+error: expect(received).toBe(expected)
+
+Expected: "mixed"
+Received: "clean"
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1582:31)
+(fail) discoverPackages > finds every migrated plugin under the real repo root [0.69ms]
+1592 |   });
+1593 | 
+1594 |   test("resolves the three-level 🎯️targets shape for framework ui", () => {
+1595 |     const catalog = discoverPackages(getWorkspaceRoot());
+1596 |     const uiTargets = catalog.filter((pkg) => pkg.ownerRel === "🧰️framework/🔨️modules/🖱️ui").map((pkg) => pkg.target).sort();
+1597 |     expect(uiTargets).toEqual(["⌨️tui", "⚛️react", "🧊️wgpu"]);
+                             ^
+error: expect(received).toEqual(expected)
+
+  [
+-   "⌨️tui",
+    "⚛️react",
+-   "🧊️wgpu",
+  ]
+
+- Expected  - 2
++ Received  + 0
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1597:23)
+(fail) discoverPackages > resolves the three-level 🎯️targets shape for framework ui [0.32ms]
+1607 |     const owners = discoverOwners(root);
+1608 |     const fem = owners.find((owner) => owner.ownerRel === "✏️s/🔌️plugins/🏗️fem");
+1609 |     expect(fem).toBeDefined();
+1610 |     expect(fem?.roles).toEqual(["plugin"]);
+1611 |     expect(fem?.maturity).toBe(fem!.residualImplDirs === 0 && fem!.entryFilesAtOwnerRoot.length === 0 ? "clean" : "mixed");
+1612 |     expect(discoverPackageProblems(root).filter((problem) => problem.path.startsWith("✏️s/🔌️plugins/🏗️fem"))).toEqual([]);
+                                                                                                                      ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
++   },
++ ]
+
+- Expected  - 1
++ Received  + 7
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1612:112)
+(fail) discoverPackages > an in-flight plugin is discovered as mixed, never as a problem [2.39ms]
+1611 |     expect(fem?.maturity).toBe(fem!.residualImplDirs === 0 && fem!.entryFilesAtOwnerRoot.length === 0 ? "clean" : "mixed");
+1612 |     expect(discoverPackageProblems(root).filter((problem) => problem.path.startsWith("✏️s/🔌️plugins/🏗️fem"))).toEqual([]);
+1613 |   });
+1614 | 
+1615 |   test("the real repo raises no discovery problems", () => {
+1616 |     expect(discoverPackageProblems(getWorkspaceRoot())).toEqual([]);
+                                                               ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   {
++     "kind": "ambiguous-lang-shape",
++     "message": ""🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust" has both a direct manifest and a 🎯️targets/ dir — a lang is either two-level or three-level, never both.",
++     "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go/📋️project.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🐹️go/📋️project.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "unknown-lang",
++     "message": ""✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/👥️presence" is not a declared lang (🦀️rust, 🟦️typescript, 🐹️go, 🐍️python, 🔷️dotnet).",
++     "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/👥️presence",
++   },
++   {
++     "kind": "unknown-lang",
++     "message": ""✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🎬️actions" is not a declared lang (🦀️rust, 🟦️typescript, 🐹️go, 🐍️python, 🔷️dotnet).",
++     "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🎬️actions",
++   },
++   {
++     "kind": "unknown-lang",
++     "message": ""✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🎚️options" is not a declared lang (🦀️rust, 🟦️typescript, 🐹️go, 🐍️python, 🔷️dotnet).",
++     "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🎚️options",
++   },
++   {
++     "kind": "unknown-lang",
++     "message": ""✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🪛️utilities" is not a declared lang (🦀️rust, 🟦️typescript, 🐹️go, 🐍️python, 🔷️dotnet).",
++     "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🪛️utilities",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "ambiguous-lang-shape",
++     "message": ""✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript" has both a direct manifest and a 🎯️targets/ dir — a lang is either two-level or three-level, never both.",
++     "path": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
++   },
++   {
++     "kind": "manifest-without-marker",
++     "message": ""✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).",
++     "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json",
++   },
++ ]
+
+- Expected  - 1
++ Received  + 252
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1616:57)
+(fail) discoverPackages > the real repo raises no discovery problems [1.58ms]
+1816 |     // Shape V1 (not yet migrated) framework core must still resolve — dropping it would break bun install repo-wide.
+1817 |     expect(result).toContain("🧰️framework/📦️packages/🟦️typescript");
+1818 |     // Shape V2 (already migrated) flow plugin TS residual.
+1819 |     expect(result).toContain("✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript");
+1820 |     // The documented drift this generator fixes: math npm-wrapper packages were resolving via nx only.
+1821 |     expect(result).toContain("🧰️framework/🔨️modules/🧮️math/➕️algebra/📦️packages/🦀️rust");
+                          ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "🧰️framework/🔨️modules/🧮️math/➕️algebra/📦️packages/🦀️rust"
+Received: [
+  "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+  "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+  "♻️mit-bestand/🧺️demonstrator", "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
+  "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🎯️targets/⚛️5d-react",
+  "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript",
+  "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript",
+  "🧰️framework/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/◻2d/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react",
+  "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+  "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
+  "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+  "🧰️framework/🔨️modules/🧮️math/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/pkg",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"
+]
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1821:20)
+(fail) computeWorkspaces > against the real repo: every entry is a real dir with its own package.json, no duplicates, and known Shape V1/V2 + math drift cases resolve as expected [723.38ms]
+
+ 133 pass
+ 29 fail
+ 874 expect() calls
+Ran 162 tests across 1 file. [53.23s]

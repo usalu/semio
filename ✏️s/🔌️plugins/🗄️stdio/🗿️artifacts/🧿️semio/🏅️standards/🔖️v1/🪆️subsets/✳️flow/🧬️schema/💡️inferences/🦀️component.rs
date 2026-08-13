@@ -23,7 +23,7 @@ use super::topology::{compute_semio_flow_topology, SemioFlowTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.flow.inference")]
 pub struct SemioFlowInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: SemioFlowTopology,
 }
 

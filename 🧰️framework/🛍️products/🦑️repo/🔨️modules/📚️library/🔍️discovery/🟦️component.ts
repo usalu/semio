@@ -148,6 +148,8 @@ export interface Taxonomy {
   readonly configChildDirs: readonly string[];
   /** 👥️ Required children of each `👥️presence/` facet: its schema. */
   readonly presenceChildDirs: readonly string[];
+  /** 🫧️ Required children of each `🫧️transient/` facet: its schema. The ephemeral local-only UI lane, fourth and last of the state mechanisms. */
+  readonly transientChildDirs: readonly string[];
   /** 🔣️ Normative JSON Schema leaf per app schema facet path. */
   readonly appSchemaSpecFilenames: Readonly<Record<string, string>>;
   readonly exampleAssetsDirName: string;
@@ -160,6 +162,8 @@ export interface Taxonomy {
   readonly forbiddenExampleSlugs: readonly string[];
   readonly forbiddenExamplePluralDirs: readonly string[];
   readonly appChildDirs: readonly string[];
+  /** 🎭️ STRUCTURAL set: every directory allowed directly below a mode — its windows plus its three own state lanes. */
+  readonly modeChildDirs: readonly string[];
   readonly semioDataLeafPrefix: string;
   readonly semioFileExtension: string;
   /** 📖️ Normative `.semio` spec filename per constitutional artifact facet (`artifactComponentDirs` keys only). */
@@ -283,6 +287,7 @@ function artifactFacetChildDirs(facetPath: string, taxonomy: Taxonomy): readonly
 function appFacetChildDirs(facet: string, taxonomy: Taxonomy): readonly string[] {
   if (facet === "🎚️config") return taxonomy.configChildDirs ?? [];
   if (facet === "👥️presence") return taxonomy.presenceChildDirs ?? [];
+  if (facet === "🫧️transient") return taxonomy.transientChildDirs ?? [];
   return [];
 }
 
@@ -554,6 +559,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   for (const [key, dirs] of [
     ["configChildDirs", taxonomy.configChildDirs],
     ["presenceChildDirs", taxonomy.presenceChildDirs],
+    ["transientChildDirs", taxonomy.transientChildDirs],
   ] as const) {
     if (!Array.isArray(dirs) || dirs.length === 0) {
       problems.push(`${key} must be a non-empty array.`);
@@ -606,6 +612,30 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
       problems.push(`a bare "${banned}" is not an app facet — use "🎚️config" and "🌉️wasm".`);
     }
   }
+  //#region StateLaneContract
+  // 🫧️ The four state mechanisms are exhaustive, so every state-owning scope (app, mode, window)
+  // declares the same three non-artifact lanes; artifacts themselves are the fourth.
+  const stateLaneDirs = ["🎚️config", "👥️presence", "🫧️transient"] as const;
+  if (!Array.isArray(taxonomy.modeChildDirs) || taxonomy.modeChildDirs.length === 0) {
+    problems.push(`modeChildDirs must be a non-empty array.`);
+  } else {
+    if (!taxonomy.modeChildDirs.includes(taxonomy.windowsDirName)) {
+      problems.push(`modeChildDirs must include "${taxonomy.windowsDirName}" — a mode owns its windows.`);
+    }
+    for (const dir of taxonomy.modeChildDirs) {
+      if (!dir) problems.push(`modeChildDirs contains an empty entry.`);
+      else if (dir !== taxonomy.windowsDirName && !taxonomy.taxonomyLeafParentDirs.includes(dir)) {
+        problems.push(`modeChildDirs member "${dir}" is missing from taxonomyLeafParentDirs.`);
+      }
+    }
+  }
+  for (const lane of stateLaneDirs) {
+    if (!taxonomy.appChildDirs.includes(lane)) problems.push(`appChildDirs must include the state lane "${lane}".`);
+    if (!taxonomy.modeChildDirs?.includes(lane)) problems.push(`modeChildDirs must include the state lane "${lane}".`);
+    if (!taxonomy.windowChildDirs.includes(lane)) problems.push(`windowChildDirs must include the state lane "${lane}".`);
+    if (!taxonomy.windowRequiredChildDirs.includes(lane)) problems.push(`windowRequiredChildDirs must include the state lane "${lane}".`);
+  }
+  //#endregion StateLaneContract
   //#endregion SchemaFacetContract
   for (const lang of taxonomy.langs) {
     const ecosystem = taxonomy.ecosystems[lang];

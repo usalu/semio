@@ -1,15 +1,15 @@
 /** 🧬️ Puzzle2dPresence */
 export interface Puzzle2dPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraX: number;
-  /** @state shared-ui */
+  /** @state presence */
   cameraY: number;
-  /** @state shared-ui */
+  /** @state presence */
   cameraZoom: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectionMethod: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
 }

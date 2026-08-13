@@ -30,38 +30,38 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraX": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraY": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraZoom": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodModeByPane": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInputByPane": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushCandidateIndex": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushCandidates": {
       "type": "array",
@@ -69,62 +69,62 @@
         "title": "Value",
         "type": "object"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushCandidateSourceHandleId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "fillCount": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSnapEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridFactor": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "suggestionOffset": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "nodeKindWeights": {
       "type": "object",
       "additionalProperties": {
         "type": "number"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "handleKindWeights": {
       "type": "object",
       "additionalProperties": {
         "type": "number"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeUtilityByWindowId": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "terminology": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   }
 }

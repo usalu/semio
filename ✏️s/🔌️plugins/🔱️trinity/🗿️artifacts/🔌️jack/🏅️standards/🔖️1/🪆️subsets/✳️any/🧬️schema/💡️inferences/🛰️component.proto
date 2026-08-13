@@ -5,9 +5,9 @@ package semio.s.trinity.jack.inference;
 // and flat-position (each node's flattened (u, v) position, BFS-walked from root_node_id).
 
 message JackInference {
-  // @state inferred
+  // @derived
   JackTopology topology = 1;
-  // @state inferred
+  // @derived
   JackFlatPosition flat_position = 2;
 }
 

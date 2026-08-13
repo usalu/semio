@@ -16,23 +16,23 @@ use std::collections::BTreeMap;
 #[dsl(id = "norm.vdi3805", layout = "lines")]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub manufacturer_file: ManufacturerFile,
-    #[state(persistent)]
+    #[state(artifact)]
     pub catalog: ManufacturerCatalog,
-    #[state(persistent)]
+    #[state(artifact)]
     pub edition_profile: BTreeMap<String, EditionProfileChoice>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub correction_as_of: EditionId,
-    #[state(persistent)]
+    #[state(artifact)]
     pub strict_mode: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     pub index: CatalogIndex,
-    #[state(persistent)]
+    #[state(artifact)]
     pub geometry: BTreeMap<String, ParametricGeometry>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub curves: BTreeMap<String, CharacteristicCurve>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub limits: SecurityLimits,
 }
 //#region 🔖️HandcraftedArtifactCodecs

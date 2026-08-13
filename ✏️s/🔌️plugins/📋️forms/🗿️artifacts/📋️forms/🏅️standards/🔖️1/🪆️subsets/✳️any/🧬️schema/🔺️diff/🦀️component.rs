@@ -10,27 +10,27 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<FormsArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub id: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub version: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub title: Option<Option<String>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub steps: Option<FormsStepsDelta>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_ids: Option<FormsStringList>,
-    #[state(local_ui)]
+    #[state(config)]
     pub current_step_index: Option<u32>,
-    #[state(local_ui)]
+    #[state(config)]
     pub try_values_json: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: Option<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff

@@ -57,8 +57,8 @@ type DrawCanvas {
 }
 
 type SemioDrawingSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  canvas: DrawCanvas! @state(class: PERSISTENT)
-  styles: [DrawStyle!]! @state(class: PERSISTENT)
-  layers: [DrawLayer!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  canvas: DrawCanvas! @state(class: ARTIFACT)
+  styles: [DrawStyle!]! @state(class: ARTIFACT)
+  layers: [DrawLayer!]! @state(class: ARTIFACT)
 }

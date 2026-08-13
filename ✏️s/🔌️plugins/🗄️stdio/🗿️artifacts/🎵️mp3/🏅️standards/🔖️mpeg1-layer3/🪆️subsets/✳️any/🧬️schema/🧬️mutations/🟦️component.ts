@@ -5,6 +5,6 @@ export interface Mp3MutationEntry {
   value: string;
 }
 export interface Mp3Mutation {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Mp3MutationEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: Mp3MutationEntry[];
 }

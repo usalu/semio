@@ -781,7 +781,7 @@ mod tests {
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
         let projection = crate::artifacts::lowpoly::schema::default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &projection, history: &history };
+        let doc = ArtifactView::new(&projection, &history);
         let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");
         assert!(emit.artifact_mutations.is_empty(), "whole-document replace is an effect, not a mutation");
         let semio_framework_plugin::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("mesh:in must emit a LoadDocument effect") else {

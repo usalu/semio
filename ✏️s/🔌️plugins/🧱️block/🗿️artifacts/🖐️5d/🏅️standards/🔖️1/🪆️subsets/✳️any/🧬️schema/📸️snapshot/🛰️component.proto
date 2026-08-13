@@ -4,31 +4,31 @@ package semio.s.block.block5d.snapshot;
 // 🧬️ Block5d snapshot schema — persistent fields only.
 
 message Block5dSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   BlockKindIdentity part_kind = 2;
-  // @state persistent
+  // @state artifact
   Block5dPart2d part2d = 3;
-  // @state persistent
+  // @state artifact
   Block5dPart3d part3d = 4;
-  // @state persistent
+  // @state artifact
   repeated BlockRepresentation representations = 5;
-  // @state persistent
+  // @state artifact
   repeated Block5dGripKind grip_kinds = 6;
-  // @state persistent
+  // @state artifact
   repeated Block5dGripTemplate grips = 7;
-  // @state persistent
+  // @state artifact
   repeated BlockCompatibilityRule compatibility = 8;
-  // @state persistent
+  // @state artifact
   repeated BlockAttribute attributes = 9;
-  // @state persistent
+  // @state artifact
   repeated BlockAuthor authors = 10;
-  // @state persistent
+  // @state artifact
   BlockCamera2d camera2d = 11;
-  // @state persistent
+  // @state artifact
   BlockCamera3d camera3d = 12;
-  // @state persistent
+  // @state artifact
   BlockMeta meta = 13;
 }
 

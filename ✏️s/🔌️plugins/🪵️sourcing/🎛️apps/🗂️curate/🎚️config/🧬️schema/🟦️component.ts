@@ -15,12 +15,12 @@ export interface Filters {
 }
 
 export interface SourcingCurateConfig {
-  /** @state local-ui */
+  /** @state config */
   filters: Filters;
-  /** @state local-ui */
+  /** @state config */
   selectedObjectId?: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson: string;
 }

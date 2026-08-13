@@ -92,9 +92,9 @@ pub struct XmlDeclaration {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xml")]
 pub struct XmlSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub doc: XmlDocument,
 }

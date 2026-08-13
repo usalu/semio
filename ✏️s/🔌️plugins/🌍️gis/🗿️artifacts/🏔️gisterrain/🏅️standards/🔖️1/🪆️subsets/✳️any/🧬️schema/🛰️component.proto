@@ -4,14 +4,14 @@ package semio.s.gis.gisterrain.artifact;
 // 🧬️ GIS terrain artifact schema — every field with its state class.
 
 message GisTerrainArtifact {
-  // @state persistent
+  // @state artifact
   double exaggeration = 1;
-  // @state persistent
+  // @state artifact
   string imported_features_json = 2;
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 3;
-  // @state local-ui
+  // @state config
   string camera_json = 4;
-  // @state local-ui
+  // @state config
   string locale = 5;
 }

@@ -11,15 +11,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf")]
 pub struct BcfArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub version: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub topics: Vec<BcfTopic>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub parts: Vec<BcfRawPart>,
 }

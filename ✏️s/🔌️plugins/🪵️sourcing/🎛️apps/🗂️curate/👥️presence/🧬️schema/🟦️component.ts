@@ -1,11 +1,11 @@
 /** 🧬️ SourcingCuratePresence */
 export interface SourcingCuratePresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraPosition: number[];
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraTarget: number[];
-  /** @state shared-ui */
+  /** @state presence */
   worldCameraFov: number;
 }

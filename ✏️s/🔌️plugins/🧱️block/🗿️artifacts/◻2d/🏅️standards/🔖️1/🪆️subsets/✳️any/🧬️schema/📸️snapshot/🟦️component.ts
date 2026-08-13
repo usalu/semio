@@ -1,25 +1,25 @@
 /** 🧬️ Block2d snapshot schema — persistent fields only. */
 
 export interface Block2dSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   nodeKind: BlockKindIdentity;
-  /** @state persistent */
+  /** @state artifact */
   presentation: Block2dPresentation;
-  /** @state persistent */
+  /** @state artifact */
   handleKinds: Block2dHandleKind[];
-  /** @state persistent */
+  /** @state artifact */
   handles: Block2dHandleTemplate[];
-  /** @state persistent */
+  /** @state artifact */
   compatibility: BlockCompatibilityRule[];
-  /** @state persistent */
+  /** @state artifact */
   attributes: BlockAttribute[];
-  /** @state persistent */
+  /** @state artifact */
   authors: BlockAuthor[];
-  /** @state persistent */
+  /** @state artifact */
   camera2d: BlockCamera2d;
-  /** @state persistent */
+  /** @state artifact */
   meta: BlockMeta;
 }
 

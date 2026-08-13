@@ -1,14 +1,14 @@
 /** 🧬️ GIS terrain artifact schema — every field with its state class. */
 
 export interface GisTerrainArtifact {
-  /** @state persistent */
+  /** @state artifact */
   exaggeration: number;
-  /** @state persistent */
+  /** @state artifact */
   importedFeaturesJson: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   cameraJson: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

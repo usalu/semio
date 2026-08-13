@@ -18,7 +18,7 @@ use super::topology::{compute_layout_topology, LayoutTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout.inference")]
 pub struct LayoutInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: LayoutTopology,
 }
 

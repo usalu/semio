@@ -118,7 +118,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").shots.len(), 3);
         let snapshot = app.snapshot().expect("snapshot");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = ShootingConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = reset_snapshot::handle(&reset_snapshot::ResetSnapshot {}, &doc, &cfg).expect("handle");

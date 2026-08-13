@@ -1,32 +1,32 @@
 /** 🧬️ Din18599 artifact schema — every field with its state class. */
 
 export interface Din18599Artifact {
-  /** @state persistent */
+  /** @state artifact */
   useClass: string;
-  /** @state persistent */
+  /** @state artifact */
   heatedAreaM2: number;
-  /** @state persistent */
+  /** @state artifact */
   occupants: number;
-  /** @state persistent */
+  /** @state artifact */
   hT: number;
-  /** @state persistent */
+  /** @state artifact */
   hV: number;
-  /** @state persistent */
+  /** @state artifact */
   climate: string;
-  /** @state persistent */
+  /** @state artifact */
   internalGainsWM2: number;
-  /** @state persistent */
+  /** @state artifact */
   solarGainsKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   systemLossesKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   renewableKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   annualLimitKwh: number;
-  /** @state persistent */
+  /** @state artifact */
   energyCarrier: string;
-  /** @state persistent */
+  /** @state artifact */
   referenceQPKwh: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }

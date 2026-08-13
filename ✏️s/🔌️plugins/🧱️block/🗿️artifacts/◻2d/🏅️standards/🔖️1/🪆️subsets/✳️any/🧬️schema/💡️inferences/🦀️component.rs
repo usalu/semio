@@ -25,7 +25,7 @@ use super::bounds::{compute_block2d_bounds, Block2dBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block2d.inference")]
 pub struct Block2dInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: Block2dBounds,
 }
 

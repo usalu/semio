@@ -52,6 +52,6 @@ export interface FlowEdgeDiff {
 }
 export type FlowEdgesDiff = NamedTripleDiff<string, FlowEdgeDiff, FlowEdge>;
 export interface SemioFlowDiff {
-  /** @state persistent */ nodes?: FlowNodesDiff;
-  /** @state persistent */ edges?: FlowEdgesDiff;
+  /** @state artifact */ nodes?: FlowNodesDiff;
+  /** @state artifact */ edges?: FlowEdgesDiff;
 }

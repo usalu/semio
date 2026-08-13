@@ -4,9 +4,9 @@ package semio.s.procedural.procedural3d.snapshot;
 // 🧬️ Procedural3d snapshot schema — persistent fields only.
 
 message Procedural3dSnapshot {
-  // @state persistent
+  // @state artifact
   FlowFixture fixture = 1;
-  // @state persistent
+  // @state artifact
   GenerationPlayState generation = 2;
 }
 

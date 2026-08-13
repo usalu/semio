@@ -27,9 +27,9 @@ use super::topology::{compute_topology, JackTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack.inference")]
 pub struct JackInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: JackTopology,
-    #[state(inferred)]
+    #[derived]
     pub flat_position: JackFlatPosition,
 }
 

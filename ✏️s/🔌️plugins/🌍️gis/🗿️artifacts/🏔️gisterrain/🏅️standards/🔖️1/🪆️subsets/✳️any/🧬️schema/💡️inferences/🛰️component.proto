@@ -5,9 +5,9 @@ package semio.s.gis.gisterrain.inference;
 // overlay decoded from `importedFeaturesJson`.
 
 message GisTerrainInference {
-  // @state inferred
+  // @derived
   uint64 position_count = 1;
-  // @state inferred
+  // @derived
   GisTerrainBounds bounds = 2;
 }
 

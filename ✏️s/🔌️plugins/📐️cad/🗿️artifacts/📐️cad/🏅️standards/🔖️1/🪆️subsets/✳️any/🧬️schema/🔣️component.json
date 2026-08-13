@@ -40,229 +40,229 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "id": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "objects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "buildingObjects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "energyObjects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "structureClassicObjects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "referencesByModelDefinitionId": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/CadReferenceList"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadNode"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "shapeGeometry": {
       "$ref": "#/$defs/CadGeometry",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "buildingGeometry": {
       "$ref": "#/$defs/CadGeometry",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "energyGeometry": {
       "$ref": "#/$defs/CadGeometry",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "structureClassicGeometry": {
       "$ref": "#/$defs/CadGeometry",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activeModelDefinitionId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedObjectIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedNodeIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeObjectId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "componentSelection": {
       "$ref": "#/$defs/CadComponentSelection",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedReferenceModelDefinitionId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedReferenceId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedPrimitiveId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectedPrimitiveKind": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeExampleId": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInput": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementStep": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementPane": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementSessionJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lastFinalizedInteractionId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunAzimuth": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunElevation": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunIntensity": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sunColor": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera": {
       "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraBuilding": {
       "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraEnergy": {
       "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "cameraStructureClassic": {
       "$ref": "#/$defs/CadCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dislocateShape": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dislocateBuilding": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dislocateEnergy": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "dislocateStructureClassic": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "terminology": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredObjectId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetObjectId": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetMode": {
       "type": "string",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "hoveredTargetId": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

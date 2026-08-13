@@ -5,9 +5,9 @@
   "additionalProperties": false,
   "required": ["schema", "nodes", "edges"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "nodes": { "type": "array", "items": { "$ref": "#/$defs/DagNodeSpec" }, "x-semio-state": "persistent" },
-    "edges": { "type": "array", "items": { "$ref": "#/$defs/DagFixtureEdge" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/DagNodeSpec" }, "x-semio-state": "artifact" },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/DagFixtureEdge" }, "x-semio-state": "artifact" }
   },
   "$defs": {
     "DagNodeSpec": {

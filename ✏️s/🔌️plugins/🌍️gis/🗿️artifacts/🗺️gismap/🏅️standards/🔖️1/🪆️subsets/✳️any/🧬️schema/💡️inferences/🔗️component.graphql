@@ -1,10 +1,10 @@
 # 💡️ GIS map inference schema — per-collection feature counts + geographic bounding box.
 
 type GisMapInference {
-  positionCount: Int! @state(class: INFERRED)
-  routeCount: Int! @state(class: INFERRED)
-  regionCount: Int! @state(class: INFERRED)
-  bounds: GisMapBounds @state(class: INFERRED)
+  positionCount: Int! @derived
+  routeCount: Int! @derived
+  regionCount: Int! @derived
+  bounds: GisMapBounds @derived
 }
 
 type GisMapBounds {

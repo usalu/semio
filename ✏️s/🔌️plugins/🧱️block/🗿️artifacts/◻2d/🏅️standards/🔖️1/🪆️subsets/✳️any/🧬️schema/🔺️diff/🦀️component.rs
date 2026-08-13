@@ -11,19 +11,19 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.block.block2d")]
 pub struct Block2dDiff {
-    #[state(persistent)] pub artifact: Option<Box<crate::artifacts::block2d::schema::Block2dArtifact>>,
-    #[state(persistent)] pub schema: Option<String>,
-    #[state(persistent)] pub node_kind: Option<BlockKindIdentity>,
-    #[state(persistent)] pub presentation: Option<Block2dPresentation>,
-    #[state(persistent)] pub handle_kinds: Option<Block2dHandleKindsDelta>,
-    #[state(persistent)] pub handles: Option<Block2dHandlesDelta>,
-    #[state(persistent)] pub compatibility: Option<Block2dCompatibilityDelta>,
-    #[state(persistent)] pub attributes: Option<Block2dAttributesDelta>,
-    #[state(persistent)] pub authors: Option<Block2dAuthorList>,
-    #[state(persistent)] pub camera2d: Option<BlockCamera2d>,
-    #[state(persistent)] pub meta: Option<BlockMeta>,
-    #[state(shared_ui)] pub selected_ids: Option<Block2dStringList>,
-    #[state(local_ui)] pub locale: Option<String>,
+    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::block2d::schema::Block2dArtifact>>,
+    #[state(artifact)] pub schema: Option<String>,
+    #[state(artifact)] pub node_kind: Option<BlockKindIdentity>,
+    #[state(artifact)] pub presentation: Option<Block2dPresentation>,
+    #[state(artifact)] pub handle_kinds: Option<Block2dHandleKindsDelta>,
+    #[state(artifact)] pub handles: Option<Block2dHandlesDelta>,
+    #[state(artifact)] pub compatibility: Option<Block2dCompatibilityDelta>,
+    #[state(artifact)] pub attributes: Option<Block2dAttributesDelta>,
+    #[state(artifact)] pub authors: Option<Block2dAuthorList>,
+    #[state(artifact)] pub camera2d: Option<BlockCamera2d>,
+    #[state(artifact)] pub meta: Option<BlockMeta>,
+    #[state(presence)] pub selected_ids: Option<Block2dStringList>,
+    #[state(config)] pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

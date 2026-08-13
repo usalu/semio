@@ -12,23 +12,23 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.kit")]
 pub struct SemioKitArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub types: Vec<SemioKitType>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub designs: Vec<SemioKitDesign>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.object")]
     pub objects: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
     pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[link_slot(roles("representation"))]
     pub representations: Vec<store::ArtifactLink>,
 }

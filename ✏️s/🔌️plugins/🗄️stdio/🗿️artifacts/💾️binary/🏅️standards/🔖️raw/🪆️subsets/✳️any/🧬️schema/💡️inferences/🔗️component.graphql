@@ -1,7 +1,7 @@
 # 💡️ binary inference schema — a raw opaque byte blob's honest real extent.
 
 type BinaryInference {
-  extent: BinaryExtent! @state(class: INFERRED)
+  extent: BinaryExtent! @derived
 }
 
 type BinaryExtent {

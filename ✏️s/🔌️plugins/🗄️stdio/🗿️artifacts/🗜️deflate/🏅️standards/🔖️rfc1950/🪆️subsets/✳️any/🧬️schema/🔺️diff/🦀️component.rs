@@ -21,21 +21,21 @@ use schema::ArtifactSchema;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate.diff")]
 pub struct DeflateDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compression_method: Option<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub window_bits: Option<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compression_level_hint: Option<DeflateLevelHint>,
     /// 🪆️ Tri-state: `None` = unchanged, `Some(None)` = dictionary cleared, `Some(Some(id))` =
     /// dictionary set/changed to `id`.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dict_id: Option<Option<u32>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub payload: Option<Vec<u8>>,
 }

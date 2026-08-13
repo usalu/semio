@@ -9,6 +9,6 @@ export interface ObjBounds {
 }
 
 export interface ObjInference {
-  /** @state inferred */
+  /** @derived */
   bounds: ObjBounds;
 }

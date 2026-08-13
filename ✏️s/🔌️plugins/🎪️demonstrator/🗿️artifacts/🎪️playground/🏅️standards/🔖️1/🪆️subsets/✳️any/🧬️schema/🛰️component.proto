@@ -4,6 +4,6 @@ package semio.s.demonstrator.playground.artifact;
 // 🧬️ Playground artifact schema — every field with its state class.
 
 message PlaygroundArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
 }

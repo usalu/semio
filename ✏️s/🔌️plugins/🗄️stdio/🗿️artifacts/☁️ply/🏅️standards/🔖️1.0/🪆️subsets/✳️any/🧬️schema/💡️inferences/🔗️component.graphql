@@ -1,7 +1,7 @@
 # 💡️ Ply inference schema — vertex-element bounding box plus vertex/face counts.
 
 type PlyInference {
-  bounds: PlyBounds! @state(class: INFERRED)
+  bounds: PlyBounds! @derived
 }
 
 type PlyBounds {

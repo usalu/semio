@@ -1,17 +1,17 @@
 # 🧬️ Vdi3805 diff schema — sparse field delta.
 
 type Vdi3805Diff {
-  artifact: Vdi3805Artifact @state(class: PERSISTENT)
-  manufacturerFile: String @state(class: PERSISTENT)
-  catalog: String @state(class: PERSISTENT)
-  editionProfile: [Vdi3805StringMapEntry!] @state(class: PERSISTENT)
-  correctionAsOf: String @state(class: PERSISTENT)
-  strictMode: Boolean @state(class: PERSISTENT)
-  index: String @state(class: PERSISTENT)
-  geometry: [Vdi3805StringMapEntry!] @state(class: PERSISTENT)
-  curves: [Vdi3805StringMapEntry!] @state(class: PERSISTENT)
-  limits: String @state(class: PERSISTENT)
-  selectedCheckIndex: Int @state(class: SHARED_UI)
+  artifact: Vdi3805Artifact @state(class: ARTIFACT)
+  manufacturerFile: String @state(class: ARTIFACT)
+  catalog: String @state(class: ARTIFACT)
+  editionProfile: [Vdi3805StringMapEntry!] @state(class: ARTIFACT)
+  correctionAsOf: String @state(class: ARTIFACT)
+  strictMode: Boolean @state(class: ARTIFACT)
+  index: String @state(class: ARTIFACT)
+  geometry: [Vdi3805StringMapEntry!] @state(class: ARTIFACT)
+  curves: [Vdi3805StringMapEntry!] @state(class: ARTIFACT)
+  limits: String @state(class: ARTIFACT)
+  selectedCheckIndex: Int @state(class: PRESENCE)
 }
 
 type Vdi3805Artifact {

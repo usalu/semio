@@ -2,8 +2,8 @@
 # overlay decoded from `importedFeaturesJson`.
 
 type GisTerrainInference {
-  positionCount: Int! @state(class: INFERRED)
-  bounds: GisTerrainBounds @state(class: INFERRED)
+  positionCount: Int! @derived
+  bounds: GisTerrainBounds @derived
 }
 
 type GisTerrainBounds {

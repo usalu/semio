@@ -4,11 +4,11 @@ package semio.s.gis.gismap.snapshot;
 // 🧬️ GIS map snapshot schema — persistent fields only.
 
 message GisMapSnapshot {
-  // @state persistent
+  // @state artifact
   repeated GisMapFeature positions = 1;
-  // @state persistent
+  // @state artifact
   repeated GisMapFeature routes = 2;
-  // @state persistent
+  // @state artifact
   repeated GisMapFeature regions = 3;
 }
 

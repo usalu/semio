@@ -93,15 +93,15 @@ pub struct CadBlock {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.cad")]
 pub struct SemioCadSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub layers: Vec<CadLayer>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub blocks: Vec<CadBlock>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub entities: Vec<CadEntityRecord>,
 }

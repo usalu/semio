@@ -4,7 +4,7 @@ package semio.s.stdio.semio.cad.inference;
 // 💡️ Semio cad inference schema — entity-derived planar bounding box.
 
 message SemioCadInference {
-  // @state inferred
+  // @derived
   SemioCadBounds bounds = 1;
 }
 

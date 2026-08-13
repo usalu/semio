@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["bounds"],
   "properties": {
-    "bounds": { "$ref": "#/$defs/StlBounds", "x-semio-state": "inferred" }
+    "bounds": { "$ref": "#/$defs/StlBounds", "x-semio-derived": true }
   },
   "$defs": {
     "StlBounds": {

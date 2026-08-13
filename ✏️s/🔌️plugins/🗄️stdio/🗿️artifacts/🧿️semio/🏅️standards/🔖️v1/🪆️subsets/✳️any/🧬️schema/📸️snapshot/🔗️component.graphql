@@ -39,6 +39,6 @@ union SemioSubsetSnapshot =
   | SemioSubsetSnapshotFlow
 
 type SemioSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  subset: SemioSubsetSnapshot! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  subset: SemioSubsetSnapshot! @state(class: ARTIFACT)
 }

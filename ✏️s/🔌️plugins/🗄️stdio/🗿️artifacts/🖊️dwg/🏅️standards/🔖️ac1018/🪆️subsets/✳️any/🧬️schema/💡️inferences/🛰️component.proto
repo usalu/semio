@@ -4,7 +4,7 @@ package semio.s.stdio.dwg.ac1018.inference;
 // 💡️ Dwg (ac1018) inference schema — structural byte/section statistics over the undecoded raw payload.
 
 message DwgInference {
-  // @state inferred
+  // @derived
   DwgStructure structure = 1;
 }
 

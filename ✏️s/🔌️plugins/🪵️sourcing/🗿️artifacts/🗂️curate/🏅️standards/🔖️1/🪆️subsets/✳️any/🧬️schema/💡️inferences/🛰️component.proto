@@ -4,7 +4,7 @@ package semio.s.sourcing.curate.inference;
 // 💡️ Curate inference schema — a real census over the stock catalog and curated bill of quantities.
 
 message CurateInference {
-  // @state inferred
+  // @derived
   CurateEntries entries = 1;
 }
 

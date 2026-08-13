@@ -11,22 +11,22 @@
   "properties": {
     "workshop": {
       "$ref": "#/$defs/Process3dWorkshop",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "stock": {
       "$ref": "#/$defs/Process3dStock",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "steps": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Process3dStep"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "resolvedUpTo": {
       "type": "integer",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

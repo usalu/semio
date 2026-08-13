@@ -12,6 +12,6 @@ export type JsonValue =
   | { kind: "object"; members: JsonMember[] };
 
 export interface JsonArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ value: JsonValue;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ value: JsonValue;
 }

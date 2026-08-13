@@ -8,21 +8,21 @@
     "positionCount": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     },
     "routeCount": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     },
     "regionCount": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     },
     "bounds": {
       "oneOf": [{ "$ref": "#/$defs/GisMapBounds" }, { "type": "null" }],
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

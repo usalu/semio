@@ -3,10 +3,10 @@
 import type { PdfDictEntry, PdfInfo, PdfIndirectObject, PdfPage } from './📸️snapshot/🟦️component.ts';
 
 export interface PdfArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ declaredVersion: string;
-  /** @state persistent */ pages: PdfPage[];
-  /** @state persistent */ info: PdfInfo;
-  /** @state persistent */ objects: PdfIndirectObject[];
-  /** @state persistent */ trailer: PdfDictEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ declaredVersion: string;
+  /** @state artifact */ pages: PdfPage[];
+  /** @state artifact */ info: PdfInfo;
+  /** @state artifact */ objects: PdfIndirectObject[];
+  /** @state artifact */ trailer: PdfDictEntry[];
 }

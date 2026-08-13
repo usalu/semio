@@ -1,14 +1,14 @@
 /** 🧬️ ShootingPresence */
 export interface ShootingPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedShotIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   selectedAssetIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredAssetId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   camera: ShootingCamera;
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
 }
 

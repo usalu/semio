@@ -19,7 +19,7 @@ use super::duration::{compute_semio_animation_duration, SemioAnimationDuration};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.animation.inference")]
 pub struct SemioAnimationInference {
-    #[state(inferred)]
+    #[derived]
     pub duration: SemioAnimationDuration,
 }
 

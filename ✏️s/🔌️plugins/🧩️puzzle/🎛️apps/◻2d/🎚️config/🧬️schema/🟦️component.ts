@@ -1,41 +1,41 @@
 /** 🧬️ Puzzle2dConfig */
 export interface Puzzle2dConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   cameraX: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   lodModeByPane: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   engagementInputByPane: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   brushCandidateIndex: number;
-  /** @state local-ui */
+  /** @state config */
   brushCandidates: unknown[];
-  /** @state local-ui */
+  /** @state config */
   brushCandidateSourceHandleId: string;
-  /** @state local-ui */
+  /** @state config */
   fillCount: number;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridFactor: number;
-  /** @state local-ui */
+  /** @state config */
   suggestionOffset: number;
-  /** @state local-ui */
+  /** @state config */
   nodeKindWeights: Record<string, number>;
-  /** @state local-ui */
+  /** @state config */
   handleKindWeights: Record<string, number>;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityByWindowId: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   terminology: string;
 }

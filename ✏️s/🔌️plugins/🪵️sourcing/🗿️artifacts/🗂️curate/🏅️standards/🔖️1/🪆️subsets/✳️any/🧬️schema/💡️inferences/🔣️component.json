@@ -7,7 +7,7 @@
   "properties": {
     "entries": {
       "$ref": "#/$defs/CurateEntries",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

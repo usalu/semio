@@ -1,7 +1,7 @@
 # 💡️ Puzzle5d inference schema — flatPosition (plane + center) per part.
 
 type Puzzle5dInference {
-  flatPositions: [Puzzle5dFlatPositionEntry!]! @state(class: INFERRED)
+  flatPositions: [Puzzle5dFlatPositionEntry!]! @derived
 }
 
 type Puzzle5dFlatPositionEntry {

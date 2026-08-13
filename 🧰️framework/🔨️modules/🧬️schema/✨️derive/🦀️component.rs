@@ -1,5 +1,5 @@
-//! ✨️ `semio_framework_schema_derive` — `#[derive(ArtifactSchema)]` with `#[artifact_schema]` / `#[state]` /
-//! `#[child]` / `#[link_slot]`.
+//! ✨️ `semio_framework_schema_derive` — `#[derive(ArtifactSchema)]` with `#[artifact_schema]` /
+//! `#[state]` / `#[derived]` / `#[child]` / `#[link_slot]`.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -45,32 +45,43 @@ fn parse_artifact_id(input: &DeriveInput) -> syn::Result<String> {
     Err(syn::Error::new_spanned(&input.ident, "missing #[artifact_schema(id = \"…\")]"))
 }
 
-fn parse_state_class(field: &syn::Field) -> syn::Result<String> {
-    for attr in &field.attrs {
-        if !attr.path().is_ident("state") {
-            continue;
-        }
-        let Meta::List(list) = &attr.meta else {
-            return Err(syn::Error::new_spanned(attr, "expected #[state(persistent|shared_ui|local_ui|preview|effect|inferred)]"));
-        };
-        let tokens = list.tokens.to_string().replace(' ', "");
-        let variant = match tokens.as_str() {
-            "persistent" => "Persistent",
-            "shared_ui" => "SharedUi",
-            "local_ui" => "LocalUi",
-            "preview" => "Preview",
-            "effect" => "Effect",
-            "inferred" => "Inferred",
-            other => {
-                return Err(syn::Error::new_spanned(
-                    attr,
-                    format!("unknown state class `{other}`"),
-                ))
-            }
-        };
-        return Ok(variant.to_string());
+/// 🗂️ A field sits on exactly ONE of two orthogonal axes: it is either STATE (one of the four
+/// lanes, `#[state(artifact|config|presence|transient)]`) or DERIVED (`#[derived]`, computed from a
+/// snapshot and therefore not state at all). Carrying both, or neither, is a compile error.
+enum FieldAxis {
+    State(String),
+    Derived,
+}
+
+fn parse_field_axis(field: &syn::Field) -> syn::Result<FieldAxis> {
+    let derived = field.attrs.iter().find(|attr| attr.path().is_ident("derived"));
+    let state = field.attrs.iter().find(|attr| attr.path().is_ident("state"));
+    if let (Some(derived), Some(_)) = (derived, state) {
+        return Err(syn::Error::new_spanned(derived, "a field is either #[state(…)] or #[derived], never both"));
     }
-    Err(syn::Error::new_spanned(field, "missing #[state(…)] on field"))
+    if derived.is_some() {
+        return Ok(FieldAxis::Derived);
+    }
+    let Some(attr) = state else {
+        return Err(syn::Error::new_spanned(field, "missing #[state(…)] or #[derived] on field"));
+    };
+    let Meta::List(list) = &attr.meta else {
+        return Err(syn::Error::new_spanned(attr, "expected #[state(artifact|config|presence|transient)]"));
+    };
+    let tokens = list.tokens.to_string().replace(' ', "");
+    let variant = match tokens.as_str() {
+        "artifact" => "Artifact",
+        "config" => "Config",
+        "presence" => "Presence",
+        "transient" => "Transient",
+        other => {
+            return Err(syn::Error::new_spanned(
+                attr,
+                format!("unknown state class `{other}` — the only four lanes are artifact, config, presence, transient"),
+            ))
+        }
+    };
+    Ok(FieldAxis::State(variant.to_string()))
 }
 
 /// 🧭️ Classifies a field's composition role (CHILD / LINK / neither) by matching the LAST path
@@ -182,11 +193,11 @@ fn parse_link_roles(field: &syn::Field) -> syn::Result<Vec<String>> {
 //#endregion 🔖️Helpers
 
 //#region 🔖️ArtifactSchema
-/// ✨️ Derives [`ArtifactSchemaFields`] from `#[artifact_schema]` / `#[state]` annotations, plus a
+/// ✨️ Derives [`ArtifactSchemaFields`] from `#[artifact_schema]` / `#[state]` / `#[derived]` annotations, plus a
 /// sibling [`ArtifactCompositionFields`] impl from `ArtifactChild<T>` / `ArtifactLink` field types
 /// (`#[child(kind = "…")]` / `#[link_slot(roles(…))]`) — one derive, since both traits describe the
 /// same struct's fields and a struct with no composition fields still needs a (trivially empty) impl.
-#[proc_macro_derive(ArtifactSchema, attributes(artifact_schema, state, child, link_slot))]
+#[proc_macro_derive(ArtifactSchema, attributes(artifact_schema, state, derived, child, link_slot))]
 pub fn derive_artifact_schema(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match expand_artifact_schema(&input) {
@@ -206,16 +217,21 @@ fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::Token
     };
 
     let mut field_entries = Vec::new();
+    let mut derived_entries = Vec::new();
     let mut child_entries = Vec::new();
     let mut link_entries = Vec::new();
     for field in &fields.named {
         let name = field.ident.as_ref().ok_or_else(|| syn::Error::new_spanned(field, "named field required"))?;
         let camel = snake_to_camel(&name.to_string());
-        let variant = parse_state_class(field)?;
-        let variant_ident = syn::Ident::new(&variant, name.span());
-        field_entries.push(quote! {
-            (#camel, ::semio_framework_schema::StateClass::#variant_ident)
-        });
+        match parse_field_axis(field)? {
+            FieldAxis::State(variant) => {
+                let variant_ident = syn::Ident::new(&variant, name.span());
+                field_entries.push(quote! {
+                    (#camel, ::semio_framework_schema::StateClass::#variant_ident)
+                });
+            }
+            FieldAxis::Derived => derived_entries.push(quote! { #camel }),
+        }
 
         match classify_composition_field(&field.ty) {
             CompositionFieldKind::Child { many } => {
@@ -246,6 +262,9 @@ fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::Token
             }
             fn field_states() -> &'static [(&'static str, ::semio_framework_schema::StateClass)] {
                 &[#(#field_entries),*]
+            }
+            fn derived_fields() -> &'static [&'static str] {
+                &[#(#derived_entries),*]
             }
         }
 

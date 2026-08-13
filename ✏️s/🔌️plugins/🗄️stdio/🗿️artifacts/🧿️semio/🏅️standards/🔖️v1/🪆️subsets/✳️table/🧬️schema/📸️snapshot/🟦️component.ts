@@ -16,7 +16,7 @@ export interface SemioTableRow {
 }
 
 export interface SemioTableSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ columns: SemioTableColumn[];
-  /** @state persistent */ rows: SemioTableRow[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ columns: SemioTableColumn[];
+  /** @state artifact */ rows: SemioTableRow[];
 }

@@ -18,7 +18,7 @@ use super::outline::TsvOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tsv.inference")]
 pub struct TsvInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: TsvOutline,
 }
 

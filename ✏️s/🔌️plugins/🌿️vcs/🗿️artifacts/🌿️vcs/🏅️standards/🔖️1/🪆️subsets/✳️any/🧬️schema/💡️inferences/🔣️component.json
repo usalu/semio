@@ -7,7 +7,7 @@
   "properties": {
     "summary": {
       "$ref": "#/$defs/VcsSummary",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

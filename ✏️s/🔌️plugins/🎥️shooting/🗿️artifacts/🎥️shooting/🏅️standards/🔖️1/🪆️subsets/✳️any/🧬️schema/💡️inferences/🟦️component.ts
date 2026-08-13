@@ -8,6 +8,6 @@ export interface ShootingTopology {
 }
 
 export interface ShootingInference {
-  /** @state inferred */
+  /** @derived */
   topology: ShootingTopology;
 }

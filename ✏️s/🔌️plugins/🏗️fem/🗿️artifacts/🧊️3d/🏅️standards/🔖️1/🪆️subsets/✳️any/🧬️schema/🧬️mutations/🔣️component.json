@@ -21,60 +21,60 @@
       "items": {
         "$ref": "#/$defs/FemNode"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "elements": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemElement"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "materials": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemMaterial"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "sections": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemSection"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "solids": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemSolid"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "supports": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemSupport"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "loadCases": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemLoadCase"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "combinations": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/FemCombination"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "analysis": {
       "$ref": "#/$defs/FemAnalysisSettings",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

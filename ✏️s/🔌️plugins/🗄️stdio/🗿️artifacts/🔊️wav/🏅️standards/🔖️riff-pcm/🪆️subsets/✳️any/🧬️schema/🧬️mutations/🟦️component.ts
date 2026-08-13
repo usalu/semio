@@ -5,6 +5,6 @@ export interface WavMutationEntry {
   value: string;
 }
 export interface WavMutation {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: WavMutationEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: WavMutationEntry[];
 }

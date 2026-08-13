@@ -5,14 +5,14 @@
   "additionalProperties": false,
   "required": ["schema", "records", "trailingNewline", "lineEnding"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
     "records": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "description": "Raw row grid; IANA TSV draws no structural header/data distinction.",
       "items": { "type": "array", "items": { "type": "string" } }
     },
-    "trailingNewline": { "type": "boolean", "x-semio-state": "persistent" },
-    "lineEnding": { "type": "string", "enum": ["lf", "crlf"], "x-semio-state": "persistent" }
+    "trailingNewline": { "type": "boolean", "x-semio-state": "artifact" },
+    "lineEnding": { "type": "string", "enum": ["lf", "crlf"], "x-semio-state": "artifact" }
   }
 }

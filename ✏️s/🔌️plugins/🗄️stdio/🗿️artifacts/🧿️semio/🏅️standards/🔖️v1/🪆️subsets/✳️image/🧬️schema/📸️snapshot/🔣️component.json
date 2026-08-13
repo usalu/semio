@@ -5,14 +5,14 @@
   "type": "object",
   "required": ["schema", "width", "height", "colorspace", "bitDepth", "frames", "metadata"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "width": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "height": { "type": "integer", "minimum": 0, "x-semio-state": "persistent" },
-    "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"], "x-semio-state": "persistent" },
-    "bitDepth": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "width": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "height": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"], "x-semio-state": "artifact" },
+    "bitDepth": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-state": "artifact" },
     "frames": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "properties": {
@@ -21,10 +21,10 @@
         }
       }
     },
-    "icc": { "type": ["string", "null"], "contentEncoding": "hex", "x-semio-state": "persistent" },
+    "icc": { "type": ["string", "null"], "contentEncoding": "hex", "x-semio-state": "artifact" },
     "metadata": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "properties": { "key": { "type": "string" }, "value": { "type": "string" } }

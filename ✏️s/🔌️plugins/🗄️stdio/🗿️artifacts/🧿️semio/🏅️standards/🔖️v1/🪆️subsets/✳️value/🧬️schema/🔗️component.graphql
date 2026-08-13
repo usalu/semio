@@ -1,6 +1,6 @@
 # 🧬️ SemioValueArtifact schema — mirrors `SemioValueSnapshot` field for field.
 type SemioValueArtifact {
-  schema: String! @state(class: PERSISTENT)
-  root: SemioValue! @state(class: PERSISTENT)
-  nodes: [SemioValueNode!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  root: SemioValue! @state(class: ARTIFACT)
+  nodes: [SemioValueNode!]! @state(class: ARTIFACT)
 }

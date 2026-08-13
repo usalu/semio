@@ -7,7 +7,7 @@
   "properties": {
     "topology": {
       "$ref": "#/$defs/FormsTopology",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

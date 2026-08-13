@@ -4,7 +4,7 @@ package semio.s.stdio.semio.model.inference;
 // 💡️ Semio model inference schema — position envelope over spatial nodes + elements.
 
 message SemioModelInference {
-  // @state inferred
+  // @derived
   SemioModelBounds bounds = 1;
 }
 

@@ -25,7 +25,7 @@ type FlowEdge {
   kind: String!
 }
 type SemioFlowArtifact {
-  schema: String! @state(class: PERSISTENT)
-  nodes: [FlowNode!]! @state(class: PERSISTENT)
-  edges: [FlowEdge!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  nodes: [FlowNode!]! @state(class: ARTIFACT)
+  edges: [FlowEdge!]! @state(class: ARTIFACT)
 }

@@ -1,0 +1,32 @@
+files touched: 2396
+   3294  "x-semio-state": "persistent"
+   3065  @state(class: PERSISTENT)
+   2986  #[state(persistent)]
+   2531  // @state persistent
+   2497  @state persistent
+    907  #[state(local_ui)]
+    874  "x-semio-state": "local-ui"
+    869  @state local-ui
+    866  @state(class: LOCAL_UI)
+    840  // @state local-ui
+    409  #[state(shared_ui)]
+    399  @state shared-ui
+    398  "x-semio-state": "shared-ui"
+    396  @state(class: SHARED_UI)
+    387  // @state shared-ui
+    123  #[state(inferred)]
+    119  "x-semio-state": "inferred"
+    119  // @state inferred
+    119  @state(class: INFERRED)
+    119  @state inferred
+     80  #[state(preview)]
+     79  @state preview
+     77  "x-semio-state": "preview"
+     72  @state(class: PREVIEW)
+     68  // @state preview
+      1  "x-semio-state": "identity"
+      1  "x-semio-state": "effect"
+      1  // @state effect
+      1  @state(class: EFFECT)
+      1  @state effect
+      1  #[state(effect)]

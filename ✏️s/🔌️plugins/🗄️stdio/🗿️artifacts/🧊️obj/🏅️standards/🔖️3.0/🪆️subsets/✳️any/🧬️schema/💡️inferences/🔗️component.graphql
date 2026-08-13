@@ -1,7 +1,7 @@
 # 💡️ Obj inference schema — vertex-derived bounding box.
 
 type ObjInference {
-  bounds: ObjBounds! @state(class: INFERRED)
+  bounds: ObjBounds! @derived
 }
 
 type ObjBounds {

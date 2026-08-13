@@ -31,19 +31,19 @@ pub const STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA: &str = "stdio.semio.object";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.object")]
 pub struct SemioObjectSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub transform: SemioTransform,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub brep: Option<store::ArtifactChild<SemioBrepSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,

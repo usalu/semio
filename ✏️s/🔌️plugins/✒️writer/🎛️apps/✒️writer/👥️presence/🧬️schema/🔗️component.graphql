@@ -1,9 +1,9 @@
 type WriterPresence {
-  selectedAstIds: [String!]! @state(class: SHARED_UI)
-  editorSelection: WriterEditorSelection @state(class: SHARED_UI)
-  treeHoveredAstId: String @state(class: SHARED_UI)
-  editorHoverOffset: Int @state(class: SHARED_UI)
-  camera: WriterCamera! @state(class: SHARED_UI)
+  selectedAstIds: [String!]! @state(class: PRESENCE)
+  editorSelection: WriterEditorSelection @state(class: PRESENCE)
+  treeHoveredAstId: String @state(class: PRESENCE)
+  editorHoverOffset: Int @state(class: PRESENCE)
+  camera: WriterCamera! @state(class: PRESENCE)
 }
 
 type WriterEditorSelection {

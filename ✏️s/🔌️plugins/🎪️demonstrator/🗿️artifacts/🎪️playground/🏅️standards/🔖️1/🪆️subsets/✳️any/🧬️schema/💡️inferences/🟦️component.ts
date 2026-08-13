@@ -9,6 +9,6 @@ export interface PlaygroundTopology {
 }
 
 export interface PlaygroundInference {
-  /** @state inferred */
+  /** @derived */
   topology: PlaygroundTopology;
 }

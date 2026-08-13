@@ -1,7 +1,7 @@
 # 💡️ Layout inference schema — topology (parent-page/spread/page composition order).
 
 type LayoutInference {
-  topology: LayoutTopology! @state(class: INFERRED)
+  topology: LayoutTopology! @derived
 }
 
 type LayoutTopology {

@@ -11,15 +11,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt")]
 pub struct TxtArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub lines: Vec<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub trailing_newline: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub line_ending: LineEnding,
 }

@@ -1,9 +1,9 @@
 /** 🧬️ PresentConfig */
 export interface PresentConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedIds: string[];
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

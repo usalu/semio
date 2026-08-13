@@ -114,8 +114,8 @@
     }
   },
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "subset": { "$ref": "#/definitions/SemioSubsetSnapshot", "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "subset": { "$ref": "#/definitions/SemioSubsetSnapshot", "x-semio-state": "artifact" }
   },
   "required": ["schema", "subset"]
 }

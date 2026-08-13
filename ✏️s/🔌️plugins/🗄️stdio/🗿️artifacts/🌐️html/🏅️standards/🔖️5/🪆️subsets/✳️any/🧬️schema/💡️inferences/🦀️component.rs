@@ -19,7 +19,7 @@ use super::outline::HtmlOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.html.inference")]
 pub struct HtmlInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: HtmlOutline,
 }
 

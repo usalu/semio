@@ -2,7 +2,7 @@
 # scene-graph entity.
 
 type SemioDrawingInference {
-  flattenedScene: [SemioDrawingFlattenedSceneEntry!]! @state(class: INFERRED)
+  flattenedScene: [SemioDrawingFlattenedSceneEntry!]! @derived
 }
 
 type SemioDrawingFlattenedSceneEntry {

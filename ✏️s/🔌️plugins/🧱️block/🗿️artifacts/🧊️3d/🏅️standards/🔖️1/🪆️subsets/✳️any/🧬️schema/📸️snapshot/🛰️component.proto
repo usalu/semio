@@ -4,25 +4,25 @@ package semio.s.block.block3d.snapshot;
 // 🧬️ Block3d snapshot schema — persistent fields only.
 
 message Block3dSnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   BlockKindIdentity object_kind = 2;
-  // @state persistent
+  // @state artifact
   repeated BlockRepresentation representations = 3;
-  // @state persistent
+  // @state artifact
   repeated Block3dVortexKind vortex_kinds = 4;
-  // @state persistent
+  // @state artifact
   repeated Block3dVortexTemplate vortices = 5;
-  // @state persistent
+  // @state artifact
   repeated BlockCompatibilityRule compatibility = 6;
-  // @state persistent
+  // @state artifact
   repeated BlockAttribute attributes = 7;
-  // @state persistent
+  // @state artifact
   repeated BlockAuthor authors = 8;
-  // @state persistent
+  // @state artifact
   BlockCamera3d camera3d = 9;
-  // @state persistent
+  // @state artifact
   BlockMeta meta = 10;
 }
 

@@ -41,7 +41,7 @@ mod tests {
     #[test]
     fn pack_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
-        assets.insert("asset-1".into(), RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() });
+        assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = BTreeMap::new();
         params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
         params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));

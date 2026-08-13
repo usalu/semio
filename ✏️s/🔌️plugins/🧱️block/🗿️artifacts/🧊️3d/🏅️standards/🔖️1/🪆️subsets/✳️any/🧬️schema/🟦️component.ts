@@ -1,47 +1,47 @@
 /** 🧬️ Block3d artifact schema — every field with its state class. */
 
 export interface Block3dArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   objectKind: BlockKindIdentity;
-  /** @state persistent */
+  /** @state artifact */
   representations: BlockRepresentation[];
-  /** @state persistent */
+  /** @state artifact */
   vortexKinds: Block3dVortexKind[];
-  /** @state persistent */
+  /** @state artifact */
   vortices: Block3dVortexTemplate[];
-  /** @state persistent */
+  /** @state artifact */
   compatibility: BlockCompatibilityRule[];
-  /** @state persistent */
+  /** @state artifact */
   attributes: BlockAttribute[];
-  /** @state persistent */
+  /** @state artifact */
   authors: BlockAuthor[];
-  /** @state persistent */
+  /** @state artifact */
   camera3d: BlockCamera3d;
-  /** @state persistent */
+  /** @state artifact */
   meta: BlockMeta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeRepresentationId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   wantedTags: string[];
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state local-ui */
+  /** @state config */
   windows: Block3dWindowView[];
-  /** @state local-ui */
+  /** @state config */
   brushVortexKindId?: string;
-  /** @state local-ui */
+  /** @state config */
   brushRadius: number;
-  /** @state local-ui */
+  /** @state config */
   brushFlip: boolean;
-  /** @state preview */
+  /** @state artifact */
   brushPreview?: Block3dBrushPreview;
-  /** @state local-ui */
+  /** @state config */
   camera?: BlockCamera3d;
-  /** @state preview */
+  /** @state artifact */
   hoveredVortexFullId?: string;
 }
 

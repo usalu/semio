@@ -8,6 +8,6 @@ export interface DxfBounds {
 }
 
 export interface DxfInference {
-  /** @state inferred */
+  /** @derived */
   bounds: DxfBounds;
 }

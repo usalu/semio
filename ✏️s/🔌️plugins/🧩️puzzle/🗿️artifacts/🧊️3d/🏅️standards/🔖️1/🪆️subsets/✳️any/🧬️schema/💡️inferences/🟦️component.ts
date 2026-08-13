@@ -13,6 +13,6 @@ export interface FlattenPose {
 }
 
 export interface Puzzle3dInference {
-  /** @state inferred */
+  /** @derived */
   flatPositions: Record<string, FlattenPose>;
 }

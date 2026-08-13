@@ -35,10 +35,10 @@
     }
   },
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "meshes": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/SemioMesh" } },
-    "materials": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/SemioMaterial" } },
-    "textures": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/definitions/SemioTexture" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "meshes": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/SemioMesh" } },
+    "materials": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/SemioMaterial" } },
+    "textures": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/SemioTexture" } }
   },
   "required": ["schema", "meshes", "materials", "textures"]
 }

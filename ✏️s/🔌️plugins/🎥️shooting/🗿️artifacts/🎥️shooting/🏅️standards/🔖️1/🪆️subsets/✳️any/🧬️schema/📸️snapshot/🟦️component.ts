@@ -1,19 +1,19 @@
 /** 🧬️ Shooting snapshot schema — persistent fields only. */
 
 export interface ShootingSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   assets: ShootingAsset[];
-  /** @state persistent */
+  /** @state artifact */
   savedCameras: ShootingSavedCamera[];
-  /** @state persistent */
+  /** @state artifact */
   scene: ShootingSceneLighting;
-  /** @state persistent */
+  /** @state artifact */
   shots: ShootingShot[];
-  /** @state persistent */
+  /** @state artifact */
   activeShotId: string;
-  /** @state persistent */
+  /** @state artifact */
   activeAssetId: string;
 }
 

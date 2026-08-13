@@ -2,8 +2,8 @@
 import type { LasHeader, LasVlr, LasPoint } from './📸️snapshot/🟦️component.ts';
 
 export interface LasArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ header: LasHeader;
-  /** @state persistent */ vlrs: LasVlr[];
-  /** @state persistent */ points: LasPoint[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ header: LasHeader;
+  /** @state artifact */ vlrs: LasVlr[];
+  /** @state artifact */ points: LasPoint[];
 }

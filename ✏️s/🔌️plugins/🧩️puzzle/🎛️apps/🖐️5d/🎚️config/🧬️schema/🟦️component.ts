@@ -1,42 +1,42 @@
 /** 🧬️ Puzzle5dConfig */
 export interface Puzzle5dConfig {
-  /** @state local-ui */
+  /** @state config */
   camera2d: Puzzle5dCamera2d;
-  /** @state local-ui */
+  /** @state config */
   camera3d: Puzzle5dCamera3d;
-  /** @state local-ui */
+  /** @state config */
   selection: Puzzle5dSelection;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredPartId?: string;
-  /** @state local-ui */
+  /** @state config */
   fillCount: number;
-  /** @state local-ui */
+  /** @state config */
   brushCandidateIndex: number;
-  /** @state local-ui */
+  /** @state config */
   overlapBudget: number;
-  /** @state local-ui */
+  /** @state config */
   lodMode: string;
-  /** @state local-ui */
+  /** @state config */
   suggestionOffset: number;
-  /** @state local-ui */
+  /** @state config */
   gridSnapEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   gridFactor: number;
-  /** @state local-ui */
+  /** @state config */
   engagementInputByWindow: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   objectKindWeights: Record<string, number>;
-  /** @state local-ui */
+  /** @state config */
   vortexKindWeights: Record<string, number>;
-  /** @state local-ui */
+  /** @state config */
   sun: WorldSunConfig;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityByWindowId: Record<string, string>;
-  /** @state local-ui */
+  /** @state config */
   terminology: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

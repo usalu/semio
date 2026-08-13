@@ -80,9 +80,9 @@
     }
   },
   "properties": {
-    "headerVars": { "$ref": "#/$defs/DxfHeaderVarsDiff", "x-semio-state": "persistent" },
-    "tables": { "$ref": "#/$defs/DxfTablesDiff", "x-semio-state": "persistent" },
-    "blocks": { "$ref": "#/$defs/DxfBlocksDiff", "x-semio-state": "persistent" },
-    "entities": { "$ref": "#/$defs/DxfEntitiesDiff", "x-semio-state": "persistent" }
+    "headerVars": { "$ref": "#/$defs/DxfHeaderVarsDiff", "x-semio-state": "artifact" },
+    "tables": { "$ref": "#/$defs/DxfTablesDiff", "x-semio-state": "artifact" },
+    "blocks": { "$ref": "#/$defs/DxfBlocksDiff", "x-semio-state": "artifact" },
+    "entities": { "$ref": "#/$defs/DxfEntitiesDiff", "x-semio-state": "artifact" }
   }
 }

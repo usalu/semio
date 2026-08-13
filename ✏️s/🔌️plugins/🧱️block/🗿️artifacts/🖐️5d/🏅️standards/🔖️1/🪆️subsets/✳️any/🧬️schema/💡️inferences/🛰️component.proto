@@ -4,7 +4,7 @@ package semio.s.block.block5d.inference;
 // 💡️ Block5d inference schema — bounds (bounding box + vertex count) over the part kind's rim grip templates' 3d placements.
 
 message Block5dInference {
-  // @state inferred
+  // @derived
   Block5dBounds bounds = 1;
 }
 

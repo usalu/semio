@@ -139,17 +139,17 @@ pub struct RiffChunk {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.avi")]
 pub struct AviSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default = "default_schema")]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub main_header: AviMainHeader,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub streams: Vec<AviStream>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub idx1_present: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub unknown_chunks: Vec<RiffChunk>,
 }

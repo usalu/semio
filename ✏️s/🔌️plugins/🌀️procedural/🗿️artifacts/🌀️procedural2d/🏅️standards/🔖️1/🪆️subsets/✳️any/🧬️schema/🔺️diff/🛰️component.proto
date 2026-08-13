@@ -4,23 +4,23 @@ package semio.s.procedural.procedural2d.diff;
 // 🧬️ Procedural2d diff schema — sparse field delta.
 
 message Procedural2dDiff {
-  // @state persistent
+  // @state artifact
   optional Procedural2dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional FlowFixture fixture = 2;
-  // @state persistent
+  // @state artifact
   optional GenerationPlayState generation = 3;
-  // @state shared-ui
+  // @state presence
   optional Procedural2dStringList selected_ids = 4;
-  // @state local-ui
+  // @state config
   optional CameraJson graph_camera = 5;
-  // @state local-ui
+  // @state config
   optional string show_mode = 6;
-  // @state shared-ui
+  // @state presence
   optional string selected_generation_id = 7;
-  // @state preview
+  // @state artifact
   optional string generation_preview_text = 8;
-  // @state local-ui
+  // @state config
   optional string locale = 9;
 }
 

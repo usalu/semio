@@ -9,13 +9,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::model::schema::EnergyModelArtifact>>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub model_json: Option<String>,
-    #[state(preview)]
+    #[state(artifact)]
     pub results_json: Option<String>,
 }
 //#endregion 🔖️Diff

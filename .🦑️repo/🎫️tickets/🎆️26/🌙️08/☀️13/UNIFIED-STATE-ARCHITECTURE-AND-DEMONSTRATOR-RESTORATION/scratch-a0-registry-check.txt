@@ -1,0 +1,2 @@
+plugin registry catalog is stale: .vscode/launch.json
+run `bun nx run @semio-tech/plugin-registry:generate` to refresh.

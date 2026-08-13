@@ -1,9 +1,9 @@
 type JackPresence {
-  selectedNodeIds: [String!]! @state(class: SHARED_UI)
-  activeFixtureId: String! @state(class: SHARED_UI)
-  jackQuery: String! @state(class: SHARED_UI)
-  camera: Camera! @state(class: SHARED_UI)
-  lodModeByWindow: [StringEntry!]! @state(class: SHARED_UI)
+  selectedNodeIds: [String!]! @state(class: PRESENCE)
+  activeFixtureId: String! @state(class: PRESENCE)
+  jackQuery: String! @state(class: PRESENCE)
+  camera: Camera! @state(class: PRESENCE)
+  lodModeByWindow: [StringEntry!]! @state(class: PRESENCE)
 }
 
 type StringEntry {

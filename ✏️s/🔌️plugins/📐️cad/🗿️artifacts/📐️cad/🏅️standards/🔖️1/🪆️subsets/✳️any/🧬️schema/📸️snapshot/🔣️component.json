@@ -17,73 +17,73 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "id": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "objects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "buildingObjects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "energyObjects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "structureClassicObjects": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadObject"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "referencesByModelDefinitionId": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/CadReferenceList"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadNode"
       },
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "shapeGeometry": {
       "$ref": "#/$defs/CadGeometry",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "buildingGeometry": {
       "$ref": "#/$defs/CadGeometry",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "energyGeometry": {
       "$ref": "#/$defs/CadGeometry",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "structureClassicGeometry": {
       "$ref": "#/$defs/CadGeometry",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "activeModelDefinitionId": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {

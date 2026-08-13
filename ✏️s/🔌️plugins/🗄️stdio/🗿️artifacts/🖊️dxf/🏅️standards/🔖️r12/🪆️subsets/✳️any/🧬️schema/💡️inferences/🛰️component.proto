@@ -4,7 +4,7 @@ package semio.s.stdio.dxf.inference;
 // 💡️ Dxf inference schema — entity-derived 3D bounding box over top-level and block-nested entities.
 
 message DxfInference {
-  // @state inferred
+  // @derived
   DxfBounds bounds = 1;
 }
 

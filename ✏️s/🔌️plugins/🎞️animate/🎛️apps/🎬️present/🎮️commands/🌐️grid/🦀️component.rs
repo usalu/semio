@@ -90,7 +90,7 @@ mod tests {
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
         let deck = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &deck, history: &history };
+        let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = crate::apps::present::commands::source::set_active_example::handle(

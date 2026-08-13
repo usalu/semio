@@ -1,38 +1,38 @@
 /** 🧬️ SpaceConfig */
 export interface SpaceConfig {
-  /** @state local-ui */
+  /** @state config */
   camera: Record<string, SpaceWindowCamera>;
-  /** @state local-ui */
+  /** @state config */
   selectedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   hoveredNodeId?: string;
-  /** @state local-ui */
+  /** @state config */
   collapsedNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   previewOffNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   activeNodeId?: string;
-  /** @state local-ui */
+  /** @state config */
   focusedNodeId?: string;
-  /** @state local-ui */
+  /** @state config */
   clipboardNodeIds: string[];
-  /** @state local-ui */
+  /** @state config */
   workflowEngagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   compiledDagEngagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   pendingImportNodeId?: string;
-  /** @state local-ui */
+  /** @state config */
   pendingImportFormat?: string;
-  /** @state local-ui */
+  /** @state config */
   activePanelTab: string;
-  /** @state local-ui */
+  /** @state config */
   spaceId?: string;
-  /** @state local-ui */
+  /** @state config */
   clientId?: string;
-  /** @state local-ui */
+  /** @state config */
   clientName?: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

@@ -549,7 +549,7 @@ fn dec_timeline_diff(s: &str) -> Result<AnimTimelineDiff, String> {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.animation.diff")]
 pub struct SemioAnimationDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timelines: Option<IndexedTripleDiff<AnimTimelineDiff, AnimTimeline>>,
 }

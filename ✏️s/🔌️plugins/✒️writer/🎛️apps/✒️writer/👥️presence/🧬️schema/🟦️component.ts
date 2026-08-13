@@ -1,14 +1,14 @@
 /** 🧬️ WriterPresence */
 export interface WriterPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedAstIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   editorSelection?: WriterEditorSelection;
-  /** @state shared-ui */
+  /** @state presence */
   treeHoveredAstId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   editorHoverOffset?: number;
-  /** @state shared-ui */
+  /** @state presence */
   camera: WriterCamera;
 }
 

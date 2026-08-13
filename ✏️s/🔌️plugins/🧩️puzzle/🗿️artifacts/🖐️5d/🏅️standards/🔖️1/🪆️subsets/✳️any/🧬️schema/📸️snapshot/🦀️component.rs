@@ -11,32 +11,32 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "puzzle.puzzle5d", layout = "lines")]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
 pub struct Puzzle5dSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     #[serde(default)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub domain: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub label: Option<String>,
     #[serde(default)]
     #[dsl(block)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub meta: Puzzle5dMeta,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub kind_catalogs: Option<Puzzle5dKindCatalogs>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub kind_compatibility: Vec<Puzzle5dKindCompatibility>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub parts: Vec<Puzzle5dPart>,
     #[serde(default)]
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub fasteners: Vec<Puzzle5dFastener>,
 }
 //#endregion 🔖️Snapshot

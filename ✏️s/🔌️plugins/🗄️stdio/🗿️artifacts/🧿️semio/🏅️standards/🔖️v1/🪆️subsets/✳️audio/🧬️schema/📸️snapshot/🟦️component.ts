@@ -8,9 +8,9 @@ export interface SemioAudioTag {
   value: string;
 }
 export interface SemioAudioSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ sampleRate: number;
-  /** @state persistent */ format: SemioAudioFormat;
-  /** @state persistent */ channels: SemioAudioChannel[];
-  /** @state persistent */ tags: SemioAudioTag[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ sampleRate: number;
+  /** @state artifact */ format: SemioAudioFormat;
+  /** @state artifact */ channels: SemioAudioChannel[];
+  /** @state artifact */ tags: SemioAudioTag[];
 }

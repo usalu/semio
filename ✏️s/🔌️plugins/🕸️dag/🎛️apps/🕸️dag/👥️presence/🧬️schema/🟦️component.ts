@@ -1,15 +1,15 @@
 /** 🧬️ DagPresence */
 export interface DagPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedNodeIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   cameraX: number;
-  /** @state shared-ui */
+  /** @state presence */
   cameraY: number;
-  /** @state shared-ui */
+  /** @state presence */
   cameraZoom: number;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredNodeId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   hoveredEdgeId?: string;
 }

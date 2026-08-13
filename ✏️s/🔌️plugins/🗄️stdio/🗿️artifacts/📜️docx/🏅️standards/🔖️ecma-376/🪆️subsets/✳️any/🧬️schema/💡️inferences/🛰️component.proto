@@ -4,7 +4,7 @@ package semio.s.stdio.docx.inference;
 // 💡️ Docx inference schema — document outline (paragraph/table/word counts).
 
 message DocxInference {
-  // @state inferred
+  // @derived
   DocxOutline outline = 1;
 }
 

@@ -4,7 +4,7 @@ package semio.s.imperative.imperative.inference;
 // 💡️ Imperative inference schema — topology (depth-first order + nesting depth + cycle-freedom) over the Path/Step tree.
 
 message ImperativeInference {
-  // @state inferred
+  // @derived
   ImperativeTopology topology = 1;
 }
 

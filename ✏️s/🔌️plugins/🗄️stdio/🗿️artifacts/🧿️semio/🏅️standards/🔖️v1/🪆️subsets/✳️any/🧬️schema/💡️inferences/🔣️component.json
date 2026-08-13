@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["kind"],
   "properties": {
-    "kind": { "$ref": "#/$defs/SemioKind", "x-semio-state": "inferred" }
+    "kind": { "$ref": "#/$defs/SemioKind", "x-semio-derived": true }
   },
   "$defs": {
     "SemioKind": {

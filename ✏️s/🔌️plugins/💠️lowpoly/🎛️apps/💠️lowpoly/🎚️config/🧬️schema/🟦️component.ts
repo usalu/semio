@@ -1,71 +1,71 @@
 /** 🧬️ LowpolyConfig */
 export interface LowpolyConfig {
-  /** @state local-ui */
+  /** @state config */
   activeObjectId: string;
-  /** @state local-ui */
+  /** @state config */
   selectionMode: string;
-  /** @state local-ui */
+  /** @state config */
   selectionIds: number[];
-  /** @state local-ui */
+  /** @state config */
   selectionTargetsMesh: boolean;
-  /** @state local-ui */
+  /** @state config */
   selectionTargetsVertex: boolean;
-  /** @state local-ui */
+  /** @state config */
   selectionTargetsEdge: boolean;
-  /** @state local-ui */
+  /** @state config */
   selectionTargetsFace: boolean;
-  /** @state local-ui */
+  /** @state config */
   selectionKeys: string[];
-  /** @state local-ui */
+  /** @state config */
   paintUtility: string;
-  /** @state local-ui */
+  /** @state config */
   activePaintLayer: number;
-  /** @state local-ui */
+  /** @state config */
   selectionMethod: string;
-  /** @state local-ui */
+  /** @state config */
   selectionModeDefault: string;
-  /** @state local-ui */
+  /** @state config */
   selectedObjectIds: string[];
-  /** @state local-ui */
+  /** @state config */
   hoveredObjectId?: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredTargetObjectId?: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredTargetMode?: string;
-  /** @state local-ui */
+  /** @state config */
   hoveredTargetId?: number;
-  /** @state local-ui */
+  /** @state config */
   utilityParamsJson: string;
-  /** @state local-ui */
+  /** @state config */
   paintColorR: number;
-  /** @state local-ui */
+  /** @state config */
   paintColorG: number;
-  /** @state local-ui */
+  /** @state config */
   paintColorB: number;
-  /** @state local-ui */
+  /** @state config */
   paintColorA: number;
-  /** @state local-ui */
+  /** @state config */
   worldCameraPosition: number[];
-  /** @state local-ui */
+  /** @state config */
   worldCameraTarget: number[];
-  /** @state local-ui */
+  /** @state config */
   worldCameraFov: number;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   showEdges: boolean;
-  /** @state local-ui */
+  /** @state config */
   sunEnabled: boolean;
-  /** @state local-ui */
+  /** @state config */
   sunAzimuth: number;
-  /** @state local-ui */
+  /** @state config */
   sunElevation: number;
-  /** @state local-ui */
+  /** @state config */
   sunIntensity: number;
-  /** @state local-ui */
+  /** @state config */
   sunColor: string;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

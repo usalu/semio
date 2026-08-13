@@ -4,11 +4,11 @@ package semio.s.cad.cad.inference;
 // 💡️ Cad inference schema — object/vertex counts + 3d bounding box across every pane.
 
 message CadInference {
-  // @state inferred
+  // @derived
   uint64 object_count = 1;
-  // @state inferred
+  // @derived
   uint64 vertex_count = 2;
-  // @state inferred
+  // @derived
   CadBounds bounds = 3;
 }
 

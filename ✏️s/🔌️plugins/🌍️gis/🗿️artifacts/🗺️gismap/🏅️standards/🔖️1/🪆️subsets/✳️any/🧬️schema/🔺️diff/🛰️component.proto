@@ -4,37 +4,37 @@ package semio.s.gis.gismap.diff;
 // 🧬️ GIS map diff schema — sparse field delta.
 
 message GisMapDiff {
-  // @state persistent
+  // @state artifact
   optional GisMapArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional GisMapFeaturesDelta positions = 2;
-  // @state persistent
+  // @state artifact
   optional GisMapFeaturesDelta routes = 3;
-  // @state persistent
+  // @state artifact
   optional GisMapFeaturesDelta regions = 4;
-  // @state shared-ui
+  // @state presence
   optional GisMapStringList selected_ids = 5;
-  // @state shared-ui
+  // @state presence
   optional string feature_selection_json = 6;
-  // @state shared-ui
+  // @state presence
   optional GisMapBoolMapDelta layer_visibility = 7;
-  // @state shared-ui
+  // @state presence
   optional GisMapNumberMapDelta layer_stroke_scale = 8;
-  // @state local-ui
+  // @state config
   optional string camera_json = 9;
-  // @state local-ui
+  // @state config
   optional string render_mode = 10;
-  // @state local-ui
+  // @state config
   optional string vector_style = 11;
-  // @state local-ui
+  // @state config
   optional string lod_mode = 12;
-  // @state local-ui
+  // @state config
   optional string hover_json = 13;
-  // @state local-ui
+  // @state config
   optional string selection_method = 14;
-  // @state local-ui
+  // @state config
   optional string selection_mode = 15;
-  // @state local-ui
+  // @state config
   optional string locale = 16;
 }
 

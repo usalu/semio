@@ -13,43 +13,43 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.din4108", layout = "lines")]
 #[artifact_schema(id = "s.norm.din4108")]
 pub struct Din4108Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub category: String,
     #[dsl(table)]
-    #[state(persistent)]
+    #[state(artifact)]
     pub layers: Vec<crate::artifacts::din4108::LayerDocument>,
-    #[state(persistent)]
+    #[state(artifact)]
     pub climate: ClimateZoneDe,
-    #[state(persistent)]
+    #[state(artifact)]
     pub airtightness_n50: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub psi_times_l_sum: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub rh_int: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub catalog_id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub material_id: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub airtightness_class: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub t_int_c: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub solar_absorptance: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub irradiance_w_m2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub moisture_mu_exterior: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub moisture_mu_interior: f64,
     #[dsl(unit = "m2")]
-    #[state(persistent)]
+    #[state(artifact)]
     pub envelope_area_m2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub bb2_details_conform: bool,
-    #[state(persistent)]
+    #[state(artifact)]
     pub application_type: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub declared_application_class: String,
 }
 //#region 🔖️HandcraftedArtifactCodecs

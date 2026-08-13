@@ -13,16 +13,16 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.assembly")]
 pub struct AssemblyDiff {
-    #[state(persistent)] pub schema: Option<String>,
-    #[state(persistent)] pub seed: Option<u64>,
-    #[state(persistent)] pub slots_removed: Vec<String>,
-    #[state(persistent)] pub slots_upserted: Vec<(usize, AssemblySlot)>,
-    #[state(persistent)] pub edges_removed: Vec<String>,
-    #[state(persistent)] pub edges_upserted: Vec<(usize, AssemblySlotEdge)>,
-    #[state(persistent)] pub weights_removed: Vec<String>,
-    #[state(persistent)] pub weights_upserted: Vec<AssemblyModuleWeight>,
-    #[state(persistent)] pub rules_removed: Vec<String>,
-    #[state(persistent)] pub rules_upserted: Vec<(usize, AssemblyRule)>,
+    #[state(artifact)] pub schema: Option<String>,
+    #[state(artifact)] pub seed: Option<u64>,
+    #[state(artifact)] pub slots_removed: Vec<String>,
+    #[state(artifact)] pub slots_upserted: Vec<(usize, AssemblySlot)>,
+    #[state(artifact)] pub edges_removed: Vec<String>,
+    #[state(artifact)] pub edges_upserted: Vec<(usize, AssemblySlotEdge)>,
+    #[state(artifact)] pub weights_removed: Vec<String>,
+    #[state(artifact)] pub weights_upserted: Vec<AssemblyModuleWeight>,
+    #[state(artifact)] pub rules_removed: Vec<String>,
+    #[state(artifact)] pub rules_upserted: Vec<(usize, AssemblyRule)>,
 }
 //#endregion 🔖️AssemblyDiff
 

@@ -1,17 +1,17 @@
 /** 🧬️ Mathematical artifact schema — every field with its state class. */
 
 export interface MathematicalArtifact {
-  /** @state persistent */
+  /** @state artifact */
   graph: MathematicalGraph;
-  /** @state persistent */
+  /** @state artifact */
   geometry: MathematicalGeometry;
-  /** @state local-ui */
+  /** @state config */
   cameraX: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 

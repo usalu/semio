@@ -4,6 +4,6 @@ package semio.s.space.home.inference;
 // 💡️ SHome inference schema — contentDigest fingerprint of the persisted document.
 
 message SHomeInference {
-  // @state inferred
+  // @derived
   string content_digest = 1;
 }

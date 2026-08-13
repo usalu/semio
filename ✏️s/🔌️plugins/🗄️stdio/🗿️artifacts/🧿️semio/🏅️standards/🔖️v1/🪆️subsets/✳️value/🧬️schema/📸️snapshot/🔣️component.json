@@ -39,9 +39,9 @@
   },
   "type": "value",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "root": { "$ref": "#/$defs/semioValue", "x-semio-state": "persistent" },
-    "nodes": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "#/$defs/semioValueNode" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "root": { "$ref": "#/$defs/semioValue", "x-semio-state": "artifact" },
+    "nodes": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/$defs/semioValueNode" } }
   },
   "required": ["schema", "root", "nodes"]
 }

@@ -4,9 +4,9 @@ package semio.s.demonstrator.playground.diff;
 // 🧬️ Playground diff schema — sparse field delta over the artifact.
 
 message PlaygroundDiff {
-  // @state persistent
+  // @state artifact
   optional PlaygroundArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string schema = 2;
 }
 

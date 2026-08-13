@@ -1,14 +1,14 @@
 # 🔺️ DAG diff schema.
 type DagDiff {
-  artifact: DagArtifact @state(class: PERSISTENT)
-  schema: String @state(class: PERSISTENT)
-  nodes: DagNodesDelta @state(class: PERSISTENT)
-  edges: DagEdgesDelta @state(class: PERSISTENT)
-  setNodes: DagNodeSpecList @state(class: PERSISTENT)
-  setEdges: DagFixtureEdgeList @state(class: PERSISTENT)
-  selectedNodeIds: DagStringList @state(class: SHARED_UI)
-  camera: DagCamera @state(class: LOCAL_UI)
-  locale: String @state(class: LOCAL_UI)
+  artifact: DagArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  nodes: DagNodesDelta @state(class: ARTIFACT)
+  edges: DagEdgesDelta @state(class: ARTIFACT)
+  setNodes: DagNodeSpecList @state(class: ARTIFACT)
+  setEdges: DagFixtureEdgeList @state(class: ARTIFACT)
+  selectedNodeIds: DagStringList @state(class: PRESENCE)
+  camera: DagCamera @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
 }
 type DagStringList { values: [String!]! }
 type DagNodeSpecList { values: [DagNodeSpec!]! }

@@ -175,18 +175,18 @@ pub const STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.document";
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.document")]
 pub struct SemioDocumentSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 🎨️ Named styles, keyed by `DocStyle::id`.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub styles: Vec<DocStyle>,
     /// 🖼️ Embedded images, keyed by `DocImage::id`, referenced from `DocBlock::Image::image_id`.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub images: Vec<DocImage>,
     /// 🧱️ The top-level block tree.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub blocks: Vec<DocBlock>,
 }

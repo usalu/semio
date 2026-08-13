@@ -1,31 +1,31 @@
 syntax = "proto3";
 package semio.app.procedural.3d;
 message Procedural3dConfig {
-  // @state local-ui
+  // @state config
   repeated string selected_node_ids = 1;
-  // @state local-ui
+  // @state config
   string lod_mode = 2;
-  // @state local-ui
+  // @state config
   string show_mode = 3;
-  // @state local-ui
+  // @state config
   string selection_method = 4;
-  // @state local-ui
+  // @state config
   optional string hovered_node_id = 5;
-  // @state local-ui
+  // @state config
   CameraJson camera = 6;
-  // @state local-ui
+  // @state config
   Procedural3dPreviewCamera preview_camera = 7;
-  // @state local-ui
+  // @state config
   string sun_json = 8;
-  // @state local-ui
+  // @state config
   optional string selected_generation_id = 9;
-  // @state local-ui
+  // @state config
   optional string generation_preview_text = 10;
-  // @state local-ui
+  // @state config
   string active_utility_id = 11;
-  // @state local-ui
+  // @state config
   string locale = 12;
-  // @state local-ui
+  // @state config
   string contributions_json = 13;
 }
 message CameraJson {

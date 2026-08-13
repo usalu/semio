@@ -1,17 +1,17 @@
 /** 🧬️ GIS terrain diff schema — sparse field delta. */
 
 export interface GisTerrainDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: GisTerrainArtifact;
-  /** @state persistent */
+  /** @state artifact */
   exaggeration?: number;
-  /** @state persistent */
+  /** @state artifact */
   importedFeaturesJson?: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds?: GisTerrainStringList;
-  /** @state local-ui */
+  /** @state config */
   cameraJson?: string;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

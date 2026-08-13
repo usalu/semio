@@ -17,7 +17,7 @@ use super::dimensions::{compute_svg_dimensions, SvgDimensions};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.svg.inference")]
 pub struct SvgInference {
-    #[state(inferred)]
+    #[derived]
     pub dimensions: SvgDimensions,
 }
 

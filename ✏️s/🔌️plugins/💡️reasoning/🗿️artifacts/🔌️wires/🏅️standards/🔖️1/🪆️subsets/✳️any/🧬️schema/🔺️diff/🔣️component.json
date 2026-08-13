@@ -8,21 +8,21 @@
     "artifact": {
       "title": "WiresArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "wiresFixture": {
       "title": "DslValue",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "boardFixture": {
       "title": "DslValue",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "$ref": "#/$defs/WiresStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "dragNodeId": {
       "oneOf": [
@@ -33,21 +33,21 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "dragLastX": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "dragLastY": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

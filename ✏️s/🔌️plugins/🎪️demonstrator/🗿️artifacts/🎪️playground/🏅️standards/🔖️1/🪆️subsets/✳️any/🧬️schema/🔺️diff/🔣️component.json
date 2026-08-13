@@ -8,11 +8,11 @@
     "artifact": {
       "title": "PlaygroundArtifact",
       "type": "object",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "schema": {
       "type": "string",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     }
   }
 }

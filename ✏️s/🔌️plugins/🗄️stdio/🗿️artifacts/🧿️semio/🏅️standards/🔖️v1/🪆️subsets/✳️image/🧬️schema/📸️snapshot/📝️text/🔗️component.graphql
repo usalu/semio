@@ -4,6 +4,6 @@ type Semio_semio_image_snapshotEntry {
   value: String!
 }
 type Semio_semio_image_snapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_image_snapshotEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Semio_semio_image_snapshotEntry!]! @state(class: ARTIFACT)
 }

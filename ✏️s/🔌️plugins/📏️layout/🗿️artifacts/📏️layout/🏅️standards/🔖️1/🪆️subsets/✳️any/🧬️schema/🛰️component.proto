@@ -2,30 +2,30 @@ syntax = "proto3";
 package semio.s.layout.layout.artifact;
 
 message LayoutArtifact {
-  string schema = 1; // @state persistent
-  string name = 2; // @state persistent
-  GridSettings grid = 3; // @state persistent
-  repeated ParagraphStyle paragraph_styles = 4; // @state persistent
-  repeated CharacterStyle character_styles = 5; // @state persistent
-  repeated TextStory stories = 6; // @state persistent
-  repeated ImageLink links = 7; // @state persistent
-  repeated ParentPage parent_pages = 8; // @state persistent
-  repeated Spread spreads = 9; // @state persistent
-  repeated Page pages = 10; // @state persistent
-  optional string print_target = 11; // @state persistent
-  optional string data_fields_json = 12; // @state persistent
-  repeated string selected_ids = 13; // @state shared-ui
-  string active_page_id = 14; // @state local-ui
-  string engagement_input = 15; // @state local-ui
-  double camera_x = 16; // @state local-ui
-  double camera_y = 17; // @state local-ui
-  double camera_zoom = 18; // @state local-ui
-  double preview_camera_x = 19; // @state local-ui
-  double preview_camera_y = 20; // @state local-ui
-  double preview_camera_zoom = 21; // @state local-ui
-  LayoutDropPreviewState drop_preview = 22; // @state local-ui
-  string locale = 23; // @state local-ui
-  optional string hovered_id = 24; // @state preview
+  string schema = 1; // @state artifact
+  string name = 2; // @state artifact
+  GridSettings grid = 3; // @state artifact
+  repeated ParagraphStyle paragraph_styles = 4; // @state artifact
+  repeated CharacterStyle character_styles = 5; // @state artifact
+  repeated TextStory stories = 6; // @state artifact
+  repeated ImageLink links = 7; // @state artifact
+  repeated ParentPage parent_pages = 8; // @state artifact
+  repeated Spread spreads = 9; // @state artifact
+  repeated Page pages = 10; // @state artifact
+  optional string print_target = 11; // @state artifact
+  optional string data_fields_json = 12; // @state artifact
+  repeated string selected_ids = 13; // @state presence
+  string active_page_id = 14; // @state config
+  string engagement_input = 15; // @state config
+  double camera_x = 16; // @state config
+  double camera_y = 17; // @state config
+  double camera_zoom = 18; // @state config
+  double preview_camera_x = 19; // @state config
+  double preview_camera_y = 20; // @state config
+  double preview_camera_zoom = 21; // @state config
+  LayoutDropPreviewState drop_preview = 22; // @state config
+  string locale = 23; // @state config
+  optional string hovered_id = 24; // @state artifact
 }
 
 message GridSettings {

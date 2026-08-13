@@ -1,23 +1,23 @@
 /** 🧬️ Remodel snapshot schema — TypeScript mirror of the normative JSON Schema. */
 
 export interface RemodelSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   streams: MediaStream[];
-  /** @state persistent */
+  /** @state artifact */
   assets: Record<string, ImageAsset>;
-  /** @state persistent */
+  /** @state artifact */
   calibration: CalibrationState;
-  /** @state persistent */
+  /** @state artifact */
   params: ReconstructionParams;
-  /** @state persistent */
+  /** @state artifact */
   gcps: GroundControlPoint[];
-  /** @state persistent */
+  /** @state artifact */
   job: ReconstructionJob;
-  /** @state persistent */
+  /** @state artifact */
   results: ReconstructionResults;
 }
 

@@ -1,22 +1,22 @@
 /** 🧬️ Vdi3805 snapshot schema — persistent fields only. */
 
 export interface Vdi3805Snapshot {
-  /** @state persistent */
+  /** @state artifact */
   manufacturerFile: string;
-  /** @state persistent */
+  /** @state artifact */
   catalog: string;
-  /** @state persistent */
+  /** @state artifact */
   editionProfile: Record<string, string>;
-  /** @state persistent */
+  /** @state artifact */
   correctionAsOf: string;
-  /** @state persistent */
+  /** @state artifact */
   strictMode: boolean;
-  /** @state persistent */
+  /** @state artifact */
   index: string;
-  /** @state persistent */
+  /** @state artifact */
   geometry: Record<string, string>;
-  /** @state persistent */
+  /** @state artifact */
   curves: Record<string, string>;
-  /** @state persistent */
+  /** @state artifact */
   limits: string;
 }

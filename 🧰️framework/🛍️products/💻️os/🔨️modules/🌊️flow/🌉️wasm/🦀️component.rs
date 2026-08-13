@@ -672,8 +672,8 @@ pub fn dwg_encode_mesh_json(mesh_json: &str) -> String {
     let Ok(mesh) = serde_json::from_str::<semio_framework::MeshData>(mesh_json) else {
         return serde_json::json!({ "error": "invalid mesh json" }).to_string();
     };
-    let drawing = semio_framework::mesh_to_dwg_drawing(&mesh);
-    match semio_framework::dwg_to_bytes(&drawing) {
+    let drawing = semio_s_plugin_stdio::artifacts::dwg::mesh_to_dwg_drawing(&mesh);
+    match semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing) {
         Ok(bytes) => {
             use base64::Engine;
             serde_json::json!({ "dwg": base64::engine::general_purpose::STANDARD.encode(bytes) }).to_string()

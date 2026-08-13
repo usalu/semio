@@ -28,7 +28,7 @@ use super::flattened_scene::{DrawFlattenedScene, FlattenedNode};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.drawing.inference")]
 pub struct SemioDrawingInference {
-    #[state(inferred)]
+    #[derived]
     pub flattened_scene: BTreeMap<String, FlattenedNode>,
 }
 

@@ -1,58 +1,58 @@
 /** 🧬️ EN 1999 artifact schema. */
 
 export interface En1999Artifact {
-  /** @state persistent */
+  /** @state artifact */
   nEdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   mEdKnm: number;
-  /** @state persistent */
+  /** @state artifact */
   aMm2: number;
-  /** @state persistent */
+  /** @state artifact */
   wElMm3: number;
-  /** @state persistent */
+  /** @state artifact */
   alloy: number;
-  /** @state persistent */
+  /** @state artifact */
   chi: number;
-  /** @state persistent */
+  /** @state artifact */
   iTMm4: number;
-  /** @state persistent */
+  /** @state artifact */
   lCrMm: number;
-  /** @state persistent */
+  /** @state artifact */
   thetaC: number;
-  /** @state persistent */
+  /** @state artifact */
   deltaSigmaEd: number;
-  /** @state persistent */
+  /** @state artifact */
   deltaSigmaC: number;
-  /** @state persistent */
+  /** @state artifact */
   fatigueM: number;
-  /** @state persistent */
+  /** @state artifact */
   nCycles: number;
-  /** @state persistent */
+  /** @state artifact */
   vWeldEdKn: number;
-  /** @state persistent */
+  /** @state artifact */
   weldThroatMm: number;
-  /** @state persistent */
+  /** @state artifact */
   weldLengthMm: number;
-  /** @state persistent */
+  /** @state artifact */
   betaW: number;
-  /** @state persistent */
+  /** @state artifact */
   sheetBMm: number;
-  /** @state persistent */
+  /** @state artifact */
   sheetTMm: number;
-  /** @state persistent */
+  /** @state artifact */
   sheetKSigma: number;
-  /** @state persistent */
+  /** @state artifact */
   sheetWElMm3: number;
-  /** @state persistent */
+  /** @state artifact */
   sheetMEdKnm: number;
-  /** @state persistent */
+  /** @state artifact */
   shellTMm: number;
-  /** @state persistent */
+  /** @state artifact */
   shellRMm: number;
-  /** @state persistent */
+  /** @state artifact */
   sigmaEdShellMpa: number;
-  /** @state persistent */
+  /** @state artifact */
   annex: number;
-  /** @state shared-ui */
+  /** @state presence */
   selectedCheckIndex?: number | null;
 }

@@ -1,7 +1,7 @@
 # 💡️ Docx inference schema — document outline (paragraph/table/word counts).
 
 type DocxInference {
-  outline: DocxOutline! @state(class: INFERRED)
+  outline: DocxOutline! @derived
 }
 
 type DocxOutline {

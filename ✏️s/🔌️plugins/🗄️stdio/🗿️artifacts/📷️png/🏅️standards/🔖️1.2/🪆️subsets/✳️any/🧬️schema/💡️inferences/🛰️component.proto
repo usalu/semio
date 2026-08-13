@@ -4,7 +4,7 @@ package semio.s.stdio.png.inference;
 // 💡️ Png inference schema — IHDR-derived raster geometry.
 
 message PngInference {
-  // @state inferred
+  // @derived
   PngDimensions dimensions = 1;
 }
 

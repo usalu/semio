@@ -1,8 +1,8 @@
 type SequenceConfig {
-  selectedStepIds: [String!]! @state(class: LOCAL_UI)
-  lastRunJson: String! @state(class: LOCAL_UI)
-  orientation: String! @state(class: LOCAL_UI)
-  camera: SequenceCamera! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  selectedStepIds: [String!]! @state(class: CONFIG)
+  lastRunJson: String! @state(class: CONFIG)
+  orientation: String! @state(class: CONFIG)
+  camera: SequenceCamera! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }
 type SequenceCamera { x: Float! y: Float! zoom: Float! }

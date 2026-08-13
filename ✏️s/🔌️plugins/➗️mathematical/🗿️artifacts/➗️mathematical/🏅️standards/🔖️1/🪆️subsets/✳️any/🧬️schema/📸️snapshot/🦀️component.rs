@@ -22,16 +22,16 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.mathematical.mathematical")]
 pub struct MathematicalSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.text")]
     pub notation: MathematicalNotationChild,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
     pub results: MathematicalResultsChild,
-    #[state(persistent)]
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
     pub computed: MathematicalComputedChild,
-    #[state(persistent)]
+    #[state(artifact)]
     pub equation: EquationSnapshot,
 }
 

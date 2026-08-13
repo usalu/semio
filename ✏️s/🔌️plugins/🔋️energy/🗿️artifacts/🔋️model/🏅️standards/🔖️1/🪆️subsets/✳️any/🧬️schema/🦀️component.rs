@@ -32,13 +32,13 @@ pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSna
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 🏢️ Opaque JSON of `crate::Model` — building inputs that persist.
-    #[state(persistent)]
+    #[state(artifact)]
     pub model_json: String,
     /// 📋️ Opaque JSON of `crate::Results` — recomputed by the BEM engine; never persisted.
-    #[state(preview)]
+    #[state(artifact)]
     pub results_json: String,
 }
 //#endregion 🔖️Artifact

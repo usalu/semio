@@ -8,23 +8,23 @@
     "selectedStepIds": {
       "type": "array",
       "items": { "type": "string" },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lastRunJson": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "orientation": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera": {
       "$ref": "#/$defs/SequenceCamera",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

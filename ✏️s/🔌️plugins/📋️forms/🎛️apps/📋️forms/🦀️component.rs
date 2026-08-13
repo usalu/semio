@@ -734,7 +734,7 @@ mod tests {
         let app = forms_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let media = <FormsPlayApp as ArtifactApp>::export_media("dictionary:out", &doc).expect("export dictionary:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
@@ -748,7 +748,7 @@ mod tests {
         let app = forms_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &document, history: &history };
+        let doc = ArtifactView::new(&document, &history);
         let media = <FormsPlayApp as ArtifactApp>::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, FORMS_DOCUMENT_SCHEMA);

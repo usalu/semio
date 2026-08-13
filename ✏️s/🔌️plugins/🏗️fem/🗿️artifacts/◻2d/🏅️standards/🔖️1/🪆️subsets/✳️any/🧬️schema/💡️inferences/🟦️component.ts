@@ -12,6 +12,6 @@ export interface Fem2dBounds {
 }
 
 export interface Fem2dInference {
-  /** @state inferred */
+  /** @derived */
   bounds: Fem2dBounds;
 }

@@ -2,25 +2,25 @@ syntax = "proto3";
 package semio.s.norm.iso16757.diff;
 
 message Iso16757Diff {
-  // @state persistent
+  // @state artifact
   optional Iso16757Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string catalogue = 2;
-  // @state persistent
+  // @state artifact
   optional string dictionary = 3;
-  // @state persistent
+  // @state artifact
   optional string geometry = 4;
-  // @state persistent
+  // @state artifact
   optional string selection = 5;
-  // @state persistent
+  // @state artifact
   optional string part_number_rule = 6;
-  // @state persistent
+  // @state artifact
   optional map<string, string> part_number_inputs = 7;
-  // @state persistent
+  // @state artifact
   optional string script_limits = 8;
-  // @state persistent
+  // @state artifact
   optional string exchange_process = 9;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 10;
 }
 

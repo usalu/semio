@@ -4,7 +4,7 @@ package semio.s.stdio.mp4.inference;
 // 💡️ mp4 inference schema — real ISO-BMFF `stts`-derived (per-track sample-table) duration.
 
 message Mp4Inference {
-  // @state inferred
+  // @derived
   Mp4Duration duration = 1;
 }
 

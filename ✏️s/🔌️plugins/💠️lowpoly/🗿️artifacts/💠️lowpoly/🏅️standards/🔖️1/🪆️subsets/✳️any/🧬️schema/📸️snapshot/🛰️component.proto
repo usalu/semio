@@ -4,9 +4,9 @@ package semio.s.lowpoly.lowpoly.snapshot;
 // 🧬️ Lowpoly snapshot schema — persistent fields only.
 
 message LowpolySnapshot {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   repeated LowpolyObject objects = 2;
 }
 

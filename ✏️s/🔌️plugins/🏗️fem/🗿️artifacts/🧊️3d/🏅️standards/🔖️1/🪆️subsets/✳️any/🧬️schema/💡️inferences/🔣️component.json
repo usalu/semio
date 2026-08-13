@@ -7,7 +7,7 @@
   "properties": {
     "bounds": {
       "$ref": "#/$defs/Fem3dBounds",
-      "x-semio-state": "inferred"
+      "x-semio-derived": true
     }
   },
   "$defs": {

@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["topology"],
   "properties": {
-    "topology": { "$ref": "#/$defs/SemioGraphTopology", "x-semio-state": "inferred" }
+    "topology": { "$ref": "#/$defs/SemioGraphTopology", "x-semio-derived": true }
   },
   "$defs": {
     "SemioGraphTopology": {

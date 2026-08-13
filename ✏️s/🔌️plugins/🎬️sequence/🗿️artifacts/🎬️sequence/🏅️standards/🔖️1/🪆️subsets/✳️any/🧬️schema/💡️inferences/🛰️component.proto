@@ -5,7 +5,7 @@ package semio.s.sequence.sequence.inference;
 // step DAG (steps + edges).
 
 message SequenceInference {
-  // @state inferred
+  // @derived
   SequenceTopology topology = 1;
 }
 

@@ -21,7 +21,7 @@ use super::topology::{compute_present_topology, PresentTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.present.inference")]
 pub struct PresentInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: PresentTopology,
 }
 

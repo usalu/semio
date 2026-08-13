@@ -1,35 +1,35 @@
 /** 🧬️ Fem3d artifact schema — every field with its state class. */
 
 export interface Fem3dArtifact {
-  /** @state persistent */
+  /** @state artifact */
   nodes: FemNode[];
-  /** @state persistent */
+  /** @state artifact */
   elements: FemElement[];
-  /** @state persistent */
+  /** @state artifact */
   materials: FemMaterial[];
-  /** @state persistent */
+  /** @state artifact */
   sections: FemSection[];
-  /** @state persistent */
+  /** @state artifact */
   solids: FemSolid[];
-  /** @state persistent */
+  /** @state artifact */
   supports: FemSupport[];
-  /** @state persistent */
+  /** @state artifact */
   loadCases: FemLoadCase[];
-  /** @state persistent */
+  /** @state artifact */
   combinations: FemCombination[];
-  /** @state persistent */
+  /** @state artifact */
   analysis: FemAnalysisSettings;
-  /** @state shared-ui */
+  /** @state presence */
   resultSourceId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   resultMode: string;
-  /** @state shared-ui */
+  /** @state presence */
   resultModeIndex: number;
-  /** @state local-ui */
+  /** @state config */
   camera: FemCamera;
-  /** @state preview */
+  /** @state artifact */
   solverResultsJson: string;
-  /** @state preview */
+  /** @state artifact */
   meshPreviewJson: string;
 }
 

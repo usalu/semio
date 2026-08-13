@@ -7,6 +7,6 @@ export interface HtmlOutline {
 }
 
 export interface HtmlInference {
-  /** @state inferred */
+  /** @derived */
   outline: HtmlOutline;
 }

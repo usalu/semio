@@ -4,6 +4,6 @@ type Semio_semio_diffEntry {
   value: String!
 }
 type Semio_semio_diff {
-  schema: String! @state(class: PERSISTENT)
-  entries: [Semio_semio_diffEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [Semio_semio_diffEntry!]! @state(class: ARTIFACT)
 }

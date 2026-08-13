@@ -163,6 +163,9 @@ impl ShootingDiff {
         if let Some(id) = &self.active_asset_id {
             next.active_asset_id = id.clone();
         }
+        if let Some(value) = &self.emblem {
+            next.emblem = value.clone();
+        }
         if let Some(list) = &self.selected_shot_ids {
             next.selected_shot_ids = list.values.clone();
         }
@@ -233,6 +236,9 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
         if let Some(id) = &self.active_asset_id {
             next.active_asset_id = id.clone();
         }
+        if let Some(value) = &self.emblem {
+            next.emblem = value.clone();
+        }
         next
     }
 
@@ -255,6 +261,7 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
         take!(scene);
         take!(active_shot_id);
         take!(active_asset_id);
+        take!(emblem);
         take!(selected_shot_ids);
         take!(selected_asset_ids);
         take!(active_utility_id);

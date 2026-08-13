@@ -5,6 +5,6 @@ export interface Mp3DiffEntry {
   value: string;
 }
 export interface Mp3Diff {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: Mp3DiffEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: Mp3DiffEntry[];
 }

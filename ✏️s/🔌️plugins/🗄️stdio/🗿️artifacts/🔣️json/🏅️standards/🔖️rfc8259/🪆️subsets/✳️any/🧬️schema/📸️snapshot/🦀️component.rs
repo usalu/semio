@@ -521,9 +521,9 @@ fn write_string_escaped(s: &str, out: &mut String) {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.json")]
 pub struct JsonSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub value: JsonValue,
 }

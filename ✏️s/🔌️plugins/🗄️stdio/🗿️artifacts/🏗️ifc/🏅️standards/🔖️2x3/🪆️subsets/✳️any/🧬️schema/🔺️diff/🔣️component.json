@@ -3,9 +3,9 @@
   "title": "Ifc2x3Diff",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "header": { "type": "string", "x-semio-state": "persistent" },
-    "removedInstances": { "type": "array", "items": { "type": "integer" }, "x-semio-state": "persistent" },
-    "upsertedInstances": { "type": "array", "items": { "type": "string" }, "x-semio-state": "persistent" }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "header": { "type": "string", "x-semio-state": "artifact" },
+    "removedInstances": { "type": "array", "items": { "type": "integer" }, "x-semio-state": "artifact" },
+    "upsertedInstances": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" }
   }
 }

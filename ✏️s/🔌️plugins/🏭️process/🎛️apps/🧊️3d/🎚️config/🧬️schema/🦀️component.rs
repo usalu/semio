@@ -6,22 +6,22 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.3d.config")]
 pub struct Process3dConfig {
-    #[state(local_ui)] pub selected_id: Option<String>,
-    #[state(local_ui)] pub hovered_id: Option<String>,
-    #[state(local_ui)] pub selected_face_id: Option<u32>,
-    #[state(local_ui)] pub selection_method: String,
-    #[state(local_ui)] pub engagement_input: String,
-    #[state(local_ui)] pub camera_position: [f64; 3],
-    #[state(local_ui)] pub camera_target: [f64; 3],
-    #[state(local_ui)] pub camera_fov: f64,
-    #[state(local_ui)] pub sun_enabled: bool,
-    #[state(local_ui)] pub sun_azimuth: f64,
-    #[state(local_ui)] pub sun_elevation: f64,
-    #[state(local_ui)] pub sun_intensity: f64,
-    #[state(local_ui)] pub sun_color: String,
-    #[state(local_ui)] pub active_utility_id: String,
-    #[state(local_ui)] pub locale: String,
-    #[state(local_ui)] pub contributions_json: String,
+    #[state(config)] pub selected_id: Option<String>,
+    #[state(config)] pub hovered_id: Option<String>,
+    #[state(config)] pub selected_face_id: Option<u32>,
+    #[state(config)] pub selection_method: String,
+    #[state(config)] pub engagement_input: String,
+    #[state(config)] pub camera_position: [f64; 3],
+    #[state(config)] pub camera_target: [f64; 3],
+    #[state(config)] pub camera_fov: f64,
+    #[state(config)] pub sun_enabled: bool,
+    #[state(config)] pub sun_azimuth: f64,
+    #[state(config)] pub sun_elevation: f64,
+    #[state(config)] pub sun_intensity: f64,
+    #[state(config)] pub sun_color: String,
+    #[state(config)] pub active_utility_id: String,
+    #[state(config)] pub locale: String,
+    #[state(config)] pub contributions_json: String,
 }
 
 //#region 🔖️AppSchemaRegistration

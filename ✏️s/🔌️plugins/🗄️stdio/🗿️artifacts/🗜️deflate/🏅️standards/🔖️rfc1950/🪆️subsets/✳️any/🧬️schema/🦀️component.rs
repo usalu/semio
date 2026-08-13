@@ -11,21 +11,21 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate")]
 pub struct DeflateArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub compression_method: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub window_bits: u8,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub compression_level_hint: DeflateLevelHint,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dict_id: Option<u32>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub payload: Vec<u8>,
 }

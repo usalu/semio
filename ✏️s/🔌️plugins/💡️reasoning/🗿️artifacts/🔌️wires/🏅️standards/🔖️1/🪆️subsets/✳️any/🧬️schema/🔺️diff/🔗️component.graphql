@@ -3,14 +3,14 @@
 scalar DslValue
 
 type WiresDiff {
-  artifact: WiresArtifact @state(class: PERSISTENT)
-  wiresFixture: DslValue @state(class: PERSISTENT)
-  boardFixture: DslValue @state(class: PERSISTENT)
-  selectedIds: WiresStringList @state(class: SHARED_UI)
-  dragNodeId: String @state(class: PREVIEW)
-  dragLastX: Float @state(class: PREVIEW)
-  dragLastY: Float @state(class: PREVIEW)
-  locale: String @state(class: LOCAL_UI)
+  artifact: WiresArtifact @state(class: ARTIFACT)
+  wiresFixture: DslValue @state(class: ARTIFACT)
+  boardFixture: DslValue @state(class: ARTIFACT)
+  selectedIds: WiresStringList @state(class: PRESENCE)
+  dragNodeId: String @state(class: ARTIFACT)
+  dragLastX: Float @state(class: ARTIFACT)
+  dragLastY: Float @state(class: ARTIFACT)
+  locale: String @state(class: CONFIG)
 }
 
 type WiresArtifact {

@@ -11,49 +11,49 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "norm.en1997", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1997")]
 pub struct En1997Snapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub v_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub h_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub footing_area_m2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub phi_deg: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub c_kpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub gamma_kn_m3: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub b_m: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub d_f_m: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub e_s_mpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub nu: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub design_approach: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub annex: crate::document::AnnexChoice,
-    #[state(persistent)]
+    #[state(artifact)]
     pub settlement_limit_mm: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub n_pile_ed_kn: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub alpha_s: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub pile_d_m: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub q_s_kpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub pile_l_m: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub q_b_kpa: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub pile_base_area_m2: f64,
-    #[state(persistent)]
+    #[state(artifact)]
     pub pile_n_profiles: u32,
-    #[state(persistent)]
+    #[state(artifact)]
     pub z_investigated_m: f64,
 }
 //#endregion 🔖️Snapshot

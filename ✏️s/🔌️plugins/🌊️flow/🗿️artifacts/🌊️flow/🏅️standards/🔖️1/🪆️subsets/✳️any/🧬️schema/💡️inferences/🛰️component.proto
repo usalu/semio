@@ -4,7 +4,7 @@ package semio.s.flow.flow.inference;
 // 💡️ Flow inference schema — topology (topological order + depth + cycle-freedom) over widgets/synapses.
 
 message FlowInference {
-  // @state inferred
+  // @derived
   FlowTopology topology = 1;
 }
 

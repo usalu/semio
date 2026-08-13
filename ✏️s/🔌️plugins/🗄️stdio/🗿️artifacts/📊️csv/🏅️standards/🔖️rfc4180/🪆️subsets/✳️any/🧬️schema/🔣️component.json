@@ -5,11 +5,11 @@
   "additionalProperties": false,
   "required": ["schema", "hasHeader", "records"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "hasHeader": { "type": "boolean", "x-semio-state": "persistent" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "hasHeader": { "type": "boolean", "x-semio-state": "artifact" },
     "records": {
       "type": "array",
-      "x-semio-state": "persistent",
+      "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "additionalProperties": false,

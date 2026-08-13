@@ -8,6 +8,6 @@ export interface BinaryExtent {
 }
 
 export interface BinaryInference {
-  /** @state inferred */
+  /** @derived */
   extent: BinaryExtent;
 }

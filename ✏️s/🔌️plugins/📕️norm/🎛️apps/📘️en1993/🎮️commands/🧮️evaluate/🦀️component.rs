@@ -36,7 +36,7 @@ mod tests {
     fn handle_emits_no_mutation_since_the_report_is_always_recomputed() {
         let projection = En1993Snapshot::default();
         let config = NormConfig::default();
-        let emit = handle(&Evaluate {}, &ArtifactView { snapshot: &projection, history: &HistoryView::empty() }, &ConfigView { snapshot: &config }).expect("handle");
+        let emit = handle(&Evaluate {}, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
         assert!(emit.artifact_mutations.is_empty());
         assert!(emit.config_mutations.is_empty());
     }

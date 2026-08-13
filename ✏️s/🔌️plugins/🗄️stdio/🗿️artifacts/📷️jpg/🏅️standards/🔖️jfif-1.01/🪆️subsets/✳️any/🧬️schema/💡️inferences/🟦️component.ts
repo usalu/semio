@@ -9,6 +9,6 @@ export interface JpgDimensions {
 }
 
 export interface JpgInference {
-  /** @state inferred */
+  /** @derived */
   dimensions: JpgDimensions;
 }

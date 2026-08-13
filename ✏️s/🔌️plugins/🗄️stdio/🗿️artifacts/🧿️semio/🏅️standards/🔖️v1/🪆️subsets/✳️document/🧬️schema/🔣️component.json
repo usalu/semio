@@ -5,9 +5,9 @@
   "type": "object",
   "required": ["schema", "styles", "images", "blocks"],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "styles": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } },
-    "images": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } },
-    "blocks": { "type": "array", "x-semio-state": "persistent", "items": { "type": "object" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "styles": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } },
+    "images": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } },
+    "blocks": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } }
   }
 }

@@ -21,7 +21,7 @@ use super::profile::{compute_semio_text_profile, SemioTextProfile};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.text.inference")]
 pub struct SemioTextInference {
-    #[state(inferred)]
+    #[derived]
     pub profile: SemioTextProfile,
 }
 

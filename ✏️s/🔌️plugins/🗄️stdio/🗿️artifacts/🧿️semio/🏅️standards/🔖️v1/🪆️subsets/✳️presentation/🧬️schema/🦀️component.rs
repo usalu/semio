@@ -9,15 +9,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.presentation")]
 pub struct SemioPresentationArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub masters: Vec<SlideMaster>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub layouts: Vec<SlideLayout>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub slides: Vec<Slide>,
 }

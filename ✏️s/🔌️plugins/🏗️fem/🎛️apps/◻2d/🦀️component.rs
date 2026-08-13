@@ -689,13 +689,13 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let media = Fem2dPlayApp::export_media("document:out", &doc).expect("document:out exports");
         assert_eq!(media.media_type.class, MediaClass::TwoD);
         assert_eq!(media.media_type.form, MediaForm::Vector);
         let empty_projection = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let empty_history = semio_framework_plugin::HistoryView::empty();
-        let empty_doc = ArtifactView { snapshot: &empty_projection, history: &empty_history };
+        let empty_doc = ArtifactView::new(&empty_projection, &empty_history);
         let emit = Fem2dPlayApp::import_media("document:in", &media, &empty_doc).expect("document:in imports");
         assert!(emit.artifact_mutations.is_empty(), "whole-document replace must not be an artifact_mutations entry");
         let semio_framework::kernel::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
@@ -710,7 +710,7 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let media = Fem2dPlayApp::export_media("results:out", &doc).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
@@ -734,7 +734,7 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let error = Fem2dPlayApp::export_media("results:out", &doc).expect_err("no load cases means no results to export");
         match error {
             MediaError::Payload(port, _) => assert_eq!(port, "results:out"),
@@ -747,7 +747,7 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         assert!(matches!(Fem2dPlayApp::export_media("bogus:out", &doc), Err(MediaError::NotImplemented)));
     }
 
@@ -757,7 +757,7 @@ mod tests {
         let mut snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         snapshot.materials.push(crate::artifacts::fem2d::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let payload = json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
@@ -777,7 +777,7 @@ mod tests {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let payload = json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");

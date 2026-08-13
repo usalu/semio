@@ -7,27 +7,27 @@
   "properties": {
     "artifact": {
       "$ref": "#/$defs/Procedural2dArtifact",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "fixture": {
       "$ref": "#/$defs/FlowFixture",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "generation": {
       "$ref": "#/$defs/GenerationPlayState",
-      "x-semio-state": "persistent"
+      "x-semio-state": "artifact"
     },
     "selectedIds": {
       "$ref": "#/$defs/Procedural2dStringList",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "graphCamera": {
       "$ref": "#/$defs/CameraJson",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "showMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectedGenerationId": {
       "oneOf": [
@@ -38,7 +38,7 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "generationPreviewText": {
       "oneOf": [
@@ -49,11 +49,11 @@
           "type": "string"
         }
       ],
-      "x-semio-state": "preview"
+      "x-semio-state": "artifact"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

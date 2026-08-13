@@ -1,169 +1,169 @@
 /** 🧬️ ProgramSnapshot diff schema — sparse field delta. */
 
 export interface ProgramDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: ProgramArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   meta?: ProgramMeta;
-  /** @state persistent */
+  /** @state artifact */
   project?: ProjectDefinition;
-  /** @state persistent */
+  /** @state artifact */
   stakeholders?: ProgramStakeholdersDelta;
-  /** @state persistent */
+  /** @state artifact */
   users?: ProgramUsersDelta;
-  /** @state persistent */
+  /** @state artifact */
   activities?: ProgramActivitiesDelta;
-  /** @state persistent */
+  /** @state artifact */
   functions?: ProgramFunctionsDelta;
-  /** @state persistent */
+  /** @state artifact */
   elements?: ProgramElementsDelta;
-  /** @state persistent */
+  /** @state artifact */
   quantities?: ProgramQuantitiesDelta;
-  /** @state persistent */
+  /** @state artifact */
   relationships?: ProgramRelationshipsDelta;
-  /** @state persistent */
+  /** @state artifact */
   adjacencies?: ProgramAdjacenciesDelta;
-  /** @state persistent */
+  /** @state artifact */
   processes?: ProgramProcessesDelta;
-  /** @state persistent */
+  /** @state artifact */
   flows?: ProgramFlowsDelta;
-  /** @state persistent */
+  /** @state artifact */
   accessRules?: ProgramAccessRulesDelta;
-  /** @state persistent */
+  /** @state artifact */
   operations?: ProgramOperationsDelta;
-  /** @state persistent */
+  /** @state artifact */
   equipment?: ProgramEquipmentDelta;
-  /** @state persistent */
+  /** @state artifact */
   resources?: ProgramResourcesDelta;
-  /** @state persistent */
+  /** @state artifact */
   storage?: ProgramStorageDelta;
-  /** @state persistent */
+  /** @state artifact */
   environmental?: ProgramEnvironmentalDelta;
-  /** @state persistent */
+  /** @state artifact */
   humanFactors?: ProgramHumanFactorsDelta;
-  /** @state persistent */
+  /** @state artifact */
   accessibility?: ProgramAccessibilityDelta;
-  /** @state persistent */
+  /** @state artifact */
   privacy?: ProgramPrivacyDelta;
-  /** @state persistent */
+  /** @state artifact */
   safety?: ProgramSafetyDelta;
-  /** @state persistent */
+  /** @state artifact */
   security?: ProgramSecurityDelta;
-  /** @state persistent */
+  /** @state artifact */
   regulatory?: ProgramRegulatoryDelta;
-  /** @state persistent */
+  /** @state artifact */
   siteContext?: ProgramSiteContextDelta;
-  /** @state persistent */
+  /** @state artifact */
   organizational?: ProgramOrganizationalDelta;
-  /** @state persistent */
+  /** @state artifact */
   services?: ProgramServicesDelta;
-  /** @state persistent */
+  /** @state artifact */
   infrastructure?: ProgramInfrastructureDelta;
-  /** @state persistent */
+  /** @state artifact */
   information?: ProgramInformationDelta;
-  /** @state persistent */
+  /** @state artifact */
   communication?: ProgramCommunicationDelta;
-  /** @state persistent */
+  /** @state artifact */
   wayfinding?: ProgramWayfindingDelta;
-  /** @state persistent */
+  /** @state artifact */
   schedules?: ProgramSchedulesDelta;
-  /** @state persistent */
+  /** @state artifact */
   flexibility?: ProgramFlexibilityDelta;
-  /** @state persistent */
+  /** @state artifact */
   growth?: ProgramGrowthDelta;
-  /** @state persistent */
+  /** @state artifact */
   sustainability?: ProgramSustainabilityDelta;
-  /** @state persistent */
+  /** @state artifact */
   resilience?: ProgramResilienceDelta;
-  /** @state persistent */
+  /** @state artifact */
   costs?: ProgramCostsDelta;
-  /** @state persistent */
+  /** @state artifact */
   delivery?: ProgramDeliveryDelta;
-  /** @state persistent */
+  /** @state artifact */
   risks?: ProgramRisksDelta;
-  /** @state persistent */
+  /** @state artifact */
   conflicts?: ProgramConflictsDelta;
-  /** @state persistent */
+  /** @state artifact */
   requirements?: ProgramRequirementsDelta;
-  /** @state persistent */
+  /** @state artifact */
   priorities?: ProgramPrioritiesDelta;
-  /** @state persistent */
+  /** @state artifact */
   scenarios?: ProgramScenariosDelta;
-  /** @state persistent */
+  /** @state artifact */
   options?: ProgramOptionsDelta;
-  /** @state persistent */
+  /** @state artifact */
   decisions?: ProgramDecisionsDelta;
-  /** @state persistent */
+  /** @state artifact */
   validations?: ProgramValidationsDelta;
-  /** @state persistent */
+  /** @state artifact */
   performance?: ProgramPerformanceDelta;
-  /** @state persistent */
+  /** @state artifact */
   quality?: ProgramQualityDelta;
-  /** @state persistent */
+  /** @state artifact */
   documents?: ProgramDocumentsDelta;
-  /** @state persistent */
+  /** @state artifact */
   assumptions?: ProgramAssumptionsDelta;
-  /** @state persistent */
+  /** @state artifact */
   constraints?: ProgramConstraintsDelta;
-  /** @state persistent */
+  /** @state artifact */
   complianceRecords?: ProgramComplianceRecordsDelta;
-  /** @state persistent */
+  /** @state artifact */
   approvals?: ProgramApprovalsDelta;
-  /** @state persistent */
+  /** @state artifact */
   meetings?: ProgramMeetingsDelta;
-  /** @state persistent */
+  /** @state artifact */
   changes?: ProgramChangesDelta;
-  /** @state persistent */
+  /** @state artifact */
   collaboration?: ProgramCollaborationDelta;
-  /** @state persistent */
+  /** @state artifact */
   analyses?: ProgramAnalysesDelta;
-  /** @state persistent */
+  /** @state artifact */
   reports?: ProgramReportsDelta;
-  /** @state persistent */
+  /** @state artifact */
   searchFilters?: ProgramSearchFiltersDelta;
-  /** @state persistent */
+  /** @state artifact */
   statusRecords?: ProgramStatusRecordsDelta;
-  /** @state persistent */
+  /** @state artifact */
   workshops?: ProgramWorkshopsDelta;
-  /** @state persistent */
+  /** @state artifact */
   surveys?: ProgramSurveysDelta;
-  /** @state persistent */
+  /** @state artifact */
   issues?: ProgramIssuesDelta;
-  /** @state persistent */
+  /** @state artifact */
   auditEvents?: ProgramAuditEventsDelta;
-  /** @state persistent */
+  /** @state artifact */
   templates?: ProgramTemplatesDelta;
-  /** @state persistent */
+  /** @state artifact */
   knowledge?: ProgramKnowledgeDelta;
-  /** @state persistent */
+  /** @state artifact */
   benchmarks?: ProgramBenchmarksDelta;
-  /** @state persistent */
+  /** @state artifact */
   traces?: ProgramTracesDelta;
-  /** @state persistent */
+  /** @state artifact */
   governance?: Governance;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds?: string;
-  /** @state shared-ui */
+  /** @state presence */
   activeRegister?: string;
-  /** @state shared-ui */
+  /** @state presence */
   adjacencyKindFilter?: AdjacencyKind;
-  /** @state shared-ui */
+  /** @state presence */
   activeReportJson?: string;
-  /** @state local-ui */
+  /** @state config */
   searchQuery?: string;
-  /** @state local-ui */
+  /** @state config */
   searchHistoryJson?: string;
-  /** @state local-ui */
+  /** @state config */
   lastResultJson?: string;
-  /** @state local-ui */
+  /** @state config */
   lastAnalysisJson?: string;
-  /** @state local-ui */
+  /** @state config */
   graphCameraX?: number;
-  /** @state local-ui */
+  /** @state config */
   graphCameraY?: number;
-  /** @state local-ui */
+  /** @state config */
   graphCameraZoom?: number;
 }
 

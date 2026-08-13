@@ -14,24 +14,24 @@
     "selectedNodeIds": {
       "type": "array",
       "items": { "type": "string" },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeHoverVar": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "activeSelectVar": {
       "type": "string",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "beforePaneCamera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     },
     "lodModeByWindow": {
       "type": "object",
       "additionalProperties": { "type": "string" },
-      "x-semio-state": "shared-ui"
+      "x-semio-state": "presence"
     }
   },
   "$defs": {

@@ -19,7 +19,7 @@ use super::bounds::{compute_semio_cad_bounds, SemioCadBounds};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.cad.inference")]
 pub struct SemioCadInference {
-    #[state(inferred)]
+    #[derived]
     pub bounds: SemioCadBounds,
 }
 

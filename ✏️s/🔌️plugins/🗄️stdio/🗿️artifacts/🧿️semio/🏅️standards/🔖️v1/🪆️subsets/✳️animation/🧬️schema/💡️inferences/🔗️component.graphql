@@ -1,7 +1,7 @@
 # 💡️ Semio animation inference schema — keyframe-derived playback duration.
 
 type SemioAnimationInference {
-  duration: SemioAnimationDuration! @state(class: INFERRED)
+  duration: SemioAnimationDuration! @derived
 }
 
 type SemioAnimationDuration {

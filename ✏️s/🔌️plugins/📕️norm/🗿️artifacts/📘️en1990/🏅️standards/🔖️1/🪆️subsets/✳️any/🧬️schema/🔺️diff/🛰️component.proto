@@ -2,21 +2,21 @@ syntax = "proto3";
 package semio.s.norm.en1990.diff;
 
 message En1990Diff {
-  // @state persistent
+  // @state artifact
   optional En1990Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional double g_k = 2;
-  // @state persistent
+  // @state artifact
   optional En1990QkList q_k = 3;
-  // @state persistent
+  // @state artifact
   optional double resistance_kn = 4;
-  // @state persistent
+  // @state artifact
   optional uint32 consequence_class = 5;
-  // @state persistent
+  // @state artifact
   optional string annex = 6;
-  // @state persistent
+  // @state artifact
   optional double seismic_a_ed_kn = 7;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 8;
 }
 

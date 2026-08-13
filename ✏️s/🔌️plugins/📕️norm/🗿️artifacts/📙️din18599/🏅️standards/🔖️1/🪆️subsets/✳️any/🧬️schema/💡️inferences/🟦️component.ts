@@ -7,6 +7,6 @@ export interface Din18599Outline {
 }
 
 export interface Din18599Inference {
-  /** @state inferred */
+  /** @derived */
   outline: Din18599Outline;
 }

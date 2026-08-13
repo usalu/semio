@@ -20,7 +20,7 @@ use super::outline::{compute_semio_presentation_outline, SemioPresentationOutlin
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.presentation.inference")]
 pub struct SemioPresentationInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: SemioPresentationOutline,
 }
 

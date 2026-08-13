@@ -4,6 +4,6 @@ type WavMutationEntry {
   value: String!
 }
 type WavMutation {
-  schema: String! @state(class: PERSISTENT)
-  entries: [WavMutationEntry!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [WavMutationEntry!]! @state(class: ARTIFACT)
 }

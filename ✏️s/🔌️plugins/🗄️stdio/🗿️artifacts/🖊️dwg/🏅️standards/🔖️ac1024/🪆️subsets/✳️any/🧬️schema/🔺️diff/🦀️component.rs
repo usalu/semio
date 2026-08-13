@@ -118,19 +118,19 @@ impl DwgSectionsDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg.diff")]
 pub struct DwgDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maintenance_version: Option<u8>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub codepage: Option<u16>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bytes: Option<Vec<u8>>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sections: Option<DwgSectionsDiff>,
 }

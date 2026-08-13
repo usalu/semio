@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["topology"],
   "properties": {
-    "topology": { "$ref": "#/$defs/WiresTopology", "x-semio-state": "inferred" }
+    "topology": { "$ref": "#/$defs/WiresTopology", "x-semio-derived": true }
   },
   "$defs": {
     "WiresTopology": {

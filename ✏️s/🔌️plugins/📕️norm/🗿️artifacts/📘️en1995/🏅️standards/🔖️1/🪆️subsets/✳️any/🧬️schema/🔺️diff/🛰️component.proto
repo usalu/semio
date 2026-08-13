@@ -3,48 +3,48 @@ syntax = "proto3";
 package semio.s.norm.en1995.diff;
 
 message En1995Diff {
-  // @state persistent
+  // @state artifact
   optional En1995Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional double annex = 2;
-  // @state persistent
+  // @state artifact
   optional double m_ed_knm = 3;
-  // @state persistent
+  // @state artifact
   optional double n_ed_kn = 4;
-  // @state persistent
+  // @state artifact
   optional double v_ed_kn = 5;
-  // @state persistent
+  // @state artifact
   optional double w_mm3 = 6;
-  // @state persistent
+  // @state artifact
   optional double a_mm2 = 7;
-  // @state persistent
+  // @state artifact
   optional double b_mm = 8;
-  // @state persistent
+  // @state artifact
   optional double h_mm = 9;
-  // @state persistent
+  // @state artifact
   optional double f_m_k = 10;
-  // @state persistent
+  // @state artifact
   optional double f_c_0_k = 11;
-  // @state persistent
+  // @state artifact
   optional double service_class = 12;
-  // @state persistent
+  // @state artifact
   optional double load_duration = 13;
-  // @state persistent
+  // @state artifact
   optional double m_crit_knm = 14;
-  // @state persistent
+  // @state artifact
   optional double f_ed_kn = 15;
-  // @state persistent
+  // @state artifact
   optional double a_ef_mm2 = 16;
-  // @state persistent
+  // @state artifact
   optional double f_v_k = 17;
-  // @state persistent
+  // @state artifact
   optional double fire_duration_min = 18;
-  // @state persistent
+  // @state artifact
   optional double section_depth_mm = 19;
-  // @state persistent
+  // @state artifact
   optional double a_vert_m_s2 = 20;
-  // @state persistent
+  // @state artifact
   optional double n_cycles_bridge = 21;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 22;
 }

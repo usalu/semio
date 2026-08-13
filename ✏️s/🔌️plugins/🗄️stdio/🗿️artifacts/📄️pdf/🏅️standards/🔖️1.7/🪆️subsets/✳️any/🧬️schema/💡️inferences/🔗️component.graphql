@@ -1,7 +1,7 @@
 # 💡️ Pdf (1.7) inference schema — document outline (page count, word count, title).
 
 type Pdf17Inference {
-  outline: Pdf17Outline! @state(class: INFERRED)
+  outline: Pdf17Outline! @derived
 }
 
 type Pdf17Outline {

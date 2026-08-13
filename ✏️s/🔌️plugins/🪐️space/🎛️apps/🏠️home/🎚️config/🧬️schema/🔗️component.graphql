@@ -1,4 +1,4 @@
 type HomeConfig {
-  activePanelTab: String! @state(class: LOCAL_UI)
-  locale: String! @state(class: LOCAL_UI)
+  activePanelTab: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
 }

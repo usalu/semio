@@ -10,17 +10,17 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.present")]
 pub struct PresentArtifact {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     pub source: FigureTileSource,
-    #[state(persistent)]
+    #[state(artifact)]
     pub tiles: Vec<FigureTileDraft>,
-    #[state(shared_ui)]
+    #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(local_ui)]
+    #[state(config)]
     pub engagement_input: String,
-    #[state(local_ui)]
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Artifact

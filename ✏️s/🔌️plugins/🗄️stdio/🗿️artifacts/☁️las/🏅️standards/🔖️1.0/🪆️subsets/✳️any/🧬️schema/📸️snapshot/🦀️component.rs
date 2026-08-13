@@ -141,15 +141,15 @@ pub struct LasPoint {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.las")]
 pub struct LasSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub header: LasHeader,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub vlrs: Vec<LasVlr>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub points: Vec<LasPoint>,
 }

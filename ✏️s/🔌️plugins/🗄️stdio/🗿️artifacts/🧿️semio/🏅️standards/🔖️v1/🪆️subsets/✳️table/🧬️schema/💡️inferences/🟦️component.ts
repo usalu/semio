@@ -12,6 +12,6 @@ export interface SemioTableShape {
 }
 
 export interface SemioTableInference {
-  /** @state inferred */
+  /** @derived */
   shape: SemioTableShape;
 }

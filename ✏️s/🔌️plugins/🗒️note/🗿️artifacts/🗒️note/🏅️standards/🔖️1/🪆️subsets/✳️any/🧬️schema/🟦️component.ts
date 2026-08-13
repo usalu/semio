@@ -1,47 +1,47 @@
 /** 🧬️ Note artifact schema — every field with its state class. */
 
 export interface NoteArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   title?: string;
-  /** @state persistent */
+  /** @state artifact */
   blocks: NoteBlockNode[];
-  /** @state persistent */
+  /** @state artifact */
   gridVisible?: boolean;
-  /** @state persistent */
+  /** @state artifact */
   gridSpacing?: number;
-  /** @state persistent */
+  /** @state artifact */
   gridSubdivisions?: number;
-  /** @state persistent */
+  /** @state artifact */
   gridOpacity?: number;
-  /** @state persistent */
+  /** @state artifact */
   snapEnabled?: boolean;
-  /** @state persistent */
+  /** @state artifact */
   snapGridSpacing?: number;
-  /** @state persistent */
+  /** @state artifact */
   pencilWidth?: number;
-  /** @state persistent */
+  /** @state artifact */
   eraserRadius?: number;
-  /** @state persistent */
+  /** @state artifact */
   assets: Record<string, NoteImageAsset>;
-  /** @state shared-ui */
+  /** @state presence */
   selectedBlockIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   cameraX: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredBlockId?: string;
 }
 

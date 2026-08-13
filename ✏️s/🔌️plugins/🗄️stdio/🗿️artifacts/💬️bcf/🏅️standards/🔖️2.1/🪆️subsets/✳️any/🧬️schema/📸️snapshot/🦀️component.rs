@@ -168,18 +168,18 @@ pub struct BcfRawPart {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf")]
 pub struct BcfSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
     /// 🏷️ `bcf.version`'s `VersionId` attribute (e.g. `"2.1"`).
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub version: String,
     /// 🗂️ Guid-keyed topics — the primary typed content.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub topics: Vec<BcfTopic>,
     /// 🗄️ Name-keyed raw retention for everything not modeled above.
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub parts: Vec<BcfRawPart>,
 }

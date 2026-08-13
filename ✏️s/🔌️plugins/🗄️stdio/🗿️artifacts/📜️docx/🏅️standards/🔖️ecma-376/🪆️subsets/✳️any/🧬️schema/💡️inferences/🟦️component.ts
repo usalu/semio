@@ -7,6 +7,6 @@ export interface DocxOutline {
 }
 
 export interface DocxInference {
-  /** @state inferred */
+  /** @derived */
   outline: DocxOutline;
 }

@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.app.block.2d.presence;
 message Block2dPresence {
-  // @state shared-ui
+  // @state presence
   repeated string selected_ids = 1;
 }

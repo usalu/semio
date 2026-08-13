@@ -4,7 +4,7 @@ package semio.s.forms.forms.inference;
 // 💡️ Forms inference schema — topology (step/block dependency order).
 
 message FormsInference {
-  // @state inferred
+  // @derived
   FormsTopology topology = 1;
 }
 

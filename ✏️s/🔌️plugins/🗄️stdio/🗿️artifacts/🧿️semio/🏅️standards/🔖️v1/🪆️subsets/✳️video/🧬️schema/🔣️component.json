@@ -4,8 +4,8 @@
   "description": "Full artifact state, mirrors SemioVideoSnapshot field for field.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "persistent" },
-    "streams": { "type": "array", "x-semio-state": "persistent", "items": { "$ref": "./📸️snapshot/🔣️component.json#/properties/streams/items" } }
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "streams": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "./📸️snapshot/🔣️component.json#/properties/streams/items" } }
   },
   "required": ["schema", "streams"]
 }

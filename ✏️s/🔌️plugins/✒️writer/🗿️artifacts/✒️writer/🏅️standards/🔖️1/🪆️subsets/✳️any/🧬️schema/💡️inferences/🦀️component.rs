@@ -22,7 +22,7 @@ use super::outline::WriterOutline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer.inference")]
 pub struct WriterInference {
-    #[state(inferred)]
+    #[derived]
     pub outline: WriterOutline,
 }
 

@@ -154,8 +154,8 @@ type GltfDocument {
 enum GltfSourceForm { JSON GLB }
 
 type GltfSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  document: GltfDocument! @state(class: PERSISTENT)
-  buffers: [[Int!]!]! @state(class: PERSISTENT)
-  sourceForm: GltfSourceForm! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  document: GltfDocument! @state(class: ARTIFACT)
+  buffers: [[Int!]!]! @state(class: ARTIFACT)
+  sourceForm: GltfSourceForm! @state(class: ARTIFACT)
 }

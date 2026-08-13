@@ -20,7 +20,7 @@ use super::flat_position::{Puzzle3dFlatCenter, Puzzle3dFlatPlane};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d.inference")]
 pub struct Puzzle3dInference {
-    #[state(inferred)]
+    #[derived]
     pub flat_positions: BTreeMap<String, FlattenPose>,
 }
 

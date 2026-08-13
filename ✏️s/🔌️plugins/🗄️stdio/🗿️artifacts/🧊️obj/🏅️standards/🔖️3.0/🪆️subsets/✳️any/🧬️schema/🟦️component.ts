@@ -12,15 +12,15 @@ export interface ObjSmoothingRange { faceIndexFrom: number; group?: number; }
 export interface ObjUnknownStatement { lineIndex: number; raw: string; }
 
 export interface ObjArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ vertices: ObjVertex[];
-  /** @state persistent */ texcoords: ObjTexCoord[];
-  /** @state persistent */ normals: ObjNormal[];
-  /** @state persistent */ faces: ObjFace[];
-  /** @state persistent */ groups: ObjGroup[];
-  /** @state persistent */ objects: ObjObject[];
-  /** @state persistent */ mtllib?: string;
-  /** @state persistent */ usemtl: ObjUsemtlRange[];
-  /** @state persistent */ smoothingGroups: ObjSmoothingRange[];
-  /** @state persistent */ unknownStatements: ObjUnknownStatement[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ vertices: ObjVertex[];
+  /** @state artifact */ texcoords: ObjTexCoord[];
+  /** @state artifact */ normals: ObjNormal[];
+  /** @state artifact */ faces: ObjFace[];
+  /** @state artifact */ groups: ObjGroup[];
+  /** @state artifact */ objects: ObjObject[];
+  /** @state artifact */ mtllib?: string;
+  /** @state artifact */ usemtl: ObjUsemtlRange[];
+  /** @state artifact */ smoothingGroups: ObjSmoothingRange[];
+  /** @state artifact */ unknownStatements: ObjUnknownStatement[];
 }

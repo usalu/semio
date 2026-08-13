@@ -22,7 +22,7 @@ use super::topology::{compute_raster_topology, RasterTopology};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster.inference")]
 pub struct RasterInference {
-    #[state(inferred)]
+    #[derived]
     pub topology: RasterTopology,
 }
 

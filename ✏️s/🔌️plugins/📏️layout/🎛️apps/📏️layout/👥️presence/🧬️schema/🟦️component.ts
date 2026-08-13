@@ -1,16 +1,16 @@
 /** 🧬️ LayoutPresence */
 export interface LayoutPresence {
-  /** @state shared-ui */
+  /** @state presence */
   activePageId: string;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   hoveredId?: string;
-  /** @state shared-ui */
+  /** @state presence */
   dropPreview: LayoutDropPreviewState;
-  /** @state shared-ui */
+  /** @state presence */
   camera: LayoutCamera;
-  /** @state shared-ui */
+  /** @state presence */
   previewCamera: LayoutCamera;
 }
 export interface LayoutDropPreviewState { kind: string; x: number; y: number; }

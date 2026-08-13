@@ -13,6 +13,6 @@ export interface SemioCadBounds {
 }
 
 export interface SemioCadInference {
-  /** @state inferred */
+  /** @derived */
   bounds: SemioCadBounds;
 }

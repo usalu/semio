@@ -4,7 +4,7 @@ package semio.s.shooting.shooting.inference;
 // 💡️ Shooting inference schema — topology derived from the shot→camera reference graph.
 
 message ShootingInference {
-  // @state inferred
+  // @derived
   ShootingTopology topology = 1;
 }
 

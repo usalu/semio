@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn set_fixture_json_replaces_document() {
         let (snapshot, history) = empty_view();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = NoteConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = set_fixture_json::handle(&set_fixture_json::SetFixtureJson { json: crate::artifacts::note::schema::semio_example_json() }, &doc, &cfg).expect("handle");
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn set_active_example_loads_semio_blocks() {
         let (snapshot, history) = empty_view();
-        let doc = ArtifactView { snapshot: &snapshot, history: &history };
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = NoteConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
 

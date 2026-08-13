@@ -12,7 +12,7 @@ pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, Signa
 pub use crate::os_spr::format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
 pub use crate::os_spr::history::{
     decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange,
-    HistoryCheckpoint, HistoryCursor, HistoryEdit, HistoryLog, HistoryOpMeta, HistoryReader, OpPayload, REC_CURSOR,
+    HistoryCheckpoint, HistoryComposition, HistoryCursor, HistoryEdit, HistoryLog, HistoryOpMeta, HistoryReader, OpPayload, REC_COMPOSITION, REC_CURSOR,
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
@@ -22,7 +22,7 @@ pub use crate::os_spr::causal::{
     decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, ArtifactDiff,
     FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseMutation, MutationDag, MutationDagError, MutationEnvelope, MutationTransform, TransformOutcome,
 };
-pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, SectionProbe, CHANNEL_VERSION};
+pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, ChildPackEntry, SectionProbe, CHANNEL_VERSION};
 pub use crate::os_spr::command::{
     apply_collection_mutation, collection_diff_from_mutation, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, register_mutation_descriptor, str_eq, CollectionDiff, CollectionMutation, CommandOutcome, DiffAlgebra,
     DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
@@ -240,6 +240,7 @@ mod tests {
             // include one here to prove the compile_ops/decompile_ops text-tooling path preserves
             // it byte-for-byte, same as every other structural line.
             cursor: Some(HistoryCursor { applied_edit_ids: vec!["e0".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: None }),
+            composition: None,
         };
         let ops_text = crate::os_spr::history::print_ops_text(&log).unwrap();
 

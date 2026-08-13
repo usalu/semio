@@ -4,7 +4,7 @@ import type { HtmlNode } from './📸️snapshot/🟦️component.ts';
 export type { HtmlNode };
 
 export interface HtmlArtifact {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ doctype?: string;
-  /** @state persistent */ root: HtmlNode;
+  /** @state artifact */ schema: string;
+  /** @state artifact */ doctype?: string;
+  /** @state artifact */ root: HtmlNode;
 }

@@ -4,43 +4,43 @@ package semio.s.flow.flow.artifact;
 // 🧬️ Flow artifact schema — every field with its state class.
 
 message FlowArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   CameraJson camera = 2;
-  // @state persistent
+  // @state artifact
   repeated Widget widgets = 3;
-  // @state persistent
+  // @state artifact
   repeated SynapseSpec synapses = 4;
-  // @state persistent
+  // @state artifact
   map<string, WidgetLayout> layout = 5;
-  // @state shared-ui
+  // @state presence
   repeated string selected_node_ids = 6;
-  // @state shared-ui
+  // @state presence
   repeated string selected_edge_ids = 7;
-  // @state shared-ui
+  // @state presence
   repeated string selected_handle_ids = 8;
-  // @state shared-ui
+  // @state presence
   repeated string preview_off_node_ids = 9;
-  // @state local-ui
+  // @state config
   string lod_mode = 10;
-  // @state local-ui
+  // @state config
   double proximity_distance = 11;
-  // @state local-ui
+  // @state config
   bool grid_visible = 12;
-  // @state local-ui
+  // @state config
   bool grid_snap_enabled = 13;
-  // @state local-ui
+  // @state config
   double grid_factor = 14;
-  // @state local-ui
+  // @state config
   string catalogue_sections_json = 15;
-  // @state local-ui
+  // @state config
   string automation_enabled_json = 16;
-  // @state local-ui
+  // @state config
   string contributions_json = 17;
-  // @state local-ui
+  // @state config
   string generation_json = 18;
-  // @state local-ui
+  // @state config
   string locale = 19;
 }
 

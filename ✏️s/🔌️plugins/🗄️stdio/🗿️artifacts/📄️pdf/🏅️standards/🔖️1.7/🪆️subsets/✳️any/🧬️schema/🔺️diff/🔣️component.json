@@ -93,10 +93,10 @@
   },
   "type": "object",
   "properties": {
-    "declaredVersion": { "type": "string", "x-semio-state": "persistent" },
-    "info": { "$ref": "#/$defs/PdfInfo", "x-semio-state": "persistent" },
-    "pages": { "$ref": "#/$defs/PdfPagesDiff", "x-semio-state": "persistent" },
-    "objects": { "$ref": "#/$defs/PdfObjectsDiff", "x-semio-state": "persistent" },
-    "trailer": { "$ref": "#/$defs/PdfDictDiff", "x-semio-state": "persistent" }
+    "declaredVersion": { "type": "string", "x-semio-state": "artifact" },
+    "info": { "$ref": "#/$defs/PdfInfo", "x-semio-state": "artifact" },
+    "pages": { "$ref": "#/$defs/PdfPagesDiff", "x-semio-state": "artifact" },
+    "objects": { "$ref": "#/$defs/PdfObjectsDiff", "x-semio-state": "artifact" },
+    "trailer": { "$ref": "#/$defs/PdfDictDiff", "x-semio-state": "artifact" }
   }
 }

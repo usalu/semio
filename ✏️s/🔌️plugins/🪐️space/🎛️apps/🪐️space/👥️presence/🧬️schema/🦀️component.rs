@@ -8,11 +8,11 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.space.space.presence")]
 pub struct SpacePresence {
-    #[state(shared_ui)] pub selected_node_ids: Vec<String>,
-    #[state(shared_ui)] pub hovered_node_id: Option<String>,
-    #[state(shared_ui)] pub camera: BTreeMap<String, SpaceWindowCamera>,
-    #[state(shared_ui)] pub active_node_id: Option<String>,
-    #[state(shared_ui)] pub focused_node_id: Option<String>,
-    #[state(shared_ui)] pub collapsed_node_ids: Vec<String>,
-    #[state(shared_ui)] pub preview_off_node_ids: Vec<String>,
+    #[state(presence)] pub selected_node_ids: Vec<String>,
+    #[state(presence)] pub hovered_node_id: Option<String>,
+    #[state(presence)] pub camera: BTreeMap<String, SpaceWindowCamera>,
+    #[state(presence)] pub active_node_id: Option<String>,
+    #[state(presence)] pub focused_node_id: Option<String>,
+    #[state(presence)] pub collapsed_node_ids: Vec<String>,
+    #[state(presence)] pub preview_off_node_ids: Vec<String>,
 }

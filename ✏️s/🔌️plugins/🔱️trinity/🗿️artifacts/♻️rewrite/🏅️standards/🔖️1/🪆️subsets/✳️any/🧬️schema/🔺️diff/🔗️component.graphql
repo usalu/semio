@@ -1,20 +1,20 @@
 # 🧬️ Rewrite diff schema — sparse field delta.
 
 type RewriteDiff {
-  beforeFixtureJson: String @state(class: PERSISTENT)
-  lhsJson: String @state(class: PERSISTENT)
-  rhsJson: String @state(class: PERSISTENT)
-  parameterBindings: [PropertyValueOptEntry!] @state(class: PERSISTENT)
-  ruleLayout: [LayoutPointOptEntry!] @state(class: PERSISTENT)
-  selectedNodeIds: RewriteStringList @state(class: SHARED_UI)
-  activeHoverVar: String @state(class: SHARED_UI)
-  activeSelectVar: String @state(class: SHARED_UI)
-  lodModeByWindow: [StringOptEntry!] @state(class: SHARED_UI)
-  beforePaneCamera: Camera @state(class: LOCAL_UI)
-  reorganizeEpoch: Int @state(class: LOCAL_UI)
-  hoverEpoch: Int @state(class: LOCAL_UI)
-  selectEpoch: Int @state(class: LOCAL_UI)
-  locale: String @state(class: LOCAL_UI)
+  beforeFixtureJson: String @state(class: ARTIFACT)
+  lhsJson: String @state(class: ARTIFACT)
+  rhsJson: String @state(class: ARTIFACT)
+  parameterBindings: [PropertyValueOptEntry!] @state(class: ARTIFACT)
+  ruleLayout: [LayoutPointOptEntry!] @state(class: ARTIFACT)
+  selectedNodeIds: RewriteStringList @state(class: PRESENCE)
+  activeHoverVar: String @state(class: PRESENCE)
+  activeSelectVar: String @state(class: PRESENCE)
+  lodModeByWindow: [StringOptEntry!] @state(class: PRESENCE)
+  beforePaneCamera: Camera @state(class: CONFIG)
+  reorganizeEpoch: Int @state(class: CONFIG)
+  hoverEpoch: Int @state(class: CONFIG)
+  selectEpoch: Int @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
 }
 
 type RewriteStringList {

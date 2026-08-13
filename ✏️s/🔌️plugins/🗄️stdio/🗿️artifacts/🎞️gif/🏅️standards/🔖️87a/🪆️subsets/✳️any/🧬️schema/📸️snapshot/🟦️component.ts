@@ -4,6 +4,6 @@ export interface GifEntry {
   data: number[];
 }
 export interface GifSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: GifEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: GifEntry[];
 }

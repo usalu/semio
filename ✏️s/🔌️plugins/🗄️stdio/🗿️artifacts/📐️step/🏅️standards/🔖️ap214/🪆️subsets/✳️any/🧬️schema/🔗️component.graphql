@@ -1,5 +1,5 @@
 # 🧬️ StepArtifact
 type StepArtifact {
-  schema: String! @state(class: PERSISTENT)
-  PLACEHOLDER_TEXT_COLON String! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  PLACEHOLDER_TEXT_COLON String! @state(class: ARTIFACT)
 }

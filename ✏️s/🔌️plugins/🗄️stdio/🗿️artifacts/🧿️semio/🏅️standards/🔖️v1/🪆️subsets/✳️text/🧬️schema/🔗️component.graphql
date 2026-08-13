@@ -10,6 +10,6 @@ type SemioTextRun {
   marks: [SemioTextMark!]!
 }
 type SemioTextArtifact {
-  schema: String! @state(class: PERSISTENT)
-  runs: [SemioTextRun!]! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  runs: [SemioTextRun!]! @state(class: ARTIFACT)
 }

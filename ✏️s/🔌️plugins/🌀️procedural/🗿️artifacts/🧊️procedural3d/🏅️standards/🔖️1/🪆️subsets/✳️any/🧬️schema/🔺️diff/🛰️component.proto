@@ -4,37 +4,37 @@ package semio.s.procedural.procedural3d.diff;
 // 🧬️ Procedural3d diff schema — sparse field delta.
 
 message Procedural3dDiff {
-  // @state persistent
+  // @state artifact
   optional Procedural3dArtifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional FlowFixture fixture = 2;
-  // @state persistent
+  // @state artifact
   optional GenerationPlayState generation = 3;
-  // @state shared-ui
+  // @state presence
   optional Procedural3dStringList selected_node_ids = 4;
-  // @state local-ui
+  // @state config
   optional string lod_mode = 5;
-  // @state local-ui
+  // @state config
   optional string show_mode = 6;
-  // @state local-ui
+  // @state config
   optional string selection_method = 7;
-  // @state preview
+  // @state artifact
   optional string hovered_node_id = 8;
-  // @state local-ui
+  // @state config
   optional CameraJson graph_camera = 9;
-  // @state local-ui
+  // @state config
   optional Procedural3dPreviewCamera preview_camera = 10;
-  // @state local-ui
+  // @state config
   optional string sun_json = 11;
-  // @state shared-ui
+  // @state presence
   optional string selected_generation_id = 12;
-  // @state preview
+  // @state artifact
   optional string generation_preview_text = 13;
-  // @state shared-ui
+  // @state presence
   optional string active_utility_id = 14;
-  // @state local-ui
+  // @state config
   optional string locale = 15;
-  // @state local-ui
+  // @state config
   optional string contributions_json = 16;
 }
 

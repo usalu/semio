@@ -1,7 +1,7 @@
 # 💡️ Semio model inference schema — position envelope over spatial nodes + elements.
 
 type SemioModelInference {
-  bounds: SemioModelBounds! @state(class: INFERRED)
+  bounds: SemioModelBounds! @derived
 }
 
 type SemioModelBounds {

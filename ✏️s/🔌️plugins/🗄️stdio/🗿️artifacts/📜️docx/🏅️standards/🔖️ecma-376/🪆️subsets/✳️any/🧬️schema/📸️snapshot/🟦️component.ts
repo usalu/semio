@@ -4,6 +4,6 @@ export interface DocxEntry {
   data: number[];
 }
 export interface DocxSnapshot {
-  /** @state persistent */ schema: string;
-  /** @state persistent */ entries: DocxEntry[];
+  /** @state artifact */ schema: string;
+  /** @state artifact */ entries: DocxEntry[];
 }

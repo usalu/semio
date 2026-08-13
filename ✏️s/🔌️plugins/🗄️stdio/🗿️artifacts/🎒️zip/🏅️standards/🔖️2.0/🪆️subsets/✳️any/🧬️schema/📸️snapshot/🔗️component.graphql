@@ -28,7 +28,7 @@ type ZipEntry {
 }
 
 type ZipSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  entries: [ZipEntry!]! @state(class: PERSISTENT)
-  comment: String! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  entries: [ZipEntry!]! @state(class: ARTIFACT)
+  comment: String! @state(class: ARTIFACT)
 }

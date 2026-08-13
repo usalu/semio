@@ -1,19 +1,19 @@
 # 🧬️ Block5d snapshot schema — persistent fields only.
 
 type Block5dSnapshot {
-  schema: String! @state(class: PERSISTENT)
-  partKind: BlockKindIdentity! @state(class: PERSISTENT)
-  part2d: Block5dPart2d! @state(class: PERSISTENT)
-  part3d: Block5dPart3d! @state(class: PERSISTENT)
-  representations: [BlockRepresentation!]! @state(class: PERSISTENT)
-  gripKinds: [Block5dGripKind!]! @state(class: PERSISTENT)
-  grips: [Block5dGripTemplate!]! @state(class: PERSISTENT)
-  compatibility: [BlockCompatibilityRule!]! @state(class: PERSISTENT)
-  attributes: [BlockAttribute!]! @state(class: PERSISTENT)
-  authors: [BlockAuthor!]! @state(class: PERSISTENT)
-  camera2d: BlockCamera2d! @state(class: PERSISTENT)
-  camera3d: BlockCamera3d! @state(class: PERSISTENT)
-  meta: BlockMeta! @state(class: PERSISTENT)
+  schema: String! @state(class: ARTIFACT)
+  partKind: BlockKindIdentity! @state(class: ARTIFACT)
+  part2d: Block5dPart2d! @state(class: ARTIFACT)
+  part3d: Block5dPart3d! @state(class: ARTIFACT)
+  representations: [BlockRepresentation!]! @state(class: ARTIFACT)
+  gripKinds: [Block5dGripKind!]! @state(class: ARTIFACT)
+  grips: [Block5dGripTemplate!]! @state(class: ARTIFACT)
+  compatibility: [BlockCompatibilityRule!]! @state(class: ARTIFACT)
+  attributes: [BlockAttribute!]! @state(class: ARTIFACT)
+  authors: [BlockAuthor!]! @state(class: ARTIFACT)
+  camera2d: BlockCamera2d! @state(class: ARTIFACT)
+  camera3d: BlockCamera3d! @state(class: ARTIFACT)
+  meta: BlockMeta! @state(class: ARTIFACT)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

@@ -4,37 +4,37 @@ package semio.s.remodel.remodel.artifact;
 // 🧬️ Remodel artifact schema.
 
 message RemodelArtifact {
-  // @state persistent
+  // @state artifact
   string schema = 1;
-  // @state persistent
+  // @state artifact
   string id = 2;
-  // @state persistent
+  // @state artifact
   repeated MediaStream streams = 3;
-  // @state persistent
+  // @state artifact
   map<string, ImageAsset> assets = 4;
-  // @state persistent
+  // @state artifact
   CalibrationState calibration = 5;
-  // @state persistent
+  // @state artifact
   ReconstructionParams params = 6;
-  // @state persistent
+  // @state artifact
   repeated GroundControlPoint gcps = 7;
-  // @state persistent
+  // @state artifact
   ReconstructionJob job = 8;
-  // @state persistent
+  // @state artifact
   ReconstructionResults results = 9;
-  // @state shared-ui
+  // @state presence
   RemodelUiSelection selection = 10;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 11;
-  // @state shared-ui
+  // @state presence
   string report_table = 12;
-  // @state shared-ui
+  // @state presence
   RemodelUiFrameCursor frame_cursor = 13;
-  // @state local-ui
+  // @state config
   RemodelUiCamera camera = 14;
-  // @state local-ui
+  // @state config
   RemodelUiLayers layers = 15;
-  // @state local-ui
+  // @state config
   string locale = 16;
 }
 

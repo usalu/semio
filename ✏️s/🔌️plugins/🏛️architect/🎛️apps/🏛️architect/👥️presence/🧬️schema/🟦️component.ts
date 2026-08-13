@@ -2,16 +2,16 @@
 export type AdjacencyKind = "required" | "preferred" | "optional" | "prohibited";
 
 export interface ArchitectPresence {
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeRegister: string;
-  /** @state shared-ui */
+  /** @state presence */
   adjacencyKindFilter?: AdjacencyKind;
-  /** @state shared-ui */
+  /** @state presence */
   graphCameraX: number;
-  /** @state shared-ui */
+  /** @state presence */
   graphCameraY: number;
-  /** @state shared-ui */
+  /** @state presence */
   graphCameraZoom: number;
 }

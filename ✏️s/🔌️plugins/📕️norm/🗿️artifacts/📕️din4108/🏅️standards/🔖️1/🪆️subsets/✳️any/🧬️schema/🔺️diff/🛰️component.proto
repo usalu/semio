@@ -2,45 +2,45 @@ syntax = "proto3";
 package semio.s.norm.din4108.diff;
 
 message Din4108Diff {
-  // @state persistent
+  // @state artifact
   optional Din4108Artifact artifact = 1;
-  // @state persistent
+  // @state artifact
   optional string category = 2;
-  // @state persistent
+  // @state artifact
   optional Din4108LayerList layers = 3;
-  // @state persistent
+  // @state artifact
   optional string climate = 4;
-  // @state persistent
+  // @state artifact
   optional double airtightness_n50 = 5;
-  // @state persistent
+  // @state artifact
   optional double psi_times_l_sum = 6;
-  // @state persistent
+  // @state artifact
   optional double rh_int = 7;
-  // @state persistent
+  // @state artifact
   optional string catalog_id = 8;
-  // @state persistent
+  // @state artifact
   optional string material_id = 9;
-  // @state persistent
+  // @state artifact
   optional string airtightness_class = 10;
-  // @state persistent
+  // @state artifact
   optional double t_int_c = 11;
-  // @state persistent
+  // @state artifact
   optional double solar_absorptance = 12;
-  // @state persistent
+  // @state artifact
   optional double irradiance_w_m2 = 13;
-  // @state persistent
+  // @state artifact
   optional double moisture_mu_exterior = 14;
-  // @state persistent
+  // @state artifact
   optional double moisture_mu_interior = 15;
-  // @state persistent
+  // @state artifact
   optional double envelope_area_m2 = 16;
-  // @state persistent
+  // @state artifact
   optional bool bb2_details_conform = 17;
-  // @state persistent
+  // @state artifact
   optional string application_type = 18;
-  // @state persistent
+  // @state artifact
   optional string declared_application_class = 19;
-  // @state shared-ui
+  // @state presence
   optional uint32 selected_check_index = 20;
 }
 

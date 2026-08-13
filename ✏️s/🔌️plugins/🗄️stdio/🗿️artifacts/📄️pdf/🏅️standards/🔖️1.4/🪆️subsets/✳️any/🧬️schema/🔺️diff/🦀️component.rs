@@ -29,13 +29,13 @@ use schema::ArtifactSchema;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.diff")]
 pub struct PdfDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
 }

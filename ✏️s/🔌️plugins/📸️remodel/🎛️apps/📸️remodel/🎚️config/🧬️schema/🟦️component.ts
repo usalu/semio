@@ -1,57 +1,57 @@
 /** 🧬️ RemodelWorldCamera */
 export interface RemodelWorldCamera {
-  /** @state local-ui */
+  /** @state config */
   position: number[];
-  /** @state local-ui */
+  /** @state config */
   target: number[];
-  /** @state local-ui */
+  /** @state config */
   fov: number;
 }
 
 /** 🧬️ RemodelSelection */
 export interface RemodelSelection {
-  /** @state local-ui */
+  /** @state config */
   mode: string;
-  /** @state local-ui */
+  /** @state config */
   ids: string[];
 }
 
 /** 🧬️ RemodelLayerVisibility */
 export interface RemodelLayerVisibility {
-  /** @state local-ui */
+  /** @state config */
   mesh: boolean;
-  /** @state local-ui */
+  /** @state config */
   dense: boolean;
-  /** @state local-ui */
+  /** @state config */
   sparse: boolean;
-  /** @state local-ui */
+  /** @state config */
   cameras: boolean;
-  /** @state local-ui */
+  /** @state config */
   gcps: boolean;
 }
 
 /** 🧬️ RemodelFrameCursor */
 export interface RemodelFrameCursor {
-  /** @state local-ui */
+  /** @state config */
   streamId?: string;
-  /** @state local-ui */
+  /** @state config */
   frameIndex: number;
 }
 
 /** 🧬️ RemodelConfig */
 export interface RemodelConfig {
-  /** @state local-ui */
+  /** @state config */
   camera: RemodelWorldCamera;
-  /** @state local-ui */
+  /** @state config */
   selection: RemodelSelection;
-  /** @state local-ui */
+  /** @state config */
   layers: RemodelLayerVisibility;
-  /** @state local-ui */
+  /** @state config */
   frameCursor: RemodelFrameCursor;
-  /** @state local-ui */
+  /** @state config */
   reportTable: string;
-  /** @state local-ui */
+  /** @state config */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }

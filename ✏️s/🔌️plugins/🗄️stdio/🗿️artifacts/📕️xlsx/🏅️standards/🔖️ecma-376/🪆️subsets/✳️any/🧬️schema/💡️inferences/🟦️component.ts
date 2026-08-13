@@ -7,6 +7,6 @@ export interface XlsxOutline {
 }
 
 export interface XlsxInference {
-  /** @state inferred */
+  /** @derived */
   outline: XlsxOutline;
 }

@@ -93,9 +93,9 @@ pub enum MdBlock {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.md")]
 pub struct MdSnapshot {
-    #[state(persistent)]
+    #[state(artifact)]
     pub schema: String,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default)]
     pub blocks: Vec<MdBlock>,
 }

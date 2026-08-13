@@ -4,7 +4,7 @@ package semio.s.stdio.semio.image.inference;
 // 💡️ Semio image inference schema — header-derived raster geometry.
 
 message SemioImageInference {
-  // @state inferred
+  // @derived
   SemioImageDimensions dimensions = 1;
 }
 

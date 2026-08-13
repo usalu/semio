@@ -3,9 +3,9 @@
 export type DslValue = Record<string, unknown>;
 
 export interface WiresSnapshot {
-  /** @state persistent */
+  /** @state artifact */
   wiresFixture: DslValue;
-  /** @state persistent */
+  /** @state artifact */
   boardFixture: DslValue;
 }
 

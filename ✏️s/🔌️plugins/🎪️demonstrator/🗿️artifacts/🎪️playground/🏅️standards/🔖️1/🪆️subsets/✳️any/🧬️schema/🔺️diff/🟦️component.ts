@@ -1,9 +1,9 @@
 /** 🧬️ Playground diff schema — sparse field delta over the artifact. */
 
 export interface PlaygroundDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: PlaygroundArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
 }
 

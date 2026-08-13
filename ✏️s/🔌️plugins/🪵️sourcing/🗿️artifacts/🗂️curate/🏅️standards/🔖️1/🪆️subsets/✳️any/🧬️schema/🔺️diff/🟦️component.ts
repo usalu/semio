@@ -64,18 +64,18 @@ export interface CurateCuratedDelta {
 }
 
 export interface CurateDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: CurateArtifact | null;
-  /** @state persistent */
+  /** @state artifact */
   stock?: CurateStockDelta | null;
-  /** @state persistent */
+  /** @state artifact */
   curated?: CurateCuratedDelta | null;
-  /** @state local-ui */
+  /** @state config */
   filters?: Filters | null;
-  /** @state shared-ui */
+  /** @state presence */
   selectedObjectId?: string | null;
-  /** @state local-ui */
+  /** @state config */
   locale?: string | null;
-  /** @state local-ui */
+  /** @state config */
   contributionsJson?: string | null;
 }

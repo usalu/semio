@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.present.config")]
 pub struct PresentConfig {
-    #[state(local_ui)] pub selected_ids: Vec<String>,
-    #[state(local_ui)] pub engagement_input: String,
-    #[state(local_ui)] pub locale: String,
+    #[state(config)] pub selected_ids: Vec<String>,
+    #[state(config)] pub engagement_input: String,
+    #[state(config)] pub locale: String,
 }
 //#endregion 🔖️Config
 

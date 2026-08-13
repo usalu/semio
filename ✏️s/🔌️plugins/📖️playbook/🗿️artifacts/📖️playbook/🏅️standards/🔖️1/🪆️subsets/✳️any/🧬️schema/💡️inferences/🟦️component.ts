@@ -8,6 +8,6 @@ export interface PlaybookTopology {
 }
 
 export interface PlaybookInference {
-  /** @state inferred */
+  /** @derived */
   topology: PlaybookTopology;
 }

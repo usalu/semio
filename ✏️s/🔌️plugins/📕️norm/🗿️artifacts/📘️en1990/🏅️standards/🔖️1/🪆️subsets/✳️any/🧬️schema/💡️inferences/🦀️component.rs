@@ -19,7 +19,7 @@ use super::outline::En1990Outline;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1990.inference")]
 pub struct En1990Inference {
-    #[state(inferred)]
+    #[derived]
     pub outline: En1990Outline,
 }
 

@@ -1,33 +1,33 @@
 /** 🧬️ Draw artifact schema — every field with its state class. */
 
 export interface DrawArtifact {
-  /** @state persistent */
+  /** @state artifact */
   schema: string;
-  /** @state persistent */
+  /** @state artifact */
   id: string;
-  /** @state persistent */
+  /** @state artifact */
   title?: string;
-  /** @state persistent */
+  /** @state artifact */
   layers: DrawLayerNode[];
-  /** @state persistent */
+  /** @state artifact */
   assets: Record<string, DrawImageAsset>;
-  /** @state persistent */
+  /** @state artifact */
   artboard?: DrawArtboard;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds: string[];
-  /** @state shared-ui */
+  /** @state presence */
   activeUtilityId: string;
-  /** @state local-ui */
+  /** @state config */
   engagementInput: string;
-  /** @state local-ui */
+  /** @state config */
   cameraX: number;
-  /** @state local-ui */
+  /** @state config */
   cameraY: number;
-  /** @state local-ui */
+  /** @state config */
   cameraZoom: number;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
-  /** @state preview */
+  /** @state artifact */
   hoveredId?: string;
 }
 

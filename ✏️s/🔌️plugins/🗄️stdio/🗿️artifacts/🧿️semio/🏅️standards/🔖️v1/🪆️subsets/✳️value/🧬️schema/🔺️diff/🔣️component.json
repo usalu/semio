@@ -37,7 +37,7 @@
   },
   "type": "value",
   "properties": {
-    "root": { "$ref": "#/$defs/semioValueDiff", "x-semio-state": "persistent" },
-    "nodes": { "$ref": "#/$defs/namedTripleDiff", "x-semio-state": "persistent" }
+    "root": { "$ref": "#/$defs/semioValueDiff", "x-semio-state": "artifact" },
+    "nodes": { "$ref": "#/$defs/namedTripleDiff", "x-semio-state": "artifact" }
   }
 }

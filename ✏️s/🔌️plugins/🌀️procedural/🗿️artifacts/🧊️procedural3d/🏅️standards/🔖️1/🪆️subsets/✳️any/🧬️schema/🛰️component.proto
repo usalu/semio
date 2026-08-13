@@ -4,35 +4,35 @@ package semio.s.procedural.procedural3d.artifact;
 // 🧬️ Procedural3d artifact schema — every field with its state class.
 
 message Procedural3dArtifact {
-  // @state persistent
+  // @state artifact
   FlowFixture fixture = 1;
-  // @state persistent
+  // @state artifact
   GenerationPlayState generation = 2;
-  // @state shared-ui
+  // @state presence
   repeated string selected_node_ids = 3;
-  // @state local-ui
+  // @state config
   string lod_mode = 4;
-  // @state local-ui
+  // @state config
   string show_mode = 5;
-  // @state local-ui
+  // @state config
   string selection_method = 6;
-  // @state preview
+  // @state artifact
   optional string hovered_node_id = 7;
-  // @state local-ui
+  // @state config
   CameraJson graph_camera = 8;
-  // @state local-ui
+  // @state config
   Procedural3dPreviewCamera preview_camera = 9;
-  // @state local-ui
+  // @state config
   string sun_json = 10;
-  // @state shared-ui
+  // @state presence
   optional string selected_generation_id = 11;
-  // @state preview
+  // @state artifact
   optional string generation_preview_text = 12;
-  // @state shared-ui
+  // @state presence
   string active_utility_id = 13;
-  // @state local-ui
+  // @state config
   string locale = 14;
-  // @state local-ui
+  // @state config
   string contributions_json = 15;
 }
 

@@ -1,14 +1,14 @@
 /** 🧬️ SequenceConfig */
 export interface SequenceConfig {
-  /** @state local-ui */
+  /** @state config */
   selectedStepIds: string[];
-  /** @state local-ui */
+  /** @state config */
   lastRunJson: string;
-  /** @state local-ui */
+  /** @state config */
   orientation: string;
-  /** @state local-ui */
+  /** @state config */
   camera: SequenceCamera;
-  /** @state local-ui */
+  /** @state config */
   locale: string;
 }
 export interface SequenceCamera { x: number; y: number; zoom: number; }

@@ -26,94 +26,94 @@
   "properties": {
     "camera2d": {
       "$ref": "#/$defs/Puzzle5dCamera2d",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "camera3d": {
       "$ref": "#/$defs/Puzzle5dCamera3d",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selection": {
       "$ref": "#/$defs/Puzzle5dSelection",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "selectionMethod": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "hoveredPartId": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "fillCount": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "brushCandidateIndex": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "overlapBudget": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "lodMode": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "suggestionOffset": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridSnapEnabled": {
       "type": "boolean",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "gridFactor": {
       "type": "number",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "engagementInputByWindow": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "objectKindWeights": {
       "type": "object",
       "additionalProperties": {
         "type": "number"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "vortexKindWeights": {
       "type": "object",
       "additionalProperties": {
         "type": "number"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "sun": {
       "$ref": "#/$defs/WorldSunConfig",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "activeUtilityByWindowId": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "terminology": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     },
     "locale": {
       "type": "string",
-      "x-semio-state": "local-ui"
+      "x-semio-state": "config"
     }
   },
   "$defs": {

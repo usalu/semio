@@ -231,10 +231,10 @@ pub struct DocxOpcDiff {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.docx.diff")]
 pub struct DocxDiff {
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub opc: Option<DocxOpcDiff>,
-    #[state(persistent)]
+    #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub document: Option<DocxDocumentDiff>,
 }

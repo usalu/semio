@@ -1,37 +1,37 @@
 /** 🧬️ Block5d diff schema — sparse field delta. */
 
 export interface Block5dDiff {
-  /** @state persistent */
+  /** @state artifact */
   artifact?: Block5dArtifact;
-  /** @state persistent */
+  /** @state artifact */
   schema?: string;
-  /** @state persistent */
+  /** @state artifact */
   partKind?: BlockKindIdentity;
-  /** @state persistent */
+  /** @state artifact */
   part2d?: Block5dPart2d;
-  /** @state persistent */
+  /** @state artifact */
   part3d?: Block5dPart3d;
-  /** @state persistent */
+  /** @state artifact */
   representations?: Block5dRepresentationsDelta;
-  /** @state persistent */
+  /** @state artifact */
   gripKinds?: Block5dGripKindsDelta;
-  /** @state persistent */
+  /** @state artifact */
   grips?: Block5dGripsDelta;
-  /** @state persistent */
+  /** @state artifact */
   compatibility?: Block5dCompatibilityDelta;
-  /** @state persistent */
+  /** @state artifact */
   attributes?: Block5dAttributesDelta;
-  /** @state persistent */
+  /** @state artifact */
   authors?: Block5dAuthorList;
-  /** @state persistent */
+  /** @state artifact */
   camera2d?: BlockCamera2d;
-  /** @state persistent */
+  /** @state artifact */
   camera3d?: BlockCamera3d;
-  /** @state persistent */
+  /** @state artifact */
   meta?: BlockMeta;
-  /** @state shared-ui */
+  /** @state presence */
   selectedIds?: Block5dStringList;
-  /** @state local-ui */
+  /** @state config */
   locale?: string;
 }
 

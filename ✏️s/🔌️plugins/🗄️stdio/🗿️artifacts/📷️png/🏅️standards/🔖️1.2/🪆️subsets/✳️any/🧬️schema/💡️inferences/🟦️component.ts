@@ -9,6 +9,6 @@ export interface PngDimensions {
 }
 
 export interface PngInference {
-  /** @state inferred */
+  /** @derived */
   dimensions: PngDimensions;
 }
