@@ -343,12 +343,15 @@ Die Perspektive der Energieberatung richtet sich auf die ökologische und energe
 \end{SemioNest}
 
 \paragraph{Bereiche}
-Inhaltlich lassen sich die User Stories drei übergeordneten Aufgabenfeldern zuordnen: der Erfassung und Qualifizierung von Baukomponentendaten, der Suche, Auswahl und Verwendung von Komponenten im Entwurf sowie der fachlichen Bewertung, Abstimmung und Dokumentation von Varianten. Übergreifend stehen die Nachvollziehbarkeit von Informationen, die Vergleichbarkeit von Komponenten und Varianten sowie der sichtbare Umgang mit Unsicherheiten im Vordergrund.
-
 \begin{SemioNest}
   \paragraph{Erfassung und Qualifizierung}
+  Dieses Aufgabenfeld umfasst die Erfassung und Qualifizierung von Baukomponentendaten. Im Vordergrund stehen dabei die Nachvollziehbarkeit der Informationen und der sichtbare Umgang mit Unsicherheiten.
+
   \paragraph{Suche, Auswahl und Verwendung}
+  Dieses Aufgabenfeld beinhaltet die Suche, Auswahl und Verwendung von Komponenten im Entwurf. Eine verlässliche Vergleichbarkeit der Komponenten unterstützt dabei fundierte Entscheidungen.
+
   \paragraph{Fachliche Bewertung, Abstimmung und Dokumentation}
+  Dieses Aufgabenfeld umfasst die fachliche Bewertung, Abstimmung und Dokumentation von Varianten. Entscheidend sind dabei deren Vergleichbarkeit sowie ein nachvollziehbarer und transparenter Umgang mit Unsicherheiten.
 \end{SemioNest}
 
 \subsection{AP-Plattform}
@@ -512,100 +515,131 @@ Die Statusdarstellung fasst Verantwortung, derzeitigen Stand und weiteres Vorgeh
 
 \subsection{AP-Erfahrung}
 
-Verantwortung: \Abbr{NGS} und \Abbr{KET} bearbeiten das Arbeitspaket gemeinsam. \Abbr{NGS} übernimmt den technischen, \Abbr{KET} den gestalterischen Schwerpunkt der Interviewleitfäden.
+\subsubsection{Verantwortung}
+\Abbr{NGS} und \Abbr{KET} bearbeiten das Arbeitspaket gemeinsam. \Abbr{NGS} übernimmt den technischen, \Abbr{KET} den gestalterischen Schwerpunkt der Interviewleitfäden.
 
-Derzeitiger Stand: Aus Recherche, externer Studie und drei eigenen Fachgesprächen liegen 35 User Stories und 17 funktionale Anforderungscluster vor.
+\subsubsection{Derzeitiger Stand}
+Aus Recherche, externer Studie und drei eigenen Fachgesprächen liegen 35 User Stories und 17 funktionale Anforderungscluster vor.
 
-Weiteres Vorgehen: Fünf weitere Fachgespräche ergänzen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung.
+\subsubsection{Weiteres Vorgehen}
+Fünf weitere Fachgespräche ergänzen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung.
 
 \subsection{AP-Plattform}
 
-Verantwortung und Einordnung. \Abbr{NGS} verantwortet \Abbr{AP}-Plattform und die Eingabeoberfläche; \Abbr{KET} bringt die übergreifende User-Experience-Perspektive ein. Im Bericht umfasst \Abbr{AP}-Plattform die Bauteileinspeisung und digitale Objektbildung. Der Bauteilkatalog wird funktional unter \Abbr{AP}-Tool behandelt, ohne die formale Zuordnung des Arbeitsplans zu verändern.
+\subsubsection{Verantwortung und Einordnung}
+\Abbr{NGS} verantwortet \Abbr{AP}-Plattform und die Eingabeoberfläche; \Abbr{KET} bringt die übergreifende User-Experience-Perspektive ein. Im Bericht umfasst \Abbr{AP}-Plattform die Bauteileinspeisung und digitale Objektbildung. Der Bauteilkatalog wird funktional unter \Abbr{AP}-Tool behandelt, ohne die formale Zuordnung des Arbeitsplans zu verändern.
 
 \subsubsection{Eingabe und Objektbildung}
 
-Derzeitiger Stand: Für Wizard, Generatorinfrastruktur und Stützengenerator liegen prototypische Implementierungen vor. Ein gemeinsames Datenschema und typologieabhängige Eingaben sind angelegt. Das Bauteilobjekt verfügt über die Infrastruktur für fachliche Repräsentationen.
+\paragraph{Derzeitiger Stand}
+Für Wizard, Generatorinfrastruktur und Stützengenerator liegen prototypische Implementierungen vor. Ein gemeinsames Datenschema und typologieabhängige Eingaben sind angelegt. Das Bauteilobjekt verfügt über die Infrastruktur für fachliche Repräsentationen.
 
-Weiteres Vorgehen: Ein Referenzbauteil wird vollständig vom Wizard bis zum Bauteilobjekt mit Quellen, Nachweiszuständen, Anschlüssen und Repräsentationen dokumentiert. Anschließend werden die Konsensfunktion, URI-basierte Verknüpfungen mit der Dokumentation sowie Angaben zu Hosting, Nutzerzugängen und Rollen ergänzt.
+\paragraph{Weiteres Vorgehen}
+Ein Referenzbauteil wird vollständig vom Wizard bis zum Bauteilobjekt mit Quellen, Nachweiszuständen, Anschlüssen und Repräsentationen dokumentiert. Anschließend werden die Konsensfunktion, URI-basierte Verknüpfungen mit der Dokumentation sowie Angaben zu Hosting, Nutzerzugängen und Rollen ergänzt.
 
 Methodische Präzisierung. Die Arbeitsgeometrie wird parametrisch durch einen Generator erzeugt. Fotografien und Scans dienen ergänzend als Referenz- und Belegquellen. Die Abstimmung mit der Fachbetreuung wird im \hyperref[abschnitt:soll-ist-vergleich]{Abschnitt~\ref*{abschnitt:soll-ist-vergleich}} dokumentiert.
 
 \subsubsection{Schnittstelle}
 
-Derzeitiger Stand: Eine prototypische \Abbr{REST}-Schnittstelleninfrastruktur liegt vor.
+\paragraph{Derzeitiger Stand}
+Eine prototypische \Abbr{REST}-Schnittstelleninfrastruktur liegt vor.
 
-Weiteres Vorgehen: Eine externe Referenzquelle wird ausgewählt und über eine \Abbr{API} oder eine statische, intervallbasierte Übertragung angebunden. Schnittstellen- und Schemabeschreibung, Fehlerfälle und Integrationstest werden versioniert dokumentiert. Auch die Einbindung eines Transferpartners wird dokumentiert.
+\paragraph{Weiteres Vorgehen}
+Eine externe Referenzquelle wird ausgewählt und über eine \Abbr{API} oder eine statische, intervallbasierte Übertragung angebunden. Schnittstellen- und Schemabeschreibung, Fehlerfälle und Integrationstest werden versioniert dokumentiert. Auch die Einbindung eines Transferpartners wird dokumentiert.
 
 \subsection{AP-Tool}
 
-Verantwortung: \Abbr{NGS} verantwortet semio, technische Infrastruktur, \Abbr{HID}, Lebenszyklusanalyse und \Abbr{KI}-Assistenz. \Abbr{KET} bearbeitet die User-Experience-Perspektive und die Tragwerksanalyse.
+\subsubsection{Verantwortung}
+\Abbr{NGS} verantwortet semio, technische Infrastruktur, \Abbr{HID}, Lebenszyklusanalyse und \Abbr{KI}-Assistenz. \Abbr{KET} bearbeitet die User-Experience-Perspektive und die Tragwerksanalyse.
 
-Derzeitiger Stand: Infrastrukturelle Grundlagen und Integrationsstrukturen liegen vor. Sie ermöglichen es, Informationen und fachliche Repräsentationen einer Baukomponente gemeinsam im Entwurfswerkzeug weiterzuführen.
+\subsubsection{Derzeitiger Stand}
+Infrastrukturelle Grundlagen und Integrationsstrukturen liegen vor. Sie ermöglichen es, Informationen und fachliche Repräsentationen einer Baukomponente gemeinsam im Entwurfswerkzeug weiterzuführen.
 
 \subsubsection{Human-Interface-Design}
 
-Derzeitiger Stand: Für den Bauteilkatalog und die Entwurfsumgebung liegen Oberflächen-, Navigations- und Ansichtsvarianten in unterschiedlichen Reifegraden vor.
+\paragraph{Derzeitiger Stand}
+Für den Bauteilkatalog und die Entwurfsumgebung liegen Oberflächen-, Navigations- und Ansichtsvarianten in unterschiedlichen Reifegraden vor.
 
-Weiteres Vorgehen: Die priorisierten Ansichten werden zu einem durchgängigen Ablauf zusammengeführt.
+\paragraph{Weiteres Vorgehen}
+Die priorisierten Ansichten werden zu einem durchgängigen Ablauf zusammengeführt.
 
 \subsubsection{Lebenszyklusanalyse}
 
-Derzeitiger Stand: Die Infrastruktur für die Zuordnung ökologischer Bewertungsinformationen zu Baukomponenten und Varianten liegt vor.
+\paragraph{Derzeitiger Stand}
+Die Infrastruktur für die Zuordnung ökologischer Bewertungsinformationen zu Baukomponenten und Varianten liegt vor.
 
-Weiteres Vorgehen: Die ökologische Berechnung wird auf dieser Grundlage auf Variantenebene umgesetzt.
+\paragraph{Weiteres Vorgehen}
+Die ökologische Berechnung wird auf dieser Grundlage auf Variantenebene umgesetzt.
 
 \subsubsection{Tragwerksanalyse}
 
-Derzeitiger Stand: Vorbereitet wurde die Infrastruktur für die Erzeugung und Zuordnung tragwerklicher Repräsentationen.
+\paragraph{Derzeitiger Stand}
+Vorbereitet wurde die Infrastruktur für die Erzeugung und Zuordnung tragwerklicher Repräsentationen.
 
-Weiteres Vorgehen: Zu entwickeln sind vereinfachte Tragsysteme, regelbasierte Anschluss- und Kompatibilitätsprüfungen sowie Berechnungen für ausgewählte Komponenten oder Teilsysteme.
+\paragraph{Weiteres Vorgehen}
+Zu entwickeln sind vereinfachte Tragsysteme, regelbasierte Anschluss- und Kompatibilitätsprüfungen sowie Berechnungen für ausgewählte Komponenten oder Teilsysteme.
 
 \subsubsection{KI-Assistenz}
 
-Derzeitiger Stand: Vorgesehen sind eine \Abbr{LLM}-basierte Entwurfsassistenz sowie ergänzend die Unterstützung der Dokumentauswertung und Dateneingabe im Wizard. Eine technische Umsetzung lag noch nicht vor.
+\paragraph{Derzeitiger Stand}
+Vorgesehen sind eine \Abbr{LLM}-basierte Entwurfsassistenz sowie ergänzend die Unterstützung der Dokumentauswertung und Dateneingabe im Wizard. Eine technische Umsetzung lag noch nicht vor.
 
-Weiteres Vorgehen: Ein erster Anwendungsfall ist mit Eingaben, erwarteten Ergebnissen und Prüfkriterien abzugrenzen. Vorschläge müssen überprüfbar und korrigierbar bleiben.
+\paragraph{Weiteres Vorgehen}
+Ein erster Anwendungsfall ist mit Eingaben, erwarteten Ergebnissen und Prüfkriterien abzugrenzen. Vorschläge müssen überprüfbar und korrigierbar bleiben.
 
 \subsubsection{Konfigurator}
 
-Derzeitiger Stand: Der Konfigurator leitet sich aus den User Stories und dem Anforderungsmapping ab und soll die Abstimmung mit Bauteilbörsen unterstützen.
+\paragraph{Derzeitiger Stand}
+Der Konfigurator leitet sich aus den User Stories und dem Anforderungsmapping ab und soll die Abstimmung mit Bauteilbörsen unterstützen.
 
-Weiteres Vorgehen: Es wird festgelegt, welche Funktionen intern umgesetzt werden können und welche eine externe Börsen-, Bestell- oder Serviceanbindung voraussetzen.
+\paragraph{Weiteres Vorgehen}
+Es wird festgelegt, welche Funktionen intern umgesetzt werden können und welche eine externe Börsen-, Bestell- oder Serviceanbindung voraussetzen.
 
 \subsection{AP-Validierung}
 
-Verantwortung: \Abbr{NGS} und \Abbr{KET} bearbeiten die erste Test-Case-Phase gemeinsam. \Abbr{KET} übernimmt schwerpunktmäßig die nutzungsnahe Weiterentwicklung und Workshopvorbereitung; Durchführung und Auswertung erfolgen gemeinsam.
+\subsubsection{Verantwortung}
+\Abbr{NGS} und \Abbr{KET} bearbeiten die erste Test-Case-Phase gemeinsam. \Abbr{KET} übernimmt schwerpunktmäßig die nutzungsnahe Weiterentwicklung und Workshopvorbereitung; Durchführung und Auswertung erfolgen gemeinsam.
 
 \subsubsection{Test-Case und Entwurfsgrammatik}
 
-Derzeitiger Stand: Der Stahlbetonbestand aus „Abbau/Aufbau“ wurde als Test-Case aufbereitet. Seine inhomogenen Fragmente wurden im Entwurfswerkzeug verwendet. Bauteilkatalog, 3D-, Diagramm- und Detailansicht waren mit den Test-Case-Daten verbunden. Eine durchgängige Verbindung mit Bauteilportal, Wizard und Generator lag noch nicht vor.
+\paragraph{Derzeitiger Stand}
+Der Stahlbetonbestand aus „Abbau/Aufbau“ wurde als Test-Case aufbereitet. Seine inhomogenen Fragmente wurden im Entwurfswerkzeug verwendet. Bauteilkatalog, 3D-, Diagramm- und Detailansicht waren mit den Test-Case-Daten verbunden. Eine durchgängige Verbindung mit Bauteilportal, Wizard und Generator lag noch nicht vor.
 
-Weiteres Vorgehen: Die bestehende Kette innerhalb des Entwurfswerkzeugs ist mit der Einspeiseplattform und der digitalen Objektbildung zu verbinden. Anschließend ist der vollständige Ablauf vom Bauteilportal bis zur Entwurfsvariante zu prüfen.
+\paragraph{Weiteres Vorgehen}
+Die bestehende Kette innerhalb des Entwurfswerkzeugs ist mit der Einspeiseplattform und der digitalen Objektbildung zu verbinden. Anschließend ist der vollständige Ablauf vom Bauteilportal bis zur Entwurfsvariante zu prüfen.
 
 \subsubsection{Workshop}
 
-Derzeitiger Stand: Der Workshop ist für eine spätere Projektphase vorgesehen.
+\textbf{Stand.} Der Workshop ist für eine spätere Projektphase vorgesehen; ein abgeschlossenes Konzept lag noch nicht vor.
 
-Weiteres Vorgehen: Zielgruppe, Entwurfsaufgabe, Ablauf, Erhebungsmethode und Auswertung werden festgelegt. Für den 80-Prozent-Indikator werden Frage, Bezugsgruppe und positive Antwort vorab definiert.
+\textbf{Weitere Arbeiten.} Zielgruppe, Entwurfsaufgabe, Ablauf, Erhebungsmethode und Auswertung sind festzulegen. Für den 80-Prozent-Indikator müssen Frage, Bezugsgruppe und positive Antwort vorab definiert werden.
 
 \part{Mittelverwendung}
 
+Die Mittelverwendung ist weitestgehend wie im Antrag vorgesehen. Die Änderungen im Projektbeginn haben nur eine geringfügige zeitliche Verschiebung zur Konsequenz gehabt.
+
 \section{Personalkosten}
 
-Im Projekt arbeiten die im Antrag vorgesehenen Personen. [ERGÄNZEN: Eingruppierungen und Beschäftigungsumfänge gemäß Personalunterlagen.]
+Die drei Personen, welche im Antrag vorgesehen waren, wurden alle eingesetzt. Die tatsächliche Einstufung nach Einstellung erfolgte wie antizipiert.
 
 \subsection{Leibniz Universität Hannover}
 
 \subsubsection{Ueli Saluz}
-[ERGÄNZEN: Arbeitsbeginn und Beschäftigungsumfang von Ueli Saluz.]
+Der Arbeitsbeginn für Ueli Saluz erfolgte zu Projektbeginn am 01.01.2026.
+
+Die vorgesehene Arbeitszeit in Höhe von 90\% der regulären Arbeitszeit konnte seit Arbeitsbeginn vollständig erbracht werden.
 
 \subsubsection{Nikolaus Möllenhof}
-[ERGÄNZEN: Arbeitsbeginn und Beschäftigungsumfang von Nikolaus Möllenhof.]
+Der Arbeitsbeginn für Nikolaus Möllenhof erfolgte zu Projektbeginn am 01.01.2026.
+
+Die vorgesehene Arbeitszeit in Höhe von 50\% der regulären Arbeitszeit konnte seit Arbeitsbeginn vollständig erbracht werden.
 
 \subsection{Universität der Künste Berlin}
 
 \subsubsection{Kinan Sarakbi}
-Kinan Sarakbi arbeitet seit dem 23.01.2026 im Projekt. [ERGÄNZEN: Beschäftigungsumfang und bestätigte Begründung des Arbeitsbeginns.]
+Der Projektbeginn für Kinan Sarakbi erfolgte leicht verzögert am 22.01.2026, da der Einstellungsprozess erst gestartet werden konnte, nachdem der Weiterleitungsvertrag von beiden Universitäten unterzeichnet wurde und die Mindesteinstellungsdauer von 6 Wochen nur leicht beschleunigt werden konnte.
+
+Die vorgesehene Arbeitszeit in Höhe von 50\% der regulären Arbeitszeit konnte seit Arbeitsbeginn vollständig erbracht werden.
 
 \section{Material}
 
@@ -630,8 +664,17 @@ Der Bedarf für Nutzung von vortrainierter \Abbr{KI}-Modelle wurde in der Antrag
 Die vorgesehenen Kosten für Hosting sind bislang nicht angefallen, da bis jetzt die Seite kostenlos über GitHub Pages bereitgestellt werden konnte. 
 
 \paragraph{Fotogrammetrie}
+
+Für den ersten Protoypen konnte auf eine externe Dienstleistung dank Nutzung von vortrainierten \Abbr{KI}-Modellen vorerst verzichtet werden.
+
 \paragraph{User-Interface}
+
+Für den ersten Protoypen konnte auf eine externe Dienstleistung dank Nutzung von vortrainierten \Abbr{KI}-Modellen vorerst verzichtet werden.
+
 \paragraph{Anbindungen Bauteilbörsen}
+
+Die Anbindung von Bauteilbörsen wird erst in Zukunft erfolgen, wodurch bislang keine Kosten angefallen sind.
+
 \end{SemioNest}
 
 \section{Reisekosten}

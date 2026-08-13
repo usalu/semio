@@ -2235,22 +2235,13 @@
 
 %endregion WindowBreakParts chrome
 
-% LR-2.8: deliver the running-header heading name via the marks mechanism, not a
-% bare \gdef. A \gdef takes effect when the heading is tokenised in the main
-% vertical list, while TeX's page builder breaks asynchronously (reading ahead),
-% so a page whose break lands before a heading could ship carrying the NEXT
-% heading's name. A mark travels with the heading box. Classic \markright/
-% \rightmark is used (this build's kernel predates the ltmarks \NewMarkClass API;
-% fancyhdr, already loaded, provides \rightmark). The \gdef is kept as a harmless
-% legacy value; the navbar reads the mark.
-% LR-navshort: an optional short label for the RUNNING HEADER only. Placing
-% \SemioNavShort{short} immediately before a heading feeds the navbar/mark a
-% shorter form so long sentence-titles render at the flat 7.2pt chip size
-% instead of auto-shrinking — while the FULL title stays verbatim in the body.
-% The pending short is consumed (and cleared) by the next marking heading, so it
-% never leaks onto a following heading. \markright stores a copy of the tokens,
-% and \let copies the meaning into the fallback macro, so both stay stable even
-% after the pending is redefined by the next heading.
+% 🧭 The running-header chip follows the document's highest heading tier. Once a
+% part appears, sections and every lower tier stop replacing it; documents whose
+% highest tier is chapter or section keep that tier instead. A mark travels with
+% the heading box, avoiding TeX page-builder read-ahead, while the global value
+% covers pages without a fresh mark. Lower tiers repeat the retained root mark
+% to supersede KOMA's numbered marks. \SemioNavShort is consumed by the next
+% heading even when that heading is below the tracked tier, so it cannot leak.
 \let\semio@nav@short@pending\relax
 \newcommand{\SemioNavShort}[1]{\gdef\semio@nav@short@pending{#1}}
 \newcommand{\semio@chrome@heading@set}[1]{%
@@ -2264,8 +2255,20 @@
   \fi
 }
 
+\newcount\semio@chrome@heading@level
+\newcount\semio@chrome@heading@candidate@level
+\semio@chrome@heading@level=99\relax
 \newcommand{\semio@chrome@heading@track}[2]{%
-  \semio@chrome@heading@set{#2}%
+  \semio@chrome@heading@candidate@level=\numexpr\semio@toc@level{#1}\relax
+  \ifnum\semio@chrome@heading@candidate@level<\semio@chrome@heading@level
+    \global\semio@chrome@heading@level=\semio@chrome@heading@candidate@level
+  \fi
+  \ifnum\semio@chrome@heading@candidate@level=\semio@chrome@heading@level
+    \semio@chrome@heading@set{#2}%
+  \else
+    \global\let\semio@nav@short@pending\relax
+    \expandafter\markright\expandafter{\semio@chrome@heading}%
+  \fi
 }
 
 \newsavebox{\semio@window@cap@slot}
