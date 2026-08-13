@@ -17,13 +17,19 @@
 % being pre-baked into a second unrelated literal.
 \providecommand{\semio@graph@node@radius}{2.275mm}
 \providecommand{\semio@graph@node@radius@emphasis}{0.3mm}
-% 🔒 Deckkraft des Knotenlogos. Die Assets tragen bereits 50 % aus der
-% Bildprüfung, aber im gebauten PDF liegt das Logo unter der ID im selben
-% 4,55-mm-Kreis: bei 50 % waren beide unlesbar (gemessen an FR/NL, Seite 96).
-% 0.2 lässt das Logo als Farbton stehen und gibt die ID wieder frei. Der Wert
-% wirkt nur auf die Zeichnung, nicht auf die Datei — die Bildprüfung bleibt
-% die Quelle dafür, WELCHES Logo erscheint, nicht wie kräftig.
-\providecommand{\semio@graph@node@image@opacity}{0.2}
+% 🔒 Zusätzliche Deckkraft auf das Knotenlogo. MUSS 1.0 bleiben: die Assets
+% tragen die 50 % der Bildprüfung bereits in ihrer Alphaebene, ein Faktor hier
+% multipliziert sich darauf. Ein Zwischenstand mit 0.2 ergab effektiv rund
+% 10 % und ließ die Marken verschwinden. Die Lesbarkeit der ID über dem Logo
+% löst \semio@graph@node@label@plate@*, nicht eine Abschwächung des Bildes --
+% ein Regler, der zwei Dinge gleichzeitig regelt, kann keines richtig treffen.
+\providecommand{\semio@graph@node@image@opacity}{1.0}
+% 🪟 Trägerfläche hinter der Knoten-ID, NUR wenn ein Logo darunterliegt. Ohne
+% Kontur und halbtransparent: sie soll die Marke dämpfen, wo die Ziffern
+% stehen, und sonst nichts. Radius als Anteil des Knotenradius; 0.62 deckt die
+% dreistellige ID der Monospace in 5,2 pt gerade ab.
+\providecommand{\semio@graph@node@label@plate@radius}{0.62}
+\providecommand{\semio@graph@node@label@plate@opacity}{0.72}
 % 🔠 Node label face. Deliberately smaller than \semio@chrome@font@chip: a
 % graph label sits inside a ~4.5mm circle, not in a window tab.
 \providecommand{\semio@graph@label@size}{5.2pt}
@@ -294,6 +300,18 @@
   }
 }
 
+% 🪟 Frostfläche hinter der ID. Konturlos und in der Knotenfüllung selbst, also
+% dieselbe Farbe wie ein bildloser Knoten -- sie liest sich als Fenster in der
+% Marke, nicht als zweiter Ring. Wird NUR im Bildzweig und NUR bei vorhandener
+% Beschriftung gezeichnet, damit bildlose Knoten und Bauvorhaben unberührt
+% bleiben. Als Token eingefärbt, also im Dark-Build automatisch mitgedreht.
+\cs_new_protected:Npn \semio_graph_node_label_plate:n #1 {
+  \fill [ semio-chrome-canvas , draw=none ,
+          fill~opacity=\semio@graph@node@label@plate@opacity ]
+    (#1) circle [ radius=\fp_to_dim:n
+      { \semio@graph@node@radius * \semio@graph@node@label@plate@radius } ] ;
+}
+
 \cs_new_protected:Npn \semio_graph_node_draw:nnn #1#2#3 {
   \tl_if_blank:VTF \l_semio_graph_image_tl {
     % Preserve the historical no-image path byte-for-byte at the TikZ level.
@@ -304,6 +322,7 @@
     % The image sits below the existing semantic contour and label.
     \draw [ semio~graph~node , semio~graph~node~#1 , fill=none ]
       (#2) circle [] ;
+    \tl_if_blank:nF {#3} { \semio_graph_node_label_plate:n {#2} }
   }
   \tl_if_blank:nF {#3} {
     \node [ semio~graph~label , \tl_use:c { c_semio_graph_state_#1_label_tl } ]
