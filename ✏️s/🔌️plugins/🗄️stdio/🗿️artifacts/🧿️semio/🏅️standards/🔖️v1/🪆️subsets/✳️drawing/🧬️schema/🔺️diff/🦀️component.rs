@@ -10,8 +10,8 @@
 //! both the `layers` collection and every nested `Group.children` collection share one
 //! implementation instead of two near-duplicates.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified,
     IndexedTripleDiff, NamedModified, NamedTripleDiff,
 };
@@ -780,7 +780,7 @@ pub fn diff_move_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_origin
 
 /// 🔄️ Builds the sparse diff that sets a `Group` node's `transform.rotation` -- empty (no-op) for
 /// every other node kind (`Path`/`Text`/`Image` carry no rotation field).
-pub fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rotation: crate::artifacts::semio::standards::v1::engine::geometry::SemioQuaternion) -> SemioDrawingDiff {
+pub fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rotation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion) -> SemioDrawingDiff {
     match node_at(snapshot, np) {
         Some(DrawNode::Group { transform, .. }) => {
             let next = SemioTransform { translation: transform.translation, rotation: new_rotation, scale: transform.scale };
@@ -792,7 +792,7 @@ pub fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rota
 
 /// 📏️ Builds the sparse diff that sets a `Group` node's `transform.scale` -- empty (no-op) for
 /// every other node kind.
-pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3) -> SemioDrawingDiff {
+pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3) -> SemioDrawingDiff {
     match node_at(snapshot, np) {
         Some(DrawNode::Group { transform, .. }) => {
             let next = SemioTransform { translation: transform.translation, rotation: transform.rotation, scale: new_scale };
@@ -1070,7 +1070,7 @@ impl protocol::DiffCodec for SemioDrawingDiff {
 /// module — same real, first-hit variant of this pattern brep's own report flags).
 #[cfg(test)]
 fn transform(tx: f64) -> SemioTransform {
-    SemioTransform { translation: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 }, rotation: crate::artifacts::semio::standards::v1::engine::geometry::SemioQuaternion::default(), scale: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
+    SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 }, rotation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion::default(), scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 
 #[cfg(test)]

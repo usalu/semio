@@ -8,7 +8,7 @@ use crate::fem2d_engine::Fem2dError;
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement};
 use crate::model::{Bar2, BeamEb2, Dof, Element, NodalLoad, Node};
 use std::collections::HashMap;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 /// ⚖️ Gravitational acceleration (m/s²) used both by the document-bridge's own lumped self-weight

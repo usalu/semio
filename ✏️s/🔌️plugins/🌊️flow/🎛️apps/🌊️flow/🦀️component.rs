@@ -216,7 +216,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
     let has_selection = !nodes.is_empty() || !edges.is_empty();
     let all_preview_off = !nodes.is_empty() && nodes.iter().all(|id| config.preview_off_node_ids.contains(id));
     let is_image = nodes.len() == 1
-        && fixture.widgets.iter().any(|widget| match widget {
+        && fixture.to_fixture().widgets.iter().any(|widget| match widget {
             Widget::InputImage { id, .. } => id == &nodes[0],
             _ => false,
         });
@@ -730,8 +730,8 @@ mod tests {
     #[test]
     fn undo_restores_fixture_after_add_widget() {
         let mut app = flow_app();
-        let before = app.snapshot().expect("snapshot").widgets.len();
-        assert_undo_redo_round_trip(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }), |app| app.snapshot().expect("snapshot").widgets.len(), before, before + 1);
+        let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
+        assert_undo_redo_round_trip(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }), |app| app.snapshot().expect("snapshot").to_fixture().widgets.len(), before, before + 1);
     }
 
     #[test]
@@ -775,8 +775,8 @@ mod tests {
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
 
-        let projection_a = instance_a.snapshot().expect("snapshot a");
-        let projection_b = instance_b.snapshot().expect("snapshot b");
+        let projection_a = instance_a.snapshot().expect("snapshot a").to_fixture();
+        let projection_b = instance_b.snapshot().expect("snapshot b").to_fixture();
         assert!(projection_a.widgets.iter().any(|widget| widget_id(widget) == "input"), "A keeps its rename");
         assert!(projection_a.widgets.iter().any(|widget| matches!(widget, Widget::InputNote { .. })), "A absorbs B's note");
         assert_eq!(projection_a.widgets.len(), projection_b.widgets.len(), "both instances converge to the same widget set");

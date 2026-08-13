@@ -34,6 +34,10 @@ pub struct PaintStrokeSession {
 pub struct TransformSession {
     object_id: String,
     before: LowpolyObject,
+    /// 🕸️ The `mesh_workspace` content the drag-start compute session was built from — `before`
+    /// (a `LowpolyObject`) no longer carries it (round 2 of this ticket's round-trip law fix), so it
+    /// is snapshotted alongside `before` here for `commit_transform`'s before/after comparison.
+    before_mesh_workspace: String,
     doc: LowpolyDocument,
 }
 
@@ -114,24 +118,27 @@ pub fn paint_uv_from_command(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: 
 /// @emoji 🧮️ The changed-field patch turning `before` into `after` — an internal diff-fragment type
 /// (never a mutation payload itself, per `📓️taxonomy.md`'s option-bag rule), consumed by
 /// `semantic_mutation_for_patch` below to pick the one real semantic mutation kind a kernel edit or
-/// gumball drag actually touched.
+/// gumball drag actually touched. The `mesh_workspace` content comparison lives OUTSIDE this patch
+/// (see `semantic_mutation_for_patch`'s own `before_mesh_workspace`/`after_mesh_workspace` params) —
+/// `LowpolyObject`/`LowpolyObjectPatch` carry no mesh content field at all (round 2 of this ticket's
+/// round-trip law fix); only the `mesh` handle is comparable here.
 pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> LowpolyObjectPatch {
     LowpolyObjectPatch {
         name: (before.name != after.name).then(|| after.name.clone()),
         smooth_shading: (before.smooth_shading != after.smooth_shading).then_some(after.smooth_shading),
         transform: (before.transform != after.transform).then(|| after.transform.clone()),
         mesh: (before.mesh != after.mesh).then(|| after.mesh.clone()),
-        mesh_workspace: (before.mesh_workspace != after.mesh_workspace).then(|| after.mesh_workspace.clone()),
     }
 }
 
-/// @emoji 🎯️ Maps an `object_patch_diff` result to the one semantic `LowpolyMutation` it represents —
-/// a kernel mesh edit or gumball drag changes exactly one facet per commit (name XOR smooth-shading
-/// XOR one transform axis XOR mesh), never several at once, so the first populated field wins.
-/// Transform sub-field priority (position, then rotation, then scale) matches the gumball's own
-/// single-axis-per-drag gesture (`translate_selection`/`rotate_selection`/`scale_selection` each
-/// mutate exactly one `LowpolyTransform` field via `apply_transform`).
-pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifacts::lowpoly::LowpolyTransform, patch: &LowpolyObjectPatch) -> Option<LowpolyMutation> {
+/// @emoji 🎯️ Maps an `object_patch_diff` result (plus the drag/edit's before/after `mesh_workspace`
+/// session-cache content, no longer reachable through `patch` itself) to the one semantic
+/// `LowpolyMutation` it represents — a kernel mesh edit or gumball drag changes exactly one facet per
+/// commit (name XOR smooth-shading XOR one transform axis XOR mesh), never several at once, so the
+/// first populated field wins. Transform sub-field priority (position, then rotation, then scale)
+/// matches the gumball's own single-axis-per-drag gesture (`translate_selection`/`rotate_selection`/
+/// `scale_selection` each mutate exactly one `LowpolyTransform` field via `apply_transform`).
+pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifacts::lowpoly::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: &str, after_mesh_workspace: &str) -> Option<LowpolyMutation> {
     if let Some(new_name) = &patch.name {
         return Some(LowpolyMutation::RenameObject(crate::artifacts::lowpoly::mutations::rename_object::mutation::RenameObject { id, new_name: new_name.clone() }));
     }
@@ -149,16 +156,16 @@ pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifac
             return Some(LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::mutation::ScaleObject { id, new_scale: transform.scale }));
         }
     }
-    if let Some(new_mesh_workspace) = &patch.mesh_workspace {
-        if new_mesh_workspace.is_empty() {
+    if before_mesh_workspace != after_mesh_workspace {
+        if after_mesh_workspace.is_empty() {
             return Some(LowpolyMutation::DeleteMesh(crate::artifacts::lowpoly::mutations::delete_mesh::mutation::DeleteMesh { id }));
         }
-        let handle = crate::artifacts::lowpoly::mesh_child_handle(&id, new_mesh_workspace);
+        let handle = crate::artifacts::lowpoly::mesh_child_handle(&id, after_mesh_workspace);
         return Some(LowpolyMutation::CreateMesh(crate::artifacts::lowpoly::mutations::create_mesh::mutation::CreateMesh {
             id,
             child_id: handle.child_id,
             target: handle.target,
-            mesh_workspace: new_mesh_workspace.clone(),
+            mesh_workspace: after_mesh_workspace.to_string(),
         }));
     }
     None
@@ -190,28 +197,33 @@ fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
     hash
 }
 
-/// @emoji 🔧️ Runs a kernel mesh edit against a compute session built from the projection + config, then
-/// returns the resulting `Objects(Patch)` capturing only the changed object fields. Stateless — takes no
-/// `LowpolyScratch` context, unlike its paint/transform siblings below.
-pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
-    let Some(mut doc) = build_doc(projection, config) else {
+/// @emoji 🔧️ Runs a kernel mesh edit against a compute session built from the projection + config,
+/// then returns the resulting `Objects(Patch)` capturing only the changed object fields. Takes
+/// `ctx: &mut LowpolyScratch` (round 2 of this ticket's round-trip law fix) — the compute session's
+/// live `mesh_workspace` content now lives session-side, never on `LowpolyObject`, so building the
+/// doc and reading back its post-edit content both need the cache.
+pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Emit<LowpolyMutation, crate::apps::lowpoly::config::LowpolyConfigMutation> {
+    let Some(mut doc) = build_doc(projection, config, ctx) else {
         return Emit::default();
     };
     let object_id = doc.active_object_id().to_string();
     let Some(before) = projection.objects.iter().find(|object| object.id == object_id).cloned() else {
         return Emit::default();
     };
+    let before_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
     if edit(&mut doc).is_err() {
         return Emit::default();
     }
     if doc.sync_meshes_to_snapshot().is_err() {
         return Emit::default();
     }
+    ctx.set_mesh_workspace_map(doc.mesh_workspace().clone());
     let Some(after) = doc.snapshot().objects.iter().find(|object| object.id == object_id).cloned() else {
         return Emit::default();
     };
+    let after_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
     let patch = object_patch_diff(&before, &after);
-    match semantic_mutation_for_patch(object_id, &before.transform, &patch) {
+    match semantic_mutation_for_patch(object_id, &before.transform, &patch, &before_mesh_workspace, &after_mesh_workspace) {
         Some(mutation) => Emit::mutations(vec![mutation]),
         None => Emit::default(),
     }
@@ -221,8 +233,14 @@ pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, edit: imp
 //#region 🔖️LowpolyScratch
 /// @emoji 🖌️ B1: `LowpolyPlayApp` sheds `RefCell<LowpolyPlayRuntime>` entirely — every former runtime
 /// field now lives in `LowpolyConfig`, written through `LowpolyConfigMutation`s emitted from `handle`.
-/// This struct holds the genuine mid-gesture scratch state the `ArtifactApp` trait sanctions.
-#[derive(Default)]
+/// This struct holds the genuine mid-gesture scratch state the `ArtifactApp` trait sanctions, PLUS
+/// (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law fix) the
+/// session-local `mesh_workspace` cache — live half-edge-mesh JSON per object id, formerly a field on
+/// `LowpolyObject` itself, moved here because a codec-excluded field cannot legitimately live on a
+/// persisted snapshot type (`store::os_store::test_support::assert_document_text_round_trip` is a
+/// general law every `ArtifactDsl + ArtifactPack` snapshot type must satisfy). Exactly the pattern
+/// `draw`'s `DrawSession` and DKM's `EngineRep` already establish elsewhere in this ticket: an
+/// ephemeral value threaded alongside the persisted view, never embedded in the persisted snapshot.
 pub struct LowpolyScratch {
     stroke: Option<PaintStrokeSession>,
     stroke_drag_active: bool,
@@ -232,9 +250,54 @@ pub struct LowpolyScratch {
     texture_cache: PaintTextureLut,
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
     preview_seq: u64,
+    /// 🕸️ Live half-edge-mesh JSON per object id — see this struct's own doc comment. Seeded from
+    /// `crate::artifacts::lowpoly::schema::default_mesh_workspace()` on `Default::default()` so a
+    /// freshly booted session can immediately reload the mesh `ArtifactApp::initial_snapshot()`
+    /// (`default_snapshot()`) describes; real interactive objects get their own entry from
+    /// `mesh_edit`/`LowpolyDocument::add_primitive` as they are created/edited. NEVER the persisted
+    /// document representation, NEVER round-tripped through undo/redo (store-level undo/redo bypass
+    /// `ArtifactApp::handle` entirely, so this cache can go stale relative to the document's `mesh`
+    /// handle across an undo/redo of a `create-mesh`/`delete-mesh` — `LowpolyDocument::reload_meshes`
+    /// detects that staleness and fails closed rather than silently computing wrong geometry; a real
+    /// fix needs child-document resolution, which no WASM-guest plugin in this repo has yet).
+    mesh_workspace: HashMap<String, String>,
+}
+
+impl Default for LowpolyScratch {
+    fn default() -> Self {
+        Self {
+            stroke: None,
+            stroke_drag_active: false,
+            stroke_dirty: 0,
+            transform: None,
+            transform_drag_active: false,
+            texture_cache: PaintTextureLut::default(),
+            preview_seq: 0,
+            mesh_workspace: crate::artifacts::lowpoly::schema::default_mesh_workspace(),
+        }
+    }
 }
 
 impl LowpolyScratch {
+    /// 🕸️ The live half-edge-mesh JSON cached for `object_id`, or `""` when this session has no
+    /// working content for it yet (e.g. an object loaded from a real document import, pending child-
+    /// document resolution — see this struct's own doc comment).
+    pub fn mesh_workspace(&self, object_id: &str) -> &str {
+        self.mesh_workspace.get(object_id).map(String::as_str).unwrap_or_default()
+    }
+
+    /// 🕸️ A clone of the full session-local mesh-workspace cache — `LowpolyDocument::with_context`'s
+    /// input, since it needs one entry per object to reload every mesh, not just the active one.
+    pub fn mesh_workspace_map(&self) -> HashMap<String, String> {
+        self.mesh_workspace.clone()
+    }
+
+    /// 🕸️ Replaces the whole session-local mesh-workspace cache — called after a successful edit with
+    /// `LowpolyDocument::mesh_workspace()`'s post-`sync_meshes_to_snapshot` content.
+    pub fn set_mesh_workspace_map(&mut self, map: HashMap<String, String>) {
+        self.mesh_workspace = map;
+    }
+
     pub fn stroke_drag_active(&self) -> bool {
         self.stroke_drag_active
     }
@@ -417,7 +480,7 @@ impl LowpolyScratch {
             self.preview_seq = self.preview_seq.wrapping_add(1);
             return Emit::default();
         }
-        let emitted = mesh_edit(projection, config, move |doc| {
+        let emitted = mesh_edit(projection, config, self, move |doc| {
             if !ids.is_empty() {
                 doc.apply_selection(mode, ids);
             }
@@ -432,14 +495,15 @@ impl LowpolyScratch {
 
     /// @emoji 🎬️ Snapshots the active object as the transform-drag base and builds the working scratch doc.
     fn begin_transform_session(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig) {
-        let Some(doc) = build_doc(projection, config) else {
+        let Some(doc) = build_doc(projection, config, self) else {
             return;
         };
         let object_id = doc.active_object_id().to_string();
         let Some(before) = projection.objects.iter().find(|object| object.id == object_id).cloned() else {
             return;
         };
-        self.transform = Some(TransformSession { object_id, before, doc });
+        let before_mesh_workspace = doc.mesh_workspace().get(&object_id).cloned().unwrap_or_default();
+        self.transform = Some(TransformSession { object_id, before, before_mesh_workspace, doc });
     }
 
     /// @emoji 📌️ Commits the whole gumball drag as ONE `Objects(Patch)` diff (base → final mesh).
@@ -450,11 +514,13 @@ impl LowpolyScratch {
         if session.doc.sync_meshes_to_snapshot().is_err() {
             return Emit::default();
         }
+        self.set_mesh_workspace_map(session.doc.mesh_workspace().clone());
         let Some(after) = session.doc.snapshot().objects.iter().find(|object| object.id == session.object_id).cloned() else {
             return Emit::default();
         };
+        let after_mesh_workspace = self.mesh_workspace(&session.object_id).to_string();
         let patch = object_patch_diff(&session.before, &after);
-        match semantic_mutation_for_patch(session.object_id, &session.before.transform, &patch) {
+        match semantic_mutation_for_patch(session.object_id, &session.before.transform, &patch, &session.before_mesh_workspace, &after_mesh_workspace) {
             Some(mutation) => Emit::commit(vec![mutation], "Transform selection"),
             None => Emit::default(),
         }
@@ -535,10 +601,11 @@ mod tests {
         let config = LowpolyConfig::default();
         scratch.set_transform_drag_active(true);
         scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(1.0, 0.0, 0.0)), "translate");
-        let mesh_before = scratch.transform.as_ref().unwrap().doc.snapshot().objects[0].mesh_workspace.clone();
+        let object_id = scratch.transform.as_ref().unwrap().object_id.clone();
+        let mesh_before = scratch.transform.as_ref().unwrap().doc.mesh_workspace().get(&object_id).cloned();
         let _ = scratch.gesture_preview();
         let _ = scratch.gesture_preview();
-        assert_eq!(scratch.transform.as_ref().unwrap().doc.snapshot().objects[0].mesh_workspace, mesh_before, "gesture_preview must never mutate the live transform scratch it reads");
+        assert_eq!(scratch.transform.as_ref().unwrap().doc.mesh_workspace().get(&object_id).cloned(), mesh_before, "gesture_preview must never mutate the live transform scratch it reads");
     }
 }
 //#endregion 🧪️Tests

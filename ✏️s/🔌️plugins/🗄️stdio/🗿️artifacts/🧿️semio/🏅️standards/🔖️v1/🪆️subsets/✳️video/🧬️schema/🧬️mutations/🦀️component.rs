@@ -1,7 +1,7 @@
 //! 🧬️ SemioVideoMutation — video mutation dispatch. Every variant's `diff()` is handcrafted
 //! (never apply-and-capture) and every variant's `inverse()` is handcrafted, index-aware.
 
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::{
     dec_bool, dec_kind, dec_list, dec_rational, dec_sample, dec_str, dec_stream, diff_insert_sample, diff_insert_stream, diff_remove_sample,
     diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_snapshot, diff_set_stream_meta, enc_bool, enc_kind, enc_list,

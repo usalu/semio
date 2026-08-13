@@ -1,7 +1,9 @@
 //! 🧬️ GltfArtifact schema — full artifact state.
 
-use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfSourceForm};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::artifacts::gltf::schema::snapshot::{
+    GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm,
+};
+use crate::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -491,3 +493,78 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: GltfComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
+/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
+/// `crate::artifacts::gltf::engine::empty_gltf_snapshot` through the `engine` barrel shim.
+pub fn empty_gltf_snapshot() -> GltfSnapshot {
+    GltfSnapshot::default()
+}
+
+/// 🌳️ P2-FG3: a genuinely non-trivial persisted snapshot (one scene/node/mesh/accessor/material/
+/// buffer PLUS one of every WEAK collection item — bufferView/texture/image/sampler/skin/
+/// animation/camera — and populated `extensionsUsed`/`extras`) — used by this artifact's own
+/// conformance-law tests AND by the shipped `.dsl.semio`/`.pack.semio` example fixtures (never a
+/// bare fake like the pre-FG3 `{"hello":"stdio.gltf","n":1}` stub, `fixture_honesty_law`'s own
+/// mandate). Mirrors `demo_json_snapshot`'s own role in json's pilot report.
+pub fn demo_gltf_snapshot() -> GltfSnapshot {
+    use crate::artifacts::gltf::schema::snapshot::{
+        GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAsset, GltfCamera,
+        GltfCameraProjection, GltfImage, GltfInterpolation, GltfMaterial, GltfNode, GltfPbrMetallicRoughness,
+        GltfPerspective, GltfSampler, GltfScene, GltfSkin, GltfTexture,
+    };
+    use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
+
+    let document = GltfDocument {
+        asset: GltfAsset { version: "2.0".into(), generator: Some("semio".into()), ..GltfAsset::default() },
+        scene: Some(0),
+        scenes: vec![GltfScene { nodes: vec![0], name: Some("root-scene".into()), ..GltfScene::default() }],
+        nodes: vec![GltfNode { mesh: Some(0), camera: Some(0), name: Some("root-node".into()), ..GltfNode::default() }],
+        meshes: vec![GltfMesh {
+            primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], indices: None, material: Some(0), mode: Some(4), extensions: None, extras: None }],
+            ..GltfMesh::default()
+        }],
+        accessors: vec![GltfAccessor {
+            buffer_view: Some(0), byte_offset: 0, component_type: GltfComponentType::Float, normalized: false, count: 3,
+            kind: GltfAccessorType::Vec3, max: Some(vec![1.0, 1.0, 1.0]), min: Some(vec![0.0, 0.0, 0.0]), sparse: None,
+            name: Some("positions".into()), extensions: None, extras: None,
+        }],
+        buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 36, byte_stride: None, target: Some(34962), name: None, extensions: None, extras: None }],
+        // A real `data:` URI (not `None`) -- `None` would round-trip LOSSY through the TEXT
+        // facet specifically (`serialize_gltf_document` embeds any uri-less buffer as a data URI
+        // on print, so re-parsing would fabricate a `Some(..)` that never matches this demo's own
+        // `None`, a real asymmetry discovered by `fixture_honesty_law` -- setting a genuine data
+        // URI up front keeps BOTH the text (`parse_gltf_document`) and GLB (`decode_glb`, which
+        // never embeds when a buffer already declares a `uri`) facets byte-for-byte lossless.
+        buffers: vec![GltfBuffer { byte_length: 36, uri: Some(crate::artifacts::gltf::engine::encode_data_uri("application/octet-stream", &[0u8; 36])), name: Some("geometry".into()), extensions: None, extras: None }],
+        materials: vec![GltfMaterial {
+            name: Some("triangle-material".into()),
+            pbr_metallic_roughness: Some(GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], metallic_factor: 0.0, roughness_factor: 0.8, ..GltfPbrMetallicRoughness::default() }),
+            ..GltfMaterial::default()
+        }],
+        textures: vec![GltfTexture { sampler: Some(0), source: Some(0), name: None, extensions: None, extras: None }],
+        images: vec![GltfImage { uri: Some("texture.png".into()), ..GltfImage::default() }],
+        samplers: vec![GltfSampler::default()],
+        skins: vec![GltfSkin { joints: vec![0], name: Some("root-skin".into()), ..GltfSkin::default() }],
+        animations: vec![GltfAnimation {
+            channels: vec![GltfAnimationChannel { sampler: 0, target: GltfAnimationChannelTarget { node: Some(0), path: GltfAnimationPath::Translation, extensions: None, extras: None }, extensions: None, extras: None }],
+            samplers: vec![crate::artifacts::gltf::schema::snapshot::GltfAnimationSampler { input: 0, interpolation: GltfInterpolation::Linear, output: 0, extensions: None, extras: None }],
+            name: Some("spin".into()),
+            extensions: None,
+            extras: None,
+        }],
+        cameras: vec![GltfCamera {
+            projection: GltfCameraProjection::Perspective(GltfPerspective { aspect_ratio: Some(1.777), yfov: 0.8, zfar: Some(100.0), znear: 0.1, extensions: None, extras: None }),
+            name: Some("main-camera".into()),
+            extensions: None,
+            extras: None,
+        }],
+        extensions_used: vec!["KHR_materials_unlit".into()],
+        extensions_required: Vec::new(),
+        extensions: None,
+        extras: Some(GltfJson::Object(vec![("generator-note".into(), GltfJson::String("fg3 demo fixture".into()))])),
+    };
+    GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![vec![0u8; 36]], source_form: GltfSourceForm::Json }
+}
+//#endregion 🔖️DocumentHelpers

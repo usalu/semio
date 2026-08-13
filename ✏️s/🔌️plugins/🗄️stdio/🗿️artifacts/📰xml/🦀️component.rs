@@ -59,7 +59,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.xml")
         .schema(crate::artifacts::xml::schema::xml_artifact_schema_descriptor())
         .inferences([crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::xml_artifact_inference_descriptor()])
-        .composers(crate::artifacts::xml::standards::v1_0::subsets::any::engine::io_registry::entries())
+        .composers(crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA)
@@ -145,7 +145,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::xml::standards::v1_0::subsets::any::engine::io_registry as v1_0;
+    use crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry as v1_0;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

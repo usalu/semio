@@ -17,14 +17,15 @@ pub struct AddPrimitive {
     pub kind: Option<String>,
 }
 
-pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
     let projection = doc.snapshot;
     let kind = primitive_kind(payload.kind.as_deref().unwrap_or("box")).to_string();
-    let Some(mut build) = build_doc(projection, cfg.snapshot) else { return Ok(Emit::default()) };
+    let Some(mut build) = build_doc(projection, cfg.snapshot, ctx) else { return Ok(Emit::default()) };
     let Ok(new_id) = build.add_primitive(&kind) else { return Ok(Emit::default()) };
     if build.sync_meshes_to_snapshot().is_err() {
         return Ok(Emit::default());
     }
+    ctx.set_mesh_workspace_map(build.mesh_workspace().clone());
     let Some(new_object) = build.snapshot().objects.iter().find(|object| object.id == new_id).cloned() else {
         return Ok(Emit::default());
     };

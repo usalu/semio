@@ -4,8 +4,8 @@
 //! schema-design.md svg infinite-recursion warning) and every variant's `inverse()` is
 //! handcrafted, key-aware.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::diff::{
     dec_edge, dec_node, dec_point2, dec_port_ref, dec_str, diff_insert_edge, diff_insert_node, diff_remove_edge,
     diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label,

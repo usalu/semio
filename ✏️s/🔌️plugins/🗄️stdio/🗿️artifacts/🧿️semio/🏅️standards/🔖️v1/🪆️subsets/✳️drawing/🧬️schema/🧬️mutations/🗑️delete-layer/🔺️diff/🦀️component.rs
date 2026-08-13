@@ -1,7 +1,7 @@
 //! 🔺️ `delete-layer` — sparse diff construction; an absent id is a no-op.
 
 use super::mutation::DeleteLayer;
-use crate::artifacts::semio::standards::v1::engine::triples::IndexedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 

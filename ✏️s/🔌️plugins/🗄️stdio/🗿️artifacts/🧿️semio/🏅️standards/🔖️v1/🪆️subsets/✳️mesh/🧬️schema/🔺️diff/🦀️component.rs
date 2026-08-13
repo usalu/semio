@@ -9,8 +9,8 @@
 //! own `between`/`apply`/`inverse`/`absorb` algorithm over the shared struct rather than
 //! reinventing the struct itself — see `w1b-type-ownership.md`'s "🧰️triples" entry).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::artifacts::semio::standards::v1::engine::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{
     SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology,
 };

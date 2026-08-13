@@ -55,7 +55,7 @@ impl ArtifactSerializer for SemioDrawingToPdf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioTransform};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment};
 
     fn sample_drawing() -> SemioDrawingSnapshot {
@@ -88,8 +88,8 @@ mod tests {
         assert_eq!(pdf.pages.len(), 1);
         assert_eq!(pdf.pages[0].text, "hello\nsemio");
 
-        let bytes = crate::artifacts::pdf::standards::v1_7::engine::encode_pdf(&pdf).expect("encode real pdf bytes");
-        let decoded = crate::artifacts::pdf::standards::v1_7::engine::decode_pdf(&bytes).expect("decode real pdf bytes");
+        let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&pdf).expect("encode real pdf bytes");
+        let decoded = crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).expect("decode real pdf bytes");
         assert_eq!(decoded.pages.len(), 1);
         assert_eq!(decoded.pages[0].text, "hello\nsemio");
     }

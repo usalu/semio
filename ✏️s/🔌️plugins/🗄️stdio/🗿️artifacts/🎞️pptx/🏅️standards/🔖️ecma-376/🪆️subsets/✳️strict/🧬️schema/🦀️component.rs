@@ -146,7 +146,7 @@ pub mod derived_analysis {
     /// 🧭️ Locates the root officeDocument part regardless of whether the package declares the
     /// Transitional or Strict officeDocument relationship type.
     fn main_part_path(opc: &OpcPackage) -> Option<String> {
-        crate::artifacts::pptx::standards::v_ecma_376::engine::resolve_office_document_relationship(opc)
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::resolve_office_document_relationship(opc)
     }
 
     fn part_text<'a>(opc: &'a OpcPackage, path: &str) -> Option<&'a str> {

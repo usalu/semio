@@ -15,7 +15,7 @@ use crate::artifacts::svg::{
     schema::snapshot::{CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox, svg_element_to_xml_node},
 };
 use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioRgba, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioRgba, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
@@ -151,7 +151,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
 
     fn sample_drawing() -> SemioDrawingSnapshot {

@@ -72,9 +72,8 @@ mod tests {
     use protocol::{Mutation, MutationDiff};
 
     fn tiny_object(id: &str, name: &str) -> LowpolyObject {
-        let mesh_workspace = default_snapshot().objects[0].mesh_workspace.clone();
         let mesh = default_snapshot().objects[0].mesh.clone();
-        LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, mesh_workspace, paint_layers: Vec::new() }
+        LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, paint_layers: Vec::new() }
     }
 
     //#region ⚖️SemanticLaws

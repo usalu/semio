@@ -6571,6 +6571,7 @@ dependencies = [
  "gltf",
  "pretty_assertions",
  "semio-framework-hash",
+ "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-ui",
  "serde",
@@ -6583,16 +6584,13 @@ dependencies = [
 name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "blake3",
  "futures",
  "geo",
  "pollster",
  "rayon",
- "semio-framework",
  "semio-framework-os-kernel",
  "serde",
- "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -6682,6 +6680,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-mesh-engine"
+version = "0.1.0"
+dependencies = [
+ "gltf",
+ "serde",
+]
+
+[[package]]
 name = "semio-framework-os"
 version = "0.1.0"
 dependencies = [
@@ -6711,6 +6717,7 @@ dependencies = [
 name = "semio-framework-os-flow"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "base64 0.22.1",
  "js-sys",
  "semio-framework",
@@ -7960,6 +7967,7 @@ dependencies = [
 name = "semio-s-plugin-writer"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-editor",
  "semio-framework-os",
  "semio-framework-os-kernel",

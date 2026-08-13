@@ -1,7 +1,17 @@
 //! 🧬️ Process3d diff schema — sparse field delta over the artifact.
+//!
+//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `steps` is no longer a
+//! `Process3dStepsDelta` (added/removed/patched/reordered) collection diff — the whole timeline is
+//! ONE composed `s.stdio.semio.flow` child now, so its diff is a single-`Option` handle swap (the
+//! "always-present slot" convention from the migration recipe §8: `Option<ArtifactChild<S>>`, not
+//! `Option<Option<...>>` — `steps` is never absent, only ever replaced wholesale). `tool_solids`
+//! uses the sibling "collection of children" convention (`📐️cad`'s `CadDrawingChildList` precedent):
+//! a whole-list wrapper behind a single `Option`.
 
-use crate::artifacts::process3d::{ProcessStep, ProcessStepPatch, Stock, Workshop};
+use crate::artifacts::process3d::{Pose, Workshop};
 use schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -12,8 +22,12 @@ use serde::{Deserialize, Serialize};
 pub struct Process3dDiff {
     #[state(persistent)] pub artifact: Option<Box<crate::artifacts::process3d::schema::Process3dArtifact>>,
     #[state(persistent)] pub workshop: Option<Workshop>,
-    #[state(persistent)] pub stock: Option<Stock>,
-    #[state(persistent)] pub steps: Option<Process3dStepsDelta>,
+    #[state(persistent)] pub stock_id: Option<String>,
+    #[state(persistent)] pub stock_label: Option<String>,
+    #[state(persistent)] pub stock_pose: Option<Pose>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.brep")] pub stock_solid: Option<store::ArtifactChild<SemioBrepSnapshot>>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.flow")] pub steps: Option<store::ArtifactChild<SemioFlowSnapshot>>,
+    #[state(persistent)] pub tool_solids: Option<Process3dToolSolidChildList>,
     #[state(persistent)] pub resolved_up_to: Option<Option<usize>>,
     #[state(shared_ui)] pub selected_id: Option<Option<String>>,
     #[state(shared_ui)] pub selected_face_id: Option<Option<usize>>,
@@ -39,21 +53,12 @@ pub struct Process3dDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-/// 🧩 Identified-collection delta for `steps`.
+/// 🧩️ Whole-list wrapper for the `tool_solids` composed CHILD COLLECTION diff field — same
+/// `RunList` shape `✳️text`/`✳️kit`/`📐️cad`'s `CadDrawingChildList` use for their own
+/// `Vec<ArtifactChild<S>>` diff fields.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct Process3dStepsDelta {
-    pub added: Vec<ProcessStep>,
-    pub removed: Vec<String>,
-    pub patched: Vec<Process3dStepPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched `steps` entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Process3dStepPatchEntry {
-    pub id: String,
-    pub patch: ProcessStepPatch,
+pub struct Process3dToolSolidChildList {
+    pub values: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
 }
 //#endregion 🔖️DeltaHelpers

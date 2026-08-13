@@ -943,8 +943,7 @@ mod scene_compute {
     }
 
     /// @emoji 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
-    #[allow(dead_code)]
-    fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
+    pub(crate) fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
         let Ok(root) = serde_json::from_str::<Value>(source_json) else {
             return (Vec::new(), CadGeometry::default());
         };
@@ -957,6 +956,20 @@ mod scene_compute {
         };
         let objects = objects_from_fixture_model(&mut *kernel, objects_value, &geometry);
         (objects, geometry)
+    }
+
+    /// @emoji 🌲️ `cad_document_pane_bundle`, scoped to the Concrete Forest Left fixture and keyed by
+    /// `CadPaneId` rather than a raw fixture index — the real, non-stub object+geometry source
+    /// `crate::apps::cad::forest_working_scene` (the app layer's `CadWorkingScene` test/render
+    /// fixture) builds each pane from.
+    pub fn forest_pane_bundle(pane: crate::artifacts::cad::CadPaneId) -> (Vec<CadObject>, CadGeometry) {
+        let model_index = match pane {
+            crate::artifacts::cad::CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
+            crate::artifacts::cad::CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
+            crate::artifacts::cad::CadPaneId::Energy => CAD_MODEL_INDEX_ENERGY,
+            crate::artifacts::cad::CadPaneId::StructureClassic => CAD_MODEL_INDEX_STRUCTURE_CLASSIC,
+        };
+        cad_document_pane_bundle(FOREST_LEFT_MODEL_JSON, model_index)
     }
 
     fn forest_references_for_model_definitions(reference_z: f64) -> std::collections::BTreeMap<String, Vec<CadReference>> {

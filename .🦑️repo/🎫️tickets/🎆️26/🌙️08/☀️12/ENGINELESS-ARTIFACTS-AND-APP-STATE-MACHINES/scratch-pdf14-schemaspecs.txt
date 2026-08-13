@@ -1,0 +1,15 @@
+/// 📇️ P2-FG3: `dsl::registry::register_schema_spec` -- genuinely callable here: `PdfSnapshot`/
+/// `PageDoc` both derive `dsl::DslRecord` and `PdfDiff` derives `dsl::DslDiff` (S-6/F6's own real
+/// derive path for this standard, confirmed by `cargo check`, see `🔺️diff/🦀️component.rs`'s own
+/// doc comment), so both `__dsl_spec`/`__dsl_diff_spec` genuinely exist. `PdfMutation`'s own
+/// per-variant specs are NOT registered here -- same scope boundary binary/raw's and txt's own
+/// identical registration functions document: `register_schema_spec` registers one spec under one
+/// schema id, and there is no single canonical id for a Mutation enum's per-variant shapes.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register_schema_specs() {
+    dsl::registry::register_schema_spec("stdio.pdf", PdfSnapshot::__dsl_spec);
+    dsl::registry::register_schema_spec("stdio.pdf#diff", PdfDiff::__dsl_diff_spec);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_schema_specs() {}

@@ -7,6 +7,6 @@ use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &MoveStock, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
-    vec![Process3dMutation::MoveStock(MoveStock { new_pose: base.stock.pose.clone() })]
+    vec![Process3dMutation::MoveStock(MoveStock { new_pose: base.stock_pose.clone() })]
 }
 //#endregion 🔖️Inverse

@@ -39,7 +39,7 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 pub(crate) fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
 pub(crate) fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 
 pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
 pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
@@ -101,8 +101,10 @@ pub(crate) fn dec_paint_layer_list(s: &str) -> Result<Vec<LowpolyPaintLayer>, St
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_paint_layer).collect()
 }
 
-/// 🧊️ One object: `[id,name,transform,smooth-shading,mesh-handle,paint-layers]`. `mesh_workspace`
-/// is DELIBERATELY absent — ephemeral kernel scratch, never part of the persisted representation.
+/// 🧊️ One object: `[id,name,transform,smooth-shading,mesh-handle,paint-layers]`. The live half-edge
+/// mesh JSON content is DELIBERATELY absent — it is not a field of `LowpolyObject` at all (moved to
+/// `🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`'s session-local `mesh_workspace` cache, ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` round-trip law fix round 2).
 pub(crate) fn enc_object(o: &LowpolyObject) -> String {
     format!(
         "[{},{},{},{},{},{}]",
@@ -121,7 +123,6 @@ pub(crate) fn dec_object(s: &str) -> Result<LowpolyObject, String> {
         transform: dec_lowpoly_transform(transform)?,
         smooth_shading: smooth_shading.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
         mesh: dec_child_opt(mesh)?,
-        mesh_workspace: String::new(),
         paint_layers: dec_paint_layer_list(paint_layers)?,
     })
 }
@@ -239,7 +240,7 @@ fn read_object(reader: &mut store::ByteReader<'_>) -> Result<LowpolyObject, Stri
     let smooth_shading = reader.read_u8().map_err(|e| e.to_string())? != 0;
     let mesh = read_child_opt(reader)?;
     let paint_layers = read_paint_layer_list(reader)?;
-    Ok(LowpolyObject { id, name, transform, smooth_shading, mesh, mesh_workspace: String::new(), paint_layers })
+    Ok(LowpolyObject { id, name, transform, smooth_shading, mesh, paint_layers })
 }
 fn write_object_list(out: &mut Vec<u8>, list: &[LowpolyObject]) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
@@ -321,9 +322,13 @@ impl store::ArtifactPack for LowpolySnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️DocumentHelpers
-/// 🏗️ Builds a single-object snapshot from mesh JSON. Populates BOTH `mesh_workspace` (the kernel's
-/// live scratch content) and `mesh` (the real persisted handle, content-addressed off that same
-/// JSON via `mesh_child_handle` — identical geometry always resolves to the identical handle).
+/// 🏗️ Builds a single-object snapshot from mesh JSON — only the real persisted `mesh` handle
+/// (content-addressed off `mesh_json` via `mesh_child_handle`, identical geometry always resolving
+/// to the identical handle). The caller is responsible for seeding its OWN session-local
+/// `mesh_workspace` cache (`🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`) with `mesh_json` under
+/// `object_id` — this function no longer does it implicitly (round 2 of this ticket's round-trip
+/// law fix: `LowpolyObject` carries no live mesh content at all any more, see that struct's own doc
+/// comment).
 pub fn snapshot_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &str) -> LowpolySnapshot {
     LowpolySnapshot {
         schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
@@ -333,7 +338,6 @@ pub fn snapshot_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &s
             transform: LowpolyTransform::default(),
             smooth_shading: false,
             mesh: Some(crate::artifacts::lowpoly::mesh_child_handle(object_id, mesh_json)),
-            mesh_workspace: mesh_json.into(),
             paint_layers: vec![crate::artifacts::lowpoly::LowpolyPaintLayer::new("Base")],
         }],
     }

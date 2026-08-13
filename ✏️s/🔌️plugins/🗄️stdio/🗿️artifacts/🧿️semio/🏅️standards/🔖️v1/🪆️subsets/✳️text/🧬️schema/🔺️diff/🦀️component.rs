@@ -86,7 +86,7 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
 fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
 
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 
 fn enc_mark_kind(k: crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind) -> char {

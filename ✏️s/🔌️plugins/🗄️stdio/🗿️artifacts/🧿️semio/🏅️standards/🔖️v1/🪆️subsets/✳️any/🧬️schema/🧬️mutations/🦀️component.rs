@@ -388,7 +388,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
         SemioMutation::Drawing(SemioDrawingMutation::DragNodes(
             crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::drag_nodes::mutation::DragNodes {
                 ats: Vec::new(),
-                offset: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2::default(),
+                offset: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2::default(),
             },
         )),
         SemioMutation::Image(SemioImageMutation::NoMutation),
@@ -414,7 +414,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot, FlowNode};
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use protocol::command::DiffAlgebra;
 
     fn audio_base() -> SemioSnapshot {
@@ -532,7 +532,7 @@ mod tests {
                 SemioSubsetSnapshot::Drawing(_) => SemioMutation::Drawing(SemioDrawingMutation::DragNodes(
                     crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::drag_nodes::mutation::DragNodes {
                         ats: Vec::new(),
-                        offset: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2::default(),
+                        offset: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2::default(),
                     },
                 )),
                 SemioSubsetSnapshot::Image(_) => SemioMutation::Image(SemioImageMutation::NoMutation),
@@ -595,7 +595,7 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Brep(Default::default()) };
         let m = SemioMutation::Brep(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex {
             id: "v1".into(),
-            point: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 },
+            point: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 },
         }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
         assert!(matches!(diff, SemioDiff::Brep(_)));
@@ -670,7 +670,7 @@ mod tests {
     fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
         use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::create_node;
         use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
-        use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+        use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Graph(Default::default()) };
         let m = SemioMutation::Graph(SemioGraphMutation::CreateNode(create_node::mutation::CreateNode {

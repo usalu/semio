@@ -1,17 +1,17 @@
-//! 🔺️ Sparse `FlowDiff` construction for `reorder-widgets` — recomputes the widget id order from
-//! `base` directly (never a whole-snapshot capture).
-use crate::artifacts::flow::schema::diff::text::{FlowDiff, FlowWidgetsDelta};
-use crate::artifacts::flow::FlowSnapshot;
+//! 🔺️ Sparse `FlowDiff` construction for `reorder-widgets` — recomputes the widget order from the
+//! current working scene directly (never a whole-snapshot capture).
+use crate::artifacts::flow::schema::diff::text::{diff_replace_content, FlowDiff};
+use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
 use protocol::Identified;
 
 use super::mutation::ReorderWidgets;
 
 pub fn diff(payload: &ReorderWidgets, base: &FlowSnapshot) -> FlowDiff {
-    let mut ids: Vec<String> = base.widgets.iter().map(|widget| widget.id().clone()).collect();
-    if let Some(from) = ids.iter().position(|id| id == &payload.id) {
-        let item = ids.remove(from);
-        let to = payload.to_index.min(ids.len());
-        ids.insert(to, item);
+    let mut scene = flow_working_scene(base);
+    if let Some(from) = scene.widgets.iter().position(|widget| widget.id() == &payload.id) {
+        let item = scene.widgets.remove(from);
+        let to = payload.to_index.min(scene.widgets.len());
+        scene.widgets.insert(to, item);
     }
-    FlowDiff { widgets: Some(FlowWidgetsDelta { reordered: Some(ids), ..Default::default() }), ..Default::default() }
+    diff_replace_content(scene.widgets, scene.synapses, scene.layout)
 }

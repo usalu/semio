@@ -19,7 +19,7 @@
 //! REFERENCED style (which never touches this entity's own node fields) still correctly
 //! invalidates its cached value. `Image` inherits the world transform and has no style field.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{node_at, NodePath};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
 use serde::{Deserialize, Serialize};
@@ -228,7 +228,7 @@ fn walk(node: &DrawNode, layer: usize, path: &mut Vec<usize>, parent_key: Option
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig, InferredField};
 
@@ -236,7 +236,7 @@ mod tests {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
-            styles: vec![DrawStyle { name: "s1".into(), fill: Some(crate::artifacts::semio::standards::v1::engine::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(2.0), opacity: None }],
+            styles: vec![DrawStyle { name: "s1".into(), fill: Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(2.0), opacity: None }],
             layers: vec![DrawLayer {
                 id: "l0".into(),
                 name: "base".into(),
@@ -330,8 +330,8 @@ mod tests {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
             styles: vec![
-                DrawStyle { name: "s1".into(), fill: Some(crate::artifacts::semio::standards::v1::engine::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(2.0), opacity: None },
-                DrawStyle { name: "s2".into(), fill: Some(crate::artifacts::semio::standards::v1::engine::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(3.0), opacity: None },
+                DrawStyle { name: "s1".into(), fill: Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(2.0), opacity: None },
+                DrawStyle { name: "s2".into(), fill: Some(crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(3.0), opacity: None },
             ],
             layers: vec![DrawLayer {
                 id: "l0".into(),

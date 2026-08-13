@@ -159,7 +159,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+        use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
         use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntityRecord, CadLayer};
 
         #[test]

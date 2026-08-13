@@ -106,7 +106,7 @@ impl ArtifactSerializer for SemioMeshToObj {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioUv};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioUv};
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
     use semio_framework_plugin::ArtifactDeserializer;

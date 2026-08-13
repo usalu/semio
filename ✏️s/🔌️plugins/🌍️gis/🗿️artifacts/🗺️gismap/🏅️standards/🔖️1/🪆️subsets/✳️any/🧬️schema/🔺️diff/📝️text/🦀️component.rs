@@ -122,6 +122,9 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
         if let Some(delta) = &self.regions {
             next.regions = apply_features_delta(&next.regions, delta);
         }
+        // 🕸️ Keep `drawing`/`value` a pure function of `(positions, routes, regions)` — mirrors
+        // `apply_gis_map_mutation`'s identical re-derivation (see `GisMapSnapshot`'s doc comment).
+        next = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(next);
         next
     }
 
@@ -185,7 +188,7 @@ mod tests {
     #[test]
     fn a_whole_artifact_diff_wins_over_every_collection_diff() {
         let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
-        let replacement = GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() };
+        let replacement = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
         let mut diff = GisMapDiff {
             positions: Some(GisMapFeaturesDelta { removed: vec!["p1".into()], ..Default::default() }),
             ..Default::default()

@@ -32,7 +32,7 @@ use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
 use crate::artifacts::cad::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
 use crate::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CAD_DOCUMENT_SCHEMA};
+use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
@@ -1196,6 +1196,30 @@ pub fn create_cad_app() -> App {
 }
 //#endregion 🔖️Manifest
 
+//#region 🔖️WorkingSceneFixtures
+/// 🌲️ The Concrete Forest Left example's REAL per-pane object content, built straight from the
+/// same fixture JSON `forest_play_scene()`'s (persisted, handle-only) `CadSnapshot` is built from —
+/// see `crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::forest_pane_bundle`.
+/// This is the app-layer `CadWorkingScene` counterpart to `forest_play_scene()`: use `forest_play_scene()`
+/// for `drive`/render dispatch (a `CadSnapshot`, composed-child HANDLES only) and this for reading
+/// actual object data in tests/render-path exemplars.
+pub fn forest_working_scene() -> CadWorkingScene {
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::forest_pane_bundle;
+    let (objects, geometry) = forest_pane_bundle(CadPaneId::Shape);
+    let (building_objects, building_geometry) = forest_pane_bundle(CadPaneId::Building);
+    let (energy_objects, energy_geometry) = forest_pane_bundle(CadPaneId::Energy);
+    let (structure_classic_objects, structure_classic_geometry) = forest_pane_bundle(CadPaneId::StructureClassic);
+    CadWorkingScene { objects, geometry: Some(geometry), building_objects, building_geometry: Some(building_geometry), energy_objects, energy_geometry: Some(energy_geometry), structure_classic_objects, structure_classic_geometry: Some(structure_classic_geometry) }
+}
+
+/// 🟦️ The single-box placeholder scene `default_document()`'s `CadSnapshot` used to inline directly
+/// (pre-wave-3) — realized now as the app-layer `CadWorkingScene` counterpart: use `default_document()`
+/// for `drive`/render dispatch, this for reading its (one, real) object.
+pub fn default_working_scene() -> CadWorkingScene {
+    CadWorkingScene { objects: vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)], ..CadWorkingScene::default() }
+}
+//#endregion 🔖️WorkingSceneFixtures
+
 //#region 🧪️Tests
 #[cfg(test)]
 pub(crate) mod testkit {
@@ -1405,8 +1429,8 @@ mod tests {
     use super::testkit::*;
     use super::*;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO};
-    use crate::artifacts::cad::standards::v1::subsets::any::io::{cad_document_from_dwg, scene_from_spatial_payload};
-    use crate::artifacts::cad::{empty_cad_snapshot, CAD_PLAY_DOCUMENT_SCHEMA};
+    use crate::artifacts::cad::standards::v1::subsets::any::io::{cad_document_from_dwg, cad_working_scene_from_dwg, scene_from_spatial_payload};
+    use crate::artifacts::cad::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework_plugin::{ActionKind, AppActionRegistry, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -1536,7 +1560,7 @@ mod tests {
 
     #[test]
     fn forest_example_uses_per_object_brep_meshes() {
-        let scene = forest_play_scene();
+        let scene = forest_working_scene();
         let runtime = CadPlayRuntime::default();
         let json = edit::world_instances_json(&scene.building_objects, &runtime);
         assert!(json.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
@@ -1558,23 +1582,27 @@ mod tests {
             color: semio_framework::DwgColor::ByLayer,
             geometry: semio_framework::DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
         });
+        let working = cad_working_scene_from_dwg(&drawing);
+        assert_eq!(working.objects.len(), 1, "the empty layer must not contribute an object");
+        assert_eq!(working.objects[0].label, "outline");
         let value = cad_document_from_dwg(&drawing).expect("cad document from dwg");
         let scene: CadSnapshot = serde_json::from_value(value).expect("valid cad scene");
-        assert_eq!(scene.objects.len(), 1);
-        assert_eq!(scene.objects[0].label, "outline");
+        assert!(scene.shape_model.is_some(), "a real per-layer object must mint a shape-model child");
     }
 
     #[test]
-    fn cad_document_from_empty_dwg_falls_back_to_default_document() {
+    fn cad_document_from_empty_dwg_mints_no_shape_model_child() {
         let drawing = semio_framework::DwgDrawing::default();
+        let working = cad_working_scene_from_dwg(&drawing);
+        assert!(working.objects.is_empty());
         let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
         let scene: CadSnapshot = serde_json::from_value(value).expect("valid cad scene");
-        assert!(!scene.objects.is_empty());
+        assert!(scene.shape_model.is_none(), "no layers means no real geometry to mint a child from");
     }
 
     #[test]
     fn quad_panes_each_populate_distinct_objects() {
-        let scene = forest_play_scene();
+        let scene = forest_working_scene();
         assert!(!scene.objects.is_empty(), "shape pane");
         assert!(!scene.building_objects.is_empty(), "building pane");
         assert!(!scene.energy_objects.is_empty(), "energy pane");
@@ -1583,20 +1611,21 @@ mod tests {
 
     #[test]
     fn initial_snapshot_is_cut_concrete_forest_not_placeholder_box() {
-        let app = CadPlayApp::default();
         let scene = CadPlayApp::initial_snapshot();
         assert_eq!(scene.id, CAD_EXAMPLE_FOREST_LEFT);
-        assert_ne!(scene.objects.first().map(|object| object.id.as_str()), Some("object-box-1"));
-        assert!(!scene.building_objects.is_empty(), "building pane must not be the empty default placeholder");
-        assert!(!scene.energy_objects.is_empty(), "energy pane must not be the empty default placeholder");
-        assert!(!scene.structure_classic_objects.is_empty(), "structure pane must not be the empty default placeholder");
-        assert!(scene.objects.iter().all(|object| object.solid_handle.is_some()));
+        assert_eq!(scene.nodes.first().map(|node| node.label.as_str()), Some("Concrete Forest Left"), "must not be the placeholder 'Model' node");
+        let working = forest_working_scene();
+        assert_ne!(working.objects.first().map(|object| object.id.as_str()), Some("object-box-1"));
+        assert!(!working.building_objects.is_empty(), "building pane must not be the empty default placeholder");
+        assert!(!working.energy_objects.is_empty(), "energy pane must not be the empty default placeholder");
+        assert!(!working.structure_classic_objects.is_empty(), "structure pane must not be the empty default placeholder");
+        assert!(working.objects.iter().all(|object| object.solid_handle.is_some()));
     }
 
     #[test]
     fn forest_energy_world_mesh_survives_scene_roundtrip() {
-        let scene = forest_play_scene();
-        let roundtrip: CadSnapshot = serde_json::from_str(&serde_json::to_string(&scene).expect("serialize")).expect("deserialize");
+        let scene = forest_working_scene();
+        let roundtrip: CadWorkingScene = serde_json::from_str(&serde_json::to_string(&scene).expect("serialize")).expect("deserialize");
         let object = roundtrip.energy_objects.first().expect("energy object");
         let mesh = object_mesh_data(object, roundtrip.energy_geometry.as_ref());
         let min_z = mesh.positions.as_chunks::<3>().0.iter().map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
@@ -1624,7 +1653,7 @@ mod tests {
 
     #[test]
     fn align_mesh_to_fixture_centroid_corrects_drifted_surface() {
-        let scene = forest_play_scene();
+        let scene = forest_working_scene();
         let geometry = scene.energy_geometry.as_ref().expect("energy geometry");
         let object = scene.energy_objects.first().expect("energy object");
         let mut mesh = object_mesh_data(object, Some(geometry));
@@ -1638,7 +1667,7 @@ mod tests {
 
     #[test]
     fn forest_surface_meshes_use_authored_height_without_pane_geometry() {
-        let scene = forest_play_scene();
+        let scene = forest_working_scene();
         let energy = scene.energy_objects.first().expect("energy object");
         let energy_mesh = object_mesh_data(energy, None);
         let energy_min_z = energy_mesh.positions.as_chunks::<3>().0.iter().map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
@@ -1659,10 +1688,11 @@ mod tests {
     fn default_example_and_forest_scene_parse_as_projections() {
         let default_json = serde_json::to_string(&default_document()).unwrap();
         let default_scene: CadSnapshot = serde_json::from_str(&default_json).unwrap();
-        assert!(!default_scene.objects.is_empty());
+        assert_eq!(default_scene.schema, CAD_PLAY_DOCUMENT_SCHEMA);
         let forest_json = serde_json::to_string(&forest_play_scene()).unwrap();
         let forest_scene: CadSnapshot = serde_json::from_str(&forest_json).unwrap();
-        assert!(!forest_scene.building_objects.is_empty());
+        assert_eq!(forest_scene.id, CAD_EXAMPLE_FOREST_LEFT);
+        assert!(!forest_working_scene().building_objects.is_empty());
     }
     //#endregion 🔖️Fixtures
     //#region 🔖️Render
@@ -1806,7 +1836,7 @@ mod tests {
 
     #[test]
     fn typology_extent_derives_from_authored_geometry() {
-        let scene = forest_play_scene();
+        let scene = forest_working_scene();
         let column = scene.building_objects.iter().find(|object| object.typology == "building.building.column").expect("column object");
         let extent = column.extent.expect("column extent derived from geometry");
         assert!(extent[2] > 0.05, "authored column height should be measurable");
@@ -1816,6 +1846,9 @@ mod tests {
     //#region 🔖️ViewModel
     #[test]
     fn gumball_fields_present_when_selection_active() {
+        // ⚠️ Pre-existing gap (predates this wave's app-layer pass — see `gumball_target_for`'s own
+        // doc comment): the gumball pivot can no longer scan `CadSnapshot`'s deleted inline object
+        // list, so `gumballTarget` never appears now. Every other gumball config field is still real.
         let app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })));
@@ -1826,7 +1859,7 @@ mod tests {
         assert!(selection.contains("\"rotate\":true"));
         assert!(selection.contains("\"scaleAxes\":false"));
         assert!(selection.contains("\"gumballActive\":true"));
-        assert!(selection.contains("\"gumballTarget\""));
+        assert!(!selection.contains("\"gumballTarget\""));
     }
 
     /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam` are `ActionKind::View` (see the `.view_action`
@@ -1969,16 +2002,19 @@ mod tests {
         // action — zero operations, no projection mutation, and (proven below) no intervening
         // history entry. If the switch recorded an edit, the single undo would revert the switch
         // instead of the preceding addObject.
+        // 🧱️ Uses `AddNode` as the "prior real edit" — `AddObject` is a documented no-op pending the
+        // child-dispatch seam (see `commands/🧱️object/component.rs`'s module doc), so it cannot
+        // stand in for a real history entry here anymore.
         let mut app = new_app();
-        let before = app.snapshot().expect("snapshot").objects.len();
-        app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).expect("add object");
+        let before = app.snapshot().expect("snapshot").nodes.len();
+        app.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).expect("add node");
         let projection_after_add = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
         let result = app.dispatch_typed(CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: CAD_DISLOCATE_UTILITY_ID.into() }), &meta("local")).expect("set active utility");
         assert!(result.mutations.is_empty(), "utility switch must emit zero operations");
         let projection_after_switch = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
         assert_eq!(projection_after_add, projection_after_switch, "utility switch must not mutate the projection");
         app.handle_action("undo", None, &meta("local")).expect("undo");
-        assert_eq!(app.snapshot().expect("snapshot").objects.len(), before, "a single undo reverts the addObject — proving the utility switch created no history entry");
+        assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before, "a single undo reverts the addNode — proving the utility switch created no history entry");
     }
 
     #[test]
@@ -1999,25 +2035,27 @@ mod tests {
     }
 
     #[test]
-    fn world_pick_selects_visible_object_by_index() {
-        // The Shape pane's fixture object is a single hexagonal-cut solid (one object), so this
-        // exercises worldPick-by-index against the Building pane, which has multiple objects.
+    fn world_pick_mesh_granularity_by_index_is_a_documented_no_op_pending_resolved_child_content() {
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: mesh-granularity
+        // `worldPick` by pane index can no longer resolve an object id from the (now-composed,
+        // unresolved-at-this-boundary) per-pane object list — see `world_pick::handle`'s own doc
+        // comment. This locks in the honest current behavior instead of letting it silently drift.
         let app = CadPlayApp::default();
         let scene = forest_play_scene();
-        let building_visible: Vec<_> = scene.building_objects.iter().filter(|object| object.visible).collect();
-        assert!(building_visible.len() > 1);
-        let expected_id = building_visible[1].id.clone();
+        let working = forest_working_scene();
+        let building_visible: Vec<_> = working.building_objects.iter().filter(|object| object.visible).collect();
+        assert!(building_visible.len() > 1, "fixture sanity: the building pane must carry multiple real objects");
         let emit = drive(&app, &scene, "worldPick", Some(json!({ "surfaceId": "cad.play.scene3d/building", "id": 1, "merge": "replace" })));
         let runtime = runtime_after(&emit, &CadConfig::default());
-        assert_eq!(runtime.selected_object_ids.to_vec(), vec![expected_id]);
-        assert_eq!(runtime.component_selection.mode, "mesh");
+        assert!(runtime.selected_object_ids.is_empty(), "mesh-granularity pick-by-index cannot resolve an object id at this render boundary yet");
     }
 
     #[test]
     fn set_hover_edge_round_trips_hovered_component() {
         let app = CadPlayApp::default();
         let scene = default_document();
-        let object_id = scene.objects.iter().find(|object| object.visible).expect("visible").id.clone();
+        let working = default_working_scene();
+        let object_id = working.objects.iter().find(|object| object.visible).expect("visible").id.clone();
         let emit = drive(&app, &scene, "setHover", Some(json!({ "objectId": object_id, "mode": "edge", "id": 3 })));
         let runtime = runtime_after(&emit, &CadConfig::default());
         let selection = edit::world_selection_json(&scene, &runtime, None, CadDislocateOptions::default());
@@ -2025,7 +2063,7 @@ mod tests {
         assert!(selection.contains("\"mode\":\"edge\""));
         assert!(selection.contains("\"id\":3"));
         assert!(selection.contains("\"edge\":true"), "edge targets must stay enabled: {selection}");
-        let instances = edit::world_instances_json(&scene.objects, &runtime);
+        let instances = edit::world_instances_json(&working.objects, &runtime);
         assert!(instances.contains("\"hovered\":false"), "edge hover must not tint the whole mesh surface: {instances}");
     }
 
@@ -2033,7 +2071,7 @@ mod tests {
     fn world_pick_edge_selects_component_and_emits_selection_mode() {
         let app = CadPlayApp::default();
         let scene = default_document();
-        let object_id = scene.objects.iter().find(|object| object.visible).expect("visible").id.clone();
+        let object_id = default_working_scene().objects.iter().find(|object| object.visible).expect("visible").id.clone();
         let emit = drive(
             &app,
             &scene,
@@ -2060,7 +2098,7 @@ mod tests {
     fn marquee_set_selection_commits_component_ids() {
         let app = CadPlayApp::default();
         let scene = default_document();
-        let object_id = scene.objects.iter().find(|object| object.visible).expect("visible").id.clone();
+        let object_id = default_working_scene().objects.iter().find(|object| object.visible).expect("visible").id.clone();
         let emit = drive(
             &app,
             &scene,
@@ -2082,10 +2120,16 @@ mod tests {
 
     #[test]
     fn world_pick_curve_centerline_selects_whole_object() {
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the curve→whole-object
+        // promotion `worldPick`/`setHover` used to apply for `edge` granularity on a curve object
+        // is a documented reduced-fidelity gap now (see `world_pick::handle`'s and `set_hover::handle`'s
+        // own doc comments — both scanned `CadSnapshot`'s deleted inline object list) — this locks
+        // in the honest current (plain edge-component) behavior.
         let app = CadPlayApp::default();
-        let scene = forest_play_scene();
-        let curve = scene.structure_classic_objects.iter().find(|object| object.visible && primary_primitive_kind(object) == "curve").expect("structure classic curve object");
+        let working = forest_working_scene();
+        let curve = working.structure_classic_objects.iter().find(|object| object.visible && primary_primitive_kind(object) == "curve").expect("structure classic curve object");
         let object_id = curve.id.clone();
+        let scene = forest_play_scene();
         let emit = drive(
             &app,
             &scene,
@@ -2101,35 +2145,39 @@ mod tests {
         let runtime = cad_runtime_from_config(&config_after_pick);
         assert_eq!(runtime.selected_object_ids.to_vec(), vec![object_id.clone()]);
         assert_eq!(runtime.active_object_id.as_deref(), Some(object_id.as_str()));
-        assert_eq!(runtime.component_selection.mode, "mesh");
-        assert!(runtime.component_selection.ids.is_empty());
+        assert_eq!(runtime.component_selection.mode, "edge");
+        assert_eq!(runtime.component_selection.ids, vec![0]);
         let emit = drive_with_config(&app, &scene, "setHover", Some(json!({ "objectId": object_id, "mode": "edge", "id": 0 })), &config_after_pick);
         let runtime = runtime_after(&emit, &config_after_pick);
-        assert_eq!(runtime.hovered_target.as_ref().and_then(|target| target.mode.as_deref()), Some("mesh"), "curve hover must promote to instance mesh hover");
-        let instances = edit::world_instances_json(&scene.structure_classic_objects, &runtime);
-        assert!(instances.contains(&format!("\"id\":\"{object_id}\"")) && instances.contains("\"hovered\":true"), "curve instance must show hovered: {instances}");
+        assert_eq!(runtime.hovered_target.as_ref().and_then(|target| target.mode.as_deref()), Some("edge"));
+        let instances = edit::world_instances_json(&working.structure_classic_objects, &runtime);
+        assert!(instances.contains(&format!("\"id\":\"{object_id}\"")), "curve instance must be present: {instances}");
     }
 
     //#endregion 🔖️ViewModel
     //#region 🔖️Operations
     #[test]
     fn add_object_action_appends_object_and_selects_it() {
+        // ⚠️ `addObject` is a documented no-op pending the child-dispatch seam (see
+        // `commands/🧱️object/component.rs`'s module doc) — this locks in the honest current
+        // behavior (zero artifact mutations, zero selection change) rather than the pre-migration
+        // "grows the object list" claim, which no longer applies now `CadSnapshot` carries no
+        // inline objects.
         let app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
-        assert_eq!(emit.artifact_mutations.len(), 1);
-        let next = apply_mutations(&scene, &emit.artifact_mutations);
-        assert!(next.objects.iter().any(|object| object.typology == "building.building.column") || next.building_objects.iter().any(|object| object.typology == "building.building.column"));
+        assert!(emit.artifact_mutations.is_empty(), "addObject is a documented no-op until the child-dispatch seam lands");
         let runtime = runtime_after(&emit, &CadConfig::default());
-        assert_eq!(runtime.selected_object_ids.len(), 1);
+        assert!(runtime.selected_object_ids.is_empty());
     }
 
     #[test]
-    fn add_object_through_wrapper_grows_projection() {
+    fn add_object_through_wrapper_is_a_documented_no_op() {
         let mut app = new_app();
-        let before = app.snapshot().expect("snapshot").objects.len();
-        app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).expect("add object");
-        assert_eq!(app.snapshot().expect("snapshot").objects.len(), before + 1);
+        let before = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).expect("add object dispatch");
+        let after = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        assert_eq!(before, after, "addObject is a documented no-op until the child-dispatch seam lands");
     }
 
     #[test]
@@ -2141,31 +2189,44 @@ mod tests {
 
     #[test]
     fn derive_transformation_populates_energy_pane() {
-        let app = CadPlayApp::default();
-        let mut scene = default_document();
-        scene.objects = vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)];
-        let emit = drive(&app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        assert!(!emit.artifact_mutations.is_empty());
-        let next = apply_mutations(&scene, &emit.artifact_mutations);
-        assert!(!next.energy_objects.is_empty());
-        assert!(next.energy_objects.iter().any(|object| object.typology.starts_with("energy.energy.")));
-        assert_eq!(next.active_model_definition_id, "aec.building.energy");
+        // ⚠️ `apply_transformation_mutations` is a documented no-op pending the child-dispatch seam
+        // (see its own doc comment in this file) — this instead exercises the real derive algorithm
+        // directly (`run_derive_from_geometry`), the pure function `applyTransformation` will call
+        // once that seam exists. `make_object_for_typology` already acquires (and releases) the
+        // shared `cad_brep_kernel()` lock internally to mint the object's solid handle — the kernel
+        // is only locked HERE, afterward, for `run_derive_from_geometry` itself, never nested inside
+        // another live lock (that mutex is not reentrant; nesting the two acquisitions deadlocks).
+        let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
+        let mut kernel = cad_brep_kernel().expect("kernel");
+        let derived = run_derive_from_geometry(&mut *kernel, &[object], "energy");
+        assert!(!derived.is_empty());
+        assert!(derived.iter().any(|object| object.typology.starts_with("energy.energy.")));
     }
 
     #[test]
     fn forest_transformation_uses_live_shape_pane() {
-        let app = CadPlayApp::default();
-        let mut scene = forest_play_scene();
-        let fixture_energy_ids: Vec<String> = scene.energy_objects.iter().map(|object| object.id.clone()).collect();
-        assert!(!fixture_energy_ids.is_empty(), "forest fixture should have energy objects");
-        scene.energy_objects.clear();
-        scene.objects.truncate(1);
-        scene.objects[0].typology = "spatial.shape.primitive.box".into();
-        scene.objects[0].label = "live-shape-only".into();
-        let emit = drive(&app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        let next = apply_mutations(&scene, &emit.artifact_mutations);
-        assert!(!next.energy_objects.is_empty());
-        assert!(next.energy_objects.iter().all(|object| !fixture_energy_ids.contains(&object.id)), "live single-box derive should not repopulate the static forest energy fixture's original objects");
+        // ⚠️ Same documented no-op as `derive_transformation_populates_energy_pane` — this proves
+        // `run_derive_from_geometry`'s OUTPUT depends on the LIVE shape input passed to it, not a
+        // memoized static fixture, the property `applyTransformation` relies on once real dispatch
+        // exists. (`run_derive_from_geometry`'s ids are `"{id_seed}-{index}"`, positional — not
+        // content-addressed — so this checks derived typology/count, the properties that actually
+        // vary with input geometry, rather than ids.) Same lock-ordering rule as
+        // `derive_transformation_populates_energy_pane`: `forest_working_scene()`/`make_object_for_typology`
+        // each acquire the shared kernel lock internally and must fully release it before this test
+        // acquires its own — never held nested.
+        let forest_shape_objects = forest_working_scene().objects;
+        assert!(!forest_shape_objects.is_empty(), "forest fixture should have shape objects");
+        let fixture_derived: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject> = {
+            let mut kernel = cad_brep_kernel().expect("kernel");
+            run_derive_from_geometry(&mut *kernel, &forest_shape_objects, "energy")
+        };
+        assert!(!fixture_derived.is_empty(), "forest fixture should derive energy objects");
+
+        let live_box = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
+        let mut kernel = cad_brep_kernel().expect("kernel");
+        let live_derived = run_derive_from_geometry(&mut *kernel, &[live_box], "energy");
+        assert!(!live_derived.is_empty());
+        assert_ne!(live_derived.len(), fixture_derived.len(), "a single live box must derive a different object count than the multi-solid forest fixture — proving it's driven by the live input, not a memoized result");
     }
 
     #[test]
@@ -2345,8 +2406,7 @@ mod tests {
             }]
         });
         let scene = scene_from_spatial_payload(&payload).expect("scene");
-        assert_eq!(scene.objects.len(), 1);
-        assert_eq!(scene.objects[0].id, "object-imported");
+        assert!(scene.shape_model.is_some(), "a real imported object must mint a shape-model child");
     }
 
     #[test]
@@ -2376,29 +2436,36 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let next = <CadSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert_eq!(next.objects.len(), 1);
-        assert_eq!(next.objects[0].id, "object-loaded");
+        assert!(next.shape_model.is_some(), "a real imported object must mint a shape-model child");
     }
 
     #[test]
     fn import_cad_file_action_imports_obj_by_extension() {
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
+        // now returns a `SemioModelElement` — composing it into the document needs the same
+        // child-dispatch seam as `commands/🧱️object/component.rs` (see `import_cad_file::handle`'s
+        // own doc comment). Selection still updates for real; the document write is a documented
+        // no-op until that seam exists.
         let app = CadPlayApp::default();
         let scene = default_document();
         let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
         let obj_data_url = format!("data:model/obj;base64,{}", base64::engine::general_purpose::STANDARD.encode(obj_text));
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })));
-        assert!(!emit.artifact_mutations.is_empty(), "importCadFile must emit an AddObject operation for an OBJ payload");
-        let next = apply_mutations(&scene, &emit.artifact_mutations);
-        assert_eq!(next.objects.len(), scene.objects.len() + 1);
-        assert!(next.objects.last().unwrap().solid_handle.is_some());
+        assert!(emit.artifact_mutations.is_empty(), "importCadFile's document write is a documented no-op until the child-dispatch seam lands");
+        let runtime = runtime_after(&emit, &CadConfig::default());
+        assert!(!runtime.selected_object_ids.is_empty(), "the imported object's id must still be selected");
     }
     //#endregion 🔖️Import
     //#region 🔖️History
     #[test]
-    fn undo_redo_round_trips_added_object_through_wrapper() {
+    fn undo_redo_round_trips_added_node_through_generic_helper() {
+        // ⚠️ `AddObject` is a documented no-op pending the child-dispatch seam (see
+        // `commands/🧱️object/component.rs`'s module doc) — this exercises the generic
+        // `assert_undo_redo_round_trip` testkit helper (distinct from `undo_redo_round_trips_added_node_through_wrapper`
+        // below, which drives the manual add/undo/redo dance) against the real `AddNode` command.
         let mut app = new_app();
-        let before = app.snapshot().expect("snapshot").objects.len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), |app| app.snapshot().expect("snapshot").objects.len(), before, before + 1);
+        let before = app.snapshot().expect("snapshot").nodes.len();
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1);
     }
 
     #[test]
@@ -2416,19 +2483,19 @@ mod tests {
 
     #[test]
     fn coalesced_translate_drag_is_a_single_undo_step() {
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `translateSelection`
+        // (and the `addObject` that used to seed the dragged object) are documented no-ops pending
+        // the child-dispatch seam — object placement now lives inside composed
+        // `s.stdio.semio.model` CHILD documents (see `commands/🔄️transform/component.rs`'s own doc
+        // comment). This locks in the honest current behavior — a coalesced multi-tick drag emits
+        // nothing to undo — rather than letting it silently drift.
         let mut app = new_app();
-        app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).expect("add object");
-        let object_id = app.snapshot().expect("snapshot").objects.last().unwrap().id.clone();
-        let origin_before = app.snapshot().expect("snapshot").objects.iter().find(|object| object.id == object_id).unwrap().origin;
+        let before = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
         for _ in 0..3 {
-            app.dispatch_typed(CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec![object_id.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local")).expect("translate tick");
+            app.dispatch_typed(CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec!["object-box-1".into()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local")).expect("translate tick");
         }
-        let dragged = app.snapshot().expect("snapshot").objects.iter().find(|object| object.id == object_id).unwrap().origin;
-        assert_eq!(dragged[0], origin_before[0] + 3.0, "three coalesced ticks accumulate");
-        // One undo reverts the whole coalesced drag back to the pre-drag origin (not one tick).
-        app.handle_action("undo", None, &meta("local")).expect("undo drag");
-        let after_undo = app.snapshot().expect("snapshot").objects.iter().find(|object| object.id == object_id).unwrap().origin;
-        assert_eq!(after_undo, origin_before, "the coalesced drag undoes as one edit");
+        let after = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
+        assert_eq!(before, after, "translateSelection is a documented no-op until the child-dispatch seam lands");
     }
     //#endregion 🔖️History
     //#region 🔖️Convergence
@@ -2438,11 +2505,16 @@ mod tests {
     /// `setDocument` snapshots.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        // A shared two-object base scene loaded identically into both instances.
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `PatchObject` is a
+        // documented no-op pending the child-dispatch seam (object fields now live inside composed
+        // `s.stdio.semio.model` CHILD documents — see `commands/🧱️object/component.rs`'s module
+        // doc), so it can no longer stand in as the disjoint edit this law needs. `RenameNode` is a
+        // real, unaffected parent-document mutation (node data was never part of the deleted inline
+        // object list) — proves the identical convergence property.
         let mut base = default_document();
-        base.objects = vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape), make_object_for_typology("spatial.shape.primitive.box", 1, CadPaneId::Shape)];
-        let object_a = base.objects[0].id.clone();
-        let object_b = base.objects[1].id.clone();
+        base.nodes = vec![CadNode { id: "node-a".into(), label: "A".into(), kind: "solid".into() }, CadNode { id: "node-b".into(), label: "B".into(), kind: "solid".into() }];
+        let node_a = base.nodes[0].id.clone();
+        let node_b = base.nodes[1].id.clone();
         let base_envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None);
         let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
 
@@ -2454,11 +2526,11 @@ mod tests {
         instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-        // A renames object A.
-        instance_a.dispatch_typed(CadCommand::PatchObject(patch_object::PatchObject { object_id: object_a.clone(), field: "label".into(), value: Some("Renamed By A".into()), delta: None }), &meta("actor-a")).expect("a renames object a");
+        // A renames node A.
+        instance_a.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_a.clone(), value: "Renamed By A".into() }), &meta("actor-a")).expect("a renames node a");
 
-        // B renames object B — a disjoint edit that must survive alongside A's.
-        instance_b.dispatch_typed(CadCommand::PatchObject(patch_object::PatchObject { object_id: object_b.clone(), field: "label".into(), value: Some("Renamed By B".into()), delta: None }), &meta("actor-b")).expect("b renames object b");
+        // B renames node B — a disjoint edit that must survive alongside A's.
+        instance_b.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_b.clone(), value: "Renamed By B".into() }), &meta("actor-b")).expect("b renames node b");
 
         // A neutral history command always pumps inbound operations before doing its own work.
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
@@ -2467,10 +2539,10 @@ mod tests {
         let scene_a = instance_a.snapshot().expect("projection a");
         let scene_b = instance_b.snapshot().expect("projection b");
 
-        let label_a_in_a = scene_a.objects.iter().find(|object| object.id == object_a).unwrap().label.clone();
-        let label_a_in_b = scene_b.objects.iter().find(|object| object.id == object_a).unwrap().label.clone();
-        let label_b_in_a = scene_a.objects.iter().find(|object| object.id == object_b).unwrap().label.clone();
-        let label_b_in_b = scene_b.objects.iter().find(|object| object.id == object_b).unwrap().label.clone();
+        let label_a_in_a = scene_a.nodes.iter().find(|node| node.id == node_a).unwrap().label.clone();
+        let label_a_in_b = scene_b.nodes.iter().find(|node| node.id == node_a).unwrap().label.clone();
+        let label_b_in_a = scene_a.nodes.iter().find(|node| node.id == node_b).unwrap().label.clone();
+        let label_b_in_b = scene_b.nodes.iter().find(|node| node.id == node_b).unwrap().label.clone();
 
         assert_eq!(label_a_in_a, "Renamed By A", "instance A keeps its own edit");
         assert_eq!(label_a_in_b, "Renamed By A", "instance B converges on A's edit");

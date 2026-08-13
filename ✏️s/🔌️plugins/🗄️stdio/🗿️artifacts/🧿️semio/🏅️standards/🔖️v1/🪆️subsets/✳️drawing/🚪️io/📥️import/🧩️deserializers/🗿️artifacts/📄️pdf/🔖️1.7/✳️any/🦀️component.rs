@@ -11,7 +11,7 @@
 //! fabricating vector paths PDF's own typed snapshot doesn't expose.
 
 use crate::artifacts::pdf::PdfSnapshot;
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 

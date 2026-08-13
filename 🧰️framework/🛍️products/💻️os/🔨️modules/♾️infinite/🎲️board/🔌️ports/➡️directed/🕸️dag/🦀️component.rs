@@ -7261,7 +7261,7 @@ mod tests {
 // #endregion 🔖️Tests
 
 // #region 🔖️ArtifactVcs
-use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, OpText, Mutation, MutationDiff, Patchable};
+use crate::os_spr::{Identified, Mutation, MutationDiff, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
 #[cfg(any(test, target_arch = "wasm32"))]
@@ -7309,7 +7309,20 @@ pub fn dag_fixture_from_document(document: &DagSnapshot, camera: DagCamera) -> D
     DagFixture { schema: document.schema.clone(), camera, nodes: document.nodes.clone(), edges: document.edges.clone() }
 }
 
-//#region 🔖️CollectionSupport
+//#region 🔖️ExternalPatchSupport
+// 🧬️ `DagNodePatch`/`DagEdgePatch` (+ the `Identified`/`Patchable` impls that make them usable) are no
+// longer consumed by THIS file's own `DagMutation`/`DagDiff` (see `🔖️DiffDeltas` below for the
+// dedicated per-verb delta types that replaced them here) — but they are re-exported verbatim
+// (`pub use infinite_board_port_directed_dag::{DagEdgePatch, DagNodePatch, ...}`,
+// `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️component.rs:9-11`) and directly consumed as a live,
+// load-bearing dependency by that plugin's own already-landed `🧬️mutations` facet: its
+// `apply_nodes_delta`/`apply_edges_delta`/`apply_identified_delta` helpers
+// (`…/🧬️schema/🔺️diff/📝️text/🦀️component.rs`) are generic over `T: Identified<String> + Patchable<P>`
+// and call `.apply_patch(...)` on `DagNodeSpec`/`DagFixtureEdge` using exactly these impls. Deleting
+// them would compile-break that plugin's facet, which is the same "boundary that separates a
+// definition from its registration is a race" failure this ticket's own doctrine warns against —
+// so this file keeps them, unrelated to and independent of the `CollectionMutation<TId,TItem,TPatch>`
+// elimination below (this crate's own `DagMutation` never wraps them in that banned generic type).
 impl Identified<String> for DagNodeSpec {
     fn id(&self) -> &String {
         &self.id
@@ -7323,7 +7336,9 @@ impl Identified<String> for DagFixtureEdge {
 }
 
 /// 🩹️ Sparse patch of a {@link DagNodeSpec} — layout fields plus a whole-`kind` replacement for
-/// kind-specific edits (slider value/min/max, note text, …).
+/// kind-specific edits (slider value/min/max, note text, …). Consumed by `✏️s/🔌️plugins/🕸️dag`'s own
+/// `DagNodeExtraPatch` deviation (fields this type has no slot for: `id`/`icon`/`abbreviation`/
+/// `operator_kind`/`properties` — that plugin's own workaround, not extended here on their behalf).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagNodePatch {
@@ -7357,9 +7372,7 @@ impl Patchable<DagNodePatch> for DagNodeSpec {
         }
     }
 
-    /// 🧮️ `self`-relative-to-`other` diff (crate::os_spr::Patchable convention) — used by
-    /// `inverse_collection_mutation` as `after.diff_patch(&prior)` to recover the pre-patch state.
-    /// Always returns `Some` (even an all-`None` patch) per that function's no-op-patch guidance.
+    /// 🧮️ `self`-relative-to-`other` diff (crate::os_spr::Patchable convention).
     fn diff_patch(&self, other: &Self) -> Option<DagNodePatch> {
         Some(DagNodePatch {
             name: (self.name != other.name).then(|| other.name.clone()),
@@ -7395,103 +7408,292 @@ impl Patchable<DagEdgePatch> for DagFixtureEdge {
         Some(DagEdgePatch { source: (self.source != other.source).then(|| other.source.clone()), target: (self.target != other.target).then(|| other.target.clone()) })
     }
 }
+//#endregion 🔖️ExternalPatchSupport
 
-/// ▶️ Applies a `CollectionDiff` (removed → modified → added) to an owned `Vec` — `vcs::CollectionDiff`
-/// has no generic apply of its own since `modified` patches require the item's `Patchable` impl.
-fn apply_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
-where
-    TId: PartialEq,
-    TItem: Identified<TId> + Clone + Patchable<TPatch>,
-{
-    for id in &diff.removed {
-        items.retain(|item| item.id() != id);
-    }
-    for patch in &diff.modified {
-        if let Some(item) = items.iter_mut().find(|item| item.id() == &patch.id) {
-            item.apply_patch(&patch.patch);
-        }
-    }
-    for added in &diff.added {
-        items.push(added.clone());
-    }
+//#region 🔖️DiffDeltas
+// 🧬️ Diff-internal sparse deltas — one small concrete struct per mutation verb rather than a shared
+// generic option-bag `Patch` type (the taxonomy bans a `Patch` payload on the MUTATION itself; a
+// per-verb delta avoids even the diff-internal option-bag entirely, keeping `DagDiff::absorb`'s
+// per-field LWW-overwrite semantics unambiguous — no risk of two unrelated field-changes for the same
+// node colliding inside one shared bag). Every field the ORIGINAL generic `DagNodePatch`/`DagEdgePatch`
+// carried now has its own dedicated `DagMutation` verb and matching delta type below.
+/// 🏷️ `id` → `new_id` — `rename-node`'s delta. `id` is the node's identity field (its display `name`
+/// has its own `ChangedNodeName`), so this also drives every `"<id>@<port>"` edge endpoint rewrite.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct RenamedNode {
+    pub id: String,
+    pub new_id: String,
 }
 
-/// ➕️ Merges an incoming `CollectionDiff` into an existing one (coalescing two edits' diffs).
-fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut Option<CollectionDiff<TId, TPatch, TItem>>, incoming: Option<CollectionDiff<TId, TPatch, TItem>>) {
-    if let Some(b) = incoming {
-        match target {
-            Some(a) => {
-                a.removed.extend(b.removed);
-                a.modified.extend(b.modified);
-                a.added.extend(b.added);
-            }
-            None => *target = Some(b),
-        }
-    }
+/// ↔️ `move-node`'s delta — FINAL-state absolute `(x, y)`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct MovedNode {
+    pub id: String,
+    pub x: f64,
+    pub y: f64,
 }
-//#endregion 🔖️CollectionSupport
 
-/// 📦️ Typed DAG operation. Node/edge add/remove/patch/move flow through a generic {@link CollectionMutation}
-/// for granular convergence; `SetNodes`/`SetEdges` are bulk writes (relayout/rename) and `SetSnapshot`
-/// replaces the whole snapshot (import/reset).
+/// 📐️ `resize-node`'s delta — FINAL-state absolute `(width, height)`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ResizedNode {
+    pub id: String,
+    pub width: f64,
+    pub height: f64,
+}
+
+/// 🔤️ `change-node-name`'s delta — the node's display label (distinct from its `id`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ChangedNodeName {
+    pub id: String,
+    pub new_name: String,
+}
+
+/// 🖼️ `change-node-icon`'s delta.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ChangedNodeIcon {
+    pub id: String,
+    pub new_icon: String,
+}
+
+/// 🔡️ `change-node-abbreviation`'s delta.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ChangedNodeAbbreviation {
+    pub id: String,
+    pub new_abbreviation: String,
+}
+
+/// 🧮️ `change-node-operator-kind`'s delta — a single (non-nested) `Option<String>`, since the delta
+/// struct's own presence on {@link DagDiff} already distinguishes "untouched" from "touched".
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ChangedNodeOperatorKind {
+    pub id: String,
+    pub new_operator_kind: Option<String>,
+}
+
+/// 🔁️ `replace-node-kind`'s delta — whole-value swap of the tagged `kind` (an 11-variant enum whose
+/// interior the editor edits via a clone-mutate-refit cycle, never a sparse per-field patch — see this
+/// ticket's report for the measurement that ruled out finer per-variant verbs).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ReplacedNodeKind {
+    pub id: String,
+    pub new_kind: DagNodeKind,
+}
+
+/// 🗃️ `replace-node-properties`'s delta — whole-value swap of the node's `PropertyBag` (no piecewise
+/// per-property editing gesture exists on this board).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ReplacedNodeProperties {
+    pub id: String,
+    pub new_properties: PropertyBag,
+}
+
+/// ↩️ `rename-node`'s edge-endpoint cascade — one entry per edge whose `source`/`target` string
+/// referenced the renamed id. `None` means that side of the edge wasn't touched.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct RewrittenEdgeEndpoint {
+    pub id: String,
+    pub new_source: Option<String>,
+    pub new_target: Option<String>,
+}
+//#endregion 🔖️DiffDeltas
+
+/// 📦️ Semantic DAG document mutation vocabulary — id-keyed node create/delete/rename/move/resize/
+/// change-<field>/replace-<payload>/reorder, plus relationship connect/disconnect between node ports
+/// (derivation rule 4: an edge is endpoints-plus-payload with no independent identity). Mirrors the
+/// already-SMO-reviewed vocabulary `✏️s/🔌️plugins/🕸️dag`'s own `🧬️mutations` facet settled on
+/// independently for the identical domain shape — same 14 verbs, same field names, so the framework
+/// port and the plugin facet read as one vocabulary. The old generic id-keyed-collection wrapper
+/// (`Nodes`/`Edges(CollectionMutation<..>)`) and the old whole-collection/whole-document replacement
+/// variants (`SetNodes`/`SetEdges`/`SetSnapshot`) are gone with no direct replacement — whole-
+/// collection/whole-document replace is not an in-history mutation; a real whole-document load goes
+/// through `crate::os_store::ArtifactStore::reset`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
-    reason = "boxing `Nodes`'s CollectionMutation would require rewrapping every construction/match site across this crate and s/plugin/dag/rs (10+ call sites, out of this crate's scope); DagMutation values are short-lived per-dispatch operations, not stored in bulk"
+    reason = "CreateNode/ReplaceNodeKind carry a full DagNodeSpec/DagNodeKind payload per taxonomy's create/replace canonical args; boxing would ripple across this file's own dsl-mirror/inverse/test call sites for marginal stack-size benefit since DagMutation values are short-lived per-dispatch operations, not stored in bulk"
 )]
 pub enum DagMutation {
-    Nodes(CollectionMutation<String, DagNodeSpec, DagNodePatch>),
-    Edges(CollectionMutation<String, DagFixtureEdge, DagEdgePatch>),
-    SetNodes { nodes: Vec<DagNodeSpec> },
-    SetEdges { edges: Vec<DagFixtureEdge> },
-    SetSnapshot { snapshot: DagSnapshot },
+    CreateNode { node: DagNodeSpec, index: usize },
+    DeleteNode { id: String },
+    RenameNode { id: String, new_id: String },
+    ChangeNodeName { id: String, new_name: String },
+    MoveNode { id: String, x: f64, y: f64 },
+    ResizeNode { id: String, width: f64, height: f64 },
+    ChangeNodeIcon { id: String, new_icon: String },
+    ChangeNodeAbbreviation { id: String, new_abbreviation: String },
+    ChangeNodeOperatorKind { id: String, new_operator_kind: Option<String> },
+    ReplaceNodeKind { id: String, new_kind: DagNodeKind },
+    ReplaceNodeProperties { id: String, new_properties: PropertyBag },
+    ReorderNodes { order: Vec<String> },
+    ConnectNodes { id: String, source: String, target: String, route_style: EdgeRouteStyle, properties: PropertyBag },
+    DisconnectNodes { id: String },
 }
 
+/// 🔺️ Sparse field delta — every field records WHAT CHANGED (an id, a new value, a captured payload),
+/// never a whole post-mutation record or a whole-collection/whole-document snapshot.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagDiff {
-    pub document: Option<DagSnapshot>,
-    pub nodes: Option<CollectionDiff<String, DagNodePatch, DagNodeSpec>>,
-    pub edges: Option<CollectionDiff<String, DagEdgePatch, DagFixtureEdge>>,
-    pub set_nodes: Option<Vec<DagNodeSpec>>,
-    pub set_edges: Option<Vec<DagFixtureEdge>>,
+    pub created_node: Option<DagNodeSpec>,
+    /// 🔢️ Companion to `created_node` — the FINAL-state insertion index (this board's node order is
+    /// its z-stack: `DagHost`'s hit-testing walks `nodes.iter().rev()`, later index = frontmost).
+    /// Kept as a sibling field rather than nested inside `created_node`, matching `🪐️space`'s
+    /// `created_folder_at` convention (the derive engine has no first-class "record + position" shape).
+    pub created_node_at: Option<usize>,
+    pub deleted_node_ids: Option<Vec<String>>,
+    pub renamed_node: Option<RenamedNode>,
+    pub moved_node: Option<MovedNode>,
+    pub resized_node: Option<ResizedNode>,
+    pub changed_node_name: Option<ChangedNodeName>,
+    pub changed_node_icon: Option<ChangedNodeIcon>,
+    pub changed_node_abbreviation: Option<ChangedNodeAbbreviation>,
+    pub changed_node_operator_kind: Option<ChangedNodeOperatorKind>,
+    pub replaced_node_kind: Option<ReplacedNodeKind>,
+    pub replaced_node_properties: Option<ReplacedNodeProperties>,
+    pub reordered_nodes: Option<Vec<String>>,
+    pub connected_edge: Option<DagFixtureEdge>,
+    pub disconnected_edge_ids: Option<Vec<String>>,
+    /// 🩹️ `rename-node`'s edge cascade only — no direct edge field-change verb exists; any other
+    /// endpoint/route/property change on an existing edge is `disconnect-nodes` + `connect-nodes`.
+    pub rewritten_edge_endpoints: Option<Vec<RewrittenEdgeEndpoint>>,
 }
 
 impl MutationDiff<DagSnapshot> for DagDiff {
     fn apply(&self, snapshot: &DagSnapshot) -> DagSnapshot {
-        if let Some(document) = &self.document {
-            return document.clone();
-        }
         let mut next = snapshot.clone();
-        if let Some(nodes) = &self.set_nodes {
-            next.nodes = nodes.clone();
+        if let Some(node) = &self.created_node {
+            let at = self.created_node_at.unwrap_or(next.nodes.len()).min(next.nodes.len());
+            next.nodes.insert(at, node.clone());
         }
-        if let Some(edges) = &self.set_edges {
-            next.edges = edges.clone();
+        if let Some(ids) = &self.deleted_node_ids {
+            next.nodes.retain(|node| !ids.contains(&node.id));
         }
-        if let Some(diff) = &self.nodes {
-            apply_collection_diff(&mut next.nodes, diff);
+        if let Some(renamed) = &self.renamed_node {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == renamed.id) {
+                node.id = renamed.new_id.clone();
+            }
         }
-        if let Some(diff) = &self.edges {
-            apply_collection_diff(&mut next.edges, diff);
+        if let Some(moved) = &self.moved_node {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == moved.id) {
+                node.x = moved.x;
+                node.y = moved.y;
+            }
+        }
+        if let Some(resized) = &self.resized_node {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == resized.id) {
+                node.width = resized.width;
+                node.height = resized.height;
+            }
+        }
+        if let Some(changed) = &self.changed_node_name {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == changed.id) {
+                node.name = changed.new_name.clone();
+            }
+        }
+        if let Some(changed) = &self.changed_node_icon {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == changed.id) {
+                node.icon = changed.new_icon.clone();
+            }
+        }
+        if let Some(changed) = &self.changed_node_abbreviation {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == changed.id) {
+                node.abbreviation = changed.new_abbreviation.clone();
+            }
+        }
+        if let Some(changed) = &self.changed_node_operator_kind {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == changed.id) {
+                node.operator_kind = changed.new_operator_kind.clone();
+            }
+        }
+        if let Some(replaced) = &self.replaced_node_kind {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == replaced.id) {
+                node.kind = replaced.new_kind.clone();
+            }
+        }
+        if let Some(replaced) = &self.replaced_node_properties {
+            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == replaced.id) {
+                node.properties = replaced.new_properties.clone();
+            }
+        }
+        if let Some(order) = &self.reordered_nodes {
+            let mut reordered: Vec<DagNodeSpec> = Vec::with_capacity(next.nodes.len());
+            for id in order {
+                if let Some(at) = next.nodes.iter().position(|node| &node.id == id) {
+                    reordered.push(next.nodes.remove(at));
+                }
+            }
+            reordered.extend(next.nodes.drain(..));
+            next.nodes = reordered;
+        }
+        if let Some(edge) = &self.connected_edge {
+            next.edges.push(edge.clone());
+        }
+        if let Some(ids) = &self.disconnected_edge_ids {
+            next.edges.retain(|edge| !ids.contains(&edge.id));
+        }
+        if let Some(rewrites) = &self.rewritten_edge_endpoints {
+            for rewrite in rewrites {
+                if let Some(edge) = next.edges.iter_mut().find(|edge| edge.id == rewrite.id) {
+                    if let Some(source) = &rewrite.new_source {
+                        edge.source = source.clone();
+                    }
+                    if let Some(target) = &rewrite.new_target {
+                        edge.target = target.clone();
+                    }
+                }
+            }
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.document.is_some() {
-            self.document = other.document;
-            return;
+        if other.created_node.is_some() {
+            self.created_node = other.created_node;
+            self.created_node_at = other.created_node_at;
         }
-        if other.set_nodes.is_some() {
-            self.set_nodes = other.set_nodes;
+        if let Some(ids) = other.deleted_node_ids {
+            self.deleted_node_ids.get_or_insert_with(Vec::new).extend(ids);
         }
-        if other.set_edges.is_some() {
-            self.set_edges = other.set_edges;
+        if other.renamed_node.is_some() {
+            self.renamed_node = other.renamed_node;
         }
-        absorb_collection_diff(&mut self.nodes, other.nodes);
-        absorb_collection_diff(&mut self.edges, other.edges);
+        if other.moved_node.is_some() {
+            self.moved_node = other.moved_node;
+        }
+        if other.resized_node.is_some() {
+            self.resized_node = other.resized_node;
+        }
+        if other.changed_node_name.is_some() {
+            self.changed_node_name = other.changed_node_name;
+        }
+        if other.changed_node_icon.is_some() {
+            self.changed_node_icon = other.changed_node_icon;
+        }
+        if other.changed_node_abbreviation.is_some() {
+            self.changed_node_abbreviation = other.changed_node_abbreviation;
+        }
+        if other.changed_node_operator_kind.is_some() {
+            self.changed_node_operator_kind = other.changed_node_operator_kind;
+        }
+        if other.replaced_node_kind.is_some() {
+            self.replaced_node_kind = other.replaced_node_kind;
+        }
+        if other.replaced_node_properties.is_some() {
+            self.replaced_node_properties = other.replaced_node_properties;
+        }
+        if other.reordered_nodes.is_some() {
+            self.reordered_nodes = other.reordered_nodes;
+        }
+        if other.connected_edge.is_some() {
+            self.connected_edge = other.connected_edge;
+        }
+        if let Some(ids) = other.disconnected_edge_ids {
+            self.disconnected_edge_ids.get_or_insert_with(Vec::new).extend(ids);
+        }
+        if let Some(rewrites) = other.rewritten_edge_endpoints {
+            self.rewritten_edge_endpoints.get_or_insert_with(Vec::new).extend(rewrites);
+        }
     }
 }
 
@@ -7499,22 +7701,151 @@ impl Mutation<DagSnapshot> for DagMutation {
     type Diff = DagDiff;
 
     fn diff(&self, snapshot: &DagSnapshot) -> DagDiff {
+        let mut diff = DagDiff::default();
         match self {
-            DagMutation::Nodes(operation) => DagDiff { nodes: Some(collection_diff_from_mutation(&snapshot.nodes, operation)), ..Default::default() },
-            DagMutation::Edges(operation) => DagDiff { edges: Some(collection_diff_from_mutation(&snapshot.edges, operation)), ..Default::default() },
-            DagMutation::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
-            DagMutation::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
-            DagMutation::SetSnapshot { snapshot } => DagDiff { document: Some(snapshot.clone()), ..Default::default() },
+            DagMutation::CreateNode { node, index } => {
+                diff.created_node = Some(node.clone());
+                diff.created_node_at = Some(*index);
+            }
+            DagMutation::DeleteNode { id } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.deleted_node_ids = Some(vec![id.clone()]);
+                    let severed: Vec<String> = snapshot.edges.iter().filter(|edge| &split_dag_endpoint(&edge.source).0 == id || &split_dag_endpoint(&edge.target).0 == id).map(|edge| edge.id.clone()).collect();
+                    if !severed.is_empty() {
+                        diff.disconnected_edge_ids = Some(severed);
+                    }
+                }
+            }
+            DagMutation::RenameNode { id, new_id } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.renamed_node = Some(RenamedNode { id: id.clone(), new_id: new_id.clone() });
+                    let rewrites: Vec<RewrittenEdgeEndpoint> = snapshot
+                        .edges
+                        .iter()
+                        .filter_map(|edge| {
+                            let (source_node, source_port) = split_dag_endpoint(&edge.source);
+                            let (target_node, target_port) = split_dag_endpoint(&edge.target);
+                            let touches_source = &source_node == id;
+                            let touches_target = &target_node == id;
+                            if !touches_source && !touches_target {
+                                return None;
+                            }
+                            Some(RewrittenEdgeEndpoint {
+                                id: edge.id.clone(),
+                                new_source: touches_source.then(|| format!("{new_id}@{source_port}")),
+                                new_target: touches_target.then(|| format!("{new_id}@{target_port}")),
+                            })
+                        })
+                        .collect();
+                    if !rewrites.is_empty() {
+                        diff.rewritten_edge_endpoints = Some(rewrites);
+                    }
+                }
+            }
+            DagMutation::ChangeNodeName { id, new_name } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.changed_node_name = Some(ChangedNodeName { id: id.clone(), new_name: new_name.clone() });
+                }
+            }
+            DagMutation::MoveNode { id, x, y } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.moved_node = Some(MovedNode { id: id.clone(), x: *x, y: *y });
+                }
+            }
+            DagMutation::ResizeNode { id, width, height } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.resized_node = Some(ResizedNode { id: id.clone(), width: *width, height: *height });
+                }
+            }
+            DagMutation::ChangeNodeIcon { id, new_icon } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.changed_node_icon = Some(ChangedNodeIcon { id: id.clone(), new_icon: new_icon.clone() });
+                }
+            }
+            DagMutation::ChangeNodeAbbreviation { id, new_abbreviation } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.changed_node_abbreviation = Some(ChangedNodeAbbreviation { id: id.clone(), new_abbreviation: new_abbreviation.clone() });
+                }
+            }
+            DagMutation::ChangeNodeOperatorKind { id, new_operator_kind } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.changed_node_operator_kind = Some(ChangedNodeOperatorKind { id: id.clone(), new_operator_kind: new_operator_kind.clone() });
+                }
+            }
+            DagMutation::ReplaceNodeKind { id, new_kind } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.replaced_node_kind = Some(ReplacedNodeKind { id: id.clone(), new_kind: new_kind.clone() });
+                }
+            }
+            DagMutation::ReplaceNodeProperties { id, new_properties } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    diff.replaced_node_properties = Some(ReplacedNodeProperties { id: id.clone(), new_properties: new_properties.clone() });
+                }
+            }
+            DagMutation::ReorderNodes { order } => diff.reordered_nodes = Some(order.clone()),
+            DagMutation::ConnectNodes { id, source, target, route_style, properties } => {
+                diff.connected_edge = Some(DagFixtureEdge { id: id.clone(), source: source.clone(), target: target.clone(), route_style: *route_style, properties: properties.clone() });
+            }
+            DagMutation::DisconnectNodes { id } => {
+                if snapshot.edges.iter().any(|edge| &edge.id == id) {
+                    diff.disconnected_edge_ids = Some(vec![id.clone()]);
+                }
+            }
         }
+        diff
     }
 
     fn inverse(&self, snapshot: &DagSnapshot) -> Vec<Self> {
         match self {
-            DagMutation::Nodes(operation) => vec![DagMutation::Nodes(inverse_collection_mutation(&snapshot.nodes, operation))],
-            DagMutation::Edges(operation) => vec![DagMutation::Edges(inverse_collection_mutation(&snapshot.edges, operation))],
-            DagMutation::SetNodes { .. } => vec![DagMutation::SetNodes { nodes: snapshot.nodes.clone() }],
-            DagMutation::SetEdges { .. } => vec![DagMutation::SetEdges { edges: snapshot.edges.clone() }],
-            DagMutation::SetSnapshot { .. } => vec![DagMutation::SetSnapshot { snapshot: snapshot.clone() }],
+            DagMutation::CreateNode { node, .. } => vec![DagMutation::DeleteNode { id: node.id.clone() }],
+            DagMutation::DeleteNode { id } => {
+                let Some(at) = snapshot.nodes.iter().position(|node| &node.id == id) else {
+                    return Vec::new();
+                };
+                let node = &snapshot.nodes[at];
+                let mut mutations = vec![DagMutation::CreateNode { node: node.clone(), index: at }];
+                for edge in snapshot.edges.iter().filter(|edge| &split_dag_endpoint(&edge.source).0 == id || &split_dag_endpoint(&edge.target).0 == id) {
+                    mutations.push(DagMutation::ConnectNodes { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), route_style: edge.route_style, properties: edge.properties.clone() });
+                }
+                mutations
+            }
+            DagMutation::RenameNode { id, new_id } => {
+                if snapshot.nodes.iter().any(|node| &node.id == id) {
+                    vec![DagMutation::RenameNode { id: new_id.clone(), new_id: id.clone() }]
+                } else {
+                    Vec::new()
+                }
+            }
+            DagMutation::MoveNode { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::MoveNode { id: id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+            DagMutation::ResizeNode { id, .. } => {
+                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ResizeNode { id: id.clone(), width: node.width, height: node.height }]).unwrap_or_default()
+            }
+            DagMutation::ChangeNodeName { id, .. } => {
+                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeName { id: id.clone(), new_name: node.name.clone() }]).unwrap_or_default()
+            }
+            DagMutation::ChangeNodeIcon { id, .. } => {
+                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeIcon { id: id.clone(), new_icon: node.icon.clone() }]).unwrap_or_default()
+            }
+            DagMutation::ChangeNodeAbbreviation { id, .. } => {
+                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeAbbreviation { id: id.clone(), new_abbreviation: node.abbreviation.clone() }]).unwrap_or_default()
+            }
+            DagMutation::ChangeNodeOperatorKind { id, .. } => {
+                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeOperatorKind { id: id.clone(), new_operator_kind: node.operator_kind.clone() }]).unwrap_or_default()
+            }
+            DagMutation::ReplaceNodeKind { id, .. } => {
+                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ReplaceNodeKind { id: id.clone(), new_kind: node.kind.clone() }]).unwrap_or_default()
+            }
+            DagMutation::ReplaceNodeProperties { id, .. } => {
+                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ReplaceNodeProperties { id: id.clone(), new_properties: node.properties.clone() }]).unwrap_or_default()
+            }
+            DagMutation::ReorderNodes { .. } => vec![DagMutation::ReorderNodes { order: snapshot.nodes.iter().map(|node| node.id.clone()).collect() }],
+            DagMutation::ConnectNodes { id, .. } => vec![DagMutation::DisconnectNodes { id: id.clone() }],
+            DagMutation::DisconnectNodes { id } => snapshot
+                .edges
+                .iter()
+                .find(|edge| &edge.id == id)
+                .map(|edge| vec![DagMutation::ConnectNodes { id: id.clone(), source: edge.source.clone(), target: edge.target.clone(), route_style: edge.route_style, properties: edge.properties.clone() }])
+                .unwrap_or_default(),
         }
     }
 }
@@ -7541,7 +7872,7 @@ pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 // (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
 // `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
 // outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeMutationDsl`
-// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagSnapshotDsl`/`DagMutationDsl` are
+// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagSnapshotDsl`/`DagMutationDsl` are
 // LOCAL structural twins that box only where the derive requires it; the real domain types keep their
 // original unboxed shape and never leave this crate — conversion happens right at this boundary.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
@@ -7695,27 +8026,6 @@ fn dag_node_spec_from_dsl(mirror: DagNodeSpecDsl) -> DagNodeSpec {
     }
 }
 
-/// 🧬️ Mirror of {@link DagNodePatch} — `kind` unwraps to `Option<DagNodeKindDsl>` directly (no `Box`
-/// needed: `#[dsl(statements)] Option<T>` is already the `OptionStatements` shape, not `RequiredStatements`).
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
-struct DagNodePatchDsl {
-    name: Option<String>,
-    x: Option<f64>,
-    y: Option<f64>,
-    width: Option<f64>,
-    height: Option<f64>,
-    #[dsl(statements)]
-    kind: Option<DagNodeKindDsl>,
-}
-
-fn dag_node_patch_to_dsl(patch: &DagNodePatch) -> DagNodePatchDsl {
-    DagNodePatchDsl { name: patch.name.clone(), x: patch.x, y: patch.y, width: patch.width, height: patch.height, kind: patch.kind.as_ref().map(dag_node_kind_to_dsl) }
-}
-
-fn dag_node_patch_from_dsl(mirror: DagNodePatchDsl) -> DagNodePatch {
-    DagNodePatch { name: mirror.name, x: mirror.x, y: mirror.y, width: mirror.width, height: mirror.height, kind: mirror.kind.map(dag_node_kind_from_dsl) }
-}
-
 /// 🧬️ Mirror of {@link DagSnapshot} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
 /// `DagNodeSpec` itself can't implement `dsl::DslField` (its `kind` field isn't boxed).
 #[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
@@ -7826,88 +8136,111 @@ impl crate::os_store::ArtifactPack for DagSnapshot {
 //#region 🔖️OpText
 
 //#region 🔖️OpTextMirror
-/// 🧬️ Mirror of {@link DagMutation} — see `🔖️DslMirror`'s doc comment for why `DagNodeSpec`/
-/// `DagNodePatch` need their own Dsl twins here too. `DagFixtureEdge`/`DagEdgePatch` are used
-/// directly (no twin needed): neither has a boxed-tagged-enum field, so both already implement
-/// `dsl::DslField` from their own direct `#[derive(dsl::DslRecord)]` above.
+/// 🧬️ Mirror of {@link DagMutation} — see `🔖️DslMirror`'s doc comment for why `DagNodeSpec`/`DagNodeKind`
+/// need their own Dsl twins here too (`kind`'s boxed-tagged-enum requirement). Every other field —
+/// ids, coordinates, extents, names, icons, `EdgeRouteStyle`, `PropertyBag`, `Vec<String>`,
+/// `Option<String>` — is DSL-representable directly, per this file's own `DagNodeSpecDsl`/
+/// `DagNodeKindDsl::Preview` precedent; no JSON-escape-hatch fields were needed.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum DagMutationDsl {
-    NodesAdd {
+    CreateNode {
+        node: DagNodeSpecDsl,
         index: usize,
-        item: DagNodeSpecDsl,
     },
-    NodesRemove {
+    DeleteNode {
         id: String,
     },
-    NodesMove {
+    RenameNode {
         id: String,
-        #[dsl(key = "to")]
-        to_index: usize,
+        new_id: String,
     },
-    NodesPatch {
+    ChangeNodeName {
         id: String,
-        patch: DagNodePatchDsl,
+        new_name: String,
     },
-    EdgesAdd {
-        index: usize,
-        item: DagFixtureEdge,
-    },
-    EdgesRemove {
+    MoveNode {
         id: String,
+        x: f64,
+        y: f64,
     },
-    EdgesMove {
+    ResizeNode {
         id: String,
-        #[dsl(key = "to")]
-        to_index: usize,
+        width: f64,
+        height: f64,
     },
-    EdgesPatch {
+    ChangeNodeIcon {
         id: String,
-        patch: DagEdgePatch,
+        new_icon: String,
     },
-    SetNodes {
-        nodes: Vec<DagNodeSpecDsl>,
+    ChangeNodeAbbreviation {
+        id: String,
+        new_abbreviation: String,
     },
-    SetEdges {
-        #[dsl(table)]
-        edges: Vec<DagFixtureEdge>,
+    ChangeNodeOperatorKind {
+        id: String,
+        new_operator_kind: Option<String>,
     },
-    SetSnapshot {
-        snapshot: DagSnapshotDsl,
+    ReplaceNodeKind {
+        id: String,
+        #[dsl(statements)]
+        new_kind: Box<DagNodeKindDsl>,
+    },
+    ReplaceNodeProperties {
+        id: String,
+        new_properties: PropertyBag,
+    },
+    ReorderNodes {
+        order: Vec<String>,
+    },
+    ConnectNodes {
+        id: String,
+        source: String,
+        target: String,
+        route_style: EdgeRouteStyle,
+        properties: PropertyBag,
+    },
+    DisconnectNodes {
+        id: String,
     },
 }
 
 fn dag_mutation_to_dsl(operation: &DagMutation) -> DagMutationDsl {
     match operation {
-        DagMutation::Nodes(CollectionMutation::Add { index: at, item }) => DagMutationDsl::NodesAdd { index: *at, item: dag_node_spec_to_dsl(item) },
-        DagMutation::Nodes(CollectionMutation::Remove { id }) => DagMutationDsl::NodesRemove { id: id.clone() },
-        DagMutation::Nodes(CollectionMutation::Move { id, to_index: to }) => DagMutationDsl::NodesMove { id: id.clone(), to_index: *to },
-        DagMutation::Nodes(CollectionMutation::Patch { id, patch }) => DagMutationDsl::NodesPatch { id: id.clone(), patch: dag_node_patch_to_dsl(patch) },
-        DagMutation::Edges(CollectionMutation::Add { index: at, item }) => DagMutationDsl::EdgesAdd { index: *at, item: item.clone() },
-        DagMutation::Edges(CollectionMutation::Remove { id }) => DagMutationDsl::EdgesRemove { id: id.clone() },
-        DagMutation::Edges(CollectionMutation::Move { id, to_index: to }) => DagMutationDsl::EdgesMove { id: id.clone(), to_index: *to },
-        DagMutation::Edges(CollectionMutation::Patch { id, patch }) => DagMutationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
-        DagMutation::SetNodes { nodes } => DagMutationDsl::SetNodes { nodes: nodes.iter().map(dag_node_spec_to_dsl).collect() },
-        DagMutation::SetEdges { edges } => DagMutationDsl::SetEdges { edges: edges.clone() },
-        DagMutation::SetSnapshot { snapshot } => DagMutationDsl::SetSnapshot { snapshot: dag_snapshot_to_dsl(snapshot) },
+        DagMutation::CreateNode { node, index } => DagMutationDsl::CreateNode { node: dag_node_spec_to_dsl(node), index: *index },
+        DagMutation::DeleteNode { id } => DagMutationDsl::DeleteNode { id: id.clone() },
+        DagMutation::RenameNode { id, new_id } => DagMutationDsl::RenameNode { id: id.clone(), new_id: new_id.clone() },
+        DagMutation::ChangeNodeName { id, new_name } => DagMutationDsl::ChangeNodeName { id: id.clone(), new_name: new_name.clone() },
+        DagMutation::MoveNode { id, x, y } => DagMutationDsl::MoveNode { id: id.clone(), x: *x, y: *y },
+        DagMutation::ResizeNode { id, width, height } => DagMutationDsl::ResizeNode { id: id.clone(), width: *width, height: *height },
+        DagMutation::ChangeNodeIcon { id, new_icon } => DagMutationDsl::ChangeNodeIcon { id: id.clone(), new_icon: new_icon.clone() },
+        DagMutation::ChangeNodeAbbreviation { id, new_abbreviation } => DagMutationDsl::ChangeNodeAbbreviation { id: id.clone(), new_abbreviation: new_abbreviation.clone() },
+        DagMutation::ChangeNodeOperatorKind { id, new_operator_kind } => DagMutationDsl::ChangeNodeOperatorKind { id: id.clone(), new_operator_kind: new_operator_kind.clone() },
+        DagMutation::ReplaceNodeKind { id, new_kind } => DagMutationDsl::ReplaceNodeKind { id: id.clone(), new_kind: Box::new(dag_node_kind_to_dsl(new_kind)) },
+        DagMutation::ReplaceNodeProperties { id, new_properties } => DagMutationDsl::ReplaceNodeProperties { id: id.clone(), new_properties: new_properties.clone() },
+        DagMutation::ReorderNodes { order } => DagMutationDsl::ReorderNodes { order: order.clone() },
+        DagMutation::ConnectNodes { id, source, target, route_style, properties } => {
+            DagMutationDsl::ConnectNodes { id: id.clone(), source: source.clone(), target: target.clone(), route_style: *route_style, properties: properties.clone() }
+        }
+        DagMutation::DisconnectNodes { id } => DagMutationDsl::DisconnectNodes { id: id.clone() },
     }
 }
 
 fn dag_mutation_from_dsl(mirror: DagMutationDsl) -> DagMutation {
     match mirror {
-        DagMutationDsl::NodesAdd { index, item } => {
-            let item = dag_node_spec_from_dsl(item);
-            DagMutation::Nodes(CollectionMutation::Add { index: index, item })
-        }
-        DagMutationDsl::NodesRemove { id } => DagMutation::Nodes(CollectionMutation::Remove { id }),
-        DagMutationDsl::NodesMove { id, to_index } => DagMutation::Nodes(CollectionMutation::Move { id, to_index }),
-        DagMutationDsl::NodesPatch { id, patch } => DagMutation::Nodes(CollectionMutation::Patch { id, patch: dag_node_patch_from_dsl(patch) }),
-        DagMutationDsl::EdgesAdd { index, item } => DagMutation::Edges(CollectionMutation::Add { index: index, item }),
-        DagMutationDsl::EdgesRemove { id } => DagMutation::Edges(CollectionMutation::Remove { id }),
-        DagMutationDsl::EdgesMove { id, to_index } => DagMutation::Edges(CollectionMutation::Move { id, to_index }),
-        DagMutationDsl::EdgesPatch { id, patch } => DagMutation::Edges(CollectionMutation::Patch { id, patch }),
-        DagMutationDsl::SetNodes { nodes } => DagMutation::SetNodes { nodes: nodes.into_iter().map(dag_node_spec_from_dsl).collect() },
-        DagMutationDsl::SetEdges { edges } => DagMutation::SetEdges { edges },
-        DagMutationDsl::SetSnapshot { snapshot } => DagMutation::SetSnapshot { snapshot: dag_snapshot_from_dsl(snapshot) },
+        DagMutationDsl::CreateNode { node, index } => DagMutation::CreateNode { node: dag_node_spec_from_dsl(node), index },
+        DagMutationDsl::DeleteNode { id } => DagMutation::DeleteNode { id },
+        DagMutationDsl::RenameNode { id, new_id } => DagMutation::RenameNode { id, new_id },
+        DagMutationDsl::ChangeNodeName { id, new_name } => DagMutation::ChangeNodeName { id, new_name },
+        DagMutationDsl::MoveNode { id, x, y } => DagMutation::MoveNode { id, x, y },
+        DagMutationDsl::ResizeNode { id, width, height } => DagMutation::ResizeNode { id, width, height },
+        DagMutationDsl::ChangeNodeIcon { id, new_icon } => DagMutation::ChangeNodeIcon { id, new_icon },
+        DagMutationDsl::ChangeNodeAbbreviation { id, new_abbreviation } => DagMutation::ChangeNodeAbbreviation { id, new_abbreviation },
+        DagMutationDsl::ChangeNodeOperatorKind { id, new_operator_kind } => DagMutation::ChangeNodeOperatorKind { id, new_operator_kind },
+        DagMutationDsl::ReplaceNodeKind { id, new_kind } => DagMutation::ReplaceNodeKind { id, new_kind: dag_node_kind_from_dsl(*new_kind) },
+        DagMutationDsl::ReplaceNodeProperties { id, new_properties } => DagMutation::ReplaceNodeProperties { id, new_properties },
+        DagMutationDsl::ReorderNodes { order } => DagMutation::ReorderNodes { order },
+        DagMutationDsl::ConnectNodes { id, source, target, route_style, properties } => DagMutation::ConnectNodes { id, source, target, route_style, properties },
+        DagMutationDsl::DisconnectNodes { id } => DagMutation::DisconnectNodes { id },
     }
 }
 
@@ -8045,32 +8378,133 @@ mod dag_vcs_tests {
     #[test]
     fn dag_document_vcs_replays_node_operations() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("n1"), index: 0 }], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("projection").nodes.len(), 1);
     }
 
     #[test]
-    fn node_add_patch_remove_round_trip() {
+    fn node_create_move_resize_delete_round_trip() {
         let document = empty_dag_document();
-        let added = round_trip(&document, &DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") }));
+        let added = round_trip(&document, &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
         assert_eq!(added.nodes.len(), 1);
-        let patched = round_trip(&added, &DagMutation::Nodes(CollectionMutation::Patch { id: "n1".into(), patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() } }));
-        assert_eq!(patched.nodes[0].name, "Renamed");
-        assert_eq!(patched.nodes[0].x, 42.0);
-        let removed = round_trip(&patched, &DagMutation::Nodes(CollectionMutation::Remove { id: "n1".into() }));
+        let moved = round_trip(&added, &DagMutation::MoveNode { id: "n1".into(), x: 42.0, y: 7.0 });
+        assert_eq!(moved.nodes[0].x, 42.0);
+        assert_eq!(moved.nodes[0].y, 7.0);
+        let resized = round_trip(&moved, &DagMutation::ResizeNode { id: "n1".into(), width: 200.0, height: 90.0 });
+        assert_eq!(resized.nodes[0].width, 200.0);
+        assert_eq!(resized.nodes[0].height, 90.0);
+        let removed = round_trip(&resized, &DagMutation::DeleteNode { id: "n1".into() });
         assert!(removed.nodes.is_empty());
     }
 
     #[test]
-    fn edge_add_remove_round_trip() {
+    fn node_scalar_field_changes_round_trip() {
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
+        let renamed_label = round_trip(&document, &DagMutation::ChangeNodeName { id: "n1".into(), new_name: "Renamed label".into() });
+        assert_eq!(renamed_label.nodes[0].name, "Renamed label");
+        let iconed = round_trip(&renamed_label, &DagMutation::ChangeNodeIcon { id: "n1".into(), new_icon: "emoji:🧪️".into() });
+        assert_eq!(iconed.nodes[0].icon, "emoji:🧪️");
+        let abbreviated = round_trip(&iconed, &DagMutation::ChangeNodeAbbreviation { id: "n1".into(), new_abbreviation: "N1".into() });
+        assert_eq!(abbreviated.nodes[0].abbreviation, "N1");
+        let with_operator = round_trip(&abbreviated, &DagMutation::ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: Some("math.add".into()) });
+        assert_eq!(with_operator.nodes[0].operator_kind.as_deref(), Some("math.add"));
+        let without_operator = round_trip(&with_operator, &DagMutation::ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: None });
+        assert_eq!(without_operator.nodes[0].operator_kind, None);
+    }
+
+    #[test]
+    fn replace_node_kind_and_properties_round_trip() {
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
+        let new_kind = DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") };
+        let replaced_kind = round_trip(&document, &DagMutation::ReplaceNodeKind { id: "n1".into(), new_kind: new_kind.clone() });
+        assert_eq!(replaced_kind.nodes[0].kind, new_kind);
+        let new_properties = PropertyBag::from([("weight".to_string(), PropertyValue::Number(3.0))]);
+        let replaced_properties = round_trip(&replaced_kind, &DagMutation::ReplaceNodeProperties { id: "n1".into(), new_properties: new_properties.clone() });
+        assert_eq!(replaced_properties.nodes[0].properties, new_properties);
+    }
+
+    #[test]
+    fn rename_node_cascades_edge_endpoints() {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b")];
-        let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        let added = round_trip(&document, &DagMutation::Edges(CollectionMutation::Add { index: 0, item: edge }));
-        assert_eq!(added.edges.len(), 1);
-        let removed = round_trip(&added, &DagMutation::Edges(CollectionMutation::Remove { id: "e1".into() }));
-        assert!(removed.edges.is_empty());
+        document.edges = vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }];
+        let renamed = round_trip(&document, &DagMutation::RenameNode { id: "a".into(), new_id: "aa".into() });
+        assert!(renamed.nodes.iter().any(|node| node.id == "aa"));
+        assert_eq!(renamed.edges[0].source, "aa@out");
+        assert_eq!(renamed.edges[0].target, "b@in");
     }
+
+    #[test]
+    fn delete_node_severs_and_reconnects_edges() {
+        let mut document = empty_dag_document();
+        document.nodes = vec![sample_node("a"), sample_node("b")];
+        document.edges = vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) }];
+        let deleted = round_trip(&document, &DagMutation::DeleteNode { id: "a".into() });
+        assert!(deleted.nodes.iter().all(|node| node.id != "a"));
+        assert!(deleted.edges.is_empty(), "the severed edge must be removed by the same delete-node diff, not left dangling");
+    }
+
+    #[test]
+    fn reorder_nodes_round_trips() {
+        let mut document = empty_dag_document();
+        document.nodes = vec![sample_node("a"), sample_node("b"), sample_node("c")];
+        let reordered = round_trip(&document, &DagMutation::ReorderNodes { order: vec!["c".into(), "a".into(), "b".into()] });
+        let ids: Vec<&str> = reordered.nodes.iter().map(|node| node.id.as_str()).collect();
+        assert_eq!(ids, vec!["c", "a", "b"]);
+        document.nodes = reordered.nodes;
+    }
+
+    #[test]
+    fn connect_disconnect_nodes_round_trip() {
+        let mut document = empty_dag_document();
+        document.nodes = vec![sample_node("a"), sample_node("b")];
+        let connected = round_trip(&document, &DagMutation::ConnectNodes { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::default() });
+        assert_eq!(connected.edges.len(), 1);
+        let disconnected = round_trip(&connected, &DagMutation::DisconnectNodes { id: "e1".into() });
+        assert!(disconnected.edges.is_empty());
+    }
+
+    //#region 🔖️MutationLaws
+    #[test]
+    fn diff_and_inverse_are_deterministic() {
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
+        let mutation = DagMutation::MoveNode { id: "n1".into(), x: 12.0, y: 34.0 };
+        assert_eq!(Mutation::diff(&mutation, &document), Mutation::diff(&mutation, &document), "diff(payload, base) must be a pure function of its inputs");
+        assert_eq!(mutation.inverse(&document), mutation.inverse(&document), "inverse(payload, base) must be a pure function of its inputs");
+    }
+
+    #[test]
+    fn move_node_diff_is_consistent_with_direct_field_mutation() {
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
+        let mutation = DagMutation::MoveNode { id: "n1".into(), x: 5.0, y: 6.0 };
+        let via_diff = Mutation::diff(&mutation, &document).apply(&document);
+        let mut via_direct = document.clone();
+        via_direct.nodes[0].x = 5.0;
+        via_direct.nodes[0].y = 6.0;
+        assert_eq!(via_diff, via_direct, "diff().apply() must match the mutation's own documented field-level effect");
+    }
+
+    #[test]
+    fn move_node_diff_absorb_law_holds() {
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
+        let mut d1 = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }, &document);
+        let mid = d1.apply(&document);
+        let d2 = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }, &mid);
+        d1.absorb(d2);
+        let absorbed = d1.apply(&document);
+        assert_eq!(absorbed.nodes[0].x, 20.0, "absorb must converge to the LATER move, not the earlier one");
+        assert_eq!(absorbed.nodes[0].y, 30.0);
+    }
+
+    #[test]
+    fn missing_target_inverse_and_diff_are_no_ops() {
+        let document = empty_dag_document();
+        assert_eq!(Mutation::diff(&DagMutation::MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }, &document), DagDiff::default());
+        assert!(DagMutation::MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }.inverse(&document).is_empty());
+        assert!(DagMutation::DeleteNode { id: "ghost".into() }.inverse(&document).is_empty());
+        assert!(DagMutation::DisconnectNodes { id: "ghost".into() }.inverse(&document).is_empty());
+    }
+    //#endregion 🔖️MutationLaws
 
     //#region 🔖️DslTests
     /// 🧩️ One node per `DagNodeKind` tag (safe field values only — no raw JSON literals in
@@ -8160,69 +8594,89 @@ mod dag_vcs_tests {
     }
 
     #[test]
-    fn op_text_round_trips_nodes_add() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("n1") }));
+    fn op_text_round_trips_create_node() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
     }
 
     #[test]
-    fn op_text_round_trips_nodes_remove() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Nodes(CollectionMutation::Remove { id: "n1".into() }));
+    fn op_text_round_trips_delete_node() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DeleteNode { id: "n1".into() });
     }
 
     #[test]
-    fn op_text_round_trips_nodes_move() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Nodes(CollectionMutation::Move { id: "n1".into(), to_index: 2 }));
+    fn op_text_round_trips_rename_node() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::RenameNode { id: "n1".into(), new_id: "n1-renamed".into() });
     }
 
     #[test]
-    fn op_text_round_trips_nodes_patch() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Nodes(CollectionMutation::Patch {
+    fn op_text_round_trips_change_node_name() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeName { id: "n1".into(), new_name: "Renamed".into() });
+    }
+
+    #[test]
+    fn op_text_round_trips_move_node() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::MoveNode { id: "n1".into(), x: 42.0, y: 7.0 });
+    }
+
+    #[test]
+    fn op_text_round_trips_resize_node() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ResizeNode { id: "n1".into(), width: 200.0, height: 90.0 });
+    }
+
+    #[test]
+    fn op_text_round_trips_change_node_icon() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeIcon { id: "n1".into(), new_icon: "emoji:🧪️".into() });
+    }
+
+    #[test]
+    fn op_text_round_trips_change_node_abbreviation() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeAbbreviation { id: "n1".into(), new_abbreviation: "N1".into() });
+    }
+
+    #[test]
+    fn op_text_round_trips_change_node_operator_kind_some_and_none() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: Some("math.add".into()) });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: None });
+    }
+
+    #[test]
+    fn op_text_round_trips_replace_node_kind() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeKind {
             id: "n1".into(),
-            patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), y: None, width: None, height: Some(10.0), kind: Some(DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") }) },
-        }));
+            new_kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") },
+        });
     }
 
     #[test]
-    fn op_text_round_trips_edges_add() {
-        let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Edges(CollectionMutation::Add { index: 0, item: edge }));
+    fn op_text_round_trips_replace_node_properties() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeProperties { id: "n1".into(), new_properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) });
     }
 
     #[test]
-    fn op_text_round_trips_edges_remove() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Edges(CollectionMutation::Remove { id: "e1".into() }));
+    fn op_text_round_trips_reorder_nodes() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReorderNodes { order: vec!["a".into(), "b".into(), "c".into()] });
     }
 
     #[test]
-    fn op_text_round_trips_edges_move() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Edges(CollectionMutation::Move { id: "e1".into(), to_index: 3 }));
+    fn op_text_round_trips_connect_nodes() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ConnectNodes {
+            id: "e1".into(),
+            source: "a@out".into(),
+            target: "b@in".into(),
+            route_style: EdgeRouteStyle::SharpSz,
+            properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]),
+        });
     }
 
     #[test]
-    fn op_text_round_trips_edges_patch() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::Edges(CollectionMutation::Patch { id: "e1".into(), patch: DagEdgePatch { source: Some("a@out".into()), target: None } }));
-    }
-
-    #[test]
-    fn op_text_round_trips_set_nodes() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetNodes { nodes: vec![sample_node("n1"), sample_node("n2")] });
-    }
-
-    #[test]
-    fn op_text_round_trips_set_edges() {
-        let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetEdges { edges: vec![edge] });
-    }
-
-    #[test]
-    fn op_text_round_trips_set_artifact() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::SetSnapshot { snapshot: kitchen_sink_snapshot() });
+    fn op_text_round_trips_disconnect_nodes() {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DisconnectNodes { id: "e1".into() });
     }
 
     #[test]
     fn document_text_round_trips_a_store_with_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("extra"), index: 0 }], description: None }).expect("apply");
         crate::os_store::test_support::assert_document_text_round_trip(&store);
         crate::os_store::test_support::assert_document_pack_round_trip(&store);
     }
@@ -8234,7 +8688,7 @@ mod dag_vcs_tests {
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::Nodes(CollectionMutation::Add { index: 0, item: sample_node("extra") })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("extra"), index: 0 }], description: None }).expect("apply");
         let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

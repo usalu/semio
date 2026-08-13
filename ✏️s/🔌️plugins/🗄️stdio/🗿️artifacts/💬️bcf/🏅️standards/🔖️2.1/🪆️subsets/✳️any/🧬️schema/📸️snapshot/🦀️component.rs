@@ -208,10 +208,10 @@ impl store::ArtifactDsl for BcfSnapshot {
                 store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1))
             })?);
         }
-        crate::artifacts::bcf::engine::decode_bcf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::bcf::io::decode_bcf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::bcf::engine::encode_bcf(self).unwrap_or_default();
+        let bytes = crate::artifacts::bcf::io::encode_bcf(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -225,7 +225,7 @@ impl store::ArtifactDsl for BcfSnapshot {
 impl store::ArtifactPack for BcfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::bcf::engine::encode_bcf(self).map_err(|e| store::PackError::Schema(e))?;
+        let raw = crate::artifacts::bcf::io::encode_bcf(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -240,7 +240,60 @@ impl store::ArtifactPack for BcfSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::bcf::engine::decode_bcf(&inner).map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::bcf::io::decode_bcf(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
 //#endregion 🔖️Snapshot
+
+//#region 🔖️SnapshotFixtures
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
+/// STATE-MACHINES) — pure snapshot constructors, no codec/IO concern.
+pub fn empty_bcf_snapshot() -> BcfSnapshot { BcfSnapshot::default() }
+
+/// 🧪️ FG-wave: representative, non-empty `BcfSnapshot` -- one topic (title/description/status/
+/// priority/labels/creation metadata all populated), one comment (with a `viewpoint_ref`), one
+/// viewpoint (perspective camera, components w/ selection+visibility+coloring, a PNG snapshot),
+/// and one raw-retained part -- the single source of truth reused by this file's own
+/// `conformance_laws::grammar_conformance_law`/`protocol_walk_law`/`fixture_honesty_law` AND by
+/// the shipped `📚️examples/🎬️demo` fixtures, same shape `📜️docx/…/⚙️engine/🦀️component.rs`'s own
+/// `demo_docx_snapshot()` establishes.
+pub fn demo_bcf_snapshot() -> BcfSnapshot {
+    BcfSnapshot {
+        schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
+        version: "2.1".into(),
+        topics: vec![BcfTopic {
+            guid: "8f9e21f0-1c3e-4b6a-9b1d-9b6b6a6b6a6b".into(),
+            title: "Clash on Level 2".into(),
+            description: "MEP duct clashes with structural beam.".into(),
+            status: "Open".into(),
+            priority: "High".into(),
+            labels: vec!["Clash".into(), "MEP".into()],
+            creation_date: "2024-01-01T00:00:00+00:00".into(),
+            creation_author: "ueli@example.com".into(),
+            comments: vec![BcfComment {
+                guid: "c1a3b8b0-1111-4b6a-9b1d-9b6b6a6b6a6b".into(),
+                date: "2024-01-01T00:00:00+00:00".into(),
+                author: "ueli@example.com".into(),
+                text: "Please review this clash.".into(),
+                viewpoint_ref: Some("v1a3b8b0-2222-4b6a-9b1d-9b6b6a6b6a6b".into()),
+            }],
+            viewpoints: vec![BcfViewpoint {
+                guid: "v1a3b8b0-2222-4b6a-9b1d-9b6b6a6b6a6b".into(),
+                camera: Some(BcfCamera::Perspective {
+                    view_point: BcfPoint3 { x: 1.0, y: 2.0, z: 3.0 },
+                    direction: BcfPoint3 { x: 0.0, y: 0.0, z: -1.0 },
+                    up_vector: BcfPoint3 { x: 0.0, y: 1.0, z: 0.0 },
+                    field_of_view: 60.0,
+                }),
+                components: Some(BcfComponents {
+                    selection: vec!["2O2Fr$t4X7Zf8NOew3FLOH".into()],
+                    visibility: BcfVisibility { default_visibility: false, exceptions: vec!["1yQBoo7d5EEBLiyMxGgTLc".into()] },
+                    coloring: vec![BcfColoring { color: "FFFF0000".into(), components: vec!["0BTBFw6f90Nfh9rP1dl_3n".into()] }],
+                }),
+                snapshot: Some(vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]),
+            }],
+        }],
+        parts: vec![BcfRawPart { name: "project.bcfp".into(), data: b"<ProjectExtension/>".to_vec() }],
+    }
+}
+//#endregion 🔖️SnapshotFixtures

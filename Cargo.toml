@@ -16,6 +16,7 @@ members = [
     "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",

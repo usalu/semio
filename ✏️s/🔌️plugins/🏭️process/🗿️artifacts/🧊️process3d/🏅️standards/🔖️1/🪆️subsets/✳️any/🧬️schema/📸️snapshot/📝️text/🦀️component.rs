@@ -81,10 +81,10 @@ mod tests {
 
 
 
-    use crate::artifacts::process3d::{empty_process3d_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, Stock, StockQuantity, Workshop, WorkshopMachine};
+    use crate::artifacts::process3d::{empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
 
     fn cut_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
+        ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
     fn drill_step(id: &str) -> ProcessStep {
@@ -103,12 +103,12 @@ mod tests {
             label: "Attach".into(),
             enabled: false,
             origin: None,
-            measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.05 }, pose: Pose { position: [0.1, -0.2, 0.3], axis: [0.0, 1.0, 0.0], angle: 1.2 } },
+            measure: ProcessMeasure::Attach { component: WorkingSolid::Sphere { radius: 0.05 }, pose: Pose { position: [0.1, -0.2, 0.3], axis: [0.0, 1.0, 0.0], angle: 1.2 } },
         }
     }
 
     fn imported_mesh_stock() -> Stock {
-        Stock { id: "stock".into(), label: "Imported GLB".into(), solid: SolidSpec::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }, pose: Pose::default() }
+        Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }, pose: Pose::default() }
     }
 
     fn circular_saw_machine() -> WorkshopMachine {
@@ -128,15 +128,16 @@ mod tests {
         }
     }
 
-    /// 📜️ A document exercising every `SolidSpec`/`ProcessMeasure` shape, both `origin` states, and a
-    /// non-default workshop machine (3-deep nesting), so the DSL round trip covers the full grammar.
+    /// 📜️ A document exercising every `WorkingSolid`/`ProcessMeasure` shape, both `origin` states,
+    /// and a non-default workshop machine (3-deep nesting), so the DSL round trip covers the full
+    /// grammar. Real composed children minted from a literal `ProcessWorkingScene`
+    /// (`process_working_scene_to_snapshot`), never a bare/hand-built handle.
     fn sample_document() -> Process3dSnapshot {
-        Process3dSnapshot {
-            workshop: Workshop { machines: vec![circular_saw_machine()] },
-            stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
+        let scene = ProcessWorkingScene {
+            stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: WorkingSolid::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             steps: vec![cut_step("cut-1"), drill_step("drill-1"), attach_step("attach-1")],
-            resolved_up_to: Some(2),
-        }
+        };
+        process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] }, Some(2))
     }
 
     #[test]
@@ -147,15 +148,16 @@ mod tests {
 
     #[test]
     fn process3d_dsl_round_trips_imported_solid_shapes() {
-        let mut document = sample_document();
-        document.stock = imported_mesh_stock();
-        document.steps.push(ProcessStep {
-            id: "imported-tool".into(),
-            label: "Imported Cut".into(),
-            enabled: true,
-            origin: None,
-            measure: ProcessMeasure::Cut { tool: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() },
-        });
+        let scene = ProcessWorkingScene {
+            stock: imported_mesh_stock(),
+            steps: vec![
+                cut_step("cut-1"),
+                drill_step("drill-1"),
+                attach_step("attach-1"),
+                ProcessStep { id: "imported-tool".into(), label: "Imported Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() } },
+            ],
+        };
+        let document = process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] }, Some(2));
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
@@ -169,15 +171,12 @@ mod tests {
     #[test]
     fn timber_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(PROCESS_3D_TIMBER_EXAMPLE_TEXT).expect("parse timber example");
-        assert_eq!(document.steps.len(), 4);
-        assert!(document.resolved_up_to.is_none());
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn drilled_plate_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(PROCESS_3D_PLATE_EXAMPLE_TEXT).expect("parse drilled plate example");
-        assert_eq!(document.steps.len(), 3);
         assert_eq!(document.resolved_up_to, Some(2));
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }

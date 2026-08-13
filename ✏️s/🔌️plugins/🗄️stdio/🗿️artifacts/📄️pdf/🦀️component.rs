@@ -32,20 +32,20 @@ pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
 /// `ArtifactDeclaration::register_all`'s own body (only composers/subset_validators/migrations are
 /// ownership-checked against `self.kind`).
 ///
-/// **Composers, split cleanly instead of replicated**: the old plugin root called
-/// `crate::artifacts::pdf::engine::register()` (the `engine` shim's own local `register()`
-/// override, which calls BOTH `v1_4::engine::register()` and `v1_7::engine::register()`) THEN
-/// `crate::artifacts::pdf::standards::v1_7::engine::register()` AGAIN — 1.7 was registered twice
-/// (composers only once, via 1.4's own call into the combined `crate::artifacts::pdf::io_registry`
-/// which the glob-shim's `engine::io_registry` does NOT reach — that shim aliases 1.7's OWN
-/// `io_registry` only). Read closely: the double 1.7 execution was accidental redundancy (harmless
-/// only because every registry below is idempotent-by-key), not a deliberate second registration —
-/// preserving it here would require inventing a "run twice" declaration shape that doesn't exist.
-/// Each declaration below supplies its OWN standard's composers exactly once
-/// (`standards::v1_4::engine::io_registry::entries()` / `standards::v1_7::engine::io_registry::
-/// entries()`, both already `&'static [ComposerEntry]` — owned rows, no combining/cloning needed),
-/// which is BOTH declarations combined equal to the old combined-and-doubled call's net effect,
-/// with the accidental double-execution removed.
+/// **Composers, split cleanly instead of replicated**: the old plugin root called the (now
+/// dissolved, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) `⚙️engine` shim's own
+/// local `register()` override, which called BOTH 1.4's and 1.7's own `register()` THEN 1.7's
+/// AGAIN — 1.7 was registered twice (composers only once, via 1.4's own call into the combined
+/// `crate::artifacts::pdf::io_registry` which the glob-shim's own `io_registry` did NOT reach —
+/// that shim aliased 1.7's OWN `io_registry` only). Read closely: the double 1.7 execution was
+/// accidental redundancy (harmless only because every registry below is idempotent-by-key), not a
+/// deliberate second registration — preserving it here would require inventing a "run twice"
+/// declaration shape that doesn't exist. Each declaration below supplies its OWN standard's
+/// composers exactly once (`standards::v1_4::subsets::any::io::io_registry::entries()` /
+/// `standards::v1_7::subsets::any::io::io_registry::entries()`, both already `&'static
+/// [ComposerEntry]` — owned rows, no combining/cloning needed), which is BOTH declarations
+/// combined equal to the old combined-and-doubled call's net effect, with the accidental
+/// double-execution removed.
 ///
 /// **NOT covered by any field** (1.4 only): `register_schema_specs()` (`dsl::registry::
 /// register_schema_spec` for `"stdio.pdf"`/`"stdio.pdf#diff"` — the P2-M3 `FullResolver` insertion
@@ -56,7 +56,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(PDF_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor())
         .inferences([crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor()])
-        .composers(crate::artifacts::pdf::standards::v1_7::engine::io_registry::entries())
+        .composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries())
         .subset_validators(pdf_1_7_subset_validators())
         .languages(pilot_languages_1_7())
         .document_codec_bare::<PdfSnapshot, PdfMutation>(
@@ -73,7 +73,7 @@ pub fn declaration_1_4() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(PDF_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor())
         .inferences([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor()])
-        .composers(crate::artifacts::pdf::standards::v1_4::engine::io_registry::entries())
+        .composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries())
         .subset_validators(pdf_1_4_subset_validators())
         .languages(pilot_languages_1_4())
         .document_codec_bare::<
@@ -264,8 +264,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::pdf::standards::v1_4::engine::io_registry as v1_4;
-    use crate::artifacts::pdf::standards::v1_7::engine::io_registry as v1_7;
+    use crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry as v1_4;
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry as v1_7;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

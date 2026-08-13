@@ -94,7 +94,7 @@ impl ArtifactSerializer for SemioPresentationToPptx {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::RunStyle;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA, Slide, SlidePictureImage};
 

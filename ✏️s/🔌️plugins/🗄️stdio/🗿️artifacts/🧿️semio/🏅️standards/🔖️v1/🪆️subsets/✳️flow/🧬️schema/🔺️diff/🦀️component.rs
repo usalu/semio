@@ -18,8 +18,8 @@
 //! per this ticket's explicit instruction ("hand-roll all diff/op codecs — do not fight the
 //! derive").
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{

@@ -1,7 +1,7 @@
 //! 🔺️ `replace-fill` — sparse diff construction; a no-op when `style_name` is absent.
 
 use super::mutation::ReplaceFill;
-use crate::artifacts::semio::standards::v1::engine::triples::{NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawStyleDiff, SemioDrawingDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 

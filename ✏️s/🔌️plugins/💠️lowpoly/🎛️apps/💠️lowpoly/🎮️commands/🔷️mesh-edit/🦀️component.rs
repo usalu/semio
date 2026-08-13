@@ -1,8 +1,10 @@
 //! 🔷️ Lowpoly play app commands — mesh-editing operations that run a kernel edit against the active
 //! object's compute session and emit the resulting `Objects(Patch)` diff (`extrude`/`inset`/`bevel`/
 //! `loopCut`/`subdivide`/`triangulate`/`mirror`/`decimate`/`flipFaces`/`merge`/`dissolve`/`snap`/
-//! `toggleSmooth`). Every handler shares `crate::apps::lowpoly::session::mesh_edit`, which is stateless
-//! (takes no `LowpolyScratch` context) — these commands ignore `ctx`.
+//! `toggleSmooth`). Every handler shares `crate::apps::lowpoly::session::mesh_edit`, threading `ctx`
+//! through it — `mesh_edit` needs the session-local `mesh_workspace` cache (round 2 of ticket
+//! 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law fix) to build/re-sync the compute
+//! session, even though no handler here reads `ctx` directly itself.
 
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
@@ -23,11 +25,11 @@ pub mod extrude {
         pub extrude_distance: Option<f32>,
     }
 
-    pub fn handle(payload: &Extrude, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &Extrude, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let params = utility_params_value(config);
         let distance = payload.extrude_distance.unwrap_or_else(|| utility_param_f32(&params, "extrudeDistance", 0.25));
-        Ok(mesh_edit(projection, config, move |doc| {
+        Ok(mesh_edit(projection, config, ctx, move |doc| {
             let faces = doc.selected_face_ids();
             if faces.is_empty() {
                 return Err("no faces selected".into());
@@ -49,11 +51,11 @@ pub mod inset {
         pub inset_amount: Option<f32>,
     }
 
-    pub fn handle(payload: &Inset, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &Inset, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let params = utility_params_value(config);
         let amount = payload.inset_amount.unwrap_or_else(|| utility_param_f32(&params, "insetAmount", 0.1));
-        Ok(mesh_edit(projection, config, move |doc| {
+        Ok(mesh_edit(projection, config, ctx, move |doc| {
             let faces = doc.selected_face_ids();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.inset_faces(&faces, amount).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -73,12 +75,12 @@ pub mod bevel {
         pub bevel_segments: Option<u32>,
     }
 
-    pub fn handle(payload: &Bevel, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &Bevel, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let params = utility_params_value(config);
         let amount = payload.bevel_amount.unwrap_or_else(|| utility_param_f32(&params, "bevelAmount", 0.05));
         let segments = payload.bevel_segments.unwrap_or_else(|| utility_param_u32(&params, "bevelSegments", 1));
-        Ok(mesh_edit(projection, config, move |doc| {
+        Ok(mesh_edit(projection, config, ctx, move |doc| {
             let edges = doc.selected_edge_ids();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.bevel_edges(&edges, amount, segments).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -97,11 +99,11 @@ pub mod loop_cut {
         pub loop_cuts: Option<u32>,
     }
 
-    pub fn handle(payload: &LoopCut, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &LoopCut, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let params = utility_params_value(config);
         let cuts = payload.loop_cuts.unwrap_or_else(|| utility_param_u32(&params, "loopCuts", 1));
-        Ok(mesh_edit(projection, config, move |doc| {
+        Ok(mesh_edit(projection, config, ctx, move |doc| {
             let edges = doc.selected_edge_ids();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.loop_cut(&edges, cuts).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -118,8 +120,8 @@ pub mod subdivide {
     #[dsl(keyword = "subdivide")]
     pub struct Subdivide {}
 
-    pub fn handle(_payload: &Subdivide, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(mesh_edit(doc.snapshot, cfg.snapshot, move |doc| {
+    pub fn handle(_payload: &Subdivide, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             let faces = doc.selected_face_ids();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.subdivide_faces(&faces).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -136,8 +138,8 @@ pub mod triangulate {
     #[dsl(keyword = "triangulate")]
     pub struct Triangulate {}
 
-    pub fn handle(_payload: &Triangulate, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(mesh_edit(doc.snapshot, cfg.snapshot, move |doc| {
+    pub fn handle(_payload: &Triangulate, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             doc.active_mesh_mut().map_err(|e| e.to_string())?.triangulate().map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
         }))
@@ -155,7 +157,7 @@ pub mod mirror {
         pub axis: Option<String>,
     }
 
-    pub fn handle(payload: &Mirror, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &Mirror, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let params = utility_params_value(config);
         let axis = payload.axis.as_deref().map_or_else(
@@ -166,7 +168,7 @@ pub mod mirror {
                 _ => MirrorAxis::X,
             },
         );
-        Ok(mesh_edit(projection, config, move |doc| {
+        Ok(mesh_edit(projection, config, ctx, move |doc| {
             doc.active_mesh_mut().map_err(|e| e.to_string())?.mirror(axis, 0.001).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
         }))
@@ -184,11 +186,11 @@ pub mod decimate {
         pub decimate_ratio: Option<f32>,
     }
 
-    pub fn handle(payload: &Decimate, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &Decimate, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let params = utility_params_value(config);
         let ratio = payload.decimate_ratio.unwrap_or_else(|| utility_param_f32(&params, "decimateRatio", 0.5));
-        Ok(mesh_edit(projection, config, move |doc| {
+        Ok(mesh_edit(projection, config, ctx, move |doc| {
             doc.active_mesh_mut().map_err(|e| e.to_string())?.decimate(ratio).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
         }))
@@ -206,9 +208,9 @@ pub mod flip_faces {
         pub face_ids: Vec<u32>,
     }
 
-    pub fn handle(payload: &FlipFaces, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &FlipFaces, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let face_ids = payload.face_ids.clone();
-        Ok(mesh_edit(doc.snapshot, cfg.snapshot, move |doc| {
+        Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             let faces: Vec<FaceId> = if !face_ids.is_empty() {
                 face_ids.into_iter().map(FaceId).collect()
             } else if !doc.selected_face_ids().is_empty() {
@@ -231,8 +233,8 @@ pub mod merge {
     #[dsl(keyword = "merge")]
     pub struct Merge {}
 
-    pub fn handle(_payload: &Merge, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(mesh_edit(doc.snapshot, cfg.snapshot, move |doc| {
+    pub fn handle(_payload: &Merge, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             let verts = doc.selected_vertex_ids();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.merge_vertices(&verts, WeldMode::Center, 0.001).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -249,8 +251,8 @@ pub mod dissolve {
     #[dsl(keyword = "dissolve")]
     pub struct Dissolve {}
 
-    pub fn handle(_payload: &Dissolve, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(mesh_edit(doc.snapshot, cfg.snapshot, move |doc| {
+    pub fn handle(_payload: &Dissolve, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             let edges = doc.selected_edge_ids();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.dissolve_edges(&edges).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -267,11 +269,11 @@ pub mod snap {
     #[dsl(keyword = "snap")]
     pub struct Snap {}
 
-    pub fn handle(_payload: &Snap, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &Snap, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let params = utility_params_value(config);
         let grid = utility_param_f32(&params, "snapGrid", 0.25);
-        Ok(mesh_edit(projection, config, move |doc| {
+        Ok(mesh_edit(projection, config, ctx, move |doc| {
             let verts = doc.selected_vertex_ids();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.snap_vertices_to_grid(&verts, grid).map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -288,8 +290,8 @@ pub mod toggle_smooth {
     #[dsl(keyword = "toggle-smooth")]
     pub struct ToggleSmooth {}
 
-    pub fn handle(_payload: &ToggleSmooth, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(mesh_edit(doc.snapshot, cfg.snapshot, move |doc| {
+    pub fn handle(_payload: &ToggleSmooth, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             if let Some(index) = doc.active_index() {
                 let smooth = !doc.snapshot().objects[index].smooth_shading;
                 doc.snapshot_mut().objects[index].smooth_shading = smooth;
@@ -309,22 +311,26 @@ pub mod toggle_smooth {
 mod tests {
     use crate::apps::lowpoly::testkit::{app, dispatch, face_selection};
     use crate::apps::lowpoly::LowpolyCommand;
-    use crate::apps::lowpoly::engine::LowpolyDocument;
-    use crate::artifacts::lowpoly::LowpolySelection;
 
+    /// 🧪️ Rewritten (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law
+    /// fix) to assert on the persisted `mesh` HANDLE rather than reconstructing a `LowpolyDocument`
+    /// and counting faces: the live half-edge-mesh JSON no longer lives on `LowpolyObject` at all, and
+    /// store-level undo/redo (which this test exercises) bypasses `ArtifactApp::handle` entirely, so
+    /// the app's own session-local `mesh_workspace` cache is never resynced by it — there is no
+    /// honest way to rebuild real post-undo geometry from outside the live session any more. The
+    /// handle still round-trips correctly through undo either way, which is what this test now checks.
     #[test]
     fn extrude_selected_face_grows_mesh_and_undo_restores() {
         use semio_framework_plugin::PluginApp;
         let mut a = app();
-        let object_id = a.snapshot().expect("projection").objects[0].id.clone();
-        let before = LowpolyDocument::new(a.snapshot().expect("projection")).unwrap().active_mesh().unwrap().face_count();
+        let before_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
         dispatch(&mut a, face_selection());
         dispatch(&mut a, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: None }));
-        let after = LowpolyDocument::with_context(a.snapshot().expect("projection"), object_id.clone(), LowpolySelection::default()).unwrap().active_mesh().unwrap().face_count();
-        assert!(after > before);
+        let after_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
+        assert_ne!(after_mesh, before_mesh, "extrude must change the mesh handle");
         a.handle_action("undo", None, &semio_framework_plugin::testkit::meta("a")).unwrap();
-        let restored = LowpolyDocument::with_context(a.snapshot().expect("projection"), object_id, LowpolySelection::default()).unwrap().active_mesh().unwrap().face_count();
-        assert_eq!(restored, before);
+        let restored_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
+        assert_eq!(restored_mesh, before_mesh, "undo restores the pre-extrude mesh handle");
     }
 
     #[test]
@@ -337,9 +343,9 @@ mod tests {
         let object_id = small.snapshot().expect("projection").objects[0].id.clone();
         dispatch(&mut small, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: Some(0.1) }));
         dispatch(&mut large, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: Some(1.5) }));
-        let small_json = small.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh_workspace.clone();
-        let large_json = large.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh_workspace.clone();
-        assert_ne!(small_json, large_json, "different staged extrude distances must produce different meshes");
+        let small_handle = small.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh.clone();
+        let large_handle = large.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh.clone();
+        assert_ne!(small_handle, large_handle, "different staged extrude distances must produce different meshes");
     }
 
     #[test]

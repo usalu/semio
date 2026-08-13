@@ -513,7 +513,7 @@ impl protocol::OpBinary for XlsxMutation {
 /// pattern-setter). Promoted from the former test-only `fixture`/`sweep_a`/`sweep_b`/
 /// `sample_mutations` (the last renamed for the same convention).
 pub(crate) fn fixture() -> XlsxSnapshot {
-    crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
+    crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
             XlsxSheet { name: "Sheet2".into(), cells: vec![] },
@@ -930,7 +930,7 @@ mod tests {
         assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&sample, &sample), &sample), sample);
 
         // "Real" fixture leg: a realistic multi-sheet workbook diffed against a mutated variant.
-        let real = crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
+        let real = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
             sheets: vec![XlsxSheet { name: "Data".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] }],
             shared_strings: vec!["Chapter One".into()],
         });
@@ -945,7 +945,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     #[test]
     fn codec_retention_law() {
-        let snap = crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
+        let snap = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
             sheets: vec![XlsxSheet {
                 name: "Sheet1".into(),
                 cells: vec![

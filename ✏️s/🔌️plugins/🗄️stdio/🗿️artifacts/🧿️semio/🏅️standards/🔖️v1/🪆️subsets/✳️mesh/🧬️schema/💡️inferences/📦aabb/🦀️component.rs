@@ -29,7 +29,7 @@
 //! `📌️important.md`'s "if a real dependency chain cannot be authored honestly for a field, omit
 //! that field and say why rather than faking one", mirroring brep's own two omissions in shape.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive};
 use serde::{Deserialize, Serialize};
 

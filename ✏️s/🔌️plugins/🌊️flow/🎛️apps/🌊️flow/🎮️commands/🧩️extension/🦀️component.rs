@@ -89,12 +89,12 @@ mod tests {
     #[test]
     fn toggle_extension_and_run_action_reorganizes_fixture() {
         let mut app = flow_app();
-        let before = app.snapshot().expect("snapshot").widgets.len();
+        let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         let ignored = dispatch(&mut app, FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }));
         assert!(ignored.mutations.is_empty(), "disabled automation action must be a no-operation");
         dispatch(&mut app, FlowCommand::ToggleExtension(toggle_extension::ToggleExtension { id: "auto-layout".into(), enabled: true }));
         dispatch(&mut app, FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }));
-        assert_eq!(app.snapshot().expect("snapshot").widgets.len(), before, "reorganize keeps every widget");
+        assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before, "reorganize keeps every widget");
     }
 
     #[test]

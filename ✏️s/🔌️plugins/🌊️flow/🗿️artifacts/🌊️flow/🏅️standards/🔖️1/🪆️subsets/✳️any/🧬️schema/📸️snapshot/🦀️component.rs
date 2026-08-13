@@ -1,15 +1,21 @@
 //! 🧬️ Flow snapshot schema — persistent fields only.
 
-use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+use crate::artifacts::flow::{flow_content_child_handle_and_cache, flow_working_scene, FlowContentChild};
+use flow::CameraJson;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region 🔹Snapshot
-/// 📸️ Persisted flow document snapshot (persistent fields of the artifact).
+/// 📸️ Persisted flow document snapshot (persistent fields of the artifact). Ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`flow→C:flow`, the canonical editor for stdio's
+/// `flow` subset): the inline `widgets`/`synapses`/`layout` content fields are replaced by a fixed
+/// composed `s.stdio.semio.flow` CHILD slot — the flow plugin no longer defines its own node-graph
+/// content model, it composes stdio's `flow` subset instead. `camera` stays inline: it is pure
+/// editor viewport state with no counterpart in `SemioFlowSnapshot`.
 ///
 /// Distinct from `flow::FlowFixture` in `semio-framework-os-flow`, which remains the framework
-/// host/kernel document type. This plugin snapshot is isomorphic and converts at the host boundary.
+/// host/kernel document type. This plugin snapshot converts at the host boundary via
+/// `to_fixture`/`from_fixture`, now bridging through the composed child + working-scene cache.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
@@ -19,14 +25,8 @@ pub struct FlowSnapshot {
     #[state(persistent)]
     pub camera: CameraJson,
     #[state(persistent)]
-    #[serde(default)]
-    pub widgets: Vec<Widget>,
-    #[state(persistent)]
-    #[serde(default)]
-    pub synapses: Vec<SynapseSpec>,
-    #[state(persistent)]
-    #[serde(default)]
-    pub layout: BTreeMap<String, WidgetLayout>,
+    #[child(kind = "s.stdio.semio.flow")]
+    pub content: FlowContentChild,
 }
 //#endregion 🔹Snapshot
 
@@ -38,26 +38,18 @@ impl Default for FlowSnapshot {
 }
 
 impl FlowSnapshot {
-    /// 🌊️ Builds a plugin snapshot from the framework `flow::FlowFixture` document type.
+    /// 🌊️ Builds a plugin snapshot from the framework `flow::FlowFixture` document type — mints and
+    /// caches a fresh content-addressed handle for the fixture's widgets/synapses/layout.
     pub fn from_fixture(fixture: flow::FlowFixture) -> Self {
-        Self {
-            schema: fixture.schema,
-            camera: fixture.camera,
-            widgets: fixture.widgets,
-            synapses: fixture.synapses,
-            layout: fixture.layout,
-        }
+        Self { schema: fixture.schema, camera: fixture.camera, content: flow_content_child_handle_and_cache(fixture.widgets, fixture.synapses, fixture.layout) }
     }
 
-    /// 🌊️ Converts this snapshot into the framework `flow::FlowFixture` for `FlowHost` / kernel codecs.
+    /// 🌊️ Converts this snapshot into the framework `flow::FlowFixture` for `FlowHost` / kernel
+    /// codecs — reads the live widgets/synapses/layout off the working-scene cache (see
+    /// `flow_working_scene`'s doc comment for the staleness gap this bridges).
     pub fn to_fixture(&self) -> flow::FlowFixture {
-        flow::FlowFixture {
-            schema: self.schema.clone(),
-            camera: self.camera.clone(),
-            widgets: self.widgets.clone(),
-            synapses: self.synapses.clone(),
-            layout: self.layout.clone(),
-        }
+        let scene = flow_working_scene(self);
+        flow::FlowFixture { schema: self.schema.clone(), camera: self.camera.clone(), widgets: scene.widgets, synapses: scene.synapses, layout: scene.layout }
     }
 }
 

@@ -213,11 +213,11 @@ impl store::ArtifactDsl for PdfSnapshot {
                 store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1))
             })?);
         }
-        crate::artifacts::pdf::standards::v1_7::engine::decode_pdf(&bytes)
+        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes)
             .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::pdf::standards::v1_7::engine::encode_pdf(self).unwrap_or_default();
+        let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -231,7 +231,7 @@ impl store::ArtifactDsl for PdfSnapshot {
 impl store::ArtifactPack for PdfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::pdf::standards::v1_7::engine::encode_pdf(self)
+        let raw = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(self)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -247,8 +247,43 @@ impl store::ArtifactPack for PdfSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::pdf::standards::v1_7::engine::decode_pdf(&inner)
+        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&inner)
             .map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 //#endregion 🔖️Snapshot
+
+//#region 🔖️SnapshotFixtures
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
+/// STATE-MACHINES) — pure snapshot constructors, no codec/IO concern.
+pub fn empty_pdf_snapshot() -> PdfSnapshot { PdfSnapshot::default() }
+
+/// 📄️ The demo `stdio.pdf.1.7` document -- the single source of truth for `🏅️standards/🔖️1.7/
+/// 📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this
+/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`).
+///
+/// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT, not a hand-built struct with
+/// empty `objects`/`trailer`: `encode_pdf` only ever reads `pages`/`info` from its input (the
+/// writer's own doc comment: "the original `objects` graph is deliberately NOT re-emitted") and
+/// regenerates a FRESH Catalog/Pages/Font/Content-stream object graph every time; `decode_pdf`
+/// then reads that fresh graph back into `objects`/`trailer`. A hand-built snapshot with
+/// `objects: vec![]` would make `parse_dsl(print_dsl(demo)) != demo` (confirmed empirically: the
+/// real `decode_pdf` output has 6 populated `objects` + a real `trailer`, never empty) -- `parse_
+/// dsl` genuinely calls `decode_pdf` on the hex-decoded bytes, not an identity round-trip, same
+/// "1.7 stays a frozen stub" pattern 1.4's own `demo_pdf_snapshot` doc comment documents for its
+/// hardcoded `width`/`height`. `pages`/`info` DO survive this round trip losslessly (the
+/// bachelor-thesis example's own `decode_encode_decode_is_structurally_equal_at_page_level` test
+/// already proves this at scale) -- only `objects`/`trailer` need the fixed-point construction.
+pub fn demo_pdf17_snapshot() -> PdfSnapshot {
+    let seed = PdfSnapshot {
+        schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(),
+        declared_version: "1.7".into(),
+        pages: vec![PdfPage { media_box: [0.0, 0.0, 200.0, 300.0], crop_box: None, rotate: 0, text: "Semio".into() }],
+        info: PdfInfo::default(),
+        objects: Vec::new(),
+        trailer: Vec::new(),
+    };
+    let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
+    crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
+}
+//#endregion 🔖️SnapshotFixtures

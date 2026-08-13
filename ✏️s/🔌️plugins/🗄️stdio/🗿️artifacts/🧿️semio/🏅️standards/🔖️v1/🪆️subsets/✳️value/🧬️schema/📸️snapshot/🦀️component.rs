@@ -140,7 +140,7 @@ pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
     )
 }
 pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
-    use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_node, dec_semio_value, dec_str};
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');

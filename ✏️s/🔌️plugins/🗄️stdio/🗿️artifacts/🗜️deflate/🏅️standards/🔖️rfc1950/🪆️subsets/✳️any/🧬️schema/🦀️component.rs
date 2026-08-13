@@ -1,7 +1,7 @@
 //! 🧬️ DeflateArtifact schema — full artifact state.
 
 use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
-use crate::artifacts::deflate::{DeflateSnapshot};
+use crate::artifacts::deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -74,6 +74,34 @@ impl DeflateArtifact {
     }
 }
 //#endregion 🔖️Conversions
+
+//#region 🔖️DocumentHelpers
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
+/// MACHINES) — mirrors `png`'s own `empty_png_snapshot`/`demo_png_snapshot` placement beside the
+/// artifact struct.
+/// 🌱 Empty persisted snapshot.
+pub fn empty_deflate_snapshot() -> DeflateSnapshot {
+    DeflateSnapshot::default()
+}
+
+/// 📄️ The demo `stdio.deflate` document — a genuine, non-empty RFC1950 container: a real
+/// preset-dictionary id (exercises the FDICT-gated `dict_id` field) plus repetitive text payload
+/// (round-trips through this artifact's own `deflate_raw`/`inflate_raw` in `🚪️io/🦀️component.rs`).
+/// Single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🗜️example.zz`/
+/// `🎒️example.pack.semio` (all three are literally this snapshot's `print_dsl`/
+/// `encode_deflate_snapshot`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
+/// `💡️inferences/🦀️component.rs`).
+pub fn demo_deflate_snapshot() -> DeflateSnapshot {
+    DeflateSnapshot {
+        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
+        compression_method: 8,
+        window_bits: 7,
+        compression_level_hint: DeflateLevelHint::Default,
+        dict_id: Some(0x1234_5678),
+        payload: b"the quick brown fox jumps over the lazy dog".to_vec(),
+    }
+}
+//#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.deflate`.

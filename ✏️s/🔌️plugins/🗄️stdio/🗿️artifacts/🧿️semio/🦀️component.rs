@@ -34,11 +34,42 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+//#region 🔖️Register
+/// 🗂️ Registers all 19 of `v1`'s subsets' IO composers (14 domain subsets + `text` + `✳️any`
+/// itself) — dissolved out of the former standard-level `⚙️engine` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES). `semio` is one of stdio's 10
+/// deliberate imperative-`register()` artifacts (never converted to the `ArtifactDeclaration`
+/// builder pattern, per `crate::plugin()`'s own call — unchanged in call order/behavior, only
+/// the function's file moved with the deleted directory).
+pub fn register() {
+    crate::artifacts::semio::standards::v1::subsets::brep::io::register();
+    crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
+    crate::artifacts::semio::standards::v1::subsets::model::io::register();
+    crate::artifacts::semio::standards::v1::subsets::value::io::register();
+    crate::artifacts::semio::standards::v1::subsets::document::io::register();
+    crate::artifacts::semio::standards::v1::subsets::cad::io::register();
+    crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
+    crate::artifacts::semio::standards::v1::subsets::image::io::register();
+    crate::artifacts::semio::standards::v1::subsets::video::io::register();
+    crate::artifacts::semio::standards::v1::subsets::audio::io::register();
+    crate::artifacts::semio::standards::v1::subsets::animation::io::register();
+    crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
+    crate::artifacts::semio::standards::v1::subsets::flow::io::register();
+    crate::artifacts::semio::standards::v1::subsets::text::io::register();
+    crate::artifacts::semio::standards::v1::subsets::table::io::register();
+    crate::artifacts::semio::standards::v1::subsets::graph::io::register();
+    crate::artifacts::semio::standards::v1::subsets::object::io::register();
+    crate::artifacts::semio::standards::v1::subsets::kit::io::register();
+    crate::artifacts::semio::standards::v1::subsets::any::io::register();
+}
+//#endregion 🔖️Register
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::semio::standards::v1::engine::io_registry as v1;
+    use crate::artifacts::semio::standards::v1::subsets::any::io::io_registry as v1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

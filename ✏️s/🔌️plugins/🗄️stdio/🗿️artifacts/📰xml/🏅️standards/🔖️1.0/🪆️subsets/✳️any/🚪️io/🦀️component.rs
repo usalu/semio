@@ -1,5 +1,14 @@
-//! 🚪️ IO stdio.xml (1.0/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
+//! 🚪️ IO stdio.xml (1.0/✳️any) — registration flows through `xml::declaration()`
+//! (`🗄️stdio/🗿️artifacts/📰xml/🦀️component.rs`), not a side-effecting `register()`; `⚙️engine`
+//! dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — `XmlEngine` (zero
+//! construction sites) deleted outright; its orphaned `register()`/`register_artifact_schema()`/
+//! `register_artifact_inferences()`/`register_pilot_languages()` (zero callers, superseded by
+//! `declaration()`) deleted outright too; `io_registry` moved here from `⚙️engine`, live
+//! (`xml::declaration()`'s `.composers(...)` and this artifact's own root `io_registry` both reach
+//! it). `empty_xml_snapshot`/`demo_xml_snapshot` + tests moved to `subsets::any::schema` — xml has
+//! no dedicated `📤️export/🧵️serializers`/`📥️import/🧩️deserializers` codec of its own (the real
+//! text codec, `xml_document_from_text`/`xml_document_to_text`, already lives in
+//! `subsets::any::schema::snapshot`, unmoved).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
@@ -48,3 +57,18 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlComposer as XmlRawAnyComposer;
+    use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<XmlRawAnyComposer>(), composer_entry_of::<XmlValidComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

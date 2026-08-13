@@ -6,7 +6,7 @@ use crate::apps::writer::terminology::WriterPlayLabels;
 use crate::apps::writer::editor_hover_context;
 use crate::artifacts::writer::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
 use crate::artifacts::writer::schema::inferences::{language_diagnostics_json, language_tokens_json};
-use crate::artifacts::writer::WriterSnapshot;
+use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
 
@@ -47,11 +47,12 @@ pub fn window_measures(config: &WriterConfig, labels: &WriterPlayLabels) -> Vec<
 //#region 🔖️Render
 pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
     let is_jack = document.language_id == "jack";
+    let text = writer_text(document);
     let selection = config.editor_selection.clone().unwrap_or(crate::apps::writer::config::WriterEditorSelection { start: 0, end: 0 });
     let cursor = selection.end;
     let selection_json = Some(json!({ "start": selection.start, "end": selection.end }).to_string());
 
-    let grammar_tokens = tokenize_language(&document.text, &document.language_id);
+    let grammar_tokens = tokenize_language(&text, &document.language_id);
     let lsp_tokens = language_tokens_json(document);
     let tokens_json = lsp_tokens.clone().or_else(|| serde_json::to_string(&grammar_tokens).ok());
     eprintln!(
@@ -64,9 +65,9 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
 
     let diagnostics_json = language_diagnostics_json(document, config.lint_signal);
 
-    let selectable_spans_json = is_jack.then(|| serde_json::to_string(&selectable_spans_for_jack(&document.text, &grammar_tokens)).unwrap_or_else(|_| "[]".into()));
-    let placeholders_json = is_jack.then(|| serde_json::to_string(&jack_editor_placeholders(&document.text, cursor)).unwrap_or_else(|_| "[]".into()));
-    let newline_gates_json = is_jack.then(|| serde_json::to_string(&jack_newline_gate_offsets(&document.text)).unwrap_or_else(|_| "[]".into()));
+    let selectable_spans_json = is_jack.then(|| serde_json::to_string(&selectable_spans_for_jack(&text, &grammar_tokens)).unwrap_or_else(|_| "[]".into()));
+    let placeholders_json = is_jack.then(|| serde_json::to_string(&jack_editor_placeholders(&text, cursor)).unwrap_or_else(|_| "[]".into()));
+    let newline_gates_json = is_jack.then(|| serde_json::to_string(&jack_newline_gate_offsets(&text)).unwrap_or_else(|_| "[]".into()));
 
     let (_, tree_hover_span, hover_occurrences) = editor_hover_context(document, config);
     let hover_json = Some(match tree_hover_span {
@@ -74,7 +75,7 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
         None => "null".to_string(),
     });
 
-    let caret_symbol = if is_jack && selection.start == selection.end { jack_symbol_at_offset(&document.text, selection.start) } else { None };
+    let caret_symbol = if is_jack && selection.start == selection.end { jack_symbol_at_offset(&text, selection.start) } else { None };
     let (selection_occurrences, rename_json): (Vec<(usize, usize)>, Option<String>) = match &caret_symbol {
         Some(symbol) if symbol.kind == JackSymbolKind::Variable => {
             let occurrences_json: Vec<Value> = symbol.occurrences.iter().map(|(s, e)| json!({ "start": s, "end": e })).collect();
@@ -96,13 +97,13 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
 
     let extra_carets_json = (!selection_occurrences.is_empty()).then(|| serde_json::to_string(&selection_occurrences.iter().map(|(s, _)| *s).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into()));
 
-    let completions_json = language_completions_json(&document.text, &document.language_id, cursor);
+    let completions_json = language_completions_json(&text, &document.language_id, cursor);
 
     build_text_editor_scene(
         WRITER_PLAY_SURFACE_MAIN,
         crate::apps::writer::WRITER_PLAY_APP_ID,
         TextEditorScene {
-            buffer: document.text.clone(),
+            buffer: text.clone(),
             language: Some(document.language_id.clone()),
             selection_json,
             tokens_json,

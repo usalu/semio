@@ -16,7 +16,7 @@
 //! insert/remove/reorder, at the IDENTICAL index, to every row's `cells` — see
 //! `🧬️mutations/🏗️create-column`/`🗑️delete-column`/`🔀reorder-columns`.
 
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, enc_semio_value, enc_str, dec_str, write_str_lp, read_str_lp};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 use schema::ArtifactSchema;

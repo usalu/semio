@@ -283,3 +283,26 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: GifComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+// 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+// `empty_gif_snapshot`/`demo_gif_snapshot` relocated here verbatim (pure helpers over the
+// document type, destination rule 5); `GifEngine` (zero construction sites) deleted outright;
+// the real GIF89a codec (multi-frame animation, Graphic Control Extension, NETSCAPE2.0 loop —
+// reusing 87a's own `pub` byte-level LZW/sub-block/color-table/quantize/interlace helpers
+// verbatim) + the protected `register()` cluster (`crate::artifacts::gif::engine::register()`'s
+// own local override explicitly calls BOTH `standards::v87a::engine::register()` AND
+// `standards::v89a::engine::register()` — untouched) + `io_registry` all moved to `../🚪️io`;
+// tests moved beside what they now test.
+pub fn empty_gif_snapshot() -> GifSnapshot { GifSnapshot::default() }
+
+/// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` for `conformance_laws` (in `../🚪️io`'s own
+/// tests) and the shipped `.dsl.semio`/`.pack.semio` fixtures (`../📚️examples/🎬️demo/🖼️assets/`)
+/// — per the ticket's own instruction, this reuses the REAL `dancing.gif` fixture
+/// (`crate::artifacts::gif::examples::dancing::decoded_snapshot()`, 54 frames, 800×800,
+/// per-frame LCTs, NETSCAPE2.0 loop) decoded via the real 89a codec, for byte-real
+/// conformance — not a synthetic stand-in.
+pub fn demo_gif_snapshot() -> GifSnapshot {
+    crate::artifacts::gif::examples::dancing::decoded_snapshot()
+}
+//#endregion 🔖️DocumentHelpers

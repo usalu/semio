@@ -20,7 +20,7 @@ mod tests {
             entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 10.0, y: 20.0 }) }],
         });
         let forward = mutation.diff(&base).apply(&base);
-        assert_eq!(forward.layout.get("slider"), Some(&flow::WidgetLayout { x: 10.0, y: 20.0 }));
+        assert_eq!(forward.to_fixture().layout.get("slider"), Some(&flow::WidgetLayout { x: 10.0, y: 20.0 }));
         let restored = mutation.inverse(&base).iter().fold(forward, |snapshot, inverse| {
             inverse.diff(&snapshot).apply(&snapshot)
         });
@@ -31,9 +31,9 @@ mod tests {
     fn create_widget_then_delete_widget_round_trips_to_base() {
         let base = FlowSnapshot::default();
         let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
-        let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget { index: base.widgets.len(), widget });
+        let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget { index: base.to_fixture().widgets.len(), widget });
         let after_create = create.diff(&base).apply(&base);
-        assert!(after_create.widgets.iter().any(|widget| widget.id() == "note-1"));
+        assert!(after_create.to_fixture().widgets.iter().any(|widget| widget.id() == "note-1"));
 
         let delete = FlowMutation::DeleteWidget(crate::artifacts::flow::schema::mutations::delete_widget::mutation::DeleteWidget { id: "note-1".into() });
         let after_delete = delete.diff(&after_create).apply(&after_create);
@@ -47,7 +47,7 @@ mod tests {
     fn connect_widgets_then_disconnect_widgets_round_trips_to_base() {
         let base = FlowSnapshot::default();
         let connect = FlowMutation::ConnectWidgets(crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets {
-            index: base.synapses.len(),
+            index: base.to_fixture().synapses.len(),
             id: "s3".into(),
             from: "slider".into(),
             from_port: "number".into(),
@@ -55,7 +55,7 @@ mod tests {
             to_port: "b".into(),
         });
         let after_connect = connect.diff(&base).apply(&base);
-        assert!(after_connect.synapses.iter().any(|synapse| synapse.id == "s3"));
+        assert!(after_connect.to_fixture().synapses.iter().any(|synapse| synapse.id == "s3"));
 
         let disconnect = FlowMutation::DisconnectWidgets(crate::artifacts::flow::schema::mutations::disconnect_widgets::mutation::DisconnectWidgets { id: "s3".into() });
         let after_disconnect = disconnect.diff(&after_connect).apply(&after_connect);

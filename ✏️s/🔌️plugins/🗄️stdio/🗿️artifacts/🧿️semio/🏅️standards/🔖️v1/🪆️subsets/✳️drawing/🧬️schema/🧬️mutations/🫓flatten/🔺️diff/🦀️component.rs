@@ -2,7 +2,7 @@
 //! group has a non-identity `transform` (see `🦠️mutation/🦀️component.rs`'s doc comment for why).
 
 use super::mutation::FlattenNode;
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{diff_at_path, node_at, DrawNodeDiff, SemioDrawingDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 

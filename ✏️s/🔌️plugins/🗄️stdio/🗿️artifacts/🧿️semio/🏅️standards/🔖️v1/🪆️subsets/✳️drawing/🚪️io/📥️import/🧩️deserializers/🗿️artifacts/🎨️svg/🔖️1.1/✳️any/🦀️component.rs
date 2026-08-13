@@ -36,7 +36,7 @@ use crate::artifacts::svg::{
     schema::snapshot::{PathCommand, SvgElement, TransformOp, ViewBox, transform_ops_to_matrix, svg_element_from_xml_node, Matrix2D},
 };
 use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 

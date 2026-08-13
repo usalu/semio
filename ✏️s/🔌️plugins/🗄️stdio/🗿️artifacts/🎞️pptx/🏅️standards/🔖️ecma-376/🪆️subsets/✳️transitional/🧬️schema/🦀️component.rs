@@ -141,7 +141,7 @@ pub mod derived_analysis {
     pub const CODE_CONFORMANCE_ATTR: &str = "stdio.pptx.transitional.conformance-attr-not-transitional";
 
     fn main_part_path(opc: &OpcPackage) -> Option<String> {
-        crate::artifacts::pptx::standards::v_ecma_376::engine::resolve_office_document_relationship(opc)
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::resolve_office_document_relationship(opc)
     }
 
     fn part_text<'a>(opc: &'a OpcPackage, path: &str) -> Option<&'a str> {

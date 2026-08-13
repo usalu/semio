@@ -7,7 +7,7 @@
 //! tree descent. Every variant's `diff()` and `inverse()` is handcrafted directly against the
 //! sparse [`SemioValueTreeDiff`] shape — never apply-and-capture.
 
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets, IndexAdded, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets, IndexAdded, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{
     dec_value_id, dec_semio_value_node_bin, dec_semio_value, dec_semio_value_bin, dec_str, enc_value_id,
     enc_semio_value_node_bin, enc_semio_value, enc_semio_value_bin, enc_str, value_diff_between, write_str_lp, read_str_lp,
@@ -106,10 +106,10 @@ fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioVa
             diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] },
         },
         Some((SemioValuePathSegment::Index { index }, rest)) => SemioValueDiff::List {
-            diff: crate::artifacts::semio::standards::v1::engine::triples::IndexedTripleDiff {
+            diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff {
                 removed: Vec::new(),
                 added: Vec::new(),
-                modified: vec![crate::artifacts::semio::standards::v1::engine::triples::IndexModified { index: *index, diff: wrap_at_path(rest, leaf) }],
+                modified: vec![crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexModified { index: *index, diff: wrap_at_path(rest, leaf) }],
             },
         },
     }
@@ -164,7 +164,7 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
 
             SemioValueMutation::InsertListItem { path, index, value } => match resolve(&base.root, path) {
                 Some(SemioValue::List { items }) => diff_at_path(path, Some(SemioValueDiff::List {
-                    diff: crate::artifacts::semio::standards::v1::engine::triples::IndexedTripleDiff {
+                    diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff {
                         removed: Vec::new(),
                         modified: Vec::new(),
                         added: vec![IndexAdded { index: (*index).min(items.len()), item: value.clone() }],
@@ -175,7 +175,7 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
 
             SemioValueMutation::RemoveListItem { path, index } => match resolve(&base.root, path) {
                 Some(SemioValue::List { items }) if *index < items.len() => diff_at_path(path, Some(SemioValueDiff::List {
-                    diff: crate::artifacts::semio::standards::v1::engine::triples::IndexedTripleDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() },
+                    diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() },
                 })),
                 _ => SemioValueTreeDiff::default(),
             },

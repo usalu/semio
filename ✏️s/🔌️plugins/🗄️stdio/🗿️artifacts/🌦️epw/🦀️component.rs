@@ -32,11 +32,39 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+//#region 🔖️Register
+/// 🗂️ Registers this artifact's IO composer + the handcrafted grammar/protocol `LanguageSpec` —
+/// dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
+/// MACHINES). `epw` is one of stdio's 10 deliberate imperative-`register()` artifacts (never
+/// converted to the `ArtifactDeclaration` builder pattern, per `crate::plugin()`'s own call —
+/// unchanged in call order/behavior, only the function's file moved with the deleted directory).
+pub fn register() {
+    crate::artifacts::epw::standards::energyplus::subsets::any::io::register();
+    register_pilot_languages();
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
+pub fn register_pilot_languages() {
+    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot;
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.epw",
+        extension: Some("epw"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.epw"),
+    });
+}
+//#endregion 🔖️Register
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::epw::standards::energyplus::engine::io_registry as std_composer;
+    use crate::artifacts::epw::standards::energyplus::subsets::any::io::io_registry as std_composer;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

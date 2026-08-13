@@ -73,7 +73,7 @@ pub fn semio_graph_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphSnapshot};

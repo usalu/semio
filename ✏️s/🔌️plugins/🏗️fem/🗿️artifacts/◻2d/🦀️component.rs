@@ -27,6 +27,11 @@ pub struct FemNode {
 /// 🔒️ A DOF tag mirroring `crate::model::Dof`'s 6 variants, kept locally: the DSL engine's `DslField`
 /// binding can only be derived for a type/trait pair with a local half (orphan rule), and both
 /// `Dof` and `DslField` are foreign to this crate. Converted at every `crate::core` boundary via `From`.
+///
+/// 🔗️ Canonical shared definition (11-type fem2d/fem3d dup consolidation, ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): `fem3d`'s `FemDof` used to be a byte-identical
+/// second copy of this exact enum; it now re-exports this one (`crate::artifacts::fem2d::FemDof`)
+/// instead — see `🗿️artifacts/🧊️3d/🦀️component.rs`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum FemDof {
     #[dsl(key = "Tx")]
@@ -41,6 +46,10 @@ pub enum FemDof {
     Ry,
     #[dsl(key = "Rz")]
     Rz,
+}
+
+impl FemDof {
+    pub const ALL: [FemDof; 6] = [FemDof::Tx, FemDof::Ty, FemDof::Tz, FemDof::Rx, FemDof::Ry, FemDof::Rz];
 }
 
 impl From<FemDof> for Dof {
@@ -189,6 +198,11 @@ pub struct FemCombination {
 /// `deformation_scale` exaggerates the STATIC results view's real (meter-scale) displacements only;
 /// modal/buckling mode shapes are dimensionless (mass/Kg-orthonormalized) and the viewer normalizes
 /// them to a fixed fraction of the model's own extent instead of using this factor.
+///
+/// 🔗️ Canonical shared definition (11-type fem2d/fem3d dup consolidation, ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): `fem3d`'s `FemAnalysisSettings` used to be a
+/// byte-identical second copy of this exact struct; it now re-exports this one
+/// (`crate::artifacts::fem2d::FemAnalysisSettings`) instead — see `🗿️artifacts/🧊️3d/🦀️component.rs`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FemAnalysisSettings {

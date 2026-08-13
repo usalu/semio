@@ -5,7 +5,7 @@
 
 pub use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 
-use crate::artifacts::semio::standards::v1::engine::triples::split_top_level;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{
     add_design::mutation::AddDesign, add_type::mutation::AddType,
     bind_representation::mutation::BindRepresentation, change_representation_pin::mutation::ChangeRepresentationPin,

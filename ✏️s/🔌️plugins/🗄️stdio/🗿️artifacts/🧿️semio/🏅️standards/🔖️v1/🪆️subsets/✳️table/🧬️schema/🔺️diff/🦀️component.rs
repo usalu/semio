@@ -7,7 +7,7 @@
 //! `snapshot: Option<SemioTableSnapshot>` full-replace slot anywhere — whole-document replace is
 //! `ArtifactStore::reset`, outside history.
 
-use crate::artifacts::semio::standards::v1::engine::triples::split_top_level;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
@@ -110,7 +110,7 @@ fn enc_columns(list: &SemioTableColumnList) -> String {
     format!("[{}]", list.values.iter().map(enc_column).collect::<Vec<_>>().join(","))
 }
 fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
-    use crate::artifacts::semio::standards::v1::engine::triples::strip_brackets;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableColumnList { values })
 }
@@ -118,7 +118,7 @@ fn enc_rows(list: &SemioTableRowList) -> String {
     format!("[{}]", list.values.iter().map(enc_row).collect::<Vec<_>>().join(","))
 }
 fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
-    use crate::artifacts::semio::standards::v1::engine::triples::strip_brackets;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableRowList { values })
 }

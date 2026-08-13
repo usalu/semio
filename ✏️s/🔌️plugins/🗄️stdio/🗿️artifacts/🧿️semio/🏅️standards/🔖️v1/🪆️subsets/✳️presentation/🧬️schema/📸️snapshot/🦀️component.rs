@@ -5,8 +5,8 @@
 //! (`SlideMaster`/`SlideLayout`/`Slide`/`SlideShape`) are owned here; only the block-tree LEAF is
 //! shared, per `w1b-type-ownership.md`).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
 /// 🧱️ REUSE, don't reinvent — the sibling `🔺️diff` facet re-exports document's own real, already-
 /// tested `DocBlock` codec (`enc_block`/`dec_block`) plus the entity value-codecs it owns

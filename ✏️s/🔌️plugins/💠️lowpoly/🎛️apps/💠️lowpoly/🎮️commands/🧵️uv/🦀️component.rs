@@ -16,8 +16,8 @@ pub mod unwrap_active {
     #[dsl(keyword = "unwrap-active")]
     pub struct UnwrapActive {}
 
-    pub fn handle(_payload: &UnwrapActive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(mesh_edit(doc.snapshot, cfg.snapshot, move |doc| {
+    pub fn handle(_payload: &UnwrapActive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+        Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             doc.active_mesh_mut().map_err(|e| e.to_string())?.unwrap_uv().map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
         }))
@@ -36,11 +36,11 @@ pub mod mark_uv_seam {
         pub edge_ids: Option<Vec<u32>>,
     }
 
-    pub fn handle(payload: &MarkUvSeam, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &MarkUvSeam, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let seam = payload.seam.unwrap_or(true);
         let edge_ids = payload.edge_ids.clone().unwrap_or_else(|| config.selection_ids.clone());
-        Ok(mesh_edit(projection, config, move |doc| {
+        Ok(mesh_edit(projection, config, ctx, move |doc| {
             let edges: Vec<EdgeId> = edge_ids.into_iter().map(EdgeId).collect();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.mark_uv_seam(&edges, seam);
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -72,12 +72,10 @@ mod tests {
     #[test]
     fn unwrap_active_resyncs_mesh_json() {
         let mut a = app();
-        let before = a.snapshot().expect("projection").objects[0].mesh_workspace.clone();
         dispatch(&mut a, LowpolyCommand::UnwrapActive(super::unwrap_active::UnwrapActive {}));
         // unwrap is idempotent-ish on an already-unwrapped mesh, so just assert it runs without error and
         // keeps the object count stable.
         assert_eq!(a.snapshot().expect("projection").objects.len(), 1);
-        let _ = before;
     }
 
     #[test]

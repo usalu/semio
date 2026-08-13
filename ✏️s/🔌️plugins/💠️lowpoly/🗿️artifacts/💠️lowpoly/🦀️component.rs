@@ -111,7 +111,14 @@ pub struct LowpolyObject {
     /// the old opaque `mesh_json: String` this field used to be. Lifecycle via `create-mesh`/
     /// `delete-mesh` (`🧬️mutations/🕸️create-mesh`, `🧬️mutations/🧨delete-mesh`), which replace the
     /// old whole-value `replace-object-mesh`. `LowpolySnapshot`'s hand-rolled `ArtifactDsl`/
-    /// `ArtifactPack` below persist ONLY this handle for the mesh slot, never `mesh_workspace`.
+    /// `ArtifactPack` below persist ONLY this handle for the mesh slot — the live half-edge-mesh
+    /// JSON content itself never lives on this struct at all (see `🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`'s
+    /// `mesh_workspace` field, the session-local cache this field's content moved to, round 2 of this
+    /// ticket's fix — `LowpolySnapshot`'s hand-rolled codecs already asserted "never `mesh_workspace`"
+    /// in this same doc comment before the field was removed; a struct-level round-trip law
+    /// (`store::os_store::test_support::assert_document_text_round_trip`) forbids a codec-excluded
+    /// field from living on a persisted snapshot type at all — see `📸️snapshot/🦀️component.rs`'s
+    /// module doc comment).
     ///
     /// ⚠️ Framework limitation (flagged in this ticket's `lowpoly-report.md` for the next fan-out
     /// agent hitting the same shape): `#[derive(ArtifactSchema)]`'s `#[child(kind = "…")]` mechanism
@@ -125,17 +132,6 @@ pub struct LowpolyObject {
     /// The type/mutation-vocabulary/persistence layer is still fully real; only the derive-generated
     /// SCHEMA INTROSPECTION table is incomplete for it.
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
-    /// 🖌️ Ephemeral, session-local working copy of the live mesh-kernel's geometry (half-edge JSON —
-    /// `semio_framework_3d::mesh::HalfedgeMesh::to_json`/`from_json`) — NEVER the persisted document
-    /// representation (see `mesh` above for that). No child-document resolution API exists yet for
-    /// any plugin in this repo (`store::ChildStoreFactory`/`CompositionCoordinator` are host-side
-    /// only, unreachable from a WASM-guest plugin — verified against `🏪️store/🦀️component.rs`) —
-    /// until that lands, this field is how the kernel session keeps working end to end. Round-trips
-    /// through plain `Serialize`/the mutation-op JSON log (an event legitimately replays its full
-    /// payload) but is DELIBERATELY excluded from `LowpolySnapshot`'s own hand-rolled
-    /// `ArtifactDsl`/`ArtifactPack` codecs — the durable snapshot-at-rest bytes store only the
-    /// `mesh` handle above, never this content.
-    pub mesh_workspace: String,
     #[serde(default)]
     pub paint_layers: Vec<LowpolyPaintLayer>,
 }
@@ -205,12 +201,6 @@ pub struct LowpolyObjectPatch {
     /// from this struct (unused in practice — nothing calls its derived DSL machinery, confirmed by
     /// grep — and `store::ArtifactChild<S>` has no `DslField` impl to derive against anyway).
     pub mesh: Option<Option<store::ArtifactChild<SemioMeshSnapshot>>>,
-    /// 🖌️ Companion to `mesh`: the new `mesh_workspace` content, carried alongside the handle so a
-    /// kernel-edit commit updates BOTH in one mutation. Ordinary single-`Option` scalar patch (not
-    /// double — `mesh_workspace` is never cleared independently of `mesh`, see `LowpolyObject`'s own
-    /// doc comment on why this field must still flow through the normal patch/mutation pipeline even
-    /// though it is excluded from the persisted `ArtifactDsl`/`ArtifactPack` bytes).
-    pub mesh_workspace: Option<String>,
 }
 
 impl Patchable<LowpolyObjectPatch> for LowpolyObject {
@@ -227,9 +217,6 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         if let Some(value) = &patch.mesh {
             self.mesh = value.clone();
         }
-        if let Some(value) = &patch.mesh_workspace {
-            self.mesh_workspace = value.clone();
-        }
     }
 
     fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
@@ -238,7 +225,6 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
             smooth_shading: (self.smooth_shading != other.smooth_shading).then_some(other.smooth_shading),
             transform: (self.transform != other.transform).then(|| other.transform.clone()),
             mesh: (self.mesh != other.mesh).then(|| other.mesh.clone()),
-            mesh_workspace: (self.mesh_workspace != other.mesh_workspace).then(|| other.mesh_workspace.clone()),
         };
         (patch != LowpolyObjectPatch::default()).then_some(patch)
     }
@@ -409,17 +395,16 @@ mod tests {
     fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
         let mesh_workspace = "{}".to_string();
         let original_mesh = mesh_child_handle("obj-1", &mesh_workspace);
-        let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh: Some(original_mesh), mesh_workspace, paint_layers: vec![LowpolyPaintLayer::new("Base")] };
+        let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh: Some(original_mesh), paint_layers: vec![LowpolyPaintLayer::new("Base")] };
         let original = object.clone();
         let new_mesh_workspace = "{\"changed\":true}".to_string();
         let new_mesh = mesh_child_handle("obj-1", &new_mesh_workspace);
-        let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh: Some(Some(new_mesh.clone())), mesh_workspace: Some(new_mesh_workspace.clone()) };
+        let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh: Some(Some(new_mesh.clone())) };
         object.apply_patch(&patch);
         assert_eq!(object.name, "Renamed");
         assert!(object.smooth_shading);
         assert_eq!(object.transform.position, [1.0, 2.0, 3.0]);
         assert_eq!(object.mesh, Some(new_mesh));
-        assert_eq!(object.mesh_workspace, new_mesh_workspace);
         let inverse = object.diff_patch(&original).expect("patch changed state");
         object.apply_patch(&inverse);
         assert_eq!(object, original);
@@ -433,7 +418,6 @@ mod tests {
         assert_eq!(snapshot.objects.len(), 1);
         assert_eq!(snapshot.objects[0].id, "obj-42");
         assert_eq!(snapshot.objects[0].name, "Widget");
-        assert_eq!(snapshot.objects[0].mesh_workspace, mesh_json);
         assert_eq!(snapshot.objects[0].mesh, Some(mesh_child_handle("obj-42", &mesh_json)));
         assert_eq!(snapshot.objects[0].paint_layers.len(), 1);
         assert_eq!(snapshot.objects[0].paint_layers[0].name, "Base");

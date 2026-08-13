@@ -1,10 +1,9 @@
 //! 🧬️ Flow artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::flow::FlowSnapshot;
-use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout, FLOW_LOD_MODE_AUTOMATIC};
+use crate::artifacts::flow::{FlowContentChild, FlowSnapshot};
+use flow::{CameraJson, Widget, FLOW_LOD_MODE_AUTOMATIC};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region 🔖️Constants
 /// 🖱️ Default proximity-select distance — also `FlowConfig`'s own default (`crate::apps::flow::config`),
@@ -66,9 +65,7 @@ pub fn widget_tree_label(widget: &Widget) -> String {
 pub struct FlowArtifact {
     #[state(persistent)] pub schema: String,
     #[state(persistent)] pub camera: CameraJson,
-    #[state(persistent)] pub widgets: Vec<Widget>,
-    #[state(persistent)] pub synapses: Vec<SynapseSpec>,
-    #[state(persistent)] pub layout: BTreeMap<String, WidgetLayout>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.flow")] pub content: FlowContentChild,
     #[state(shared_ui)] pub selected_node_ids: Vec<String>,
     #[state(shared_ui)] pub selected_edge_ids: Vec<String>,
     #[state(shared_ui)] pub selected_handle_ids: Vec<String>,
@@ -99,9 +96,7 @@ impl FlowArtifact {
         FlowSnapshot {
             schema: self.schema.clone(),
             camera: self.camera.clone(),
-            widgets: self.widgets.clone(),
-            synapses: self.synapses.clone(),
-            layout: self.layout.clone(),
+            content: self.content.clone(),
         }
     }
 
@@ -110,9 +105,7 @@ impl FlowArtifact {
         Self {
             schema: snapshot.schema,
             camera: snapshot.camera,
-            widgets: snapshot.widgets,
-            synapses: snapshot.synapses,
-            layout: snapshot.layout,
+            content: snapshot.content,
             selected_node_ids: Vec::new(),
             selected_edge_ids: Vec::new(),
             selected_handle_ids: Vec::new(),
@@ -134,9 +127,7 @@ impl FlowArtifact {
     pub fn set_snapshot(&mut self, snapshot: FlowSnapshot) {
         self.schema = snapshot.schema;
         self.camera = snapshot.camera;
-        self.widgets = snapshot.widgets;
-        self.synapses = snapshot.synapses;
-        self.layout = snapshot.layout;
+        self.content = snapshot.content;
     }
 }
 //#endregion 🔹Conversions

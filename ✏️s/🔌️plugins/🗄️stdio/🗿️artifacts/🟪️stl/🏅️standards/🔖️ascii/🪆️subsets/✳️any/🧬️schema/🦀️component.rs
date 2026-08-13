@@ -1,6 +1,7 @@
 //! 🧬️ StlArtifact schema — full artifact state.
 
-use crate::artifacts::stl::StlSnapshot;
+use crate::artifacts::stl::schema::snapshot::StlTriangle;
+use crate::artifacts::stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -264,3 +265,37 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: StlComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
+/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
+/// `crate::artifacts::stl::engine::empty_stl_snapshot` through the `engine` barrel shim.
+pub fn empty_stl_snapshot() -> StlSnapshot {
+    StlSnapshot::default()
+}
+
+/// 📄️ FG1: the demo `stdio.stl` document — a non-degenerate, non-empty `solid_name` plus two
+/// distinct-normal triangles, matching the companion real-format fixture assets
+/// (`📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`, both literally this
+/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `conformance_laws::
+/// fixture_honesty_law`). Deliberately avoids the empty-`solid_name` degenerate case: the
+/// grammar's `LINE` raw-span terminal captures rest-of-physical-line starting at the NEXT real
+/// token after `"solid"`/`"endsolid"` — when the name is empty, that next token is on a LATER
+/// line (whitespace/newlines are lexer trivia), which would swallow that later line's content as
+/// if it were the name. This is a real, narrow edge of the `LINE` primitive itself (shared,
+/// framework-level — `📖️grammar/🦀️component.rs`'s `match_raw_span`), not a bug in this artifact;
+/// every other pilot's own demo/fixture picks similarly avoid degenerate corners their grammar's
+/// primitives don't cleanly cover (same "model realistically" convention this ticket's recipe
+/// documents throughout, not a `mechanism_gaps` entry of its own since it's a strict subset of the
+/// already-documented `protocol-prim-ref-recursion`-adjacent raw-span family).
+pub fn demo_stl_snapshot() -> StlSnapshot {
+    StlSnapshot {
+        schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
+        solid_name: "demo".into(),
+        triangles: vec![
+            StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] },
+            StlTriangle { normal: [0.0, 0.0, -1.0], vertices: [[0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [0.0, 1.0, 1.0]] },
+        ],
+    }
+}
+//#endregion 🔖️DocumentHelpers

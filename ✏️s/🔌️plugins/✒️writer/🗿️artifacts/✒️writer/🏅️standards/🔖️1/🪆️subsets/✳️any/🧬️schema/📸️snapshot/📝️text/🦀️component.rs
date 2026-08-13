@@ -16,6 +16,17 @@ pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬�
 /// 📄️ The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
 pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️dag-example.dsl.semio");
 
+/// ✍️ The `jack`/`dag.jack` examples' real query text. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`:
+/// `WriterSnapshot::document` is a composed `s.stdio.semio.document` CHILD HANDLE now, so
+/// `JACK_EXAMPLE_TEXT`/`DAG_JACK_EXAMPLE_TEXT` themselves only carry the opaque
+/// `document=[childId,target]` pair (content-addressed, matching every other composed-child DSL
+/// fixture in this ticket — cad's `shapeModel=`/lowpoly's `mesh=` lines are equally opaque). These
+/// constants are the honest source of the actual text those handles were minted from — the working-
+/// scene cache (`writer_text`) has no way to recover it from the handle alone otherwise, exactly the
+/// documented `WriterWorkingScene` gap (`🗿️artifacts/✒️writer/🦀️component.rs`'s module doc comment).
+const JACK_QUERY_TEXT: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name";
+const DAG_JACK_QUERY_TEXT: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a, b";
+
 /// 📖️ Parses `.writer` DSL text into a `WriterSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<WriterSnapshot, store::TextError> {
     <WriterSnapshot as store::ArtifactDsl>::parse_dsl(text)
@@ -31,7 +42,9 @@ pub fn print_dsl(projection: &WriterSnapshot) -> String {
 /// call site below (`setActiveExample`, `.example("jack", ...)`, tests, "file-text"); never re-embed the
 /// raw text.
 pub fn jack_example_document() -> WriterSnapshot {
-    parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot())
+    let document = parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot());
+    crate::artifacts::writer::cache_writer_document_text(&document.document.child_id, JACK_QUERY_TEXT);
+    document
 }
 
 /// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
@@ -42,7 +55,9 @@ pub fn jack_example_json() -> String {
 
 /// 📄️ The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
 pub fn dag_jack_example_document() -> WriterSnapshot {
-    parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot())
+    let document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot());
+    crate::artifacts::writer::cache_writer_document_text(&document.document.child_id, DAG_JACK_QUERY_TEXT);
+    document
 }
 
 /// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
@@ -71,7 +86,13 @@ mod tests {
 
     /// ✍️ Hand-built representative document exercising the multiline/quoted-text path.
     fn jack_snapshot() -> WriterSnapshot {
-        WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+        crate::artifacts::writer::writer_snapshot_with_text(
+            "writer.document",
+            "jack",
+            "jack",
+            "writer://jack",
+            "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
+        )
     }
 
     #[test]
@@ -80,19 +101,23 @@ mod tests {
         store::os_store::test_support::assert_dsl_round_trip(&jack_snapshot());
     }
 
+    /// 📄️ The hand-rolled `document` codec (`📸️snapshot/🦀️component.rs`'s
+    /// `print_writer_snapshot_body`) prints one hex-encoded `key=value` line per persistent field —
+    /// `document` is now a two-string CHILD HANDLE, not the embedded text, so this law only checks
+    /// the scalar fields print readably; the actual text content is proven separately by
+    /// `writer_dsl_round_trips_empty_and_jack_snapshots` (round trip) and `writer_text` reads.
     #[test]
-    fn writer_dsl_prints_readable_multiline_text() {
+    fn writer_dsl_prints_readable_scalar_fields() {
         let printed = print_dsl(&jack_snapshot());
-        // Bare-ident-shaped scalars print unquoted (`is_bare_ident`); `writer://jack` contains `:`
-        // and `/`, so it isn't bare and stays quoted.
-        assert!(printed.contains("schema=writer.document"));
-        assert!(printed.contains("id=jack"));
-        assert!(printed.contains("language-id=jack"));
-        assert!(printed.contains("uri=\"writer://jack\""));
-        // `#[dsl(lang = "jack")]` prints `text` as a fenced ```jack verbatim block (`Shape::Embed`)
-        // instead of an escaped-quoted string, so the embedded query keeps its raw newlines and its
-        // own `"` needs no backslash-escaping.
-        assert!(printed.contains("text=```jack\nMATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name\n```"));
+        assert!(printed.contains(&format!("schema={}", hex_encode_for_test("writer.document"))));
+        assert!(printed.contains(&format!("id={}", hex_encode_for_test("jack"))));
+        assert!(printed.contains(&format!("languageId={}", hex_encode_for_test("jack"))));
+        assert!(printed.contains(&format!("uri={}", hex_encode_for_test("writer://jack"))));
+        assert!(printed.contains("document=["));
+    }
+
+    fn hex_encode_for_test(s: &str) -> String {
+        s.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
     }
 }
 //#endregion 🧪️Tests

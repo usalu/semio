@@ -3,7 +3,9 @@
 //! 🩹️ `stdio_gap`/foreign-lag fix — see the paired export leaf's doc comment (same wave, the
 //! single-page `PageDoc` -> multi-page `pages: Vec<PdfPage>`/`media_box` shape plus
 //! `decode_pdf`'s error type change). Only the first page is mapped — the same single-page scope
-//! the old reader covered.
+//! the old reader covered. `decode_pdf` comes directly from 1.7's own `subsets::any::io` (the
+//! `pdf::engine` shim it used to reach through is dissolved, ticket 26/08/12/ENGINELESS-
+//! ARTIFACTS-AND-APP-STATE-MACHINES).
 use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_s_plugin_stdio::artifacts::pdf::schema::snapshot::PdfPage;
@@ -25,5 +27,5 @@ pub fn deserialize(from: &PdfSnapshot) -> Result<NoteSnapshot, String> {
     Ok(snap)
 }
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<NoteSnapshot, String> {
-    deserialize(&semio_s_plugin_stdio::artifacts::pdf::engine::decode_pdf(bytes).map_err(|e| e.to_string())?)
+    deserialize(&semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(bytes).map_err(|e| e.to_string())?)
 }

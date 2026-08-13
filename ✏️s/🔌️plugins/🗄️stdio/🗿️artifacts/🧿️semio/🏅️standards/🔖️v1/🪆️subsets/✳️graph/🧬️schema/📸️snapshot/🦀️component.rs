@@ -17,8 +17,8 @@
 //! vocabulary (never redefined locally) — see `engine::geometry::SemioPoint2` and
 //! `subsets::value::schema::snapshot::SemioValueEntry`.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{enc_semio_value_bin, dec_semio_value_bin, enc_semio_value_entry, dec_semio_value_entry};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 use schema::ArtifactSchema;

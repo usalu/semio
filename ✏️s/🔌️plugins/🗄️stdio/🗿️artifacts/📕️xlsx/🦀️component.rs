@@ -36,7 +36,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(XLSX_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor())
         .inferences([crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::inferences::xlsx_artifact_inference_descriptor()])
-        .composers(crate::artifacts::xlsx::engine::io_registry::entries())
+        .composers(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::io_registry::entries())
         .subset_validators(xlsx_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA)
@@ -149,7 +149,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::xlsx::standards::v_ecma_376::engine::io_registry as v_ecma_376;
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::io_registry as v_ecma_376;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

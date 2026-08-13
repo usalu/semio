@@ -300,3 +300,51 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: BmpComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+// 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+// `empty_bmp_snapshot`/`demo_bmp_snapshot` relocated here verbatim (pure helpers over the
+// document type, destination rule 5); `BmpEngine` (zero construction sites) deleted outright;
+// the real codec (`encode_bmp`/`decode_bmp` + every pure format algorithm) + the protected
+// `register()` cluster (`crate::artifacts::bmp::engine::register()` is one of stdio's 10
+// deliberate imperative plugin-root calls — untouched, reached via this standard's own inline
+// `engine` barrel) + `io_registry` all moved to `../🚪️io`; tests moved beside what they now test.
+/// 🌱 Empty persisted snapshot.
+pub fn empty_bmp_snapshot() -> BmpSnapshot {
+    BmpSnapshot::default()
+}
+
+/// 🎬 P2-FG2: canonical demo snapshot — the same value the real `.dsl.semio`/`.pack.semio`
+/// fixtures under `📚️examples/🎬️demo/🖼️assets/` are genuine `print_dsl`/`encode_pack` output
+/// of (regenerated this wave via a real `encode_bmp`/`print_dsl`/`encode_pack` call, replacing
+/// the pre-existing fake "hello" placeholder text). 4x2 24-bit `BI_RGB`, bottom-up, 8 distinct
+/// non-solid RGBA pixels (`row_bytes(4, 24) == 12`, already a multiple of 4, so this fixture
+/// does NOT exercise row padding — `gradient_checkerboard_24bit_round_trip`'s own 6-wide fixture
+/// in `../🚪️io`'s own tests already covers that) — `header_size`/`planes`/`bits_per_pixel`/
+/// `compression` are exactly what `encode_bmp` always hardcodes (40/1/24/0, see its own
+/// `EncodeScopeNote`), so this snapshot is safe against `encode_bmp`'s own canonicalization (any
+/// other value here would silently "self-correct" on the first decode and break
+/// `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` identity). No palette (bpp=24 has none).
+pub fn demo_bmp_snapshot() -> BmpSnapshot {
+    use crate::artifacts::bmp::standards::v_v3::subsets::any::io::row_bytes;
+    BmpSnapshot {
+        schema: crate::artifacts::bmp::STDIO_BMP_DOCUMENT_SCHEMA.into(),
+        header_size: 40,
+        width: 4,
+        height: 2,
+        row_order: BmpRowOrder::BottomUp,
+        planes: 1,
+        bits_per_pixel: 24,
+        compression: 0,
+        image_size: row_bytes(4, 24) as u32 * 2,
+        x_pixels_per_meter: 2835,
+        y_pixels_per_meter: 2835,
+        colors_used: 0,
+        colors_important: 0,
+        palette: Vec::new(),
+        pixels: vec![
+            255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 0, 255, 0, 255, 255, 255, 255, 0, 255, 255, 128, 128, 128, 255, 0, 0, 0, 255,
+        ],
+    }
+}
+//#endregion 🔖️DocumentHelpers

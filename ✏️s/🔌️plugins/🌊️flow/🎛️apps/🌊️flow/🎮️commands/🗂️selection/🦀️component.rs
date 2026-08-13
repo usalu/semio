@@ -49,7 +49,7 @@ pub mod select_all {
 
     pub fn handle(_payload: &SelectAll, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
         let config = cfg.snapshot;
-        let ids: Vec<String> = doc.snapshot.widgets.iter().map(widget_id).map(str::to_string).collect();
+        let ids: Vec<String> = doc.snapshot.to_fixture().widgets.iter().map(widget_id).map(str::to_string).collect();
         Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: ids, edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]))
     }
 }
@@ -194,10 +194,10 @@ mod tests {
     #[test]
     fn delete_selection_action_removes_selected_synapses() {
         let mut app = flow_app_with_registry();
-        let before = app.snapshot().expect("snapshot").synapses.len();
+        let before = app.snapshot().expect("snapshot").to_fixture().synapses.len();
         dispatch_with_registry(&mut app, FlowCommand::SetSelection(set_selection::SetSelection { ids: Vec::new(), edge_ids: vec!["s1".into()], handle_ids: Vec::new() }));
         let result = dispatch_with_registry(&mut app, FlowCommand::DeleteSelection(delete_selection::DeleteSelection {}));
-        let after = app.snapshot().expect("snapshot");
+        let after = app.snapshot().expect("snapshot").to_fixture();
         assert!(!result.mutations.is_empty(), "deleteSelection must emit operations for an edge");
         assert!(!after.synapses.iter().any(|synapse| synapse.id == "s1"), "synapse s1 must be removed");
         assert_eq!(after.synapses.len(), before - 1);

@@ -2,7 +2,7 @@
 
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

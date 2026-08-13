@@ -65,12 +65,17 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     }
 
     fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-        use crate::artifacts::cad::{CadMutation, CadPaneId};
-        use crate::artifacts::cad::mutations::rename_object::mutation::RenameObject;
-        let Some(object) = snapshot.objects.first() else {
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `RenameObject` is retired
+        // — object fields now live inside composed `s.stdio.semio.model` CHILD documents, which
+        // this demo fixture's `CadSnapshot` no longer carries inline. `RenameNode` is real and
+        // unaffected (node data was never part of the deleted inline object list) and exercises the
+        // identical sample-mutation-roundtrip law this spec is for.
+        use crate::artifacts::cad::CadMutation;
+        use crate::artifacts::cad::mutations::rename_node::mutation::RenameNode;
+        let Some(node) = snapshot.nodes.first() else {
             return Vec::new();
         };
-        vec![CadMutation::RenameObject(RenameObject { pane: CadPaneId::Shape, object_id: object.id.clone(), new_label: "Roundtrip Renamed".into() })]
+        vec![CadMutation::RenameNode(RenameNode { node_id: node.id.clone(), new_label: "Roundtrip Renamed".into() })]
     }
 
     fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

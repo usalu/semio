@@ -5,7 +5,7 @@
 //! EXACT original membership/positions losslessly (a non-contiguous grouping would interleave
 //! with untouched siblings in a way `ungroup` could not reconstruct from `base` alone).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;

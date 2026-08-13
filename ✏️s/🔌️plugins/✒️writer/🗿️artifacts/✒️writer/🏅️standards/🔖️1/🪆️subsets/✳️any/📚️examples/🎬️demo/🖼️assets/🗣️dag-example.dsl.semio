@@ -1,7 +1,6 @@
 semio writer.writer.dsl v1
-schema=writer.document id=dag-jack language-id=jack uri="writer://dag-jack"
-text=```jack
-MATCH (a:Piece)-[r:Connection]->(b:Piece)
-WHERE a.name = "core"
-RETURN a, b
-```
+schema=7772697465722e646f63756d656e74
+id=6461672d6a61636b
+languageId=6a61636b
+uri=7772697465723a2f2f6461672d6a61636b
+document=[646f63756d656e742d37366130356665663031653163376165,6461672d6a61636b2d646f63756d656e7421732e737464696f2e73656d696f4076312f646f63756d656e74]

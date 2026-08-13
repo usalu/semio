@@ -11,8 +11,8 @@
 //! wire codecs (`enc_indexed_triple`/`dec_indexed_triple`) come from the shared
 //! `engine::triples` module per the ticket's explicit instruction — not re-derived here.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioQuaternion};
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     IndexAdded, IndexModified, IndexedTripleDiff, dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets,
 };
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{

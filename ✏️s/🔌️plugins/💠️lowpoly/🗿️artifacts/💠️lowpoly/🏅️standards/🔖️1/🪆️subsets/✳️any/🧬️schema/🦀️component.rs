@@ -167,12 +167,44 @@ pub fn lowpoly_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 /// unit box until the handcrafted mesh DSL codec replaces derive-based `parse_dsl` (the reuse
 /// `.lowpoly` example is already structured half-edge text without `mesh-json`). Relocated from
 /// `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a pure document helper,
-/// not engine behaviour.
+/// not engine behaviour. Companion to `default_mesh_workspace()` below (round 2 of ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law fix) — the box's live mesh JSON no
+/// longer lives on `LowpolyObject`, so the two functions share one MEMOIZED build (`default_snapshot_and_mesh_workspace`)
+/// so they never drift apart. Memoization is load-bearing, not a micro-optimization: `HalfedgeMesh::unwrap_uv`'s
+/// internal UV-island packing is not observed to be byte-for-byte deterministic run to run (two
+/// independent `box_prim()+unwrap_uv()+to_json()` calls could serialize to different JSON text for
+/// the "same" geometry), which would make `mesh_child_handle`'s content hash — computed over the raw
+/// JSON string — disagree between `default_snapshot()`'s handle and `default_mesh_workspace()`'s
+/// content, tripping `LowpolyDocument::reload_meshes`'s staleness check spuriously.
 pub fn default_snapshot() -> crate::artifacts::lowpoly::LowpolySnapshot {
-    let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim");
-    let _ = mesh.unwrap_uv();
-    let mesh_json = mesh.to_json().expect("mesh json");
-    crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Unit Box")
+    default_snapshot_and_mesh_workspace().0.clone()
+}
+
+/// 🕸️ Companion cache for `default_snapshot()`'s single object ("obj-1") — the live half-edge mesh
+/// JSON its `mesh` handle is content-addressed off, keyed by object id exactly like
+/// `🎛️apps/💠️lowpoly/🖌️session::LowpolyScratch`'s own `mesh_workspace` field expects. Tests and
+/// `LowpolyScratch::default()` seed from this so a freshly booted session can immediately reload the
+/// mesh `default_snapshot()` describes, without a real child-document resolution API (none exists
+/// yet for any WASM-guest plugin in this repo).
+pub fn default_mesh_workspace() -> std::collections::HashMap<String, String> {
+    default_snapshot_and_mesh_workspace().1.clone()
+}
+
+/// 🔒️ Memoized (see `default_snapshot()`'s own doc comment for why memoization is load-bearing here,
+/// not optional) — computed once per process via `OnceLock`, so every caller of `default_snapshot()`/
+/// `default_mesh_workspace()` observes the identical `mesh_json` and therefore the identical
+/// content-addressed `mesh` handle, no matter how many times each is called independently.
+fn default_snapshot_and_mesh_workspace() -> &'static (crate::artifacts::lowpoly::LowpolySnapshot, std::collections::HashMap<String, String>) {
+    static CACHE: std::sync::OnceLock<(crate::artifacts::lowpoly::LowpolySnapshot, std::collections::HashMap<String, String>)> = std::sync::OnceLock::new();
+    CACHE.get_or_init(|| {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim");
+        let _ = mesh.unwrap_uv();
+        let mesh_json = mesh.to_json().expect("mesh json");
+        let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Unit Box");
+        let mut workspace = std::collections::HashMap::new();
+        workspace.insert("obj-1".to_string(), mesh_json);
+        (snapshot, workspace)
+    })
 }
 
 /// 🔧️ Shared by the app's compute session and the `edit-paint-layer`/`insert-paint-layer` mutation
@@ -502,7 +534,9 @@ mod tests {
     #[test]
     fn default_unit_box_mesh_parses_and_has_faces() {
         let projection = default_snapshot();
-        let mesh = HalfedgeMesh::from_json(&projection.objects[0].mesh_workspace).expect("default mesh");
+        let workspace = default_mesh_workspace();
+        let mesh_json = workspace.get(&projection.objects[0].id).expect("workspace entry for default object");
+        let mesh = HalfedgeMesh::from_json(mesh_json).expect("default mesh");
         assert!(mesh.face_count() >= 6, "unit box should expose six faces");
         assert!(mesh.vertex_count() >= 8, "unit box should expose eight vertices");
     }

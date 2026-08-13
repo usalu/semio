@@ -1,5 +1,12 @@
-//! 🚪️ IO stdio.md (commonmark/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
+//! 🚪️ IO stdio.md (commonmark/✳️any) — registration flows through `md::declaration()`
+//! (`🗄️stdio/🗿️artifacts/📝️md/🦀️component.rs`), not a side-effecting `register()`; `⚙️engine`
+//! dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — `MdEngine` (zero
+//! construction sites) deleted outright; its orphaned `register()`/`register_artifact_schema()`/
+//! `register_artifact_inferences()`/`register_pilot_languages()` (zero callers, superseded by
+//! `declaration()`) deleted outright too; `parse_markdown_blocks` + the block/inline parser moved
+//! to `📥️import/🧩️deserializers`; `render_markdown_blocks` + the block/inline renderer moved to
+//! `📤️export/🧵️serializers`; `io_registry` moved here from `⚙️engine`, live (`md::declaration()`'s
+//! `.composers(...)` and this artifact's own root `io_registry` both reach it).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
@@ -48,3 +55,17 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::MdComposer as MdRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<MdRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

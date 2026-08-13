@@ -6,7 +6,7 @@
 //! writer) needs no MORE than that for a structurally valid file.
 
 use crate::artifacts::dxf::{DxfSnapshot, schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue}};
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, SemioCadSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 

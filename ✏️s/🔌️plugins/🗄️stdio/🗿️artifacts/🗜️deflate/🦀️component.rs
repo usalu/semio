@@ -20,24 +20,25 @@ pub const DEFLATE_ARTIFACT_SCHEMA_ID: &str = "s.stdio.deflate";
 /// `🔋️energy`'s `s.model` exemplar exactly: a headless library artifact with zero `ArtifactApp`s,
 /// so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
 /// `store::register_document_codec(store::ArtifactCodec::of::<DeflateSnapshot,
-/// DeflateMutation>(...))`. `.composers(...)` reaches the ENGINE's own `io_registry` (returns
-/// `&'static [ComposerEntry]`, owned rows) by its full path through the `engine` shim
-/// (`📦️glue.rs`'s `pub mod engine { pub use super::standards::v_rfc1950::engine::*; }`) —
-/// deliberately NOT this file's own `io_registry` module below, whose `entries()` returns
+/// DeflateMutation>(...))`. `.composers(...)` reaches the SUBSET IO module's own `io_registry`
+/// (returns `&'static [ComposerEntry]`, owned rows) by its full path
+/// (`standards::v_rfc1950::subsets::any::io::io_registry` — the former `⚙️engine`'s `io_registry`,
+/// dissolved there per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — deliberately
+/// NOT this file's own `io_registry` module below, whose `entries()` returns
 /// `&'static [&'static ComposerEntry]` (references) and would silently rebind under a bare call
 /// (see this ticket's "SILENT REBIND" hazard).
 ///
-/// **NOT covered by any `ArtifactDeclaration` field**: the engine's `register_schema_specs()`
+/// **NOT covered by any `ArtifactDeclaration` field**: `register_schema_specs()`
 /// (`dsl::registry::register_schema_spec`, the P2-M3 `FullResolver` insertion API — a registry
-/// distinct from `.languages()`'s `dsl::register_language`). No field here closes it, so it is not
-/// invented and the call is not dropped — it survives on the plugin root's `.setup(...)`, exactly
-/// this ticket's own W1d precedent (puzzle's B2 OS-media-bridge case) for a genuine, narrowly
-/// scoped registration gap.
+/// distinct from `.languages()`'s `dsl::register_language`), now living beside `io_registry` in
+/// `standards::v_rfc1950::subsets::any::io`. No field here closes it, so it is not invented and the
+/// call is not dropped — it survives on the plugin root's `.setup(...)`, repointed at this new
+/// location by the dissolution.
 pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(DEFLATE_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::deflate::schema::deflate_artifact_schema_descriptor())
         .inferences([crate::artifacts::deflate::schema::inferences::deflate_artifact_inference_descriptor()])
-        .composers(crate::artifacts::deflate::engine::io_registry::entries())
+        .composers(crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA)
         .build()
@@ -45,9 +46,10 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
 /// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
-/// verbatim (five `LanguageSpec` rows, one per role) from `crate::artifacts::deflate::engine::
-/// register_pilot_languages`'s own `dsl::register_language(...)` call bodies — same ids, same
-/// grammar/protocol paths, same `passthrough_hooks` calls.
+/// verbatim (five `LanguageSpec` rows, one per role) from the former
+/// `crate::artifacts::deflate::engine::register_pilot_languages`'s own
+/// `dsl::register_language(...)` call bodies — same ids, same grammar/protocol paths, same
+/// `passthrough_hooks` calls.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
@@ -132,7 +134,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::deflate::standards::v_rfc1950::engine::io_registry as v_rfc1950;
+    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::io_registry as v_rfc1950;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

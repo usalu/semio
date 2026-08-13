@@ -57,7 +57,6 @@ mod tests {
             transform: Default::default(),
             smooth_shading: false,
             mesh: Some(mesh),
-            mesh_workspace,
             paint_layers: vec![crate::artifacts::lowpoly::LowpolyPaintLayer::new("Base")],
         }
     }

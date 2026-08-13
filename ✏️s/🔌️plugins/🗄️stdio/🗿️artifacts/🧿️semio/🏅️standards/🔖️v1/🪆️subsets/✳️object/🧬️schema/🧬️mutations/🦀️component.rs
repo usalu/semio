@@ -45,7 +45,7 @@ pub enum SemioObjectMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioQuaternion};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 

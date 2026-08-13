@@ -16,7 +16,7 @@
 //! `Vec<T>`-of-struct field (streams→samples) plus this file's own generic collection-triple
 //! wrapper both individually block the derive macro.
 
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{

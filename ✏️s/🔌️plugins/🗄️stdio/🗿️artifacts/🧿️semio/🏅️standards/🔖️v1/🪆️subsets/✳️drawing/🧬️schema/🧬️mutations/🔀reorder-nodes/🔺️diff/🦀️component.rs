@@ -2,7 +2,7 @@
 //! `from` is out of range for its `children`.
 
 use super::mutation::ReorderNodes;
-use crate::artifacts::semio::standards::v1::engine::triples::{IndexAdded, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{diff_at_path, node_at, DrawGroupDiff, DrawNodeDiff, SemioDrawingDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 

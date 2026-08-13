@@ -3,7 +3,7 @@
 //! origin-field reach as `move-node` (`Group.transform.translation`, `Text`/`Image.at`; `Path`
 //! is a no-op per-node).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;

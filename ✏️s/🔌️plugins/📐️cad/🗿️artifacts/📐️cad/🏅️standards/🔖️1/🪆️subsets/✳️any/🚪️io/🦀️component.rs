@@ -273,7 +273,7 @@ use base64::Engine as _;
 use semio_framework_3d::brep::engine::{block_on, BrepKernel, GeometryHandle};
 use semio_framework::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
@@ -514,7 +514,7 @@ pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts
 /// 🌉️ Builds a `SemioModelElement` from a live kernel solid handle — id, identity placement, and a
 /// `GeometryRef::Brep{brep_id}` naming the handle. Shared by every native-geometry import path.
 fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement};
     SemioModelElement {
         id,
@@ -590,23 +590,66 @@ pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
     Some(raw.clone())
 }
 
-/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `CadSnapshot` no longer inlines
-/// `objects`/`*Geometry` — that data now lives inside composed `s.stdio.semio.model` CHILD
-/// documents, each its own document minted through the host's `ChildStoreFactory` (out of a pure
-/// function's reach; see `🔖️Composition` in `🏪️store/🦀️component.rs`). This function therefore
-/// returns the base document UNPOPULATED (a real, valid `CadSnapshot` with no model children set)
-/// rather than silently dropping data into fields that no longer exist — composing an imported
-/// spatial payload into a pane's model child is now a two-step host-level gesture (mint the child
-/// artifact, then dispatch `create-<pane>-model` against the parent) that the two callers of this
-/// function (🎪️demonstrator's koordinator pane, 💠️lowpoly's schema) must perform themselves.
-/// Flagged as a real behavioral gap in this wave's report, not silently swallowed.
+/// 🌉 Real per-pane object extraction from a `spatial.modelspace`/`spatial.model` payload — the
+/// SAME fixture-import machinery (`geometry_import::parse_geometry` + `objects_from_fixture_model`)
+/// the Concrete Forest Left quad fixture is built from (`crate::apps::cad::forest_working_scene`),
+/// since both are the identical `spatial.model`-shaped wire form. A `spatial.modelspace` payload
+/// wraps zero or more `{id|modelDefinitionId, model}` entries in `models[]`; a bare `spatial.model`
+/// payload IS one implicit entry. Each entry that resolves to a known `CadPaneId` and carries real
+/// objects gets its own real `SemioModelSnapshot` minted (`geometry_import::semio_model_snapshot_from_objects`)
+/// and composed as that pane's `CadModelChild` (`crate::artifacts::cad::cad_model_child_handle`) —
+/// panes with no objects, or an id this document doesn't recognize, are left `None` rather than
+/// fabricating an empty child. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
 pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::cad::CadSnapshot> {
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects};
+    use crate::artifacts::cad::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
     let schema = payload.get("schema").and_then(|value| value.as_str());
-    if schema == Some("spatial.modelspace") || schema == Some("spatial.model") {
-        return Some(default_document());
+    if schema != Some("spatial.modelspace") && schema != Some("spatial.model") {
+        return None;
     }
-    None
+    let mut document = default_document();
+    let owned_models: Vec<Value>;
+    let models: Vec<&Value> = if schema == Some("spatial.modelspace") {
+        payload.get("models").and_then(Value::as_array).map(|entries| entries.iter().collect()).unwrap_or_default()
+    } else {
+        owned_models = vec![payload.clone()];
+        owned_models.iter().collect()
+    };
+    for entry in models {
+        let model_definition_id = entry.get("id").and_then(Value::as_str).or_else(|| entry.get("modelDefinitionId").and_then(Value::as_str)).unwrap_or(CAD_MODEL_DEFINITION_SHAPE);
+        let Some(pane) = cad_pane_from_model_definition_id(model_definition_id) else {
+            continue;
+        };
+        let model_value = entry.get("model").unwrap_or(entry);
+        let Some(objects_value) = model_value.get("objects").and_then(Value::as_array) else {
+            continue;
+        };
+        if objects_value.is_empty() {
+            continue;
+        }
+        let geometry = parse_geometry(model_value.get("geometry"));
+        let Ok(mut kernel) = cad_brep_kernel() else {
+            continue;
+        };
+        let objects = objects_from_fixture_model(&mut *kernel, objects_value, &geometry);
+        drop(kernel);
+        if objects.is_empty() {
+            continue;
+        }
+        let model = semio_model_snapshot_from_objects(&objects);
+        let Ok(content_json) = serde_json::to_string(&model) else {
+            continue;
+        };
+        let handle = Some(cad_model_child_handle(pane, &content_json));
+        match pane {
+            CadPaneId::Shape => document.shape_model = handle,
+            CadPaneId::Building => document.building_model = handle,
+            CadPaneId::Energy => document.energy_model = handle,
+            CadPaneId::StructureClassic => document.structure_classic_model = handle,
+        }
+    }
+    Some(document)
 }
 
 pub fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
@@ -614,12 +657,57 @@ pub fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::Mes
     Ok(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::export_mesh_from_scene(&scene))
 }
 
-/// ⚠️ See `scene_from_spatial_payload`'s doc comment — DWG-imported geometry can no longer be
-/// written into `CadSnapshot.objects` (deleted); this now returns the base document unpopulated,
-/// same documented gap.
-pub fn cad_document_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
+/// 🌉 One `CadObject` per non-empty DWG layer — filters `drawing` down to that layer's entities and
+/// tessellates them via the existing `dwg_drawing_to_mesh` merge (reused verbatim, not
+/// reimplemented), then imports the result into the live kernel through `geometry_import::cad_object_from_mesh`
+/// — the identical OBJ-text bridge every other native-geometry import path in this file already
+/// uses. A layer with no entities (or none that triangulate) contributes no object — never a
+/// fabricated placeholder.
+pub fn cad_working_scene_from_dwg(drawing: &semio_framework::DwgDrawing) -> crate::artifacts::cad::CadWorkingScene {
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::cad_object_from_mesh;
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, next_cad_id};
+    let Ok(mut kernel) = cad_brep_kernel() else {
+        return crate::artifacts::cad::CadWorkingScene::default();
+    };
+    let objects = drawing
+        .layers
+        .iter()
+        .enumerate()
+        .filter_map(|(layer_index, layer)| {
+            let filtered = semio_framework::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
+            if filtered.entities.is_empty() {
+                return None;
+            }
+            let mesh = semio_framework::dwg_drawing_to_mesh(&filtered);
+            if mesh.indices.is_empty() || mesh.positions.is_empty() {
+                return None;
+            }
+            Some(cad_object_from_mesh(&mut *kernel, next_cad_id("object"), layer.name.clone(), "spatial.shape.imported", &mesh))
+        })
+        .collect();
+    crate::artifacts::cad::CadWorkingScene { objects, ..Default::default() }
+}
+
+/// 🌉 Real per-layer DWG import: every non-empty layer becomes a real `CadObject`
+/// (`cad_working_scene_from_dwg`), wrapped into a `SemioModelSnapshot` and minted as a
+/// deterministic, content-addressed `shape_model` CHILD HANDLE (`cad_model_child_handle`) — the
+/// same "mint the child, dispatch create-<pane>-model against the result" two-step gesture
+/// `scene_from_spatial_payload` documents, done here for the ONE piece (the child's own content) a
+/// pure function CAN produce. An empty drawing (no layer contributes real geometry) mints no
+/// child, matching `scene_from_spatial_payload`'s "no fabricated child" rule. Ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
+pub fn cad_document_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
-    serde_json::to_value(default_document()).map_err(|err| err.to_string())
+    use crate::artifacts::cad::{cad_model_child_handle, CadPaneId};
+    let working = cad_working_scene_from_dwg(drawing);
+    let mut document = default_document();
+    if !working.objects.is_empty() {
+        let model = semio_model_snapshot_from_objects(&working.objects);
+        let content_json = serde_json::to_string(&model).map_err(|err| err.to_string())?;
+        document.shape_model = Some(cad_model_child_handle(CadPaneId::Shape, &content_json));
+    }
+    serde_json::to_value(document).map_err(|err| err.to_string())
 }
 
 /// ⚠️ See `scene_from_spatial_payload`'s doc comment — same documented gap for a `MeshImporter`

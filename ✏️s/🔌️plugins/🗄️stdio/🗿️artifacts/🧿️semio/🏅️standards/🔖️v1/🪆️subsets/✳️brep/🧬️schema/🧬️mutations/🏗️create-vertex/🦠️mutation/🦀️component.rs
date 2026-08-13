@@ -2,7 +2,7 @@
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

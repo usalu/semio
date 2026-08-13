@@ -54,7 +54,13 @@ mod tests {
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
     fn jack_snapshot() -> crate::artifacts::writer::WriterSnapshot {
-        crate::artifacts::writer::WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+        crate::artifacts::writer::writer_snapshot_with_text(
+            "writer.document",
+            "jack",
+            "jack",
+            "writer://jack",
+            "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
+        )
     }
 
     #[test]

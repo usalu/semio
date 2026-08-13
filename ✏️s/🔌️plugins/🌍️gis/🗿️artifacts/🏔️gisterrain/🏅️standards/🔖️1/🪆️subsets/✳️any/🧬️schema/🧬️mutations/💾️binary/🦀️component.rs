@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn gis3d_terrain_document_text_round_trips_through_store() {
-        let initial = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new() };
+        let initial = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
         let envelope = store::create_document_envelope(GIS_3D_TERRAIN_SCHEMA, "gis3d-demo", initial, None);
         let mut store = store::ArtifactStore::new(envelope);
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 2.0 })], description: None }).expect("apply");

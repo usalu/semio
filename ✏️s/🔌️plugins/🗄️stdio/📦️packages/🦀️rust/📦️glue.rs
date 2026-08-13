@@ -49,8 +49,20 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_raw {
-                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // codecs already lived beside `BinarySnapshot`'s `ArtifactDsl`/`ArtifactPack` impls in
+                // `subsets::any::schema::snapshot` (untouched); `empty_binary_snapshot`/
+                // `demo_binary_snapshot` moved to `subsets::any::schema`; `BinaryEngine` (zero
+                // construction sites repo-wide) deleted outright; the register cluster + `io_registry`
+                // moved to `subsets::any::io`; tests moved into `subsets::any::schema::inferences`.
+                // `register()` is one of stdio's 10 protected imperative plugin-root calls
+                // (`crate::artifacts::binary::engine::register()` in `🗄️stdio/🦀️component.rs`, reached
+                // via this artifact's own top-level `pub mod engine` shim below) — left callable at
+                // this exact path via a pure re-export of `subsets::any::io::register` (itself
+                // unchanged).
+                pub mod engine {
+                    pub use super::subsets::any::io::register;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -531,8 +543,18 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                        pub mod engine;
+                        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                        // `XmlEngine` (zero construction sites) deleted outright; its orphaned
+                        // `register()`/`register_artifact_schema()`/`register_artifact_inferences()`/
+                        // `register_pilot_languages()` (zero callers, superseded by `xml::declaration()`)
+                        // deleted outright too; `io_registry` moved to `subsets::any::io`;
+                        // `empty_xml_snapshot`/`demo_xml_snapshot` + tests moved to `subsets::any::schema`.
+                        // xml has no dedicated codec of its own to move -- the real text codec
+                        // (`xml_document_from_text`/`xml_document_to_text`) already lives in
+                        // `subsets::any::schema::snapshot`, unmoved. xml is NOT one of stdio's 10
+                        // protected imperative plugin-root `engine::register()` calls, so no `engine`
+                        // shim remains — no external caller ever reached `xml::…::engine::` (confirmed
+                        // repo-wide).
                         #[path = "."]
                         pub mod examples {
                             #[path = "."]
@@ -677,18 +699,12 @@ pub mod artifacts {
                         }
                     }
                 }
-                pub mod engine {
-                    pub use super::subsets::any::engine::*;
-                }
             }
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
         pub mod schema {
             pub use super::standards::v1_0::subsets::any::schema::*;
-        }
-        pub mod engine {
-            pub use super::standards::v1_0::subsets::any::engine::*;
         }
         pub mod io {
             pub use super::standards::v1_0::subsets::any::io::*;
@@ -873,8 +889,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_commonmark {
-                #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // `MdEngine` (zero construction sites) deleted outright; its orphaned `register()`/
+                // `register_artifact_schema()`/`register_artifact_inferences()`/
+                // `register_pilot_languages()` (zero callers, superseded by `md::declaration()`)
+                // deleted outright too; `parse_markdown_blocks` + the block/inline parser moved to
+                // `subsets::any::io::import::deserializers`; `render_markdown_blocks` + the
+                // block/inline renderer moved to `subsets::any::io::export::serializers`;
+                // `io_registry` moved to `subsets::any::io`; `empty_md_snapshot`/`demo_md_snapshot`
+                // + tests moved to `subsets::any::schema`. md is NOT one of stdio's 10 protected
+                // imperative plugin-root `engine::register()` calls, so no `engine` shim remains —
+                // external callers (🔱️trinity's jack/rewrite, 📜️imperative) were repointed to the
+                // new `subsets::any::io::{import::deserializers,export::serializers}` paths.
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -949,6 +975,9 @@ pub mod artifacts {
                             pub mod import {
                                 #[path = "."]
                                 pub mod deserializers {
+                                    #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
@@ -970,6 +999,9 @@ pub mod artifacts {
                             pub mod export {
                                 #[path = "."]
                                 pub mod serializers {
+                                    #[path = "../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
@@ -997,9 +1029,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v_commonmark::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v_commonmark::engine::*;
-        }
         pub mod io {
             pub use super::standards::v_commonmark::subsets::any::io::*;
         }
@@ -1026,8 +1055,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_rfc1950 {
-                #[path = "../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // pure format algorithms (Adler32/BitIO/Huffman/LZ77) + `zlib_compress`/
+                // `zlib_decompress` + `encode_deflate_snapshot`/`decode_deflate_snapshot` +
+                // `io_registry` + `register_schema_specs` all moved into `subsets::any::io`
+                // (rule 6: deflate's Huffman/LZ77 is the clearest "keep with the codec" case);
+                // `empty_deflate_snapshot`/`demo_deflate_snapshot` moved to `subsets::any::schema`;
+                // `DeflateEngine` (zero construction sites repo-wide) deleted outright; tests moved
+                // into `subsets::any::io` (codec tests) and `subsets::any::schema::inferences`
+                // (conformance laws). `deflate` is NOT one of stdio's 10 protected imperative
+                // plugin-root calls (it already used the declarative `ArtifactDeclaration` builder)
+                // — every call site was repointed directly at the new locations, and no `engine`
+                // shim survives here since nothing references it anymore.
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -1150,9 +1189,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v_rfc1950::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v_rfc1950::engine::*;
-        }
         pub mod io {
             pub use super::standards::v_rfc1950::subsets::any::io::*;
         }
@@ -1179,8 +1215,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v2_0 {
-                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // CRC32 + CP437 + extra-fields + EOCD parsing + `decode_zip`/`encode_zip`/
+                // `sniff_zip_bytes`/`SniffConfidence`/`ZipError` all moved into `subsets::any::io`
+                // (rule 2: this is the codec); `empty_zip_snapshot`/`demo_zip_snapshot` moved to
+                // `subsets::any::schema`; `ZipEngine` (zero construction sites repo-wide) deleted
+                // outright; tests moved into `subsets::any::io` (codec tests) and
+                // `subsets::any::schema::inferences` (conformance laws). `zip` is NOT one of stdio's
+                // 10 protected imperative plugin-root calls (it already used the declarative
+                // `ArtifactDeclaration` builder) — every call site (incl. `📜️docx`/`📕️xlsx`/`🎞️pptx`'s
+                // own zip-wrap export paths and `💬️bcf`'s zip-container sniff) was repointed directly
+                // at the new locations, and no `engine` shim survives here since nothing references
+                // it anymore.
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -1342,9 +1388,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v2_0::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v2_0::engine::*;
-        }
         pub mod io {
             pub use super::standards::v2_0::subsets::any::io::*;
         }
@@ -1386,8 +1429,13 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ap214 {
-                #[path = "../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v_ap214::engine::*`/root `engine::*` path still resolves.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -1604,8 +1652,16 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v4 {
-                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v4::engine::*` path still resolves — including
+                // `register()`, deliberately left imperative and callable (ticket instruction: do
+                // not touch ifc's registration mechanism), called explicitly from this artifact's
+                // own root `engine` shim (which also glob-imports this standard as the default).
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -1748,8 +1804,16 @@ pub mod artifacts {
             }
             #[path = "."]
             pub mod v2x3 {
-                #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v2x3::engine::*` path still resolves — including
+                // `register()`, deliberately left imperative and callable (ticket instruction: do
+                // not touch ifc's registration mechanism), called explicitly from this artifact's
+                // own root `engine` shim below.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -2110,8 +2174,13 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v2_0 {
-                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v2_0::engine::*`/root `engine::*` path still resolves.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -2271,8 +2340,13 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v3_0 {
-                #[path = "../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v3_0::engine::*`/root `engine::*` path still resolves.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -2731,8 +2805,13 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ascii {
-                #[path = "../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v_ascii::engine::*`/root `engine::*` path still resolves.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -2907,8 +2986,13 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_1 {
-                #[path = "../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::io` (codecs/io_registry) and
+                // `subsets::any::schema` (document helpers); this stays an inline barrel so every
+                // existing `standards::v1_1::engine::*`/root `engine::*` path still resolves.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -3080,8 +3164,15 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_v3 {
-                #[path = "../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::io` (codec/register/io_registry —
+                // `register` stays reachable since bmp is one of stdio's 10 deliberate imperative
+                // `engine::register()` plugin-root calls) and `subsets::any::schema` (document
+                // helpers); this stays an inline barrel so every existing
+                // `standards::v_v3::engine::*`/root `engine::*` path still resolves.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -3232,8 +3323,15 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ac1018 {
-                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v_ac1018::engine::*` path still resolves. ac1018's
+                // own register()/schema/inference/language registration was confirmed dead
+                // repo-wide and deleted outright — only composer entries + document helpers moved.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -3352,8 +3450,14 @@ pub mod artifacts {
             }
             #[path = "."]
             pub mod v_ac1024 {
-                #[path = "../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v_ac1024::engine::*`/root `engine::*` path
+                // (aliased to THIS standard, the canonical one) still resolves.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -3700,8 +3804,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1_4 {
-                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -3865,8 +3967,6 @@ pub mod artifacts {
 
             #[path = "."]
             pub mod v1_7 {
-                #[path = "../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -4082,16 +4182,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v1_7::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v1_7::engine::*;
-            /// 📎 Registers BOTH standards' engines (1.7 canonical + 1.4 legacy) — a flat glob
-            /// re-export can't do this (two `register` fns of the same name would collide), so this
-            /// local definition shadows the glob-imported 1.7 one and calls both explicitly.
-            pub fn register() {
-                super::standards::v1_4::engine::register();
-                super::standards::v1_7::engine::register();
-            }
-        }
         pub mod io {
             pub use super::standards::v1_7::subsets::any::io::*;
         }
@@ -4134,8 +4224,15 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_jfif_1_01 {
-                #[path = "../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::io` (codec/io_registry) and
+                // `subsets::any::schema` (document helpers); this stays an inline barrel so every
+                // existing `standards::v_jfif_1_01::engine::*`/root `engine::*` path still resolves
+                // (`📸️remodel`'s own `jpg::engine::decode_jpg`/`encode_jpg`/`JpgError` consumer
+                // included).
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -4303,8 +4400,16 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v87a {
-                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::io` (codec/register/io_registry — `register`
+                // stays reachable since gif is one of stdio's 10 deliberate imperative
+                // `engine::register()` plugin-root calls) and `subsets::any::schema` (document
+                // helpers); this stays an inline barrel so every existing
+                // `standards::v87a::engine::*`/`gif::engine::*` path still resolves — including
+                // 89a's own `standards::v87a::engine as codec` cross-standard reuse import.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -4424,8 +4529,16 @@ pub mod artifacts {
 
             #[path = "."]
             pub mod v89a {
-                #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::io` (codec/register/io_registry — `register`
+                // stays reachable since gif is one of stdio's 10 deliberate imperative
+                // `engine::register()` plugin-root calls) and `subsets::any::schema` (document
+                // helpers); this stays an inline barrel so every existing
+                // `standards::v89a::engine::*`/`gif::engine::*` path still resolves — including
+                // `📚️examples/💃️dancing`'s own `standards::v89a::engine::decode_gif` call.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                }
                 #[path = "../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🧬️migrations/🦀️component.rs"]
                 pub mod migrations;
                 #[path = "."]
@@ -4603,8 +4716,14 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                        pub mod engine;
+                        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                        // real code now lives in `io` (codec/io_registry) and `schema` (document
+                        // helpers), both siblings within this same `any` module — this stays an
+                        // inline barrel so every existing `subsets::any::engine::*` path (reached
+                        // from the `v6_0::engine`/root `engine::*` barrels above it) still resolves.
+                        pub mod engine {
+                            pub use super::io::*;
+                        }
                         #[path = "."]
                         pub mod examples {
                             #[path = "."]
@@ -4991,8 +5110,19 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ecma_376 {
-                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // `PptxEngine` (zero construction sites) deleted outright; `register()`/
+                // `register_artifact_inferences()`/`register_pilot_languages()` were already orphaned
+                // (superseded by `pptx::declaration()`) and deleted outright too; `build_minimal_pptx`/
+                // `encode_pptx` + the `*_to_xml` mapping moved to `subsets::any::io::export::
+                // serializers`; `decode_pptx`/`sniff_pptx_bytes` + the `*_from_xml` mapping moved to
+                // `subsets::any::io::import::deserializers`; `PptxError` + shared OPC/XML constants +
+                // the minimal slideMaster/slideLayout/theme boilerplate moved to `subsets::any::io`;
+                // `io_registry` moved to `subsets::any::io`; `empty_pptx_snapshot`/`demo_pptx_snapshot`
+                // + tests moved to `subsets::any::schema`. pptx is NOT one of stdio's 10 protected
+                // imperative plugin-root `engine::register()` calls, so no `engine` shim remains —
+                // external callers only ever reached `PptxSnapshot`/`STDIO_PPTX_DOCUMENT_SCHEMA`
+                // (unaffected).
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -5067,6 +5197,9 @@ pub mod artifacts {
                             pub mod import {
                                 #[path = "."]
                                 pub mod deserializers {
+                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
@@ -5100,6 +5233,9 @@ pub mod artifacts {
                             pub mod export {
                                 #[path = "."]
                                 pub mod serializers {
+                                    #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
@@ -5166,9 +5302,6 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v_ecma_376::subsets::any::io::*;
         }
-        pub mod engine {
-            pub use super::standards::v_ecma_376::engine::*;
-        }
 
 
         #[path = "."]
@@ -5199,8 +5332,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ecma_376 {
-                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // `XlsxEngine` (zero construction sites) deleted outright; `register()`/
+                // `register_artifact_inferences()`/`register_pilot_languages()` were already orphaned
+                // (superseded by `xlsx::declaration()`) and deleted outright too; `build_minimal_xlsx`/
+                // `encode_xlsx` + the `*_to_xml` mapping moved to `subsets::any::io::export::
+                // serializers`; `decode_xlsx`/`sniff_xlsx_bytes` + the `*_from_xml` mapping moved to
+                // `subsets::any::io::import::deserializers`; `XlsxError` + shared OPC/XML constants +
+                // `column_letter`/`column_index` moved to `subsets::any::io`; `io_registry` moved to
+                // `subsets::any::io`; `empty_xlsx_snapshot`/`demo_xlsx_snapshot` + tests moved to
+                // `subsets::any::schema`. xlsx is NOT one of stdio's 10 protected imperative
+                // plugin-root `engine::register()` calls, so no `engine` shim remains — external
+                // callers only ever reached `XlsxSnapshot`/`STDIO_XLSX_DOCUMENT_SCHEMA` (unaffected).
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -5275,6 +5418,9 @@ pub mod artifacts {
                             pub mod import {
                                 #[path = "."]
                                 pub mod deserializers {
+                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
@@ -5308,6 +5454,9 @@ pub mod artifacts {
                             pub mod export {
                                 #[path = "."]
                                 pub mod serializers {
+                                    #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
@@ -5372,9 +5521,6 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v_ecma_376::subsets::any::io::*;
         }
-        pub mod engine {
-            pub use super::standards::v_ecma_376::engine::*;
-        }
 
 
         #[path = "."]
@@ -5405,8 +5551,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v2_1 {
-                #[path = "../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -5553,9 +5697,6 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v2_1::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v2_1::engine::*;
-        }
         pub mod io {
             pub use super::standards::v2_1::subsets::any::io::*;
         }
@@ -5582,16 +5723,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[path = "."]
-                pub mod engine {
-                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🧮️geometry/🦀️component.rs"]
-                    pub mod geometry;
-                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/⚙️engine/🧰️triples/🦀️component.rs"]
-                    pub mod triples;
-                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -5724,6 +5855,10 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
                                 pub mod text;
                             }
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🦀️component.rs"]
+                            pub mod geometry;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧰️triples/🦀️component.rs"]
+                            pub mod triples;
                         }
                     }
                     #[path = "."]
@@ -6866,8 +7001,6 @@ pub mod artifacts {
                     }
                     #[path = "."]
                     pub mod mesh {
-                        #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/⚙️engine/🦀️component.rs"]
-                        pub mod engine;
                         #[path = "."]
                         pub mod io {
                             #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs"]
@@ -8961,8 +9094,6 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod energyplus {
-                #[path = "../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -9050,8 +9181,13 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod iana {
-                #[path = "../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // `sniff_real_bytes`/`decode_tsv`/`encode_tsv` moved to `subsets::any::schema::snapshot`
+                // (mirrors `json`'s own `parse_json_text`/`write_json_text` placement — this artifact's
+                // codec is a pure text<->snapshot round trip, no cross-artifact bridging), `io_registry`
+                // moved to `subsets::any::io::io_registry`. `register()` is one of stdio's 10 protected
+                // imperative plugin-root calls; the root `📑️tsv/🦀️component.rs`'s OWN `register()` now
+                // covers it directly (`crate::artifacts::tsv::register()` — see stdio's plugin root).
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]

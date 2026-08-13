@@ -1,16 +1,20 @@
 //! note -> pdf
 //!
 //! 🩹️ `stdio_gap`/foreign-lag fix (not part of this wave's svg/dwg-pattern scope — see
-//! `w5b--report.md`): stdio's top-level `pdf::schema`/`pdf::engine`/`pdf::PdfSnapshot` shims were
-//! repointed from the old 1.4 `PageDoc{width,height,text}` stub to 1.7's real multi-page object
-//! graph (`PdfSnapshot.pages: Vec<PdfPage>`, `PdfPage{media_box:[f64;4],crop_box,rotate,text}`) —
-//! a concurrent stdio wave's S-6 canonicalization. `encode_pdf` also now returns
-//! `Result<_, PdfEngineError>` instead of `Result<_, String>`; `.to_string()`d at this leaf's own
-//! `String`-error boundary (`PdfEngineError` implements `Display`).
+//! `w5b--report.md`): stdio's top-level `pdf::schema`/`pdf::PdfSnapshot` shims were repointed
+//! from the old 1.4 `PageDoc{width,height,text}` stub to 1.7's real multi-page object graph
+//! (`PdfSnapshot.pages: Vec<PdfPage>`, `PdfPage{media_box:[f64;4],crop_box,rotate,text}`) — a
+//! concurrent stdio wave's S-6 canonicalization; `encode_pdf`/`empty_pdf_snapshot` now come
+//! directly from 1.7's own `subsets::any::io`/`subsets::any::schema::snapshot` (the `pdf::engine`
+//! shim they used to reach through is dissolved, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
+//! STATE-MACHINES). `encode_pdf` also now returns `Result<_, PdfEngineError>` instead of
+//! `Result<_, String>`; `.to_string()`d at this leaf's own `String`-error boundary
+//! (`PdfEngineError` implements `Display`).
 use crate::artifacts::note::schema::flatten_blocks;
 use crate::artifacts::note::io::note_document_bounds;
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
-use semio_s_plugin_stdio::artifacts::pdf::engine::{encode_pdf, empty_pdf_snapshot};
+use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf;
+use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::empty_pdf_snapshot;
 use semio_s_plugin_stdio::artifacts::pdf::schema::snapshot::PdfPage;
 pub fn register() {}
 pub fn serialize(snapshot: &NoteSnapshot) -> Result<semio_s_plugin_stdio::artifacts::pdf::PdfSnapshot, String> {

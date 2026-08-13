@@ -1,19 +1,28 @@
 //! 🧬️ Process3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
+use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, StockQuantity, Workshop, WorkshopMachine};
 use schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use serde::{Deserialize, Serialize};
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
 /// 🧬️ Full process3d artifact state across persistent, shared-ui, local-ui and preview classes.
+/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: mirrors `Process3dSnapshot`'s
+/// flattened `stock_*`/composed-child field shape exactly, so `to_snapshot`/`from_snapshot` stay a
+/// plain field-for-field copy.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dArtifact {
     #[state(persistent)] pub workshop: Workshop,
-    #[state(persistent)] pub stock: Stock,
-    #[state(persistent)] pub steps: Vec<ProcessStep>,
+    #[state(persistent)] pub stock_id: String,
+    #[state(persistent)] pub stock_label: String,
+    #[state(persistent)] pub stock_pose: Pose,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.brep")] pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.flow")] pub steps: store::ArtifactChild<SemioFlowSnapshot>,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.brep")] pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(persistent)] pub resolved_up_to: Option<usize>,
     #[state(shared_ui)] pub selected_id: Option<String>,
     #[state(shared_ui)] pub selected_face_id: Option<usize>,
@@ -41,10 +50,15 @@ pub struct Process3dArtifact {
 //#region 🔖️Conversions
 impl Default for Process3dArtifact {
     fn default() -> Self {
+        let base = crate::artifacts::process3d::empty_process3d_snapshot();
         Self {
-            workshop: Workshop::default(),
-            stock: Stock::default(),
-            steps: Vec::new(),
+            workshop: base.workshop,
+            stock_id: base.stock_id,
+            stock_label: base.stock_label,
+            stock_pose: base.stock_pose,
+            stock_solid: base.stock_solid,
+            steps: base.steps,
+            tool_solids: base.tool_solids,
             resolved_up_to: None,
             selected_id: None,
             selected_face_id: None,
@@ -75,8 +89,12 @@ impl Process3dArtifact {
     pub fn to_snapshot(&self) -> crate::artifacts::process3d::Process3dSnapshot {
         crate::artifacts::process3d::Process3dSnapshot {
             workshop: self.workshop.clone(),
-            stock: self.stock.clone(),
+            stock_id: self.stock_id.clone(),
+            stock_label: self.stock_label.clone(),
+            stock_pose: self.stock_pose.clone(),
+            stock_solid: self.stock_solid.clone(),
             steps: self.steps.clone(),
+            tool_solids: self.tool_solids.clone(),
             resolved_up_to: self.resolved_up_to,
         }
     }
@@ -85,8 +103,12 @@ impl Process3dArtifact {
     pub fn from_snapshot(snapshot: crate::artifacts::process3d::Process3dSnapshot) -> Self {
         Self {
             workshop: snapshot.workshop,
-            stock: snapshot.stock,
+            stock_id: snapshot.stock_id,
+            stock_label: snapshot.stock_label,
+            stock_pose: snapshot.stock_pose,
+            stock_solid: snapshot.stock_solid,
             steps: snapshot.steps,
+            tool_solids: snapshot.tool_solids,
             resolved_up_to: snapshot.resolved_up_to,
             ..Self::default()
         }
@@ -95,8 +117,12 @@ impl Process3dArtifact {
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::process3d::Process3dSnapshot) {
         self.workshop = snapshot.workshop;
-        self.stock = snapshot.stock;
+        self.stock_id = snapshot.stock_id;
+        self.stock_label = snapshot.stock_label;
+        self.stock_pose = snapshot.stock_pose;
+        self.stock_solid = snapshot.stock_solid;
         self.steps = snapshot.steps;
+        self.tool_solids = snapshot.tool_solids;
         self.resolved_up_to = snapshot.resolved_up_to;
     }
 }
@@ -842,27 +868,26 @@ pub fn next_step_id() -> String {
 /// (and pulling the cursor back if it sat past the removed step). Shared by the `🎮️commands/🪜️step` and
 /// `🎮️commands/🌍️world` command modules — building `Process3dMutation`s from an immutable
 /// `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
+///
+/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `steps` composes an
+/// `s.stdio.semio.flow` CHILD HANDLE now (no inline content, no resolver to read it back — see
+/// `ProcessWorkingScene`'s own doc comment), so `CreateStep`/`DeleteStep`'s `diff()` is a documented
+/// no-op (same "pending the child dispatch seam" bridge `📐️cad`'s per-object mutations use). These
+/// two builders can no longer compute a real cursor/index from `fixture.steps` (a handle has no
+/// `.len()`); `insert_step_mutations` still emits the (now no-op) `CreateStep` for call-site source
+/// compatibility but the cursor advance is honestly skipped rather than guessed.
 pub fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
     use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::schema::mutations::{change_cursor, create_step};
-    let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
-    vec![
-        Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: cursor, step }),
-        Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor + 1) }),
-    ]
+    use crate::artifacts::process3d::schema::mutations::create_step;
+    let _ = fixture;
+    vec![Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step })]
 }
 
 pub fn remove_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
     use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::schema::mutations::{change_cursor, delete_step};
-    let index = fixture.steps.iter().position(|step| step.id == id)?;
-    let mut operations = vec![Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id: id.to_string() })];
-    if let Some(cursor) = fixture.resolved_up_to {
-        if cursor > index {
-            operations.push(Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor - 1) }));
-        }
-    }
-    Some(operations)
+    use crate::artifacts::process3d::schema::mutations::delete_step;
+    let _ = fixture;
+    Some(vec![Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id: id.to_string() })])
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -875,14 +900,14 @@ mod tests {
     #[test]
     fn default_document_parses_timber_example() {
         let document = default_document();
-        assert_eq!(document.steps.len(), 4);
+        assert!(!document.steps.child_id.is_empty());
         assert!(document.resolved_up_to.is_none());
     }
 
     #[test]
     fn plate_document_parses_and_opens_mid_timeline() {
         let document = plate_document();
-        assert_eq!(document.steps.len(), 3);
+        assert!(!document.steps.child_id.is_empty());
         assert_eq!(document.resolved_up_to, Some(2));
     }
     //#endregion 🔖️ExampleFixtures

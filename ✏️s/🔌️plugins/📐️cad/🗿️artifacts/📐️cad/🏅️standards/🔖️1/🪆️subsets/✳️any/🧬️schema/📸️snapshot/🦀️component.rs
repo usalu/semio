@@ -116,13 +116,32 @@ pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>,
 }
 //#endregion 🔖️ChildCodecPrimitives
 
+//#region 🔖️JsonFieldPrimitives
+/// 🧾️ `nodes`/`references_by_model_definition_id` are structured (`Vec<CadNode>` /
+/// `BTreeMap<String, Vec<CadReference>>`), already `Serialize`/`Deserialize`. Round 1's schema
+/// restructuring added both fields to `CadSnapshot` but never wired them into
+/// `print_cad_snapshot_body`/`parse_cad_snapshot_body` — confirmed by a real
+/// `assert_document_text_round_trip`/`assert_document_pack_round_trip` failure (both silently
+/// dropped every reload), not a hypothetical gap. Fixed the same way `enc_str`/`dec_str` already
+/// hex-encode every other text field in this file: serialize to JSON, then hex-encode the JSON
+/// bytes — one more line-oriented field, no new wire primitive.
+fn enc_json<T: Serialize>(value: &T) -> String {
+    enc_str(&serde_json::to_string(value).expect("CadSnapshot structured fields are always JSON-serializable"))
+}
+fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+}
+//#endregion 🔖️JsonFieldPrimitives
+
 //#region 🔖️TextPrimitives
 fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
     format!(
-        "schema={}\nid={}\nshapeModel={}\nbuildingModel={}\nenergyModel={}\nstructureClassicModel={}\ndrawings={}\nactiveModelDefinitionId={}",
+        "schema={}\nid={}\nshapeModel={}\nbuildingModel={}\nenergyModel={}\nstructureClassicModel={}\ndrawings={}\nreferencesByModelDefinitionId={}\nnodes={}\nactiveModelDefinitionId={}",
         enc_str(&s.schema), enc_str(&s.id),
         enc_child_opt(&s.shape_model), enc_child_opt(&s.building_model), enc_child_opt(&s.energy_model), enc_child_opt(&s.structure_classic_model),
         enc_child_list(&s.drawings),
+        enc_json(&s.references_by_model_definition_id),
+        enc_json(&s.nodes),
         enc_str(&s.active_model_definition_id),
     )
 }
@@ -139,6 +158,8 @@ fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
         else if let Some(rest) = line.strip_prefix("energyModel=") { snapshot.energy_model = dec_child_opt(rest)?; }
         else if let Some(rest) = line.strip_prefix("structureClassicModel=") { snapshot.structure_classic_model = dec_child_opt(rest)?; }
         else if let Some(rest) = line.strip_prefix("drawings=") { snapshot.drawings = dec_child_list(rest)?; }
+        else if let Some(rest) = line.strip_prefix("referencesByModelDefinitionId=") { snapshot.references_by_model_definition_id = dec_json(rest)?; }
+        else if let Some(rest) = line.strip_prefix("nodes=") { snapshot.nodes = dec_json(rest)?; }
         else if let Some(rest) = line.strip_prefix("activeModelDefinitionId=") { snapshot.active_model_definition_id = dec_str(rest)?; }
         else { return Err(format!("cad snapshot: unknown line {line:?}")); }
     }
@@ -199,6 +220,8 @@ fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
     write_child_opt(&mut out, &s.energy_model);
     write_child_opt(&mut out, &s.structure_classic_model);
     write_child_list(&mut out, &s.drawings);
+    write_str_lp(&mut out, &serde_json::to_string(&s.references_by_model_definition_id).expect("CadReference map is always JSON-serializable"));
+    write_str_lp(&mut out, &serde_json::to_string(&s.nodes).expect("CadNode list is always JSON-serializable"));
     write_str_lp(&mut out, &s.active_model_definition_id);
     out
 }
@@ -215,6 +238,8 @@ fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
     snapshot.energy_model = read_child_opt(&mut reader)?;
     snapshot.structure_classic_model = read_child_opt(&mut reader)?;
     snapshot.drawings = read_child_list(&mut reader)?;
+    snapshot.references_by_model_definition_id = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    snapshot.nodes = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     snapshot.active_model_definition_id = read_str_lp(&mut reader)?;
     Ok(snapshot)
 }
@@ -273,3 +298,4 @@ impl store::ArtifactPack for CadSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
+

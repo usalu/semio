@@ -38,12 +38,12 @@ mod tests {
 
     #[test]
     fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
-        store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 2.75, imported_features_json: String::new() });
+        store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 2.75, imported_features_json: String::new(), ..Default::default() });
     }
 
     #[test]
     fn gis3d_terrain_document_dsl_round_trips_imported_features_json() {
-        store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into() });
+        store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into(), ..Default::default() });
     }
 
     #[test]

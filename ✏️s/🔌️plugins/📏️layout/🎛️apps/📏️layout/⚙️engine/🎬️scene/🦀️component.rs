@@ -25,7 +25,7 @@ use sha2::{Digest, Sha256};
 use zip::write::SimpleFileOptions;
 use zip::ZipWriter;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioRgba, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
     DrawCanvas, DrawLayer, DrawNode, DrawStyle, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
 };

@@ -5,7 +5,7 @@
 //! child handle into its target snapshot is a cross-artifact read, out of scope for a pure
 //! snapshot->inference fold).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use serde::{Deserialize, Serialize};
 
@@ -35,8 +35,8 @@ pub fn compute_semio_object_composition(snapshot: &SemioObjectSnapshot) -> Semio
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioQuaternion;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA;
 
     fn dialect(subset: &str) -> store::os_io::ArtifactDialect {

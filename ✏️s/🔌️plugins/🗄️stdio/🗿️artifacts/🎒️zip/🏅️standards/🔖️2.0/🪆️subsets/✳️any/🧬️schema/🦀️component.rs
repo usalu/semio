@@ -1,7 +1,7 @@
 //! 🧬️ ZipArtifact schema — full artifact state.
 
-use crate::artifacts::zip::schema::snapshot::ZipEntry;
-use crate::artifacts::zip::ZipSnapshot;
+use crate::artifacts::zip::schema::snapshot::{ZipEntry, ZipCompressionMethod, ZipExtraField};
+use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -56,6 +56,74 @@ impl ZipArtifact {
     }
 }
 //#endregion Conversions
+
+//#region 🔖️DocumentHelpers
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
+/// MACHINES) — mirrors `png`'s own `empty_png_snapshot`/`demo_png_snapshot` placement beside the
+/// artifact struct.
+/// 🌱 Empty persisted snapshot.
+pub fn empty_zip_snapshot() -> ZipSnapshot {
+    ZipSnapshot::default()
+}
+
+/// 📦️ P2-P2: the demo `stdio.zip` document — two real entries (one `Stored`, one `Deflate`),
+/// each with extra fields, timestamps (one carrying a real Info-ZIP `UT` mtime, the other without
+/// — exercising the tri-state at the fixture level too), distinct attrs/comments, plus an
+/// archive-level comment. The single source of truth for
+/// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally
+/// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
+/// `💡️inferences/🦀️component.rs`) and for this artifact's own `protocol_walk_law` (walked against
+/// the REAL `📸️snapshot/💾️binary/📡️component.protocol.semio` — needs at least one central-directory
+/// entry for the `repeat`/`backward`/`jump` construct to have real bytes to walk).
+pub fn demo_zip_snapshot() -> ZipSnapshot {
+    ZipSnapshot {
+        schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
+        entries: vec![
+            ZipEntry {
+                name: "readme.txt".into(),
+                data: b"hello from stdio.zip".to_vec(),
+                method: ZipCompressionMethod::Stored,
+                dos_date: 0x5678,
+                dos_time: 0x1234,
+                unix_mtime: Some(1_700_000_000),
+                // `encode_zip` always sets bit 11 (UTF-8) and clears bit 3 (data descriptor)
+                // unconditionally — this fixture's `flags` is already in that post-round-trip
+                // normal form (matching `encode_full_metadata_round_trip`'s own documented
+                // pattern) so `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` holds exactly.
+                flags: 0x0800,
+                version_made_by: 20,
+                version_needed: 20,
+                internal_attrs: 0,
+                external_attrs: 0o100644 << 16,
+                // Real Info-ZIP `UT` (0x5455) extended-timestamp payload: mtime-present flag byte
+                // + LE i32 seconds — this is what `parse_ut_mtime` actually decodes back into
+                // `unix_mtime` above (a raw, non-UT-shaped payload would silently round-trip to a
+                // DIFFERENT `unix_mtime`, exactly the bug this fixture must avoid).
+                local_extra: vec![ZipExtraField { id: 0x5455, payload: { let mut p = vec![0x01u8]; p.extend_from_slice(&1_700_000_000i32.to_le_bytes()); p } }],
+                central_extra: vec![],
+                comment: "a readme".into(),
+            },
+            ZipEntry {
+                name: "data/poem.txt".into(),
+                data: b"deflate this small poem, it should compress reasonably well well well".to_vec(),
+                method: ZipCompressionMethod::Deflate,
+                dos_date: 0x1111,
+                dos_time: 0x2222,
+                unix_mtime: None,
+                flags: 0x0800,
+                version_made_by: 63,
+                version_needed: 20,
+                internal_attrs: 1,
+                external_attrs: 0o100755 << 16,
+                local_extra: vec![],
+                central_extra: vec![ZipExtraField { id: 9, payload: vec![9, 9] }],
+                comment: String::new(),
+            },
+        ],
+        comment: "demo archive comment".into(),
+    }
+}
+//#endregion 🔖️DocumentHelpers
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.zip`.
@@ -204,7 +272,7 @@ pub mod derived_analysis {
             // constant. `AnalyzeSource::Text` is the hex-envelope DSL form, not raw container bytes,
             // so it can't be magic-sniffed the same way — treated as low confidence here (the DSL
             // envelope preamble, not this sniff, is what actually recognizes it).
-            use crate::artifacts::zip::engine::{sniff_zip_bytes, SniffConfidence};
+            use crate::artifacts::zip::standards::v2_0::subsets::any::io::{sniff_zip_bytes, SniffConfidence};
             match source {
                 AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {
                     SniffConfidence::High => IoConfidence::High,

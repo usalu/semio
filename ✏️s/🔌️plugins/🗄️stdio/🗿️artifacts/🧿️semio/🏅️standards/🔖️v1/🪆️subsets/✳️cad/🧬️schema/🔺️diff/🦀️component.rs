@@ -10,8 +10,8 @@
 //! replaced, never sub-diffed — same treatment `BcfCamera`/`XlsxCellValue` get), so
 //! `CadEntityRecordDiff.entity` is a plain `Option<CadEntity>`, not a nested diff type.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{

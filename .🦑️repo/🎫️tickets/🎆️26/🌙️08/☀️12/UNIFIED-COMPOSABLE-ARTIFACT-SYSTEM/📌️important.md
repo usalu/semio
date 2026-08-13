@@ -130,6 +130,14 @@ Any new or restructured mutation facet lands inside the SEMANTIC-MUTATIONS-OVERH
 - **`bind`/`unbind`, not `connect`/`disconnect`** — a link fills a *named slot* on the parent as a handle; it is not an edge row in an edge collection. The taxonomy's rule: "a parameterization gets `bind`/`unbind` instead."
 - **`change-link-pin`, not `update-link-pin`** — `update` is reserved for an inseparable ≥2-field facet rewritten atomically. Re-pinning sets the single `pin` field while `target`/`role` stay put, which is exactly `change` (record `ChangedLinkPin`).
 
+## W4 fan-out tracking (orchestrator-maintained)
+
+Batch 1 dispatched 2026-08-13: `process` (→C:flow,brep), `fem` (→ONE fem-core, C:mesh,table R:brep,drawing — largest single migration in the fan-out, partial completion explicitly sanctioned if the full 11-type consolidation can't land in one pass, see the agent brief), `gis` (→terrain C:mesh, map C:drawing+image+value), `flow` (→C:flow, canonical editor). Reports land at `📓️wave4-reports/<plugin>-report.md`.
+
+**`remodel` was skipped for batch 1** — found with a live uncommitted edit (`🎛️apps/📸️remodel/⚙️engine/🎥️video/🦀️component.rs`, an `engine as X` → `subsets::any::io as X` import-path fix) matching ticket #2553's in-flight `⚙️engine`-dissolution fan-out pattern, not this ticket's own work. Do not dispatch a fan-out agent into `remodel` until that settles — re-check `git diff --stat -- ✏️s/🔌️plugins/📸️remodel` first.
+
+Remaining batches per `📓️design-full-plan.md` §"Execution": B (sequence, imperative, mathematical, dag, reasoning, trinity, norm — remodel moved here pending #2553), C (raster, shooting, note, animate, playbook, forms, layout), D (puzzle, block, sourcing, architect, energy, vcs, space, demonstrator LAST). **`demonstrator` and `note` are confirmed NOT SMO-clear** (see the SMO coordination section above) — do not dispatch either until re-checked with the SMO session directly.
+
 ## Report shape (every wave)
 
 Follow the shape of SMO's `📓️wave2-reports/norm-en1994-1-any-report.md` as the reference: what changed, files touched, verification commands + results, `## sharedFileRequests` (file, region, reason, patch file path), `## Concurrent-churn observations`, honest pass/fail — never claim a test passed without running it.

@@ -22,6 +22,7 @@ thiserror = { workspace = true }
 ts-rs = { workspace = true, optional = true }
 ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-hash = { path = "../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-mesh-engine = { path = "../../🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 # 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
 semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 

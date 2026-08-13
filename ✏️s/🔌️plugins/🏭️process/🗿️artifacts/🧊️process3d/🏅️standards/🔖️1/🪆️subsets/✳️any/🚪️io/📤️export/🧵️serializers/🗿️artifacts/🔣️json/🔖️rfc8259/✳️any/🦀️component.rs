@@ -7,7 +7,7 @@ pub fn register() {}
 pub fn serialize(snapshot: &Process3dSnapshot) -> Result<JsonSnapshot, store::TextError> {
     Ok(JsonSnapshot {
         schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
-        value: serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?,
+        value: serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?.into(),
     })
 }
 

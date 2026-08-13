@@ -6,7 +6,7 @@
 
 pub use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{
     change_stroke_color::mutation::ChangeStrokeColor, change_stroke_width::mutation::ChangeStrokeWidth, create_layer::mutation::CreateLayer, create_node::mutation::CreateNode,

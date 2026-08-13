@@ -297,7 +297,7 @@ impl Default for EpwSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-// 🔗 Real EnergyPlus Weather File text codec lives in `⚙️engine::decode_epw`/`encode_epw`
+// 🔗 Real EnergyPlus Weather File text codec lives in `🚪️io::decode_epw`/`encode_epw`
 // (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html).
 impl store::ArtifactDsl for EpwSnapshot {
     const EXTENSION: &'static str = "epw";
@@ -308,11 +308,11 @@ impl store::ArtifactDsl for EpwSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::epw::standards::energyplus::engine::decode_epw(body)
+        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(body)
             .map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = crate::artifacts::epw::standards::energyplus::engine::encode_epw(self);
+        let body = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -325,7 +325,7 @@ impl store::ArtifactDsl for EpwSnapshot {
 impl store::ArtifactPack for EpwSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::epw::standards::energyplus::engine::encode_epw(self).into_bytes();
+        let raw = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -345,7 +345,7 @@ impl store::ArtifactPack for EpwSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        crate::artifacts::epw::standards::energyplus::engine::decode_epw(&text).map_err(store::PackError::Schema)
+        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(&text).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -7,11 +7,14 @@
   },
   "include": [
     "📦️index.ts",
-    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🟦️index.ts",
     "../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx",
-    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧱️brepjs/🟦️component.ts",
-    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔍️query/🟦️component.ts",
-    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎰️stately/🟦️component.ts",
-    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏃️runtime/🟦️component.ts"
+    "../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts",
+    "../../🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts",
+    "../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts",
+    "../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts",
+    "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts",
+    "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts",
+    "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts",
+    "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts"
   ]
 }

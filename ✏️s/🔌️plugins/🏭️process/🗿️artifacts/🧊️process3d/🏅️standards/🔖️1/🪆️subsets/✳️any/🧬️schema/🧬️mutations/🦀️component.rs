@@ -84,7 +84,7 @@ pub enum Process3dMutation {
 mod tests {
     use super::*;
     use protocol::SemanticMutation;
-    use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, WorkshopMachine};
+    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, WorkshopMachine};
     use change_machine_icon::mutation::ChangeMachineIcon;
     use change_step_enabled::mutation::ChangeStepEnabled;
     use change_step_origin::mutation::ChangeStepOrigin;
@@ -104,7 +104,7 @@ mod tests {
     use create_step::mutation::CreateStep;
 
     fn cut_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
+        ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
     fn saw_machine(id: &str) -> WorkshopMachine {
@@ -138,7 +138,7 @@ mod tests {
             Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: "machine-1".into(), new_capabilities: vec![] }),
             Process3dMutation::MoveStock(MoveStock { new_pose: Pose { position: [1.0, 0.0, 0.0], ..Pose::default() } }),
             Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }),
-            Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: SolidSpec::Sphere { radius: 0.5 } }),
+            Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })) }),
             Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }),
         ]
     }
@@ -152,69 +152,73 @@ mod tests {
         assert_eq!(<Process3dMutation as protocol::SemanticMutation<Process3dSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
+    //#region 🔖️StepMutationsAreDocumentedNoOps
+    /// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `steps` composes an
+    /// `s.stdio.semio.flow` CHILD HANDLE now — no inline `Vec<ProcessStep>` for these 7 mutations
+    /// to edit, and no `LinkResolver` to read the child's content back through (see
+    /// `🌱create-step/🔺️diff/🦀️component.rs`'s doc comment). Each is now a REAL, honest no-op:
+    /// `diff()` returns `Process3dDiff::default()`, `inverse()` returns `Vec::new()` — the
+    /// sanctioned `MutationKind::inverse` contract for "nothing changed, nothing to undo". These
+    /// tests assert exactly that, matching `📐️cad`'s own precedent
+    /// (`add_object_action_is_a_documented_no_op_pending_the_child_dispatch_seam`).
     #[test]
-    fn create_step_round_trips() {
+    fn create_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
-        let after = round_trip(&base, &Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-9") }));
-        assert!(after.steps.iter().any(|step| step.id == "step-9"));
+        let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-9") });
+        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn delete_step_round_trips() {
-        let mut base = empty_process3d_snapshot();
-        base.steps.push(cut_step("step-1"));
-        let after = round_trip(&base, &Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() }));
-        assert!(after.steps.is_empty());
-    }
-
-    #[test]
-    fn inverse_delete_step_when_missing_returns_empty() {
+    fn delete_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
-        assert!(Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() }).inverse(&base).is_empty());
+        let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
+        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn rename_step_round_trips() {
-        let mut base = empty_process3d_snapshot();
-        base.steps.push(cut_step("step-1"));
-        let after = round_trip(&base, &Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Renamed".into() }));
-        assert_eq!(after.steps[0].label, "Renamed");
+    fn rename_step_diff_is_a_documented_no_op() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Renamed".into() });
+        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn change_step_enabled_round_trips() {
-        let mut base = empty_process3d_snapshot();
-        base.steps.push(cut_step("step-1"));
-        let after = round_trip(&base, &Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false }));
-        assert!(!after.steps[0].enabled);
+    fn change_step_enabled_diff_is_a_documented_no_op() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false });
+        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn change_step_origin_round_trips() {
-        let mut base = empty_process3d_snapshot();
-        base.steps.push(cut_step("step-1"));
+    fn change_step_origin_diff_is_a_documented_no_op() {
+        let base = empty_process3d_snapshot();
         let origin = StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() };
-        let after = round_trip(&base, &Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "step-1".into(), new_origin: Some(origin.clone()) }));
-        assert_eq!(after.steps[0].origin, Some(origin));
+        let mutation = Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "step-1".into(), new_origin: Some(origin) });
+        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn replace_step_measure_round_trips() {
-        let mut base = empty_process3d_snapshot();
-        base.steps.push(cut_step("step-1"));
+    fn replace_step_measure_diff_is_a_documented_no_op() {
+        let base = empty_process3d_snapshot();
         let new_measure = ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() };
-        let after = round_trip(&base, &Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "step-1".into(), new_measure: new_measure.clone() }));
-        assert_eq!(after.steps[0].measure, new_measure);
+        let mutation = Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "step-1".into(), new_measure });
+        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert!(mutation.inverse(&base).is_empty());
     }
 
     #[test]
-    fn reorder_steps_round_trips() {
-        let mut base = empty_process3d_snapshot();
-        base.steps.push(cut_step("a"));
-        base.steps.push(cut_step("b"));
-        let after = round_trip(&base, &Process3dMutation::ReorderSteps(ReorderSteps { id: "b".into(), to_index: 0 }));
-        assert_eq!(after.steps.iter().map(|step| step.id.clone()).collect::<Vec<_>>(), vec!["b".to_string(), "a".to_string()]);
+    fn reorder_steps_diff_is_a_documented_no_op() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::ReorderSteps(ReorderSteps { id: "b".into(), to_index: 0 });
+        assert_eq!(mutation.diff(&base), Process3dDiff::default());
+        assert!(mutation.inverse(&base).is_empty());
     }
+    //#endregion 🔖️StepMutationsAreDocumentedNoOps
 
     #[test]
     fn create_machine_round_trips() {
@@ -266,21 +270,22 @@ mod tests {
         let base = empty_process3d_snapshot();
         let new_pose = Pose { position: [1.0, 2.0, 3.0], ..Pose::default() };
         let after = round_trip(&base, &Process3dMutation::MoveStock(MoveStock { new_pose: new_pose.clone() }));
-        assert_eq!(after.stock.pose, new_pose);
+        assert_eq!(after.stock_pose, new_pose);
     }
 
     #[test]
     fn change_stock_label_round_trips() {
         let base = empty_process3d_snapshot();
         let after = round_trip(&base, &Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }));
-        assert_eq!(after.stock.label, "Beam");
+        assert_eq!(after.stock_label, "Beam");
     }
 
     #[test]
     fn replace_stock_solid_round_trips() {
         let base = empty_process3d_snapshot();
-        let after = round_trip(&base, &Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: SolidSpec::Sphere { radius: 0.5 } }));
-        assert_eq!(after.stock.solid, SolidSpec::Sphere { radius: 0.5 });
+        let new_handle = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 }));
+        let after = round_trip(&base, &Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: new_handle.clone() }));
+        assert_eq!(after.stock_solid, new_handle);
     }
 
     #[test]

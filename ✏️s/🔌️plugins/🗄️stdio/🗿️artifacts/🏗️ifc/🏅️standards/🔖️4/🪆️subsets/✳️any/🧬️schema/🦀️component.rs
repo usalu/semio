@@ -4,7 +4,7 @@
 //! verbatim) — now mirrors `IfcSnapshot`'s own typed `header`/`entities` fields.
 
 use crate::artifacts::ifc::schema::snapshot::{IfcHeader, IfcEntity};
-use crate::artifacts::ifc::IfcSnapshot;
+use crate::artifacts::ifc::{IfcMutation, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -221,3 +221,143 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: IfcComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
+/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
+/// `crate::artifacts::ifc::standards::v4::engine::empty_ifc_snapshot` through the `engine` barrel
+/// shim, and (via the root `crate::artifacts::ifc::engine` shim, glob-imported from v4) as
+/// `crate::artifacts::ifc::engine::empty_ifc_snapshot` too.
+pub fn empty_ifc_snapshot() -> IfcSnapshot {
+    IfcSnapshot::default()
+}
+
+/// 📄️ P2-FG1: the demo `stdio.ifc` document — a real, minimal IFC4 exchange structure (raw HEADER
+/// value tuples + three real entities incl. an `IFCOWNERHISTORY` reference chain). The single
+/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`
+/// (both are literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
+/// `fixture_honesty_law`, now in `../🚪️io/🦀️component.rs`) and for `mutations::
+/// demo_mutation_cases()`/`diff::demo_diff_cases()`.
+pub fn demo_ifc_snapshot() -> IfcSnapshot {
+    use crate::artifacts::ifc::schema::snapshot::{IfcEntity as _IfcEntity, IfcHeader as _IfcHeader, IfcValue};
+    IfcSnapshot {
+        schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
+        header: _IfcHeader {
+            file_description: vec![IfcValue::Aggregate(vec![]), IfcValue::String("2;1".into())],
+            file_name: vec![
+                IfcValue::String("semio.ifc".into()),
+                IfcValue::String("2026-08-11T00:00:00".into()),
+                IfcValue::Aggregate(vec![IfcValue::String("Ueli".into())]),
+                IfcValue::Aggregate(vec![IfcValue::String("semio".into())]),
+                IfcValue::String("semio".into()),
+                IfcValue::String("".into()),
+                IfcValue::String("".into()),
+            ],
+            file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])],
+        },
+        entities: vec![
+            _IfcEntity { id: 1, name: "IFCPROJECT".into(), args: vec![IfcValue::String("gid-project".into()), IfcValue::Reference(2), IfcValue::String("Demo Project".into())], complex: Vec::new() },
+            _IfcEntity { id: 2, name: "IFCOWNERHISTORY".into(), args: vec![IfcValue::Unset, IfcValue::Integer(0)], complex: Vec::new() },
+        ],
+    }
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🔖️Register
+/// 🗂️ **Deliberately left imperative and callable** (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-
+/// APP-STATE-MACHINES, per the ticket's own explicit instruction: "leave ifc's registration
+/// alone" — see the artifact root `🦀️component.rs`'s own doc comment for why `ArtifactDeclaration`
+/// structurally cannot hold both `4`'s and `2x3`'s independent descriptors/codecs at once). Only
+/// physically dissolved out of `⚙️engine`; reached as `crate::artifacts::ifc::standards::v4::
+/// engine::register()` through the `engine` barrel shim below, which is exactly the path
+/// `📦️glue.rs`'s root `ifc::engine::register()` override calls explicitly (alongside `v2x3::
+/// engine::register()`) — and, since the root shim's `pub use super::standards::v4::engine::*;`
+/// glob otherwise re-exports this standard, also the plugin root's own `crate::artifacts::ifc::
+/// engine::register()` entry point before that override's `fn register()` shadows it.
+///
+/// Registers codecs and the artifact schema descriptor.
+pub fn register() {
+    crate::artifacts::ifc::io_registry::register();
+    register_artifact_schema();
+    register_artifact_inferences();
+    register_pilot_languages();
+    store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA));
+}
+
+/// 📌️ P2-FG1: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's
+/// json exemplar — `stdio.ifc`/`.op`/`.diff`/`.pack`/`.spr`, all `dsl::passthrough_hooks`. `diff`'s
+/// `protocol` slot stays `None` matching the exemplar's own shape exactly (the 5-role scheme has no
+/// dedicated "diff binary" role even though `🔺️diff/💾️binary/📡️component.protocol.semio` is a
+/// real, conformance-tested file — its binary form is exercised directly by `protocol_walk_law`
+/// below, just not wired through a 6th `LanguageRole`).
+pub fn register_pilot_languages() {
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc",
+        extension: Some("ifc"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(crate::artifacts::ifc::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::ifc::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::ifc::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::ifc::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.ifc"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(crate::artifacts::ifc::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::ifc::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::artifacts::ifc::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::ifc::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.ifc.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(crate::artifacts::ifc::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::artifacts::ifc::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.ifc.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::ifc::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::ifc::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.ifc.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(crate::artifacts::ifc::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::artifacts::ifc::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.ifc.spr"),
+    });
+}
+
+/// 📌️ P2-FG1: `dsl::registry::register_schema_spec` is intentionally NOT called here — `IfcValue`
+/// (a genuine data-carrying enum) has no `DslField` impl, so no `fn() -> RecordSpec` exists for
+/// `IfcSnapshot`/`IfcDiff` at all (real `cargo check` confirmed, see `🔺️diff/🦀️component.rs`'s own
+/// doc comment) — filed as the `register-schema-spec-needs-recordspec` mechanism gap rather than
+/// fabricating an unrelated spec, per the recipe's own instruction.
+
+/// 📌️ Registers schema leaves for `s.stdio.ifc`.
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::ifc::schema::ifc_artifact_schema_descriptor());
+}
+
+/// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to `register_artifact_schema()` (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor());
+}
+//#endregion 🔖️Register

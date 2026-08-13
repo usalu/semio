@@ -6,26 +6,27 @@ use crate::artifacts::flow::schema::mutations::connect_widgets::mutation::Connec
 use crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget;
 use crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets;
 use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::FlowSnapshot;
+use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
 use flow::FlowLayoutEntry;
 use protocol::Identified;
 
 use super::mutation::DeleteWidget;
 
 pub fn inverse(payload: &DeleteWidget, base: &FlowSnapshot) -> Vec<FlowMutation> {
-    let Some(index) = base.widgets.iter().position(|widget| widget.id() == &payload.id) else {
+    let scene = flow_working_scene(base);
+    let Some(index) = scene.widgets.iter().position(|widget| widget.id() == &payload.id) else {
         return Vec::new();
     };
-    let widget = base.widgets[index].clone();
+    let widget = scene.widgets[index].clone();
     let mut inverses = vec![FlowMutation::CreateWidget(CreateWidget { index, widget })];
 
-    if let Some(layout) = base.layout.get(&payload.id) {
+    if let Some(layout) = scene.layout.get(&payload.id) {
         inverses.push(FlowMutation::MoveWidgets(MoveWidgets {
             entries: vec![FlowLayoutEntry { id: payload.id.clone(), layout: Some(layout.clone()) }],
         }));
     }
 
-    let severed_indices: Vec<usize> = base
+    let severed_indices: Vec<usize> = scene
         .synapses
         .iter()
         .enumerate()
@@ -33,7 +34,7 @@ pub fn inverse(payload: &DeleteWidget, base: &FlowSnapshot) -> Vec<FlowMutation>
         .map(|(index, _)| index)
         .collect();
     for &synapse_index in severed_indices.iter().rev() {
-        let synapse = &base.synapses[synapse_index];
+        let synapse = &scene.synapses[synapse_index];
         inverses.push(FlowMutation::ConnectWidgets(ConnectWidgets {
             index: synapse_index,
             id: synapse.id.clone(),

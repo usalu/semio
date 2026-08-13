@@ -26,8 +26,8 @@
 //! `SlideShape` nor (out-of-scope) `document::DocBlock` implements `Default`. `split_top_level`/
 //! `strip_brackets` (plain functions, no generic-bound issue) ARE reused from the shared module.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
 /// (`ws-codec-document-report.md`), re-exported here so both this file's own leaf encoders AND

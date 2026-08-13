@@ -12,7 +12,7 @@
 //! independently hit by gltf/pptx/docx/bcf/xlsx) — `IndexedTripleDiff<D,T>` is a bare generic with
 //! no `DslField` impl of its own.
 
-use crate::artifacts::semio::standards::v1::engine::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{
     SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag,
 };

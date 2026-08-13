@@ -42,20 +42,29 @@ mod tests {
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
     fn jack_snapshot() -> WriterSnapshot {
-        WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+        crate::artifacts::writer::writer_snapshot_with_text(
+            "writer.document",
+            "jack",
+            "jack",
+            "writer://jack",
+            "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
+        )
     }
 
     /// 🧬️ Reaches `jack_snapshot()` from `empty_writer_snapshot()` via the semantic vocabulary —
     /// `SetSnapshot` (whole-document replace) is banned, so what used to be one mutation is now the
     /// sequence of scalar mutations that actually differ between the two documents (`schema` is
-    /// identical in both, so it gets no mutation).
+    /// identical in both, so it gets no mutation). `EditText` mints its `document` handle from
+    /// `base.id`/`base.language_id` at apply time, so it must run LAST, after `RenameWriter`/
+    /// `ChangeLanguage` have already landed — otherwise its handle would target the wrong owner id.
     fn jack_mutations() -> Vec<WriterMutation> {
         let jack = jack_snapshot();
+        let text = crate::artifacts::writer::writer_text(&jack);
         vec![
             WriterMutation::RenameWriter(crate::artifacts::writer::schema::mutations::RenameWriter { new_id: jack.id }),
             WriterMutation::ChangeLanguage(crate::artifacts::writer::schema::mutations::ChangeLanguage { new_language_id: jack.language_id }),
             WriterMutation::ChangeUri(crate::artifacts::writer::schema::mutations::ChangeUri { new_uri: jack.uri }),
-            WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: jack.text }),
+            WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text }),
         ]
     }
 

@@ -10,100 +10,9 @@ pub use crate::artifacts::flow::schema::diff::*;
 
 use crate::artifacts::flow::schema::FlowArtifact;
 use crate::artifacts::flow::FlowSnapshot;
-use flow::{SynapseSpec, Widget};
-use protocol::{Identified, MutationDiff, Patchable};
+use protocol::MutationDiff;
 
 //#region 🔹Apply
-/// Applies an identified-collection delta to a widget list.
-pub fn apply_widgets_delta(items: &[Widget], delta: &FlowWidgetsDelta) -> Vec<Widget> {
-    let mut next = items.to_vec();
-    for id in &delta.removed {
-        next.retain(|item| item.id() != id);
-    }
-    for item in &delta.added {
-        next.push(item.clone());
-    }
-    for entry in &delta.patched {
-        if let Some(item) = next.iter_mut().find(|item| item.id() == &entry.id) {
-            item.apply_patch(&entry.patch);
-        }
-    }
-    if let Some(order) = &delta.reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> =
-            next.into_iter().map(|item| (item.id().clone(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
-/// Applies an identified-collection delta to a synapse list.
-pub fn apply_synapses_delta(items: &[SynapseSpec], delta: &FlowSynapsesDelta) -> Vec<SynapseSpec> {
-    let mut next = items.to_vec();
-    for id in &delta.removed {
-        next.retain(|item| &item.id != id);
-    }
-    for item in &delta.added {
-        next.push(item.clone());
-    }
-    for entry in &delta.patched {
-        if let Some(item) = next.iter_mut().find(|item| item.id == entry.id) {
-            item.apply_patch(&entry.patch);
-        }
-    }
-    if let Some(order) = &delta.reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> =
-            next.into_iter().map(|item| (item.id.clone(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
-fn absorb_widgets_delta(target: &mut Option<FlowWidgetsDelta>, incoming: Option<FlowWidgetsDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                if src.reordered.is_some() {
-                    dst.reordered = src.reordered;
-                }
-            }
-            None => *target = Some(src),
-        }
-    }
-}
-
-fn absorb_synapses_delta(target: &mut Option<FlowSynapsesDelta>, incoming: Option<FlowSynapsesDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                if src.reordered.is_some() {
-                    dst.reordered = src.reordered;
-                }
-            }
-            None => *target = Some(src),
-        }
-    }
-}
-
 impl FlowDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &FlowArtifact) -> FlowArtifact {
@@ -117,23 +26,8 @@ impl FlowDiff {
         if let Some(value) = &self.camera {
             next.camera = value.clone();
         }
-        if let Some(delta) = &self.widgets {
-            next.widgets = apply_widgets_delta(&next.widgets, delta);
-        }
-        if let Some(delta) = &self.synapses {
-            next.synapses = apply_synapses_delta(&next.synapses, delta);
-        }
-        if let Some(delta) = &self.layout {
-            for (key, value) in &delta.entries {
-                match value {
-                    Some(v) => {
-                        next.layout.insert(key.clone(), v.clone());
-                    }
-                    None => {
-                        next.layout.remove(key);
-                    }
-                }
-            }
+        if let Some(content) = &self.content {
+            next.content = content.clone();
         }
         if let Some(list) = &self.selected_node_ids {
             next.selected_node_ids = list.values.clone();
@@ -193,23 +87,8 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
         if let Some(value) = &self.camera {
             next.camera = value.clone();
         }
-        if let Some(delta) = &self.widgets {
-            next.widgets = apply_widgets_delta(&next.widgets, delta);
-        }
-        if let Some(delta) = &self.synapses {
-            next.synapses = apply_synapses_delta(&next.synapses, delta);
-        }
-        if let Some(delta) = &self.layout {
-            for (key, value) in &delta.entries {
-                match value {
-                    Some(v) => {
-                        next.layout.insert(key.clone(), v.clone());
-                    }
-                    None => {
-                        next.layout.remove(key);
-                    }
-                }
-            }
+        if let Some(content) = &self.content {
+            next.content = content.clone();
         }
         next
     }
@@ -218,13 +97,6 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
         if other.artifact.is_some() {
             *self = other;
             return;
-        }
-        absorb_widgets_delta(&mut self.widgets, other.widgets);
-        absorb_synapses_delta(&mut self.synapses, other.synapses);
-        match (&mut self.layout, other.layout) {
-            (Some(dst), Some(src)) => dst.entries.extend(src.entries),
-            (None, Some(src)) => self.layout = Some(src),
-            _ => {}
         }
         macro_rules! take {
             ($field:ident) => {
@@ -235,6 +107,7 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
         }
         take!(schema);
         take!(camera);
+        take!(content);
         take!(selected_node_ids);
         take!(selected_edge_ids);
         take!(selected_handle_ids);
@@ -261,6 +134,16 @@ pub fn diff_set_snapshot(snapshot: &FlowSnapshot) -> FlowDiff {
         ..Default::default()
     }
 }
+
+/// 🔺️ Mints a new content-addressed `content` handle for the whole-scene replacement
+/// `(widgets, synapses, layout)` and seeds the working-scene cache with it
+/// (`flow_content_child_handle_and_cache`) — real handcrafted construction, never apply-then-
+/// capture. Every one of the nine widget/synapse mutation triads' `🔺️diff` leaf reads the CURRENT
+/// scene off `base` (via `flow_working_scene`), applies its own specific semantics to that scene,
+/// then calls this shared builder — mirrors writer's `diff_set_text`.
+pub fn diff_replace_content(widgets: Vec<flow::Widget>, synapses: Vec<flow::SynapseSpec>, layout: std::collections::BTreeMap<String, flow::WidgetLayout>) -> FlowDiff {
+    FlowDiff { content: Some(crate::artifacts::flow::flow_content_child_handle_and_cache(widgets, synapses, layout)), ..Default::default() }
+}
 //#endregion 🔹Helpers
 
 //#region 🧪️Tests
@@ -271,33 +154,24 @@ mod tests {
     use protocol::Mutation;
 
     #[test]
-    fn move_widgets_diff_touches_only_the_layout_slot() {
+    fn move_widgets_diff_touches_only_the_content_slot() {
         let base = FlowSnapshot::default();
         let operation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
             entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 3.0, y: 4.0 }) }],
         });
         let diff: FlowDiff = operation.diff(&base);
-        assert!(diff.layout.is_some(), "MoveWidgets must produce a layout diff: {diff:?}");
-        assert!(
-            diff.artifact.is_none() && diff.widgets.is_none() && diff.synapses.is_none(),
-            "MoveWidgets must touch only the layout slot: {diff:?}"
-        );
+        assert!(diff.content.is_some(), "MoveWidgets must produce a content diff: {diff:?}");
+        assert!(diff.artifact.is_none(), "MoveWidgets must not replace the whole artifact: {diff:?}");
         let after = diff.apply(&base);
-        assert_eq!(after.layout.get("slider"), Some(&flow::WidgetLayout { x: 3.0, y: 4.0 }));
+        assert_eq!(after.to_fixture().layout.get("slider"), Some(&flow::WidgetLayout { x: 3.0, y: 4.0 }));
     }
 
     #[test]
-    fn a_whole_artifact_diff_wins_over_every_collection_diff() {
+    fn a_whole_artifact_diff_wins_over_every_content_diff() {
         let base = FlowSnapshot::default();
         let mut replacement = base.clone();
         replacement.schema = "flow.replaced".into();
-        let mut diff = FlowDiff {
-            widgets: Some(FlowWidgetsDelta {
-                removed: vec!["slider".into()],
-                ..Default::default()
-            }),
-            ..Default::default()
-        };
+        let mut diff = diff_replace_content(Vec::new(), Vec::new(), Default::default());
         diff.absorb(diff_set_snapshot(&replacement));
         assert_eq!(diff.apply(&base), replacement);
     }

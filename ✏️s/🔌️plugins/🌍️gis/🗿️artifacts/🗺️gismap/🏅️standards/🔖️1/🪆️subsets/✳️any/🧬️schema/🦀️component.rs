@@ -3,9 +3,9 @@
 use crate::artifacts::gismap::dsl::REUSE_MAP_EXAMPLE_TEXT;
 use crate::artifacts::gismap::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
 use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeature};
+use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapImageChild, GisMapSnapshot, MapFeature};
 use semio_framework_plugin::{ArtifactSerializer, DwgDrawing, DwgGeometry, ErasedComposeSource, IoDirection, IoKey, IoPayload, io_dispatch};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
@@ -23,6 +23,15 @@ pub struct GisMapArtifact {
     #[state(persistent)] pub positions: Vec<MapFeature>,
     #[state(persistent)] pub routes: Vec<MapFeature>,
     #[state(persistent)] pub regions: Vec<MapFeature>,
+    /// 🕸️ Mirrors `GisMapSnapshot.image` — see that field's own doc comment and
+    /// `crate::artifacts::gismap::🦀️component.rs`'s `🔖️Composition` region. Carried verbatim (never
+    /// derived) since, unlike `drawing`/`value`, nothing in this plugin can rebuild it from
+    /// `positions`/`routes`/`regions` — dropping it silently on `from_snapshot`/`to_snapshot` would
+    /// be a real, undocumented data loss the moment a future basemap-capture path populates it.
+    #[state(persistent)]
+    #[child(kind = "s.stdio.semio.image")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<GisMapImageChild>,
     #[state(shared_ui)] pub selected_ids: Vec<String>,
     #[state(shared_ui)] pub feature_selection_json: String,
     #[state(shared_ui)] pub layer_visibility: BTreeMap<String, bool>,
@@ -45,6 +54,7 @@ impl Default for GisMapArtifact {
             positions: Vec::new(),
             routes: Vec::new(),
             regions: Vec::new(),
+            image: None,
             selected_ids: Vec::new(),
             feature_selection_json: r#"{"positions":[],"routes":[]}"#.into(),
             layer_visibility: BTreeMap::new(),
@@ -62,13 +72,18 @@ impl Default for GisMapArtifact {
 }
 
 impl GisMapArtifact {
-    /// 📸️ Persisted subset.
+    /// 📸️ Persisted subset. `drawing`/`value` are always re-derived (never carried verbatim off
+    /// `self`) via `gis_map_snapshot_with_derived_children` so they can never drift from what
+    /// `positions`/`routes`/`regions` actually contain; `image` carries straight through (real, but
+    /// not derivable from anything this plugin owns — see the field's own doc comment).
     pub fn to_snapshot(&self) -> crate::artifacts::gismap::GisMapSnapshot {
-        crate::artifacts::gismap::GisMapSnapshot {
+        gis_map_snapshot_with_derived_children(crate::artifacts::gismap::GisMapSnapshot {
             positions: self.positions.clone(),
             routes: self.routes.clone(),
             regions: self.regions.clone(),
-        }
+            image: self.image.clone(),
+            ..Default::default()
+        })
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
@@ -77,6 +92,7 @@ impl GisMapArtifact {
             positions: snapshot.positions,
             routes: snapshot.routes,
             regions: snapshot.regions,
+            image: snapshot.image,
             ..Self::default()
         }
     }
@@ -86,6 +102,7 @@ impl GisMapArtifact {
         self.positions = snapshot.positions;
         self.routes = snapshot.routes;
         self.regions = snapshot.regions;
+        self.image = snapshot.image;
     }
 }
 //#endregion 🔹Conversions
@@ -263,7 +280,12 @@ pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot {
             })
             .unwrap_or_default()
     };
-    GisMapSnapshot { positions: features("positions"), routes: features("routes"), regions: features("regions") }
+    crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot {
+        positions: features("positions"),
+        routes: features("routes"),
+        regions: features("regions"),
+        ..Default::default()
+    })
 }
 
 /// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
@@ -583,7 +605,8 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
             MapFeature { id: id.clone(), data: value_to_dsl(&json!({ "id": id, "lon": point.x, "lat": point.y })) }
         })
         .collect();
-    serde_json::to_value(GisMapSnapshot { positions, routes: Vec::new(), regions: Vec::new() }).map_err(|error| error.to_string())
+    let document = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions, routes: Vec::new(), regions: Vec::new(), ..Default::default() });
+    serde_json::to_value(document).map_err(|error| error.to_string())
 }
 //#endregion 🔖️MediaImport
 
@@ -638,7 +661,7 @@ mod relocated_engine_tests {
     fn ensure_stdio_semio_registered_for_tests() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::register();
+            semio_s_plugin_stdio::artifacts::semio::register();
         });
     }
 

@@ -47,13 +47,18 @@ pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, 
 
 // 🛂️ The declarative component model (layout/utilities/UiNode) lives in `ui_wgpu` now — re-import
 // honestly (not a re-export) wherever this crate's manifest/kernel types need it; see `pub mod manifest`.
-pub use mesh::{
+// 🔺️ Mesh geometry data, primitive construction, and Obj/Glb/Stl codecs are dissolved into a
+// dedicated engine crate (consumed only from artifact facet code / engine-to-engine callers such
+// as brep tessellation) — no longer part of this framework module's own re-export surface.
+pub use semio_framework_mesh_engine::{
     mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_ico_sphere,
     mesh_plane, mesh_to_glb, mesh_to_obj, mesh_from_obj, mesh_to_stl, mesh_from_stl, mesh_torus, mesh_uv_sphere, MeshData,
-    dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
-    DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
     IoError,
+};
+pub use mesh::{
+    dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
+    DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
 };
 // 🔀️ OsMediaCapability/ArtifactKindSpec/MediaClass/MediaForm/MediaType/MediaWireFormat/MediaPortDirection/
 // PortMultiplicity/MediaPortSpec/MediaCompat/media_types_compatible/Media/MediaPayload/MediaFingerprint/

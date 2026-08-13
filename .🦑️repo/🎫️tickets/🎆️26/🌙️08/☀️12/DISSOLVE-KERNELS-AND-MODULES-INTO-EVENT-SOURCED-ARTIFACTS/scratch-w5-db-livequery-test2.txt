@@ -1,0 +1,20 @@
+
+warning: unused import: `Emit`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:26:5
+   |
+26 | use Emit as _;
+   |     ^^^^
+
+warning: `semio-framework-os-kernel-db` (lib test) generated 73 warnings (run `cargo fix --lib -p semio-framework-os-kernel-db --tests` to apply 54 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 3.75s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 4`
+     Running unittests 📦️glue.rs (.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS/🎯️target/debug/deps/db-562901d9164cccc1)
+
+running 3 tests
+test db_query::tests::live_query::diff_applied_to_old_snapshot_reconstructs_new_snapshot ... ok
+test db_query::tests::live_query::refresh_reports_added_removed_and_updated_rows ... ok
+test db_query::tests::live_query::refresh_leaves_unrelated_rows_cache_warm_and_misses_only_the_changed_row ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 421 filtered out; finished in 0.00s
+

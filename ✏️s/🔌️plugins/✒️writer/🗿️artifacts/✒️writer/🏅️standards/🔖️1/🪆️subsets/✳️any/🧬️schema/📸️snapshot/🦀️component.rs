@@ -1,14 +1,17 @@
 //! 🧬️ Writer snapshot schema — persistent fields only.
 
-use crate::artifacts::writer::{WRITER_DOCUMENT_SCHEMA};
+use crate::artifacts::writer::{document_child_handle_and_cache, WriterDocumentChild, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted writer document snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
+/// 📸️ Persisted writer document snapshot. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
+/// wave 3 (`writer→C:document`): the inline `text: String` content field is replaced by a fixed
+/// composed `s.stdio.semio.document` CHILD slot — the writer plugin no longer defines its own
+/// text-block content model, it composes stdio's `document` subset instead. `#[child(...)]` drives
+/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
-#[dsl(id = "writer.writer", layout = "lines")]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterSnapshot {
     #[state(persistent)]
@@ -21,11 +24,108 @@ pub struct WriterSnapshot {
     #[serde(default = "crate::artifacts::writer::default_uri")]
     pub uri: String,
     #[state(persistent)]
-    #[serde(default)]
-    #[dsl(lang_from = "language_id")]
-    pub text: String,
+    #[child(kind = "s.stdio.semio.document")]
+    pub document: WriterDocumentChild,
 }
+
+//#region 🔖️ChildCodecPrimitives
+/// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`'s own `enc_child`/`dec_child`, the
+/// working reference for a composite subset's handle codec) — a handle is exactly two strings
+/// (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the child's own content.
+fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
+fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
+fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
+fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
+
+fn enc_child(c: &WriterDocumentChild) -> String { format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target)) }
+fn dec_child(s: &str) -> Result<WriterDocumentChild, String> {
+    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
+    let parts: Vec<&str> = inner.splitn(2, ',').collect();
+    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
+    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
+}
+//#endregion 🔖️ChildCodecPrimitives
+
+//#region 🔖️TextPrimitives
+fn print_writer_snapshot_body(s: &WriterSnapshot) -> String {
+    format!("schema={}\nid={}\nlanguageId={}\nuri={}\ndocument={}", enc_str(&s.schema), enc_str(&s.id), enc_str(&s.language_id), enc_str(&s.uri), enc_child(&s.document))
+}
+fn parse_writer_snapshot_body(body: &str) -> Result<WriterSnapshot, String> {
+    let mut snapshot = WriterSnapshot::default();
+    let mut saw_schema = false;
+    for line in body.lines() {
+        let line = line.trim();
+        if line.is_empty() { continue; }
+        if let Some(rest) = line.strip_prefix("schema=") { snapshot.schema = dec_str(rest)?; saw_schema = true; }
+        else if let Some(rest) = line.strip_prefix("id=") { snapshot.id = dec_str(rest)?; }
+        else if let Some(rest) = line.strip_prefix("languageId=") { snapshot.language_id = dec_str(rest)?; }
+        else if let Some(rest) = line.strip_prefix("uri=") { snapshot.uri = dec_str(rest)?; }
+        else if let Some(rest) = line.strip_prefix("document=") { snapshot.document = dec_child(rest)?; }
+        else { return Err(format!("writer snapshot: unknown line {line:?}")); }
+    }
+    if !saw_schema { return Err("writer snapshot: missing schema line".to_string()); }
+    Ok(snapshot)
+}
+//#endregion 🔖️TextPrimitives
+
+//#region 🔖️BinaryPrimitives
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
+fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
+fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?) }
+fn write_child(out: &mut Vec<u8>, c: &WriterDocumentChild) {
+    write_str_lp(out, &c.child_id);
+    write_ref(out, &c.target);
+}
+fn read_child(reader: &mut store::ByteReader<'_>) -> Result<WriterDocumentChild, String> {
+    let child_id = read_str_lp(reader)?;
+    let target = read_ref(reader)?;
+    Ok(store::ArtifactChild::new(child_id, target))
+}
+
+fn encode_writer_snapshot_binary(s: &WriterSnapshot) -> Vec<u8> {
+    const PACK_BINARY_FORMAT: u8 = 1;
+    let mut out = vec![PACK_BINARY_FORMAT];
+    write_str_lp(&mut out, &s.schema);
+    write_str_lp(&mut out, &s.id);
+    write_str_lp(&mut out, &s.language_id);
+    write_str_lp(&mut out, &s.uri);
+    write_child(&mut out, &s.document);
+    out
+}
+fn decode_writer_snapshot_binary(bytes: &[u8]) -> Result<WriterSnapshot, String> {
+    const PACK_BINARY_FORMAT: u8 = 1;
+    let mut reader = store::ByteReader::new(bytes);
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    if format != PACK_BINARY_FORMAT { return Err(format!("unsupported pack format {format}")); }
+    let mut snapshot = WriterSnapshot::default();
+    snapshot.schema = read_str_lp(&mut reader)?;
+    snapshot.id = read_str_lp(&mut reader)?;
+    snapshot.language_id = read_str_lp(&mut reader)?;
+    snapshot.uri = read_str_lp(&mut reader)?;
+    snapshot.document = read_child(&mut reader)?;
+    Ok(snapshot)
+}
+//#endregion 🔖️BinaryPrimitives
+
 //#region 🔖️HandcraftedArtifactCodecs
+/// ✉️ Handcrafted `ArtifactDsl`/`ArtifactPack`, real hex/bracket text + LEB128 binary primitives —
+/// same upgrade `📐️cad`/`💠️lowpoly` made when they gained a real `ArtifactChild<S>` slot (the old
+/// `dsl::DslRecord`-derive-driven `Self::__dsl_spec()` path cannot express a composed child slot,
+/// which has no `dsl::DslField` impl reachable from this crate).
 impl store::ArtifactDsl for WriterSnapshot {
     const EXTENSION: &'static str = "writer";
     fn envelope_id() -> &'static str {
@@ -36,18 +136,10 @@ impl store::ArtifactDsl for WriterSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions {
-                limits: dsl::Limits::default(),
-                mode: dsl::SourceMode::Document,
-            },
-        )?;
-        Self::__dsl_from_record(&record)
+        parse_writer_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = print_writer_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -60,14 +152,15 @@ impl store::ArtifactDsl for WriterSnapshot {
 
 impl store::ArtifactPack for WriterSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let _ = options;
+        let raw = encode_writer_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         )
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+        Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -78,11 +171,8 @@ impl store::ArtifactPack for WriterSnapshot {
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
+        let _ = options;
+        decode_writer_snapshot_binary(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -94,7 +184,7 @@ impl Default for WriterSnapshot {
             id: String::new(),
             language_id: "plaintext".into(),
             uri: crate::artifacts::writer::default_uri(),
-            text: String::new(),
+            document: document_child_handle_and_cache("", "", "plaintext"),
         }
     }
 }

@@ -6,8 +6,8 @@
 
 pub use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{
     add_node_port::mutation::AddNodePort, add_node_property::mutation::AddNodeProperty, change_node_kind::mutation::ChangeNodeKind,
     change_node_label::mutation::ChangeNodeLabel, create_edge::mutation::CreateEdge, create_node::mutation::CreateNode, delete_edge::mutation::DeleteEdge,

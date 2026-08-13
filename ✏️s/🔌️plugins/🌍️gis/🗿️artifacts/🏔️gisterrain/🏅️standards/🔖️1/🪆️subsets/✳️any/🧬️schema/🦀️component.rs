@@ -1,9 +1,10 @@
 //! 🧬️ GIS terrain artifact schema — every field of the artifact with its state class.
 
 use crate::artifacts::gisterrain::dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::artifacts::gisterrain::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
 use framework_surface::terrain::tiles;
 use schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
@@ -14,6 +15,12 @@ use serde::{Deserialize, Serialize};
 pub struct GisTerrainArtifact {
     #[state(persistent)] pub exaggeration: f64,
     #[state(persistent)] pub imported_features_json: String,
+    /// 🕸️ Mirrors `GisTerrainSnapshot.mesh` — see that field's own doc comment. Always re-derived
+    /// from `(exaggeration, imported_features_json)` by `to_snapshot`, never independently set.
+    #[state(persistent)]
+    #[child(kind = "s.stdio.semio.mesh")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(shared_ui)] pub selected_ids: Vec<String>,
     #[state(local_ui)] pub camera_json: String,
     #[state(local_ui)] pub locale: String,
@@ -26,6 +33,7 @@ impl Default for GisTerrainArtifact {
         Self {
             exaggeration: 0.0,
             imported_features_json: String::new(),
+            mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, ""))),
             selected_ids: Vec::new(),
             camera_json: serde_json::json!({ "position": [800.0, -800.0, 600.0], "target": [0.0, 0.0, 0.0], "up": [0.0, 0.0, 1.0], "fov": 45.0 }).to_string(),
             locale: "en-US".into(),
@@ -34,11 +42,13 @@ impl Default for GisTerrainArtifact {
 }
 
 impl GisTerrainArtifact {
-    /// 📸️ Persisted subset.
+    /// 📸️ Persisted subset. `mesh` is always re-derived here (never carried verbatim off `self`) so
+    /// it can never drift from what `(exaggeration, imported_features_json)` actually determine.
     pub fn to_snapshot(&self) -> crate::artifacts::gisterrain::GisTerrainSnapshot {
         crate::artifacts::gisterrain::GisTerrainSnapshot {
             exaggeration: self.exaggeration,
             imported_features_json: self.imported_features_json.clone(),
+            mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(self.exaggeration, &self.imported_features_json))),
         }
     }
 
@@ -47,6 +57,7 @@ impl GisTerrainArtifact {
         Self {
             exaggeration: snapshot.exaggeration,
             imported_features_json: snapshot.imported_features_json,
+            mesh: snapshot.mesh,
             ..Self::default()
         }
     }
@@ -55,6 +66,7 @@ impl GisTerrainArtifact {
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::gisterrain::GisTerrainSnapshot) {
         self.exaggeration = snapshot.exaggeration;
         self.imported_features_json = snapshot.imported_features_json;
+        self.mesh = snapshot.mesh;
     }
 }
 //#endregion 🔖️Conversions
@@ -202,7 +214,10 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
 /// `GisTerrainSnapshot`, no app-state dependency — an artifact must never depend on an app.
 pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
-    GisTerrainSnapshot { exaggeration: 1.0, ..Default::default() }
+    let exaggeration = 1.0;
+    let imported_features_json = String::new();
+    let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(exaggeration, &imported_features_json)));
+    GisTerrainSnapshot { exaggeration, imported_features_json, mesh }
 }
 
 /// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain

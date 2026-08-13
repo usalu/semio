@@ -5,7 +5,6 @@ pub use crate::artifacts::fem3d::schema::snapshot::Fem3dSnapshot;
 pub use crate::artifacts::fem3d::schema::mutations::Fem3dMutation;
 pub use crate::artifacts::fem3d::schema::diff::Fem3dDiff;
 
-use crate::model::Dof;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -20,51 +19,14 @@ pub const FEM_3D_SCHEMA: &str = "fem.3d";
 /// field in the `Fem3dSnapshot` grammar (`FemSupport::fixed`, `FemLoad::Nodal::dof`) uses this local tag
 /// instead, converting to/from `crate::model::Dof` at the `crate::model::Model`/`Support`/`NodalLoad`
 /// boundary (see `crate::fem3d_engine::meshing::resolve_geometry`, `translate_loads`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-pub enum FemDof {
-    #[dsl(key = "Tx")]
-    Tx,
-    #[dsl(key = "Ty")]
-    Ty,
-    #[dsl(key = "Tz")]
-    Tz,
-    #[dsl(key = "Rx")]
-    Rx,
-    #[dsl(key = "Ry")]
-    Ry,
-    #[dsl(key = "Rz")]
-    Rz,
-}
-
-impl FemDof {
-    pub const ALL: [FemDof; 6] = [FemDof::Tx, FemDof::Ty, FemDof::Tz, FemDof::Rx, FemDof::Ry, FemDof::Rz];
-}
-
-impl From<Dof> for FemDof {
-    fn from(dof: Dof) -> Self {
-        match dof {
-            Dof::Tx => FemDof::Tx,
-            Dof::Ty => FemDof::Ty,
-            Dof::Tz => FemDof::Tz,
-            Dof::Rx => FemDof::Rx,
-            Dof::Ry => FemDof::Ry,
-            Dof::Rz => FemDof::Rz,
-        }
-    }
-}
-
-impl From<FemDof> for Dof {
-    fn from(dof: FemDof) -> Self {
-        match dof {
-            FemDof::Tx => Dof::Tx,
-            FemDof::Ty => Dof::Ty,
-            FemDof::Tz => Dof::Tz,
-            FemDof::Rx => Dof::Rx,
-            FemDof::Ry => Dof::Ry,
-            FemDof::Rz => Dof::Rz,
-        }
-    }
-}
+///
+/// 🔗️ Consolidated (11-type fem2d/fem3d dup consolidation, ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): this used to be a byte-identical second copy of
+/// `fem2d::FemDof`; both dimensions' DOF sets are the same 6 tags with the same `#[dsl(key = ...)]`
+/// wire encoding, so this dimension now re-exports the canonical definition instead of duplicating it.
+pub use crate::artifacts::fem2d::FemDof;
+// `From<Dof> for FemDof` / `From<FemDof> for Dof` already live on `fem2d::FemDof` above — this is now
+// the same concrete type, so re-implementing either direction here would be a duplicate trait impl.
 
 /// 📍️ A structural node: a stable id and a global position, plain SI meters.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -182,23 +144,12 @@ pub struct FemCombination {
 /// (meter-scale) displacements only; modal/buckling mode shapes are dimensionless (mass/Kg-
 /// orthonormalized) and the viewer normalizes them to a fixed fraction of the model's own extent
 /// instead of using this factor.
-// No `#[dsl(keyword = ...)]` here: the only fields embedding this type (`Fem3dSnapshot::analysis`,
-// `mutations::update_analysis_settings::mutation::UpdateAnalysisSettings::settings`) are themselves
-// `#[dsl(block)]`, which already supplies the bare leading keyword from the FIELD's own name — an
-// inner keyword too would double it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct FemAnalysisSettings {
-    pub modal_count: usize,
-    pub buckling_count: usize,
-    pub deformation_scale: f64,
-}
-
-impl Default for FemAnalysisSettings {
-    fn default() -> Self {
-        Self { modal_count: 3, buckling_count: 3, deformation_scale: 50.0 }
-    }
-}
+///
+/// 🔗️ Consolidated (11-type fem2d/fem3d dup consolidation, ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): this used to be a byte-identical second copy of
+/// `fem2d::FemAnalysisSettings` (same fields, same `Default`, same missing `#[dsl(keyword = ...)]` for
+/// the reason the removed doc comment here used to explain) — re-exported from there now instead.
+pub use crate::artifacts::fem2d::FemAnalysisSettings;
 
 /// 🧱️ A meshed continuum solid — a polygon footprint (with optional holes) extruded upward from
 /// `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at solve time
@@ -349,6 +300,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::Dof;
 
     #[test]
     fn fem_dof_round_trips_through_core_dof() {

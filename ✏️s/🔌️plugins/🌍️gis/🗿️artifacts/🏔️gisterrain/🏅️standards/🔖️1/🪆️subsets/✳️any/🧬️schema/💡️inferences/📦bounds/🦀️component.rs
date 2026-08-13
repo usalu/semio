@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn malformed_overlay_json_contributes_no_positions() {
-        let snapshot = GisTerrainSnapshot { exaggeration: 0.0, imported_features_json: "not json".into() };
+        let snapshot = GisTerrainSnapshot { exaggeration: 0.0, imported_features_json: "not json".into(), ..Default::default() };
         assert!(imported_lon_lat_positions(&snapshot).is_empty());
     }
 
@@ -73,6 +73,7 @@ mod tests {
                 { "id": "b", "lon": 6.0, "lat": 51.0 },
             ] })
             .to_string(),
+            ..Default::default()
         };
         let bounds = lon_lat_bounds(&imported_lon_lat_positions(&snapshot)).expect("two positions bound");
         assert_eq!(bounds, GisTerrainBounds { lon_min: 5.0, lon_max: 6.0, lat_min: 50.0, lat_max: 51.0 });

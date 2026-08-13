@@ -10,7 +10,7 @@ pub fn register() {}
 /// Encode ZIP bytes as the deflate artifact's typed payload (real zlib compression happens on
 /// `ArtifactPack`/`ArtifactDsl` encode, via `engine::encode_deflate_snapshot`).
 pub fn serialize(from: &ZipSnapshot) -> Result<DeflateSnapshot, store::PackError> {
-    let zip_bytes = crate::artifacts::zip::engine::encode_zip(from)
+    let zip_bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(from)
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
     Ok(DeflateSnapshot {
         schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),

@@ -110,8 +110,8 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
 fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort, SemioGraphPortKind};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{enc_semio_value_entry, dec_semio_value_entry};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;

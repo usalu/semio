@@ -162,7 +162,7 @@ fn push_accessor(buffers: &mut Vec<Vec<u8>>, buffer_views: &mut Vec<GltfBufferVi
 mod tests {
     use super::*;
     use crate::artifacts::gltf::engine::decode_accessor;
-    use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioQuaternion};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::animation::io::gltf_deserializer::SemioAnimationFromGltf;
     use semio_framework_plugin::ArtifactDeserializer;

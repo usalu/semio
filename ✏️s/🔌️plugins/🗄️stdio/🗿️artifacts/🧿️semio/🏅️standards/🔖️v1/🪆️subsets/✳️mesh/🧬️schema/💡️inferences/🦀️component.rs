@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn inference_covers_every_primitive_by_composite_key() {
-        use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+        use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
         use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
         let snapshot = SemioMeshSnapshot {
             meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), positions: vec![SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], ..Default::default() }] }],

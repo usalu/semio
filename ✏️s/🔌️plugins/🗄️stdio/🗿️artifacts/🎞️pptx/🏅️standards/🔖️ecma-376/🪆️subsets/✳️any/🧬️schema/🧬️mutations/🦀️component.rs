@@ -511,7 +511,7 @@ impl protocol::OpBinary for PptxMutation {
 /// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
 pub(crate) fn demo_fixture() -> PptxSnapshot {
-    crate::artifacts::pptx::engine::build_minimal_pptx(PptxPresentation {
+    crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
         slides: vec![
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("second")], position: PptxTransform::default() }] },
@@ -545,7 +545,7 @@ mod tests {
     use protocol::MutationDiff;
 
     fn fixture() -> PptxSnapshot {
-        crate::artifacts::pptx::engine::build_minimal_pptx(PptxPresentation {
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("second")], position: PptxTransform::default() }] },
@@ -765,7 +765,7 @@ mod tests {
     /// again on the way back -- a structural property of the append-new-at-end convention this
     /// engine shares with docx's, not a regression.
     fn mutated_fixture() -> PptxSnapshot {
-        crate::artifacts::pptx::engine::build_minimal_pptx(PptxPresentation {
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::Placeholder { kind: "title".into(), text_frame: vec![PptxParagraph::text("changed first")], position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 } }] },
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("changed second")], position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } }] },
@@ -936,7 +936,7 @@ mod tests {
         assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&sample, &sample), &sample), sample);
 
         // "Real" fixture leg: a realistic multi-slide presentation diffed against a mutated variant.
-        let real = crate::artifacts::pptx::engine::build_minimal_pptx(PptxPresentation {
+        let real = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::Placeholder { kind: "title".into(), text_frame: vec![PptxParagraph::text("Chapter One")], position: PptxTransform::default() }] },
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("Body text goes here.")], position: PptxTransform::default() }] },
@@ -953,7 +953,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     #[test]
     fn codec_retention_law() {
-        let snap = crate::artifacts::pptx::engine::build_minimal_pptx(PptxPresentation {
+        let snap = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![PptxSlide {
                 shapes: vec![
                     PptxShape::Placeholder { kind: "ctrTitle".into(), text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "Hello".into(), bold: true, italic: true, font_size: Some(44) }] }], position: PptxTransform { x: 100, y: 200, cx: 300, cy: 400 } },

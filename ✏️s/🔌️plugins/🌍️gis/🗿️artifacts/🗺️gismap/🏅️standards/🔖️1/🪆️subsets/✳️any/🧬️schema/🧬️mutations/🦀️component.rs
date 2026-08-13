@@ -87,7 +87,7 @@ mod tests {
 
     #[test]
     fn positions_reorder_round_trips() {
-        let document = GisMapSnapshot { positions: vec![feature("p1"), feature("p2"), feature("p3")], ..Default::default() };
+        let document = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1"), feature("p2"), feature("p3")], ..Default::default() });
         let reordered = round_trip(&document, &GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "p1".into(), to_index: 2 }));
         assert_eq!(reordered.positions.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), vec!["p2", "p3", "p1"]);
     }
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn create_position_obeys_the_inverse_and_diff_absorb_laws() {
-        let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
+        let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
         let mutation = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 1, item: feature("p2") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
@@ -112,14 +112,14 @@ mod tests {
 
     #[test]
     fn delete_route_obeys_the_inverse_law() {
-        let base = GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() };
+        let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
         let mutation = GisMapMutation::DeleteRoute(delete_route::mutation::DeleteRoute { id: "r1".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[test]
     fn replace_region_data_obeys_the_inverse_and_diff_absorb_laws() {
-        let base = GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() };
+        let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() });
         let mutation = GisMapMutation::ReplaceRegionData(replace_region_data::mutation::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "boundary" })) });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn reorder_routes_obeys_the_inverse_law() {
-        let base = GisMapSnapshot { routes: vec![feature("r1"), feature("r2")], ..Default::default() };
+        let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1"), feature("r2")], ..Default::default() });
         let mutation = GisMapMutation::ReorderRoutes(reorder_routes::mutation::ReorderRoutes { id: "r1".into(), to_index: 1 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
@@ -157,6 +157,10 @@ mod tests {
 
 pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) {
     *snapshot = vcs::apply_mutation(snapshot, mutation);
+    // 🕸️ `drawing`/`value` are pure functions of `(positions, routes, regions)` — re-derive them
+    // after every mutation so the composed children never drift from what they actually describe
+    // (see `crate::artifacts::gismap::🦀️component.rs`'s `🔖️Composition` region doc).
+    *snapshot = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(std::mem::take(snapshot));
 }
 
 pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Vec<GisMapMutation> {

@@ -2,7 +2,7 @@
 //! `base`, this is a no-op (real entity-lifecycle safety — never a duplicate id).
 
 use super::mutation::CreateEdge;
-use crate::artifacts::semio::standards::v1::engine::triples::NamedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, SemioBrepSnapshot};
 

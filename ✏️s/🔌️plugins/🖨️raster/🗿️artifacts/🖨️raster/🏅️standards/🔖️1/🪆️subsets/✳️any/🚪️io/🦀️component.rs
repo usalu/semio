@@ -20,7 +20,7 @@ use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterSnapshot
 use base64::Engine;
 use semio_framework::{io::io_compose_via, io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
@@ -40,7 +40,7 @@ const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: S
 fn ensure_stdio_semio_and_png_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::register();
+        semio_s_plugin_stdio::artifacts::semio::register();
         semio_s_plugin_stdio::artifacts::png::register();
     });
 }

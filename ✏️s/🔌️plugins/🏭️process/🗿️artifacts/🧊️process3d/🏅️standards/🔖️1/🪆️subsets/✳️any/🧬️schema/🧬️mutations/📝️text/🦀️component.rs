@@ -14,7 +14,7 @@ use crate::artifacts::process3d::schema::mutations::{
     change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step,
     move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities, replace_step_measure, replace_stock_solid,
 };
-use crate::artifacts::process3d::{Capability, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, WorkshopMachine};
+use crate::artifacts::process3d::{Capability, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkshopMachine};
 use protocol::OpText;
 use serde::{Deserialize, Serialize};
 
@@ -22,12 +22,21 @@ use serde::{Deserialize, Serialize};
 /// ✂️ Local DSL-only mirror of `Process3dMutation` — every real variant flattened into its own
 /// keyworded record, converted at the `store::OpText` boundary only; `Process3dMutation` itself,
 /// and every consumer matching on it, is completely untouched.
+///
+/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `ProcessStep`/`ProcessMeasure`
+/// dropped their `dsl` derives (now ephemeral working-scene types, containing `WorkingSolid` —
+/// itself never `dsl::DslField`, same wall every composed-child migration hits). `CreateStep`/
+/// `ReplaceStepMeasure` carry those as JSON-then-hex strings now (matching `📐️cad`'s
+/// `enc_json`/`dec_json` convention for structured fields with no dedicated grammar) — harmless
+/// since both are DOCUMENTED NO-OPS pending a resolver anyway (see the sibling `🧬️mutations/**`
+/// triads' own doc comments); `ReplaceStockSolid.new_solid` is now a real
+/// `store::ArtifactChild<SemioBrepSnapshot>` handle, JSON-encoded the same way (it already derives
+/// `Serialize`/`Deserialize` regardless of `S`).
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum Process3dMutationDsl {
     CreateStep {
         index: usize,
-        #[dsl(block)]
-        step: ProcessStep,
+        step_json: String,
     },
     DeleteStep {
         id: String,
@@ -47,7 +56,7 @@ enum Process3dMutationDsl {
     },
     ReplaceStepMeasure {
         id: String,
-        new_measure: ProcessMeasure,
+        new_measure_json: String,
     },
     ReorderSteps {
         id: String,
@@ -81,7 +90,7 @@ enum Process3dMutationDsl {
         new_label: String,
     },
     ReplaceStockSolid {
-        new_solid: SolidSpec,
+        new_solid_json: String,
     },
     ChangeCursor {
         new_resolved_up_to: Option<usize>,
@@ -125,12 +134,12 @@ impl protocol::OpBinary for Process3dMutationDsl {
 
 fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationDsl {
     match mutation {
-        Process3dMutation::CreateStep(payload) => Process3dMutationDsl::CreateStep { index: payload.index, step: payload.step.clone() },
+        Process3dMutation::CreateStep(payload) => Process3dMutationDsl::CreateStep { index: payload.index, step_json: serde_json::to_string(&payload.step).expect("ProcessStep is always JSON-serializable") },
         Process3dMutation::DeleteStep(payload) => Process3dMutationDsl::DeleteStep { id: payload.id.clone() },
         Process3dMutation::RenameStep(payload) => Process3dMutationDsl::RenameStep { id: payload.id.clone(), new_label: payload.new_label.clone() },
         Process3dMutation::ChangeStepEnabled(payload) => Process3dMutationDsl::ChangeStepEnabled { id: payload.id.clone(), new_enabled: payload.new_enabled },
         Process3dMutation::ChangeStepOrigin(payload) => Process3dMutationDsl::ChangeStepOrigin { id: payload.id.clone(), new_origin: payload.new_origin.clone() },
-        Process3dMutation::ReplaceStepMeasure(payload) => Process3dMutationDsl::ReplaceStepMeasure { id: payload.id.clone(), new_measure: payload.new_measure.clone() },
+        Process3dMutation::ReplaceStepMeasure(payload) => Process3dMutationDsl::ReplaceStepMeasure { id: payload.id.clone(), new_measure_json: serde_json::to_string(&payload.new_measure).expect("ProcessMeasure is always JSON-serializable") },
         Process3dMutation::ReorderSteps(payload) => Process3dMutationDsl::ReorderSteps { id: payload.id.clone(), to_index: payload.to_index },
         Process3dMutation::CreateMachine(payload) => Process3dMutationDsl::CreateMachine { index: payload.index, machine: payload.machine.clone() },
         Process3dMutation::DeleteMachine(payload) => Process3dMutationDsl::DeleteMachine { id: payload.id.clone() },
@@ -139,19 +148,19 @@ fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationD
         Process3dMutation::ReplaceMachineCapabilities(payload) => Process3dMutationDsl::ReplaceMachineCapabilities { id: payload.id.clone(), new_capabilities: payload.new_capabilities.clone() },
         Process3dMutation::MoveStock(payload) => Process3dMutationDsl::MoveStock { new_pose: payload.new_pose.clone() },
         Process3dMutation::ChangeStockLabel(payload) => Process3dMutationDsl::ChangeStockLabel { new_label: payload.new_label.clone() },
-        Process3dMutation::ReplaceStockSolid(payload) => Process3dMutationDsl::ReplaceStockSolid { new_solid: payload.new_solid.clone() },
+        Process3dMutation::ReplaceStockSolid(payload) => Process3dMutationDsl::ReplaceStockSolid { new_solid_json: serde_json::to_string(&payload.new_solid).expect("ArtifactChild is always JSON-serializable") },
         Process3dMutation::ChangeCursor(payload) => Process3dMutationDsl::ChangeCursor { new_resolved_up_to: payload.new_resolved_up_to },
     }
 }
 
 fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutation {
     match mutation {
-        Process3dMutationDsl::CreateStep { index, step } => Process3dMutation::CreateStep(create_step::mutation::CreateStep { index, step }),
+        Process3dMutationDsl::CreateStep { index, step_json } => Process3dMutation::CreateStep(create_step::mutation::CreateStep { index, step: serde_json::from_str(&step_json).expect("valid ProcessStep json") }),
         Process3dMutationDsl::DeleteStep { id } => Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id }),
         Process3dMutationDsl::RenameStep { id, new_label } => Process3dMutation::RenameStep(rename_step::mutation::RenameStep { id, new_label }),
         Process3dMutationDsl::ChangeStepEnabled { id, new_enabled } => Process3dMutation::ChangeStepEnabled(change_step_enabled::mutation::ChangeStepEnabled { id, new_enabled }),
         Process3dMutationDsl::ChangeStepOrigin { id, new_origin } => Process3dMutation::ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin { id, new_origin }),
-        Process3dMutationDsl::ReplaceStepMeasure { id, new_measure } => Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id, new_measure }),
+        Process3dMutationDsl::ReplaceStepMeasure { id, new_measure_json } => Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id, new_measure: serde_json::from_str(&new_measure_json).expect("valid ProcessMeasure json") }),
         Process3dMutationDsl::ReorderSteps { id, to_index } => Process3dMutation::ReorderSteps(reorder_steps::mutation::ReorderSteps { id, to_index }),
         Process3dMutationDsl::CreateMachine { index, machine } => Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index, machine }),
         Process3dMutationDsl::DeleteMachine { id } => Process3dMutation::DeleteMachine(delete_machine::mutation::DeleteMachine { id }),
@@ -160,7 +169,7 @@ fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutat
         Process3dMutationDsl::ReplaceMachineCapabilities { id, new_capabilities } => Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities { id, new_capabilities }),
         Process3dMutationDsl::MoveStock { new_pose } => Process3dMutation::MoveStock(move_stock::mutation::MoveStock { new_pose }),
         Process3dMutationDsl::ChangeStockLabel { new_label } => Process3dMutation::ChangeStockLabel(change_stock_label::mutation::ChangeStockLabel { new_label }),
-        Process3dMutationDsl::ReplaceStockSolid { new_solid } => Process3dMutation::ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid { new_solid }),
+        Process3dMutationDsl::ReplaceStockSolid { new_solid_json } => Process3dMutation::ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid { new_solid: serde_json::from_str(&new_solid_json).expect("valid ArtifactChild json") }),
         Process3dMutationDsl::ChangeCursor { new_resolved_up_to } => Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to }),
     }
 }
@@ -193,11 +202,11 @@ impl protocol::OpBinary for Process3dMutation {
 mod tests {
     use super::*;
     use crate::artifacts::process3d::schema::mutations::*;
-    use crate::artifacts::process3d::{empty_process3d_snapshot, Pose, Process3dSnapshot, SolidSpec, Stock};
+    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, Process3dSnapshot, WorkingSolid};
     use protocol::Mutation;
 
     fn cut_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
+        ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
     fn circular_saw_machine() -> WorkshopMachine {
@@ -302,7 +311,7 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_replace_stock_solid() {
-        let new_solid = SolidSpec::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() };
+        let new_solid = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid { new_solid }));
     }
 
@@ -340,11 +349,12 @@ mod tests {
         }
     }
 
-    /// 📸️ Sanity: `Stock` itself (unrelated to the mutation vocabulary) still round-trips through
+    /// 📸️ Sanity: the stock fields (unrelated to the mutation vocabulary) still round-trip through
     /// the artifact's DSL document codec.
     #[test]
     fn imported_mesh_stock_round_trips_document_dsl() {
-        let snapshot = Process3dSnapshot { stock: Stock { id: "stock".into(), label: "Imported GLB".into(), solid: SolidSpec::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }, pose: Pose::default() }, ..Process3dSnapshot::default() };
+        let stock_solid = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }));
+        let snapshot = Process3dSnapshot { stock_id: "stock".into(), stock_label: "Imported GLB".into(), stock_pose: Pose::default(), stock_solid, ..empty_process3d_snapshot() };
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 }

@@ -96,6 +96,7 @@ mod tests {
             positions: vec![MapFeature { id: "p1".into(), data: dsl::to_dsl_value(&serde_json::json!({ "lon": 1.0, "lat": 2.0 })).unwrap_or(dsl::DslValue::Null) }],
             routes: Vec::new(),
             regions: Vec::new(),
+            ..Default::default()
         };
         assert_eq!(GisMapInference::infer(&snapshot), GisMapInference::infer(&snapshot));
     }

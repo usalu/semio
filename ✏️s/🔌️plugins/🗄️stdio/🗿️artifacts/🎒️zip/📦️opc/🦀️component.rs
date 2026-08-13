@@ -1,6 +1,6 @@
 //! 📦️ OPC — Open Packaging Conventions (ECMA-376 Part 2 / ISO 29500-2 §9-10), the zip+XML
 //! container shape shared by every OOXML format (`📜️docx`/`📕️xlsx`/`🎞️pptx`). Real zip parsing is
-//! reused from `crate::artifacts::zip::engine::{decode_zip, encode_zip}` and real XML parsing from
+//! reused from `crate::artifacts::zip::standards::v2_0::subsets::any::io::{decode_zip, encode_zip}` and real XML parsing from
 //! `crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text}` —
 //! neither is reimplemented here. This module owns exactly two typed metadata channels
 //! (`[Content_Types].xml` and every `*.rels` file) plus the verbatim byte payload of every other
@@ -363,7 +363,7 @@ impl OpcPackage {
 /// Every zip entry becomes exactly one of: the typed `content_types` table, a typed
 /// relationship list, or a verbatim content `OpcPart` — never dropped, never fabricated.
 pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
-    let zip = crate::artifacts::zip::engine::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
+    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
     let ct_text = String::from_utf8(ct_entry.data.clone())
@@ -427,14 +427,14 @@ pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
     }
 
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
-    crate::artifacts::zip::engine::encode_zip(&snap).map_err(|e| OpcError::Zip(e.to_string()))
+    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).map_err(|e| OpcError::Zip(e.to_string()))
 }
 
 /// 🕵️ Structural sniff of OOXML-shaped bytes: recognizes the zip magic *and* the presence of a
 /// `[Content_Types].xml` entry — real OOXML disambiguation from a plain zip peeks part names
 /// (docx/xlsx/pptx callers inspect `word/`/`xl/`/`ppt/`-prefixed parts on top of this).
 pub fn sniff_opc_bytes(data: &[u8]) -> bool {
-    let Ok(zip) = crate::artifacts::zip::engine::decode_zip(data) else { return false };
+    let Ok(zip) = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data) else { return false };
     zip.entries.iter().any(|e| e.name == CONTENT_TYPES_PART)
 }
 //#endregion 🔖️Package
@@ -506,7 +506,7 @@ mod tests {
             entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }],
             comment: String::new(),
         };
-        let bytes = crate::artifacts::zip::engine::encode_zip(&snap).unwrap();
+        let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).unwrap();
         let err = decode_opc(&bytes).expect_err("must reject a zip with no [Content_Types].xml");
         assert_eq!(err, OpcError::MissingContentTypes);
     }
@@ -518,7 +518,7 @@ mod tests {
         assert!(sniff_opc_bytes(&bytes));
         assert!(!sniff_opc_bytes(b"not a zip"));
 
-        let plain_zip = crate::artifacts::zip::engine::encode_zip(&ZipSnapshot {
+        let plain_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&ZipSnapshot {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
             entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec(), ..Default::default() }],
             comment: String::new(),

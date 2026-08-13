@@ -1,16 +1,16 @@
-//! 🔺️ Sparse `FlowDiff` construction for `reorder-synapses` — recomputes the synapse id order from
-//! `base` directly (never a whole-snapshot capture).
-use crate::artifacts::flow::schema::diff::text::{FlowDiff, FlowSynapsesDelta};
-use crate::artifacts::flow::FlowSnapshot;
+//! 🔺️ Sparse `FlowDiff` construction for `reorder-synapses` — recomputes the synapse order from the
+//! current working scene directly (never a whole-snapshot capture).
+use crate::artifacts::flow::schema::diff::text::{diff_replace_content, FlowDiff};
+use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
 
 use super::mutation::ReorderSynapses;
 
 pub fn diff(payload: &ReorderSynapses, base: &FlowSnapshot) -> FlowDiff {
-    let mut ids: Vec<String> = base.synapses.iter().map(|synapse| synapse.id.clone()).collect();
-    if let Some(from) = ids.iter().position(|id| id == &payload.id) {
-        let item = ids.remove(from);
-        let to = payload.to_index.min(ids.len());
-        ids.insert(to, item);
+    let mut scene = flow_working_scene(base);
+    if let Some(from) = scene.synapses.iter().position(|synapse| synapse.id == payload.id) {
+        let item = scene.synapses.remove(from);
+        let to = payload.to_index.min(scene.synapses.len());
+        scene.synapses.insert(to, item);
     }
-    FlowDiff { synapses: Some(FlowSynapsesDelta { reordered: Some(ids), ..Default::default() }), ..Default::default() }
+    diff_replace_content(scene.widgets, scene.synapses, scene.layout)
 }

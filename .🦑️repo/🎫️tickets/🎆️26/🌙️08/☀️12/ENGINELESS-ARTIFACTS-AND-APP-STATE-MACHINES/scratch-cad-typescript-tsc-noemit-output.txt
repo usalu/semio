@@ -1,0 +1,770 @@
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(4,109): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(5,61): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(120,10): error TS2304: Cannot find name 'modelDefinitionActionCatalog'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(121,11): error TS7006: Parameter 'raw' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(122,14): error TS7006: Parameter 'spec' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(166,18): error TS2304: Cannot find name 'VertexRecord'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(178,59): error TS2304: Cannot find name 'AnchorAttachment'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(183,17): error TS2304: Cannot find name 'AnchorRecord'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(183,93): error TS2304: Cannot find name 'AnchorRef'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(364,80): error TS2304: Cannot find name 'AnchorRef'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(538,53): error TS2304: Cannot find name 'FaceRecord'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(692,36): error TS7006: Parameter 'pole' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(693,22): error TS7006: Parameter 'pole' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(693,28): error TS7006: Parameter 'index' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(813,7): error TS18046: 'modifiers' is of type 'unknown'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(813,26): error TS18046: 'modifiers' is of type 'unknown'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(819,7): error TS18046: 'modifiers' is of type 'unknown'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(830,7): error TS18046: 'modifiers' is of type 'unknown'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(881,38): error TS2304: Cannot find name 'MODEL_ENTITY_KINDS'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(897,38): error TS2304: Cannot find name 'MODEL_ENTITY_KINDS'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(1169,14): error TS2304: Cannot find name 'findState'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(1170,33): error TS7006: Parameter 'h' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(1228,75): error TS2304: Cannot find name 'listFinalInteractionStates'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(1424,14): error TS2304: Cannot find name 'findState'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(1426,37): error TS7006: Parameter 'h' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(1590,14): error TS2304: Cannot find name 'findState'.
+../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts(1608,51): error TS2304: Cannot find name 'InteractionRuntime'.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(7,27): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(286,14): error TS2416: Property 'id' in type 'StubKernel' is not assignable to the same property in base type 'BrepjsKernel'.
+  Type '"stub-parity"' is not assignable to type '"brepjs-opencascade"'.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(287,14): error TS2416: Property 'operations' in type 'StubKernel' is not assignable to the same property in base type 'BrepjsKernel'.
+  Type 'readonly ["solid.createBox", "entity.tessellate"]' is not assignable to type 'readonly ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"]'.
+    Source has 2 element(s) but target requires 7.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(291,14): error TS2304: Cannot find name 'solidRef'.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(298,12): error TS2304: Cannot find name 'emptyMeshTransfer'.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(335,14): error TS2416: Property 'id' in type 'MeasureParityKernel' is not assignable to the same property in base type 'BrepjsKernel'.
+  Type '"stub-measure-parity"' is not assignable to type '"brepjs-opencascade"'.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(336,14): error TS2416: Property 'operations' in type 'MeasureParityKernel' is not assignable to the same property in base type 'BrepjsKernel'.
+  Type 'readonly ["surface.resolveFaces", "measure.distance", "measure.area"]' is not assignable to type 'readonly ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"]'.
+    Source has 3 element(s) but target requires 7.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(338,14): error TS2304: Cannot find name 'solidRef'.
+../../🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts(344,14): error TS2304: Cannot find name 'emptyMeshTransfer'.
+../../🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts(47,7): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+../../🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts(64,7): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+../../🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts(81,7): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+../../🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts(98,7): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+../../🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts(126,16): error TS2339: Property 'contribution' does not exist on type 'ProgramContributionEntry'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(4,109): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(5,61): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(240,11): error TS2741: Property 'preview' is missing in type '{ context: Record<string, unknown>; event: { kind: string; }; }' but required in type 'ExprEnv'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(337,9): error TS2304: Cannot find name 'clearInteractionLengthEntryFields'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(346,47): error TS2304: Cannot find name 'clearInteractionLengthEntryFields'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(359,9): error TS2304: Cannot find name 'CURSOR_RAW_CTX'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(360,18): error TS2304: Cannot find name 'positiveLengthLock'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(373,11): error TS2304: Cannot find name 'LENGTH_LOCK_CTX'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(377,9): error TS2304: Cannot find name 'LENGTH_LOCK_CTX'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(382,17): error TS2304: Cannot find name 'lengthEntryRawPoint'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(384,11): error TS2304: Cannot find name 'CURSOR_RAW_CTX'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(385,7): error TS2304: Cannot find name 'applyLengthEntryToContext'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(397,9): error TS2304: Cannot find name 'CURSOR_RAW_CTX'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(400,18): error TS2304: Cannot find name 'scalarEntryAxis'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(402,9): error TS2304: Cannot find name 'SCALAR_AXIS_T_CTX'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(403,18): error TS2304: Cannot find name 'positiveHeightLock'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(404,32): error TS2304: Cannot find name 'scalarHeightFromAxisT'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(414,11): error TS2304: Cannot find name 'HEIGHT_LOCK_CTX'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(417,18): error TS2304: Cannot find name 'HEIGHT_LOCK_CTX'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(434,17): error TS2304: Cannot find name 'lookupGuard'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(449,20): error TS2304: Cannot find name 'findState'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(449,59): error TS7006: Parameter 'handler' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(740,21): error TS2304: Cannot find name 'applyActionPatchToContext'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(753,32): error TS2345: Argument of type '{ context: Record<string, unknown>; event: undefined; }' is not assignable to parameter of type 'ExprEnv'.
+  Property 'preview' is missing in type '{ context: Record<string, unknown>; event: undefined; }' but required in type 'ExprEnv'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(754,38): error TS2345: Argument of type '{ context: Record<string, unknown>; event: undefined; }' is not assignable to parameter of type 'ExprEnv'.
+  Property 'preview' is missing in type '{ context: Record<string, unknown>; event: undefined; }' but required in type 'ExprEnv'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(809,5): error TS2739: Type '{ ok: true; diff: ModelDiff; archiveContext: { targets: readonly SelectionTarget[]; }; }' is missing the following properties from type 'InteractionResponse<unknown>': errors, warnings, infos, data
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(893,10): error TS2304: Cannot find name 'modelDefinitionInteractionCatalog'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(944,1): error TS2304: Cannot find name 'interactionCompileCacheClear'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(1467,75): error TS7006: Parameter 'pole' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(1470,52): error TS2741: Property 'editable' is missing in type '{ kind: string; id: any; }' but required in type 'SelectionTarget'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(1475,57): error TS7006: Parameter 'pole' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(1496,52): error TS2741: Property 'editable' is missing in type '{ kind: string; id: any; }' but required in type 'SelectionTarget'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(1631,20): error TS2339: Property 'register' does not exist on type 'InteractionRegistry'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(1757,11): error TS2339: Property 'register' does not exist on type 'InteractionRegistry'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(1758,11): error TS2339: Property 'register' does not exist on type 'InteractionRegistry'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(1794,9): error TS2339: Property 'register' does not exist on type 'ActionRegistry'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(2186,16): error TS18048: 'heightSeg.params' is possibly 'undefined'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(2186,16): error TS18046: 'heightSeg.params.to' is of type 'unknown'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(2399,16): error TS18046: 'ev.point' is of type 'unknown'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(2400,16): error TS18046: 'ev.point' is of type 'unknown'.
+../../🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts(3263,11): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📔️registry/🟦️component.ts(4,109): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/📔️registry/🟦️component.ts(5,61): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/📔️registry/🟦️component.ts(55,61): error TS2304: Cannot find name 'ResolvedTypologyStyle'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(43,3): error TS2305: Module '"@semio-tech/ui-react"' has no exported member 'WINDOW_SEARCH_USER'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(456,29): error TS2345: Argument of type 'Model | null | undefined' is not assignable to parameter of type 'Model | ModelJson | null'.
+  Type 'undefined' is not assignable to type 'Model | ModelJson | null'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(624,20): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(653,5): error TS2322: Type 'unknown' is not assignable to type 'Readonly<Record<string, boolean>> | undefined'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(971,32): error TS2339: Property 'vertices' does not exist on type 'ModelJson'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(972,29): error TS2339: Property 'edges' does not exist on type 'ModelJson'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(973,29): error TS2339: Property 'wires' does not exist on type 'ModelJson'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(974,29): error TS2339: Property 'faces' does not exist on type 'ModelJson'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(975,30): error TS2339: Property 'shells' does not exist on type 'ModelJson'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(976,30): error TS2339: Property 'solids' does not exist on type 'ModelJson'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1007,55): error TS7006: Parameter 'edgeId' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1017,37): error TS7006: Parameter 'wireId' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1018,31): error TS7006: Parameter 'id' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1022,38): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1031,53): error TS7006: Parameter 'id' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1035,54): error TS7006: Parameter 'id' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1039,55): error TS7006: Parameter 'id' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1091,34): error TS7006: Parameter 'wireId' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1097,49): error TS7006: Parameter 'faceId' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1100,50): error TS7006: Parameter 'shellId' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1691,96): error TS2304: Cannot find name 'palette'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1762,46): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1812,41): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(1813,58): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2126,48): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2143,45): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2149,91): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2149,121): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2178,27): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2262,3): error TS2353: Object literal may only specify known properties, and 'surface' does not exist in type 'Record<SpatialGeometryPickTargetKind, number>'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2266,30): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2349,52): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2361,11): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2376,11): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2399,41): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2549,45): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2862,59): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(2915,77): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3059,32): error TS2339: Property 'hidden' does not exist on type '{}'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3068,29): error TS2339: Property 'hidden' does not exist on type '{}'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3085,30): error TS2339: Property 'hidden' does not exist on type '{}'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3139,74): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3154,31): error TS7006: Parameter 'info' implicitly has an 'any' type.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3481,55): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3481,76): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3494,57): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3564,51): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3568,49): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3659,7): error TS2322: Type '((event: MouseEvent) => void) | undefined' is not assignable to type '((event: MouseEvent<Element, MouseEvent>) => void) | undefined'.
+  Type '(event: MouseEvent) => void' is not assignable to type '(event: MouseEvent<Element, MouseEvent>) => void'.
+    Types of parameters 'event' and 'event' are incompatible.
+      Type 'MouseEvent<Element, MouseEvent>' is missing the following properties from type 'MouseEvent': layerX, layerY, offsetX, offsetY, and 16 more.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(3999,17): error TS2322: Type 'SpatialPickGeometry' is not assignable to type 'Model'.
+  Type 'ModelJson' is missing the following properties from type 'Model': anchors, vertices, edges, wires, and 7 more.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4608,7): error TS2322: Type 'string' is not assignable to type 'UiLabel'.
+  Type 'string' is not assignable to type '{ readonly [uiLabelBrand]: true; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4621,7): error TS2322: Type 'string' is not assignable to type 'UiLabel'.
+  Type 'string' is not assignable to type '{ readonly [uiLabelBrand]: true; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4634,5): error TS2322: Type 'string' is not assignable to type 'UiLabel'.
+  Type 'string' is not assignable to type '{ readonly [uiLabelBrand]: true; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4703,5): error TS2322: Type '{ id: string; label: string; onPress: () => void; }[] | undefined' is not assignable to type 'EngagementOption[] | undefined'.
+  Type '{ id: string; label: string; onPress: () => void; }[]' is not assignable to type 'EngagementOption[]'.
+    Property 'icon' is missing in type '{ id: string; label: string; onPress: () => void; }' but required in type 'EngagementOption'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4749,146): error TS2322: Type 'string' is not assignable to type '"typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | ... 236 more ... | "zoom-out"'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4749,185): error TS2322: Type 'string' is not assignable to type 'UiLabel'.
+  Type 'string' is not assignable to type '{ readonly [uiLabelBrand]: true; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4839,3): error TS2339: Property 'asideHost' does not exist on type 'InteractionReplProps'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4913,78): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4932,87): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(4934,34): error TS2503: Cannot find namespace 'THREE'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6109,104): error TS2322: Type '{ children: (string | Element)[]; key: string; type: "button"; variant: "outline"; size: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6115,14): error TS2741: Property 'id' is missing in type '{ ref: RefObject<HTMLInputElement | null>; type: "text"; autoComplete: "off"; spellCheck: false; value: string; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; onKeyDown: (e: KeyboardEvent<...>) => void; placeholder: any; "aria-label": any; className: string; }' but required in type 'InputProps'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6133,15): error TS2322: Type '{ children: string; type: "button"; variant: "outline"; size: string; className: string; onMouseDown: (e: MouseEvent<HTMLButtonElement, MouseEvent>) => void; onClick: () => void; "aria-label": any; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6480,51): error TS2322: Type '{ children: string; type: "button"; variant: "outline"; size: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<...> & { ...; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6529,14): error TS2741: Property 'id' is missing in type '{ type: "number"; className: string; value: string | number; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; }' but required in type 'InputProps'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6553,12): error TS2741: Property 'id' is missing in type '{ type: "text"; className: string; value: string; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; }' but required in type 'InputProps'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6709,67): error TS2307: Cannot find module '../📐️brepjs/🟦️component.ts' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6908,11): error TS2322: Type 'string' is not assignable to type 'UiLabel'.
+  Type 'string' is not assignable to type '{ readonly [uiLabelBrand]: true; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6933,62): error TS2345: Argument of type 'InteractionSpec | null' is not assignable to parameter of type 'InteractionSpec'.
+  Type 'null' is not assignable to type 'InteractionSpec'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6934,62): error TS2345: Argument of type 'InteractionSpec | null' is not assignable to parameter of type 'InteractionSpec'.
+  Type 'null' is not assignable to type 'InteractionSpec'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6935,62): error TS2345: Argument of type 'InteractionSpec | null' is not assignable to parameter of type 'InteractionSpec'.
+  Type 'null' is not assignable to type 'InteractionSpec'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6936,62): error TS2345: Argument of type 'InteractionSpec | null' is not assignable to parameter of type 'InteractionSpec'.
+  Type 'null' is not assignable to type 'InteractionSpec'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6937,49): error TS2345: Argument of type 'InteractionSpec | null' is not assignable to parameter of type 'InteractionSpec'.
+  Type 'null' is not assignable to type 'InteractionSpec'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6986,9): error TS2739: Type '{ spatialGroundPick: true; pickDisabledStates: string[]; groundPointerMoveStates: string[]; heightDragStates: never[]; verticalRodStates: never[]; heightConfirmState: null; }' is missing the following properties from type 'InteractionSpatialResolved': lengthEntry, scalarEntry
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6995,55): error TS2345: Argument of type '{ state: string; spatialInteraction: { spatialGroundPick: true; pickDisabledStates: string[]; groundPointerMoveStates: string[]; heightDragStates: never[]; verticalRodStates: never[]; heightConfirmState: null; }; }' is not assignable to parameter of type 'Pick<InteractionSnapshot, "state" | "spatialInteraction">'.
+  Types of property 'spatialInteraction' are incompatible.
+    Type '{ spatialGroundPick: true; pickDisabledStates: string[]; groundPointerMoveStates: string[]; heightDragStates: never[]; verticalRodStates: never[]; heightConfirmState: null; }' is missing the following properties from type 'InteractionSpatialResolved': lengthEntry, scalarEntry
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(6996,55): error TS2345: Argument of type '{ state: string; spatialInteraction: { spatialGroundPick: true; pickDisabledStates: string[]; groundPointerMoveStates: string[]; heightDragStates: never[]; verticalRodStates: never[]; heightConfirmState: null; }; }' is not assignable to parameter of type 'Pick<InteractionSnapshot, "state" | "spatialInteraction">'.
+  Types of property 'spatialInteraction' are incompatible.
+    Type '{ spatialGroundPick: true; pickDisabledStates: string[]; groundPointerMoveStates: string[]; heightDragStates: never[]; verticalRodStates: never[]; heightConfirmState: null; }' is missing the following properties from type 'InteractionSpatialResolved': lengthEntry, scalarEntry
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7019,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7155,43): error TS2307: Cannot find module '../🟦️index.ts' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7262,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7301,73): error TS2339: Property 'sort' does not exist on type 'readonly SpatialGeometryPickTargetKind[]'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7302,71): error TS2339: Property 'sort' does not exist on type 'readonly SpatialGeometryPickTargetKind[]'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7340,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7381,20): error TS2322: Type '"solid"' is not assignable to type 'TypologyStylePatternKind'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7466,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7480,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7502,60): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7503,60): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7504,62): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7539,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7555,60): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7569,60): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx(7607,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🎛️apps/📐️cad/⚙️engine/🧬️typology/🟦️component.ts(4,109): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🎛️apps/📐️cad/⚙️engine/🧬️typology/🟦️component.ts(5,61): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+📦️index.ts(2,29): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(3,38): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(4,36): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/📝️text/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(5,38): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(6,27): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/🔺️diff/📝️text/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(7,34): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/🔺️diff/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(8,26): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/📝️text/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(9,27): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(10,25): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/📝️text/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(11,32): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(12,26): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(13,33): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🪓️decomposer/🟦️component.ts' or its corresponding type declarations.
+📦️index.ts(14,25): error TS2307: Cannot find module '../../🗿️artifacts/📐️cad/🚪️io/🟦️component.ts' or its corresponding type declarations.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(26,53): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(691,61): error TS2345: Argument of type 'CstElement' is not assignable to parameter of type 'IToken'.
+  Type 'CstNode' is missing the following properties from type 'IToken': image, startOffset, tokenTypeIdx, tokenType
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(693,62): error TS2345: Argument of type 'CstElement' is not assignable to parameter of type 'IToken'.
+  Type 'CstNode' is missing the following properties from type 'IToken': image, startOffset, tokenTypeIdx, tokenType
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(695,62): error TS2345: Argument of type 'CstElement' is not assignable to parameter of type 'IToken'.
+  Type 'CstNode' is missing the following properties from type 'IToken': image, startOffset, tokenTypeIdx, tokenType
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(718,62): error TS2345: Argument of type 'CstElement' is not assignable to parameter of type 'IToken'.
+  Type 'CstNode' is missing the following properties from type 'IToken': image, startOffset, tokenTypeIdx, tokenType
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(805,59): error TS2345: Argument of type 'CstElement' is not assignable to parameter of type 'IToken'.
+  Type 'CstNode' is missing the following properties from type 'IToken': image, startOffset, tokenTypeIdx, tokenType
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(806,60): error TS2345: Argument of type 'CstElement' is not assignable to parameter of type 'IToken'.
+  Type 'CstNode' is missing the following properties from type 'IToken': image, startOffset, tokenTypeIdx, tokenType
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(807,58): error TS2345: Argument of type 'CstElement' is not assignable to parameter of type 'IToken'.
+  Type 'CstNode' is missing the following properties from type 'IToken': image, startOffset, tokenTypeIdx, tokenType
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(846,48): error TS2339: Property 'children' does not exist on type 'CstElement'.
+  Property 'children' does not exist on type 'IToken'.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(880,46): error TS2339: Property 'image' does not exist on type 'CstElement'.
+  Property 'image' does not exist on type 'CstNode'.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1206,58): error TS2339: Property 'preview' does not exist on type 'ConstructQueryContext'.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1371,7): error TS2542: Index signature in type 'Readonly<Record<string, unknown>>' only permits reading.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1430,23): error TS2416: Property 'id' in type 'QueryTestKernel' is not assignable to the same property in base type 'BrepjsKernel'.
+  Type '"stub-k"' is not assignable to type '"brepjs-opencascade"'.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1431,23): error TS2416: Property 'operations' in type 'QueryTestKernel' is not assignable to the same property in base type 'BrepjsKernel'.
+  Type 'readonly []' is not assignable to type 'readonly ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"]'.
+    Source has 0 element(s) but target requires 7.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1436,52): error TS2554: Expected 0 arguments, but got 1.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1662,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1663,39): error TS2551: Property 'solid' does not exist on type 'ModelDiff'. Did you mean 'solids'?
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1692,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts(1693,39): error TS2551: Property 'solid' does not exist on type 'ModelDiff'. Did you mean 'solids'?
+../../🧩️extensions/🏛️aec-building-structure/🟦️component.ts(5,10): error TS2305: Module '"@semio-tech/cad-js"' has no exported member 'core'.
+../../🧩️extensions/🏛️aec-building-structure/🟦️component.ts(77,51): error TS18046: 'row' is of type 'unknown'.
+../../🧩️extensions/🏛️aec-building-structure/🟦️component.ts(85,24): error TS18046: 'row' is of type 'unknown'.
+../../🧩️extensions/🏛️aec-building-structure/🟦️component.ts(86,11): error TS18046: 'row' is of type 'unknown'.
+../../🧩️extensions/🏛️aec-building-structure/🟦️component.ts(86,47): error TS18046: 'row' is of type 'unknown'.
+../../🧩️extensions/🏛️aec-building-structure/🟦️component.ts(120,11): error TS2339: Property 'runtime' does not exist on type 'typeof import("/Users/ueli/Documents/semio/\u270F\uFE0Fs/\uD83D\uDD0C\uFE0Fplugins/\uD83D\uDCD0\uFE0Fcad/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex")'.
+../../🧩️extensions/🏛️aec-building-structure/🟦️component.ts(120,20): error TS2339: Property 'brepjs' does not exist on type 'typeof import("/Users/ueli/Documents/semio/\u270F\uFE0Fs/\uD83D\uDD0C\uFE0Fplugins/\uD83D\uDCD0\uFE0Fcad/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex")'.
+../../🧩️extensions/🏛️aec-building-structure/🟦️component.ts(160,48): error TS2339: Property 'typology' does not exist on type '{}'.
+../../🧩️extensions/🏢️aec-building/🟦️component.ts(5,10): error TS2305: Module '"@semio-tech/cad-js"' has no exported member 'core'.
+../../🧩️extensions/🏢️aec-building/🟦️component.ts(53,11): error TS2339: Property 'runtime' does not exist on type 'typeof import("/Users/ueli/Documents/semio/\u270F\uFE0Fs/\uD83D\uDD0C\uFE0Fplugins/\uD83D\uDCD0\uFE0Fcad/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex")'.
+../../🧩️extensions/📐️spatial-shape/🟦️component.ts(5,10): error TS2305: Module '"@semio-tech/cad-js"' has no exported member 'core'.
+../../🧩️extensions/📐️spatial-shape/🟦️component.ts(67,11): error TS2339: Property 'runtime' does not exist on type 'typeof import("/Users/ueli/Documents/semio/\u270F\uFE0Fs/\uD83D\uDD0C\uFE0Fplugins/\uD83D\uDCD0\uFE0Fcad/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex")'.
+../../🧩️extensions/📐️spatial-shape/🟦️component.ts(67,20): error TS2339: Property 'brepjs' does not exist on type 'typeof import("/Users/ueli/Documents/semio/\u270F\uFE0Fs/\uD83D\uDD0C\uFE0Fplugins/\uD83D\uDCD0\uFE0Fcad/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex")'.
+../../🧩️extensions/🔥️aec-building-energy/🟦️component.ts(5,10): error TS2305: Module '"@semio-tech/cad-js"' has no exported member 'core'.
+../../🧩️extensions/🔥️aec-building-energy/🟦️component.ts(82,11): error TS2339: Property 'runtime' does not exist on type 'typeof import("/Users/ueli/Documents/semio/\u270F\uFE0Fs/\uD83D\uDD0C\uFE0Fplugins/\uD83D\uDCD0\uFE0Fcad/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex")'.
+../../🧩️extensions/🔥️aec-building-energy/🟦️component.ts(82,20): error TS2339: Property 'brepjs' does not exist on type 'typeof import("/Users/ueli/Documents/semio/\u270F\uFE0Fs/\uD83D\uDD0C\uFE0Fplugins/\uD83D\uDCD0\uFE0Fcad/\uD83D\uDCE6\uFE0Fpackages/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex")'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(4,109): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(5,61): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(110,17): error TS2304: Cannot find name 'lookupGuard'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(819,9): error TS2741: Property 'preview' is missing in type '{ context: Record<string, unknown>; event: { kind: string; }; }' but required in type 'ExprEnv'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(904,9): error TS2741: Property 'preview' is missing in type '{ context: Record<string, unknown>; event: { kind: string; }; }' but required in type 'ExprEnv'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1259,27): error TS7006: Parameter 'c' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1265,41): error TS7006: Parameter 'vid' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1267,19): error TS7006: Parameter 'c' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1297,65): error TS7006: Parameter 'c' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1492,7): error TS2304: Cannot find name 'defaultModelDefinitionIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1492,53): error TS2304: Cannot find name 'defaultModelDefinitionIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1495,3): error TS2304: Cannot find name 'defaultModelDefinitionIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1496,10): error TS2304: Cannot find name 'defaultModelDefinitionIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1547,10): error TS2304: Cannot find name 'modelDefinitionManifestCatalog'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1548,11): error TS7006: Parameter 'raw' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1549,14): error TS7006: Parameter 'm' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1785,7): error TS2304: Cannot find name 'typologyStyleCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1785,57): error TS2304: Cannot find name 'typologyStyleCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1788,8): error TS2304: Cannot find name 'typologyStyleCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1788,36): error TS2304: Cannot find name 'typologyStyleCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1789,3): error TS2304: Cannot find name 'typologyStyleCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1796,5): error TS2304: Cannot find name 'modelDefinitionTypologyCatalog'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1797,13): error TS7006: Parameter 'raw' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1798,16): error TS7006: Parameter 'spec' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1896,5): error TS2304: Cannot find name 'modelDefinitionAttributeCatalog'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1897,13): error TS7006: Parameter 'raw' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1898,16): error TS7006: Parameter 'spec' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1904,5): error TS2304: Cannot find name 'modelDefinitionPropertyCatalog'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1905,13): error TS7006: Parameter 'raw' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(1906,16): error TS7006: Parameter 'spec' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2169,5): error TS2304: Cannot find name 'modelDefinitionStatCatalog'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2170,13): error TS7006: Parameter 'raw' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2171,16): error TS7006: Parameter 'spec' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2186,7): error TS2304: Cannot find name 'statOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2186,42): error TS2304: Cannot find name 'statOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2188,44): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2194,3): error TS2304: Cannot find name 'statOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2656,44): error TS2304: Cannot find name 'modelDefinitionTransformationModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2707,7): error TS2304: Cannot find name 'modelDefinitionFolderIdMapCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2707,55): error TS2304: Cannot find name 'modelDefinitionFolderIdMapCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2710,8): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2711,8): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2719,3): error TS2304: Cannot find name 'modelDefinitionFolderIdMapCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2731,7): error TS2304: Cannot find name 'typologyOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2731,46): error TS2304: Cannot find name 'typologyOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2733,44): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2739,3): error TS2304: Cannot find name 'typologyOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2750,7): error TS2304: Cannot find name 'actionOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2750,44): error TS2304: Cannot find name 'actionOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2752,44): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2754,18): error TS2304: Cannot find name 'parseActionSpec'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2758,3): error TS2304: Cannot find name 'actionOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2781,7): error TS2304: Cannot find name 'interactionOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2781,49): error TS2304: Cannot find name 'interactionOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2783,44): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2789,3): error TS2304: Cannot find name 'interactionOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2807,27): error TS2304: Cannot find name 'shippedSpatialInteractionCatalog'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2807,67): error TS7006: Parameter 'row' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2813,20): error TS2304: Cannot find name 'loadSpatialInteraction'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2820,7): error TS2304: Cannot find name 'attributeOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2820,47): error TS2304: Cannot find name 'attributeOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2822,44): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2828,3): error TS2304: Cannot find name 'attributeOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2839,7): error TS2304: Cannot find name 'propertyOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2839,46): error TS2304: Cannot find name 'propertyOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2842,8): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2843,8): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2850,3): error TS2304: Cannot find name 'propertyOwnerByIdCache'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2885,17): error TS2304: Cannot find name 'typologyConstructKitByInteraction'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2904,20): error TS2304: Cannot find name 'loadSpatialInteraction'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2920,44): error TS2304: Cannot find name 'modelDefinitionAssetModules'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2922,18): error TS2304: Cannot find name 'parseActionSpec'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2926,25): error TS2304: Cannot find name 'loadSpatialInteraction'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2946,96): error TS2304: Cannot find name 'SelectionOperationInteractionDef'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2947,10): error TS2304: Cannot find name 'selectionOperationsForModelDefinitionFromActions'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(2997,42): error TS2304: Cannot find name 'SelectionOperationInteractionDef'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(3512,58): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(3513,60): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(3524,9): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(3543,58): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(3544,60): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts(3728,27): error TS2345: Argument of type '{ context: { origin: number[]; height: number; }; }' is not assignable to parameter of type 'ExprEnv'.
+  Property 'preview' is missing in type '{ context: { origin: number[]; height: number; }; }' but required in type 'ExprEnv'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(4,109): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(5,61): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(15,47): error TS2304: Cannot find name 'AnchorRef'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(15,74): error TS2304: Cannot find name 'AnchorRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(16,74): error TS2304: Cannot find name 'VertexRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(17,70): error TS2304: Cannot find name 'EdgeRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(18,70): error TS2304: Cannot find name 'WireRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(19,70): error TS2304: Cannot find name 'FaceRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(20,72): error TS2304: Cannot find name 'ShellRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(21,72): error TS2304: Cannot find name 'SolidRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(31,33): error TS2304: Cannot find name 'AnchorRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(31,65): error TS2304: Cannot find name 'AnchorRef'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(32,34): error TS2304: Cannot find name 'VertexRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(33,31): error TS2304: Cannot find name 'EdgeRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(34,31): error TS2304: Cannot find name 'WireRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(35,31): error TS2304: Cannot find name 'FaceRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(36,32): error TS2304: Cannot find name 'ShellRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(37,32): error TS2304: Cannot find name 'SolidRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(66,35): error TS2540: Cannot assign to 'added' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(75,37): error TS2540: Cannot assign to 'removed' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(92,38): error TS2540: Cannot assign to 'modified' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(101,26): error TS2304: Cannot find name 'AnchorRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(101,58): error TS2304: Cannot find name 'AnchorRef'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(102,26): error TS2304: Cannot find name 'VertexRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(103,26): error TS2304: Cannot find name 'EdgeRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(104,26): error TS2304: Cannot find name 'WireRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(105,26): error TS2304: Cannot find name 'FaceRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(106,26): error TS2304: Cannot find name 'ShellRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(107,26): error TS2304: Cannot find name 'SolidRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(108,51): error TS2304: Cannot find name 'AnchorRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(109,52): error TS2304: Cannot find name 'VertexRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(110,49): error TS2304: Cannot find name 'EdgeRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(111,49): error TS2304: Cannot find name 'WireRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(112,49): error TS2304: Cannot find name 'FaceRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(113,50): error TS2304: Cannot find name 'ShellRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(114,50): error TS2304: Cannot find name 'SolidRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(118,23): error TS2304: Cannot find name 'modelDiffSyncNurbsThroughEdgesForMovedVertices'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(120,34): error TS2304: Cannot find name 'EdgeRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(121,53): error TS2304: Cannot find name 'EdgeRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(124,13): error TS2540: Cannot assign to 'edges' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(134,37): error TS2540: Cannot assign to 'anchors' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(135,37): error TS2540: Cannot assign to 'vertices' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(136,37): error TS2540: Cannot assign to 'edges' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(137,37): error TS2540: Cannot assign to 'wires' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(138,37): error TS2540: Cannot assign to 'faces' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(139,37): error TS2540: Cannot assign to 'shells' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(140,37): error TS2540: Cannot assign to 'solids' because it is a read-only property.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(169,54): error TS2304: Cannot find name 'VertexRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(169,76): error TS2304: Cannot find name 'EdgeRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(175,29): error TS2304: Cannot find name 'SolidPrimitive'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(176,40): error TS2304: Cannot find name 'SolidRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(179,48): error TS2304: Cannot find name 'AnchorRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(180,49): error TS2304: Cannot find name 'AnchorAttachment'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(180,149): error TS2304: Cannot find name 'AnchorAttachment'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(184,34): error TS2304: Cannot find name 'FaceRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(185,36): error TS2304: Cannot find name 'FaceRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(186,34): error TS2304: Cannot find name 'FaceRecord'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(226,14): error TS2304: Cannot find name 'ActionResult'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(226,30): error TS2304: Cannot find name 'ActionResult'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(320,56): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts(321,56): error TS2322: Type 'string' is not assignable to type 'TypologyRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "TypologyRef"; }'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(62,169): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(316,36): error TS7006: Parameter 'id' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(316,83): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(837,40): error TS7006: Parameter 'wireId' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(839,43): error TS7006: Parameter 'edgeId' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(841,43): error TS7006: Parameter 'vertexId' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(841,106): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(844,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(854,41): error TS7006: Parameter 'shellId' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(861,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1619,38): error TS7006: Parameter 'g' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1620,38): error TS7006: Parameter 'g' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1621,36): error TS7006: Parameter 'f' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1622,36): error TS7006: Parameter 'e' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1905,37): error TS7006: Parameter 'shellRef' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1906,36): error TS7006: Parameter 'faceRef' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1907,36): error TS7006: Parameter 'wireRef' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1949,23): error TS2322: Type 'string' is not assignable to type 'ObjectRef'.
+  Type 'string' is not assignable to type '{ readonly __brand: "ObjectRef"; }'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1949,64): error TS2322: Type 'unknown[]' is not assignable to type 'Readonly<Record<string, string>>'.
+  Index signature for type 'string' is missing in type 'unknown[]'.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(1977,46): error TS7006: Parameter 'n' implicitly has an 'any' type.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(2686,66): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(2701,66): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts(2716,66): error TS2307: Cannot find module '@semio-tech/kernel-3d-js' or its corresponding type declarations.
+../../../../../🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(408,30): error TS2304: Cannot find name 'PluginRegistryEntry'.
+../../../../../🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(436,21): error TS2304: Cannot find name 'PluginSourceEvent'.
+../../../../../🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(81,47): error TS2339: Property 'contributions' does not exist on type 'PluginManifest'.
+../../../../../🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(82,48): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+../../../../../🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(586,23): error TS2358: The left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+../../../../../🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(586,96): error TS2352: Conversion of type 'string' to type 'ArrayBuffer' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+../../../../../🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts(633,43): error TS2304: Cannot find name 'PluginContextMenuRequest'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(69,28): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(72,46): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(72,59): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(77,52): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(83,113): error TS2304: Cannot find name 'UiStatus'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(90,35): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(128,149): error TS2304: Cannot find name 'WindowLayoutWindowNode'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(164,92): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(164,178): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(183,50): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(183,97): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(183,125): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(221,54): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(222,20): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(232,27): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(236,16): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(254,28): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(261,27): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(262,75): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(262,124): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(262,169): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(262,221): error TS2304: Cannot find name 'NamedLayout'.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(691,33): error TS7006: Parameter 'child' implicitly has an 'any' type.
+../../../../../🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(691,40): error TS7006: Parameter 'index' implicitly has an 'any' type.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(227,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(228,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(229,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(230,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(64,1114): error TS2305: Module '"@semio-tech/framework"' has no exported member 'TutorialDocumentEvent'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(1045,205): error TS2300: Duplicate identifier 'Icon'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(1046,15): error TS2300: Duplicate identifier 'Icon'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(1447,24): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node | null' is not assignable to parameter of type 'Node | null'.
+  Type 'Node' is not assignable to type 'Node | null'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(1458,49): error TS2345: Argument of type 'Node' is not assignable to parameter of type 'Node | null'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(1856,7): error TS2322: Type 'true' is not assignable to type 'false'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(2507,11): error TS2322: Type '{ ui: { nav: { back: { label: { normal: string; beginner: string; }; }; forward: { label: { normal: string; beginner: string; }; }; up: { label: { normal: string; beginner: string; }; }; }; search: { toggle: { label: { normal: string; beginner: string; }; }; ... 5 more ...; category: { ...; }; }; ... 28 more ...; su...' is not assignable to type 'UiTranslationSchema'.
+  The types of 'ui.surfaceContextMenu' are incompatible between these types.
+    Object literal may only specify known properties, and 'architecture' does not exist in type '{ readonly file: UiLabelValue; readonly workspace: UiLabelValue; readonly canvas: UiLabelValue; readonly scene: UiLabelValue; ... 12 more ...; readonly map: UiLabelValue; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(2507,11): error TS2353: Object literal may only specify known properties, and 'architecture' does not exist in type '{ readonly file: UiLabelValue; readonly workspace: UiLabelValue; readonly canvas: UiLabelValue; readonly scene: UiLabelValue; ... 12 more ...; readonly map: UiLabelValue; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(3236,11): error TS2322: Type '{ ui: { nav: { back: { label: { normal: string; beginner: string; }; }; forward: { label: { normal: string; beginner: string; }; }; up: { label: { normal: string; beginner: string; }; }; }; search: { toggle: { label: { normal: string; beginner: string; }; }; ... 5 more ...; category: { ...; }; }; ... 28 more ...; su...' is not assignable to type 'UiTranslationSchema'.
+  The types of 'ui.surfaceContextMenu' are incompatible between these types.
+    Object literal may only specify known properties, and 'architecture' does not exist in type '{ readonly file: UiLabelValue; readonly workspace: UiLabelValue; readonly canvas: UiLabelValue; readonly scene: UiLabelValue; ... 12 more ...; readonly map: UiLabelValue; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(3236,11): error TS2353: Object literal may only specify known properties, and 'architecture' does not exist in type '{ readonly file: UiLabelValue; readonly workspace: UiLabelValue; readonly canvas: UiLabelValue; readonly scene: UiLabelValue; ... 12 more ...; readonly map: UiLabelValue; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(3411,161): error TS2304: Cannot find name 'DeepUiTranslationKeys'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(4052,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(4122,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(4165,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(4203,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(5243,58): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(5277,15): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(5493,29): error TS2339: Property 'document' does not exist on type 'TutorialTracks'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(5493,46): error TS7006: Parameter 'event' implicitly has an 'any' type.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(5525,45): error TS2339: Property 'document' does not exist on type 'TutorialTracks'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(5525,62): error TS18046: 'e' is of type 'unknown'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(5754,39): error TS2322: Type '"gauge"' is not assignable to type 'ControlIcon'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(6631,10): error TS2741: Property 'children' is missing in type '{ ref: RefObject<HTMLDivElement | null>; sessionGhost: false; "data-level": string; "data-slot": string; "data-anchor": "top-left" | "top-middle" | "top-right" | ... 4 more ... | "left-middle"; "data-panel-chrome-tab-bar-placeholder": string; "aria-hidden": "true"; className: string; style: { ...; } | undefined; }' but required in type 'GhostRegionShellProps'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(6794,15): error TS2540: Cannot assign to 'right' because it is a read-only property.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(7179,16): error TS2322: Type '{ xmlns: string; className: string; style: { width: string; height: string; }; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+  Property 'xmlns' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(10534,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; utilityBar: React.JSX.Element; utilityBarFolded: false; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(10594,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(11246,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "orbit" | "action" | "utility" | "tool" | "expand" | "pan" | "zoom"'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(11519,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "orbit" | "action" | "utility" | "tool" | "expand" | "pan" | "zoom"'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(11541,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "orbit" | "action" | "utility" | "tool" | "expand" | "pan" | "zoom"'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(11804,44): error TS2345: Argument of type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is missing the following properties from type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(11805,44): error TS2345: Argument of type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; button: "middle"; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Property 'modifiers' is missing in type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; button: "middle"; }' but required in type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(11806,44): error TS2345: Argument of type '{ kind: "orbit"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Type '{ kind: "orbit"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is missing the following properties from type '{ kind: "orbit"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(11946,23): error TS2352: Conversion of type '{ id: string; title: string; body: string; introduce: null; show: never[]; placement: "center"; interactions: never[]; ordered: false; logos: never[]; }[]' to type 'IntroductionStepDefinition[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'demonstrations' is missing in type '{ id: string; title: string; body: string; introduce: null; show: never[]; placement: "center"; interactions: never[]; ordered: false; logos: never[]; }' but required in type 'IntroductionStepDefinition'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(12022,13): error TS2322: Type '{ kind: "drag"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; button: "middle"; }' is not assignable to type 'IntroductionGesture'.
+  Property 'modifiers' is missing in type '{ kind: "drag"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; button: "middle"; }' but required in type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(12023,13): error TS2322: Type '{ kind: "orbit"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; }' is not assignable to type 'IntroductionGesture'.
+  Type '{ kind: "orbit"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; }' is missing the following properties from type '{ kind: "orbit"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(14986,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(14989,44): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(14997,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(15946,21): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; active: true; search: { input: { id: string; value: string; placeholder: UiLabel; onChange: React.Dispatch<React.SetStateAction<string>>; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(16135,19): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; active: true; search: { input: { value: string; placeholder: UiLabel; onChange: () => void; onAbort: () => number; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(20666,63): error TS2353: Object literal may only specify known properties, and 'document' does not exist in type 'TutorialTracks'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx(20760,11): error TS2353: Object literal may only specify known properties, and 'document' does not exist in type 'TutorialTracks'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx(1721,7): error TS2322: Type 'readonly { id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }[] | { ...; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }[]'.
+  Type '{ id: string; title: string; iconId: string; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }[]'.
+    Type '{ id: string; title: string; iconId: string; }' is not assignable to type '{ id: string; title: string; iconId: "typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | ... 238 more ... | "zoom-out"; }'.
+      Types of property 'iconId' are incompatible.
+        Type 'string' is not assignable to type '"typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | ... 236 more ... | "zoom-out"'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx(53,55): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx(54,9): error TS2322: Type 'unknown' is not assignable to type 'string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<...> | null | undefined'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx(54,80): error TS2322: Type '{}' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx(59,65): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx(66,66): error TS2322: Type '{}' is not assignable to type 'string'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx(67,54): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁️VirtualFileSystem/🟦️component.tsx(540,6): error TS2604: JSX element type 'Table' does not have any construct or call signatures.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁️VirtualFileSystem/🟦️component.tsx(540,6): error TS2786: 'Table' cannot be used as a JSX component.
+  Its type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>' is not a valid JSX element type.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁️VirtualFileSystem/🟦️component.tsx(544,18): error TS7006: Parameter 'row' implicitly has an 'any' type.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️component.tsx(600,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️component.tsx(601,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️component.tsx(602,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx(386,33): error TS2322: Type 'string' is not assignable to type '"typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | ... 236 more ... | "zoom-out"'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️IconSelector/🟦️component.tsx(74,94): error TS2322: Type 'string' is not assignable to type '"typography" | "window" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | ... 236 more ... | "zoom-out"'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️story.tsx(40,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️story.tsx(49,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️story.tsx(58,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️story.tsx(68,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️story.tsx(77,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️story.tsx(86,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️story.tsx(95,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx(518,3): error TS2322: Type '{ id: string; label: UiLabel; icon: ControlIcon; disabled: boolean | undefined; onSelect: () => void; }[]' is not assignable to type 'ContextMenuItem[]'.
+  Type '{ id: string; label: UiLabel; icon: ControlIcon; disabled: boolean | undefined; onSelect: () => void; }' is not assignable to type 'ContextMenuItem'.
+    Types of property 'icon' are incompatible.
+      Type 'ControlIcon' is not assignable to type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 10 more ... | undefined'.
+        Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 10 more ... | undefined'.
+          Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type '{ readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 9 more ... | { ...; }'.
+            Property 'kind' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type '{ readonly kind: "themed"; readonly key: "base" | "base_blob" | "capital" | "capsule_J" | "capsule_L" | "capsule_backslash" | "capsule_p" | "capsule_q" | "capsule_s" | "capsule_slash" | ... 18 more ... | "tambour_single-storey"; }'.
+../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx(767,54): error TS2339: Property 'escape' does not exist on type 'Readonly<{ Translate: { toString(transform: Transform | null): string | undefined; }; Scale: { toString(transform: Transform | null): string | undefined; }; Transform: { ...; }; Transition: { ...; }; }>'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(231,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(266,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(287,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(304,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(319,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(329,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(343,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(355,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(367,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(378,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(388,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(398,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(409,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(429,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(437,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(452,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(463,77): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(470,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(491,5): error TS2304: Cannot find name 'UiComponentSceneNode'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(492,5): error TS2304: Cannot find name 'UiExternalSlotNode'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(952,40): error TS2304: Cannot find name 'HostEffect'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(992,18): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(999,28): error TS2304: Cannot find name 'ContextMenuItemSpec'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(129,9): error TS2304: Cannot find name 'ConfigSpec'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(134,17): error TS2304: Cannot find name 'CommandGrammar'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(140,5): error TS2304: Cannot find name 'AppIo'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(717,68): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(717,109): error TS2304: Cannot find name 'StyleSpec'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(717,150): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(724,42): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(724,55): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(726,136): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(728,161): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(730,60): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(730,97): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(732,89): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(732,231): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(734,40): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(736,95): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(738,183): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(749,124): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(751,52): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(753,99): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(753,164): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(755,63): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(757,170): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(772,35): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(772,140): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(774,67): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(774,132): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(776,60): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(776,105): error TS2304: Cannot find name 'UiTreeActionPlacement'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(778,51): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(788,8): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(790,222): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(792,55): error TS2304: Cannot find name 'Label'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(851,9): error TS2304: Cannot find name 'Locale'.
+../../../../../🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(855,14): error TS2304: Cannot find name 'Terminology'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(23,8): error TS2305: Module '"@semio-tech/ui-react"' has no exported member 'ReactNode'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(239,37): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(249,35): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(259,35): error TS2749: 'Quaternion' refers to a value, but is being used as a type here. Did you mean 'typeof Quaternion'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(309,22): error TS2749: 'BufferGeometry' refers to a value, but is being used as a type here. Did you mean 'typeof BufferGeometry'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(311,25): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(317,25): error TS2749: 'Box3' refers to a value, but is being used as a type here. Did you mean 'typeof Box3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(341,47): error TS2749: 'Object3D' refers to a value, but is being used as a type here. Did you mean 'typeof Object3D'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(351,25): error TS2749: 'Mesh' refers to a value, but is being used as a type here. Did you mean 'typeof Mesh'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(391,76): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(391,107): error TS2749: 'Box3' refers to a value, but is being used as a type here. Did you mean 'typeof Box3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(396,76): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(423,69): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(423,90): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(433,70): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(433,105): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(447,59): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(447,94): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(471,62): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(471,97): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(525,54): error TS2749: 'BufferGeometry' refers to a value, but is being used as a type here. Did you mean 'typeof BufferGeometry'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(525,93): error TS2749: 'LineSegments' refers to a value, but is being used as a type here. Did you mean 'typeof LineSegments'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(534,49): error TS2749: 'Object3D' refers to a value, but is being used as a type here. Did you mean 'typeof Object3D'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(536,18): error TS7006: Parameter 'object' implicitly has an 'any' type.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(570,63): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(570,94): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(710,41): error TS2749: 'Object3D' refers to a value, but is being used as a type here. Did you mean 'typeof Object3D'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(710,52): error TS2749: 'Object3D' refers to a value, but is being used as a type here. Did you mean 'typeof Object3D'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(714,20): error TS2749: 'Object3D' refers to a value, but is being used as a type here. Did you mean 'typeof Object3D'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(717,35): error TS2749: 'Object3D' refers to a value, but is being used as a type here. Did you mean 'typeof Object3D'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(881,41): error TS2339: Property 'far' does not exist on type 'Camera'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(881,56): error TS2339: Property 'far' does not exist on type 'Camera'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(881,73): error TS2339: Property 'far' does not exist on type 'Camera'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(914,13): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(917,25): error TS2749: 'Object3D' refers to a value, but is being used as a type here. Did you mean 'typeof Object3D'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(930,40): error TS2749: 'Mesh' refers to a value, but is being used as a type here. Did you mean 'typeof Mesh'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(985,61): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1312,47): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1359,24): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1613,67): error TS2339: Property 'quadrant' does not exist on type 'ProjectionGizmoHit'.
+  Property 'quadrant' does not exist on type '{ readonly type: "face"; readonly axis: "x" | "y" | "z"; readonly sign: 1 | -1; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1613,90): error TS2339: Property 'hemisphere' does not exist on type 'ProjectionGizmoHit'.
+  Property 'hemisphere' does not exist on type '{ readonly type: "face"; readonly axis: "x" | "y" | "z"; readonly sign: 1 | -1; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1622,76): error TS2339: Property 'quadrant' does not exist on type 'ProjectionGizmoHit'.
+  Property 'quadrant' does not exist on type '{ readonly type: "face"; readonly axis: "x" | "y" | "z"; readonly sign: 1 | -1; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1622,99): error TS2339: Property 'hemisphere' does not exist on type 'ProjectionGizmoHit'.
+  Property 'hemisphere' does not exist on type '{ readonly type: "face"; readonly axis: "x" | "y" | "z"; readonly sign: 1 | -1; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1680,21): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1681,20): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1682,24): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1809,3): error TS2322: Type 'Element' is not assignable to type 'null'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1894,27): error TS2339: Property 'variant' does not exist on type 'WorldProjectionMode'.
+  Property 'variant' does not exist on type '{ readonly kind: "orthographic"; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1906,81): error TS2339: Property 'angle' does not exist on type 'WorldProjectionMode'.
+  Property 'angle' does not exist on type '{ readonly kind: "orthographic"; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1907,27): error TS2339: Property 'variant' does not exist on type 'WorldProjectionMode'.
+  Property 'variant' does not exist on type '{ readonly kind: "orthographic"; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1914,61): error TS2339: Property 'fov' does not exist on type 'WorldProjectionMode'.
+  Property 'fov' does not exist on type '{ readonly kind: "orthographic"; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1914,86): error TS2339: Property 'strength' does not exist on type 'WorldProjectionMode'.
+  Property 'strength' does not exist on type '{ readonly kind: "orthographic"; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1915,27): error TS2339: Property 'mapping' does not exist on type 'WorldProjectionMode'.
+  Property 'mapping' does not exist on type '{ readonly kind: "orthographic"; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(1955,17): error TS2322: Type 'string' is not assignable to type 'IconSource'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(2613,113): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(2626,249): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(2651,50): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(2651,63): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(2651,84): error TS2749: 'Matrix4' refers to a value, but is being used as a type here. Did you mean 'typeof Matrix4'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3027,24): error TS2345: Argument of type 'WebGLRenderTarget<Texture<unknown> | Texture<unknown>[]>' is not assignable to parameter of type 'WebGLRenderTarget<Texture<unknown>> | WebGLRenderTarget<Texture<unknown>[]> | null'.
+  Type 'WebGLRenderTarget<Texture<unknown> | Texture<unknown>[]>' is not assignable to type 'WebGLRenderTarget<Texture<unknown>>'.
+    Type 'Texture<unknown> | Texture<unknown>[]' is not assignable to type 'Texture<unknown>'.
+      Type 'Texture<unknown>[]' is missing the following properties from type 'Texture<unknown>': isTexture, id, uuid, name, and 50 more.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3393,21): error TS2749: 'ThreePerspectiveCamera' refers to a value, but is being used as a type here. Did you mean 'typeof ThreePerspectiveCamera'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3467,50): error TS2339: Property 'minPolar' does not exist on type '{ readonly rotate: true; } | { readonly rotate: boolean; readonly minPolar?: number | undefined; readonly maxPolar?: number | undefined; }'.
+  Property 'minPolar' does not exist on type '{ readonly rotate: true; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3468,50): error TS2339: Property 'maxPolar' does not exist on type '{ readonly rotate: true; } | { readonly rotate: boolean; readonly minPolar?: number | undefined; readonly maxPolar?: number | undefined; }'.
+  Property 'maxPolar' does not exist on type '{ readonly rotate: true; }'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3494,27): error TS2339: Property 'target' does not exist on type 'WorldOrbitControlsBinding'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3507,27): error TS2339: Property 'target' does not exist on type 'WorldOrbitControlsBinding'.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3550,50): error TS2749: 'Vector3' refers to a value, but is being used as a type here. Did you mean 'typeof Vector3'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3610,43): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3648,57): error TS2345: Argument of type 'MouseEvent' is not assignable to parameter of type 'MouseEvent<Element, MouseEvent>'.
+  Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3742,48): error TS2749: 'Group' refers to a value, but is being used as a type here. Did you mean 'typeof Group'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3813,11): error TS2540: Cannot assign to 'origin' because it is a read-only property.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3815,11): error TS2540: Cannot assign to 'orientation' because it is a read-only property.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3820,11): error TS2540: Cannot assign to 'scale' because it is a read-only property.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3824,13): error TS2540: Cannot assign to 'scale' because it is a read-only property.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3829,13): error TS2540: Cannot assign to 'widthWorld' because it is a read-only property.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3834,13): error TS2540: Cannot assign to 'opacity' because it is a read-only property.
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3847,137): error TS2749: 'Group' refers to a value, but is being used as a type here. Did you mean 'typeof Group'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(3881,41): error TS2749: 'Group' refers to a value, but is being used as a type here. Did you mean 'typeof Group'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(4068,45): error TS2749: 'Group' refers to a value, but is being used as a type here. Did you mean 'typeof Group'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(4131,128): error TS2749: 'Group' refers to a value, but is being used as a type here. Did you mean 'typeof Group'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(4168,41): error TS2749: 'Group' refers to a value, but is being used as a type here. Did you mean 'typeof Group'?
+../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx(4305,39): error TS2345: Argument of type 'OrbitControls' is not assignable to parameter of type 'WorldOrbitControlsBinding'.
+  The types of 'mouseButtons.LEFT' are incompatible between these types.
+    Type 'MOUSE | null | undefined' is not assignable to type 'number | null'.
+      Type 'undefined' is not assignable to type 'number | null'.

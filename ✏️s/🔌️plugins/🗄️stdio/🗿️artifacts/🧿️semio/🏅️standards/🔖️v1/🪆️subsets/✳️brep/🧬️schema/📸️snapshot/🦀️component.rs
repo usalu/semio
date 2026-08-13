@@ -7,8 +7,8 @@
 //! own curve (not just a straight-line control polygon) and every face its own surface (not just
 //! `PLANE`), matching AP214's real vocabulary of surface/curve kinds.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

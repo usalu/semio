@@ -1,8 +1,8 @@
 //! 🔺️ `move-vertex` — sparse diff construction; an absent BASE `vertex_id` is a no-op clone.
 
 use super::mutation::MoveVertex;
-use crate::artifacts::semio::standards::v1::engine::triples::NamedModified;
-use crate::artifacts::semio::standards::v1::engine::triples::NamedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedModified;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{BrepVertexDiff, SemioBrepDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 

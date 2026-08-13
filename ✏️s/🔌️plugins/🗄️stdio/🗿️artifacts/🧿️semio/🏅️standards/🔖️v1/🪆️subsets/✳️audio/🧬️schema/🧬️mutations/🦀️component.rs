@@ -4,7 +4,7 @@
 //! against the sparse `SemioAudioDiff` shape — never apply-and-capture (per the schema-design
 //! recipe's own svg infinite-recursion warning).
 
-use crate::artifacts::semio::standards::v1::engine::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::diff::{
     self, SemioAudioChannelDiff, SemioAudioDiff, dec_channel, dec_f32_list, dec_format, dec_snapshot, dec_tag,
     enc_channel, enc_f32_list, enc_format, enc_snapshot, enc_tag, hex_decode_string, hex_encode,

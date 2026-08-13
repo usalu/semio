@@ -13,7 +13,7 @@ use crate::apps::gis3d::modes::view as view_mode;
 use crate::apps::gis3d::modes::view::windows::terrain;
 use crate::artifacts::gisterrain::schema::default_terrain_document;
 use crate::artifacts::gisterrain::op::GisTerrainMutation;
-use crate::artifacts::gisterrain::{mesh_artifact_kind, GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
+use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     ui_text, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
@@ -253,7 +253,9 @@ pub fn create_gis3d_app() -> App {
             // Wave 2 port recipe) — the canonical declaration is the gismap artifact's;
             // identical-shape duplicates are harmless (registry dedupes by id).
             .artifact_kind(crate::artifacts::gismap::artifact_kind())
-            .artifact_kind(mesh_artifact_kind())
+            // 🧱️ `.artifact_kind(mesh_artifact_kind())` REMOVED — `3d.mesh` duplicate kind deleted
+            // repo-wide (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); mesh is now
+            // canonically `s.stdio.semio@v1/mesh`, composed via `GisTerrainSnapshot.mesh`.
             .media_input(gis3d_map_in_port())
             .media_output(gis3d_scene_out_port())
             .icon_id("gis3d")
@@ -398,7 +400,12 @@ mod tests {
         // 🧷️ gis3d declares no app panel tabs of its own; whatever is present comes from the framework.
         assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "2d.map"));
-        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "3d.mesh"));
+        // 🧱️ `3d.mesh` is NO LONGER independently registered here (ticket
+        // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — duplicate `ArtifactKindSpec` deleted, see
+        // `crate::artifacts::gisterrain::🦀️component.rs`'s removal comment). `scene:out`'s
+        // `kind_id: Some("3d.mesh".into())` media-port tag (asserted separately below) still
+        // references the canonical kind by id; this manifest just no longer redundantly declares it.
+        assert!(!definition.artifact_kinds.iter().any(|kind| kind.id == "3d.mesh"), "3d.mesh is composed via GisTerrainSnapshot.mesh now, never a standalone ArtifactKindSpec");
     }
 
     #[test]

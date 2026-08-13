@@ -36,7 +36,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(PPTX_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::pptx::schema::pptx_artifact_schema_descriptor())
         .inferences([crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::inferences::pptx_artifact_inference_descriptor()])
-        .composers(crate::artifacts::pptx::engine::io_registry::entries())
+        .composers(crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::io_registry::entries())
         .subset_validators(pptx_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA)
@@ -149,7 +149,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::pptx::standards::v_ecma_376::engine::io_registry as v_ecma_376;
+    use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::io_registry as v_ecma_376;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

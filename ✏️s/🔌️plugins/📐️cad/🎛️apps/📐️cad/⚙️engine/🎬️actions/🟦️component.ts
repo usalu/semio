@@ -1839,3 +1839,33 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
 // #endregion 🖼️Display
 
 // #endregion 📦️🎬️actions
+
+// #region 🧪️Tests
+import { buildBoxInteractionSpec } from "../📄️artifact/🟦️component.ts";
+
+const __actionsTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️component.ts") : null;
+const __actionsTestKernel = import.meta.vitest ? await import("../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
+
+if (import.meta.vitest) {
+  __actionsTestRuntime!.bootstrapCadModules();
+  const { preciseSpatialKernelMath } = __actionsTestKernel!;
+  const M = preciseSpatialKernelMath;
+  const { describe, expect, it } = import.meta.vitest;
+
+  describe("@semio-tech/cad-js/core box display committed", () => {
+    it("keeps box-preview visible for committed state", () => {
+      const spec = buildBoxInteractionSpec();
+      const ctx: Record<string, unknown> = {
+        origin: [0, 0, 0] as Vec3,
+        corner: [2, 3, 0] as Vec3,
+        height: 4,
+      };
+      const d = resolveDisplay(spec, "committed", ctx, M);
+      const prev = d.items.find((i) => i.kind === "box-preview" && i.id === "preview-committed");
+      expect(prev?.params?.cornerA).toEqual([0, 0, 0]);
+      expect(prev?.params?.cornerB).toEqual([2, 3, 0]);
+      expect(prev?.params?.height).toBe(4);
+    });
+  });
+}
+// #endregion 🧪️Tests

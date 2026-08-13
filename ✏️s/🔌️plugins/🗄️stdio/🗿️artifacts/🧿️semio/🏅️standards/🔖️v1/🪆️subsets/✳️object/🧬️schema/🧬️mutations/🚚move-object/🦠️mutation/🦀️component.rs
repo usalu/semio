@@ -1,6 +1,6 @@
 //! 🚚️ `move-object` — sets the object's `transform.translation`, keeping rotation/scale.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use serde::{Deserialize, Serialize};

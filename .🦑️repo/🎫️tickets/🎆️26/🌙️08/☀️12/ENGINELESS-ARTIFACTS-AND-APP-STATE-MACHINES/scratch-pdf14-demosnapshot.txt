@@ -1,0 +1,11 @@
+/// 📄️ The demo `stdio.pdf` document -- the single source of truth for `📚️examples/🎬️demo/🖼️assets/
+/// 🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/
+/// `encode_pack` output, asserted equal by `fixture_honesty_law` below). `width`/`height` are
+/// FIXED at `612.0`/`792.0` -- NOT an arbitrary choice: `decode_pdf` (above) hardcodes those two
+/// literals unconditionally (never parses them back out of the encoded bytes, the documented
+/// "1.4 stays a frozen stub" scope boundary) -- any OTHER width/height would make `parse_dsl(
+/// print_dsl(demo)) != demo`, since `parse_dsl` genuinely calls the real `decode_pdf` on the
+/// hex-decoded bytes, not an identity round-trip.
+pub fn demo_pdf_snapshot() -> PdfSnapshot {
+    PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 612.0, height: 792.0, text: "Semio Demo".into() } }
+}

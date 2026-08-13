@@ -22,6 +22,20 @@ taxonomyLeafParentDirs contains ⚙️engine                          ← module
 
 IIF's flip was the strongest available proof the inference fan-out is real: `policySchemaRepresentationBreaches` is allowlist-free and hard-gating, so the instant it landed it demanded the full inference tree on all 112 owning subsets — and high breaches went **24802 → 24801 (down by one)**, with zero new representation breaches.
 
+## FINAL STATE — 95 → 0
+
+```
+artifact ⚙️engine directories:  0   (started at 95)
+dangling #[path] mounts:        0   repo-wide
+semio-s-plugin-stdio:           Finished in 1m35s, exit 0, ZERO errors
+```
+
+Every artifact-tree `⚙️engine` directory in the repository — including all 41 of stdio's, the largest and most cross-coupled block — is dissolved. The last wave ran as 5 concurrent agents plus direct hand-repair of the errors they surfaced; `🧿️semio`, the artifact that had already defeated one full session earlier tonight, was resolved this time by working symbol-by-symbol from the compiler's own error text rather than by file-wide edits.
+
+**218 remaining `artifacts::X::engine::` references, enumerated rather than trusted.** All are legitimate: the 10 deliberately-protected imperative `engine::register()` plugin-root calls (a separate `dsl::registry::register_schema_spec` registry `ArtifactDeclaration` has no field for) and external consumers (`remodel`'s jpg import, etc.) — both resolving through inline `engine`-named compatibility barrels that several packets kept as a Rust module identifier after deleting the `⚙️engine` **directory** it used to name. The taxonomy governs filesystem facets, not arbitrary internal module names — this is compliant, and the fact that stdio compiles clean with all 218 present is the proof, not an assumption.
+
+**Module engines (60) and app engines (51) both remain, as required.** Only artifact engines were ever abolished; `taxonomyLeafParentDirs` keeps the former legal, `appChildDirs` requires the latter.
+
 ## Scoreboard
 
 | | |
@@ -85,6 +99,38 @@ pub mod v_commonmark {
 > **Standing method: parse `📦️glue.rs`'s `pub mod` nesting to derive the authoritative module path per artifact, and match each `declaration()` against its own artifact's real path. Never copy a path between siblings. Where a working line exists in the same file (e.g. an already-resolving `.inferences(…)` prefix), copy from that — it is evidence; a directory name is not.**
 
 This ticket's own wave is clear of the defect: of five dissolved plugins carrying a `.composers(…)` path, four compile clean and the fifth fails on unrelated mutation-derive and type errors, with **zero `E0433`** touching composers or `io_registry`.
+
+## Simultaneous agent-fleet failure and hand repair
+
+All six dispatched agents (5 stdio blocks + the norm regression repair + the cad TS remainder) were killed **at the same moment** by an API session limit, mid-edit. Damage assessment before doing anything else: **zero dangling `#[path]` mounts** despite the simultaneous kill — the individual edits that had landed were each internally consistent, just incomplete as a set.
+
+Repaired by hand rather than re-dispatching into an unknown-duration outage, working error-by-error against `RUSTC_WRAPPER="" CARGO_TARGET_DIR=target/stdio_final cargo check -p semio-s-plugin-stdio --all-targets`:
+
+1. **Two mid-file `//!` doc-comment blocks** (`☁️las/…/🚪️io`, `🎥️mp4/…/🚪️io`) — `//!` is only valid as the very first thing in a file/module; agents had appended large explanatory blocks mid-file after `//#region` markers. `E0753`. Converted to `//`.
+2. **`docx`'s `📥️import/📤️export` real component files were never mounted** in glue — only their nested cross-format bridge submodules (`artifacts::zip::…`, `artifacts::xml::…`) were, so the direct file holding `decode_docx`/`encode_docx`/`build_minimal_docx` was orphaned. Added the missing `mod component; pub use component::*;` before each nested block.
+3. **`pptx`/`xlsx` were missing their compatibility `engine` shim** — their real engine module still exists at `standards::v_ecma_376::engine` (their dissolution hadn't started), but the top-level `pptx::engine`/`xlsx::engine` passthrough that ~15 internal call sites expect was never added. Restored it.
+4. **`docx`'s `engine` shim pointed at a module APA had already deleted** — repointed to the real new locations (`io::import::deserializers`, `io::export::serializers`, `io::io_registry`) rather than the stale `engine` path, since 16 in-crate call sites plus one cross-plugin consumer (`✒️writer`) still used it.
+5. **Two path-nesting mistakes surfaced only once earlier errors cleared**: `docx`'s `✳️transitional` subset called `…::engine::sync_main_part` (real home: `…::io::export::serializers::sync_main_part`); `html`'s schema file aliased `use …::engine as engine;` where the real function lived two levels deeper than assumed (`io::import::deserializers::sniff_real_bytes`, not `io::sniff_real_bytes` — discovered by reading the actual nesting in the source file, not by inference).
+
+**Verified, not assumed, at each step**: re-ran the full `cargo check` after every fix rather than trusting an error count from memory; one re-check surfaced 19 errors where the prior read showed 3 — not a regression, but earlier errors had been blocking rustc from reaching the code underneath.
+
+**Result: `semio-s-plugin-stdio` — `Finished` in 24.97s, exit 0, zero errors.** `semio-s-plugin-norm` (the earlier regression) reconfirmed fully green (`Finished` 20.60s, exit 0) now that its dependency compiles. `✒️writer` (a docx consumer) still shows 20 errors — checked and **none touch docx or the engine dissolution**: they're an untouched `pdf` artifact (`PageDoc` unresolved — pdf's dissolution hasn't started) and a `WriterMutation` variant mismatch on a file last modified at commit 497, well before this session — confirmed pre-existing via `git log`, not fixed.
+
+**Remaining stdio scope, honestly stated: 29 of 41 artifact engines are untouched** (directories and content both, not merely unmounted) — the repair above only fixed the handful whose deletion had already landed before the agents died. That work has not restarted.
+
+## Workspace-wide re-verification after the stdio fix
+
+Ran `cargo check --workspace --all-targets --keep-going` against a dedicated target dir (`target/ws_final`) to avoid the shared-lock contention that killed the earlier attempt. **Confirmed complete this time** — tail shows the run's final crates (`norm`, `stdio`) finishing with warnings only, no truncation.
+
+**Result: still 23 failing crates — same count, but not the same set.** Diffed against the pre-repair baseline:
+```
+FIXED: semio-s-plugin-norm       (the regression this session repaired)
+NEW:   semio-s-plugin-remodel
+```
+
+**The headline finding: fixing stdio did NOT reduce the overall failure count**, because most of the 23 failures were never caused by stdio being uncompilable — they carry independent, pre-existing bugs (mutation-vocabulary renames, an untouched `pdf` artifact, unrelated type errors) that show up whether or not stdio compiles. Spot-checked `block` directly: identical 8 errors, same as before the stdio fix, none touching declaration/io_registry/composers. `✒️writer`'s 20 errors are similarly unrelated (see above). **A green stdio does not imply a green workspace** — it only removes stdio itself from the blocking set.
+
+**`remodel` appearing as newly-broken was investigated, not assumed.** Its own artifact IO file was clean; the actual break was in `🎛️apps/📸️remodel/⚙️engine/🎥️video/🦀️component.rs`, which imports `avi_engine`/`mp4_engine` aliased from `semio_s_plugin_stdio::artifacts::{avi,mp4}::standards::…::engine`. Both of stdio's `avi` and `mp4` engines had been dissolved (mp4 by this session's own repair; avi by an untracked concurrent write — its directory was gone with no corresponding entry in this session's edit history) **without their external consumer being updated** — exactly the cross-plugin-consumer pattern flagged earlier in this document. Repointed both aliases to `subsets::any::io` (their real new home, verified by finding `decode_avi`/`encode_avi`/`decode_mp4`/`encode_mp4` as top-level `pub fn`s there). **`semio-s-plugin-remodel` — `Finished` in 3.69s, exit 0, confirmed.**
 
 ## Defects this ticket caused, and fixed
 

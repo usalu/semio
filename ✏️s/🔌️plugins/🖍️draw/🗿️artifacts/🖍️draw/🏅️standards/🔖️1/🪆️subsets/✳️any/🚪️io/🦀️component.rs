@@ -10,7 +10,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.d
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use crate::artifacts::draw::{DrawSnapshot, FillStyle, PathSegment};
 use crate::artifacts::draw::schema::{draw_layer_world_bounds, flatten_draw_document_to_scene_nodes, flatten_draw_layers, DrawSceneNode};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
     DrawCanvas as SemioDrawCanvas, DrawLayer as SemioDrawLayer, DrawNode as SemioDrawNode, DrawStyle as SemioDrawStyle, PathSegment as SemioPathSegment, SemioDrawingSnapshot,
     STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,

@@ -1,4 +1,8 @@
 //! 🔺️ Process3d artifact — sparse field-delta diff codec and apply/absorb.
+//!
+//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `steps` applies as a plain
+//! handle-swap now (no `Process3dStepsDelta` collection-apply machinery — the whole timeline is one
+//! composed `s.stdio.semio.flow` child), matching `stock_solid`'s own handle-swap shape.
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -10,55 +14,10 @@ use crate::artifacts::process3d::schema::diff::*;
 
 
 use crate::artifacts::process3d::schema::Process3dArtifact;
-use crate::artifacts::process3d::{ProcessStep, Process3dSnapshot};
-use protocol::{MutationDiff, Patchable};
+use crate::artifacts::process3d::Process3dSnapshot;
+use protocol::MutationDiff;
 
 //#region 🔖️Apply
-/// 🧩 Applies an identified-collection delta to a step list.
-pub fn apply_steps_delta(items: &[ProcessStep], delta: &Process3dStepsDelta) -> Vec<ProcessStep> {
-    let mut next = items.to_vec();
-    for id in &delta.removed {
-        next.retain(|item| &item.id != id);
-    }
-    for item in &delta.added {
-        next.push(item.clone());
-    }
-    for entry in &delta.patched {
-        if let Some(item) = next.iter_mut().find(|item| item.id == entry.id) {
-            item.apply_patch(&entry.patch);
-        }
-    }
-    if let Some(order) = &delta.reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> =
-            next.into_iter().map(|item| (item.id.clone(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
-fn absorb_steps_delta(target: &mut Option<Process3dStepsDelta>, incoming: Option<Process3dStepsDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                if src.reordered.is_some() {
-                    dst.reordered = src.reordered;
-                }
-            }
-            None => *target = Some(src),
-        }
-    }
-}
-
 impl Process3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &Process3dArtifact) -> Process3dArtifact {
@@ -69,11 +28,23 @@ impl Process3dDiff {
         if let Some(workshop) = &self.workshop {
             next.workshop = workshop.clone();
         }
-        if let Some(stock) = &self.stock {
-            next.stock = stock.clone();
+        if let Some(value) = &self.stock_id {
+            next.stock_id = value.clone();
         }
-        if let Some(delta) = &self.steps {
-            next.steps = apply_steps_delta(&next.steps, delta);
+        if let Some(value) = &self.stock_label {
+            next.stock_label = value.clone();
+        }
+        if let Some(value) = &self.stock_pose {
+            next.stock_pose = value.clone();
+        }
+        if let Some(value) = &self.stock_solid {
+            next.stock_solid = value.clone();
+        }
+        if let Some(value) = &self.steps {
+            next.steps = value.clone();
+        }
+        if let Some(value) = &self.tool_solids {
+            next.tool_solids = value.values.clone();
         }
         if let Some(value) = &self.resolved_up_to {
             next.resolved_up_to = *value;
@@ -108,9 +79,6 @@ impl Process3dDiff {
         if let Some(value) = &self.locale { next.locale = value.clone(); }
         if let Some(value) = &self.contributions_json { next.contributions_json = value.clone(); }
         if let Some(value) = &self.hovered_id { next.hovered_id = value.clone(); }
-        if let Some(cursor) = next.resolved_up_to {
-            next.resolved_up_to = Some(cursor.min(next.steps.len()));
-        }
         next
     }
 }
@@ -124,17 +92,26 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
         if let Some(workshop) = &self.workshop {
             next.workshop = workshop.clone();
         }
-        if let Some(stock) = &self.stock {
-            next.stock = stock.clone();
+        if let Some(value) = &self.stock_id {
+            next.stock_id = value.clone();
         }
-        if let Some(delta) = &self.steps {
-            next.steps = apply_steps_delta(&next.steps, delta);
+        if let Some(value) = &self.stock_label {
+            next.stock_label = value.clone();
+        }
+        if let Some(value) = &self.stock_pose {
+            next.stock_pose = value.clone();
+        }
+        if let Some(value) = &self.stock_solid {
+            next.stock_solid = value.clone();
+        }
+        if let Some(value) = &self.steps {
+            next.steps = value.clone();
+        }
+        if let Some(value) = &self.tool_solids {
+            next.tool_solids = value.values.clone();
         }
         if let Some(value) = &self.resolved_up_to {
             next.resolved_up_to = *value;
-        }
-        if let Some(cursor) = next.resolved_up_to {
-            next.resolved_up_to = Some(cursor.min(next.steps.len()));
         }
         next
     }
@@ -144,9 +121,6 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
             *self = other;
             return;
         }
-        if other.workshop.is_some() { self.workshop = other.workshop; }
-        if other.stock.is_some() { self.stock = other.stock; }
-        absorb_steps_delta(&mut self.steps, other.steps);
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -154,6 +128,13 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
                 }
             };
         }
+        take!(workshop);
+        take!(stock_id);
+        take!(stock_label);
+        take!(stock_pose);
+        take!(stock_solid);
+        take!(steps);
+        take!(tool_solids);
         take!(resolved_up_to);
         take!(selected_id);
         take!(selected_face_id);
@@ -193,33 +174,13 @@ pub fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::{Pose, ProcessMeasure, SolidSpec, Stock};
-
-    fn cut_step(id: &str) -> ProcessStep {
-        ProcessStep {
-            id: id.into(),
-            label: "Cut".into(),
-            enabled: true,
-            origin: None,
-            measure: ProcessMeasure::Cut {
-                tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 },
-                pose: Pose::default(),
-            },
-        }
-    }
 
     #[test]
     fn a_whole_artifact_diff_wins_over_every_field_diff() {
-        let base = Process3dSnapshot {
-            steps: vec![cut_step("a")],
-            ..Default::default()
-        };
-        let replacement = Process3dSnapshot {
-            stock: Stock { id: "beam".into(), label: "Beam".into(), solid: SolidSpec::Box { width: 1.0, depth: 0.1, height: 0.2 }, pose: Pose::default() },
-            ..Default::default()
-        };
+        let base = crate::artifacts::process3d::empty_process3d_snapshot();
+        let replacement = Process3dSnapshot { stock_label: "Beam".into(), ..crate::artifacts::process3d::empty_process3d_snapshot() };
         let mut diff = Process3dDiff {
-            steps: Some(Process3dStepsDelta { removed: vec!["a".into()], ..Default::default() }),
+            stock_label: Some("Ignored".into()),
             ..Default::default()
         };
         diff.absorb(diff_set_snapshot(&replacement));
@@ -227,19 +188,13 @@ mod tests {
     }
 
     #[test]
-    fn steps_delta_add_remove_applies() {
-        let base = Process3dSnapshot { steps: vec![cut_step("a")], ..Default::default() };
-        let mut diff = Process3dDiff {
-            steps: Some(Process3dStepsDelta { removed: vec!["a".into()], ..Default::default() }),
-            ..Default::default()
-        };
-        diff.absorb(Process3dDiff {
-            steps: Some(Process3dStepsDelta { added: vec![cut_step("b")], ..Default::default() }),
-            ..Default::default()
-        });
+    fn stock_solid_handle_swap_applies() {
+        let base = crate::artifacts::process3d::empty_process3d_snapshot();
+        let new_content = crate::artifacts::process3d::brep_snapshot_for_working_solid(&crate::artifacts::process3d::WorkingSolid::Sphere { radius: 0.5 });
+        let new_handle = crate::artifacts::process3d::brep_child_handle("stock", &new_content);
+        let diff = Process3dDiff { stock_solid: Some(new_handle.clone()), ..Default::default() };
         let next = diff.apply(&base);
-        assert_eq!(next.steps.len(), 1);
-        assert_eq!(next.steps[0].id, "b");
+        assert_eq!(next.stock_solid, new_handle);
     }
 }
 //#endregion 🧪️Tests

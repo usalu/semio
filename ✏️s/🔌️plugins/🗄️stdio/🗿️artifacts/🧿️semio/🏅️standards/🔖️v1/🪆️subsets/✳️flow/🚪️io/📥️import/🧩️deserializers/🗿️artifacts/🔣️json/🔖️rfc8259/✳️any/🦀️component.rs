@@ -6,7 +6,7 @@
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use crate::artifacts::json::JsonSnapshot;
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{PortRef, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA, SemioFlowSnapshot, FlowEdge, FlowNode, FlowParam};
 
 //#region 🔖️JsonAccessors

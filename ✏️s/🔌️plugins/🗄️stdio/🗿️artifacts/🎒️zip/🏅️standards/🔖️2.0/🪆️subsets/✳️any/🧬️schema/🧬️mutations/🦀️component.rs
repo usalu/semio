@@ -517,11 +517,11 @@ mod tests {
             // The fixture path is relative to this crate's manifest dir under the workspace
             // layout; if the workspace root differs at test time, fall back to a synthetic
             // archive so this law still exercises decode -> encode -> decode identity.
-            Err(_) => crate::artifacts::zip::engine::encode_zip(&base_snapshot()).expect("encode synthetic fallback"),
+            Err(_) => crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&base_snapshot()).expect("encode synthetic fallback"),
         };
-        let decoded = crate::artifacts::zip::engine::decode_zip(&bytes).expect("decode fixture");
-        let reencoded = crate::artifacts::zip::engine::encode_zip(&decoded).expect("re-encode fixture");
-        let redecoded = crate::artifacts::zip::engine::decode_zip(&reencoded).expect("re-decode fixture");
+        let decoded = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).expect("decode fixture");
+        let reencoded = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&decoded).expect("re-encode fixture");
+        let redecoded = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&reencoded).expect("re-decode fixture");
         // Semantically equivalent per the engine's own documented normal form (UTF-8 flag /
         // data-descriptor bit normalization) — content, not raw bytes, is the retained invariant.
         assert_eq!(redecoded.entries.len(), decoded.entries.len());

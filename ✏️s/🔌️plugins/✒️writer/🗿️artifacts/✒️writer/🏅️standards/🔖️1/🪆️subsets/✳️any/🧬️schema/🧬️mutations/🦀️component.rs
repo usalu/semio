@@ -57,7 +57,7 @@ mod tests {
     fn writer_document_vcs_replays_text_mutations() {
         let mut store = seeded_store();
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).expect("apply");
-        assert_eq!(store.snapshot().expect("snapshot").text, "hello");
+        assert_eq!(crate::artifacts::writer::writer_text(&store.snapshot().expect("snapshot")), "hello");
     }
 
     #[test]
@@ -65,13 +65,13 @@ mod tests {
         let mut store = seeded_store();
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).expect("apply");
         store.dispatch(store::ArtifactCommand::Undo).expect("undo");
-        assert_eq!(store.snapshot().expect("snapshot").text, "");
+        assert_eq!(crate::artifacts::writer::writer_text(&store.snapshot().expect("snapshot")), "");
     }
 
     //#region 🔖️MutationLaws
     #[test]
     fn rename_writer_and_edit_text_invert_to_the_prior_field_value() {
-        let snapshot = WriterSnapshot { id: "old-id".into(), text: "old text".into(), ..schema::empty_writer_snapshot() };
+        let snapshot = WriterSnapshot { id: "old-id".into(), document: crate::artifacts::writer::document_child_handle_and_cache("old-id", "old text", "plaintext"), ..schema::empty_writer_snapshot() };
         assert_eq!(
             WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }).inverse(&snapshot),
             vec![WriterMutation::RenameWriter(RenameWriter { new_id: "old-id".into() })]
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
-        let base = WriterSnapshot { text: "first".into(), ..schema::empty_writer_snapshot() };
+        let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_and_cache("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
         let mutation = WriterMutation::EditText(EditText { text: "second".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);

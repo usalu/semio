@@ -2,7 +2,7 @@
 //! `path`) or the addressed index is out of range.
 
 use super::mutation::DeleteNode;
-use crate::artifacts::semio::standards::v1::engine::triples::IndexedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{diff_at_path, node_at, DrawGroupDiff, DrawNodeDiff, NodePath, SemioDrawingDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 

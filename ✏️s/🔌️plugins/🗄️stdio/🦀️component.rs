@@ -10,9 +10,9 @@ pub fn plugin() -> Plugin {
     crate::artifacts::ifc::engine::register();
     crate::artifacts::gif::engine::register();
     crate::artifacts::bmp::engine::register();
-    crate::artifacts::semio::standards::v1::engine::register();
+    crate::artifacts::semio::register();
     crate::artifacts::wav::standards::riff_pcm::engine::register();
-    crate::artifacts::epw::standards::energyplus::engine::register();
+    crate::artifacts::epw::register();
     crate::artifacts::tsv::register();
     crate::artifacts::html::standards::v5::engine::register();
     Plugin::builder("stdio")
@@ -47,8 +47,10 @@ pub fn plugin() -> Plugin {
         .artifact_kind(crate::artifacts::deflate::artifact_kind())
         .artifact(crate::artifacts::deflate::declaration())
         // 🚧️ W6 g2 gap: `dsl::registry::register_schema_spec` (FullResolver insertion, no
-        // `ArtifactDeclaration` field) — see `deflate::declaration()`'s own doc.
-        .setup(crate::artifacts::deflate::engine::register_schema_specs)
+        // `ArtifactDeclaration` field) — see `deflate::declaration()`'s own doc. Repointed off the
+        // dissolved `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) at its
+        // new home beside `io_registry`.
+        .setup(crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::register_schema_specs)
         .artifact_kind(crate::artifacts::bcf::artifact_kind())
         .artifact(crate::artifacts::bcf::declaration())
         .artifact_kind(crate::artifacts::xlsx::artifact_kind())
@@ -62,7 +64,9 @@ pub fn plugin() -> Plugin {
         .artifact(crate::artifacts::pdf::declaration_1_4())
         // 🚧️ W6 g2 gap: 1.4's `dsl::registry::register_schema_spec` (FullResolver insertion, no
         // `ArtifactDeclaration` field) — see `pdf::declaration()`'s own doc. 1.7 never called this.
-        .setup(crate::artifacts::pdf::standards::v1_4::engine::register_schema_specs)
+        // Repointed off the dissolved `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
+        // STATE-MACHINES) at its new home beside `io_registry`.
+        .setup(crate::artifacts::pdf::standards::v1_4::subsets::any::io::register_schema_specs)
         .artifact_kind(crate::artifacts::tiff::artifact_kind())
         .artifact(crate::artifacts::tiff::declaration())
         .artifact_kind(crate::artifacts::gif::artifact_kind())

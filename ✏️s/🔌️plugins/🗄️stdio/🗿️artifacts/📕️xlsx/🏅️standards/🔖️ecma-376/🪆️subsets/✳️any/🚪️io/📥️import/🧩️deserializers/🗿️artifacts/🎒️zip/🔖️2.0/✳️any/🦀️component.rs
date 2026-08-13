@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 🎒️ Parse ZIP container bytes into a XlsxSnapshot.
 pub fn deserialize(from: &BinarySnapshot) -> Result<XlsxSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::xlsx::engine::decode_xlsx(&from.bytes)
+    let mut snap = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx(&from.bytes)
         .map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_XLSX_DOCUMENT_SCHEMA.into();
     Ok(snap)

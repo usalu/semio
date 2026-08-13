@@ -28,23 +28,22 @@ pub fn print_dsl(document: &LowpolySnapshot) -> String {
 mod tests {
     use super::*;
 
-    /// 🕸️ `mesh_workspace` is DELIBERATELY excluded from the persisted DSL codec (ephemeral kernel
-    /// scratch, never part of the durable snapshot-at-rest bytes — see `📸️snapshot/🦀️component.rs`'s
-    /// module doc comment). `assert_dsl_round_trip` checks full struct equality, so both tests below
-    /// clear it on the input first — an honest reflection of what a REAL round trip through the
-    /// persisted format does (it resets to empty, exactly like re-hydrating from storage would),
-    /// not a workaround hiding a bug.
+    /// 🕸️ The live half-edge mesh JSON is not a field of `LowpolyObject` at all (round 2 of this
+    /// ticket's round-trip law fix — see that struct's own doc comment and
+    /// `📸️snapshot/🦀️component.rs`'s module doc comment), so `default_snapshot()` alone is already an
+    /// honest round-trip fixture: nothing needs clearing before `assert_dsl_round_trip` compares full
+    /// struct equality, unlike the pre-fix version of these tests.
     #[test]
     fn debug_dump_fixture_bytes() {
-        let mesh_workspace = crate::artifacts::lowpoly::schema::default_snapshot().objects[0].mesh_workspace.clone();
-        let mesh = crate::artifacts::lowpoly::mesh_child_handle("obj-1", &mesh_workspace);
+        let mesh_workspace = crate::artifacts::lowpoly::schema::default_mesh_workspace();
+        let mesh_json = mesh_workspace.get("obj-1").expect("default workspace entry");
+        let mesh = crate::artifacts::lowpoly::mesh_child_handle("obj-1", mesh_json);
         let object = crate::artifacts::lowpoly::LowpolyObject {
             id: "obj-1".into(),
             name: "Unit Box".into(),
             transform: Default::default(),
             smooth_shading: false,
             mesh: Some(mesh),
-            mesh_workspace,
             paint_layers: Vec::new(),
         };
         let projection = LowpolySnapshot { schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![object] };
@@ -56,15 +55,13 @@ mod tests {
 
     #[test]
     fn dsl_round_trips_the_default_snapshot() {
-        let mut projection = crate::artifacts::lowpoly::schema::default_snapshot();
-        for object in &mut projection.objects { object.mesh_workspace.clear(); }
+        let projection = crate::artifacts::lowpoly::schema::default_snapshot();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 
     #[test]
     fn dsl_round_trips_a_projection_with_a_painted_layer() {
         let mut projection = crate::artifacts::lowpoly::schema::default_snapshot();
-        for object in &mut projection.objects { object.mesh_workspace.clear(); }
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);

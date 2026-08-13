@@ -113,10 +113,13 @@ pub mod derived_composition {
     }
 
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
-    /// validate-on-build hook). Called from the 2.0 standard's own `⚙️engine::register()`. The
-    /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::zip::standards::v2_0::engine::io_registry::entries()`), matching how `✳️any`'s own
-    /// entry is registered.
+    /// validate-on-build hook). Formerly called from the 2.0 standard's own `⚙️engine::register()`
+    /// (dissolved, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); `zip::declaration()`
+    /// now re-derives the same `SubsetValidatorEntry` directly via `subset_validator_entry_of::<
+    /// ZipIso21320Validator>()` instead of calling this `register()`. The `ComposerEntry` itself is
+    /// registered separately by the standard-level composer aggregator
+    /// (`crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries()`), matching
+    /// how `✳️any`'s own entry is registered.
     pub fn register() {
         register_subset_validator(validator_entry());
     }

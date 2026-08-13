@@ -135,7 +135,7 @@ pub use derived_composition::*;
 
 //#region 🔖️MediaImportExport
 use base64::Engine as _;
-use crate::artifacts::process3d::{Pose, Process3dSnapshot, SolidSpec, Stock};
+use crate::artifacts::process3d::{Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
 use semio_framework_3d::brep::kernel::{ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use semio_framework_plugin::{MeshExporter, MeshImporter};
 use serde_json::Value;
@@ -156,9 +156,16 @@ const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
 /// `SolidExporter` trait objects (real B-Rep, exact where the format allows it); GLB goes through
 /// the mesh tessellation bridge (`schema::inferences::processed_mesh` → `GlbExporter`), matching how
 /// it is already rendered/exported elsewhere in this app.
-pub fn export_process3d_model(fixture: &Process3dSnapshot, format: &str) -> Option<Process3dModelExport> {
+///
+/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: takes a real, literal
+/// `ProcessWorkingScene` now (never a bare `Process3dSnapshot` — its composed `stock_solid`/`steps`
+/// children carry no resolvable content without a `LinkResolver` this ticket doesn't add; see
+/// `ProcessWorkingScene`'s own doc comment in the artifact root file). Callers that only have a
+/// persisted snapshot get the honest empty scene from `process_working_scene_from_snapshot` — this
+/// export then legitimately returns `None` (no stock to replay), the same documented gap.
+pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>, format: &str) -> Option<Process3dModelExport> {
     if format == "glb" {
-        let mesh = crate::artifacts::process3d::schema::inferences::processed_mesh(fixture)?;
+        let mesh = crate::artifacts::process3d::schema::inferences::processed_mesh(scene, resolved_up_to)?;
         let bytes = semio_framework_plugin::GlbExporter.export(&mesh).ok()?;
         return Some(Process3dModelExport {
             filename: "process3d.glb".into(),
@@ -173,7 +180,7 @@ pub fn export_process3d_model(fixture: &Process3dSnapshot, format: &str) -> Opti
         _ => Box::new(StepSolidExporter),
     };
     let mut session = crate::artifacts::process3d::schema::inferences::ProcessKernelReplay::new();
-    let handle = crate::artifacts::process3d::schema::inferences::replay_process(&mut session, fixture)?;
+    let handle = crate::artifacts::process3d::schema::inferences::replay_process(&mut session, scene, resolved_up_to)?;
     let bytes = exporter.export(&*session.kernel().lock().ok()?, &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
     let format_kind = exporter.format_kind();
     let descriptor = semio_framework::format_descriptor(format_kind);
@@ -194,17 +201,19 @@ fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
 }
 
 /// 📥️ Imports a picked file into a brand-new stock-only fixture (steps cleared): STEP/OBJ/STL go
-/// through the `SolidImporter` trait objects and land as `SolidSpec::ImportedSolid` (real B-Rep,
+/// through the `SolidImporter` trait objects and land as `WorkingSolid::ImportedSolid` (real B-Rep,
 /// reusable as a Cut/Drill/Attach operand); GLB is decoded once (via the mesh tessellation bridge,
-/// `GlbImporter`) purely to validate it, then kept as `SolidSpec::ImportedMesh` referencing the
-/// original data url directly — it carries no exact B-Rep, so it is never re-imported into the kernel.
+/// `GlbImporter`) purely to validate it, then kept as `WorkingSolid::ImportedMesh` referencing the
+/// original data url directly — it carries no exact B-Rep, so it is never re-imported into the
+/// kernel. Real WRITE-side construction (mints real composed children from literal content via
+/// `process_working_scene_to_snapshot` — the only place this migration can do so; see
+/// `ProcessWorkingScene`'s own doc comment).
 pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSnapshot> {
     let bytes = process3d_bytes_from_data_url(data_url)?;
-    let mut fixture = Process3dSnapshot::default();
     if name.ends_with(".glb") {
         semio_framework_plugin::GlbImporter.import(&bytes).ok()?;
-        fixture.stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: SolidSpec::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
-        return Some(fixture);
+        let stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
+        return Some(crate::artifacts::process3d::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default(), None));
     }
     let (importer, label): (Box<dyn SolidImporter>, &str) = if name.ends_with(".stp") || name.ends_with(".step") {
         (Box::new(StepSolidImporter), "Imported STEP")
@@ -217,8 +226,8 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
     };
     let mut session = crate::artifacts::process3d::schema::inferences::ProcessKernelReplay::new();
     let handle = importer.import(&mut *session.kernel().lock().ok()?, &bytes, PROCESS3D_TESSELLATION_TOLERANCE).ok()?.into_iter().next()?;
-    fixture.stock = Stock { id: "stock".into(), label: label.into(), solid: SolidSpec::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
-    Some(fixture)
+    let stock = Stock { id: "stock".into(), label: label.into(), solid: WorkingSolid::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
+    Some(crate::artifacts::process3d::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default(), None))
 }
 //#endregion 🔖️MediaImportExport
 

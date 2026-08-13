@@ -5,7 +5,7 @@ use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::editor_hover_context;
 use crate::apps::writer::terminology::WriterPlayLabels;
 use crate::artifacts::writer::schema::{jack_ast_tree_icon, parse_jack_ast, JackAstNode};
-use crate::artifacts::writer::WriterSnapshot;
+use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{
     tree_item, ui_declarative_sections_to_tree, ui_text, ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
@@ -74,7 +74,7 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterP
             menu: None,
         }]);
     }
-    let root = parse_jack_ast(&document.text);
+    let root = parse_jack_ast(&writer_text(document));
     let items = if root.kind == "error" {
         vec![UiTreeItemNode { description: Some(root.kind.clone()), icon_id: jack_ast_tree_icon(&root.kind).and_then(IconName::from_str), ..tree_item(root.id.as_str(), Label::data(root.label.as_str())) }]
     } else {

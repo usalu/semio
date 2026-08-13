@@ -530,7 +530,7 @@ mod tests {
 
             let demo = demo_docx_snapshot();
             let bytes = encode_docx(&demo).expect("encode demo docx");
-            let zip = crate::artifacts::zip::engine::decode_zip(&bytes).expect("decode zip");
+            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).expect("decode zip");
 
             let modeled_parts = ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/styles.xml"];
             let mut checked = 0;

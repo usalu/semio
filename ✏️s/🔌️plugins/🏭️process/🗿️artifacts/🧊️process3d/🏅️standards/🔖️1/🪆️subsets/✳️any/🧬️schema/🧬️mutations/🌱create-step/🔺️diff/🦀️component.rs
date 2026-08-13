@@ -1,13 +1,19 @@
-//! 🔺️ `create-step` sparse diff construction — a single `Process3dStepsDelta.added` entry, never
-//! a snapshot clone.
+//! 🔺️ `create-step` sparse diff construction.
+//!
+//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `steps` composes an
+//! `s.stdio.semio.flow` CHILD HANDLE now (see `ProcessWorkingScene`'s doc comment in the artifact
+//! root file) — the individual step content this triad used to append lives only inside that
+//! unresolved child, unreachable without a `LinkResolver` this ticket doesn't add. This is a
+//! DOCUMENTED NO-OP pending that resolver, matching `📐️cad`'s own precedent for per-object
+//! mutations on composed content (`addObject`/`patchObject`, ticket wave 3 round 2).
 
-use crate::artifacts::process3d::diff::{Process3dDiff, Process3dStepsDelta};
+use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::create_step::mutation::CreateStep;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-/// 🏗️ Builds the sparse steps delta for one `create-step` payload.
-pub fn diff(payload: &CreateStep, _base: &Process3dSnapshot) -> Process3dDiff {
-    Process3dDiff { steps: Some(Process3dStepsDelta { added: vec![payload.step.clone()], ..Default::default() }), ..Default::default() }
+/// 🚧️ Documented no-op — see file doc comment.
+pub fn diff(_payload: &CreateStep, _base: &Process3dSnapshot) -> Process3dDiff {
+    Process3dDiff::default()
 }
 //#endregion 🔖️Diff

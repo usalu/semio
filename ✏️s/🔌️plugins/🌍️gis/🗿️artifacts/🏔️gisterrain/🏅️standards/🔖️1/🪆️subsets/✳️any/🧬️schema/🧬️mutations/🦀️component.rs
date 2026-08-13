@@ -37,7 +37,7 @@ mod tests {
 
     #[test]
     fn change_exaggeration_and_change_imported_features_invert_to_the_prior_field_value() {
-        let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into() };
+        let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into(), ..Default::default() };
         assert_eq!(
             GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 9.0 }).inverse(&snapshot),
             vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 1.5 })]
@@ -50,7 +50,7 @@ mod tests {
 
     #[test]
     fn change_exaggeration_obeys_the_inverse_and_diff_absorb_laws() {
-        let base = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into() };
+        let base = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into(), ..Default::default() });
         let mutation = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 4.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn change_imported_features_obeys_the_inverse_law() {
-        let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: "null".into() };
+        let base = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: "null".into(), ..Default::default() });
         let mutation = GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: "{}".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
@@ -69,6 +69,10 @@ mod tests {
 
 pub fn apply_gis_terrain_mutation(snapshot: &mut GisTerrainSnapshot, mutation: &GisTerrainMutation) {
     *snapshot = vcs::apply_mutation(snapshot, mutation);
+    // 🕸️ `mesh` is a pure function of `(exaggeration, imported_features_json)` — re-derive it after
+    // every mutation so the composed child handle never drifts from what
+    // `gis_terrain_mesh_from_snapshot` would actually build (see `GisTerrainSnapshot.mesh`'s doc).
+    *snapshot = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(std::mem::take(snapshot));
 }
 
 pub fn inverse_gis_terrain_mutation(snapshot: &GisTerrainSnapshot, mutation: &GisTerrainMutation) -> Vec<GisTerrainMutation> {

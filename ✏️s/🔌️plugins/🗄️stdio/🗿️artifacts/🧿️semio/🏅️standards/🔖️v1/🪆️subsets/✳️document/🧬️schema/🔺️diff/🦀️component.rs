@@ -21,7 +21,7 @@
 //! fails with `Option<T>: DslField` is not satisfied. `DiffCodec` is hand-rolled below, following
 //! the svg/gif/docx template exactly.
 
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified,
     IndexedTripleDiff, NamedModified, NamedTripleDiff,
 };

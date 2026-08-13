@@ -86,14 +86,15 @@ pub mod rename_flow_widget {
     }
 
     /// ✏️ Renames a widget id (rewiring synapses and layout) purely in the fixture; `None` if the target
-    /// id is blank, unchanged, or already taken.
-    fn renamed_fixture(fixture: &FlowSnapshot, old_id: &str, new_id: &str) -> Option<FlowSnapshot> {
+    /// id is blank, unchanged, or already taken. Operates on the live `flow::FlowFixture` (via
+    /// `to_fixture`/`from_fixture`) rather than `FlowSnapshot`'s own composed `content` handle.
+    fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Option<FlowSnapshot> {
         let trimmed = new_id.trim();
+        let mut fixture = snapshot.to_fixture();
         if trimmed.is_empty() || trimmed == old_id || fixture.widgets.iter().any(|widget| widget_id(widget) == trimmed) {
             return None;
         }
-        let mut next = fixture.clone();
-        for widget in next.widgets.iter_mut() {
+        for widget in fixture.widgets.iter_mut() {
             if widget_id(widget) == old_id {
                 match widget {
                     Widget::Neuron { id, .. }
@@ -108,7 +109,7 @@ pub mod rename_flow_widget {
                 }
             }
         }
-        for synapse in next.synapses.iter_mut() {
+        for synapse in fixture.synapses.iter_mut() {
             if synapse.from == old_id {
                 synapse.from = trimmed.into();
             }
@@ -116,10 +117,10 @@ pub mod rename_flow_widget {
                 synapse.to = trimmed.into();
             }
         }
-        if let Some(layout) = next.layout.remove(old_id) {
-            next.layout.insert(trimmed.into(), layout);
+        if let Some(layout) = fixture.layout.remove(old_id) {
+            fixture.layout.insert(trimmed.into(), layout);
         }
-        Some(next)
+        Some(FlowSnapshot::from_fixture(fixture))
     }
 
     pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
@@ -152,9 +153,9 @@ pub mod patch_flow_widgets {
     /// clone. `value` is the typed command field verbatim (a plain `&str`, not a `serde_json::Value` —
     /// mirrors `dag_engine::node_patch_for_field`'s "typed command carries the raw UI input string
     /// directly" convention) — numeric fields parse it themselves.
-    fn patched_widgets_fixture(fixture: &FlowSnapshot, widget_ids: &[String], field: &str, raw_value: &str) -> FlowSnapshot {
-        let mut next = fixture.clone();
-        for widget in next.widgets.iter_mut() {
+    fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field: &str, raw_value: &str) -> FlowSnapshot {
+        let mut fixture = snapshot.to_fixture();
+        for widget in fixture.widgets.iter_mut() {
             if !widget_ids.iter().any(|id| id == widget_id(widget)) {
                 continue;
             }
@@ -168,7 +169,7 @@ pub mod patch_flow_widgets {
                 _ => {}
             }
         }
-        next
+        FlowSnapshot::from_fixture(fixture)
     }
 
     pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
@@ -219,10 +220,10 @@ mod tests {
     #[test]
     fn add_widget_emits_operations_and_selects_the_new_widget() {
         let mut app = flow_app();
-        let before = app.snapshot().expect("snapshot").widgets.len();
+        let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         let result = dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }));
         assert!(!result.mutations.is_empty(), "addWidget must emit operations");
-        assert_eq!(app.snapshot().expect("snapshot").widgets.len(), before + 1);
+        assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before + 1);
     }
 
     #[test]
@@ -239,7 +240,8 @@ mod tests {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() }));
         let patched = app.snapshot().expect("snapshot");
-        assert!(patched.widgets.iter().any(|widget| matches!(widget, Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)), "slider must carry the parsed value: {patched:?}");
+        let patched_widgets = patched.to_fixture().widgets;
+        assert!(patched_widgets.iter().any(|widget| matches!(widget, Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)), "slider must carry the parsed value: {patched_widgets:?}");
     }
 }
 //#endregion 🧪️Tests

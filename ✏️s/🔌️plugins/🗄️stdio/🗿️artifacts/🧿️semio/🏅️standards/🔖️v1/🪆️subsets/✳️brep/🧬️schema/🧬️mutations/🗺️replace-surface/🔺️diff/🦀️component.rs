@@ -1,8 +1,8 @@
 //! 🔺️ `replace-surface` — sparse diff construction; an absent BASE `face_id` is a no-op clone.
 
 use super::mutation::ReplaceSurface;
-use crate::artifacts::semio::standards::v1::engine::triples::NamedModified;
-use crate::artifacts::semio::standards::v1::engine::triples::NamedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedModified;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{BrepFaceDiff, SemioBrepDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 

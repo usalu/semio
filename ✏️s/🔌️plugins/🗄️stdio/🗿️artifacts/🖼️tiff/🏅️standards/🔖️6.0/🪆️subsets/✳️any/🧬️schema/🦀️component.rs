@@ -222,3 +222,60 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: TiffComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+// 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+// `empty_tiff_snapshot`/`demo_tiff_snapshot` relocated here verbatim (pure helpers over the
+// document type, destination rule 5); `TiffEngine` (zero construction sites) and the dead
+// `register`/`register_pilot_languages`/`register_artifact_inferences` cluster (superseded by
+// `declaration()` in the artifact root, zero real callers) deleted outright; the real codec
+// (`encode_tiff`/`encode_tiff_packbits`/`decode_tiff` + every pure format algorithm) and
+// `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
+pub fn empty_tiff_snapshot() -> crate::artifacts::tiff::TiffSnapshot {
+    crate::artifacts::tiff::TiffSnapshot::default()
+}
+
+/// 📄️ P2-FG2: the demo `stdio.tiff` document — a genuinely non-trivial `TiffSnapshot` exercising
+/// a non-solid checkerboard raster plus one carried non-core tag (`Artist`, 315). The single
+/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` (`fixture_honesty_law`
+/// in `../🚪️io`'s own tests asserts they're literally this snapshot's `print_dsl` output).
+///
+/// **Deliberately built via a real `encode_tiff`/`decode_tiff` round trip**, not hand-assembled
+/// field values: `encode_tiff` always CANONICALIZES the core strip/geometry tags fresh from
+/// `pixels` (see `encode_tiff_with`'s own `EncodeScopeNote`) — hand-picking `ImageWidth`/
+/// `BitsPerSample`/`Compression`/`PhotometricInterpretation`/`SamplesPerPixel`/`RowsPerStrip`/
+/// `StripByteCounts`/`StripOffsets` values here would silently "self-correct" on the very first
+/// `print_dsl`/`parse_dsl` round trip and break `fixture_honesty_law`'s `parse_dsl(fixture) ==
+/// demo()` identity (same class of trap `png`'s own `demo_png_snapshot()` doc comment documents
+/// for its IHDR fields) — running the real codec once here guarantees `demo()` is ALREADY in
+/// exactly the canonical shape a second `encode_tiff`/`decode_tiff` pass reproduces byte-for-byte.
+pub fn demo_tiff_snapshot() -> crate::artifacts::tiff::TiffSnapshot {
+    use crate::artifacts::tiff::standards::v6_0::subsets::any::io::{decode_tiff, encode_tiff};
+    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+    use crate::artifacts::tiff::TiffSnapshot;
+    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
+    use crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA;
+    let (w, h) = (3u32, 2u32);
+    let mut pixels = Vec::with_capacity((w * h * 4) as usize);
+    for y in 0..h {
+        for x in 0..w {
+            let checker = if (x + y) % 2 == 0 { 255u8 } else { 0u8 };
+            pixels.extend_from_slice(&[checker, ((x * 37) % 256) as u8, ((y * 53) % 256) as u8, 255]);
+        }
+    }
+    let seed = TiffSnapshot {
+        schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
+        byte_order: TiffByteOrder::LittleEndian,
+        ifds: vec![TiffIfd {
+            entries: vec![
+                TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![w]) },
+                TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![h]) },
+                TiffTag { tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("stdio.tiff demo".into()) },
+            ],
+        }],
+        pixels,
+    };
+    let encoded = encode_tiff(&seed).expect("demo_tiff_snapshot: encode must succeed");
+    decode_tiff(&encoded).expect("demo_tiff_snapshot: decode must succeed")
+}
+//#endregion 🔖️DocumentHelpers

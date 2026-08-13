@@ -226,3 +226,54 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: JpgComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+// 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+// `empty_jpg_snapshot`/`demo_jpg_snapshot` relocated here verbatim (pure helpers over the
+// document type, destination rule 5); `JpgEngine` (zero construction sites) and the dead
+// `register`/`register_pilot_languages`/`register_artifact_inferences`/`register_schema_specs`
+// cluster (superseded by `declaration()` in the artifact root, zero real callers) deleted
+// outright; the real codec (`encode_jpg`/`decode_jpg`/`JpgError` + every pure format algorithm)
+// and `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
+pub fn empty_jpg_snapshot() -> crate::artifacts::jpg::JpgSnapshot {
+    crate::artifacts::jpg::JpgSnapshot::default()
+}
+
+/// 🧪️ P2-FG2: the demo `JpgSnapshot` used by `conformance_laws::protocol_walk_law`/
+/// `fixture_honesty_law` — a real, `encode_jpg`-round-trippable 16x16 image (16x16 = exactly one
+/// 4:2:0 MCU, no edge-replication padding needed). Deliberately carries NO `jfif_thumbnail` and NO
+/// `other_segments`: `encode_jpg` always canonicalizes fresh Annex K DQT/DHT tables and a fixed
+/// 3-component frame regardless of `frame`/`quant_tables`/`huffman_tables`/`sof_marker`/
+/// `arithmetic`/`restart_interval` (those fields are decode-only, per the F3b-wave's own
+/// documented `EncodeScopeNote`), so this snapshot leaves them at their `Default` values — the
+/// thumbnail/other_segments omission specifically sidesteps the two arithmetic-count mechanism
+/// gaps `../🚪️io/🦀️component.rs`'s own `📡️component.protocol.semio` documents (thumbnail-size =
+/// width*height*3 needs a two-field product; other_segments' body length needs `Lp - 2`, neither
+/// expressible by this dialect's `Field`/`Array` primitives).
+pub(crate) fn demo_jpg_snapshot() -> crate::artifacts::jpg::JpgSnapshot {
+    use crate::artifacts::jpg::JpgSnapshot;
+    use crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA;
+    let (w, h) = (16u32, 16u32);
+    let mut pixels = vec![0u8; (w * h * 4) as usize];
+    for (i, px) in pixels.chunks_mut(4).enumerate() {
+        px[0] = (i * 7 % 255) as u8;
+        px[1] = (i * 13 % 255) as u8;
+        px[2] = (i * 17 % 255) as u8;
+        px[3] = 255;
+    }
+    JpgSnapshot {
+        schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
+        width: w,
+        height: h,
+        pixels,
+        re_encode_quality: Some(85),
+        jfif_version: (1, 1),
+        jfif_density_units: crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::snapshot::JfifDensityUnits::PixelsPerInch,
+        jfif_x_density: 72,
+        jfif_y_density: 72,
+        jfif_thumbnail: None,
+        other_segments: Vec::new(),
+        ..JpgSnapshot::default()
+    }
+}
+//#endregion 🔖️DocumentHelpers

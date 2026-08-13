@@ -135,17 +135,12 @@ pub fn document_tree_selected_ids(document: &CadSnapshot, runtime: &CadPlayRunti
     if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
         return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
     }
-    if let (Some(object_id), Some(primitive_id)) = (runtime.selected_object_ids.first(), runtime.selected_primitive_id.as_deref()) {
-        if let Some(pane) = cad_find_object_pane(document, object_id) {
-            return Some(vec![format!("cad-primitive:{}:{object_id}:{primitive_id}", cad_pane_suffix(pane))]);
-        }
-    }
-    let selected: Vec<String> = runtime.selected_object_ids.iter().filter_map(|object_id| cad_find_object_pane(document, object_id).map(|pane| format!("cad-object:{}:{object_id}", cad_pane_suffix(pane)))).collect();
-    if selected.is_empty() {
-        None
-    } else {
-        Some(selected)
-    }
+    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `cad_find_object_pane` is
+    // retired (no live per-pane object list on `CadSnapshot`, only composed model-child HANDLES) —
+    // same documented reduced-fidelity gap as `document_tree_highlighted_ids` below: object/
+    // primitive selection no longer resolves a pane at this render boundary.
+    let _ = (document, runtime.selected_object_ids.first(), runtime.selected_primitive_id.as_deref());
+    None
 }
 
 pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
@@ -220,60 +215,70 @@ mod tests {
     use super::*;
     use crate::apps::cad::testkit::*;
     use crate::apps::cad::config::CadConfig;
-    use crate::apps::cad::{CadPlayApp, CadPlayRuntime};
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene};
+    use crate::apps::cad::terminology::cad_labels;
+    use crate::apps::cad::{make_object_for_typology, CadPlayApp, CadPlayRuntime};
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
+    use crate::artifacts::cad::CadPaneId;
     use semio_framework_plugin::{ArtifactView, PluginApp, SelectionSet, UiNode, ViewModel};
 
     #[test]
-    fn document_lists_objects_and_nodes() {
+    fn document_lists_nodes() {
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: pane object sections
+        // render empty at this boundary now (documented gap, see `build_document_tree`'s own doc
+        // comment) — `object_tree_item_shows_name_with_kind_as_secondary_label`/
+        // `object_tree_item_includes_primitive_children` below cover the real (still-working)
+        // tree-item builder directly instead.
         let mut app = new_app();
         let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("cad-object:"));
         assert!(json.contains("cad-node:"));
     }
 
     #[test]
-    fn document_tree_shows_name_with_kind_as_secondary_label() {
-        let app = CadPlayApp::default();
-        let mut scene = default_document();
-        scene.objects[0].label = "U2".into();
-        scene.objects[0].typology = "building.building.beam".into();
-        let history = empty_history();
-        let doc = ArtifactView { snapshot: &scene, history: &history };
-        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &CadConfig::default());
-        let UiNode::Tree(tree) = node else {
-            panic!("document body should render a tree");
-        };
-        let object_item = tree.sections.iter().flat_map(|section| section.items.iter()).find(|item| item.id.contains("cad-object:") && item.label.as_str() == "U2").expect("named object tree item");
-        assert_eq!(object_item.description.as_deref(), Some("Beam"));
+    fn object_tree_item_shows_name_with_kind_as_secondary_label() {
+        let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
+        object.label = "U2".into();
+        let labels = cad_labels(&CadConfig::default());
+        let item = object_tree_item("shape", &object, labels);
+        assert_eq!(item.label.as_str(), "U2");
+        assert_eq!(item.description.as_deref(), Some("Beam"));
 
-        let de_node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &CadConfig { locale: "de".into(), ..CadConfig::default() });
-        let UiNode::Tree(de_tree) = de_node else {
-            panic!("document body should render a tree");
-        };
-        let de_object_item = de_tree.sections.iter().flat_map(|section| section.items.iter()).find(|item| item.id.contains("cad-object:") && item.label.as_str() == "U2").expect("named object tree item in German");
-        assert_eq!(de_object_item.description.as_deref(), Some("Träger"));
+        let de_config = CadConfig { locale: "de".into(), ..CadConfig::default() };
+        let de_labels = cad_labels(&de_config);
+        let de_item = object_tree_item("shape", &object, de_labels);
+        assert_eq!(de_item.description.as_deref(), Some("Träger"));
     }
 
     #[test]
-    fn document_tree_includes_primitive_children() {
-        let mut app = new_app();
-        let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+    fn object_tree_item_includes_primitive_children() {
+        let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
+        object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
+        let labels = cad_labels(&CadConfig::default());
+        let item = object_tree_item("shape", &object, labels);
+        let json = serde_json::to_string(&item).unwrap();
         assert!(json.contains("cad-primitive:"));
         assert!(json.contains("hoverAction"));
     }
 
     #[test]
-    fn document_tree_reflects_viewport_selection() {
+    fn document_tree_selected_and_highlighted_ids_are_none_for_plain_object_selection() {
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: object-id → pane
+        // resolution (`cad_find_object_pane`) is retired — no live per-pane object list exists on
+        // `CadSnapshot` to resolve against at this render boundary (composed model-child content,
+        // unresolved here). Documented gap: this asserts the honest `None`, not a fabricated id.
+        let scene = default_document();
+        let runtime = CadPlayRuntime { selected_object_ids: SelectionSet::from(vec!["object-box-1".into()]), hovered_object_id: Some("object-box-1".into()), ..CadPlayRuntime::default() };
+        assert_eq!(document_tree_selected_ids(&scene, &runtime), None);
+        assert_eq!(document_tree_highlighted_ids(&scene, &runtime), None);
+    }
+
+    #[test]
+    fn document_tree_selected_ids_resolves_reference_selection() {
         let scene = forest_play_scene();
-        let object_id = scene.objects.iter().find(|object| object.visible).expect("visible shape object").id.clone();
-        let runtime = CadPlayRuntime { selected_object_ids: SelectionSet::from(vec![object_id.clone()]), hovered_object_id: Some(object_id.clone()), ..CadPlayRuntime::default() };
+        let runtime = CadPlayRuntime { selected_reference_model_definition_id: Some(CAD_MODEL_DEFINITION_SHAPE.into()), selected_reference_id: Some("ref-concrete-forest".into()), ..CadPlayRuntime::default() };
         let selected = document_tree_selected_ids(&scene, &runtime).expect("selected");
-        assert!(selected.iter().any(|id| id.contains(&object_id) && id.starts_with("cad-object:shape:")));
-        let highlighted = document_tree_highlighted_ids(&scene, &runtime).expect("highlighted");
-        assert!(highlighted.iter().any(|id| id.contains(&object_id) && id.starts_with("cad-object:shape:")));
+        assert!(selected.iter().any(|id| id == "cad-reference:spatial.shape:ref-concrete-forest"));
     }
 
     #[test]

@@ -183,7 +183,7 @@ impl ArtifactApp for Process3dPlayApp {
     /// shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(doc.snapshot, "step") {
+            "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(&crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step") {
                 Some(export) => {
                     let text = match export.data {
                         Value::String(text) => text,
@@ -455,7 +455,12 @@ pub fn register() {
     register_pilot_languages();
     fn process3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
         let snapshot: Process3dSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-        crate::artifacts::process3d::schema::inferences::processed_mesh(&snapshot).ok_or_else(|| "process3d: kernel replay failed".to_string())
+        // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: a bare snapshot's
+        // `stock_solid`/`steps` are composed CHILD HANDLES with no resolvable content (no
+        // `LinkResolver` — see `ProcessWorkingScene`'s doc comment); this degrades to the honest
+        // empty scene until a resolver exists.
+        let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(&snapshot);
+        crate::artifacts::process3d::schema::inferences::processed_mesh(&scene, snapshot.resolved_up_to).ok_or_else(|| "process3d: kernel replay failed (no resolved working-scene content)".to_string())
     }
 
     fn process3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {

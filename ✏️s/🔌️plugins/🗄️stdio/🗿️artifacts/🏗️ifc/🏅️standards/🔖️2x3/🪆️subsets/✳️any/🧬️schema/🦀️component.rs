@@ -244,3 +244,155 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Ifc2x3Composer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
+/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
+/// `crate::artifacts::ifc::standards::v2x3::engine::empty_ifc2x3_snapshot` through the `engine`
+/// barrel shim.
+pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
+    Ifc2x3Snapshot::default()
+}
+
+/// 📄️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: the demo
+/// `stdio.ifc.2x3` document — a real, minimal IFC2X3 exchange structure (raw HEADER value tuples +
+/// two real entities incl. an `IFCOWNERHISTORY` reference chain), matching `4`'s own
+/// `demo_ifc_snapshot()` shape but declaring `FILE_SCHEMA(('IFC2X3'))` so `decode_ifc2x3`'s own
+/// schema gate accepts it. Fodder for `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`
+/// and this standard's own `conformance_laws` tests (a non-empty snapshot, unlike the prior
+/// `empty_ifc2x3_snapshot()` stub, so every recognizer/walk law actually exercises real content).
+pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
+    use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    Ifc2x3Snapshot {
+        schema: crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
+        document: Part21Document {
+            header: Part21Header {
+                file_description: vec![Part21Value::List(vec![]), Part21Value::Str("2;1".into())],
+                file_name: vec![
+                    Part21Value::Str("semio.ifc".into()),
+                    Part21Value::Str("2026-08-11T00:00:00".into()),
+                    Part21Value::List(vec![Part21Value::Str("Ueli".into())]),
+                    Part21Value::List(vec![Part21Value::Str("semio".into())]),
+                    Part21Value::Str("semio".into()),
+                    Part21Value::Str("".into()),
+                    Part21Value::Str("".into()),
+                ],
+                file_schema: vec![Part21Value::List(vec![Part21Value::Str("IFC2X3".into())])],
+            },
+            instances: vec![
+                Part21Instance { id: 1, entities: vec![("IFCPROJECT".into(), vec![Part21Value::Str("gid-project".into()), Part21Value::Ref(2), Part21Value::Str("Demo Project".into())])] },
+                Part21Instance { id: 2, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Int(0)])] },
+            ],
+        },
+    }
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🔖️Register
+/// 🗂️ **Deliberately left imperative and callable** (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-
+/// APP-STATE-MACHINES, per the ticket's own explicit instruction: "leave ifc's registration
+/// alone" — `ArtifactDeclaration` has exactly one `.schema()`/`.document_codec()` slot and
+/// cannot hold both `4`'s and `2x3`'s independent descriptors/codecs at once, see the artifact
+/// root `🦀️component.rs`'s own doc comment). Only physically dissolved out of `⚙️engine`; reached
+/// as `crate::artifacts::ifc::standards::v2x3::engine::register()` through the `engine` barrel
+/// shim, which is exactly the path `📦️glue.rs`'s root `ifc::engine::register()` override calls
+/// explicitly (alongside `v4::engine::register()`).
+///
+/// Registers this standard's schema descriptor, document codec, 5-role `LanguageSpec`s, and (via
+/// each real subset's own composer) its `SubsetValidator`s. Does NOT call the artifact-level
+/// `ifc::composer::register()` (that union is already invoked once from `4`'s own
+/// `engine::register()`, extended by this ticket to also union `v2x3::composer::entries()` —
+/// calling it a second time here would be a redundant registration, same reasoning gif's
+/// `89a::engine::register` doc comment gives).
+pub fn register() {
+    ::schema::register_artifact_schema_descriptor(
+        crate::artifacts::ifc::standards::v2x3::subsets::any::schema::ifc2x3_artifact_schema_descriptor(),
+    );
+    register_artifact_inferences();
+    register_pilot_languages();
+    store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::Ifc2x3Mutation>(
+        crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA,
+    ));
+    // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
+    // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
+    // is registered separately via this standard's own `composer::entries()` aggregation.
+    crate::artifacts::ifc::standards::v2x3::subsets::cv20::io::register();
+    crate::artifacts::ifc::standards::v2x3::subsets::sav::io::register();
+    crate::artifacts::ifc::standards::v2x3::subsets::cobie::io::register();
+}
+
+/// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
+/// sibling to the schema descriptor registration above (separate registry, ticket
+/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::inferences::ifc2x3_artifact_inference_descriptor());
+}
+
+/// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role
+/// `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's json exemplar —
+/// `stdio.ifc.2x3`/`.op`/`.diff`/`.pack`/`.spr`, all `dsl::passthrough_hooks`. `diff`'s `protocol`
+/// slot stays `None` matching the exemplar's own shape exactly (the 5-role scheme has no dedicated
+/// "diff binary" role even though `🔺️diff/💾️binary/📡️component.protocol.semio` is a real,
+/// conformance-tested file — its binary form is exercised directly by `protocol_walk_law` below,
+/// just not wired through a 6th `LanguageRole`), same precedent `4`'s own
+/// `register_pilot_languages` established.
+pub fn register_pilot_languages() {
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{diff, mutations, snapshot};
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.2x3",
+        extension: Some("ifc"),
+        role: dsl::LanguageRole::Document,
+        grammar: Some(snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.ifc.2x3"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.2x3.op",
+        extension: None,
+        role: dsl::LanguageRole::Ops,
+        grammar: Some(mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.ifc.2x3.op"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.2x3.diff",
+        extension: None,
+        role: dsl::LanguageRole::Diff,
+        grammar: Some(diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: None,
+        protocol_path: None,
+        hooks: dsl::passthrough_hooks("stdio.ifc.2x3.diff"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.2x3.pack",
+        extension: None,
+        role: dsl::LanguageRole::Pack,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.ifc.2x3.pack"),
+    });
+    dsl::register_language(dsl::LanguageSpec {
+        id: "stdio.ifc.2x3.spr",
+        extension: None,
+        role: dsl::LanguageRole::Spr,
+        grammar: None,
+        grammar_path: None,
+        protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
+        hooks: dsl::passthrough_hooks("stdio.ifc.2x3.spr"),
+    });
+}
+
+// 📌️ `dsl::registry::register_schema_spec` is intentionally NOT called here — `Part21Value` (a
+// genuine data-carrying enum) has no `DslField` impl, so no `fn() -> RecordSpec` exists for
+// `Ifc2x3Snapshot`/`Ifc2x3Diff` at all (same `register-schema-spec-needs-recordspec` mechanism gap
+// `4`'s own `IfcSnapshot`/`IfcDiff` doc comment documents for the isomorphic shape) — filed as a
+// `mechanism_gaps` entry rather than fabricating an unrelated spec.
+//#endregion 🔖️Register

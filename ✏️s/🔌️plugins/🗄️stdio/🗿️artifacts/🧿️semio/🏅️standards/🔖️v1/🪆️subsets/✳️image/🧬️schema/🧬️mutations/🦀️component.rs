@@ -7,7 +7,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::{
     SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff, decode_option, diff_set_snapshot,
     enc_colorspace, dec_colorspace, enc_frame, dec_frame, enc_metadata_entry, dec_metadata_entry, encode_option,
 };
-use crate::artifacts::semio::standards::v1::engine::triples::{IndexAdded, IndexModified, NamedModified, split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexModified, NamedModified, split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
     SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot,
 };

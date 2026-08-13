@@ -152,13 +152,13 @@ impl store::ArtifactDsl for ZipSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::zip::engine::decode_zip(&bytes).map_err(|e| {
+        crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).map_err(|e| {
             store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1))
         })
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::zip::engine::encode_zip(self).unwrap_or_default();
+        let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -172,7 +172,7 @@ impl store::ArtifactDsl for ZipSnapshot {
 impl store::ArtifactPack for ZipSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::zip::engine::encode_zip(self)
+        let raw = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(self)
             .map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -193,7 +193,7 @@ impl store::ArtifactPack for ZipSnapshot {
             )));
         }
         let _ = options;
-        crate::artifacts::zip::engine::decode_zip(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 //#endregion HandcraftedArtifactCodecs

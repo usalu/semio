@@ -2,8 +2,8 @@
 //! (nothing at that address to replace).
 
 use super::mutation::ReplaceCurve;
-use crate::artifacts::semio::standards::v1::engine::triples::NamedModified;
-use crate::artifacts::semio::standards::v1::engine::triples::NamedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedModified;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{BrepEdgeDiff, SemioBrepDiff};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 

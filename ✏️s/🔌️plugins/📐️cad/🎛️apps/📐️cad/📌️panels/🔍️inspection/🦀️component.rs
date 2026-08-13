@@ -279,24 +279,33 @@ mod tests {
 
     #[test]
     fn multi_selection_inspector_shows_mixed_values() {
-        let mut scene = default_document();
-        let second = make_object_for_typology("spatial.shape.primitive.box", 1, CadPaneId::Shape);
-        let second_id = second.id.clone();
-        scene.objects.push(second);
-        scene.objects[0].label = "Alpha".into();
-        scene.objects[1].label = "Beta".into();
-        scene.objects[0].orientation = Some([0.0, 0.0, 0.0, 1.0]);
-        scene.objects[1].orientation = Some([0.0, 0.707, 0.0, 0.707]);
-        let runtime = CadPlayRuntime { selected_object_ids: SelectionSet::from(vec!["object-box-1".into(), second_id]), ..CadPlayRuntime::default() };
-        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&CadConfig::default()), None);
-        let json = serde_json::to_string(&panel).unwrap();
+        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `build_properties_panel`
+        // no longer resolves object selection into an inspector group (documented gap, see its own
+        // doc comment — no live per-pane object list on `CadSnapshot`) — this exercises the real
+        // `object_inspector_group` builder directly instead, the pure function the full render path
+        // will call once resolved-child-content rendering exists.
+        let mut first = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
+        let mut second = make_object_for_typology("spatial.shape.primitive.box", 1, CadPaneId::Shape);
+        first.label = "Alpha".into();
+        second.label = "Beta".into();
+        first.orientation = Some([0.0, 0.0, 0.0, 1.0]);
+        second.orientation = Some([0.0, 0.707, 0.0, 0.707]);
+        let group = object_inspector_group(&[&first, &second], cad_labels(&CadConfig::default()));
+        let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[group])).unwrap();
         assert!(json.contains("Mixed"));
         assert!(json.contains("cad-play-inspector.object.orientation"));
     }
 
+    // ⚠️ Pre-existing gap (predates this wave's app-layer pass, see `build_properties_panel`'s own
+    // doc comment): the full render path can no longer resolve object/primitive selection into an
+    // inspector group at all (no live per-pane object list on `CadSnapshot`), so `selected_box_panel`
+    // can no longer exercise `object_inspector_group`/`primitive_inspector_group`'s terminology
+    // labels — every test below that needs those groups now calls the real, still-working builder
+    // directly instead (same pattern `multi_selection_inspector_shows_mixed_values` already uses).
     #[test]
     fn cad_labels_resolve_native_by_default() {
-        let json = selected_box_panel(&CadConfig::default());
+        let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
+        let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[object_inspector_group(&[&object], cad_labels(&CadConfig::default()))])).unwrap();
         assert!(json.contains("\"Object\""));
         assert!(!json.contains("Building component"));
     }
@@ -318,15 +327,17 @@ mod tests {
     #[test]
     fn cad_labels_resolve_native_terminology_in_german() {
         let config = CadConfig { terminology: "native".into(), locale: "de".into(), ..CadConfig::default() };
-        assert!(selected_box_panel(&config).contains("\"Objekt\""));
+        let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
+        let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[object_inspector_group(&[&object], cad_labels(&config))])).unwrap();
+        assert!(json.contains("\"Objekt\""));
     }
 
     #[test]
     fn cad_labels_resolve_reuse_terminology_for_primitive() {
-        let runtime = CadPlayRuntime { selected_object_ids: SelectionSet::from(vec!["object-box-1".into()]), selected_primitive_id: Some("box-solid".into()), ..CadPlayRuntime::default() };
         let config = CadConfig { terminology: "reuse".into(), locale: "de".into(), ..CadConfig::default() };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&config), None);
-        assert!(serde_json::to_string(&panel).unwrap().contains("Bauteil"));
+        let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
+        let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[primitive_inspector_group(&object, cad_labels(&config), "box-solid", "solid")])).unwrap();
+        assert!(json.contains("Bauteil"));
     }
 }
 //#endregion 🧪️Tests

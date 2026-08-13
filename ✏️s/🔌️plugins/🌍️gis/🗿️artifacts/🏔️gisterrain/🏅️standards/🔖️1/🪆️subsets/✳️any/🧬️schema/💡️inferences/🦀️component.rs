@@ -62,11 +62,13 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gisterrain::
 /// `🧬️schema/💡️inferences/` destination — same family as `GisTerrainInference` above, just not yet
 /// wired through the typed `#[state(inferred)]` registry.
 ///
-/// ⚠️ `crate::modules::terrain` below is a KNOWN PRE-EXISTING unresolved import — verified (git log,
-/// no `pub mod modules` anywhere in this crate's `📦️glue.rs`) to predate this ticket's changes and
-/// reported by another session. It is carried forward unchanged here, not fixed: out of this
-/// ticket's scope (engine dissolution, not import repair).
-use crate::modules::terrain::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
+/// ⚠️ `crate::modules::terrain` used to be a pre-existing unresolved import (predating this ticket,
+/// flagged by another session — `crate::modules` was never mounted in this crate's `📦️glue.rs`).
+/// Fixed opportunistically while touching this file for the `mesh` composition (ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`): the real home of these types is
+/// `crate::artifacts::gisterrain::schema`'s `🔖️TerrainDescriptor` region — a one-line path
+/// correction, not an engine-dissolution rewrite.
+use crate::artifacts::gisterrain::schema::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
 
 /// 📜️ Hand-rolled reader for the `.gisterrain` fixture's `origin`/`position` scenery lines — the
 /// read-only pins/project-origin data rendered alongside the document; the `gisterrain
@@ -235,6 +237,7 @@ mod tests {
         let snapshot = GisTerrainSnapshot {
             exaggeration: 1.5,
             imported_features_json: serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string(),
+            ..Default::default()
         };
         assert_eq!(GisTerrainInference::infer(&snapshot), GisTerrainInference::infer(&snapshot));
     }
@@ -255,7 +258,7 @@ mod tests {
     /// after the document-only conversion — i.e. converting the fixture to the DSL didn't lose data.
     #[test]
     fn terrain_fixture_text_recovers_bundled_scenery_data() {
-        let descriptor = parse_descriptor(&GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: String::new() });
+        let descriptor = parse_descriptor(&GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: String::new(), ..Default::default() });
         assert_eq!(descriptor.project_origin.lon, 5.5818);
         assert_eq!(descriptor.project_origin.lat, 50.603);
         assert_eq!(descriptor.positions.len(), 2);
@@ -265,7 +268,7 @@ mod tests {
     /// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
     #[test]
     fn imported_map_features_render_as_extra_pins() {
-        let document = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string() };
+        let document = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string(), ..Default::default() };
         let descriptor = parse_descriptor(&document);
         assert_eq!(descriptor.positions.len(), 3, "2 fixture pins + 1 imported pin");
         assert!(descriptor.positions.iter().any(|position| position.id == "imported-1"));

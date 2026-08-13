@@ -4,27 +4,34 @@
 //! slug dirs directly — `📦️glue.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 //!
-//! `stock`/`steps` are a single workpiece solid plus an ordered process timeline, not a graph of
-//! positioned objects — the honest whole-snapshot derivation is the stock's world-space bounding
-//! box plus the step count, computed straight from `SolidSpec`/`Pose` (no kernel/tessellation
-//! needed). Whole-snapshot scalars, so this uses the plain `protocol::Inference<P>` shape (no
-//! `InferredField`/caching machinery — see `📦bounds/🦀️component.rs` for the derivation).
+//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `stock`/`steps` compose real
+//! `s.stdio.semio.brep`/`s.stdio.semio.flow` CHILD HANDLES on `Process3dSnapshot` now, not inline
+//! content — `Process3dInference::infer(&Process3dSnapshot)` can only see the stock's `stock_pose`
+//! (real, no resolver needed) and cannot recover `stock_bounds`'s full extent or `step_count`
+//! without resolving those children, which no `LinkResolver` seam exists to do yet (checked directly
+//! against `🔌️plugin/🦀️component.rs`, W1-owned — see `ProcessWorkingScene`'s own doc comment in the
+//! artifact root file). `stock_bounds` degrades to the honest single-point-at-`stock_pose.position`
+//! bound (real, not fabricated); `step_count` degrades to 0 with the gap documented on the field.
+//! The KERNEL REPLAY pipeline (`ProcessKernelReplay`/`replay_process`/`processed_mesh`/
+//! `processed_volume`) still does real, unmodified CSG work — it now reads a `ProcessWorkingScene`
+//! (the ephemeral, real-content bridge type) instead of `Process3dSnapshot` directly, exactly the
+//! "one accessor every render/export/inference call site funnels through" pattern the migration
+//! recipe's §3 prescribes.
 
 use crate::artifacts::process3d::{
-    Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, SolidSpec, Stock, StockQuantity, Workshop, WorkshopMachine,
+    Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine,
 };
 use protocol::Inference;
 use schema::ArtifactSchema;
-use semio_framework_3d::brep::kernel::{Brep, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
+use semio_framework_3d::brep::kernel::Brep;
 use semio_framework_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandle};
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
-use super::bounds::{stock_bounding_box, BoundingBox};
+use super::bounds::{brep_bounding_box, BoundingBox};
 
 /// 🕳️ Tessellation tolerance for kernel replay/export.
 const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
@@ -40,20 +47,22 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 pub struct Process3dInference {
     #[state(inferred)]
     pub stock_bounds: BoundingBox,
+    /// 🌉️ Documented gap (see file doc comment): a plain `Process3dSnapshot` cannot see its
+    /// composed `steps` child's content without a resolver, so this is always 0. Use
+    /// `ProcessWorkingScene::steps.len()` for the real count when a working scene is in hand.
     #[state(inferred)]
     pub step_count: u64,
 }
 
 impl protocol::Inference<Process3dSnapshot> for Process3dInference {
     fn infer(snapshot: &Process3dSnapshot) -> Self {
-        Self { stock_bounds: stock_bounding_box(&snapshot.stock), step_count: snapshot.steps.len() as u64 }
+        Self { stock_bounds: BoundingBox { min: snapshot.stock_pose.position, max: snapshot.stock_pose.position }, step_count: 0 }
     }
 }
 
 /// 🌉️ Hand impl (not derived): a naive `#[derive(Default)]` would give `stock_bounds` an
-/// all-zero box, which disagrees with `infer(&Process3dSnapshot::default())` (the default 1x1x1
-/// `Stock` box has a real, non-zero bound) and would break `inference_default_law`. Defining
-/// default as "infer the default snapshot" makes the two definitionally equal.
+/// all-zero box, which disagrees with `infer(&Process3dSnapshot::default())`. Defining default as
+/// "infer the default snapshot" makes the two definitionally equal.
 impl Default for Process3dInference {
     fn default() -> Self {
         Self::infer(&Process3dSnapshot::default())
@@ -69,7 +78,7 @@ impl protocol::InferenceSpec<Process3dSnapshot> for Process3dInference {
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
-            protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stockBounds", reads: &["stock"] },
+            protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stockBounds", reads: &["stockPose"] },
             protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stepCount", reads: &["steps"] },
         ]
     }
@@ -143,19 +152,19 @@ fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
 }
 
 /// 📦️ Builds a posed kernel solid for a spec via `*_prim_sync` → `rotate_sync` → `translate_sync`.
-fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &SolidSpec, pose: &Pose) -> Option<GeometryHandle> {
+fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
     let base = match spec {
-        SolidSpec::Box { width, depth, height } => semio_framework_3d::brep::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
-        SolidSpec::Cylinder { radius, height } => semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
-        SolidSpec::Sphere { radius } => semio_framework_3d::brep::engine::block_on(kernel.sphere_prim(*radius)).ok()?,
-        SolidSpec::ImportedSolid { solid_handle } => {
+        WorkingSolid::Box { width, depth, height } => semio_framework_3d::brep::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
+        WorkingSolid::Cylinder { radius, height } => semio_framework_3d::brep::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
+        WorkingSolid::Sphere { radius } => semio_framework_3d::brep::engine::block_on(kernel.sphere_prim(*radius)).ok()?,
+        WorkingSolid::ImportedSolid { solid_handle } => {
             let handle = GeometryHandle(solid_handle.clone());
             semio_framework_3d::brep::engine::block_on(kernel.kind(&handle)).ok()?;
             handle
         }
         // 🖼️ A GLB-imported reference mesh has no real B-Rep topology in the kernel, so it cannot
         // serve as a CSG operand (stock or tool); the stock-level fallback handles display instead.
-        SolidSpec::ImportedMesh { .. } => return None,
+        WorkingSolid::ImportedMesh { .. } => return None,
     };
     let rotated = if pose.angle != 0.0 { semio_framework_3d::brep::engine::block_on(kernel.rotate(&base, pose.axis, pose.angle)).ok()? } else { base };
     if pose.position != [0.0, 0.0, 0.0] {
@@ -168,20 +177,21 @@ fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &SolidSpec, pose: &Pose) ->
 fn tool_solid_for_measure(kernel: &mut dyn BrepKernel, measure: &ProcessMeasure) -> Option<GeometryHandle> {
     match measure {
         ProcessMeasure::Cut { tool, pose } => solid_for_spec(kernel, tool, pose),
-        ProcessMeasure::Drill { radius, depth, pose } => solid_for_spec(kernel, &SolidSpec::Cylinder { radius: *radius, height: *depth }, pose),
+        ProcessMeasure::Drill { radius, depth, pose } => solid_for_spec(kernel, &WorkingSolid::Cylinder { radius: *radius, height: *depth }, pose),
         ProcessMeasure::Attach { component, pose } => solid_for_spec(kernel, component, pose),
     }
 }
 
-/// 🧠️ Replays enabled steps up to the cursor, reusing the longest memoized prefix.
-pub fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dSnapshot) -> Option<GeometryHandle> {
-    let stock_signature = hash_value(&doc.stock);
+/// 🧠️ Replays enabled steps up to the cursor, reusing the longest memoized prefix. Reads a real,
+/// literal `ProcessWorkingScene` (never a bare `Process3dSnapshot` — see file doc comment).
+pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<GeometryHandle> {
+    let stock_signature = hash_value(&scene.stock);
     if stock_signature != session.stock_signature {
         session.tables.memo.clear();
         session.stock_signature = stock_signature;
     }
-    let limit = doc.resolved_up_to.unwrap_or(doc.steps.len()).min(doc.steps.len());
-    let enabled_steps: Vec<&ProcessStep> = doc.steps[..limit].iter().filter(|step| step.enabled).collect();
+    let limit = resolved_up_to.unwrap_or(scene.steps.len()).min(scene.steps.len());
+    let enabled_steps: Vec<&ProcessStep> = scene.steps[..limit].iter().filter(|step| step.enabled).collect();
 
     let mut start = enabled_steps.len();
     let mut current: Option<GeometryHandle> = loop {
@@ -198,7 +208,7 @@ pub fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dSnapshot
     if current.is_none() {
         let stock = {
             let mut kernel = session.kernel().lock().ok()?;
-            solid_for_spec(&mut *kernel, &doc.stock.solid, &doc.stock.pose)
+            solid_for_spec(&mut *kernel, &scene.stock.solid, &scene.stock.pose)
         }?;
         session.tables.memo.insert(prefix_signature(stock_signature, &[]), stock.clone());
         current = Some(stock);
@@ -225,9 +235,9 @@ pub fn replay_process(session: &mut ProcessKernelReplay, doc: &Process3dSnapshot
     Some(handle)
 }
 
-pub fn processed_mesh(doc: &Process3dSnapshot) -> Option<semio_framework_plugin::MeshData> {
+pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_framework_plugin::MeshData> {
     let mut session = ProcessKernelReplay::new();
-    let handle = replay_process(&mut session, doc)?;
+    let handle = replay_process(&mut session, scene, resolved_up_to)?;
     let mesh = {
         let kernel = session.kernel().lock().ok()?;
         semio_framework_3d::brep::engine::block_on(kernel.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE))
@@ -237,9 +247,9 @@ pub fn processed_mesh(doc: &Process3dSnapshot) -> Option<semio_framework_plugin:
     Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
 
-pub fn processed_volume(doc: &Process3dSnapshot) -> Option<f64> {
+pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {
     let mut session = ProcessKernelReplay::new();
-    let handle = replay_process(&mut session, doc)?;
+    let handle = replay_process(&mut session, scene, resolved_up_to)?;
     let volume = {
         let kernel = session.kernel().lock().ok()?;
         semio_framework_3d::brep::engine::block_on(kernel.volume(&handle))
@@ -356,12 +366,12 @@ pub fn validation_reason(failures: &[ValidationFailure]) -> String {
 
 /// 📐️ Imported specs carry no persisted bounding box, so validation falls back to a 1m³ approximation
 /// until the kernel is consulted (matches `cad`'s extent-less fallback for handle-only objects).
-pub fn stock_extent(solid: &SolidSpec) -> [f64; 3] {
+pub fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
     match solid {
-        SolidSpec::Box { width, depth, height } => [*width, *depth, *height],
-        SolidSpec::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
-        SolidSpec::Sphere { radius } => [*radius * 2.0, *radius * 2.0, *radius * 2.0],
-        SolidSpec::ImportedMesh { .. } | SolidSpec::ImportedSolid { .. } => [1.0, 1.0, 1.0],
+        WorkingSolid::Box { width, depth, height } => [*width, *depth, *height],
+        WorkingSolid::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
+        WorkingSolid::Sphere { radius } => [*radius * 2.0, *radius * 2.0, *radius * 2.0],
+        WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => [1.0, 1.0, 1.0],
     }
 }
 
@@ -375,15 +385,15 @@ pub fn validation_context_for_stock(stock: &Stock) -> ValidationContext {
 pub fn measure_for_capability(capability: &Capability, position: Option<[f64; 3]>) -> ProcessMeasure {
     let value = |id: &str| parameter_value(capability, id).unwrap_or(0.0);
     let mut measure = match &capability.recipe {
-        MeasureRecipe::DiscCut { diameter, kerf } => ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius: value(diameter) / 2.0, height: value(kerf) }, pose: Pose::default() },
-        MeasureRecipe::BladeCut { kerf, length, depth } => ProcessMeasure::Cut { tool: SolidSpec::Box { width: value(kerf), depth: value(length), height: value(depth) }, pose: Pose::default() },
+        MeasureRecipe::DiscCut { diameter, kerf } => ProcessMeasure::Cut { tool: WorkingSolid::Cylinder { radius: value(diameter) / 2.0, height: value(kerf) }, pose: Pose::default() },
+        MeasureRecipe::BladeCut { kerf, length, depth } => ProcessMeasure::Cut { tool: WorkingSolid::Box { width: value(kerf), depth: value(length), height: value(depth) }, pose: Pose::default() },
         MeasureRecipe::PocketCut { diameter, depth } => {
             let side = value(diameter);
-            ProcessMeasure::Cut { tool: SolidSpec::Box { width: side, depth: side, height: value(depth) }, pose: Pose::default() }
+            ProcessMeasure::Cut { tool: WorkingSolid::Box { width: side, depth: side, height: value(depth) }, pose: Pose::default() }
         }
         MeasureRecipe::BoreDrill { radius, depth } => ProcessMeasure::Drill { radius: value(radius), depth: value(depth), pose: Pose::default() },
-        MeasureRecipe::CylinderAttach { radius, length } => ProcessMeasure::Attach { component: SolidSpec::Cylinder { radius: value(radius), height: value(length) }, pose: Pose::default() },
-        MeasureRecipe::BoxAttach { width, depth, height } => ProcessMeasure::Attach { component: SolidSpec::Box { width: value(width), depth: value(depth), height: value(height) }, pose: Pose::default() },
+        MeasureRecipe::CylinderAttach { radius, length } => ProcessMeasure::Attach { component: WorkingSolid::Cylinder { radius: value(radius), height: value(length) }, pose: Pose::default() },
+        MeasureRecipe::BoxAttach { width, depth, height } => ProcessMeasure::Attach { component: WorkingSolid::Box { width: value(width), depth: value(depth), height: value(height) }, pose: Pose::default() },
     };
     if let Some(position) = position {
         let pose = match &mut measure {
@@ -416,6 +426,7 @@ pub fn process3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDes
 //#region 🧪️Tests
 mod tests {
     use super::*;
+    use crate::artifacts::process3d::{ProcessStep, StepOrigin};
 
     //#region 🧪️InferenceLaws
     #[test]
@@ -429,62 +440,53 @@ mod tests {
         assert_eq!(Process3dInference::infer(&Process3dSnapshot::default()), Process3dInference::default());
     }
 
+    /// 🌉️ Documented gap (see file doc comment): a plain snapshot can't see its composed `steps`
+    /// child's content, so `step_count` is always 0 regardless of the working scene's real steps.
     #[test]
-    fn step_count_matches_steps_len() {
-        let mut snapshot = Process3dSnapshot::default();
-        snapshot.steps.push(crate::artifacts::process3d::ProcessStep {
-            id: "s1".into(),
-            label: "Cut".into(),
-            enabled: true,
-            origin: None,
-            measure: crate::artifacts::process3d::ProcessMeasure::Drill { radius: 0.1, depth: 0.2, pose: crate::artifacts::process3d::Pose::default() },
-        });
-        assert_eq!(Process3dInference::infer(&snapshot).step_count, 1);
+    fn step_count_is_zero_pending_a_resolver() {
+        let snapshot = Process3dSnapshot::default();
+        assert_eq!(Process3dInference::infer(&snapshot).step_count, 0);
     }
     //#endregion 🧪️InferenceLaws
 
     //#region 🧪️KernelReplay
-    fn session_volume(session: &mut ProcessKernelReplay, fixture: &Process3dSnapshot) -> f64 {
-        let handle = replay_process(session, fixture).expect("replayed handle");
+    fn drill_step(id: &str, radius: f64, depth: f64, pose: Pose) -> ProcessStep {
+        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "drill".into(), capability_id: "drill".into() }), measure: ProcessMeasure::Drill { radius, depth, pose } }
+    }
+
+    fn session_volume(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> f64 {
+        let handle = replay_process(session, scene, resolved_up_to).expect("replayed handle");
         semio_framework_3d::brep::engine::block_on(session.kernel().lock().expect("kernel lock").volume(&handle)).expect("replayed volume")
     }
 
     #[test]
     fn drill_reduces_volume_below_stock() {
-        let mut fixture = Process3dSnapshot::default();
-        fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        let stock_volume = processed_volume(&fixture).expect("stock volume");
-        fixture.steps.push(ProcessStep {
+        let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
+        let stock_volume = processed_volume(&scene, None).expect("stock volume");
+        scene.steps.push(ProcessStep {
             id: "drill-1".into(),
             label: "Drill".into(),
             enabled: true,
             origin: None,
-            measure: ProcessMeasure::Cut {
-                tool: SolidSpec::Box { width: 0.4, depth: 0.4, height: 1.2 },
-                pose: Pose { position: [0.3, 0.3, -0.1], axis: [0.0, 0.0, 1.0], angle: 0.0 },
-            },
+            measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.4, depth: 0.4, height: 1.2 }, pose: Pose { position: [0.3, 0.3, -0.1], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
         });
-        let drilled_volume = processed_volume(&fixture).expect("drilled volume");
+        let drilled_volume = processed_volume(&scene, None).expect("drilled volume");
         assert!(drilled_volume < stock_volume, "drilled volume {drilled_volume} should be less than stock volume {stock_volume}");
     }
 
     #[test]
     fn attach_increases_volume_above_stock() {
         for _ in 0..32 {
-            let mut fixture = Process3dSnapshot::default();
-            fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-            let stock_volume = processed_volume(&fixture).expect("stock volume");
-            fixture.steps.push(ProcessStep {
+            let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
+            let stock_volume = processed_volume(&scene, None).expect("stock volume");
+            scene.steps.push(ProcessStep {
                 id: "attach-1".into(),
                 label: "Attach".into(),
                 enabled: true,
                 origin: None,
-                measure: ProcessMeasure::Attach {
-                    component: SolidSpec::Box { width: 0.4, depth: 0.4, height: 0.4 },
-                    pose: Pose { position: [0.3, 0.3, 1.0], axis: [0.0, 0.0, 1.0], angle: 0.0 },
-                },
+                measure: ProcessMeasure::Attach { component: WorkingSolid::Box { width: 0.4, depth: 0.4, height: 0.4 }, pose: Pose { position: [0.3, 0.3, 1.0], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             });
-            let attached_volume = processed_volume(&fixture).expect("attached volume");
+            let attached_volume = processed_volume(&scene, None).expect("attached volume");
             assert!(attached_volume > stock_volume, "attached volume {attached_volume} should exceed stock volume {stock_volume}");
         }
     }
@@ -492,23 +494,20 @@ mod tests {
     #[test]
     fn disabled_step_is_skipped_on_replay() {
         let mut session = ProcessKernelReplay::new();
-        let mut fixture = Process3dSnapshot::default();
-        fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        let stock_volume = session_volume(&mut session, &fixture);
-        fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: false, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() } });
-        let volume_with_disabled_step = session_volume(&mut session, &fixture);
+        let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
+        let stock_volume = session_volume(&mut session, &scene, None);
+        scene.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: false, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() } });
+        let volume_with_disabled_step = session_volume(&mut session, &scene, None);
         assert!((volume_with_disabled_step - stock_volume).abs() < 1e-6);
     }
 
     #[test]
     fn cursor_zero_yields_stock_volume() {
         let mut session = ProcessKernelReplay::new();
-        let mut fixture = Process3dSnapshot::default();
-        fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        let stock_volume = session_volume(&mut session, &fixture);
-        fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() } });
-        fixture.resolved_up_to = Some(0);
-        let volume_at_cursor_zero = session_volume(&mut session, &fixture);
+        let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
+        let stock_volume = session_volume(&mut session, &scene, None);
+        scene.steps.push(drill_step("drill-1", 0.2, 1.0, Pose::default()));
+        let volume_at_cursor_zero = session_volume(&mut session, &scene, Some(0));
         assert!((volume_at_cursor_zero - stock_volume).abs() < 1e-6);
     }
 

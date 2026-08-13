@@ -1,5 +1,8 @@
-//! 🖊️ 2D drawing kernel: engine contracts, scene-graph store (SVG/PDF/DWG export), planar
-//! booleans, and bitmap autotrace.
+//! 🖊️ 2D geometry kernel: shared path-segment vocabulary, planar booleans, and bitmap autotrace.
+//! 🪦 The scene-graph store (`DrawingStore`/`DrawingEngine`, SVG/PDF/DWG export) relocated to the
+//! OS flow module's own drawing kernel — ticket
+//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, superseded by `✳️drawing`'s
+//! real `ArtifactStore` + 17 mutation triads + `🎛flattened-scene` inference.
 
 pub use semio_framework_os_kernel::os_spr;
 
@@ -18,7 +21,3 @@ pub mod booleans;
 #[cfg(feature = "trace")]
 #[path = "../../🔍️trace/🦀️component.rs"]
 pub mod trace;
-
-#[path = "../../🗄️store/🦀️component.rs"]
-mod store;
-pub use store::{DrawingEngine, DrawingStore};

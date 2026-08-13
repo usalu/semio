@@ -199,7 +199,7 @@ mod tests {
         let after = round_trip(&base, &add);
         assert!(after.designs.iter().any(|d| d.id == "office"));
 
-        let new_pieces = vec![SemioKitPiece { id: "p9".into(), type_id: "chair".into(), transform: crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform::identity() }];
+        let new_pieces = vec![SemioKitPiece { id: "p9".into(), type_id: "chair".into(), transform: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform::identity() }];
         let edit = SemioKitMutation::EditDesign(edit_design::mutation::EditDesign { id: "living-room".into(), pieces: new_pieces.clone(), connections: vec![] });
         let after = round_trip(&base, &edit);
         assert_eq!(after.designs.iter().find(|d| d.id == "living-room").unwrap().pieces, new_pieces);

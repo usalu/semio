@@ -182,7 +182,7 @@ pub mod derived_analysis {
         /// `engine::sniff_pdf`, does not discard its argument.
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
-                AnalyzeSource::Binary(bytes) => match crate::artifacts::pdf::standards::v1_7::engine::sniff_pdf(bytes) {
+                AnalyzeSource::Binary(bytes) => match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes) {
                     Some(_version) => IoConfidence::High,
                     None => IoConfidence::Low,
                 },
@@ -196,7 +196,7 @@ pub mod derived_analysis {
                         .filter_map(|i| hex.get(i..i + 2))
                         .filter_map(|h| u8::from_str_radix(h, 16).ok())
                         .collect();
-                    match crate::artifacts::pdf::standards::v1_7::engine::sniff_pdf(&magic) {
+                    match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(&magic) {
                         Some(_) => IoConfidence::Medium,
                         None => IoConfidence::Low,
                     }

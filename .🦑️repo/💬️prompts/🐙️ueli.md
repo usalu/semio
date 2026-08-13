@@ -377,12 +377,23 @@ The following architecture must be reached:
 - Every artifact has a schema, snapshot, diff, mutations, inferences, io system.
 - Every artifact is tracked over vcs.
 - Every artifact has children artifacts that have their own version history and referenced artifacts that also have their own version history.
-- Every app has a headless engine.
-- Every app has modes.
-- Every mode has windows.
-- Every window has actions, utilities, options, presence, config.
+- Every app has a headless engine, modes, config, presence, transient.
+- Every mode has windows, config, presence, transient.
+- Every window has actions, utilities, options, config, presence, transient.
 
 Get the demonstrator working again end to end with the new architecture.
+
+---
+
+The state management system is extremely adhoc.
+Make sure that only these 4 different mechanisms are used:
+artifacts are persisted shared state.
+config is persisted local-only state.
+presence is ephemeral shared state.
+transient is ephemaral local-only state.
+
+Every engine depending on the config produces a 
+
 
 ---
 

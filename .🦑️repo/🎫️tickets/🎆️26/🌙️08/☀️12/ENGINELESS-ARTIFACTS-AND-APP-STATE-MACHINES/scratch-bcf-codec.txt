@@ -1,0 +1,77 @@
+pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
+    let mut entries = Vec::new();
+    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version), ..Default::default() });
+    for topic in &snap.topics {
+        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic), ..Default::default() });
+        for vp in &topic.viewpoints {
+            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp), ..Default::default() });
+            if let Some(bytes) = &vp.snapshot {
+                entries.push(ZipEntry { name: format!("{}/{}.png", topic.guid, vp.guid), data: bytes.clone(), ..Default::default() });
+            }
+        }
+    }
+    for part in &snap.parts {
+        entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone(), ..Default::default() });
+    }
+    let zip_snap = crate::artifacts::zip::ZipSnapshot { schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
+    crate::artifacts::zip::engine::encode_zip(&zip_snap).map_err(|e| e.to_string())
+}
+
+pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
+    let zip = crate::artifacts::zip::engine::decode_zip(data).map_err(|e| e.to_string())?;
+
+    let mut version = String::new();
+    let mut consumed: std::collections::HashSet<String> = std::collections::HashSet::new();
+    if let Some(e) = zip.entries.iter().find(|e| e.name.eq_ignore_ascii_case("bcf.version")) {
+        version = parse_bcf_version(&e.data).unwrap_or_default();
+        consumed.insert(e.name.clone());
+    }
+
+    let mut folders: std::collections::BTreeMap<&str, Vec<&ZipEntry>> = Default::default();
+    for e in &zip.entries {
+        if let Some((folder, _)) = e.name.split_once('/') {
+            folders.entry(folder).or_default().push(e);
+        }
+    }
+
+    let mut topics = Vec::new();
+    for (folder, folder_entries) in &folders {
+        let markup_name = format!("{folder}/markup.bcf");
+        let Some(markup_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&markup_name)) else { continue };
+        let Some(raw) = parse_markup_bcf(&markup_entry.data) else { continue };
+        consumed.insert(markup_entry.name.clone());
+
+        let mut viewpoints = Vec::new();
+        for vref in &raw.viewpoint_refs {
+            let mut camera = None;
+            let mut components = None;
+            if let Some(vp_file) = &vref.viewpoint_file {
+                let full = format!("{folder}/{vp_file}");
+                if let Some(vp_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&full)) {
+                    if let Some((c, comp)) = parse_visualization_info(&vp_entry.data) {
+                        camera = c;
+                        components = comp;
+                    }
+                    consumed.insert(vp_entry.name.clone());
+                }
+            }
+            let mut snapshot = None;
+            if let Some(snap_file) = &vref.snapshot_file {
+                let full = format!("{folder}/{snap_file}");
+                if let Some(snap_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&full)) {
+                    snapshot = Some(snap_entry.data.clone());
+                    consumed.insert(snap_entry.name.clone());
+                }
+            }
+            viewpoints.push(BcfViewpoint { guid: vref.guid.clone(), camera, components, snapshot });
+        }
+
+        let mut topic = raw.topic;
+        topic.viewpoints = viewpoints;
+        topics.push(topic);
+    }
+
+    let parts = zip.entries.iter().filter(|e| !consumed.contains(&e.name)).map(|e| BcfRawPart { name: e.name.clone(), data: e.data.clone() }).collect();
+
+    Ok(BcfSnapshot { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), version, topics, parts })
+}

@@ -14,7 +14,7 @@
 //! NEUTRAL semio type, not itself an on-disk file format — real per-format bytes for wav/mp3 are
 //! produced by the semio↔format `🚪️io` leaves).
 
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

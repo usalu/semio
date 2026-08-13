@@ -58,7 +58,7 @@ pub mod derived_construction {
         /// ➕️ The recommended entry point: builds a minimal package from `workbook` via the shared
         /// ecma-376 engine, then stamps it Strict.
         pub fn new(workbook: XlsxWorkbook) -> Self {
-            Self { snapshot: stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::engine::build_minimal_xlsx(workbook)) }
+            Self { snapshot: stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(workbook)) }
         }
     }
 

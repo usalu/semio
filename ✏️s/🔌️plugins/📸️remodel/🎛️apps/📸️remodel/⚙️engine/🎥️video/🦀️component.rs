@@ -22,14 +22,14 @@ use crate::apps::remodel::engine::images as remodel_image;
 use semio_s_plugin_stdio::artifacts::{
     avi::{
         standards::v1_0::{
-            engine as avi_engine,
+            subsets::any::io as avi_engine,
             subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader},
         },
         STDIO_AVI_DOCUMENT_SCHEMA,
     },
     mp4::{
         standards::isobmff::{
-            engine as mp4_engine,
+            subsets::any::io as mp4_engine,
             subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track},
         },
         STDIO_MP4_DOCUMENT_SCHEMA,

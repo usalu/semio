@@ -1,0 +1,55 @@
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:533:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4: warning: function `print_edge_label` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2793:19: warning: method `set_envelope` is never used
+warning: `semio-framework-os-kernel` (lib) generated 8 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 4 suggestions)
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+error[E0432]: unresolved imports `mesh::mesh_box`, `mesh::mesh_cone`, `mesh::mesh_cylinder`, `mesh::mesh_from_glb`, `mesh::mesh_from_indexed`, `mesh::mesh_from_indexed_with_face_groups`, `mesh::mesh_from_kind`, `mesh::mesh_ico_sphere`, `mesh::mesh_plane`, `mesh::mesh_to_glb`, `mesh::mesh_to_obj`, `mesh::mesh_from_obj`, `mesh::mesh_to_stl`, `mesh::mesh_from_stl`, `mesh::mesh_torus`, `mesh::mesh_uv_sphere`, `mesh::MeshExporter`, `mesh::MeshImporter`, `mesh::ObjExporter`, `mesh::ObjImporter`, `mesh::GlbExporter`, `mesh::GlbImporter`, `mesh::StlExporter`, `mesh::StlImporter`, `mesh::IoError`
+  --> 🧰️framework/📦️packages/🦀️rust/📦️glue.rs:51:5
+   |
+51 |     mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_ico_sphere,
+   |     ^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^ no `mesh_ico_sphere` in `mesh`
+   |     |         |          |              |              |                  |                                   |
+   |     |         |          |              |              |                  |                                   no `mesh_from_kind` in `mesh`
+   |     |         |          |              |              |                  no `mesh_from_indexed_with_face_groups` in `mesh`
+   |     |         |          |              |              no `mesh_from_indexed` in `mesh`
+   |     |         |          |              no `mesh_from_glb` in `mesh`
+   |     |         |          no `mesh_cylinder` in `mesh`
+   |     |         no `mesh_cone` in `mesh`
+   |     no `mesh_box` in `mesh`
+52 |     mesh_plane, mesh_to_glb, mesh_to_obj, mesh_from_obj, mesh_to_stl, mesh_from_stl, mesh_torus, mesh_uv_sphere, MeshData,
+   |     ^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |     |           |
+   |     |           no `mesh_to_glb` in `mesh`
+   |     no `mesh_plane` in `mesh`
+...
+55 |     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
+   |     ^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^
+56 |     IoError,
+   |     ^^^^^^^
+
+error[E0603]: struct import `MeshData` is private
+  --> 🧰️framework/📦️packages/🦀️rust/📦️glue.rs:52:114
+   |
+52 |     mesh_plane, mesh_to_glb, mesh_to_obj, mesh_from_obj, mesh_to_stl, mesh_from_stl, mesh_torus, mesh_uv_sphere, MeshData,
+   |                                                                                                                  ^^^^^^^^ private struct import
+   |
+note: the struct import `MeshData` is defined here...
+  --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🔺️mesh/🦀️component.rs:7:5
+   |
+ 7 | use semio_framework_mesh_engine::MeshData;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...and refers to the struct `MeshData` which is defined here
+  --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | pub struct MeshData {
+   | ^^^^^^^^^^^^^^^^^^^ you could import this directly
+
+Some errors have detailed explanations: E0432, E0603.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework` (lib) due to 2 previous errors

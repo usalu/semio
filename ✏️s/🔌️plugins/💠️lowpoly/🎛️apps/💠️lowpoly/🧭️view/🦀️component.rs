@@ -5,6 +5,7 @@
 
 use crate::apps::lowpoly::config::LowpolyConfig;
 use crate::apps::lowpoly::engine::LowpolyDocument;
+use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolySnapshot, LowpolySelection, LowpolySelectionTargets};
 use serde_json::Value;
 
@@ -44,9 +45,12 @@ pub fn selection_targets_from_config(config: &LowpolyConfig) -> LowpolySelection
     LowpolySelectionTargets { mesh: config.selection_targets_mesh, vertex: config.selection_targets_vertex, edge: config.selection_targets_edge, face: config.selection_targets_face }
 }
 
-pub fn build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig) -> Option<LowpolyDocument> {
+/// 🕸️ Takes `ctx: &LowpolyScratch` (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's
+/// round-trip law fix) — the compute session's live mesh content now lives in the session-local
+/// `mesh_workspace` cache, never on `LowpolySnapshot`/`LowpolyObject`.
+pub fn build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig, ctx: &LowpolyScratch) -> Option<LowpolyDocument> {
     let active = resolve_active_object_id(snapshot, config);
-    LowpolyDocument::with_context(snapshot.clone(), active, selection_from_config(config)).ok()
+    LowpolyDocument::with_context(snapshot.clone(), active, selection_from_config(config), ctx.mesh_workspace_map()).ok()
 }
 
 pub fn merge_selection_ids(existing: &[u32], incoming: &[u32], merge: &str) -> Vec<u32> {

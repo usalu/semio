@@ -15,9 +15,9 @@ const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
-const DOMAIN_FILES = ["🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🟦️index.ts", "🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🧱️brepjs/🟦️component.ts", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🔍️query/🟦️component.ts", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎰️stately/🟦️component.ts", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏃️runtime/🟦️component.ts"];
+const DOMAIN_FILES = ["🎛️apps/📐️cad/⚙️engine/📺️renderer/🟦️component.tsx", "🎛️apps/📐️cad/⚙️engine/🎰️stately/🟦️component.ts", "🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts", "🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts", "🎛️apps/📐️cad/⚙️engine/📄️artifact/🟦️component.ts", "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts", "../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts", "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts"];
 
-/** @emoji 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 6 folded domain files (former cad-js-{core,renderer,kernel-brepjs,query,machine-stately,runtime} configs merged; renderer alone needs jsdom, the rest run in `node`). */
+/** @emoji 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 9 domain files now that the artifact `⚙️engine` has dissolved (and the barrel with it) into the app `⚙️engine` (stately/runtime/actions/artifact), the `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial), the renderer, and the `💡️inferences` schema leaf (former `🔍️query`); renderer alone needs jsdom, the rest run in `node`. */
 export default defineConfig({
   root,
   plugins: [],

@@ -7,6 +7,9 @@ pub use crate::artifacts::gismap::schema::diff::GisMapDiff;
 
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 
 //#region 🔹Constants
@@ -53,6 +56,114 @@ impl Patchable<MapFeaturePatch> for MapFeature {
 
 /// 📸️ Persisted GIS map snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 //#endregion 🔹Types
+
+//#region 🔖️Composition
+/// 🧩️ Composed `s.stdio.semio.drawing`/`s.stdio.semio.image`/`s.stdio.semio.value` child slots
+/// (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, design map §4: "map C:drawing+image+value").
+/// `positions`/`routes`/`regions` stay gis's own domain-specific id-keyed feature lists (analogous to
+/// `📐️cad`'s `nodes`/`references_by_model_definition_id`, kept inline rather than gutted — see that
+/// plugin's `🧬️schema/📸️snapshot/🦀️component.rs` module doc for the precedent) since they are NOT a
+/// duplicated stdio type, just gis's own vocabulary; `drawing`/`value` are DERIVED composed children,
+/// deterministically re-minted from the current feature collections by
+/// `gis_map_snapshot_with_derived_children` every time the document changes (`GisMapArtifact::to_snapshot`,
+/// `apply_gis_map_mutation`), never independently mutable. `image` is honestly always absent: gis
+/// carries no raster basemap capability today (see `render_mode`'s app-level raster/vector TOGGLE,
+/// which selects a rendering STYLE of the same vector data, not a second raster document) — the slot
+/// exists, real and typed, for the day a basemap capture lands, not as a stub.
+pub type GisMapDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
+pub type GisMapImageChild = store::ArtifactChild<SemioImageSnapshot>;
+pub type GisMapValueChild = store::ArtifactChild<SemioValueSnapshot>;
+
+/// 🕸️ Deterministic content-addressed CHILD handle for the map's composed drawing — same
+/// `(child_id, target)` for identical `content_key`, a different pair once the features actually
+/// change. Mirrors `🏔️gisterrain`'s `gis_terrain_mesh_child_handle`/`💠️lowpoly`'s `mesh_child_handle`.
+pub fn gis_map_drawing_child_handle(content_key: &str) -> GisMapDrawingChild {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_key.hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let child_id = format!("gismap-drawing-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: "gismap-drawing".into(), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle for the map's composed value graph — same
+/// hashing/dialect shape as `gis_map_drawing_child_handle`, targeting `s.stdio.semio.value` instead.
+pub fn gis_map_value_child_handle(content_key: &str) -> GisMapValueChild {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_key.hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let child_id = format!("gismap-value-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: "gismap-value".into(), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+/// 🌉️ WRITE direction, real (not a stub): `serde_json::Value` → `SemioValue`, a direct structural
+/// mapping (json has no binary/graph-reference primitive, so `Bytes`/`Ref` are never produced —
+/// mirrors stdio's own `semio_value_from_json` for its `json` artifact, written locally here since
+/// that one converts stdio's OWN `JsonValue` AST, not `serde_json::Value`, and gis already speaks
+/// `serde_json::Value` everywhere else in this file).
+pub fn semio_value_from_serde_json(value: &serde_json::Value) -> SemioValue {
+    match value {
+        serde_json::Value::Null => SemioValue::Null,
+        serde_json::Value::Bool(value) => SemioValue::Bool { value: *value },
+        serde_json::Value::Number(number) => {
+            let lexeme = number.to_string();
+            if lexeme.contains('.') || lexeme.contains('e') || lexeme.contains('E') { SemioValue::Float { lexeme } } else { SemioValue::Int { lexeme } }
+        }
+        serde_json::Value::String(value) => SemioValue::Str { value: value.clone() },
+        serde_json::Value::Array(items) => SemioValue::List { items: items.iter().map(semio_value_from_serde_json).collect() },
+        serde_json::Value::Object(members) => {
+            SemioValue::Map { entries: members.iter().map(|(key, value)| SemioValueEntry { key: key.clone(), value: semio_value_from_serde_json(value) }).collect() }
+        }
+    }
+}
+
+/// 🌉️ READ direction, real (not a stub): the exact inverse of `semio_value_from_serde_json`. `Ref`
+/// (this format's graph-reference variant) never appears in content this bridge itself produces —
+/// resolved defensively to `Null` rather than panicking, matching the honesty convention this
+/// ticket's other converters use for out-of-scope input shapes.
+pub fn serde_json_from_semio_value(value: &SemioValue) -> serde_json::Value {
+    match value {
+        SemioValue::Null => serde_json::Value::Null,
+        SemioValue::Bool { value } => serde_json::Value::Bool(*value),
+        SemioValue::Int { lexeme } | SemioValue::Float { lexeme } => serde_json::from_str(lexeme).unwrap_or(serde_json::Value::Null),
+        SemioValue::Str { value } => serde_json::Value::String(value.clone()),
+        SemioValue::Bytes { .. } => serde_json::Value::Null,
+        SemioValue::List { items } => serde_json::Value::Array(items.iter().map(serde_json_from_semio_value).collect()),
+        SemioValue::Map { entries } => serde_json::Value::Object(entries.iter().map(|entry| (entry.key.clone(), serde_json_from_semio_value(&entry.value))).collect()),
+        SemioValue::Ref { .. } => serde_json::Value::Null,
+    }
+}
+
+/// 🌉️ Builds the map's composed `value` child content — the lossless `{positions,routes,regions}`
+/// descriptor JSON (`gis_map_descriptor_json`) lifted into a real `SemioValueSnapshot` graph.
+pub fn gis_map_value_from_descriptor_json(descriptor_json: &str) -> SemioValueSnapshot {
+    let value: serde_json::Value = serde_json::from_str(descriptor_json).unwrap_or(serde_json::Value::Null);
+    SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_serde_json(&value), nodes: Vec::new() }
+}
+
+/// 🌉️ The exact inverse of `gis_map_value_from_descriptor_json` — recovers the descriptor JSON a
+/// `value` child's content actually carries.
+pub fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> String {
+    serde_json_from_semio_value(&value.root).to_string()
+}
+
+/// 🔄️ Re-derives `drawing`/`value` from `document`'s CURRENT `positions`/`routes`/`regions` — the
+/// single call every constructor/mutator funnels through so the composed children never drift from
+/// what they actually describe (`image` stays `None`, honestly — see this region's own doc comment).
+/// Uses the SAME `gis_map_content_key` hash basis `GisMapSnapshot::default()` uses (`📸️snapshot/🦀️component.rs`)
+/// so two paths building an identical empty/edited document always converge on the identical handles.
+pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> GisMapSnapshot {
+    let content_key = crate::artifacts::gismap::schema::snapshot::gis_map_content_key(&document.positions, &document.routes, &document.regions);
+    document.drawing = gis_map_drawing_child_handle(&content_key);
+    document.value = gis_map_value_child_handle(&content_key);
+    document
+}
+//#endregion 🔖️Composition
 
 //#region 🔹ArtifactKind
 /// The `2d.map` artifact kind declaration.

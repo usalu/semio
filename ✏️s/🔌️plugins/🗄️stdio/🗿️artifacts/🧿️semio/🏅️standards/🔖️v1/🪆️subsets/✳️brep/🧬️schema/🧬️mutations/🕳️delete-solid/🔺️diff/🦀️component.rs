@@ -5,7 +5,7 @@
 //! an absent id would make `SemioBrepDiff::is_empty()` lie).
 
 use super::mutation::DeleteSolid;
-use crate::artifacts::semio::standards::v1::engine::triples::NamedTripleDiff;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 

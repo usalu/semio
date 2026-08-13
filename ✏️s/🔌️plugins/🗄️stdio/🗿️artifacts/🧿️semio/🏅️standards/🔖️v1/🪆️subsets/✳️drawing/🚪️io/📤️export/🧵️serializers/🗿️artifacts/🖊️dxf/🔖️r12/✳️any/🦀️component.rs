@@ -10,7 +10,7 @@
 //! describes for BLOCKS/INSERT).
 
 use crate::artifacts::dxf::{DxfSnapshot, schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue}};
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
@@ -170,7 +170,7 @@ impl ArtifactSerializer for SemioDrawingToDxf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
 
     fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {

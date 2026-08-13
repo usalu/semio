@@ -1,7 +1,7 @@
 //! jack -> md
 use crate::artifacts::jack::JackSnapshot;
 use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::md::engine::parse_markdown_blocks;
+use semio_s_plugin_stdio::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks;
 
 /// ✒️ Wraps the printed DSL text as md's own block model (see `engine::parse_markdown_blocks`) —
 /// `MdSnapshot` is a typed block tree, not a raw `body: String`, since the schema overhaul.

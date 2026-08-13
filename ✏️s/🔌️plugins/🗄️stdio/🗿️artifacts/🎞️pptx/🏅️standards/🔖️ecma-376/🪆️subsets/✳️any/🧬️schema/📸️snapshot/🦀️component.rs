@@ -162,11 +162,11 @@ impl store::ArtifactDsl for PptxSnapshot {
                 store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1))
             })?);
         }
-        crate::artifacts::pptx::engine::decode_pptx(&bytes)
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes)
             .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::pptx::engine::encode_pptx(self).unwrap_or_default();
+        let bytes = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -180,7 +180,7 @@ impl store::ArtifactDsl for PptxSnapshot {
 impl store::ArtifactPack for PptxSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::pptx::engine::encode_pptx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -195,7 +195,7 @@ impl store::ArtifactPack for PptxSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::pptx::engine::decode_pptx(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

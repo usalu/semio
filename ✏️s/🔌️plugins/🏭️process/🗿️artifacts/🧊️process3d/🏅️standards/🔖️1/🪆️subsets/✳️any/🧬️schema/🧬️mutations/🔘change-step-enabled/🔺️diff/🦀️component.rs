@@ -1,16 +1,14 @@
-//! 🔺️ `change-step-enabled` sparse diff construction — a single `Process3dStepsDelta.patched`
-//! entry touching only `enabled`, never a snapshot clone.
+//! 🔺️ `change-step-enabled` sparse diff construction.
+//!
+//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: DOCUMENTED NO-OP — see
+//! `🌱create-step/🔺️diff/🦀️component.rs`'s doc comment for the full rationale.
 
-use crate::artifacts::process3d::diff::{Process3dDiff, Process3dStepPatchEntry, Process3dStepsDelta};
+use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::change_step_enabled::mutation::ChangeStepEnabled;
-use crate::artifacts::process3d::{Process3dSnapshot, ProcessStepPatch};
+use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeStepEnabled, _base: &Process3dSnapshot) -> Process3dDiff {
-    let patch = ProcessStepPatch { enabled: Some(payload.new_enabled), ..Default::default() };
-    Process3dDiff {
-        steps: Some(Process3dStepsDelta { patched: vec![Process3dStepPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }),
-        ..Default::default()
-    }
+pub fn diff(_payload: &ChangeStepEnabled, _base: &Process3dSnapshot) -> Process3dDiff {
+    Process3dDiff::default()
 }
 //#endregion 🔖️Diff

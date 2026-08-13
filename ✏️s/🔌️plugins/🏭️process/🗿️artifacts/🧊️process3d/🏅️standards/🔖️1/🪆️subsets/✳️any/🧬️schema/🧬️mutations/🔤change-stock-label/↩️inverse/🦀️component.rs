@@ -7,6 +7,6 @@ use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeStockLabel, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
-    vec![Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: base.stock.label.clone() })]
+    vec![Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: base.stock_label.clone() })]
 }
 //#endregion 🔖️Inverse

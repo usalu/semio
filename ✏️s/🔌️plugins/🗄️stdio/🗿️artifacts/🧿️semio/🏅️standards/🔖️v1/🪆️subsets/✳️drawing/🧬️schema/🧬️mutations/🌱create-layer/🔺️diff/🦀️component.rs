@@ -2,7 +2,7 @@
 //! clamps to append.
 
 use super::mutation::CreateLayer;
-use crate::artifacts::semio::standards::v1::engine::triples::{IndexAdded, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 

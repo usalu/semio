@@ -55,7 +55,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder("s.stdio.md")
         .schema(crate::artifacts::md::schema::md_artifact_schema_descriptor())
         .inferences([crate::artifacts::md::standards::v_commonmark::subsets::any::schema::inferences::md_artifact_inference_descriptor()])
-        .composers(crate::artifacts::md::standards::v_commonmark::engine::io_registry::entries())
+        .composers(crate::artifacts::md::standards::v_commonmark::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA)
         .build()
@@ -130,7 +130,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::md::standards::v_commonmark::engine::io_registry as v_commonmark;
+    use crate::artifacts::md::standards::v_commonmark::subsets::any::io::io_registry as v_commonmark;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

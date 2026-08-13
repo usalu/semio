@@ -61,6 +61,7 @@ mod tests {
             }],
             routes: vec![MapFeature { id: "r1".into(), data: dsl_of(json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] })) }],
             regions: vec![MapFeature { id: "g1".into(), data: dsl_of(json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] })) }],
+            ..Default::default()
         };
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }

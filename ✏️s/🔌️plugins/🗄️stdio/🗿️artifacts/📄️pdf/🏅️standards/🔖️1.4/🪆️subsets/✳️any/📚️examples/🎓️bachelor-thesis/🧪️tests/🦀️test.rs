@@ -24,7 +24,7 @@
 //! `tounicode_cmap_bfrange_identity_and_bfchar`, and the Identity-H writer/reader round trip).
 
 use crate::artifacts::pdf::examples::bachelor_thesis::{source, FIXTURE_BYTES};
-use crate::artifacts::pdf::standards::v1_7::engine::{decode_pdf, encode_pdf};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilderConstruction as PdfBuilder;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::Pdf17Inference;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;

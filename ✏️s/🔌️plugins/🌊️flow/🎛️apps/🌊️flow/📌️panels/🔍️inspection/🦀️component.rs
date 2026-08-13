@@ -32,7 +32,8 @@ pub fn render(fixture: &FlowSnapshot, selected: &[String], labels: &FlowPlayLabe
     if selected.is_empty() {
         return placeholder_tree("flow-play-inspector.empty", ui_text(labels.no_selection));
     }
-    let widgets: Vec<&Widget> = selected.iter().filter_map(|id| fixture.widgets.iter().find(|widget| widget_id(widget) == id)).collect();
+    let live = fixture.to_fixture();
+    let widgets: Vec<&Widget> = selected.iter().filter_map(|id| live.widgets.iter().find(|widget| widget_id(widget) == id)).collect();
     if widgets.is_empty() {
         return placeholder_tree("flow-play-inspector.missing", ui_text(labels.widget_not_found));
     }

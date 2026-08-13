@@ -116,7 +116,7 @@ pub mod derived_composition {
             // `engine::decode_xlsx` without an intervening regenerate. Same technique the PDF/A 1.7
             // pilot's composer tests use for the analogous reason.
             use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace;
-            let strict_snapshot = stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::engine::build_minimal_xlsx(XlsxWorkbook::default()));
+            let strict_snapshot = stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default()));
             // 🩹 `engine::encode_xlsx` itself regenerates workbook.xml as Transitional-shaped (the
             // very thing this comment above warns about) -- encoding the OPC package directly, NOT
             // through `encode_xlsx`, is what actually avoids the regenerate.

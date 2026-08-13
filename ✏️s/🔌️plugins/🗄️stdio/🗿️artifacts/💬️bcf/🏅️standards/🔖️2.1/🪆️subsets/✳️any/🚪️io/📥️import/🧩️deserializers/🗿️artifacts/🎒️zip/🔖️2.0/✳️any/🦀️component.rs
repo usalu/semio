@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 🎒️ Parse ZIP container bytes into a BcfSnapshot.
 pub fn deserialize(from: &BinarySnapshot) -> Result<BcfSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::bcf::engine::decode_bcf(&from.bytes)
+    let mut snap = crate::artifacts::bcf::io::decode_bcf(&from.bytes)
         .map_err(|e| store::PackError::Schema(e))?;
     snap.schema = STDIO_BCF_DOCUMENT_SCHEMA.into();
     Ok(snap)

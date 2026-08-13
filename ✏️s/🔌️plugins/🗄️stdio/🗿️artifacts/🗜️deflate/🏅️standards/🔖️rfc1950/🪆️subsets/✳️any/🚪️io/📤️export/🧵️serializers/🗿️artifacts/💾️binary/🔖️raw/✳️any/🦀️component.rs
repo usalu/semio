@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 🗜️ Zlib-inflate deflate stream into a BinarySnapshot payload.
 pub fn serialize(from: &DeflateSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::deflate::engine::zlib_decompress(&from.payload)
+    let bytes = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&from.payload)
         .map_err(|e| store::PackError::Schema(e))?;
     Ok(BinarySnapshot {
         schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),

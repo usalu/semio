@@ -373,7 +373,7 @@ impl protocol::DiffCodec for DeflateDiff {
 mod tests {
     use super::*;
     use crate::artifacts::deflate::schema::mutations::{apply_deflate_mutation, DeflateMutation};
-    use crate::artifacts::deflate::engine::{decode_deflate_snapshot, encode_deflate_snapshot};
+    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
     use protocol::{DiffCodec, Mutation};
 

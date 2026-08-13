@@ -1,7 +1,7 @@
 //! 🔺️ SemioValueTreeDiff — recursive, handcrafted diff mirroring `SemioValue`'s shape. `List` gets an
 //! index-keyed triple, `Map` gets a name-keyed triple, the top-level `nodes` graph gets an
 //! id-keyed triple — all THREE built directly on the shared
-//! `crate::artifacts::semio::standards::v1::engine::triples` codec (`IndexedTripleDiff`/
+//! `crate::artifacts::semio::standards::v1::subsets::any::schema::triples` codec (`IndexedTripleDiff`/
 //! `NamedTripleDiff` + their `enc_*`/`dec_*` bridge functions) per this ticket's explicit
 //! instruction to reuse it rather than reinvent it a 14th time (bcf/docx and now `json` each
 //! rolled their own copy before this shared engine existed). No `snapshot: Option<SemioValueSnapshot>`
@@ -9,7 +9,7 @@
 //! like every other mutation. Structural template (Replace-on-kind-change fallback, recursive
 //! between/apply/absorb) copied from `json`'s own `JsonDiff` (this subset's informing source).
 
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified,
     IndexedTripleDiff, NamedModified, NamedTripleDiff,
 };

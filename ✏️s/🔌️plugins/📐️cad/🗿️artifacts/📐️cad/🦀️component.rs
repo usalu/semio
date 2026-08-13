@@ -48,6 +48,110 @@ pub type CadModelChild = store::ArtifactChild<SemioModelSnapshot>;
 /// `create-drawing`/`delete-drawing` once a caller actually attaches one.
 pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 
+//#region 🔖️WorkingScene
+/// 🧱 EPHEMERAL, per-invocation working representation of the document's per-pane object content —
+/// never persisted, never a `CadSnapshot` field (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
+/// wave 3, following the `EngineRep` contract in `⚙️engine/🦀️component.rs`: wholly derived, dropped
+/// at the end of the call that built it). `CadSnapshot` composes only child HANDLES
+/// (`CadModelChild` — two strings, no content); this is what the app derives from a resolved
+/// child's actual content (`cad_working_scene_from_models`, the READ direction) or from literal
+/// input before any child is even minted (the WRITE direction — see `🚪️io/🦀️component.rs`'s
+/// `cad_document_from_dwg`/`scene_from_spatial_payload`), to actually edit/render a pane.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadWorkingScene {
+    #[serde(default)]
+    pub objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    #[serde(default)]
+    pub building_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    #[serde(default)]
+    pub energy_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    #[serde(default)]
+    pub structure_classic_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    #[serde(default)]
+    pub geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    #[serde(default)]
+    pub building_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    #[serde(default)]
+    pub energy_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    #[serde(default)]
+    pub structure_classic_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+}
+
+impl CadWorkingScene {
+    /// 🗂️ This pane's object list.
+    pub fn objects_for(&self, pane: CadPaneId) -> &[crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject] {
+        match pane {
+            CadPaneId::Shape => &self.objects,
+            CadPaneId::Building => &self.building_objects,
+            CadPaneId::Energy => &self.energy_objects,
+            CadPaneId::StructureClassic => &self.structure_classic_objects,
+        }
+    }
+
+    /// 🗂️ This pane's raw import-time topology, when the working scene carries it (write-side
+    /// fixture/DWG import only — the READ direction from a resolved `SemioModelSnapshot` child
+    /// never has this, since `model` never inlines brep/mesh geometry data; see that subset's own
+    /// module doc).
+    pub fn geometry_for(&self, pane: CadPaneId) -> Option<&crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry> {
+        match pane {
+            CadPaneId::Shape => self.geometry.as_ref(),
+            CadPaneId::Building => self.building_geometry.as_ref(),
+            CadPaneId::Energy => self.energy_geometry.as_ref(),
+            CadPaneId::StructureClassic => self.structure_classic_geometry.as_ref(),
+        }
+    }
+}
+
+/// 🌉 READ direction: resolved `s.stdio.semio.model` child content (once a real resolver hands it
+/// over — see `store::LinkResolver`/`ChildStoreFactory` in `🏪️store/🦀️component.rs`'s
+/// `🔖️Composition` region) → this document's `CadWorkingScene`. Each pane is independent: a `None`
+/// (child not yet resolved/composed) leaves that pane's object list empty rather than fabricating
+/// placeholder content. Real per-element conversion lives in `geometry_import::objects_from_model_snapshot`.
+pub fn cad_working_scene_from_models(shape: Option<&SemioModelSnapshot>, building: Option<&SemioModelSnapshot>, energy: Option<&SemioModelSnapshot>, structure_classic: Option<&SemioModelSnapshot>) -> CadWorkingScene {
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::objects_from_model_snapshot;
+    CadWorkingScene {
+        objects: shape.map(objects_from_model_snapshot).unwrap_or_default(),
+        building_objects: building.map(objects_from_model_snapshot).unwrap_or_default(),
+        energy_objects: energy.map(objects_from_model_snapshot).unwrap_or_default(),
+        structure_classic_objects: structure_classic.map(objects_from_model_snapshot).unwrap_or_default(),
+        geometry: None,
+        building_geometry: None,
+        energy_geometry: None,
+        structure_classic_geometry: None,
+    }
+}
+
+/// 🌉 WRITE direction: a deterministic, content-addressed `s.stdio.semio.model` CHILD HANDLE for
+/// `pane`, minted from `content_json` (mirrors `💠️lowpoly`'s `mesh_child_handle` — same pattern,
+/// same shared `store::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical
+/// content mint the same handle. This is a HANDLE only — the target artifact id is a forward
+/// reference; materializing it as a real, persisted, resolvable document is the two-step
+/// host-level gesture (mint the child, dispatch `create-<pane>-model` against the result)
+/// `🚪️io/🦀️component.rs`'s own comments already document, since minting the actual store entry
+/// needs `ChildStoreFactory`/`CompositionCoordinator`, out of a pure function's reach.
+pub fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelChild {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_json.hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let slug = cad_model_child_pane_slug(pane);
+    let child_id = format!("{slug}-model-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: format!("cad-{slug}-model"), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
+    match pane {
+        CadPaneId::Shape => "shape",
+        CadPaneId::Building => "building",
+        CadPaneId::Energy => "energy",
+        CadPaneId::StructureClassic => "structure-classic",
+    }
+}
+//#endregion 🔖️WorkingScene
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CadReference {

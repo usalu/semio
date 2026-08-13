@@ -44,7 +44,11 @@ use std::collections::BTreeMap;
 /// `db_state` structure directly (those are the *storage* representation; a document's queryable
 /// shape is resolved into this tree by whichever layer above `db_query` owns the schema — typically
 /// `db_artifact`).
-#[derive(Clone, Debug, PartialEq)]
+/// 🧪️ `Serialize`/`Deserialize` (added for `LiveQuery`'s `QueryResultField: InferredField<..>`
+/// routing — see `🔖️LiveQuery` below): `infer_field`'s cache stores `F::Value` bytes via
+/// `serde_json`, so any `InferredField::Value` must round-trip through serde regardless of whether
+/// caching is actually enabled at runtime (a static bound on the trait, not a runtime condition).
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Value {
     Null,
     Bool(bool),
@@ -528,7 +532,8 @@ fn estimate_result_bytes(rows: &[(RowId, Value)]) -> u64 {
 /// own `doc_ref` convention for full-text/touched-region postings (see `db_index::FullTextIndex`'s
 /// doc) — a `FullTextLookup`'s postings and a `QuerySource`'s row ids are meant to be the same
 /// space, so pushdown candidates resolve back into `QuerySource::get` directly.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+/// 🧪️ `Serialize`/`Deserialize` — same reason as `Value`'s: `RowId` is `QueryResultField::Key`.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, serde::Serialize, serde::Deserialize)]
 pub struct RowId(pub u64);
 
 /// @emoji 🚰️ What the planner/evaluator need from a materialized document: every row (for a full
@@ -928,18 +933,83 @@ pub struct QueryDiff {
     pub updated: Vec<(RowId, Value)>,
 }
 
+//#region 🔖️QueryResultField
+/// @emoji 🌉️ What `QueryResultField::{plan,dep_input,compute}` need: the fully evaluated result
+/// rows of one `refresh` call (already select/filter/sort/paginate-resolved by the tested, fallible
+/// `execute`/planner/pushdown machinery above — `InferredField::plan` is infallible, so it cannot
+/// itself own the full-text-pushdown-requires-a-lookup / scan-limit error paths `execute` already
+/// owns; re-deriving those inside an infallible `plan` would be forcing a bad fit, not a clean
+/// dissolve. Row-set membership is therefore still `execute`'s job — one full re-evaluation per
+/// `refresh`, as before). What THIS field routes through the inference spine is the one thing that
+/// genuinely is a per-key derivation with no cross-row dependency: a row's cacheable content, keyed
+/// by `RowId`, content-addressed by that row's own `Value` bytes.
+struct QuerySnapshot<'a> {
+    rows: &'a BTreeMap<RowId, Value>,
+}
+
+/// @emoji 🧮️ `InferredField<QuerySnapshot>` marker for one `LiveQuery` result row — replaces the
+/// private `self.snapshot = new_snapshot` hand-roll with the spine's `DepHash`/`InferenceCache`
+/// mechanism. Roots-only `plan` (`parents: vec![]` for every key): a query result row depends on its
+/// own queried columns, never on another row's result (see this crate's module doc on `db_state`'s
+/// per-row independence). `dep_input` is `encode_value` on the row's already-projected `Value` —
+/// exactly what `compute` returns, satisfying `dep_input`'s honesty contract by construction (it
+/// covers everything `compute` reads because it covers ALL of it, not a proxy subset).
+struct QueryResultField;
+
+impl<'a> pack::InferredField<QuerySnapshot<'a>> for QueryResultField {
+    type Key = RowId;
+    type Value = Value;
+
+    const FIELD_ID: &'static str = "db.query.live-row";
+    const SCHEMA_VERSION: u32 = 1;
+
+    /// 🃏️ `Query::filter`/`select`/`sort` paths are chosen dynamically per call, so no fixed field
+    /// list is honest here — `infer_field_after_diff`'s tier-1 `DiffRegions` gate is deliberately
+    /// never used by `LiveQuery::refresh` (below) for the same reason `plan` can't own `execute`'s
+    /// error paths: a wildcard is the honest declaration, not a narrowed guess.
+    fn reads() -> &'static [&'static str] {
+        &["*"]
+    }
+
+    fn plan(snapshot: &QuerySnapshot<'a>) -> Vec<pack::InferenceStep<RowId>> {
+        snapshot.rows.keys().map(|id| pack::InferenceStep { key: *id, parents: Vec::new() }).collect()
+    }
+
+    fn dep_input(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[RowId]) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        if let Some(value) = snapshot.rows.get(key) {
+            encode_value(value, &mut bytes);
+        }
+        bytes
+    }
+
+    fn compute(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[Value]) -> Value {
+        snapshot.rows.get(key).cloned().unwrap_or(Value::Null)
+    }
+}
+//#endregion 🔖️QueryResultField
+
 /// @emoji 📺️ Tracks one live query's last-seen result set so `refresh` can emit a `QueryDiff`
 /// instead of the caller having to re-diff two full `QueryResult`s itself. The law this crate's
 /// tests hold it to: applying a `QueryDiff` to the pre-refresh snapshot (add `added`, drop
-/// `removed`, overwrite `updated`) always reconstructs exactly the post-refresh snapshot.
+/// `removed`, overwrite `updated`) always reconstructs exactly the post-refresh snapshot. Per-row
+/// content is now sourced through `QueryResultField`/`InferenceCache` (`🔖️QueryResultField` above)
+/// rather than held as this struct's own ad hoc cache — `LiveQuery` itself is left owning only the
+/// diff-adapter comparison (this refresh's spine-derived rows vs. the previous refresh's), which is
+/// NOT redundant with the spine's own hit/miss bookkeeping: a `DepHash` cache hit means "this exact
+/// row content has been seen before, at any point", not "unchanged since the immediately preceding
+/// refresh" (a row that oscillates between two values would warm-hit the cache every other refresh
+/// while still being a real `updated` event each time) — so the two mechanisms are complementary,
+/// not duplicate.
 pub struct LiveQuery {
     spec: LiveQuerySpec,
     snapshot: BTreeMap<RowId, Value>,
+    cache: pack::InferenceCache,
 }
 
 impl LiveQuery {
     pub fn new(spec: LiveQuerySpec) -> LiveQuery {
-        LiveQuery { spec, snapshot: BTreeMap::new() }
+        LiveQuery { spec, snapshot: BTreeMap::new(), cache: pack::InferenceCache::new(pack::InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }) }
     }
 
     pub fn spec(&self) -> &LiveQuerySpec {
@@ -954,10 +1024,16 @@ impl LiveQuery {
     /// previous snapshot, updating the snapshot in place. `source`/`fulltext` are expected to
     /// already be materialized at whatever frontier `resolve_consistency(&self.spec.consistency,
     /// ..)` resolved to — resolving that frontier and building the matching `QuerySource` is the
-    /// caller's job (it owns the actual document state), not this crate's.
+    /// caller's job (it owns the actual document state), not this crate's. Row values are now
+    /// obtained via `pack::infer_field::<QuerySnapshot, QueryResultField>` (routed through this
+    /// `LiveQuery`'s own `InferenceCache`) instead of being read directly off `result.rows` — a
+    /// row whose content is byte-identical to one already seen by this cache is served from the
+    /// cache rather than re-materialized, per `QueryResultField`'s doc above.
     pub fn refresh(&mut self, source: &dyn QuerySource, fulltext: Option<&dyn FullTextLookup>, limits: &QueryLimits) -> Result<QueryDiff, DbError> {
         let result = execute(&self.spec.query, source, fulltext, limits)?;
-        let new_snapshot: BTreeMap<RowId, Value> = result.rows.into_iter().collect();
+        let rows: BTreeMap<RowId, Value> = result.rows.into_iter().collect();
+        let query_snapshot = QuerySnapshot { rows: &rows };
+        let new_snapshot = pack::infer_field::<QuerySnapshot<'_>, QueryResultField>(&query_snapshot, Some(&mut self.cache));
 
         let mut diff = QueryDiff::default();
         for (id, value) in &new_snapshot {
@@ -1436,6 +1512,46 @@ mod tests {
 
             assert_eq!(&reconstructed, live.snapshot());
         }
+
+        //#region 🧪️IncrementalityLaw
+        /// @emoji ⚖️ The incrementality law this dissolve exists to prove (ticket
+        /// `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS`): now that row
+        /// content is routed through `QueryResultField: InferredField<QuerySnapshot>` (see
+        /// `🔖️QueryResultField` above), a refresh over an UNCHANGED row set is all cache hits, and a
+        /// refresh where exactly one row's own content changed misses for only that row — every
+        /// other row's `DepHash` is untouched and is served warm from `LiveQuery`'s own
+        /// `InferenceCache`. Reads `live.cache` directly (a private field of this same module — see
+        /// `LiveQuery`'s doc on why `refresh`'s row values are no longer readable any other way)
+        /// rather than through `pack::infer_field` in isolation, so the law is proven against the
+        /// real public `refresh` path, not a hand-assembled `QuerySnapshot`.
+        #[test]
+        fn refresh_leaves_unrelated_rows_cache_warm_and_misses_only_the_changed_row() {
+            let spec = LiveQuerySpec { query: Query::new(), consistency: Consistency::Canonical };
+            let mut live = LiveQuery::new(spec);
+
+            let first = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 25, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
+            live.refresh(&first, None, &QueryLimits::default()).expect("refresh succeeds");
+
+            // An identical re-refresh: every row's dep_hash is unchanged, so every row is a cache hit.
+            let before = live.cache.stats();
+            let diff = live.refresh(&first, None, &QueryLimits::default()).expect("refresh succeeds");
+            let after = live.cache.stats();
+            assert!(diff.added.is_empty() && diff.removed.is_empty() && diff.updated.is_empty(), "an unchanged source must produce an empty diff");
+            assert_eq!(after.misses, before.misses, "an unchanged refresh must produce zero new misses");
+            assert_eq!(after.hits - before.hits, 3, "all three rows must be served from the warm cache");
+
+            // Only bob's row changes (same position, same length — isolates a value change from a
+            // position-based added/removed churn).
+            let third = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 26, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
+            let before = live.cache.stats();
+            let diff = live.refresh(&third, None, &QueryLimits::default()).expect("refresh succeeds");
+            let after = live.cache.stats();
+            assert_eq!(diff.updated.len(), 1, "only bob's row changed");
+            assert!(diff.added.is_empty() && diff.removed.is_empty());
+            assert_eq!(after.misses - before.misses, 1, "only bob's row may miss when only bob's own content changed");
+            assert_eq!(after.hits - before.hits, 2, "alice's and cara's rows are untouched by bob's change and must stay warm");
+        }
+        //#endregion 🧪️IncrementalityLaw
     }
     //#endregion 🔖️LiveQuery
 

@@ -17,7 +17,7 @@
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use crate::artifacts::stl::StlSnapshot;
 use crate::artifacts::stl::schema::snapshot::StlTriangle;
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };

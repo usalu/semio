@@ -4,7 +4,7 @@
 //! `diff()` builds the exact sparse `SemioAnimationDiff` directly via the `diff_*` helpers below,
 //! never by diffing a mutated clone against `base`.
 
-use crate::artifacts::semio::standards::v1::engine::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{
     AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff, diff_set_snapshot,
 };
@@ -183,7 +183,7 @@ fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
     format!("[{},{}]", enc_str(&s.schema), enc_list(&s.timelines, enc_timeline))
 }
 fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
-    use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{dec_list, dec_str, dec_timeline};
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, timelines] = parts.as_slice() else { return Err(format!("snapshot-lit: expected 2 fields, got {}", parts.len())) };
@@ -221,7 +221,7 @@ impl protocol::OpText for SemioAnimationMutation {
     }
 
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets};
+        use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
         use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{
             dec_channel, dec_interpolation, dec_keyframe, dec_str, dec_target, dec_timeline, dec_value,
         };

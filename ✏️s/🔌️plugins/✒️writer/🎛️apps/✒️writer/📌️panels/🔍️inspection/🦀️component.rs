@@ -2,7 +2,7 @@
 
 use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::terminology::WriterPlayLabels;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use trinity::core::{example_graph, lint};
 
@@ -24,6 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
+    let text = writer_text(document);
     let mut sections = vec![
         UiSectionNode {
             id: "writer-inspector.document".into(),
@@ -34,7 +35,7 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterP
                 ui_text(Label::data(format!("Id: {}", document.id))),
                 ui_text(Label::data(format!("Language: {}", document.language_id))),
                 ui_text(Label::data(format!("Uri: {}", document.uri))),
-                ui_text(Label::data(format!("Lines: {}", document.text.lines().count()))),
+                ui_text(Label::data(format!("Lines: {}", text.lines().count()))),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -50,7 +51,7 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterP
     ];
     if document.language_id == "jack" {
         let graph = example_graph();
-        let messages: Vec<String> = lint(&graph, &document.text).into_iter().map(|diag| diag.message).take(8).collect();
+        let messages: Vec<String> = lint(&graph, &text).into_iter().map(|diag| diag.message).take(8).collect();
         if !messages.is_empty() {
             sections.push(UiSectionNode {
                 id: "writer-inspector.diagnostics".into(),

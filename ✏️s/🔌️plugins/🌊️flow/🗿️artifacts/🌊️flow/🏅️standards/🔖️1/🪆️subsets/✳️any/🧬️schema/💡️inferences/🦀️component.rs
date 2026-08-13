@@ -24,7 +24,8 @@ pub struct FlowInference {
 
 impl protocol::Inference<FlowSnapshot> for FlowInference {
     fn infer(snapshot: &FlowSnapshot) -> Self {
-        Self { topology: compute_flow_topology(&snapshot.widgets, &snapshot.synapses) }
+        let fixture = snapshot.to_fixture();
+        Self { topology: compute_flow_topology(&fixture.widgets, &fixture.synapses) }
     }
 }
 
@@ -47,7 +48,7 @@ impl protocol::InferenceSpec<FlowSnapshot> for FlowInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.flow.flow.inference.topology", reads: &["widgets", "synapses"] }]
+        &[protocol::InferenceFieldSpec { id: "s.flow.flow.inference.topology", reads: &["content"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -84,13 +85,13 @@ mod tests {
     use protocol::Inference;
 
     fn chain_snapshot() -> FlowSnapshot {
-        let mut snapshot = FlowSnapshot::default();
-        snapshot.widgets = vec![
+        let mut fixture = FlowSnapshot::default().to_fixture();
+        fixture.widgets = vec![
             Widget::InputSlider { id: "a".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
             Widget::InputSlider { id: "b".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
         ];
-        snapshot.synapses = vec![flow::SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: String::new(), to_port: String::new() }];
-        snapshot
+        fixture.synapses = vec![flow::SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: String::new(), to_port: String::new() }];
+        FlowSnapshot::from_fixture(fixture)
     }
 
     #[test]
@@ -108,8 +109,9 @@ mod tests {
     fn topology_counts_every_widget_exactly_once() {
         let snapshot = chain_snapshot();
         let inferred = FlowInference::infer(&snapshot);
-        assert_eq!(inferred.topology.node_count as usize, snapshot.widgets.len());
-        assert_eq!(inferred.topology.topo_order.len(), snapshot.widgets.len());
+        let widget_count = snapshot.to_fixture().widgets.len();
+        assert_eq!(inferred.topology.node_count as usize, widget_count);
+        assert_eq!(inferred.topology.topo_order.len(), widget_count);
         assert!(inferred.topology.cycle_free);
     }
 }

@@ -20,7 +20,7 @@
 //!   (`"E{n}"` top-level, `"B{block}#{n}"` inside a block), a documented synthetic identity.
 
 use crate::artifacts::dxf::{DxfSnapshot, schema::snapshot::{DxfBlock, DxfEntity, DxfLayer, DxfValue, DxfVertex}};
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 

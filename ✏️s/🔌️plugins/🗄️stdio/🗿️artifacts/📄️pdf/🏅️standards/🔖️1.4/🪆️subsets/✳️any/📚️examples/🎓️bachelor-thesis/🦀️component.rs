@@ -12,7 +12,7 @@ pub const ICON: &str = "file";
 pub const FIXTURE_BYTES: &[u8] = include_bytes!("🖼️assets/📄️bachelor-thesis.pdf");
 
 fn decoded_summary_json() -> String {
-    match crate::artifacts::pdf::standards::v1_7::engine::decode_pdf(FIXTURE_BYTES) {
+    match crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(FIXTURE_BYTES) {
         Ok(snap) => format!(
             r#"{{"fixture":"bachelor-thesis.pdf","bytes":{},"declaredVersion":"{}","pageCount":{},"objectCount":{}}}"#,
             FIXTURE_BYTES.len(),

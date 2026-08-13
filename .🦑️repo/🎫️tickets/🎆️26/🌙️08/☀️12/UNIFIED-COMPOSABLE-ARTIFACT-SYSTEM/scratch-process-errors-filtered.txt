@@ -1,0 +1,126 @@
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:17:82
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:84:164
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:138:60
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |  --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪵️stock/🦀️component.rs:5:83
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:196:90
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🔎️inspector/🦀️component.rs:12:99
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🌍️world/🦀️component.rs:10:125
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:84:100
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |  --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:8:54
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |  --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:8:83
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |  --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:8:54
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |  --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:8:83
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🛠️workshop/🦀️component.rs:132:59
+error[E0432]: unresolved import `crate::artifacts::process3d::SolidSpec` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:280:59
+error[E0433]: cannot find `SolidSpec` in `process3d` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:900:116
+error[E0433]: cannot find `SolidSpec` in `process3d` |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1034:77
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:86:60
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:95:30
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🛍️catalogue/🦀️component.rs:40:53
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:86:60
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/📄️artifact/🦀️component.rs:30:26
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:95:30
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:101:16
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:114:27
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:109:26
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:109:26
+error[E0599]: `ArtifactChild<SemioFlowSnapshot>` is not an iterator |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🛠️workshop/🦀️component.rs:139:35
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:176:103
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:230:31
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:231:47
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/⏱️cursor/🦀️component.rs:74:33
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🎛️engagement/🦀️component.rs:23:33
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:149:29
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️component.rs:151:18
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:176:103
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/⏱️cursor/🦀️component.rs:57:33
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:230:31
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:231:47
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/📄️artifact/🦀️component.rs:30:26
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪵️stock/🦀️component.rs:31:41
+error[E0560]: struct `artifacts::process3d::standards::v1::subsets::any::schema::snapshot::component::Process3dSnapshot` has no field named `stock` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪵️stock/🦀️component.rs:32:80
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:273:35
+error[E0308]: mismatched types |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪵️stock/🦀️component.rs:32:94
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/📄️artifact/🦀️component.rs:38:65
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/⏱️cursor/🦀️component.rs:40:33
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🔎️inspector/🦀️component.rs:161:26
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🔎️inspector/🦀️component.rs:162:33
+error[E0599]: `ArtifactChild<SemioFlowSnapshot>` is not an iterator |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:287:35
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessStep: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:133:19
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/⏱️cursor/🦀️component.rs:22:77
+error[E0599]: no method named `iter` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:233:39
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessStep: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:129:63
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪵️stock/🦀️component.rs:31:41
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🔎️inspector/🦀️component.rs:161:26
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🔎️inspector/🦀️component.rs:162:33
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:44:96
+error[E0599]: `ArtifactChild<SemioFlowSnapshot>` is not an iterator |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:310:35
+error[E0599]: `ArtifactChild<SemioFlowSnapshot>` is not an iterator |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:324:63
+error[E0277]: the trait bound `Process3dSnapshot: DslField` is not satisfied |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs:21:23
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessStep: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:133:19
+error[E0277]: the trait bound `Process3dSnapshot: DslField` is not satisfied |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs:17:63
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessStep: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:129:63
+error[E0599]: no method named `iter` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🔎️inspector/🦀️component.rs:173:30
+error[E0599]: no method named `iter` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:116:31
+error[E0599]: no method named `iter` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:173:31
+error[E0599]: no method named `iter` found for struct `ArtifactChild<S>` in the current scope |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/📄️artifact/🦀️component.rs:41:10
+error[E0599]: no method named `iter` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:140:49
+error[E0599]: `ArtifactChild<SemioFlowSnapshot>` is not an iterator |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs:335:63
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs:44:96
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:178:66
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:186:59
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:191:56
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:197:66
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:205:59
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:210:56
+error[E0609]: no field `stock` on type `&Process3dSnapshot` |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/📌️panels/🛍️catalogue/🦀️component.rs:40:53
+error[E0277]: the trait bound `Process3dSnapshot: DslField` is not satisfied |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs:21:23
+error[E0277]: the trait bound `Process3dSnapshot: DslField` is not satisfied |   --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./../../🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs:17:63
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:458:9
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:161:20
+error[E0061]: this function takes 3 arguments but 2 arguments were supplied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:176:18
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:206:17
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:220:13
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessStep: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:30:9
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:111:37
+error[E0608]: cannot index into a value of type `ArtifactChild<SemioFlowSnapshot>` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:112:36
+error[E0599]: `ArtifactChild<SemioFlowSnapshot>` is not an iterator |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1055:35
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessMeasure: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:50:9
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessStep: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:30:15
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessMeasure: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:50:22
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:206:17
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:220:13
+error[E0599]: no method named `is_empty` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:115:59
+error[E0608]: cannot index into a value of type `ArtifactChild<SemioFlowSnapshot>` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:125:59
+error[E0608]: cannot index into a value of type `ArtifactChild<SemioFlowSnapshot>` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:128:58
+error[E0599]: no method named `iter` found for struct `ArtifactChild<S>` in the current scope |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1078:87
+error[E0608]: cannot index into a value of type `ArtifactChild<SemioFlowSnapshot>` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:135:58
+error[E0608]: cannot index into a value of type `ArtifactChild<SemioFlowSnapshot>` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:144:61
+error[E0608]: cannot index into a value of type `ArtifactChild<SemioFlowSnapshot>` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:147:58
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1006:235
+error[E0609]: no field `stock` on type `Process3dSnapshot` |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1034:35
+error[E0560]: struct `artifacts::process3d::standards::v1::subsets::any::schema::snapshot::component::Process3dSnapshot` has no field named `stock` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:347:44
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessStep: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:30:9
+error[E0599]: no method named `iter` found for struct `ArtifactChild<S>` in the current scope |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1088:77
+error[E0609]: no field `stock` on type `Process3dSnapshot` |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1092:58
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1102:28
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessMeasure: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:50:9
+error[E0599]: no method named `is_empty` found for struct `ArtifactChild<S>` in the current scope |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1035:32
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessStep: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:30:15
+error[E0277]: the trait bound `artifacts::process3d::component::ProcessMeasure: DslField` is not satisfied |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:50:22
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs:167:37
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1106:35
+error[E0608]: cannot index into a value of type `ArtifactChild<SemioFlowSnapshot>` |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1107:40
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1108:26
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1116:28
+error[E0560]: struct `artifacts::process3d::standards::v1::subsets::any::schema::snapshot::component::Process3dSnapshot` has no field named `stock` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:136:13
+error[E0308]: mismatched types |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:137:20
+error[E0609]: no field `stock` on type `Process3dSnapshot` |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:151:18
+error[E0599]: no method named `push` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:152:24
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1120:35
+error[E0608]: cannot index into a value of type `ArtifactChild<SemioFlowSnapshot>` |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1121:40
+error[E0061]: this function takes 2 arguments but 1 argument was supplied |     --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/../../🎛️apps/🧊️3d/🦀️component.rs:1122:26
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:903:35
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:910:35
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:172:35
+error[E0599]: no method named `len` found for struct `ArtifactChild<S>` in the current scope |    --> ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:180:35

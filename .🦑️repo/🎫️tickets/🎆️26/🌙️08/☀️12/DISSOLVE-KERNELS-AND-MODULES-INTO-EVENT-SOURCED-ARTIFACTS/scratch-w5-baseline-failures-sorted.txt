@@ -1,0 +1,75 @@
+    db_artifact::tests::bridge::envelope_from_operation_uses_operation_and_diff_traits
+    db_cli::tests::cli_full_cycle_succeeds_for_a_seeded_document
+    db_cli::tests::cli_profile_reports_throughput_for_n_commands_on_a_fresh_document
+    db_cli::tests::cli_replica_simulate_copies_missing_commands_to_a_fresh_follower
+    db_cli::tests::cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it
+    db_engine::tests::a_document_survives_a_full_database_shutdown_and_reopen_at_the_same_root
+    db_engine::tests::checkpoint_document_mints_distinct_real_vcs_content_addressed_checkpoint_ids
+    db_engine::tests::compact_document_runs_a_real_compaction_pass_without_error
+    db_engine::tests::exact_consistency_rejects_a_frontier_the_document_has_moved_past
+    db_engine::tests::full_submit_durable_query_round_trip_over_a_real_document_authority
+    db_engine::tests::hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica
+    db_facade::tests::full_round_trip_reachable_purely_through_facade_reexports
+    db_testkit::tests::crash_harness_recovers_cleanly_after_every_injected_write_failure
+    db_testkit::tests::document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail
+    db_testkit::tests::exhaustive::wal_recovery_never_panics_under_truncation_or_bit_flip_corruption
+    db_testkit::tests::explore_interleavings_every_permutation_of_disjoint_writes_converges_to_the_same_state
+    db_testkit::tests::law_inverse_undo_roundtrip
+    db_testkit::tests::law_preview_never_durable
+    db_testkit::tests::law_replay_deterministic
+    db_testkit::tests::law_snapshot_plus_suffix_equals_replay
+    db_testkit::tests::law_sync_convergence
+---- db_artifact::tests::bridge::envelope_from_operation_uses_operation_and_diff_traits stdout ----
+---- db_cli::tests::cli_full_cycle_succeeds_for_a_seeded_document stdout ----
+---- db_cli::tests::cli_profile_reports_throughput_for_n_commands_on_a_fresh_document stdout ----
+---- db_cli::tests::cli_replica_simulate_copies_missing_commands_to_a_fresh_follower stdout ----
+---- db_cli::tests::cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it stdout ----
+---- db_engine::tests::a_document_survives_a_full_database_shutdown_and_reopen_at_the_same_root stdout ----
+---- db_engine::tests::checkpoint_document_mints_distinct_real_vcs_content_addressed_checkpoint_ids stdout ----
+---- db_engine::tests::compact_document_runs_a_real_compaction_pass_without_error stdout ----
+---- db_engine::tests::exact_consistency_rejects_a_frontier_the_document_has_moved_past stdout ----
+---- db_engine::tests::full_submit_durable_query_round_trip_over_a_real_document_authority stdout ----
+---- db_engine::tests::hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica stdout ----
+---- db_facade::tests::full_round_trip_reachable_purely_through_facade_reexports stdout ----
+---- db_testkit::tests::crash_harness_recovers_cleanly_after_every_injected_write_failure stdout ----
+---- db_testkit::tests::document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail stdout ----
+---- db_testkit::tests::exhaustive::wal_recovery_never_panics_under_truncation_or_bit_flip_corruption stdout ----
+---- db_testkit::tests::explore_interleavings_every_permutation_of_disjoint_writes_converges_to_the_same_state stdout ----
+---- db_testkit::tests::law_inverse_undo_roundtrip stdout ----
+---- db_testkit::tests::law_preview_never_durable stdout ----
+---- db_testkit::tests::law_replay_deterministic stdout ----
+---- db_testkit::tests::law_snapshot_plus_suffix_equals_replay stdout ----
+---- db_testkit::tests::law_sync_convergence stdout ----
+called `Result::unwrap()` on an `Err` value: "invalid type: integer `15`, expected tuple struct Counter"
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+called `Result::unwrap()` on an `Err` value: InvalidArgument("db_artifact wire error: truncated at offset 2")
+thread 'db_artifact::tests::bridge::envelope_from_operation_uses_operation_and_diff_traits' (285387825) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1211:82:
+thread 'db_cli::tests::cli_full_cycle_succeeds_for_a_seeded_document' (285387851) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:1065:132:
+thread 'db_cli::tests::cli_profile_reports_throughput_for_n_commands_on_a_fresh_document' (285387857) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:1175:9:
+thread 'db_cli::tests::cli_replica_simulate_copies_missing_commands_to_a_fresh_follower' (285387859) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:1065:132:
+thread 'db_cli::tests::cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it' (285387863) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:1065:132:
+thread 'db_engine::tests::a_document_survives_a_full_database_shutdown_and_reopen_at_the_same_root' (285387950) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1140:130:
+thread 'db_engine::tests::checkpoint_document_mints_distinct_real_vcs_content_addressed_checkpoint_ids' (285387965) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1194:99:
+thread 'db_engine::tests::compact_document_runs_a_real_compaction_pass_without_error' (285387976) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1224:98:
+thread 'db_engine::tests::exact_consistency_rejects_a_frontier_the_document_has_moved_past' (285388069) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1163:98:
+thread 'db_engine::tests::full_submit_durable_query_round_trip_over_a_real_document_authority' (285388075) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1110:140:
+thread 'db_engine::tests::hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica' (285388083) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1237:98:
+thread 'db_facade::tests::full_round_trip_reachable_purely_through_facade_reexports' (285388110) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:243:134:
+thread 'db_testkit::tests::crash_harness_recovers_cleanly_after_every_injected_write_failure' (285388454) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:582:107:
+thread 'db_testkit::tests::document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail' (285388455) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:1110:138:
+thread 'db_testkit::tests::exhaustive::wal_recovery_never_panics_under_truncation_or_bit_flip_corruption' (285388456) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:1191:145:
+thread 'db_testkit::tests::explore_interleavings_every_permutation_of_disjoint_writes_converges_to_the_same_state' (285388457) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:1021:153:
+thread 'db_testkit::tests::law_inverse_undo_roundtrip' (285388466) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:801:94:
+thread 'db_testkit::tests::law_preview_never_durable' (285388468) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:886:122:
+thread 'db_testkit::tests::law_replay_deterministic' (285388471) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:642:188:
+thread 'db_testkit::tests::law_snapshot_plus_suffix_equals_replay' (285388472) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:685:145:
+thread 'db_testkit::tests::law_sync_convergence' (285388473) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:826:141:

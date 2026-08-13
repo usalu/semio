@@ -44,6 +44,8 @@ mod tests {
     use crate::apps::writer::commands::text::set_active_example;
     use crate::apps::writer::testkit::new_app_with_registry;
     use crate::apps::writer::WriterCommand;
+    use crate::artifacts::writer::{writer_text, WriterSnapshot};
+    use semio_framework::kernel::HostEffect;
 
     #[test]
     fn lint_is_a_view_action_and_example_default_materializes() {
@@ -51,9 +53,15 @@ mod tests {
         // lintDocument is a declared View action: registry kind discipline requires it emit no operations.
         let result = app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &semio_framework_plugin::testkit::meta("local")).expect("lint");
         assert!(result.mutations.is_empty(), "lint re-runs diagnostics into runtime, never the document");
-        // setActiveExample fired with the declared default example ("jack").
-        app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }), &semio_framework_plugin::testkit::meta("local")).expect("example");
-        assert!(!app.snapshot().expect("projection").text.is_empty(), "jack default materialized from the registry");
+        // setActiveExample fired with the declared default example ("jack") — whole-document replace
+        // is not an in-history mutation (`SetSnapshot` is banned outright), so this surfaces as a
+        // `HostEffect::LoadDocument`, not a live `app.snapshot()` change (see `reset_document_effect`).
+        let result = app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }), &semio_framework_plugin::testkit::meta("local")).expect("example");
+        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("expected a LoadDocument effect") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let projection = <WriterSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert!(!writer_text(&projection).is_empty(), "jack default materialized from the registry");
     }
 }
 //#endregion 🧪️Tests

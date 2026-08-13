@@ -4,7 +4,7 @@
 
 pub use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
 
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioQuaternion};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::{
     create_brep::mutation::CreateBrep, create_mesh::mutation::CreateMesh, create_properties::mutation::CreateProperties,
     delete_brep::mutation::DeleteBrep, delete_mesh::mutation::DeleteMesh, delete_properties::mutation::DeleteProperties,

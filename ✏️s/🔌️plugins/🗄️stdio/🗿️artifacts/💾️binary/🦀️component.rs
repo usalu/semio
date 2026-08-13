@@ -36,7 +36,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::binary::standards::v_raw::engine::io_registry as v_raw;
+    use crate::artifacts::binary::standards::v_raw::subsets::any::io::io_registry as v_raw;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
@@ -69,7 +69,7 @@ pub mod io_registry {
 
         #[test]
         fn compose_direct_round_trips_a_native_binary_payload() {
-            let snapshot = crate::artifacts::binary::standards::v_raw::engine::empty_binary_snapshot();
+            let snapshot = crate::artifacts::binary::standards::v_raw::subsets::any::schema::empty_binary_snapshot();
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let sources = [ErasedComposeSource { dialect: DIALECT, payload: IoPayload::Binary(bytes) }];
             let composed = compose(DIALECT, &sources).expect("compose");

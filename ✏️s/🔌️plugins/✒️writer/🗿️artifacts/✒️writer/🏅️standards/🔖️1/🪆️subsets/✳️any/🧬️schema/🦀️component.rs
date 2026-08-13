@@ -1,6 +1,6 @@
 //! 🧬️ Writer artifact schema — every field with its state class.
 
-use crate::artifacts::writer::{WriterEditorSelection, WriterEditorSettings, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::artifacts::writer::{document_child_handle_and_cache, WriterDocumentChild, WriterEditorSelection, WriterEditorSettings, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -16,7 +16,7 @@ pub struct WriterArtifact {
     #[state(persistent)] pub id: String,
     #[state(persistent)] pub language_id: String,
     #[state(persistent)] pub uri: String,
-    #[state(persistent)] pub text: String,
+    #[state(persistent)] #[child(kind = "s.stdio.semio.document")] pub document: WriterDocumentChild,
     #[state(shared_ui)] pub selected_ast_ids: Vec<String>,
     #[state(shared_ui)] pub editor_selection: Option<WriterEditorSelection>,
     #[state(shared_ui)] pub editor_settings: WriterEditorSettings,
@@ -48,7 +48,7 @@ impl WriterArtifact {
             id: self.id.clone(),
             language_id: self.language_id.clone(),
             uri: self.uri.clone(),
-            text: self.text.clone(),
+            document: self.document.clone(),
         }
     }
 
@@ -59,7 +59,7 @@ impl WriterArtifact {
             id: snapshot.id,
             language_id: snapshot.language_id,
             uri: snapshot.uri,
-            text: snapshot.text,
+            document: snapshot.document,
             ..Self::default_ui()
         }
     }
@@ -70,7 +70,7 @@ impl WriterArtifact {
             id: String::new(),
             language_id: "plaintext".into(),
             uri: crate::artifacts::writer::default_uri(),
-            text: String::new(),
+            document: document_child_handle_and_cache("", "", "plaintext"),
             selected_ast_ids: Vec::new(),
             editor_selection: None,
             editor_settings: WriterEditorSettings::default(),
@@ -93,7 +93,7 @@ impl WriterArtifact {
         self.id = snapshot.id;
         self.language_id = snapshot.language_id;
         self.uri = snapshot.uri;
-        self.text = snapshot.text;
+        self.document = snapshot.document;
     }
 }
 //#endregion 🔖️Conversions
@@ -240,7 +240,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🌱️ The canonical empty `WriterSnapshot` — every artifact-tree helper here that needs a fallback or a
 /// baseline document builds off this one value.
 pub fn empty_writer_snapshot() -> WriterSnapshot {
-    WriterSnapshot { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), text: String::new() }
+    WriterSnapshot { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), document: document_child_handle_and_cache("empty", "", "plaintext") }
 }
 //#endregion 🔖️DocumentHelpers
 

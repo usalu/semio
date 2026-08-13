@@ -131,7 +131,7 @@ pub mod derived_composition {
 
         #[test]
         fn transitional_shaped_document_fails_compose_with_real_diagnostic() {
-            let snapshot = crate::artifacts::xlsx::standards::v_ecma_376::engine::build_minimal_xlsx(XlsxWorkbook::default());
+            let snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default());
             let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let err = XlsxStrictComposerComposition::compose(&sources).expect_err("a Transitional-shaped workbook.xml must not stamp strict");

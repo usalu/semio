@@ -1663,7 +1663,7 @@ impl protocol::DiffCodec for XlsxDiff {
 /// `snapshot_a()`/`snapshot_b()`/`demo_diff_cases()` establish (this wave's OPC pattern-setter).
 /// Promoted from the former test-only `sample_a`/`sample_b` (renamed for the same convention).
 pub(crate) fn snapshot_a() -> XlsxSnapshot {
-    crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
+    crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
             XlsxSheet { name: "ToDrop".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] },
@@ -1673,7 +1673,7 @@ pub(crate) fn snapshot_a() -> XlsxSnapshot {
 }
 
 pub(crate) fn snapshot_b() -> XlsxSnapshot {
-    let mut snap = crate::artifacts::xlsx::engine::build_minimal_xlsx(XlsxWorkbook {
+    let mut snap = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet {
                 name: "Sheet1".into(),

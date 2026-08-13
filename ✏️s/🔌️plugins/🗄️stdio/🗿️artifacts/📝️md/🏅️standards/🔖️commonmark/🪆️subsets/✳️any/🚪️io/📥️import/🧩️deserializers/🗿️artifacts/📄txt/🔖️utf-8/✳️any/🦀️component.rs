@@ -9,7 +9,7 @@ pub fn register() {}
 
 /// 📥 Parse md text into a MdSnapshot.
 pub fn deserialize(from: &TxtSnapshot) -> Result<MdSnapshot, store::TextError> {
-    let blocks = crate::artifacts::md::engine::parse_markdown_blocks(&from.to_body());
+    let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(&from.to_body());
     Ok(MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks })
 }
 

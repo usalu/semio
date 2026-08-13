@@ -8,7 +8,10 @@ use crate::apps::gis3d::config::Gis3dConfig;
 use crate::apps::gis3d::GIS3D_PLAY_APP_ID;
 use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
-use crate::modules::terrain::{build_terrain_scene_json, TerrainDescriptorJson};
+/// ⚠️ Fixed opportunistically (was a pre-existing, ticket-predating unresolved `crate::modules`
+/// import — see `💡️inferences/🦀️component.rs`'s identical fix for the full story). Real home:
+/// `crate::artifacts::gisterrain::schema`'s `🔖️TerrainDescriptor` region.
+use crate::artifacts::gisterrain::schema::{build_terrain_scene_json, TerrainDescriptorJson};
 use framework_surface::terrain::projection;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};

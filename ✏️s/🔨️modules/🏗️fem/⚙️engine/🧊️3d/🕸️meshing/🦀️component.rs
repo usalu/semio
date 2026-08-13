@@ -7,7 +7,7 @@ use crate::fem3d_engine::Fem3dError;
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement, FemLoad};
 use crate::model::{Bar3, Dof, Element, Frame3, MemberUdl, NodalLoad, Node, Support};
 use std::collections::HashMap;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 // #region 🔖️SolidMeshing

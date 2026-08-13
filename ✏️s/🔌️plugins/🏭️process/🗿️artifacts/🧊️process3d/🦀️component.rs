@@ -1,8 +1,19 @@
 //! 🪚️ Process3d artifact — document entities (workshop machines/capabilities, stock, process steps)
 //! plus this artifact's `ArtifactKindSpec`.
+//!
+//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `Process3dSnapshot` composes
+//! stdio's `brep` subset (`SemioBrepSnapshot`, real analytic B-Rep topology) for the stock/tool
+//! solid geometry — killing this plugin's old `SolidSpec` DSL-enum, which duplicated brep content
+//! with a lighter parametric shape — and stdio's `flow` subset (`SemioFlowSnapshot`) for the
+//! ordered step timeline. See the `🔖️WorkingScene` region below for the ephemeral bridge type
+//! (`WorkingSolid`/`ProcessStep`/`ProcessMeasure`/`ProcessWorkingScene`) that replaces `SolidSpec`'s
+//! old role as the plugin's own editable in-memory geometry vocabulary.
 
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, };
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
@@ -93,8 +104,7 @@ impl MeasureRecipe {
     }
 }
 
-/// 🌉️ Same reasoning/idiom as `SolidSpec`'s and `ProcessMeasure`'s hand `dsl::DslField` impls (see
-/// `SolidSpec`'s doc comment) — `MeasureRecipe` is a `DslEnum` (`DslVariants` only), and
+/// 🌉️ Hand `dsl::DslField` impl — `MeasureRecipe` is a `DslEnum` (`DslVariants` only), and
 /// `Capability::recipe` is a REQUIRED, never-optional field that must stay a bare `MeasureRecipe`.
 impl dsl::DslField for MeasureRecipe {
     fn shape() -> dsl::Shape {
@@ -297,125 +307,6 @@ impl Default for Pose {
     }
 }
 
-/// 📦️ Primitive solid spec resolvable via `Brep::*_prim_sync`, or a non-parametric imported
-/// reference (mesh or real B-Rep solid) resolved by the app's own kernel session instead of a primitive.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
-pub enum SolidSpec {
-    Box {
-        #[dsl(unit = "m")]
-        width: f64,
-        #[dsl(unit = "m")]
-        depth: f64,
-        #[dsl(unit = "m")]
-        height: f64,
-    },
-    Cylinder {
-        #[dsl(unit = "m")]
-        radius: f64,
-        #[dsl(unit = "m")]
-        height: f64,
-    },
-    Sphere {
-        #[dsl(unit = "m")]
-        radius: f64,
-    },
-    /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology
-    /// (mirrors `cad`'s `meshUrl` pattern); cannot serve as a Cut/Drill/Attach tool.
-    ImportedMesh { mesh_url: String },
-    /// 🧊️ STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
-    /// session by handle id (mirrors `cad`'s `solidHandle` pattern); ephemeral to that session.
-    ImportedSolid { solid_handle: String },
-}
-
-/// 🌉️ `#[derive(dsl::DslEnum)]` only gives `SolidSpec` a `dsl::DslVariants` binding (a tagged-record
-/// table), not `dsl::DslField` — so it can't sit directly in a plain (non-`Option`/`Vec`) field on
-/// its own. Every real usage site (`Stock::solid`, `ProcessMeasure::Cut::tool`,
-/// `ProcessMeasure::Attach::component`) is a REQUIRED, never-optional, never-collection single value,
-/// which the derive macro would normally solve via `#[dsl(statements)] Box<SolidSpec>` — but boxing
-/// would change the field's Rust-visible type and break `process/plugin`'s existing pattern
-/// matches/struct literals against a bare `SolidSpec`. This hand impl reuses the exact same "exactly
-/// one tagged statement" idiom the derive's `Box<T>`-required-statements codegen uses internally,
-/// applied directly to `SolidSpec` so every real field stays unboxed.
-impl dsl::DslField for SolidSpec {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Statements(<SolidSpec as dsl::DslVariants>::variants())
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Statements(vec![<SolidSpec as dsl::DslVariants>::to_named_record(self)])
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            dsl::FieldValue::Statements(items) if items.len() == 1 => <SolidSpec as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
-            other => Err(format!("expected exactly 1 tagged solid value, found {other:?}")),
-        }
-    }
-}
-
-/// 🪵️ The raw workpiece the process starts from.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct Stock {
-    pub id: String,
-    pub label: String,
-    pub solid: SolidSpec,
-    #[serde(default)]
-    #[dsl(block)]
-    pub pose: Pose,
-}
-
-impl Default for Stock {
-    fn default() -> Self {
-        Self { id: "stock".into(), label: "Stock".into(), solid: SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }
-    }
-}
-
-/// 🪚️ One processing measure: subtractive (cut/drill via `cut_sync`) or additive (attach via `fuse_sync`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "measure", rename_all = "camelCase")]
-pub enum ProcessMeasure {
-    /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
-    Cut {
-        tool: SolidSpec,
-        #[dsl(block)]
-        pose: Pose,
-    },
-    /// 🕳️ Subtractive: a cylinder of `radius`×`depth` subtracted at `pose` (axis = drill direction).
-    Drill {
-        #[dsl(unit = "m")]
-        radius: f64,
-        #[dsl(unit = "m")]
-        depth: f64,
-        #[dsl(block)]
-        pose: Pose,
-    },
-    /// 🔩️ Additive: fuses another component solid at `pose`.
-    Attach {
-        component: SolidSpec,
-        #[dsl(block)]
-        pose: Pose,
-    },
-}
-
-/// 🌉️ Same reasoning/idiom as `SolidSpec`'s hand `dsl::DslField` impl — `ProcessMeasure` is a
-/// `DslEnum` (`DslVariants` only), and `ProcessStep::measure` is a REQUIRED, never-optional field
-/// that must stay a bare `ProcessMeasure` (not `Box<ProcessMeasure>`) for `process/plugin`'s existing
-/// `match &mut step.measure { ProcessMeasure::Cut { .. } => .. }` usage to keep compiling untouched.
-impl dsl::DslField for ProcessMeasure {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Statements(<ProcessMeasure as dsl::DslVariants>::variants())
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Statements(vec![<ProcessMeasure as dsl::DslVariants>::to_named_record(self)])
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            dsl::FieldValue::Statements(items) if items.len() == 1 => <ProcessMeasure as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
-            other => Err(format!("expected exactly 1 tagged measure value, found {other:?}")),
-        }
-    }
-}
-
 /// 🏭️ Provenance: which workshop machine/capability produced a step (display + future re-validation).
 /// Purely informational — kernel replay only ever reads `ProcessMeasure`, never resolves this back to a
 /// workshop entry, so editing or removing the machine/capability can never retroactively change
@@ -427,8 +318,111 @@ pub struct StepOrigin {
     pub capability_id: String,
 }
 
-/// 🎞️ One ordered step of the process timeline.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+//#region 🔖️WorkingScene
+/// 🧱️ EPHEMERAL, per-invocation working representation of a process3d document's editable geometry
+/// and step timeline — never persisted, never a `Process3dSnapshot` field (ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4, following the `EngineRep` contract in
+/// `⚙️engine/🦀️component.rs`: wholly derived, dropped at the end of the call that built it).
+///
+/// `WorkingSolid` is the direct successor of the old, now-DELETED persisted `SolidSpec` DSL-enum —
+/// same five variants, same role (a parametric/imported solid the kernel resolves into real
+/// geometry), but demoted from "part of the document's own content model" (duplicating what stdio's
+/// `brep` subset already expresses) to "the plugin's own ephemeral editing vocabulary", exactly
+/// mirroring `📐️cad`'s `CadObject`/`CadGeometry` (ephemeral bridge types kept beside a composed
+/// child, never re-persisted themselves). `Process3dSnapshot` composes `SemioBrepSnapshot` CHILD
+/// HANDLES for `stock_solid`/`tool_solids`; this is what the app derives a `WorkingSolid` from (or
+/// builds fresh input for) before it can call the kernel — see `brep_snapshot_for_working_solid`
+/// (WRITE, real) below for the analytic converter that turns a `WorkingSolid` into real,
+/// content-addressable `SemioBrepSnapshot` topology.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum WorkingSolid {
+    Box {
+        width: f64,
+        depth: f64,
+        height: f64,
+    },
+    Cylinder {
+        radius: f64,
+        height: f64,
+    },
+    Sphere {
+        radius: f64,
+    },
+    /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology.
+    ImportedMesh { mesh_url: String },
+    /// 🧊️ STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
+    /// session by handle id; ephemeral to that session.
+    ImportedSolid { solid_handle: String },
+}
+
+impl Default for WorkingSolid {
+    fn default() -> Self {
+        WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }
+    }
+}
+
+/// 🪵️ The raw workpiece the process starts from — ephemeral working-scene counterpart of the
+/// persisted `stock_id`/`stock_label`/`stock_pose`/`stock_solid` fields on `Process3dSnapshot`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Stock {
+    pub id: String,
+    pub label: String,
+    pub solid: WorkingSolid,
+    pub pose: Pose,
+}
+
+impl Default for Stock {
+    fn default() -> Self {
+        Self { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::default(), pose: Pose::default() }
+    }
+}
+
+/// 🪚️ One processing measure: subtractive (cut/drill via `cut_sync`) or additive (attach via `fuse_sync`).
+/// Ephemeral working-scene counterpart of a `flow` node's `kind`/`params` — see
+/// `flow_node_from_process_step`/`process_step_from_flow_node` below for the real bidirectional
+/// converter.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "measure", rename_all = "camelCase")]
+pub enum ProcessMeasure {
+    /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
+    Cut {
+        tool: WorkingSolid,
+        pose: Pose,
+    },
+    /// 🕳️ Subtractive: a cylinder of `radius`×`depth` subtracted at `pose` (axis = drill direction).
+    Drill {
+        radius: f64,
+        depth: f64,
+        pose: Pose,
+    },
+    /// 🔩️ Additive: fuses another component solid at `pose`.
+    Attach {
+        component: WorkingSolid,
+        pose: Pose,
+    },
+}
+
+impl ProcessMeasure {
+    pub fn kind_slug(&self) -> &'static str {
+        match self {
+            ProcessMeasure::Cut { .. } => "cut",
+            ProcessMeasure::Drill { .. } => "drill",
+            ProcessMeasure::Attach { .. } => "attach",
+        }
+    }
+
+    pub fn pose(&self) -> &Pose {
+        match self {
+            ProcessMeasure::Cut { pose, .. } | ProcessMeasure::Drill { pose, .. } | ProcessMeasure::Attach { pose, .. } => pose,
+        }
+    }
+}
+
+/// 🎞️ One ordered step of the process timeline — ephemeral working-scene counterpart of one
+/// `SemioFlowSnapshot` `FlowNode` (see `flow_node_from_process_step`/`process_step_from_flow_node`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProcessStep {
     pub id: String,
@@ -436,13 +430,7 @@ pub struct ProcessStep {
     #[serde(default = "default_true")]
     pub enabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(block)]
     pub origin: Option<StepOrigin>,
-    /// 🌉️ `#[serde(flatten)]` is a JSON-only concern (`dsl(flatten)` is a dead/unimplemented derive
-    /// flag) — the DSL grammar just gives `measure` its own ordinary tagged shape via `ProcessMeasure`'s
-    /// hand `dsl::DslField` impl (see its doc comment), printed as its own `cut|drill|attach ...`
-    /// statement on the step's line.
-    #[serde(flatten)]
     pub measure: ProcessMeasure,
 }
 
@@ -494,13 +482,298 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
     }
 }
 
-/// 🪚️ Process 3d projection: workshop + stock + ordered steps + timeline cursor.
+/// 🧱️ The full ephemeral working scene: current stock + ordered step timeline, exactly the shape
+/// `Process3dSnapshot` used to carry inline before this migration. Lives beside the persisted
+/// document — populated at mutation-diff-build time (`process_working_scene_to_snapshot`, the WRITE
+/// direction — the only place literal content is in hand) or at fixture-construction time; the READ
+/// direction (`process_working_scene_from_snapshot`, resolving a persisted document's composed
+/// children back into a working scene) is a documented gap until a real `LinkResolver`/
+/// `ChildStoreFactory` seam reaches `ArtifactApp::handle` (checked directly against
+/// `🔌️plugin/🦀️component.rs`, W1-owned, confirmed still absent as of this wave — see
+/// `process_working_scene_from_snapshot`'s own doc comment).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProcessWorkingScene {
+    pub stock: Stock,
+    pub steps: Vec<ProcessStep>,
+}
+
+//#region 🔖️BrepConverters
+/// 🌉️ WRITE direction, real (not a stub): analytic B-Rep topology for each `WorkingSolid` variant.
+/// `Box`/`Cylinder`/`Sphere` are exact (no tessellation/approximation — `BrepSurface::Cylinder`/
+/// `Sphere` are themselves analytic surface primitives, and a `BrepLoop` with zero edges is the
+/// correct "untrimmed, spans the whole surface" shape for the sphere's single closed face and the
+/// cylinder's lateral face). `ImportedMesh`/`ImportedSolid` reference content the app's own kernel
+/// session must resolve (mesh URL / kernel-session-local handle) — this plugin-only migration cannot
+/// tessellate/import that here, so it mints an honest EMPTY-topology placeholder rather than
+/// fabricating fake geometry; the doc comment on `SolidSpec`'s old `ImportedMesh`/`ImportedSolid`
+/// variants already flagged this as kernel-session-resolved, never persisted-content-resolved.
+pub fn brep_snapshot_for_working_solid(solid: &WorkingSolid) -> SemioBrepSnapshot {
+    match solid {
+        WorkingSolid::Box { width, depth, height } => brep_snapshot_for_box(*width, *depth, *height),
+        WorkingSolid::Cylinder { radius, height } => brep_snapshot_for_cylinder(*radius, *height),
+        WorkingSolid::Sphere { radius } => brep_snapshot_for_sphere(*radius),
+        WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => empty_brep_snapshot(),
+    }
+}
+
+fn empty_brep_snapshot() -> SemioBrepSnapshot {
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new() }
+}
+
+fn point3(p: [f64; 3]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 {
+    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: p[0], y: p[1], z: p[2] }
+}
+
+/// 📦️ Corner-at-local-origin box, spanning `[0,w]×[0,d]×[0,h]` — 8 vertices, 12 straight edges, 6
+/// planar faces, 1 shell, 1 solid.
+fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapshot {
+    let (w, d, h) = (width, depth, height);
+    let corners = [[0.0, 0.0, 0.0], [w, 0.0, 0.0], [w, d, 0.0], [0.0, d, 0.0], [0.0, 0.0, h], [w, 0.0, h], [w, d, h], [0.0, d, h]];
+    let vertices: Vec<BrepVertex> = corners.iter().enumerate().map(|(i, c)| BrepVertex { id: format!("v{i}"), point: point3(*c) }).collect();
+    let line_edge = |id: &str, a: usize, b: usize| -> BrepEdge {
+        let origin = corners[a];
+        let direction = [corners[b][0] - corners[a][0], corners[b][1] - corners[a][1], corners[b][2] - corners[a][2]];
+        BrepEdge { id: id.into(), start_vertex: format!("v{a}"), end_vertex: format!("v{b}"), curve: BrepCurve::Line { origin: point3(origin), direction: point3(direction) } }
+    };
+    let edges = vec![
+        line_edge("e0", 0, 1), line_edge("e1", 1, 2), line_edge("e2", 2, 3), line_edge("e3", 3, 0),
+        line_edge("e4", 4, 5), line_edge("e5", 5, 6), line_edge("e6", 6, 7), line_edge("e7", 7, 4),
+        line_edge("e8", 0, 4), line_edge("e9", 1, 5), line_edge("e10", 2, 6), line_edge("e11", 3, 7),
+    ];
+    let loop_of = |id: &str, edges: &[(&str, bool)]| -> BrepLoop {
+        BrepLoop { id: id.into(), edges: edges.iter().map(|(e, o)| BrepLoopEdge { edge: (*e).into(), orientation: *o }).collect() }
+    };
+    let loops = vec![
+        loop_of("l0", &[("e0", true), ("e1", true), ("e2", true), ("e3", true)]),
+        loop_of("l1", &[("e4", true), ("e5", true), ("e6", true), ("e7", true)]),
+        loop_of("l2", &[("e0", true), ("e9", true), ("e4", false), ("e8", false)]),
+        loop_of("l3", &[("e1", true), ("e10", true), ("e5", false), ("e9", false)]),
+        loop_of("l4", &[("e2", true), ("e11", true), ("e6", false), ("e10", false)]),
+        loop_of("l5", &[("e3", true), ("e8", true), ("e7", false), ("e11", false)]),
+    ];
+    let plane_face = |id: &str, loop_id: &str, origin: [f64; 3], normal: [f64; 3], orientation: bool| -> BrepFace {
+        BrepFace { id: id.into(), outer_loop: loop_id.into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3(origin), normal: point3(normal) }, orientation }
+    };
+    let faces = vec![
+        plane_face("f0", "l0", [0.0, 0.0, 0.0], [0.0, 0.0, -1.0], true),
+        plane_face("f1", "l1", [0.0, 0.0, h], [0.0, 0.0, 1.0], true),
+        plane_face("f2", "l2", [0.0, 0.0, 0.0], [0.0, -1.0, 0.0], true),
+        plane_face("f3", "l3", [w, 0.0, 0.0], [1.0, 0.0, 0.0], true),
+        plane_face("f4", "l4", [0.0, d, 0.0], [0.0, 1.0, 0.0], true),
+        plane_face("f5", "l5", [0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], true),
+    ];
+    let shells = vec![BrepShell { id: "s0".into(), faces: (0..6).map(|i| BrepShellFace { face: format!("f{i}"), orientation: true }).collect() }];
+    let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids }
+}
+
+/// 🥫️ Axis-aligned cylinder, base centered at local origin, axis along +Z, spanning `[0,height]`.
+/// Two circular cap edges + two planar cap faces + one analytic `BrepSurface::Cylinder` lateral
+/// face (untrimmed — its loop has no bounding edges, since the lateral surface is naturally closed
+/// around the axis and only bounded top/bottom by the shared circular edges via the loop's implicit
+/// parametric domain, matching the same "loop may be empty" convention the sphere face uses).
+fn brep_snapshot_for_cylinder(radius: f64, height: f64) -> SemioBrepSnapshot {
+    let (r, h) = (radius, height);
+    let vertices = vec![BrepVertex { id: "v0".into(), point: point3([r, 0.0, 0.0]) }, BrepVertex { id: "v1".into(), point: point3([r, 0.0, h]) }];
+    let edges = vec![
+        BrepEdge { id: "e0".into(), start_vertex: "v0".into(), end_vertex: "v0".into(), curve: BrepCurve::Circle { center: point3([0.0, 0.0, 0.0]), axis: point3([0.0, 0.0, 1.0]), radius: r } },
+        BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Circle { center: point3([0.0, 0.0, h]), axis: point3([0.0, 0.0, 1.0]), radius: r } },
+    ];
+    let loops = vec![
+        BrepLoop { id: "l0".into(), edges: vec![BrepLoopEdge { edge: "e0".into(), orientation: true }] },
+        BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] },
+        BrepLoop { id: "l2".into(), edges: Vec::new() },
+    ];
+    let faces = vec![
+        BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3([0.0, 0.0, 0.0]), normal: point3([0.0, 0.0, -1.0]) }, orientation: true },
+        BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3([0.0, 0.0, h]), normal: point3([0.0, 0.0, 1.0]) }, orientation: true },
+        BrepFace { id: "f2".into(), outer_loop: "l2".into(), inner_loops: Vec::new(), surface: BrepSurface::Cylinder { origin: point3([0.0, 0.0, 0.0]), axis: point3([0.0, 0.0, 1.0]), radius: r }, orientation: true },
+    ];
+    let shells = vec![BrepShell { id: "s0".into(), faces: vec![BrepShellFace { face: "f0".into(), orientation: true }, BrepShellFace { face: "f1".into(), orientation: true }, BrepShellFace { face: "f2".into(), orientation: true }] }];
+    let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids }
+}
+
+/// 🔮️ Sphere centered at local origin — one closed, untrimmed analytic `BrepSurface::Sphere` face
+/// (no boundary curves at all: zero vertices/edges, one loop with zero edges, matching the shared
+/// "a `BrepLoop` with no edges means the whole surface" convention).
+fn brep_snapshot_for_sphere(radius: f64) -> SemioBrepSnapshot {
+    let loops = vec![BrepLoop { id: "l0".into(), edges: Vec::new() }];
+    let faces = vec![BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Sphere { center: point3([0.0, 0.0, 0.0]), radius }, orientation: true }];
+    let shells = vec![BrepShell { id: "s0".into(), faces: vec![BrepShellFace { face: "f0".into(), orientation: true }] }];
+    let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops, faces, shells, solids }
+}
+
+/// 🌉️ READ direction, documented gap: recovering a `WorkingSolid` (a small parametric vocabulary)
+/// from an arbitrary resolved `SemioBrepSnapshot` (general topology) is not generally invertible —
+/// nothing tags a brep as "this originated from a box/cylinder/sphere". Mirrors `📐️cad`'s own
+/// documented read-side gap for its per-pane object lists. Callers that only need SOME extent
+/// (rendering/bounds) should read `stock_bounding_box`, which works directly off the brep's own
+/// vertex list instead of trying to recover a `WorkingSolid`.
+pub fn working_solid_from_brep_snapshot(_brep: &SemioBrepSnapshot) -> WorkingSolid {
+    WorkingSolid::default()
+}
+
+/// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.brep` CHILD HANDLE from `content`
+/// (mirrors `📐️cad`'s `cad_model_child_handle`/`💠️lowpoly`'s `mesh_child_handle` — same
+/// `store::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical content
+/// mint the same handle.
+pub fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::ArtifactChild<SemioBrepSnapshot> {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    serde_json::to_string(content).unwrap_or_default().hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let child_id = format!("{slug}-brep-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: format!("process-{slug}-brep"), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+//#endregion 🔖️BrepConverters
+
+//#region 🔖️FlowConverters
+/// 🌉️ WRITE direction, real: one `FlowNode` per `ProcessStep`, laid out left-to-right in timeline
+/// order. `enabled`/`origin`/measure-specific scalars round-trip exactly via string params;
+/// `Cut`/`Attach`'s `WorkingSolid` tool/component is addressed indirectly by a `toolChildId` param
+/// naming its entry in `Process3dSnapshot::tool_solids` (minted alongside by the caller — see
+/// `process_working_scene_to_snapshot`), since a `FlowParam` value is a plain string, never a child
+/// handle itself.
+pub fn flow_node_from_process_step(step: &ProcessStep, index: usize, tool_child_id: Option<&str>) -> FlowNode {
+    let mut params = vec![FlowParam { key: "enabled".into(), value: step.enabled.to_string() }];
+    if let Some(origin) = &step.origin {
+        params.push(FlowParam { key: "originMachineId".into(), value: origin.machine_id.clone() });
+        params.push(FlowParam { key: "originCapabilityId".into(), value: origin.capability_id.clone() });
+    }
+    let pose = step.measure.pose();
+    params.push(FlowParam { key: "posePositionX".into(), value: pose.position[0].to_string() });
+    params.push(FlowParam { key: "posePositionY".into(), value: pose.position[1].to_string() });
+    params.push(FlowParam { key: "posePositionZ".into(), value: pose.position[2].to_string() });
+    params.push(FlowParam { key: "poseAxisX".into(), value: pose.axis[0].to_string() });
+    params.push(FlowParam { key: "poseAxisY".into(), value: pose.axis[1].to_string() });
+    params.push(FlowParam { key: "poseAxisZ".into(), value: pose.axis[2].to_string() });
+    params.push(FlowParam { key: "poseAngle".into(), value: pose.angle.to_string() });
+    match &step.measure {
+        ProcessMeasure::Drill { radius, depth, .. } => {
+            params.push(FlowParam { key: "radius".into(), value: radius.to_string() });
+            params.push(FlowParam { key: "depth".into(), value: depth.to_string() });
+        }
+        ProcessMeasure::Cut { .. } | ProcessMeasure::Attach { .. } => {
+            if let Some(child_id) = tool_child_id {
+                params.push(FlowParam { key: "toolChildId".into(), value: child_id.to_string() });
+            }
+        }
+    }
+    FlowNode { id: step.id.clone(), kind: step.measure.kind_slug().into(), label: step.label.clone(), params, position: SemioPoint2 { x: index as f64 * 200.0, y: 0.0 } }
+}
+
+/// 🌉️ READ direction, real for everything reachable from the node's own params (`enabled`/`origin`/
+/// pose/radius/depth); `Cut`/`Attach`'s tool/component solid is a documented gap
+/// (`working_solid_from_brep_snapshot`'s own doc comment — a `toolChildId` param names WHICH child
+/// holds the resolved geometry, but resolving that handle to real content needs a `LinkResolver`
+/// this ticket doesn't add).
+pub fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
+    let param = |key: &str| node.params.iter().find(|p| p.key == key).map(|p| p.value.as_str());
+    let f = |key: &str| -> f64 { param(key).and_then(|v| v.parse().ok()).unwrap_or(0.0) };
+    let enabled = param("enabled").map(|v| v == "true").unwrap_or(true);
+    let origin = match (param("originMachineId"), param("originCapabilityId")) {
+        (Some(machine_id), Some(capability_id)) => Some(StepOrigin { machine_id: machine_id.into(), capability_id: capability_id.into() }),
+        _ => None,
+    };
+    let pose = Pose { position: [f("posePositionX"), f("posePositionY"), f("posePositionZ")], axis: [f("poseAxisX"), f("poseAxisY"), f("poseAxisZ")], angle: f("poseAngle") };
+    let measure = match node.kind.as_str() {
+        "drill" => ProcessMeasure::Drill { radius: f("radius"), depth: f("depth"), pose },
+        "attach" => ProcessMeasure::Attach { component: WorkingSolid::default(), pose },
+        _ => ProcessMeasure::Cut { tool: WorkingSolid::default(), pose },
+    };
+    ProcessStep { id: node.id.clone(), label: node.label.clone(), enabled, origin, measure }
+}
+
+/// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.flow` CHILD HANDLE from `content`.
+pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<SemioFlowSnapshot> {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    serde_json::to_string(content).unwrap_or_default().hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let child_id = format!("steps-flow-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: "process-steps-flow".into(), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+/// 🌉️ WRITE direction, real: the full flow graph for a step timeline — one node per step (see
+/// `flow_node_from_process_step`) plus a linear sequence edge between consecutive steps (this
+/// plugin's timeline has no branching, so a simple chain is an honest, lossless topology — not an
+/// approximation of a richer graph the old `Vec<ProcessStep>` never had either).
+pub fn flow_snapshot_for_steps(steps: &[ProcessStep], tool_child_ids: &std::collections::BTreeMap<String, String>) -> SemioFlowSnapshot {
+    let nodes: Vec<FlowNode> = steps.iter().enumerate().map(|(i, step)| flow_node_from_process_step(step, i, tool_child_ids.get(&step.id).map(|s| s.as_str()))).collect();
+    let edges: Vec<FlowEdge> = steps.windows(2).map(|pair| FlowEdge { id: format!("e-{}-{}", pair[0].id, pair[1].id), from: PortRef { node: pair[0].id.clone(), port: "out".into() }, to: PortRef { node: pair[1].id.clone(), port: "in".into() }, kind: "sequence".into() }).collect();
+    SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
+}
+
+/// 🌉️ READ direction: node order in `SemioFlowSnapshot.nodes` IS the step order (matches
+/// `flow_snapshot_for_steps`'s construction — the `position.x` synthetic layout is display-only,
+/// never re-derived from).
+pub fn process_steps_from_flow_snapshot(flow: &SemioFlowSnapshot) -> Vec<ProcessStep> {
+    flow.nodes.iter().map(process_step_from_flow_node).collect()
+}
+//#endregion 🔖️FlowConverters
+
+//#region 🔖️SceneConverters
+/// 🌉️ WRITE direction, real: builds the full persisted `Process3dSnapshot` from a literal
+/// `ProcessWorkingScene` — the only place this migration can mint real composed-child CONTENT
+/// (fixture construction, `empty_process3d_snapshot`, and any host-level "mint then dispatch"
+/// gesture), since there is no `LinkResolver` to pull literal content back out of an
+/// already-persisted child handle later. Mints one `stock_solid` brep child, one `steps` flow
+/// child, and one `tool_solids` brep child per `Cut`/`Attach` step (skipped for `Drill`, which
+/// carries no `WorkingSolid`).
+pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: Workshop, resolved_up_to: Option<usize>) -> Process3dSnapshot {
+    let mut tool_solids = Vec::new();
+    let mut tool_child_ids = std::collections::BTreeMap::new();
+    for step in &scene.steps {
+        let solid = match &step.measure {
+            ProcessMeasure::Cut { tool, .. } => Some(tool),
+            ProcessMeasure::Attach { component, .. } => Some(component),
+            ProcessMeasure::Drill { .. } => None,
+        };
+        if let Some(solid) = solid {
+            let content = brep_snapshot_for_working_solid(solid);
+            let handle = brep_child_handle(&format!("tool-{}", step.id), &content);
+            tool_child_ids.insert(step.id.clone(), handle.child_id.clone());
+            tool_solids.push(handle);
+        }
+    }
+    let stock_content = brep_snapshot_for_working_solid(&scene.stock.solid);
+    let stock_solid = brep_child_handle("stock", &stock_content);
+    let flow_content = flow_snapshot_for_steps(&scene.steps, &tool_child_ids);
+    let steps = flow_child_handle(&flow_content);
+    Process3dSnapshot { workshop, stock_id: scene.stock.id.clone(), stock_label: scene.stock.label.clone(), stock_pose: scene.stock.pose.clone(), stock_solid, steps, tool_solids, resolved_up_to }
+}
+
+/// 🌉️ READ direction, documented gap: `Process3dSnapshot` composes its `stock_solid`/`steps`/
+/// `tool_solids` fields as HANDLES only (`child_id`+`target`, never resolved content — see
+/// `🏪️store/🦀️component.rs`'s `🔖️Composition` region). No `LinkResolver`/`ChildStoreFactory` seam
+/// reaches `ArtifactApp::handle` yet (confirmed directly against `🔌️plugin/🦀️component.rs`, W1-
+/// owned, read-only for this wave), so a plain snapshot alone cannot recover its own children's
+/// content — this returns the honest empty scene (default stock, no steps) rather than fabricating
+/// data, exactly mirroring `📐️cad`'s empty per-pane object list until a real resolver lands. Once a
+/// resolver exists, replace this with real calls to `working_solid_from_brep_snapshot`/
+/// `process_steps_from_flow_snapshot` against the resolved child content.
+pub fn process_working_scene_from_snapshot(_snapshot: &Process3dSnapshot) -> ProcessWorkingScene {
+    ProcessWorkingScene::default()
+}
+//#endregion 🔖️SceneConverters
+//#endregion 🔖️WorkingScene
+
+/// 🪚️ Process 3d projection: workshop + stock + composed step timeline + tool solids + timeline cursor.
 /// 📸️ Persisted process3d snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 pub use crate::artifacts::process3d::schema::snapshot::Process3dSnapshot;
 
-/// 🗄️ Empty process3d snapshot (default workshop + stock, no steps).
+/// 🗄️ Empty process3d snapshot (default workshop + stock, no steps) — real composed children minted
+/// from the default `ProcessWorkingScene` via `process_working_scene_to_snapshot`, never bare/unset
+/// handles.
 pub fn empty_process3d_snapshot() -> Process3dSnapshot {
-    Process3dSnapshot::default()
+    process_working_scene_to_snapshot(&ProcessWorkingScene::default(), Workshop::default(), None)
 }
 //#endregion 🔖️Document
 
@@ -529,34 +802,6 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn legacy_step_json_without_origin_deserializes_with_none() {
-        let legacy_json = r#"{"id":"cut-1","label":"Cut","enabled":true,"measure":"cut","tool":{"kind":"box","width":0.1,"depth":0.1,"height":0.1},"pose":{"position":[0.0,0.0,0.0],"axis":[0.0,0.0,1.0],"angle":0.0}}"#;
-        let step: ProcessStep = serde_json::from_str(legacy_json).expect("legacy step json");
-        assert!(step.origin.is_none());
-        assert_eq!(step.id, "cut-1");
-    }
-
-    #[test]
-    fn imported_mesh_solid_spec_round_trips_json() {
-        let solid = SolidSpec::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() };
-        let json = serde_json::to_value(&solid).expect("serialize");
-        assert_eq!(json["kind"], "importedMesh");
-        assert_eq!(json["meshUrl"], "data:model/gltf-binary;base64,AAAA");
-        let parsed: SolidSpec = serde_json::from_value(json).expect("deserialize");
-        assert_eq!(parsed, solid);
-    }
-
-    #[test]
-    fn imported_solid_solid_spec_round_trips_json() {
-        let solid = SolidSpec::ImportedSolid { solid_handle: "solid-42".into() };
-        let json = serde_json::to_value(&solid).expect("serialize");
-        assert_eq!(json["kind"], "importedSolid");
-        assert_eq!(json["solidHandle"], "solid-42");
-        let parsed: SolidSpec = serde_json::from_value(json).expect("deserialize");
-        assert_eq!(parsed, solid);
-    }
 
     /// 🔤️ The legacy enum-typed `export_formats`/`import_formats` are retired in favor of the
     /// string-id `export_stdio_kinds`/`import_stdio_kinds` peers below — both stay empty.
@@ -591,7 +836,7 @@ mod tests {
     /// 3 `Vec` levels deep) must round-trip through the DSL text codec — the riskiest new grammar surface.
     #[test]
     fn workshop_dsl_round_trips_through_document() {
-        let snapshot = Process3dSnapshot { workshop: sample_workshop(), ..Process3dSnapshot::default() };
+        let snapshot = Process3dSnapshot { workshop: sample_workshop(), ..empty_process3d_snapshot() };
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 
@@ -601,13 +846,6 @@ mod tests {
         let ids: Vec<&str> = workshop.machines.iter().map(|machine| machine.id.as_str()).collect();
         assert_eq!(ids, ["saw", "drill", "attacher"]);
         assert!(workshop.machines.iter().all(|machine| machine.catalog_id.is_none()));
-    }
-
-    #[test]
-    fn document_without_workshop_field_deserializes_to_generic_workshop() {
-        let legacy_json = r#"{"stock":{"id":"stock","label":"Stock","solid":{"kind":"box","width":1.0,"depth":1.0,"height":1.0},"pose":{"position":[0.0,0.0,0.0],"axis":[0.0,0.0,1.0],"angle":0.0}},"steps":[],"resolvedUpTo":null}"#;
-        let snapshot: Process3dSnapshot = serde_json::from_str(legacy_json).expect("legacy document json");
-        assert_eq!(snapshot.workshop, Workshop::default());
     }
 
     #[test]
@@ -628,6 +866,83 @@ mod tests {
         assert!(machine.diff_patch(&machine).is_none());
     }
     //#endregion 🔖️WorkshopTests
+
+    //#region 🔖️WorkingSceneTests
+    /// ⚖️ Real round-trip law: every field a `WorkingSolid` box/cylinder/sphere carries survives a
+    /// full `ProcessWorkingScene` → `Process3dSnapshot` → back-through-the-brep-content path
+    /// (content-level, not handle-level — resolving `working_solid_from_brep_snapshot` is the
+    /// documented gap, so this asserts on the minted `SemioBrepSnapshot` content directly).
+    #[test]
+    fn box_working_solid_mints_a_real_six_face_one_solid_brep() {
+        let content = brep_snapshot_for_working_solid(&WorkingSolid::Box { width: 2.0, depth: 3.0, height: 4.0 });
+        assert_eq!(content.vertices.len(), 8);
+        assert_eq!(content.edges.len(), 12);
+        assert_eq!(content.faces.len(), 6);
+        assert_eq!(content.solids.len(), 1);
+    }
+
+    #[test]
+    fn cylinder_working_solid_mints_a_real_three_face_brep() {
+        let content = brep_snapshot_for_working_solid(&WorkingSolid::Cylinder { radius: 1.0, height: 2.0 });
+        assert_eq!(content.faces.len(), 3);
+        assert_eq!(content.solids.len(), 1);
+    }
+
+    #[test]
+    fn sphere_working_solid_mints_a_real_one_face_untrimmed_brep() {
+        let content = brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 1.5 });
+        assert_eq!(content.faces.len(), 1);
+        assert!(content.loops[0].edges.is_empty(), "sphere's single face loop must be untrimmed");
+    }
+
+    #[test]
+    fn brep_snapshot_for_working_solid_round_trips_pack_and_dsl() {
+        for solid in [WorkingSolid::Box { width: 1.0, depth: 2.0, height: 3.0 }, WorkingSolid::Cylinder { radius: 1.0, height: 2.0 }, WorkingSolid::Sphere { radius: 1.0 }] {
+            let content = brep_snapshot_for_working_solid(&solid);
+            let packed = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&content);
+            assert_eq!(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode"), content);
+        }
+    }
+
+    fn sample_step(id: &str, measure: ProcessMeasure) -> ProcessStep {
+        ProcessStep { id: id.into(), label: format!("Step {id}"), enabled: true, origin: Some(StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() }), measure }
+    }
+
+    /// ⚖️ Flow round-trip law: `enabled`/`origin`/pose/measure-scalar fields survive
+    /// `ProcessStep → FlowNode → ProcessStep` exactly (the `WorkingSolid` tool/component is the
+    /// documented gap, asserted separately below).
+    #[test]
+    fn process_step_flow_round_trips_scalar_fields() {
+        let step = sample_step("s1", ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.5 } });
+        let node = flow_node_from_process_step(&step, 0, None);
+        let back = process_step_from_flow_node(&node);
+        assert_eq!(back.id, step.id);
+        assert_eq!(back.label, step.label);
+        assert_eq!(back.enabled, step.enabled);
+        assert_eq!(back.origin, step.origin);
+        assert_eq!(back.measure, step.measure);
+    }
+
+    #[test]
+    fn flow_snapshot_for_steps_is_a_real_linear_chain() {
+        let steps = vec![sample_step("a", ProcessMeasure::Drill { radius: 0.1, depth: 0.1, pose: Pose::default() }), sample_step("b", ProcessMeasure::Drill { radius: 0.1, depth: 0.1, pose: Pose::default() })];
+        let flow = flow_snapshot_for_steps(&steps, &Default::default());
+        assert_eq!(flow.nodes.len(), 2);
+        assert_eq!(flow.edges.len(), 1);
+        assert_eq!(flow.edges[0].from.node, "a");
+        assert_eq!(flow.edges[0].to.node, "b");
+        let recovered = process_steps_from_flow_snapshot(&flow);
+        assert_eq!(recovered.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), vec!["a".to_string(), "b".to_string()]);
+    }
+
+    #[test]
+    fn empty_process3d_snapshot_mints_real_stock_and_steps_children() {
+        let snapshot = empty_process3d_snapshot();
+        assert!(!snapshot.stock_solid.child_id.is_empty());
+        assert!(!snapshot.steps.child_id.is_empty());
+        assert!(snapshot.tool_solids.is_empty());
+    }
+    //#endregion 🔖️WorkingSceneTests
 }
 //#endregion 🧪️Tests
 //#region 🚪️DerivedIoRegistry

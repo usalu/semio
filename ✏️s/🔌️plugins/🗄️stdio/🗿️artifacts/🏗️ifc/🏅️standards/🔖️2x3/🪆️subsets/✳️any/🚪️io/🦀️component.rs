@@ -1,5 +1,45 @@
 //! 🚪️ IO stdio.ifc.2x3 (2x3/✳️any) — registration flows through 🎹️composer::register /
-//! ⚙️engine::register, not per-leaf register().
+//! `engine::register` (now `schema::register`, reached through the `engine` barrel shim —
+//! ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES leaves ifc's own imperative
+//! registration alone per that ticket's explicit instruction; only physically dissolved out of
+//! `⚙️engine`), not per-leaf register().
+//!
+//! 📐️ IFC2X3 is buildingSMART Coordination View 2.0-era IFC, ISO/PAS 16739:2005 schema,
+//! physically-encoded identically to `📐️step`'s AP214 (`FILE_SCHEMA(('IFC2X3'))` in place of
+//! `FILE_SCHEMA(('AUTOMOTIVE_DESIGN'))`). Reuses `step::engine::part21`'s tokenizer/writer
+//! functions directly — PARSING-CODE reuse; what's NOT reused is `Part21Document`'s type IDENTITY
+//! as this standard's snapshot type.
+use crate::artifacts::step::engine::part21::{parse_part21, write_part21};
+use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
+
+//#region 🔖️Codec
+/// 📐️ The IFC2X3 FILE_SCHEMA name a conforming Part-21 file must declare.
+pub const IFC2X3_SCHEMA_NAME: &str = "IFC2X3";
+
+/// 📥️ Decodes IFC2X3 SPF bytes into an [`Ifc2x3Snapshot`]. Real standard-specific validation
+/// beyond generic Part-21 parsing: rejects any file whose `FILE_SCHEMA` doesn't declare
+/// `IFC2X3` (so this decoder never silently accepts an IFC4 or plain STEP AP214 file).
+pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
+    let text = std::str::from_utf8(bytes).map_err(|e| format!("ifc2x3: not valid utf-8: {e}"))?;
+    let document = parse_part21(text).map_err(|e| format!("ifc2x3 parse: {e}"))?;
+    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| {
+        v.as_list()
+            .map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME)))
+            .unwrap_or(false)
+    });
+    if !declares_ifc2x3 {
+        return Err(format!("ifc2x3: FILE_SCHEMA does not declare {IFC2X3_SCHEMA_NAME}"));
+    }
+    Ok(Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document })
+}
+
+/// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
+/// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
+pub fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
+    Ok(write_part21(&snapshot.document).into_bytes())
+}
+//#endregion 🔖️Codec
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
@@ -43,3 +83,201 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::ifc::standards::v2x3::engine::{demo_ifc2x3_snapshot, empty_ifc2x3_snapshot};
+
+    const IFC2X3_FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.ifc','2026-08-11T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('IFC2X3'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('0YvctVUKr0kugbFTf53O9L',$,'Project',$,$,$,$,(#20),#30);\n#20=IFCUNITASSIGNMENT((#21));\n#21=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);\n#30=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#31,$);\n#31=IFCAXIS2PLACEMENT3D(#32,$,$);\n#32=IFCCARTESIANPOINT((0.,0.,0.));\n#40=IFCBUILDING('0YvctVUKr0kugbFTf53O9M',$,'Building',$,$,#41,$,$,.ELEMENT.,$,$,$);\n#41=IFCLOCALPLACEMENT($,#31);\nENDSEC;\nEND-ISO-10303-21;\n";
+
+    #[test]
+    fn decode_rejects_non_ifc2x3_schema() {
+        let step_ap214 = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
+        assert!(decode_ifc2x3(step_ap214.as_bytes()).is_err(), "must reject a non-IFC2X3 FILE_SCHEMA");
+        let ifc4 = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
+        assert!(decode_ifc2x3(ifc4.as_bytes()).is_err(), "must reject IFC4 too -- 2x3 is a distinct standard, not a superset reader");
+    }
+
+    /// 🧪️ THE genuine decode→encode→decode round-trip law this ticket's own policy requires
+    /// (`POLICY_ROUND_TRIP_TEST_ALLOWLIST` is shrink-only for new standards).
+    #[test]
+    fn decode_encode_decode_round_trip_is_lossless() {
+        let once = decode_ifc2x3(IFC2X3_FIXTURE.as_bytes()).expect("decode fixture");
+        // 🩹 8 distinct instance ids in IFC2X3_FIXTURE: #1, #20, #21, #30, #31, #32, #40, #41.
+        assert_eq!(once.document.instances.len(), 8);
+        assert!(once.document.by_type("IFCPROJECT").next().is_some());
+        let bytes = encode_ifc2x3(&once).expect("encode");
+        let twice = decode_ifc2x3(&bytes).expect("decode re-encoded bytes");
+        assert_eq!(once, twice, "decode -> encode -> decode must be lossless at the snapshot level");
+    }
+
+    #[test]
+    fn empty_snapshot_matches_schema() {
+        let snapshot = empty_ifc2x3_snapshot();
+        assert_eq!(snapshot.schema, STDIO_IFC2X3_DOCUMENT_SCHEMA);
+    }
+
+    #[test]
+    fn codec_round_trip_through_store_traits() {
+        let snap = decode_ifc2x3(IFC2X3_FIXTURE.as_bytes()).expect("decode");
+        let text = store::ArtifactDsl::print_dsl(&snap);
+        let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse_dsl");
+        assert_eq!(parsed, snap);
+        let packed = store::ArtifactPack::encode_pack(&snap);
+        let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode_pack");
+        assert_eq!(decoded, snap);
+    }
+
+    //#region 🔖️ConformanceLaws
+    /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: per-artifact
+    /// conformance laws — grammar/protocol parseability, `Recognizer` against real fixtures AND real
+    /// `print_op`/`print_diff` output, `walk_protocol` against real `encode_pack`/`encode_op`/
+    /// `encode_diff` bytes, and the fixture-honesty round-trip. Dissolved out of `⚙️engine`'s own
+    /// test region (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — same shape as
+    /// `4`'s own `conformance_laws` module and every P1-P3 pilot's own.
+    mod conformance_laws {
+        use super::*;
+        use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{diff, mutations, snapshot};
+        use protocol::{DiffCodec, OpBinary, OpText};
+
+        /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+        /// parse under the real dialect.
+        #[test]
+        fn committed_facet_files_parse() {
+            for (label, text) in [
+                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
+            ] {
+                let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+                assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            }
+            for (label, text) in [
+                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
+            ] {
+                dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            }
+        }
+
+        /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output for
+        /// the demo snapshot AND the empty-instances case, preamble-stripped-and-reconstructed the
+        /// same way `m5_handcrafted_grammar_conformance` itself does.
+        #[test]
+        fn grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            let text = store::ArtifactDsl::print_dsl(&demo_ifc2x3_snapshot());
+            let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+            let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+            assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+
+            // 🔬️ Also the empty-instances case (`empty_ifc2x3_snapshot()`), exercising `instance*`'s
+            // zero-width match and the empty-value-list optional group.
+            let empty_text = store::ArtifactDsl::print_dsl(&empty_ifc2x3_snapshot());
+            let (empty_envelope, empty_body) = store::semio_format::split_text_preamble(&empty_text).expect("split preamble");
+            let empty_reconstructed = format!("{}\n{empty_body}", empty_envelope.envelope_id());
+            assert!(recognizer.recognize(&empty_reconstructed).expect("recognize"), "grammar did not recognize empty dsl body:\n{empty_reconstructed}");
+        }
+
+        /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
+        /// for every `Ifc2x3Mutation` demo case.
+        #[test]
+        fn ops_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for mutation in mutations::demo_mutation_cases() {
+                let printed = mutation.print_op();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+            }
+        }
+
+        /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
+        /// for every representative `Ifc2x3Diff` demo case.
+        #[test]
+        fn diff_grammar_conformance_law() {
+            let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let recognizer = dsl::Recognizer::compile(&grammar);
+            for d in diff::demo_diff_cases() {
+                let printed = d.print_diff();
+                assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+            }
+        }
+
+        /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+        /// snapshot pack (envelope-unwrapped first), every demo mutation's `encode_op`, every demo
+        /// diff's `encode_diff` — asserting `consumed == bytes.len()`.
+        #[test]
+        fn protocol_walk_law() {
+            let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let packed = store::ArtifactPack::encode_pack(&demo_ifc2x3_snapshot());
+            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            for mutation in mutations::demo_mutation_cases() {
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+            }
+
+            let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            for d in diff::demo_diff_cases() {
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+                assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+            }
+        }
+
+        /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+        /// `print_dsl`/`encode_pack` output of `demo_ifc2x3_snapshot()`.
+        #[test]
+        fn fixture_honesty_law() {
+            const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+
+            let demo = demo_ifc2x3_snapshot();
+
+            let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_ifc2x3_snapshot()");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_ifc2x3_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+            let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_ifc2x3_snapshot()");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ifc2x3_snapshot()) drifted from the shipped .pack.semio fixture");
+        }
+    }
+    //#endregion 🔖️ConformanceLaws
+}
+//#endregion 🧪️Tests
+
+//#region 🚪️DerivedIoRegistry
+/// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Composer as Ifc2x3RawAnyComposer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20Composer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::Ifc2x3SavComposer;
+    use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::Ifc2x3CobieComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<Ifc2x3RawAnyComposer>(),
+                    composer_entry_of::<Ifc2x3Cv20Composer>(),
+                    composer_entry_of::<Ifc2x3SavComposer>(),
+                    composer_entry_of::<Ifc2x3CobieComposer>(),
+                ]
+            })
+            .as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

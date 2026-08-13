@@ -1,6 +1,6 @@
 //! 🧬️ BinaryArtifact schema — full artifact state.
 
-use crate::artifacts::binary::{BinarySnapshot};
+use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -49,6 +49,26 @@ impl BinaryArtifact {
     }
 }
 //#endregion 🔖️Conversions
+
+//#region 🔖️DocumentHelpers
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
+/// MACHINES) — mirrors `png`'s own `empty_png_snapshot`/`demo_png_snapshot` placement beside the
+/// artifact struct (binary has no format codec of its own to sit beside — the hex `ArtifactDsl`/
+/// `ArtifactPack` impls already live in `📸️snapshot/🦀️component.rs`, untouched by this move).
+/// 🌱 Empty persisted snapshot.
+pub fn empty_binary_snapshot() -> BinarySnapshot {
+    BinarySnapshot::default()
+}
+
+/// 📄️ The demo `stdio.binary` document -- `bytes = b"hello"`, matching the companion real-format
+/// fixture asset (`📚️examples/🎬️demo/🖼️assets/🎒️example.bin`, which is literally the raw bytes
+/// `hello`). The single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/
+/// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
+/// asserted equal by `fixture_honesty_law` in `💡️inferences/🦀️component.rs`).
+pub fn demo_binary_snapshot() -> BinarySnapshot {
+    BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: b"hello".to_vec() }
+}
+//#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.binary`.

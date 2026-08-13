@@ -23,8 +23,9 @@ use crate::apps::writer::modes::edit::windows::main;
 use crate::apps::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::apps::writer::terminology::writer_play_labels;
 use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::{WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use crate::artifacts::writer::{writer_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use semio_framework::kernel::HostEffect;
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, ArtifactApp, ArtifactView, Emit, Fault, Label,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, WindowMeasure,
 };
@@ -98,7 +99,21 @@ pub struct WriterChapterPayload {
 
 /// 🎞️ Projects a `WriterSnapshot` onto the `"text:out"` chapter payload shape.
 pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload {
-    WriterChapterPayload { id: document.id.clone(), title: document.id.clone(), text: document.text.clone(), language_id: document.language_id.clone() }
+    WriterChapterPayload { id: document.id.clone(), title: document.id.clone(), text: writer_text(document), language_id: document.language_id.clone() }
+}
+
+/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
+/// the sanctioned non-mutation path for a whole-document replace (open file, load example, dev JSON
+/// setters). Per the SMO-agreed mutation taxonomy, whole-document replace has NO mutation-enum
+/// representative (`SetSnapshot` is banned outright); every former "replace the whole document"
+/// gesture builds this effect instead of an `Emit::mutations([...])` — mirrors `📐️cad`'s identical
+/// `reset_document_effect` (`📓️wave3-reports/cad-report.md`). The spr is a fresh, edit-free op-log
+/// for `scene`'s own `schema`/`id` — a genesis envelope with no history to encode.
+pub fn reset_document_effect(scene: &WriterSnapshot) -> HostEffect {
+    let pack = <WriterSnapshot as store::ArtifactPack>::encode_pack(scene);
+    let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&scene.schema, &scene.id, scene.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("writer document spr encode is infallible for a fresh, edit-free envelope");
+    HostEffect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Io
 
@@ -212,11 +227,12 @@ pub fn editor_hover_context(document: &WriterSnapshot, config: &WriterConfig) ->
     if document.language_id != "jack" {
         return (None, None, Vec::new());
     }
-    let root = parse_jack_ast(&document.text);
+    let text = writer_text(document);
+    let root = parse_jack_ast(&text);
     let tree_span = config.tree_hovered_ast_id.as_ref().and_then(|id| jack_ast_node_by_id(&root, id)).map(|node| (node.start, node.end));
     let editor_hovered_ast_id = config.editor_hover_offset.and_then(|offset| find_deepest_jack_ast_node_at(&root, offset)).map(|node| node.id.clone());
     let highlighted = config.tree_hovered_ast_id.clone().or(editor_hovered_ast_id);
-    let hover_occurrences = config.editor_hover_offset.and_then(|offset| jack_symbol_at_offset(&document.text, offset)).filter(|symbol| symbol.kind == JackSymbolKind::Variable).map(|symbol| symbol.occurrences).unwrap_or_default();
+    let hover_occurrences = config.editor_hover_offset.and_then(|offset| jack_symbol_at_offset(&text, offset)).filter(|symbol| symbol.kind == JackSymbolKind::Variable).map(|symbol| symbol.occurrences).unwrap_or_default();
     (highlighted, tree_span, hover_occurrences)
 }
 //#endregion 🔖️DocumentHelpers
@@ -345,9 +361,12 @@ impl ArtifactApp for WriterPlayApp {
         Some(writer_io())
     }
 
-    fn whole_document_operation(snapshot: WriterSnapshot) -> Option<WriterMutation> {
-        Some(WriterMutation::SetSnapshot { snapshot })
-    }
+    // 🌱️ No `whole_document_operation` override: per the SMO-agreed mutation taxonomy
+    // (`📌️important.md`'s "Forbidden vocabulary"), whole-document replace has NO mutation-enum
+    // representative — `SetSnapshot` is banned outright — so this falls back to the trait's own
+    // default (`None`), matching `📐️cad`/`💠️lowpoly`'s identical ruling. Every former "replace the
+    // whole document" gesture (`setSnapshot`/`openDocument`/JSON setters/`setActiveExample`) now
+    // builds `reset_document_effect` (a `HostEffect::LoadDocument`, outside undo history) instead.
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
@@ -529,9 +548,18 @@ pub(crate) mod testkit {
     }
 
     /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
+    /// 🌱️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
+    /// see `reset_document_effect`'s doc comment), so `setActiveExample` no longer lands via
+    /// `dispatch_typed` alone; this loads the same document pack a real host would apply from that
+    /// command's `HostEffect::LoadDocument`, via `PluginApp::load_document_pack` directly — the same
+    /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
     pub fn app_with_jack() -> WriterApp {
         let mut app = new_app();
-        app.dispatch_typed(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }), &meta("local")).expect("load jack");
+        let document = crate::artifacts::writer::dsl::jack_example_document();
+        let (schema, id) = (document.schema.clone(), document.id.clone());
+        let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
+        let files = store::print_document_pack(&envelope).expect("print jack document pack");
+        app.load_document_pack(&files).expect("load jack");
         app
     }
 
@@ -601,7 +629,7 @@ mod tests {
         let expectations: Vec<(&str, WriterCommand)> = vec![
             ("text-edit", WriterCommand::TextEdit(text_edit::TextEdit { text: "x".into() })),
             ("set-text", WriterCommand::SetText(set_text::SetText { text: "x".into() })),
-            ("set-snapshot", WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: jack_snapshot() })),
+            ("set-snapshot", WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "{}".into() })),
             ("open-document", WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: "x".into() })),
             ("document-json", WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() })),
             ("fixture-json", WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() })),
@@ -633,7 +661,7 @@ mod tests {
 
     /// ✍️ Hand-built representative document — used across the app's own command-surface tests.
     fn jack_snapshot() -> WriterSnapshot {
-        WriterSnapshot { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
+        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
@@ -641,7 +669,7 @@ mod tests {
         vec![
             WriterCommand::TextEdit(text_edit::TextEdit { text: "hello".into() }),
             WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() }),
-            WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: jack_snapshot() }),
+            WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "{}".into() }),
             WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: String::new() }),
             WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() }),
             WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
@@ -731,7 +759,7 @@ mod tests {
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "text.document");
         let payload: WriterChapterPayload = serde_json::from_str(&json).expect("decode chapter payload");
-        assert_eq!(payload.text, document.text);
+        assert_eq!(payload.text, writer_text(&document));
         assert_eq!(payload.language_id, document.language_id);
     }
 
@@ -792,12 +820,14 @@ mod tests {
         assert!(render(&mut app, "writer.play.nope").contains("Unknown body"));
     }
 
+    /// 🌱️ `SetSnapshot` is banned outright (see `whole_document_operation`'s doc comment) — the
+    /// trait default correctly returns `None`; whole-document replace goes through
+    /// `reset_document_effect` instead, exercised by `📚️examples/🎬️demo-session`'s own command
+    /// tests and by `commands::text`'s `set_active_example`/`open_document` tests.
     #[test]
-    fn whole_document_operation_replaces_the_snapshot() {
-        let app = WriterPlayApp;
+    fn whole_document_operation_stays_the_trait_default_none() {
         let replacement = jack_snapshot();
-        let operation = WriterPlayApp::whole_document_operation(replacement.clone()).expect("whole document operation");
-        assert_eq!(operation, WriterMutation::SetSnapshot { snapshot: replacement });
+        assert_eq!(WriterPlayApp::whole_document_operation(replacement), None);
     }
 
     #[test]

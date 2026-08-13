@@ -127,11 +127,11 @@ impl store::ArtifactDsl for XlsxSnapshot {
                 store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1))
             })?);
         }
-        crate::artifacts::xlsx::engine::decode_xlsx(&bytes)
+        crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx(&bytes)
             .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::xlsx::engine::encode_xlsx(self).unwrap_or_default();
+        let bytes = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -145,7 +145,7 @@ impl store::ArtifactDsl for XlsxSnapshot {
 impl store::ArtifactPack for XlsxSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::xlsx::engine::encode_xlsx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -160,7 +160,7 @@ impl store::ArtifactPack for XlsxSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::xlsx::engine::decode_xlsx(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

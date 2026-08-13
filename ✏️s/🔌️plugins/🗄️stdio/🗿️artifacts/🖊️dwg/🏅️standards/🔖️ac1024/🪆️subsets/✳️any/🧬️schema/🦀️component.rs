@@ -238,3 +238,45 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: DwgComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
+/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
+/// `crate::artifacts::dwg::standards::v_ac1024::engine::empty_dwg_snapshot` through the `engine`
+/// barrel shim, and (via the root `crate::artifacts::dwg::engine` shim, ac1024-only) as
+/// `crate::artifacts::dwg::engine::empty_dwg_snapshot` too.
+pub fn empty_dwg_snapshot() -> DwgSnapshot {
+    DwgSnapshot::default()
+}
+
+/// 📄️ The demo `stdio.dwg` (ac1024, the CANONICAL standard per S-6/Decision #5) document —
+/// decodes the real, committed 22-byte AC1024 stub (`📚️examples/🎬️demo/🖼️assets/🖊️example.dwg`)
+/// via this standard's own real `decode_dwg`. The single source of truth for
+/// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally
+/// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
+/// `conformance_laws::fixture_honesty_law`, now in `../🚪️io/🦀️component.rs`).
+pub fn demo_dwg_snapshot() -> DwgSnapshot {
+    let stub = b"AC1024\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+    crate::artifacts::dwg::schema::snapshot::decode_dwg(stub).expect("decode ac1024 demo stub")
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🔖️RegisterSchemaSpecs
+/// 📇️ `DwgSnapshot`/`DwgDiff` (ac1024) both derive real `dsl::DslRecord`/`dsl::DslDiff` —
+/// genuinely callable, same 2-call shape as `stdio.binary`/`stdio.txt`'s own
+/// `register_schema_specs`. Per-mutation-variant specs are NOT registered here — no single
+/// canonical id exists for a `Mutation` enum's N independently-shaped variants (same documented
+/// scope boundary every other pilot's own `register_schema_specs` observes). Dissolved out of
+/// `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — one of the ten
+/// deliberate imperative `engine::register()`-family calls left in place at the stdio plugin
+/// root's own `.setup(crate::artifacts::dwg::engine::register_schema_specs)`, reached through the
+/// root `engine` shim (ac1024-only) and this standard's own `engine` barrel shim.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register_schema_specs() {
+    dsl::registry::register_schema_spec("stdio.dwg", crate::artifacts::dwg::schema::snapshot::DwgSnapshot::__dsl_spec);
+    dsl::registry::register_schema_spec("stdio.dwg#diff", crate::artifacts::dwg::schema::diff::DwgDiff::__dsl_diff_spec);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_schema_specs() {}
+//#endregion 🔖️RegisterSchemaSpecs

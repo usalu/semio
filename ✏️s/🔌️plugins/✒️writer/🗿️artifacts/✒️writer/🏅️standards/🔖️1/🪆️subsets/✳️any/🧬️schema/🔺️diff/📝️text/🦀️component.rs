@@ -1,10 +1,8 @@
 //! 🔺️ Writer artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::writer::schema::diff::{
-    WriterDiff, WriterStringList, WriterTextDelta, WriterTextRangeEdit,
-};
+use crate::artifacts::writer::schema::diff::WriterDiff;
 use crate::artifacts::writer::schema::WriterArtifact;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::artifacts::writer::{document_child_handle_and_cache, WriterSnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -14,36 +12,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 pub use crate::artifacts::writer::schema::diff::*;
-
-//#region 🔖️TextApply
-fn apply_text_delta(base: &str, delta: &WriterTextDelta) -> String {
-    if let Some(replacement) = &delta.replacement {
-        return replacement.clone();
-    }
-    let mut text = base.to_string();
-    for edit in &delta.edits {
-        let start = edit.start as usize;
-        let end = edit.end as usize;
-        let safe_start = start.min(text.len());
-        let safe_end = end.min(text.len()).max(safe_start);
-        let mut next = String::new();
-        next.push_str(&text[..safe_start]);
-        next.push_str(&edit.insert);
-        next.push_str(&text[safe_end..]);
-        text = next;
-    }
-    text
-}
-
-fn absorb_text_delta(dst: &mut WriterTextDelta, src: WriterTextDelta) {
-    if src.replacement.is_some() {
-        dst.replacement = src.replacement;
-        dst.edits.clear();
-        return;
-    }
-    dst.edits.extend(src.edits);
-}
-//#endregion 🔖️TextApply
 
 //#region 🔖️Apply
 impl WriterDiff {
@@ -65,8 +33,8 @@ impl WriterDiff {
         if let Some(uri) = &self.uri {
             next.uri = uri.clone();
         }
-        if let Some(text) = &self.text {
-            next.text = apply_text_delta(&next.text, text);
+        if let Some(document) = &self.document {
+            next.document = document.clone();
         }
         if let Some(list) = &self.selected_ast_ids {
             next.selected_ast_ids = list.values.clone();
@@ -129,8 +97,8 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
         if let Some(uri) = &self.uri {
             next.uri = uri.clone();
         }
-        if let Some(text) = &self.text {
-            next.text = apply_text_delta(&next.text, text);
+        if let Some(document) = &self.document {
+            next.document = document.clone();
         }
         next
     }
@@ -152,11 +120,8 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
         if other.uri.is_some() {
             self.uri = other.uri;
         }
-        if let Some(text) = other.text {
-            match &mut self.text {
-                Some(dst) => absorb_text_delta(dst, text),
-                None => self.text = Some(text),
-            }
+        if other.document.is_some() {
+            self.document = other.document;
         }
         if other.selected_ast_ids.is_some() {
             self.selected_ast_ids = other.selected_ast_ids;
@@ -209,28 +174,12 @@ pub fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
     }
 }
 
-pub fn diff_set_text(text: &str) -> WriterDiff {
-    WriterDiff {
-        text: Some(WriterTextDelta {
-            replacement: Some(text.to_string()),
-            edits: Vec::new(),
-        }),
-        ..Default::default()
-    }
-}
-
-pub fn diff_text_range_edit(start: u32, end: u32, insert: &str) -> WriterDiff {
-    WriterDiff {
-        text: Some(WriterTextDelta {
-            replacement: None,
-            edits: vec![WriterTextRangeEdit {
-                start,
-                end,
-                insert: insert.to_string(),
-            }],
-        }),
-        ..Default::default()
-    }
+/// 🔺️ Mints a new content-addressed `document` handle for the whole-body replacement `text` and
+/// seeds the working-scene cache with it (`document_child_handle_and_cache`) — real handcrafted
+/// construction, never apply-then-capture. `id`/`language_id` come from `base` since the handle's
+/// target/content both need them.
+pub fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
+    WriterDiff { document: Some(document_child_handle_and_cache(id, text, language_id)), ..Default::default() }
 }
 //#endregion 🔖️Builders
 
@@ -268,19 +217,19 @@ mod tests {
     use protocol::DiffCodec;
 
     fn jack_snapshot() -> WriterSnapshot {
-        WriterSnapshot {
-            schema: "writer.document".into(),
-            id: "jack".into(),
-            language_id: "jack".into(),
-            uri: "writer://jack".into(),
-            text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
-        }
+        crate::artifacts::writer::writer_snapshot_with_text(
+            "writer.document",
+            "jack",
+            "jack",
+            "writer://jack",
+            "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
+        )
     }
 
     #[test]
     fn writer_diff_print_parse_round_trips() {
         let diffs = vec![
-            diff_set_text("hello"),
+            diff_set_text("hello", "jack", "jack"),
             diff_set_snapshot(&jack_snapshot()),
             WriterDiff::default(),
         ];
@@ -295,7 +244,7 @@ mod tests {
     #[test]
     fn writer_diff_encode_decode_round_trips_and_matches_text() {
         let diffs = vec![
-            diff_set_text("hello"),
+            diff_set_text("hello", "jack", "jack"),
             diff_set_snapshot(&jack_snapshot()),
             WriterDiff::default(),
         ];
@@ -306,15 +255,15 @@ mod tests {
         }
     }
 
+    /// 🔺️ `diff_set_text` mints a real content-addressed `document` handle and seeds the working-
+    /// scene cache, honestly replacing the retired byte-range-edit law (composed-child handles are
+    /// whole-value replacements, not sub-string patches — see this file's `🔖️Builders` doc comment).
     #[test]
-    fn text_range_edit_honestly_patches_substring() {
-        let base = WriterSnapshot {
-            text: "hello".into(),
-            ..WriterSnapshot::default()
-        };
-        let diff = diff_text_range_edit(1, 4, "i");
+    fn diff_set_text_mints_a_document_handle_and_caches_its_text() {
+        let base = WriterSnapshot::default();
+        let diff = diff_set_text("hio", "jack", "plaintext");
         let next = diff.apply(&base);
-        assert_eq!(next.text, "hio");
+        assert_eq!(crate::artifacts::writer::writer_text(&next), "hio");
     }
 }
 //#endregion 🧪️Tests

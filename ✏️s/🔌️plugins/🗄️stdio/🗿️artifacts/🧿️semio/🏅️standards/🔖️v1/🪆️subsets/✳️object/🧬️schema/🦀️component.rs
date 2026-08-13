@@ -1,7 +1,7 @@
 //! 🧬️ SemioObjectArtifact schema — full artifact state, mirrors `SemioObjectSnapshot` field for
 //! field (see `✳️text`'s `SemioTextArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
@@ -88,7 +88,7 @@ pub fn semio_object_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
     use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
@@ -145,7 +145,7 @@ pub mod derived_construction {
         #[test]
         fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioObjectBuilderConstruction::new()
-                .with_transform(SemioTransform { translation: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() })
+                .with_transform(SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() })
                 .with_brep("b1", store::os_io::ArtifactRef { artifact_id: "brep-a".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } })
                 .build()
                 .expect("build");

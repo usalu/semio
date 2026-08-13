@@ -222,3 +222,50 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: GifComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+// 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+// `empty_gif_snapshot`/`demo_gif_snapshot` relocated here verbatim (pure helpers over the
+// document type, destination rule 5); `GifEngine` (zero construction sites) deleted outright;
+// the real byte-level LZW/sub-block/color-table/quantize/interlace codec (`pub`, reused verbatim
+// by 89a's own engine) + `encode_gif`/`decode_gif` + `sniff_magic` + the protected `register()`
+// cluster (`crate::artifacts::gif::engine::register()` is one of stdio's 10 deliberate imperative
+// plugin-root calls — untouched, reached via this standard's own inline `engine` barrel) +
+// `io_registry` all moved to `../🚪️io`; tests moved beside what they now test.
+pub fn empty_gif_snapshot() -> GifSnapshot { GifSnapshot::default() }
+
+/// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` — a real GCT plus two real images (one
+/// with its own LCT, exercising every field a genuine encode/decode round-trip touches) — used
+/// by `conformance_laws` (in `../🚪️io`'s own tests) and by the shipped `.dsl.semio`/
+/// `.pack.semio` fixtures (`../📚️examples/🎬️demo/🖼️assets/`), matching png's own
+/// `demo_png_snapshot()` precedent.
+pub fn demo_gif_snapshot() -> GifSnapshot {
+    use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
+    let gct = GifColorTable { sorted: false, colors: vec![
+        GifRgb { r: 0, g: 0, b: 0 }, GifRgb { r: 255, g: 255, b: 255 },
+    ] };
+    let image_a = GifImage {
+        left: 0, top: 0, width: 2, height: 2,
+        interlace: false,
+        lct: None,
+        indices: vec![0, 1, 1, 0],
+    };
+    let image_b = GifImage {
+        left: 0, top: 0, width: 2, height: 2,
+        interlace: false,
+        lct: Some(GifColorTable { sorted: true, colors: vec![
+            GifRgb { r: 10, g: 20, b: 30 }, GifRgb { r: 200, g: 100, b: 50 },
+        ] }),
+        indices: vec![1, 0, 0, 1],
+    };
+    GifSnapshot {
+        schema: crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA.into(),
+        width: 2,
+        height: 2,
+        gct: Some(gct),
+        background_color_index: 0,
+        pixel_aspect_ratio: 0,
+        images: vec![image_a, image_b],
+    }
+}
+//#endregion 🔖️DocumentHelpers

@@ -24,7 +24,7 @@
 
 use crate::artifacts::ifc::IfcSnapshot;
 use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioQuaternion, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioQuaternion, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, SemioModelSnapshot, SpatialKind};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::HashMap;
@@ -371,7 +371,7 @@ mod tests {
                     kind: SpatialKind::Storey,
                     name: "Ground Floor".into(),
                     parent_id: Some("site-1".into()),
-                    placement: SemioTransform { translation: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 0.0, y: 0.0, z: 3.0 }, rotation: SemioQuaternion::default(), scale: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
+                    placement: SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 0.0, y: 0.0, z: 3.0 }, rotation: SemioQuaternion::default(), scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
                 },
             ],
             elements: vec![SemioModelElement {
@@ -435,7 +435,7 @@ mod tests {
                 kind: SpatialKind::Site,
                 name: "Rotated Site".into(),
                 parent_id: None,
-                placement: SemioTransform { translation: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 5.0, y: -2.0, z: 0.0 }, rotation, scale: crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
+                placement: SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 5.0, y: -2.0, z: 0.0 }, rotation, scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
             }],
             elements: vec![],
             relations: vec![],

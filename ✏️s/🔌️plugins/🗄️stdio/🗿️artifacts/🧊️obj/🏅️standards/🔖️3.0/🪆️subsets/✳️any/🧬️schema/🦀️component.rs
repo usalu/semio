@@ -328,3 +328,66 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: ObjComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+/// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
+/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
+/// `crate::artifacts::obj::engine::empty_obj_snapshot` through the `engine` barrel shim.
+pub fn empty_obj_snapshot() -> ObjSnapshot {
+    ObjSnapshot::default()
+}
+
+/// 📄️ Raw demo Wavefront OBJ text — a two-triangle quad split across two named groups/materials,
+/// matching `📚️examples/🎬️demo/🖼️assets/🧊️example.obj` verbatim (this module's own single source
+/// of truth for the demo fixture — exercises every statement kind: `mtllib`, `v`/`vt`/`vn`
+/// (incl. `w`-omitted forms), `f` (`v/vt/vn` triangles), `o`, `g`, `usemtl`, `s` (both numeric and
+/// `off`), a `#` comment, and one genuinely-unrecognized keyword line retained via
+/// `unknown_statements`).
+const DEMO_OBJ_TEXT: &str = "# stdio.obj demo -- a two-triangle quad split across two named groups/materials\n\
+mtllib demo.mtl\n\
+v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\n\
+vt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\n\
+vn 0 0 1\n\
+o Quad\ng Front\nusemtl Red\ns 1\n\
+f 1/1/1 2/2/1 3/3/1\n\
+f 1/1/1 3/3/1 4/4/1\n\
+g Back\nusemtl Blue\ns off\n\
+f 3/3/1 2/2/1 1/1/1\n\
+# trailing note retained verbatim\n\
+weird_directive foo bar\n";
+
+/// 📄️ The `demo` example snapshot, parsed once from [`DEMO_OBJ_TEXT`] and stabilized to the
+/// SECOND-generation decode/encode fixed point this module's own doc comment documents
+/// (`unknown_statements[].line_index` renumbers into the trailer on the first re-encode) — so
+/// `print_dsl(demo_obj_snapshot())` is genuinely stable, matching `🗣️example.dsl.semio`'s own
+/// `fixture_honesty_law` requirement exactly. Same pattern `stdio.txt`'s own
+/// `demo_txt_snapshot()`/`stdio.csv`'s own `demo_csv_snapshot()` establish.
+pub fn demo_obj_snapshot() -> ObjSnapshot {
+    let gen1 = crate::artifacts::obj::engine::decode_obj(DEMO_OBJ_TEXT).unwrap_or_else(|_| empty_obj_snapshot());
+    let gen2_text = crate::artifacts::obj::engine::encode_obj(&gen1);
+    crate::artifacts::obj::engine::decode_obj(&gen2_text).unwrap_or(gen1)
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🔖️RegisterSchemaSpecs
+/// 📇️ P2-FG1: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) — a
+/// real, non-fabricated call: `ObjSnapshot` genuinely derives `#[derive(dsl::DslRecord)]`
+/// (`📸️snapshot/🦀️component.rs`), so `__dsl_spec` is a real generated constructor. `ObjDiff` is
+/// hand-rolled (§3b tri-state blocker — `Option<Option<T>>` fields — see `🔺️diff/🦀️component.rs`'s
+/// own module doc comment), NOT `#[derive(dsl::DslDiff)]`, so it has no `__dsl_diff_spec` to
+/// register under `"stdio.obj#diff"` — filed as a `mechanism_gaps` entry rather than fabricating a
+/// `RecordSpec` that would diverge from the real hand-rolled diff codec (same treatment
+/// gif89a/svg's own hand-rolled diffs get). `#[cfg]`-gated to match `os_dsl::registry`'s own
+/// `#[cfg(not(target_arch = "wasm32"))]`. Dissolved out of `⚙️engine` (ticket 26/08/12/
+/// ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — one of the ten deliberate imperative
+/// `engine::register()`-family calls left in place at the stdio plugin root's own
+/// `.setup(crate::artifacts::obj::engine::register_schema_specs)`, reached through the `engine`
+/// barrel shim.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register_schema_specs() {
+    dsl::registry::register_schema_spec("stdio.obj", ObjSnapshot::__dsl_spec);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_schema_specs() {}
+//#endregion 🔖️RegisterSchemaSpecs

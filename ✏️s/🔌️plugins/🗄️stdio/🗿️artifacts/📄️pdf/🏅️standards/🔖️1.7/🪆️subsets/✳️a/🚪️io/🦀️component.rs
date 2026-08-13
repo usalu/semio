@@ -84,11 +84,13 @@ pub mod derived_composition {
     }
 
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
-    /// validate-on-build hook). Called from the 1.7 standard's own `⚙️engine::register()`, which is
-    /// already invoked directly from the stdio plugin's `plugin()` -- see that file. The
-    /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::pdf::standards::v1_7::engine::io_registry::entries()`), matching how `✳️any`'s own
-    /// entry is registered.
+    /// validate-on-build hook). Reached via `crate::artifacts::pdf::declaration()`'s
+    /// `.subset_validators(...)` field (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) --
+    /// the former side-effecting `⚙️engine::register()` call chain is dissolved (ticket
+    /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES). The `ComposerEntry` itself is
+    /// registered separately by the standard-level composer aggregator
+    /// (`crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries()`),
+    /// matching how `✳️any`'s own entry is registered.
     pub fn register() {
         register_subset_validator(validator_entry());
     }

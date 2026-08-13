@@ -335,8 +335,9 @@ impl ArtifactApp for LowpolyPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
+                let mesh_workspace = LOWPOLY_SCRATCH.with(|scratch| scratch.borrow().mesh_workspace_map());
                 let document_json = serde_json::to_value(doc.snapshot).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                let mesh = crate::apps::lowpoly::engine::lowpoly_mesh_from_document(&document_json).map_err(|error| MediaError::Payload(port.into(), error))?;
+                let mesh = crate::apps::lowpoly::engine::lowpoly_mesh_from_document(&document_json, &mesh_workspace).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let json = serde_json::to_string(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
@@ -399,7 +400,9 @@ impl ArtifactApp for LowpolyPlayApp {
         });
         let render_projection = scratch_projection.as_ref().unwrap_or(projection);
         let view = LowpolyView { snapshot: render_projection, config };
-        let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT).then(|| crate::apps::lowpoly::view::build_doc(projection, config)).flatten();
+        let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT)
+            .then(|| LOWPOLY_SCRATCH.with(|scratch| crate::apps::lowpoly::view::build_doc(projection, config, &scratch.borrow())))
+            .flatten();
         match body_key {
             LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache),
             LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache),

@@ -65,7 +65,7 @@ pub enum GifMutation {
 /// `Option<T>`-of-struct-block field (`SetGlobalColorTable::gct`) — mirrors png's own
 /// `demo_mutation_cases()`.
 pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
-    let base = crate::artifacts::gif::standards::v87a::engine::demo_gif_snapshot();
+    let base = crate::artifacts::gif::standards::v87a::subsets::any::schema::demo_gif_snapshot();
     let sample_image = GifImage {
         left: 0, top: 0, width: 2, height: 2,
         interlace: false,

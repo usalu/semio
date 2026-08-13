@@ -1,8 +1,11 @@
 //! 🕸️ `create-mesh` — sets an object's `mesh` CHILD slot to a new owned handle (overwrite-aware,
-//! same convention as stdio's `✳️object` `create-mesh`), and syncs `mesh_workspace` alongside it —
-//! a kernel-edit commit touches both together. Replaces the old whole-value `replace-object-mesh`,
-//! gone now that `LowpolyObject.mesh` is a real `store::ArtifactChild<SemioMeshSnapshot>` handle
-//! instead of an opaque `mesh_json: String` (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`).
+//! same convention as stdio's `✳️object` `create-mesh`). `mesh_workspace` below is event-log payload
+//! data only — the originating session's `🖌️session::LowpolyScratch` cache replays it into its own
+//! live kernel content; `diff::diff` never writes it onto the document (`LowpolyObject` carries no
+//! mesh content field at all, round 2 of this ticket's round-trip law fix). Replaces the old
+//! whole-value `replace-object-mesh`, gone now that `LowpolyObject.mesh` is a real
+//! `store::ArtifactChild<SemioMeshSnapshot>` handle instead of an opaque `mesh_json: String`
+//! (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`).
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
 use serde::{Deserialize, Serialize};

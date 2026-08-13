@@ -180,7 +180,7 @@ pub mod derived_composition {
     mod tests {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
-        use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+        use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
 
         fn clean_snapshot() -> SemioModelSnapshot {
             SemioModelSnapshot {

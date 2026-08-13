@@ -1,31 +1,197 @@
 //! 🧬️ GIS map snapshot schema — persistent fields only.
+//!
+//! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):
+//! `GisMapSnapshot` now carries real `store::ArtifactChild<…>` handles for its composed
+//! `drawing`/`image`/`value` slots, which `dsl::DslRecord`'s derive cannot represent (no `DslField`
+//! impl for `ArtifactChild<S>`) — same reason `🏔️gisterrain`/`💠️lowpoly`/`📐️cad` hand-roll their own
+//! codecs. Follows their exact hex/bracket convention; `positions`/`routes`/`regions` (still real
+//! `Vec<MapFeature>`, gis's own domain data, see `crate::artifacts::gismap::🦀️component.rs`'s
+//! `🔖️Composition` region) round-trip via JSON-then-hex, matching `📐️cad`'s `enc_json`/`dec_json`
+//! convention for its own structured (non-child) fields.
 
-use crate::artifacts::gismap::MapFeature;
+use crate::artifacts::gismap::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
 use schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use serde::{Deserialize, Serialize};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS map document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
-#[dsl(id = "gis.gismap", layout = "lines")]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapSnapshot {
     #[state(persistent)]
     #[serde(default)]
-    #[dsl(table)]
     pub positions: Vec<MapFeature>,
     #[state(persistent)]
     #[serde(default)]
-    #[dsl(table)]
     pub routes: Vec<MapFeature>,
     #[state(persistent)]
     #[serde(default)]
-    #[dsl(table)]
     pub regions: Vec<MapFeature>,
+    /// 🕸️ Composed `s.stdio.semio.drawing` child — see `crate::artifacts::gismap::🦀️component.rs`'s
+    /// `🔖️Composition` region for the full design (derived, re-minted on every edit).
+    #[state(persistent)]
+    #[child(kind = "s.stdio.semio.drawing")]
+    pub drawing: GisMapDrawingChild,
+    /// 🕸️ Composed `s.stdio.semio.image` child — always absent today (see `🔖️Composition`'s doc).
+    #[state(persistent)]
+    #[child(kind = "s.stdio.semio.image")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<GisMapImageChild>,
+    /// 🕸️ Composed `s.stdio.semio.value` child — the lossless `{positions,routes,regions}` mirror.
+    #[state(persistent)]
+    #[child(kind = "s.stdio.semio.value")]
+    pub value: GisMapValueChild,
 }
+
+/// 🧮️ The exact content-key string every composed child's handle hashes — `positions`/`routes`/
+/// `regions`, JSON-serialized (features already `Serialize`); kept as one function so `Default` and
+/// `gis_map_snapshot_with_derived_children` can never disagree on what determines the handles.
+pub(crate) fn gis_map_content_key(positions: &[MapFeature], routes: &[MapFeature], regions: &[MapFeature]) -> String {
+    serde_json::to_string(&(positions, routes, regions)).unwrap_or_default()
+}
+
+impl Default for GisMapSnapshot {
+    fn default() -> Self {
+        let content_key = gis_map_content_key(&[], &[], &[]);
+        Self {
+            positions: Vec::new(),
+            routes: Vec::new(),
+            regions: Vec::new(),
+            drawing: gis_map_drawing_child_handle(&content_key),
+            image: None,
+            value: gis_map_value_child_handle(&content_key),
+        }
+    }
+}
+//#endregion 🔹Snapshot
+
+//#region 🔖️CodecPrimitives
+fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
+pub(crate) fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
+
+pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
+pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
+
+pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String { format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target)) }
+pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
+    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
+}
+pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
+    match c { Some(c) => enc_child(c), None => "[]".to_string() }
+}
+pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
+    if s == "[]" { return Ok(None); }
+    Ok(Some(dec_child(s)?))
+}
+
+/// 🧾️ `positions`/`routes`/`regions` are structured (`Vec<MapFeature>`, already
+/// `Serialize`/`Deserialize`): serialize to JSON, then hex-encode the JSON bytes — same convention
+/// every other text field in this file already uses (`📐️cad`'s `enc_json`/`dec_json`).
+fn enc_json<T: Serialize>(value: &T) -> String { enc_str(&serde_json::to_string(value).expect("gismap structured fields are always JSON-serializable")) }
+fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> { serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string()) }
+//#endregion 🔖️CodecPrimitives
+
+//#region 🔖️TextPrimitives
+fn print_gis_map_snapshot_body(s: &GisMapSnapshot) -> String {
+    format!(
+        "positions={}\nroutes={}\nregions={}\ndrawing={}\nimage={}\nvalue={}",
+        enc_json(&s.positions), enc_json(&s.routes), enc_json(&s.regions),
+        enc_child(&s.drawing), enc_child_opt(&s.image), enc_child(&s.value),
+    )
+}
+fn parse_gis_map_snapshot_body(body: &str) -> Result<GisMapSnapshot, String> {
+    let mut snapshot = GisMapSnapshot::default();
+    let mut saw_drawing = false;
+    let mut saw_value = false;
+    for line in body.lines() {
+        let line = line.trim();
+        if line.is_empty() { continue; }
+        if let Some(rest) = line.strip_prefix("positions=") { snapshot.positions = dec_json(rest)?; }
+        else if let Some(rest) = line.strip_prefix("routes=") { snapshot.routes = dec_json(rest)?; }
+        else if let Some(rest) = line.strip_prefix("regions=") { snapshot.regions = dec_json(rest)?; }
+        else if let Some(rest) = line.strip_prefix("drawing=") { snapshot.drawing = dec_child(rest)?; saw_drawing = true; }
+        else if let Some(rest) = line.strip_prefix("image=") { snapshot.image = dec_child_opt(rest)?; }
+        else if let Some(rest) = line.strip_prefix("value=") { snapshot.value = dec_child(rest)?; saw_value = true; }
+        else { return Err(format!("gis map snapshot: unknown line {line:?}")); }
+    }
+    if !saw_drawing { return Err("gis map snapshot: missing drawing line".to_string()); }
+    if !saw_value { return Err("gis map snapshot: missing value line".to_string()); }
+    Ok(snapshot)
+}
+//#endregion 🔖️TextPrimitives
+
+//#region 🔖️BinaryPrimitives
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
+
+pub(crate) fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
+pub(crate) fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?) }
+pub(crate) fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+    write_str_lp(out, &c.child_id);
+    write_ref(out, &c.target);
+}
+pub(crate) fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+    let child_id = read_str_lp(reader)?;
+    let target = read_ref(reader)?;
+    Ok(store::ArtifactChild::new(child_id, target))
+}
+pub(crate) fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
+    match c {
+        Some(c) => { out.push(1); write_child(out, c); }
+        None => out.push(0),
+    }
+}
+pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
+    let presence = reader.read_u8().map_err(|e| e.to_string())?;
+    if presence == 0 { Ok(None) } else { Ok(Some(read_child(reader)?)) }
+}
+
+fn encode_gis_map_snapshot_binary(s: &GisMapSnapshot) -> Vec<u8> {
+    const PACK_BINARY_FORMAT: u8 = 1;
+    let mut out = vec![PACK_BINARY_FORMAT];
+    write_str_lp(&mut out, &serde_json::to_string(&s.positions).expect("MapFeature list is always JSON-serializable"));
+    write_str_lp(&mut out, &serde_json::to_string(&s.routes).expect("MapFeature list is always JSON-serializable"));
+    write_str_lp(&mut out, &serde_json::to_string(&s.regions).expect("MapFeature list is always JSON-serializable"));
+    write_child(&mut out, &s.drawing);
+    write_child_opt(&mut out, &s.image);
+    write_child(&mut out, &s.value);
+    out
+}
+fn decode_gis_map_snapshot_binary(bytes: &[u8]) -> Result<GisMapSnapshot, String> {
+    const PACK_BINARY_FORMAT: u8 = 1;
+    let mut reader = store::ByteReader::new(bytes);
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    if format != PACK_BINARY_FORMAT { return Err(format!("unsupported pack format {format}")); }
+    let positions = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let routes = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let regions = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let drawing = read_child(&mut reader)?;
+    let image = read_child_opt(&mut reader)?;
+    let value = read_child(&mut reader)?;
+    Ok(GisMapSnapshot { positions, routes, regions, drawing, image, value })
+}
+//#endregion 🔖️BinaryPrimitives
+
 //#region 🔹HandcraftedArtifactCodecs
-/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
+/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits — see this
+/// file's module doc comment).
 impl store::ArtifactDsl for GisMapSnapshot {
     const EXTENSION: &'static str = "gismap";
     fn envelope_id() -> &'static str { "gis.gismap" }
@@ -34,15 +200,10 @@ impl store::ArtifactDsl for GisMapSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
+        parse_gis_map_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = print_gis_map_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -54,13 +215,14 @@ impl store::ArtifactDsl for GisMapSnapshot {
 
 impl store::ArtifactPack for GisMapSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let _ = options;
+        let raw = encode_gis_map_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
         ).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+        Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
@@ -72,10 +234,8 @@ impl store::ArtifactPack for GisMapSnapshot {
                 envelope.envelope_id()
             )));
         }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        let _ = options;
+        decode_gis_map_snapshot_binary(&inner).map_err(store::PackError::Schema)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 //#endregion 🔹HandcraftedArtifactCodecs
-//#endregion 🔹Snapshot

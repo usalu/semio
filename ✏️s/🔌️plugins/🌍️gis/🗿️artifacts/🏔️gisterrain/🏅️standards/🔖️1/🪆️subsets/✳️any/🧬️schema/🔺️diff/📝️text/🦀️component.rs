@@ -50,6 +50,9 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
         if let Some(value) = &self.imported_features_json {
             next.imported_features_json = value.clone();
         }
+        // 🕸️ Keep `mesh` a pure function of the two fields above — mirrors
+        // `apply_gis_terrain_mutation`'s identical re-derivation (see `GisTerrainSnapshot.mesh`'s doc).
+        next = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(next);
         next
     }
 
@@ -99,7 +102,7 @@ mod tests {
 
     #[test]
     fn field_diffs_absorb_last_writer_wins_and_apply_onto_the_snapshot() {
-        let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new() };
+        let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
         let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
         diff.absorb(GisTerrainDiff { exaggeration: Some(3.0), imported_features_json: Some("null".into()), ..Default::default() });
         let next = diff.apply(&base);
@@ -109,8 +112,16 @@ mod tests {
 
     #[test]
     fn a_whole_artifact_diff_wins_over_every_field_diff() {
-        let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new() };
-        let replacement = GisTerrainSnapshot { exaggeration: 9.0, imported_features_json: "{}".into() };
+        let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
+        let replacement_exaggeration = 9.0;
+        let replacement_imported_features_json = "{}".to_string();
+        let replacement = GisTerrainSnapshot {
+            exaggeration: replacement_exaggeration,
+            imported_features_json: replacement_imported_features_json.clone(),
+            mesh: Some(crate::artifacts::gisterrain::gis_terrain_mesh_child_handle(
+                &crate::artifacts::gisterrain::gis_terrain_mesh_content_key(replacement_exaggeration, &replacement_imported_features_json),
+            )),
+        };
         let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
         diff.absorb(diff_set_snapshot(&replacement));
         assert_eq!(diff.apply(&base), replacement);

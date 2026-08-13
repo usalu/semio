@@ -1,6 +1,6 @@
 //! 🧬️ SvgArtifact schema — full artifact state.
 
-use crate::artifacts::svg::SvgSnapshot;
+use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -440,7 +440,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::svg::schema::snapshot::{svg_document_to_typed, SvgElement};
-    use crate::artifacts::svg::SvgSnapshot;
+    use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
     use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
 
     //#region 🔖️Parts
@@ -748,3 +748,66 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: SvgComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔖️DocumentHelpers
+// 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+// `empty_svg_snapshot`/`demo_svg_snapshot` relocated here verbatim (pure helpers over the
+// document type, destination rule 5); `SvgEngine` (zero construction sites) deleted outright;
+// codecs/`io_registry` moved to `../🚪️io`; tests moved beside what they now test (see that
+// file's own `mod tests`).
+/// 🌱 Empty persisted snapshot.
+pub fn empty_svg_snapshot() -> SvgSnapshot {
+    SvgSnapshot::default()
+}
+
+/// 📄️ The demo `stdio.svg` document -- exercises every real-syntax construct the W0 census row
+/// names (svg's snapshot IS an `XmlDocument`, so this mirrors `📰xml`'s own `demo_xml_snapshot`
+/// construct-for-construct): an XML declaration, a simple `<!DOCTYPE svg>`, a namespaced
+/// (`:`-qualified) attribute name (`xmlns:xlink`), entity decode (`Tom &amp; Jerry`), a
+/// self-closing element (carrying an attribute so its trailing `/` never fuses with the preceding
+/// ident), `<![CDATA[...]]>`, `<!--...-->`, and a `<?target data?>` processing instruction. The
+/// single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/
+/// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
+/// asserted equal by `fixture_honesty_law` in `../🚪️io`'s own tests).
+pub fn demo_svg_snapshot() -> SvgSnapshot {
+    use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
+    let root = XmlNode::Element {
+        name: "svg".into(),
+        attrs: vec![
+            XmlAttr { name: "xmlns".into(), value: "http://www.w3.org/2000/svg".into() },
+            XmlAttr { name: "xmlns:xlink".into(), value: "http://www.w3.org/1999/xlink".into() },
+            XmlAttr { name: "viewBox".into(), value: "0 0 100 100".into() },
+        ],
+        children: vec![
+            XmlNode::Comment { text: " demo scene ".into() },
+            XmlNode::ProcessingInstruction { target: "xml-stylesheet".into(), data: "text".into() },
+            XmlNode::Element {
+                name: "rect".into(),
+                attrs: vec![
+                    XmlAttr { name: "x".into(), value: "0".into() },
+                    XmlAttr { name: "y".into(), value: "0".into() },
+                    XmlAttr { name: "width".into(), value: "10".into() },
+                    XmlAttr { name: "height".into(), value: "10".into() },
+                    XmlAttr { name: "fill".into(), value: "red".into() },
+                ],
+                children: vec![],
+            },
+            XmlNode::Element {
+                name: "text".into(),
+                attrs: vec![XmlAttr { name: "x".into(), value: "5".into() }],
+                children: vec![XmlNode::Text { text: "Tom & Jerry".into() }],
+            },
+            XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "cx".into(), value: "1".into() }], children: vec![] },
+            XmlNode::CData { text: "raw markup".into() },
+        ],
+    };
+    SvgSnapshot {
+        schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
+        doc: XmlDocument {
+            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+            doctype: Some("<!DOCTYPE svg>".into()),
+            root: Some(root),
+        },
+    }
+}
+//#endregion 🔖️DocumentHelpers

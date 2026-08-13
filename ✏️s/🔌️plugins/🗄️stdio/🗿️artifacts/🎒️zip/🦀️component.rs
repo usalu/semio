@@ -18,9 +18,10 @@ pub const ZIP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.zip";
 /// replaces the old side-effecting `crate::artifacts::zip::engine::register()`. Mirrors `🔋️energy`'s
 /// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
 /// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<ZipSnapshot,
-/// ZipMutation>(...))` call. `.composers(...)` reaches the engine's own `io_registry` (through the
-/// `engine` shim — `📦️glue.rs`'s `pub use super::standards::v2_0::engine::*`), whose `entries()`
-/// already aggregates BOTH the `✳️any` and `✳️iso21320` `ComposerEntry` rows — NOT this file's own
+/// ZipMutation>(...))` call. `.composers(...)` reaches the subset IO module's own `io_registry`
+/// (the former `⚙️engine`'s `io_registry`, dissolved into `standards::v2_0::subsets::any::io` per
+/// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES), whose `entries()` already
+/// aggregates BOTH the `✳️any` and `✳️iso21320` `ComposerEntry` rows — NOT this file's own
 /// shadowing `io_registry` below, whose `entries()` returns `&'static [&'static ComposerEntry]`
 /// (references) and would silently rebind under a bare call (this ticket's "SILENT REBIND" hazard).
 /// `.subset_validators(...)` is new here: the old `register()`'s
@@ -38,7 +39,7 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(ZIP_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::zip::schema::zip_artifact_schema_descriptor())
         .inferences([crate::artifacts::zip::schema::inferences::zip_artifact_inference_descriptor()])
-        .composers(crate::artifacts::zip::engine::io_registry::entries())
+        .composers(crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries())
         .subset_validators(zip_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)
@@ -60,8 +61,8 @@ fn zip_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorE
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
-/// `LanguageSpec` rows) from `crate::artifacts::zip::engine::register_pilot_languages`'s own
-/// `dsl::register_language(...)` call bodies.
+/// `LanguageSpec` rows) from the former `crate::artifacts::zip::engine::register_pilot_languages`'s
+/// own `dsl::register_language(...)` call bodies.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
@@ -146,7 +147,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::zip::standards::v2_0::engine::io_registry as v2_0;
+    use crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry as v2_0;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

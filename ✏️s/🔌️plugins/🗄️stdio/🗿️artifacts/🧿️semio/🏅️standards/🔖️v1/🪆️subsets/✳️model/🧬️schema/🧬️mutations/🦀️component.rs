@@ -3,8 +3,8 @@
 //! variant's `diff()`/`inverse()` is HAND-WRITTEN below (schema-design.md: apply-and-capture via
 //! clone+apply+re-diff is banned -- each variant constructs its `SemioModelDiff` directly).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
-use crate::artifacts::semio::standards::v1::engine::triples::{split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
 use crate::artifacts::semio::standards::v1::subsets::model::schema::diff::{
     dec_element, dec_relation, dec_spatial_node, dec_str, decode_option, diff_set_snapshot, enc_element, enc_element_class, enc_geometry_ref,
     enc_list, enc_property_set, enc_relation, enc_relation_kind, enc_spatial_kind, enc_spatial_node, enc_str, enc_transform, encode_option,
@@ -400,7 +400,7 @@ impl OpBinary for SemioModelMutation {
 /// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
 pub(crate) fn sample_transform() -> SemioTransform {
-    use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint3, SemioQuaternion};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
     SemioTransform { translation: SemioPoint3 { x: 5.0, y: 6.0, z: 7.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 

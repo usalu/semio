@@ -15,14 +15,16 @@ pub const BCF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.bcf";
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
-/// replaces the old side-effecting `crate::artifacts::bcf::engine::register()`. Mirrors `🔋️energy`'s
-/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
-/// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<BcfSnapshot,
-/// BcfMutation>(...))` call. `.composers(...)` reaches the engine's own `io_registry` (through the
-/// `engine` shim), whose `entries()` returns `&'static [ComposerEntry]` (owned rows) — NOT this
-/// file's own shadowing `io_registry` below, whose `entries()` returns `&'static [&'static
-/// ComposerEntry]` (references) and would silently rebind under a bare call (this ticket's
-/// "SILENT REBIND" hazard).
+/// replaces the old side-effecting `register()` (dissolved out of the former `⚙️engine`, ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES — the codec now lives in `🚪️io`). Mirrors
+/// `🔋️energy`'s `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so
+/// `.document_codec_bare` stands in for the old `store::register_document_codec(store::
+/// ArtifactCodec::of::<BcfSnapshot, BcfMutation>(...))` call. `.composers(...)` reaches the
+/// subset io's own `io_registry` directly (fully qualified, not through the `io` shim), whose
+/// `entries()` returns `&'static [ComposerEntry]` (owned rows) — NOT this file's own shadowing
+/// `io_registry` below, whose `entries()` returns `&'static [&'static ComposerEntry]`
+/// (references) and would silently rebind under a bare call (this ticket's "SILENT REBIND"
+/// hazard).
 ///
 /// **NOT covered by any field**: nothing — bcf's `register()` never called `register_schema_spec`
 /// (`BcfSnapshot`/`BcfDiff`/`BcfMutation` are all hand-rolled, no derivable `RecordSpec` — see the
@@ -32,15 +34,16 @@ pub fn declaration() -> semio_framework_plugin::ArtifactDeclaration {
     semio_framework_plugin::ArtifactDeclaration::builder(BCF_ARTIFACT_SCHEMA_ID)
         .schema(crate::artifacts::bcf::schema::bcf_artifact_schema_descriptor())
         .inferences([crate::artifacts::bcf::standards::v2_1::subsets::any::schema::inferences::bcf_artifact_inference_descriptor()])
-        .composers(crate::artifacts::bcf::engine::io_registry::entries())
+        .composers(crate::artifacts::bcf::standards::v2_1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA)
         .build()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
-/// `LanguageSpec` rows) from `crate::artifacts::bcf::engine::register_pilot_languages`'s own
-/// `dsl::register_language(...)` call bodies.
+/// `LanguageSpec` rows) from the former `⚙️engine::register_pilot_languages`'s own
+/// `dsl::register_language(...)` call bodies (dissolved, ticket 26/08/12/ENGINELESS-ARTIFACTS-
+/// AND-APP-STATE-MACHINES).
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
@@ -125,7 +128,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use std::sync::OnceLock;
     use semio_framework_plugin::{ComposerEntry, Dialect, ErasedComposeSource, ComposedArtifact, ComposeError, register_composer_entries};
-    use crate::artifacts::bcf::standards::v2_1::engine::io_registry as v2_1;
+    use crate::artifacts::bcf::standards::v2_1::subsets::any::io::io_registry as v2_1;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 

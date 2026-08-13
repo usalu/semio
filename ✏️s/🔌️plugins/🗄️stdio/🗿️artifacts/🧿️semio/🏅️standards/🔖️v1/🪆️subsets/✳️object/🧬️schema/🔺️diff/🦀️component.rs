@@ -6,7 +6,7 @@
 //! `Some(Some(handle))` = "set it to this handle" — each triad's own `🔺️diff` leaf builds this
 //! directly from `(payload, base)`, never apply-then-capture.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
@@ -158,7 +158,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
 /// `diff_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
     vec![
         SemioObjectDiff::default(),
         SemioObjectDiff { transform: Some(SemioTransform { translation: SemioPoint3 { x: 5.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() }), ..Default::default() },

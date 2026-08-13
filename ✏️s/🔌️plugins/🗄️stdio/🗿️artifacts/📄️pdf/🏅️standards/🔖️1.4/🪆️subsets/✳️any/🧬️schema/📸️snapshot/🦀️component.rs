@@ -52,10 +52,10 @@ impl store::ArtifactDsl for PdfSnapshot {
                 store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1))
             })?);
         }
-        crate::artifacts::pdf::standards::v1_4::engine::decode_pdf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::pdf::standards::v1_4::subsets::any::io::decode_pdf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::pdf::standards::v1_4::engine::encode_pdf(self).unwrap_or_default();
+        let bytes = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -69,7 +69,7 @@ impl store::ArtifactDsl for PdfSnapshot {
 impl store::ArtifactPack for PdfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::pdf::standards::v1_4::engine::encode_pdf(self).map_err(|e| store::PackError::Schema(e))?;
+        let raw = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -84,6 +84,24 @@ impl store::ArtifactPack for PdfSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::pdf::standards::v1_4::engine::decode_pdf(&inner).map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::pdf::standards::v1_4::subsets::any::io::decode_pdf(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
+
+//#region 🔖️SnapshotFixtures
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
+/// STATE-MACHINES) — pure snapshot constructors, no codec/IO concern.
+pub fn empty_pdf_snapshot() -> PdfSnapshot { PdfSnapshot::default() }
+
+/// 📄️ The demo `stdio.pdf` document -- the single source of truth for `📚️examples/🎬️demo/🖼️assets/
+/// 🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/
+/// `encode_pack` output, asserted equal by `fixture_honesty_law`). `width`/`height` are FIXED at
+/// `612.0`/`792.0` -- NOT an arbitrary choice: `decode_pdf` hardcodes those two literals
+/// unconditionally (never parses them back out of the encoded bytes, the documented "1.4 stays a
+/// frozen stub" scope boundary) -- any OTHER width/height would make `parse_dsl(print_dsl(demo))
+/// != demo`, since `parse_dsl` genuinely calls the real `decode_pdf` on the hex-decoded bytes, not
+/// an identity round-trip.
+pub fn demo_pdf_snapshot() -> PdfSnapshot {
+    PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 612.0, height: 792.0, text: "Semio Demo".into() } }
+}
+//#endregion 🔖️SnapshotFixtures

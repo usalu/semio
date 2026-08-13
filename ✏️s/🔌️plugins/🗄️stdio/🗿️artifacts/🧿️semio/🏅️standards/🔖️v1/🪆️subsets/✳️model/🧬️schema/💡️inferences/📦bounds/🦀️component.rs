@@ -7,7 +7,7 @@
 //! incremental caching needed for a single min/max pass (same ruling `cad`'s own `📦bounds` facet
 //! reaches for its own entity-point fold).
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use serde::{Deserialize, Serialize};
 
@@ -57,7 +57,7 @@ pub fn compute_semio_model_bounds(snapshot: &SemioModelSnapshot) -> SemioModelBo
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::{SemioQuaternion, SemioTransform};
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioQuaternion, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
     fn placed(x: f64, y: f64, z: f64) -> SemioTransform {

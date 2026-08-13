@@ -460,7 +460,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot, FlowNode};
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 
     fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {
         SemioSnapshot {

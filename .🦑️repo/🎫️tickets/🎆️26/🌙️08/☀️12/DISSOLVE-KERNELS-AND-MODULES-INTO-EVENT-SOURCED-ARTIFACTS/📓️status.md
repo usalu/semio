@@ -617,3 +617,106 @@ Any one of the three would justify stopping; together they rule out "minimal, me
 Written into this ticket for whoever next holds mutation-vocabulary work: land the target `FlowMutation` shape from `📓️wave3c-design/flow-target-shape.md` in the framework file first (enum + sparse `FlowDiff` regions), **then** rewrite the plugin's own 9-variant vocabulary to field-level granularity — that rewrite is the actual size of the job, not a codec patch — **then** delete `🔹WireCodecs`/`🌉️FrameworkBridge` per SMO's original ruling. The `camera` doctrine violation and two open design questions (`replace-cluster-tree`/`-flow` as composition; `ChangeActionTarget` naming) remain outstanding, unaffected by this block.
 
 The space-side plugin delta is pre-scoped for whoever picks it up: `grep -rln "CollectionMutation" ✏️s/🔌️plugins/🪐️space/` → exactly one file, using it only as a generic type parameter, never constructing a variant by name — **zero required edits** to the plugin.
+
+## W5 — user directive to go further, four more waves dispatched
+
+User pointed at `🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs` as a concrete example: "shouldn't exist and all be part of the mesh artifact." Investigated before dispatching — the file is genuinely mixed: real mesh content (MeshData/primitives/Obj/Glb/Stl codecs/MeshExporter family, ~30 consumers) **plus an entire unrelated DWG binary codec** (~1600 LOC, 20 consumers including stdio's own `🖊️dwg` artifact and `cad`/`drawing` snapshot serialization) that is not mesh material at all — flagged to the mesh-dissolution agent as explicitly out of scope, with its own correct home, rather than folded in under the wrong name or silently left as a second violation.
+
+Also surveyed the rest of DKM's own claimed boundary for anything left undone tonight — three real gaps found, none previously dispatched:
+- `◻2d`'s `DrawingStore`/`DrawingEngine` (8 setters) — now safely deletable since `✳️drawing`'s real triads + inference exist.
+- `🛢️db`'s `LiveQuery` — still hand-rolling `self.snapshot = new_snapshot`; its crate (previously pre-broken, ~53 errors) now measures clean, unblocking this.
+- `♾️infinite/…/🕸️dag` — 37 `CollectionMutation` hits, the third of DKM's three original consumers (flow 40, space 70 already done tonight) that was never actually dispatched in W3c.
+
+Four agents running in parallel on disjoint boundaries: mesh-module dissolution, `◻2d` store deletion, `🛢️db` LiveQuery→InferredField, `♾️infinite/🕸️dag` triad conversion.
+
+### Checked, not a violation: `🧮️math/🧩️wfc` solvers
+
+`Grid2dSolverBuilder`/`Grid2dSolver` (and its graph/3d siblings) are a self-contained `Builder`→`solve()` pattern: no external runtime consumers found, no state held across separate invocations — a call builds, solves, returns, and discards. That is the legitimate tier-(e) shape (pure compute, no authoritative state to duplicate), not a hidden document. Checked before dispatching a wave, rather than assuming the mandate requires converting every solver into an artifact regardless of whether it holds state — it doesn't, so it isn't in scope.
+
+## W5 — `🛢️db` LiveQuery DONE, independently re-verified
+
+Coordinator forced recheck: `cargo check -p semio-framework-os-kernel-db --all-targets` → **0 errors**. `cargo test --lib` → 403 passed / 21 failed, all 21 pre-existing and unrelated (one shared root cause: `db_artifact wire error: truncated at offset 2`), confirmed present before this wave too.
+
+**Near-miss in the coordinator's own re-check, caught before recording it as incomplete.** A grep for `self.snapshot = new_snapshot` still found 1 real hit (plus 1 docstring mention) after the wave claimed to have "replaced" it — looked like the violation survived. Reading the function clarified it: the assignment now stores the **output of `pack::infer_field::<QuerySnapshot, QueryResultField>`**, computed through the real `InferredField`/`InferenceCache` spine, not a hand-rolled copy of raw query results. Storing a materialized view for the `.snapshot()` accessor and next-call diffing is the same legitimate shape as `ArtifactStore.current`'s live incremental fold — it is not the violation. The violation was *how the value was computed*, not that a field holds it.
+
+**Verified the incrementality law directly, not just its presence.** `refresh_leaves_unrelated_rows_cache_warm_and_misses_only_the_changed_row` asserts real cache statistics deltas: an identical re-refresh produces zero new misses and exactly 3 hits; changing only one row's content produces exactly 1 miss while the other two rows' hits increment — i.e. **an unrelated row edit provably does not invalidate its siblings.** That is the actual incrementality property, asserted on real numbers, not merely on "it compiled".
+
+**Honest scope boundary, correctly held.** `execute()`'s fallible planner/pushdown/limits logic stays as-is — `InferredField::plan` is infallible, and the wave correctly declined to force query execution itself behind that trait at the cost of losing error handling. Only the per-row cacheable-content step moved, which is the piece with no cross-row dependency. Report also disclosed the law test's first attempt failing (`record_stats` defaulting `false`) and being fixed — honest process record, not a polished retelling.
+
+## W5 — `🔺️mesh` module DONE — the coordinator executed the fix the sub-agent correctly deferred
+
+The dispatched agent found a genuine architectural blocker and correctly refused to force it: `🧊️3d/📐️brep/📦️mesh-io/🦀️component.rs` (W3a-owned, 413-passing-tests mandate) directly imports `MeshData`/`GlbExporter`/etc from `semio_framework::`, and `semio-s-plugin-stdio → semio-framework-plugin → semio-framework` — so moving that content INTO stdio (making it private there) would require framework-layer crates to depend back on stdio: **a hard Cargo cycle, not a refactor question.** It proposed the correct fix (a small shared leaf crate) and correctly deferred executing it — new-workspace-member registration is exactly the operation that took the whole tree down earlier tonight, and is explicitly coordinator/W6 territory in `📌️important.md`'s hot-file table.
+
+**The coordinator executed it directly**, in the smallest possible verified increments given the demonstrated fragility of workspace-member changes:
+
+1. Created `🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/` (crate `semio-framework-mesh-engine`) — `MeshData`, primitive constructors, Obj/Glb/Stl codecs, `MeshExporter`/`MeshImporter` family, `IoError`. Docstring states its doctrine role explicitly: consumed only from artifact facet code or engine-to-engine callers, never a standalone surface a plugin app reaches into.
+2. Added it to root `Cargo.toml`'s `[workspace] members`, then **immediately ran `cargo metadata --no-deps` before any other action** — the cheap check that would have caught the earlier outage. Clean.
+3. Wired it as a path-dependency of `semio-framework`, mirroring the existing `semio-framework-hash` pattern exactly (same shape, already proven safe in this repo).
+4. Split `🔺️mesh/🦀️component.rs`'s crate-root re-export in `📦️glue.rs` into two `pub use` blocks — mesh content from the new crate, DWG content from the now-DWG-only local module.
+5. `🔺️mesh/🦀️component.rs` **shrank from 2545 → 1643 lines**, containing now only the DWG codec and its two mesh-bridge functions (`use semio_framework_mesh_engine::MeshData;` at the top) — exactly the out-of-scope region the sub-agent correctly declined to touch.
+
+**Because `semio_framework::` still re-exports the moved symbols at the crate root — architecture, not a compatibility shim, the same pattern `ui_wgpu`/`semio-framework-hash` already use — not one of the ~30 external consumers needed to change.** Brep's read-only `📦️mesh-io` file required *zero* edits; its import path was never touched.
+
+**Verified, every gate independently, in order:**
+```
+cargo metadata --no-deps                                    → exit 0   (workspace loads)
+cargo check -p semio-framework-mesh-engine --all-targets     → 0 errors
+cargo check -p semio-framework --all-targets                 → 0 errors
+cargo test  -p semio-framework --lib                         → 127 passed, 0 failed
+cargo check -p semio-framework-3d --all-targets               → 0 errors
+cargo test  -p semio-framework-3d --lib                       → 413 passed, 0 failed   ← UNCHANGED, W3a-0 not regressed
+cargo check -p semio-framework-plugin                          → 0 errors
+```
+
+**stdio and its dependents (lowpoly/remodel/puzzle) show 19 pre-existing errors — confirmed NOT caused by this change.** `✳️any/🚪️io/🦀️component.rs` (E0753 doc-comment errors) and `✳️any/⚙️engine/🦀️component.rs` (dangling mount) both have **mtimes 10+ hours old**, and `git status` shows zero DKM touches under `✳️any` in stdio. This is the same unrelated concurrent churn the sub-agent's own report already flagged (tiff/binary/svg/deflate/gltf-adjacent), now manifesting in a different corner of the same in-flight peer work. Not fixed, not attributed here.
+
+### What this achieves vs. what remains honestly open
+
+The literal file the user pointed at is gone as a grab-bag; the real mesh content has a correctly-scoped, doctrine-positioned home (pure compute, consumed only from facets/engines, never a standalone plugin-reachable surface by *design intent*). What remains open, honestly: the ~20 plugin-app call sites (`procedural`/`process`/`puzzle`/`lowpoly`/`remodel` constructing demo/placeholder meshes via `mesh_from_kind` etc.) still reach the engine crate directly rather than dispatching through the mesh artifact's own mutations — the sub-agent correctly characterized this as ephemeral/demo construction, not persisted-document CRUD, and a redesign of ~15-20 app call sites to route through artifact dispatch is a separate, larger, higher-risk wave that was not forced tonight. The DWG codec remains its own, still-unaddressed, correctly-flagged violation with its own future home.
+
+## W5 — `◻2d` DONE, independently verified, and the coordinator applied the one pending patch
+
+**Deleted** `🧰️framework/🔨️modules/◻2d/🗄️store/🦀️component.rs` (`DrawingStore`/`DrawingEngine`) entirely — confirmed gone. Coordinator forced recheck: `cargo check -p semio-framework-2d --all-targets` → **0 errors**; `cargo test --lib` → **26 passed, 0 failed**.
+
+### The recon's own consumer count was wrong, and the wave caught it precisely
+
+The earlier `📓️wave3b-surface-2d-recon.md` estimate ("`PathSegment` in 27 files") turned out to be a symbol-name grep across **unrelated vocabularies** — the real consumer set (crates actually depending on `semio-framework-2d`) is three files, and only two use `DrawingStore`. This is the fourth instance tonight of the same lesson stated in `📌️important.md`: a pattern match locates candidates, not a census.
+
+### Split by real ownership rather than force-repointing to a mismatched destination
+
+`✳️drawing`'s stdio subset already independently defined its own, differently-shaped vocabulary (`SemioPoint2`-based `PathSegment`, a combined `DrawStyle`, `SemioTransform`) — discovered by reading it, not assumed. Neither it, nor the unrelated `🖍️draw` plugin, nor the framework's own `booleans`/`trace` kernels could sanely repoint to that shape. Correct resolution: `Vec2`/`PathSegment`/`DrawingError`/`compute::{block_on,run_blocking}` **stay** in `◻2d/⚙️engine` (genuinely shared by `booleans`/`trace` and the unrelated `🖍️draw` plugin); the **store-specific** vocabulary (`DrawingKernel`, `DrawingHandle`, `DrawingScene`, `FillStyle`, `StrokeStyle`, `Affine2D`, …) relocated into `🌊️flow/🖍️drawing/🦀️component.rs` — **flow's own private ephemeral node-evaluation kernel**, mirroring the already-existing `📐️brep-geometry` precedent in the same codebase, rather than inventing a new shape.
+
+### Coordinator applied the one required, correctly-deferred patch
+
+The wave produced one `sharedFileRequests` item: `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs` needed a mechanical import repoint after the relocation, filed as a patch rather than applied directly because that plugin tree is SMO-claimed. **SMO has wound down for the night.** The patch was small (one doc-comment line, one `use` split, one function's type path — 8 lines total), fully pre-verified by the wave's own careful re-read (confirmed every other reference in the ~1170-line file is unqualified, so no other line needed touching), and the breakage was a direct, unavoidable consequence of DKM's own change — a materially different situation from the earlier flow-vocabulary blocker, which needed a genuine ~9-variant semantic redesign of code SMO's own plugin owns. **The coordinator applied it**, matching the patch exactly, and verified: `cargo check -p semio-s-plugin-flow-extension-draw --all-targets` → **0 errors** (was failing to compile before).
+
+### Large pre-existing, unrelated breakage confirmed NOT ours
+
+`semio-framework-os-flow`'s full build surfaces >100 errors in `🖥️host/🦀️component.rs`, top-level `🌿️vcs/🦀️component.rs`, and `📖️playbook/🦀️component.rs` — **confirmed by mtime (16+ hours stale) and `git status` (zero DKM touches) to be long-standing, unrelated breakage**, not live peer churn and not caused by this wave or the mesh-engine extraction. Zero of those errors mention `🖍️drawing`, the actual relocation destination, which the coordinator confirmed compiles clean in isolation.
+
+## W5 — `♾️infinite/…/🕸️dag` DONE, independently re-verified — the fourth and final W5 wave
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs`: banned `CollectionMutation<TId,TItem,TPatch>` (37 hits) replaced with a real 14-verb `DagMutation` enum (`CreateNode`/`DeleteNode`/`RenameNode`/`ChangeNodeName`/`MoveNode`/`ResizeNode`/`ChangeNodeIcon`/`ChangeNodeAbbreviation`/`ChangeNodeOperatorKind`/`ReplaceNodeKind`/`ReplaceNodeProperties`/`ReorderNodes`/`ConnectNodes`/`DisconnectNodes`); `SetNodes`/`SetEdges`/`SetSnapshot` removed with no replacement.
+
+**Coordinator re-ran every claimed check rather than accepting the report, per the standing rule:**
+
+```
+touch 🌍️world/🦀️component.rs; RUSTC_WRAPPER="" cargo check -p semio-framework-os-infinite --all-targets
+  → lib target: 0 errors   (forced recheck, not a cached false-green)
+grep CollectionMutation / SetSnapshot|NoMutation → 3 hits total, all inside explanatory doc comments
+  documenting the removal (e.g. "the old whole-collection ... (SetNodes/SetEdges/SetSnapshot) are
+  gone with no direct replacement") — zero functional/constructive usage. Distinguished from the
+  earlier-caught mesh-wave trap (a comment that still implied live behaviour) by reading each hit.
+```
+
+**New verb names cross-checked against real stdio consumers, not just SMO's roster.** `DagNodePatch`/`DagEdgePatch` (restored byte-identical after a first-pass deletion broke the plugin, caught by `cargo check` not assumed) are consumed by `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/`, which **already has real triad directories named** `resize-node`, `change-node-name`, `change-node-icon`, `rename-node`, `move-node`, `replace-node-kind`, `replace-node-properties` — the framework enum's verb names match pre-existing stdio vocabulary rather than inventing new terms.
+
+**The claimed "12 pre-existing, unrelated lib-test errors" traced to source and confirmed, not merely trusted.** All 12 are `🌍️world/🦀️component.rs`: a missing `🧊️capsule_J.glb` asset file plus 5 `E0608` "`cannot index into a value of type DslValue`" errors — reported twice each (12 = 6×2) purely because cargo attributes the same `#[path]`-mounted file under two relative-path spellings, not because there are 12 distinct defects. `git log --oneline -3` on that file shows its most recent commit predates this entire ticket by roughly two months (June 2026 commits only), independently confirming it is not concurrent churn from this session or any DKM-adjacent peer.
+
+**Real bug caught by running the law tests, not just authoring them**: the first `CreateNode` design (no position field) silently lost node z-order on undo of a delete; fixed by adding an `index: usize` field to the variant, now present in the verified enum above.
+
+Full report: `📓️wave5-reports/infinite-dag-report.md`.
+
+## W5 — all four waves complete
+
+Mesh-engine dissolution, `◻2d` store deletion, `🛢️db` LiveQuery→InferredField, and `♾️infinite/…/🕸️dag` triad conversion are all landed and independently re-verified by the coordinator (not merely accepted from agent reports) — the fourth and last of the "everything that can be migrated must be migrated" gaps identified after the user's pivot instruction. Honest remainders carried forward, none silently dropped: the DWG binary codec still embedded in `🔺️mesh/🦀️component.rs` (flagged, own future home); ~20 plugin-app ad-hoc mesh-construction call sites (`procedural`/`process`/`puzzle`/`lowpoly`/`remodel`) not yet routed through artifact dispatch (separate, larger, higher-risk wave); `🌊️flow/🌿️vcs`'s `CollectionMutation` still `blocked-cross-session` on SMO's wound-down plugin-vocabulary rewrite; `BrepEngineHost` cross-session deletion still APA's territory.

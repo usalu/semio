@@ -1,6 +1,7 @@
-//! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`semio_framework_2d::DrawingStore`].
+//! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`flow_extension_sdk::DrawingStore`].
 
-use semio_framework_2d::{block_on, DrawingError, DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
+use semio_framework_2d::{block_on, DrawingError, Vec2};
+use flow_extension_sdk::{DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle};
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use flow_extension_sdk::with_drawing_kernel as with_kernel;
 
@@ -10,16 +11,16 @@ fn map_kernel_error(error: DrawingError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
-fn kind_label(kind: semio_framework_2d::DrawingKind) -> &'static str {
+fn kind_label(kind: flow_extension_sdk::DrawingKind) -> &'static str {
     match kind {
-        semio_framework_2d::DrawingKind::Rect => "rect",
-        semio_framework_2d::DrawingKind::Ellipse => "ellipse",
-        semio_framework_2d::DrawingKind::Circle => "circle",
-        semio_framework_2d::DrawingKind::Line => "line",
-        semio_framework_2d::DrawingKind::Polygon => "polygon",
-        semio_framework_2d::DrawingKind::Path => "path",
-        semio_framework_2d::DrawingKind::Text => "text",
-        semio_framework_2d::DrawingKind::Group => "group",
+        flow_extension_sdk::DrawingKind::Rect => "rect",
+        flow_extension_sdk::DrawingKind::Ellipse => "ellipse",
+        flow_extension_sdk::DrawingKind::Circle => "circle",
+        flow_extension_sdk::DrawingKind::Line => "line",
+        flow_extension_sdk::DrawingKind::Polygon => "polygon",
+        flow_extension_sdk::DrawingKind::Path => "path",
+        flow_extension_sdk::DrawingKind::Text => "text",
+        flow_extension_sdk::DrawingKind::Group => "group",
     }
 }
 

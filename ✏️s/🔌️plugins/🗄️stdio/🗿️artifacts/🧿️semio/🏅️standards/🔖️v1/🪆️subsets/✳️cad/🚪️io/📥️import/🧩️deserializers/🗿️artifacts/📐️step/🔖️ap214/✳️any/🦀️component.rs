@@ -18,7 +18,7 @@
 //!   type, non-numeric arg) is skipped, not fabricated with zeros.
 
 use crate::artifacts::step::{StepSnapshot, schema::snapshot::{StepEntity, StepValue}};
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint2;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, CadEntityRecord, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use std::collections::HashMap;

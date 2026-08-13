@@ -166,7 +166,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+        use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
             BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex,
         };

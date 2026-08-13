@@ -18,7 +18,7 @@
 //!   raw-retention path node kind exists on `DrawNode`.
 
 use crate::artifacts::dxf::{DxfSnapshot, schema::snapshot::DxfEntity};
-use crate::artifacts::semio::standards::v1::engine::geometry::{SemioPoint2, SemioTransform};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 

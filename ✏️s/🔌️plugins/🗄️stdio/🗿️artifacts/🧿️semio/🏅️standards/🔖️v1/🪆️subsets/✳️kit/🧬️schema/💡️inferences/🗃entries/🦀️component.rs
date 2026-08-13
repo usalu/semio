@@ -48,7 +48,7 @@ pub fn compute_semio_kit_entries(snapshot: &SemioKitSnapshot) -> SemioKitEntries
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::engine::geometry::SemioTransform;
+    use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitType, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
 
     /// 🌱 A hand-built, non-empty catalog: 2 types, 2 designs (one with 2 pieces + 1 connection,

@@ -3,7 +3,7 @@
 //! diff is the sparse field-by-field `SemioBrepDiff::between(base, next)`.
 //!
 //! All 6 collections (`vertices`/`edges`/`loops`/`faces`/`shells`/`solids`) are id-keyed and
-//! diffed via the SHARED `crate::artifacts::semio::standards::v1::engine::triples::NamedTripleDiff`
+//! diffed via the SHARED `crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff`
 //! (per `w1b-type-ownership.md`: "Use 🧰️triples ... instead of reinventing it"). The generic
 //! `apply_named`/`between_named`/`inverse_named`/`absorb_named` algebra functions below are this
 //! artifact's OWN copy of the small helper set bcf/docx each keep locally (no shared "diff
@@ -14,8 +14,8 @@
 //! reusing the shared `enc_named_triple`/`dec_named_triple`/`split_top_level`/`strip_brackets`
 //! codec primitives from `🧰️triples` rather than re-deriving them.
 
-use crate::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{

@@ -21,7 +21,23 @@ Peer session *names* rotate after session-limit restarts and I have misrouted me
 - **A merge, not a revert.** Blindly restoring 496 would have destroyed the peer's inference work; diffing per-subset mount counts made the merge safe.
 - Unicode normalisation defeats literal emoji filenames in scripts — detect files by listing a directory, never by comparing a hard-coded `"🦀️component.rs"`.
 
-## ⏸️ W3 exemplars CODE-COMPLETE, final verification blocked by fresh concurrent churn (#2553)
+## ▶️ W3 IN PROGRESS — stdio green, exemplars found real bugs under test, both being fixed
+
+**stdio is confirmed green** as of this check: `cargo check --all-targets` clean; `cargo nextest --profile long`: **2423 run, 2418 passed, 5 failed, 5 skipped** (the same 5 pre-existing non-UCAS failures as before — csv/binary/dxf/dwg/ifc, all owned by IIF or unowned; unchanged). #2553's `⚙️engine` fan-out churn from the previous entry settled.
+
+**`draw` independently confirmed fully done**: `cargo nextest -p semio-s-plugin-draw` → 93/93 passed. No further work needed on draw.
+
+**`lowpoly` compiles clean but its own test suite found a genuine architectural bug** — not a false alarm, a real framework-law violation: `LowpolyObject.mesh_workspace: String` (ephemeral halfedge-mesh JSON, explicitly documented as "never the persisted representation") sits ON the persisted `LowpolySnapshot` struct, so `store::os_store::test_support::assert_document_text_round_trip`'s generic law — `parse_dsl(print_dsl(snapshot)) == snapshot` by exact `PartialEq` — fails by construction, because the hand-rolled codec correctly drops it while the live in-memory value keeps real content. Confirmed via full diff (`mesh_workspace: ""` parsed vs `mesh_workspace: "{halfedge JSON}"` live). **General lesson**: any field on a persisted snapshot struct that a codec deliberately excludes violates this law — the field must live in a genuinely separate session-side cache (the `draw::DrawSession` / DKM `EngineRep` pattern), never embedded in the persisted type. Dispatched a focused fix: move `mesh_workspace` off `LowpolyObject` into the app's session state, rewire the 18 touching call sites (mutation triads, engine, session, commands).
+
+**`cad` needs a second round.** The schema-level migration (composed `model`/`drawing` children replacing the old inline B-Rep topology) is done and correct — `CadSnapshot` is coherent. But the app layer (`🎛️apps/📐️cad/🦀️component.rs`, 2505 lines) never got threaded through: 84 compile errors, almost all `objects`/`building_objects`/`energy_objects`/`structure_classic_objects`/`*_geometry` fields that no longer exist on `CadSnapshot`. Dispatched a focused completion: introduce an ephemeral `CadWorkingScene` (the `EngineRep` pattern again) built from resolved `SemioModelSnapshot` content, rewire the app's panes/commands onto it.
+
+**lowpoly: DONE, independently re-verified.** `cargo check --all-targets` clean; `cargo nextest`: **124 run, 123 passed, 1 failed** (matches the fix agent's own numbers exactly). The one remaining failure (`inference_determinism_law`) is a pre-existing, unrelated fixture-grammar gap the agent correctly diagnosed and declined to touch — its `example.dsl.semio` fixture uses a structured half-edge grammar the hand-rolled hex/bracket codec doesn't implement, already flagged in that file's own doc comments before this ticket started.
+
+**Fix quality worth recording**: this wasn't a mechanical field move. `mesh_workspace` now lives in `LowpolyScratch.mesh_workspace: HashMap<String, String>` (session-side, mirroring `draw::DrawSession`), and the agent added a genuine fail-safe — `LowpolyDocument::reload_meshes` now verifies the cached JSON's content-hash still matches the persisted `mesh` handle before trusting it (`LowpolyCoreError::StaleMeshWorkspace` on mismatch), because it discovered store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a live session's cache can go stale across an undo of `create-mesh`/`delete-mesh`. It also caught and fixed a determinism bug along the way: two independent `HalfedgeMesh::box_prim().unwrap_uv().to_json()` calls weren't reliably byte-identical, spuriously tripping the new staleness check on ~30 tests — fixed by memoizing the combined build behind one `OnceLock`. 21 files touched (18 original + 3 discovered as direct consequences), self-caught 2 missed call sites in `🎮️commands/🧵️uv` before final verification.
+
+**cad: still running (round 2, app-layer completion).**
+
+## ⏸️ (superseded) Earlier: W3 exemplars CODE-COMPLETE, final verification blocked by fresh concurrent churn (#2553)
 
 **lowpoly and cad migrations both landed on disk and both compiled clean at last check** (see their reports). Both W3 agents were then terminated mid-final-verification by a session limit.
 
@@ -345,3 +361,37 @@ cargo nextest run --profile long -p semio-s-plugin-stdio --no-fail-fast
 ## Remaining
 
 W2 stdio roster (gated on W1 + stdio SMO-clearance or explicit claim), W3 exemplars, W4 mass fan-out (~29 plugins, width 7), W5 serializer, W6 policy ratchet, W7 verify+close. Per the "no pause between waves" precedent SMO itself set, each wave launches automatically as the prior one's report lands — this will span many turns/notifications.
+
+## Update (2026-08-13) — W2 frozen, W3 exemplars: lowpoly + cad done, writer/draw next
+
+Since the hand-off above: **W2 roster is frozen** (all 18 subsets + any landed, stdio SMO-cleared, broadcast to SMO/APA/IIF). W1's `register_child` ownership-graph bug and the dual-identity `InvocationResult` bug (both flagged in the hand-off's outstanding-verification section) were found and fixed; `semio-framework-plugin` is green.
+
+**W3 lowpoly: complete.** 123/124 tests (1 pre-existing unrelated: `inference_determinism_law`, a DSL grammar gap). Real architectural fix landed, not just a schema migration: `mesh_workspace` moved off the persisted `LowpolyObject`/`LowpolyObjectPatch` onto `LowpolyScratch.mesh_workspace` (session-only cache), with a new `LowpolyCoreError::StaleMeshWorkspace` fail-safe in `reload_meshes` since store-level undo/redo can bypass `ArtifactApp::handle`. Full report: `📓️wave3-reports/lowpoly-report.md`.
+
+**W3 cad: complete.** 137/139 tests, 2 confirmed pre-existing/unrelated failures (both traced via `git log -p` to commits dated 2026-06-04, two months before this ticket — an interaction-spec-asset path test off-by-one `..` and a STEP-repair test with a self-evidently wrong hardcoded expectation). Round 3 (this session, done directly rather than via agent) fixed a real codec-completeness bug round 1's own schema work had introduced: `references_by_model_definition_id`/`nodes` were added to `CadSnapshot` but never wired into the hand-rolled text/pack codecs, silently dropping data on every save/reload — fixed, plus the demo DSL fixture was regenerated from real `print_dsl()` output (it predated the current codec format). Full report: `📓️wave3-reports/cad-report.md`.
+
+**Standing lesson reconfirmed twice more this round**: neither the "stdio churn is the blocker" caveat nor the "7 pre-existing failures" classification survived independent verification untouched — both were partially right (some failures genuinely were unrelated/pre-existing) and partially wrong (a real, ticket-introduced bug was hiding inside the "pre-existing" bucket). Never accept an agent's out-of-scope classification without tracing it to a commit.
+
+**Next**: writer or draw as the third W3 exemplar (text/2d family) — draw was already confirmed clean with zero additional work needed earlier in this ticket, so writer is the remaining pick. Then distill `📓️migration-recipe.md` from the three exemplars before starting W4's ~29-plugin fan-out.
+
+## Update (2026-08-13, continued) — W3 complete: writer exemplar done, all three exemplars verified
+
+**W3 writer: complete, independently re-verified.** `WriterSnapshot.text: String` → `document: store::ArtifactChild<SemioDocumentSnapshot>` (`#[child(kind = "s.stdio.semio.document")]`), hand-rolled `ArtifactDsl`/`ArtifactPack` codecs (same wall lowpoly/cad hit — `dsl::DslRecord` derive doesn't reach through a composed child), real bidirectional converter (`document_snapshot_from_text`/`text_from_document_snapshot`, one `DocBlock::Code` leaf, lossless), `WriterWorkingScene` ephemeral `thread_local!` cache mirroring lowpoly's `LowpolyScratch` (no `LinkResolver` seam exists yet at the framework layer, confirmed by direct inspection — same documented gap as cad). Banned `WriterMutation::SetSnapshot` replaced with `reset_document_effect`/`HostEffect::LoadDocument`.
+
+The agent found the writer crate was already red before touching it (16 pre-existing compile errors — stale mutation-variant references, a dead import, unrelated stdio pdf/docx schema drift from APA) and fixed all of them as part of reaching green, rather than deferring. Independently re-verified by the orchestrator (not trusted at face value, per this ticket's standing rule):
+```
+cargo check -p semio-s-plugin-writer --all-targets   → clean, reproduced
+cargo nextest run -p semio-s-plugin-writer --no-fail-fast → 100/100 passed, reproduced
+grep for SetSnapshot/NoMutation/CollectionMutation in WriterMutation → none; only command-layer names remain, correctly routed outside history
+```
+Full report: `📓️wave3-reports/writer-report.md`.
+
+**W3 exemplars are now ALL DONE**: lowpoly (123/124, 1 pre-existing), cad (137/139, 2 pre-existing traced to 2026-06-04 commits), writer (100/100). Every exemplar independently verified, not just trusted from an agent's final claim. `📓️migration-recipe.md` distilled from all three. W4 mass fan-out (~29 plugins) underway.
+
+## Update (2026-08-13, continued) — W4 batch 1 dispatched (process, fem, gis, flow); fem lands honest partial
+
+`remodel` was skipped for batch 1 — found with a live uncommitted edit matching ticket #2553's in-flight `⚙️engine`-dissolution pattern (an `engine as X` → `subsets::any::io as X` import fix in its video component), substituted `flow` instead. See `📌️important.md`'s new "W4 fan-out tracking" section.
+
+**`fem`: partial, correctly so — not a shortfall.** The design doc's "ONE fem-core... kills 11-type dup + 4 mesh types" turned out to only be 2/11 types genuinely byte-identical (`FemDof`, `FemAnalysisSettings` — now consolidated, `fem3d` re-exports `fem2d`'s copies, zero behavior change, verified compile-clean and 335/356 tests passing both before and after). The other 9 types differ in real shape (2D vs 3D DOF/section/geometry are not the same data) and forcing them into one type would recreate the "whole-object-replace with half the fields always None" anti-pattern this ticket's own D2/Concern B already flags. More importantly: the "4 mesh types" and the mesh-consuming engine code live in `✏️s/🔨️modules/🏗️fem/⚙️engine/**` — a **shared module tree outside the plugin's own artifact directory**, moved there by ticket #2553 specifically because "an artifact is a schema + io system, never an engine." Independently confirmed (grepped the glue.rs mount myself): true, not an excuse. The remaining 21 test failures were traced via `git log` to commits from 2026-08-10 and earlier-2026-08-13, both before this task started; spot-checked one myself and it matches exactly. Filed as `sharedFileRequests`: mesh-type dedup needs a future wave scoped to the `⚙️engine` module directly (different ownership, not in this ticket's plugin-fan-out boundary), and the brep/drawing-link half needs the same missing `LinkResolver` seam every exemplar has already flagged. Full report: `📓️wave4-reports/fem-report.md`.
+
+Still waiting on: process, gis, flow (batch 1, in flight).

@@ -1,8 +1,8 @@
 //! 💬️ Writer play app commands — the engagement bar: draft input and natural-language submit.
 
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::artifacts::writer::op::{EditText, WriterMutation};
+use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -94,8 +94,9 @@ pub mod engagement_submit {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let value = payload.value.clone().unwrap_or_else(|| config.engagement_input.clone());
-        let outcome = apply_engagement(config, &document.text, &document.language_id, &value);
-        Ok(Emit { artifact_mutations: outcome.text.map(|text| vec![WriterMutation::SetText { text }]).unwrap_or_default(), config_mutations: outcome.config_mutations, ..Default::default() })
+        let current_text = writer_text(document);
+        let outcome = apply_engagement(config, &current_text, &document.language_id, &value);
+        Ok(Emit { artifact_mutations: outcome.text.map(|text| vec![WriterMutation::EditText(EditText { text })]).unwrap_or_default(), config_mutations: outcome.config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️EngagementSubmit

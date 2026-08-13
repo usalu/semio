@@ -23,10 +23,11 @@ use std::collections::HashMap;
 // is now stdio's real `semio/mesh` → `obj` codec (`SemioMeshToObj` + `obj::engine::encode_obj`) —
 // same real mesh→OBJ encoder `⚙️engine/🦀️component.rs`'s `export_solids_as` now uses, no
 // reimplementation.
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::engine::geometry::SemioPoint3;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
 use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
 //#region 🔖️EphemeralImportTypes
 /// 🧱️ EPHEMERAL — never persisted, never part of `ArtifactSchema`. See module doc comment.
@@ -598,6 +599,85 @@ fn primitives_from_json(entry: &Value) -> Vec<CadPrimitiveSlot> {
 }
 //#endregion 🔖️KernelBuild
 
+//#region 🔖️ModelBridge
+/// 🌉️ WRITE direction: one `CadObject` → one `SemioModelElement`, the shape a composed
+/// `s.stdio.semio.model` CHILD actually stores. `typology` round-trips losslessly through
+/// `ElementClass::Other{name}` — the same convention `model_element_from_solid_handle` (in the
+/// parent `🚪️io/🦀️component.rs`) already established for its own native-geometry imports.
+/// `origin`/`orientation`/`scale` map onto `SemioTransform` field-for-field; `solid_handle` maps
+/// onto `GeometryRef::Brep`. `label`/`visible`/`locked`/`extent`/`mesh_url` have no counterpart in
+/// this subset (a `model` element carries no UI-authoring state) and are intentionally dropped —
+/// `cad_object_from_model_element` restores real, computed values for them on the way back in,
+/// never a fabricated echo of the original.
+pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelElement {
+    let [ox, oy, oz] = object.origin;
+    let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+    let scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
+    SemioModelElement {
+        id: object.id.clone(),
+        class: ElementClass::Other { name: object.typology.clone() },
+        placement: SemioTransform {
+            translation: SemioPoint3 { x: ox, y: oy, z: oz },
+            rotation: SemioQuaternion { x: orientation[0], y: orientation[1], z: orientation[2], w: orientation[3] },
+            scale: SemioPoint3 { x: scale[0], y: scale[1], z: scale[2] },
+        },
+        geometry: object.solid_handle.clone().map_or(GeometryRef::None, |brep_id| GeometryRef::Brep { brep_id }),
+        spatial_id: None,
+        psets: Vec::new(),
+    }
+}
+
+/// 🌉️ WRITE direction: a pane's full object list → a `SemioModelSnapshot` ready to become a
+/// composed child's content (see `store::ArtifactChild`/`crate::artifacts::cad::cad_model_child_handle`).
+pub(crate) fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioModelSnapshot {
+    SemioModelSnapshot { schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(), spatial: Vec::new(), elements: objects.iter().map(model_element_from_cad_object).collect(), relations: Vec::new() }
+}
+
+/// 🌉️ READ direction: the inverse of `model_element_from_cad_object` — a resolved child's
+/// `SemioModelElement` back into the app's ephemeral `CadObject` working shape.
+pub(crate) fn cad_object_from_model_element(element: &SemioModelElement) -> CadObject {
+    let typology = match &element.class {
+        ElementClass::Other { name } => name.clone(),
+        ElementClass::Wall => "building.building.wall".into(),
+        ElementClass::Slab => "building.building.slab".into(),
+        ElementClass::Column => "building.building.column".into(),
+        ElementClass::Beam => "building.building.beam".into(),
+        ElementClass::Door => "building.building.door".into(),
+        ElementClass::Window => "building.building.window".into(),
+        ElementClass::Roof => "energy.energy.roof".into(),
+        ElementClass::Stair => "building.building.stair".into(),
+        ElementClass::Furniture => "building.building.furniture".into(),
+    };
+    let solid_handle = match &element.geometry {
+        GeometryRef::Brep { brep_id } => Some(brep_id.clone()),
+        GeometryRef::Mesh { mesh_id } => Some(mesh_id.clone()),
+        GeometryRef::None => None,
+    };
+    let primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
+    let t = &element.placement;
+    CadObject {
+        id: element.id.clone(),
+        label: object_label_from_id(&element.id),
+        typology,
+        visible: true,
+        locked: false,
+        origin: [t.translation.x, t.translation.y, t.translation.z],
+        orientation: Some([t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w]),
+        scale: Some([t.scale.x, t.scale.y, t.scale.z]),
+        mesh_url: None,
+        extent: None,
+        solid_handle,
+        primitives,
+    }
+}
+
+/// 🌉️ READ direction: every element in a resolved `SemioModelSnapshot` child → this pane's
+/// `CadObject` list — what `crate::artifacts::cad::cad_working_scene_from_models` calls per pane.
+pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<CadObject> {
+    model.elements.iter().map(cad_object_from_model_element).collect()
+}
+//#endregion 🔖️ModelBridge
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -703,4 +783,51 @@ mod tests {
         assert_eq!(mesh.edge_positions.len() % 6, 0);
         assert!(mesh.indices.is_empty());
     }
+
+    //#region 🧪️ModelBridgeLaws
+    #[test]
+    fn cad_object_model_element_round_trip_preserves_identity_placement_and_geometry() {
+        let object = CadObject {
+            id: "object-7".into(),
+            label: "ignored on the way in — restored from the id on the way out".into(),
+            typology: "building.building.column".into(),
+            visible: false,
+            locked: true,
+            origin: [1.5, -2.25, 3.0],
+            orientation: Some([0.0, 0.707, 0.0, 0.707]),
+            scale: Some([1.0, 2.0, 1.0]),
+            mesh_url: None,
+            extent: Some([0.5, 0.5, 3.0]),
+            solid_handle: Some("brep-handle-42".into()),
+            primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "brep-handle-42".into(), kind: "solid".into() }],
+        };
+        let element = model_element_from_cad_object(&object);
+        assert_eq!(element.id, object.id);
+        assert_eq!(element.geometry, GeometryRef::Brep { brep_id: "brep-handle-42".into() });
+        let restored = cad_object_from_model_element(&element);
+        assert_eq!(restored.id, object.id);
+        assert_eq!(restored.typology, object.typology, "typology round-trips through ElementClass::Other");
+        assert_eq!(restored.origin, object.origin);
+        assert_eq!(restored.orientation, object.orientation);
+        assert_eq!(restored.scale, object.scale);
+        assert_eq!(restored.solid_handle, object.solid_handle);
+    }
+
+    #[test]
+    fn semio_model_snapshot_from_objects_round_trips_via_objects_from_model_snapshot() {
+        let objects = vec![
+            CadObject { id: "object-a".into(), label: "A".into(), typology: "spatial.shape.primitive.box".into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, extent: None, solid_handle: Some("h1".into()), primitives: Vec::new() },
+            CadObject { id: "object-b".into(), label: "B".into(), typology: "building.building.slab".into(), visible: true, locked: false, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, mesh_url: None, extent: None, solid_handle: None, primitives: Vec::new() },
+        ];
+        let model = semio_model_snapshot_from_objects(&objects);
+        assert_eq!(model.elements.len(), 2);
+        let restored = objects_from_model_snapshot(&model);
+        assert_eq!(restored.len(), 2);
+        assert_eq!(restored[0].id, "object-a");
+        assert_eq!(restored[0].typology, "spatial.shape.primitive.box");
+        assert_eq!(restored[0].solid_handle, Some("h1".into()));
+        assert_eq!(restored[1].id, "object-b");
+        assert_eq!(restored[1].solid_handle, None);
+    }
+    //#endregion 🧪️ModelBridgeLaws
 }

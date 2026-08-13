@@ -40,9 +40,9 @@ mod tests {
     #[test]
     fn reorganize_keeps_every_widget() {
         let mut app = flow_app();
-        let before = app.snapshot().expect("snapshot").widgets.len();
+        let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
         dispatch(&mut app, FlowCommand::Reorganize(reorganize::Reorganize {}));
-        assert_eq!(app.snapshot().expect("snapshot").widgets.len(), before);
+        assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before);
     }
 }
 //#endregion 🧪️Tests

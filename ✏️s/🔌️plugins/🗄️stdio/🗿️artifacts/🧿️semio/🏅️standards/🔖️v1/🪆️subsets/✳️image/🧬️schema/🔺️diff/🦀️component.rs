@@ -1,7 +1,7 @@
 //! 🔺️ SemioImageDiff — sparse per-field diff, handcrafted per `🧬️schema-design.md`'s recipe.
 //! `frames` (strong entity, per-field diffable) and `metadata` (weak/name-keyed entity, whole-
 //! value diffed) are both index/name-keyed collection triples built on the SHARED
-//! `standards::v1::engine::triples` module (`IndexedTripleDiff`/`NamedTripleDiff` +
+//! `standards::v1::subsets::any::schema::triples` module (`IndexedTripleDiff`/`NamedTripleDiff` +
 //! `enc_indexed_triple`/`enc_named_triple`) — no per-subset reinvention of that wire shape, per
 //! `w1b-type-ownership.md`. The between/apply/absorb/inverse ALGEBRA over those triple types is
 //! hand-rolled locally below (the shared module only owns the wire codec, not the algebra — every
@@ -9,7 +9,7 @@
 //! following the docx/gif precedent (`f6-docx-ecma-376-report.md`, `f6-final-summary.md` §4.4). No
 //! `snapshot: Option<SemioImageSnapshot>` full-replace slot anywhere.
 
-use crate::artifacts::semio::standards::v1::engine::triples::{
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{
     IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff,
     dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets,
 };

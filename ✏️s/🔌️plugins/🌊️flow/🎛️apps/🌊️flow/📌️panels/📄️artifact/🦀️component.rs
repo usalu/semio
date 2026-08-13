@@ -27,7 +27,8 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 pub fn render(fixture: &FlowSnapshot, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
-    let widget_items: Vec<UiTreeItemNode> = fixture
+    let live = fixture.to_fixture();
+    let widget_items: Vec<UiTreeItemNode> = live
         .widgets
         .iter()
         .map(|widget| {
@@ -35,7 +36,7 @@ pub fn render(fixture: &FlowSnapshot, selected: &[String], labels: &FlowPlayLabe
         })
         .collect();
     let synapse_items: Vec<UiTreeItemNode> =
-        fixture.synapses.iter().map(|synapse| tree_item_desc(format!("flow-play-document.synapse.{}", synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
+        live.synapses.iter().map(|synapse| tree_item_desc(format!("flow-play-document.synapse.{}", synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
     PanelTreeBuilder::new("flow-play-document")
         .section_or_placeholder("flow-play-document.widgets", Some(labels.widgets.into()), true, widget_items, labels.none_placeholder)
         .section_or_placeholder("flow-play-document.synapses", Some(labels.synapses.into()), false, synapse_items, labels.none_placeholder)
