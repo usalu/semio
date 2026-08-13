@@ -1,4 +1,4 @@
-# 🧬️ Program snapshot schema — persistent fields only.
+# 🧬️ Program snapshot schema — artifact-lane fields only.
 
 type ProgramSnapshot {
   schema: String! @state(class: ARTIFACT)

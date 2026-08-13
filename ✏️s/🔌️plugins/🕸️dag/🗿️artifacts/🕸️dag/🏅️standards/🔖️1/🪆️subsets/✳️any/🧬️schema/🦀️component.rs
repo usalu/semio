@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Artifact
-/// 🧬️ Full DAG artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full DAG artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag")]

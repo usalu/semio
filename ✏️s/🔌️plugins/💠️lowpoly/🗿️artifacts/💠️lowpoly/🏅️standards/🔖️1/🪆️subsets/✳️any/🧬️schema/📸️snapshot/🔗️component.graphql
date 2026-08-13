@@ -1,4 +1,4 @@
-# 🧬️ Lowpoly snapshot schema — persistent fields only.
+# 🧬️ Lowpoly snapshot schema — artifact-lane fields only.
 
 type LowpolySnapshot {
   schema: String! @state(class: ARTIFACT)

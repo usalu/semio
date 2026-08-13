@@ -4,11 +4,11 @@
 //! slug dirs directly — `📦️glue.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🗃entries/`).
 //!
-//! `model_json` is an opaque JSON body (`crate::model::Model`'s serialized form, per the field's
-//! own doc comment) — it is not guaranteed to decode into the full typed `Model` for every
-//! persisted snapshot (e.g. the default snapshot's `"{}"` has none of `Model`'s required fields),
-//! so the only honest whole-snapshot derivation treats it as an opaque byte/entry container: real
-//! top-level JSON key count, real byte size, real content digest — never a typed `Model` field.
+//! Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the old opaque `model_json` field is gone —
+//! `structure`/`zones` are composed `s.stdio.semio.value`/`table` children, so the whole-snapshot
+//! derivation now reads the real typed `crate::model::Model` behind them (via
+//! `crate::artifacts::model::energy_model`, the working-scene accessor) and census over ITS OWN
+//! `serde_json` serialization — always a full JSON object, never a possibly-malformed opaque body.
 
 use crate::artifacts::model::EnergyModelSnapshot;
 use schema::ArtifactSchema;
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<EnergyModelSnapshot> for EnergyModelInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.energy.model.inference.entries", reads: &["model_json"] }]
+        &[protocol::InferenceFieldSpec { id: "s.energy.model.inference.entries", reads: &["structure", "zones"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -90,7 +90,11 @@ mod tests {
     use protocol::Inference;
 
     fn populated_snapshot() -> EnergyModelSnapshot {
-        EnergyModelSnapshot { model_json: r#"{"name":"demo","zones":[]}"#.into(), ..EnergyModelSnapshot::default() }
+        crate::artifacts::model::energy_snapshot_with_state(
+            "energy.model",
+            crate::model::Model { name: "demo".into(), zones: Vec::new(), ..crate::model::Model::default() },
+            None,
+        )
     }
 
     #[test]
@@ -105,10 +109,12 @@ mod tests {
     }
 
     #[test]
-    fn entries_counts_top_level_keys_and_bytes() {
-        let inferred = EnergyModelInference::infer(&populated_snapshot());
-        assert_eq!(inferred.entries.entry_count, 2);
-        assert_eq!(inferred.entries.byte_size, populated_snapshot().model_json.len() as u32);
+    fn entries_counts_top_level_model_fields_and_bytes() {
+        let snapshot = populated_snapshot();
+        let inferred = EnergyModelInference::infer(&snapshot);
+        let expected_json = serde_json::to_string(&crate::artifacts::model::energy_model(&snapshot)).expect("Model serializes");
+        assert_eq!(inferred.entries.byte_size, expected_json.len() as u32);
+        assert!(inferred.entries.entry_count > 0);
     }
 }
 //#endregion 🧪️Tests

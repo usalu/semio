@@ -385,6 +385,8 @@ impl ArtifactApp for Fem3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::fem3d::presence::Fem3dPresence;
     type PresenceMutation = crate::apps::fem3d::presence::Fem3dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Fem3dCommand;
 

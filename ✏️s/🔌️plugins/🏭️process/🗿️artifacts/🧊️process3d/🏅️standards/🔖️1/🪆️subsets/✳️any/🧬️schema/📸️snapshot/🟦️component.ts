@@ -1,4 +1,4 @@
-/** 🧬️ Process3d snapshot schema — persistent fields only. */
+/** 🧬️ Process3d snapshot schema — artifact-lane fields only. */
 
 export interface Process3dSnapshot {
   /** @state artifact */

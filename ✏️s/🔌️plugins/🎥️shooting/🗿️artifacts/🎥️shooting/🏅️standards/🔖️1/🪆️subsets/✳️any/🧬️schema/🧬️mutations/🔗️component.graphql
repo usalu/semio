@@ -1,4 +1,4 @@
-# 🧬️ Shooting mutation schema — persistent fields only.
+# 🧬️ Shooting mutation schema — artifact-lane fields only.
 
 type ShootingMutation {
   schema: String! @state(class: ARTIFACT)

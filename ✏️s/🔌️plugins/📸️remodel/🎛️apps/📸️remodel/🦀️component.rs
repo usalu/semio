@@ -415,6 +415,8 @@ impl ArtifactApp for RemodelPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = RemodelPresence;
     type PresenceMutation = RemodelPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = RemodelCommand;
 

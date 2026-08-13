@@ -75,7 +75,7 @@ mod tests {
         let json = serde_json::to_string(&envelope).expect("serialize");
         let deck = materialize_present_projection_json(&json).expect("materialize");
         assert_eq!(deck.schema, PRESENT_DOCUMENT_SCHEMA);
-        assert!(deck.tiles.is_empty());
+        assert!(crate::artifacts::present::present_working_scene(&deck).1.is_empty());
     }
 
     #[test]
@@ -87,7 +87,7 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        assert_eq!(store.snapshot().expect("projection").tiles.len(), 1);
+        assert_eq!(crate::artifacts::present::present_working_scene(&store.snapshot().expect("projection")).1.len(), 1);
     }
 
     //#region 🔖️DocumentTextTests

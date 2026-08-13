@@ -1,4 +1,4 @@
-/** 🧬️ Vdi3805 snapshot schema — persistent fields only. */
+/** 🧬️ Vdi3805 snapshot schema — artifact-lane fields only. */
 
 export interface Vdi3805Snapshot {
   /** @state artifact */

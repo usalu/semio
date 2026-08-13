@@ -1,11 +1,16 @@
 //! 🧬️ Curate diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::curate::{CuratedItem, Filters, ObjectKind};
+use crate::artifacts::curate::{CuratedItem, Filters, ObjectKindExtra};
 use schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the curate artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
+/// `catalog`/`stock_extra` replace the former `stock: Option<CurateStockDelta>` — `catalog` is a
+/// whole-handle replace (never incrementally patched: composed-child content changes through the
+/// child's OWN history, never through this parent diff), `stock_extra` keeps the same id-keyed
+/// added/removed/patched/reordered shape the old `stock` delta used.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.sourcing.curate")]
@@ -13,7 +18,10 @@ pub struct CurateDiff {
     #[state(artifact)]
     pub artifact: Option<Box<crate::artifacts::curate::schema::CurateArtifact>>,
     #[state(artifact)]
-    pub stock: Option<CurateStockDelta>,
+    #[child(kind = "s.stdio.semio.kit")]
+    pub catalog: Option<store::ArtifactChild<SemioKitSnapshot>>,
+    #[state(artifact)]
+    pub stock_extra: Option<CurateStockExtraDelta>,
     #[state(artifact)]
     pub curated: Option<CurateCuratedDelta>,
     #[state(config)]
@@ -28,21 +36,21 @@ pub struct CurateDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-/// 🩹 One patched stock entry.
+/// 🩹 One patched stock-extra entry.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CurateObjectKindPatchEntry {
+pub struct CurateObjectKindExtraPatchEntry {
     pub id: String,
-    pub kind: ObjectKind,
+    pub extra: ObjectKindExtra,
 }
 
-/// 🧩 Identified-collection delta for `stock`.
+/// 🧩 Identified-collection delta for `stock_extra`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct CurateStockDelta {
-    pub added: Vec<ObjectKind>,
+pub struct CurateStockExtraDelta {
+    pub added: Vec<ObjectKindExtra>,
     pub removed: Vec<String>,
-    pub patched: Vec<CurateObjectKindPatchEntry>,
+    pub patched: Vec<CurateObjectKindExtraPatchEntry>,
     pub reordered: Option<Vec<String>>,
 }
 

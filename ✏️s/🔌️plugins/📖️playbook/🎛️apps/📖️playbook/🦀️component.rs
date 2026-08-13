@@ -74,6 +74,8 @@ impl ArtifactApp for PlaybookPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::playbook::presence::PlaybookPresence;
     type PresenceMutation = crate::apps::playbook::presence::PlaybookPresenceMutation;
+    type Transient = semio_framework_plugin::app::NoTransient;
+    type TransientMutation = semio_framework_plugin::app::NoTransientMutation;
 
     type Command = PlaybookCommand;
 
@@ -116,7 +118,7 @@ impl ArtifactApp for PlaybookPlayApp {
         let chapter: PlaybookChapterPayload = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let spec = doc.snapshot;
         let mut operations = Vec::new();
-        if !spec.steps.iter().any(|step| step.id == PLAYBOOK_IMPORTED_STEP_ID) {
+        if !spec.steps().iter().any(|step| step.id == PLAYBOOK_IMPORTED_STEP_ID) {
             operations.push(PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() }, index: None }));
         }
         let block_id = format!("chapter-{}", flatten_playbook_blocks(spec).len() + 1);
@@ -295,7 +297,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = playbook_app();
-        testkit::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps.len(), 1, 2);
+        testkit::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2);
     }
 
     #[test]
@@ -317,7 +319,8 @@ mod tests {
             PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }),
             |app| {
                 let projection = app.snapshot().expect("materialize projection");
-                (projection.steps.len(), projection.steps[0].blocks.len())
+                let steps = projection.steps();
+                (steps.len(), steps[0].blocks.len())
             },
         );
     }
@@ -362,8 +365,10 @@ mod tests {
     #[test]
     fn import_media_reuses_the_imported_step_on_a_second_import() {
         let app = PlaybookPlayApp;
-        let mut spec = crate::artifacts::playbook::empty_playbook_snapshot();
-        spec.steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
+        let base = crate::artifacts::playbook::empty_playbook_snapshot();
+        let mut steps = base.steps();
+        steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
+        let spec = crate::artifacts::playbook::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps);
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&spec, &history);
         let media = chapter_media("second chapter", "Second");

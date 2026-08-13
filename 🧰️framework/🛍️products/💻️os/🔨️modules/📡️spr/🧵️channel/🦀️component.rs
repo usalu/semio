@@ -1022,6 +1022,8 @@ mod tests {
                 draft: vec![6],
                 draft_spr: vec![7],
             }),
+            ("LoadChildren", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
+            ("ReadChildren", AppCommand::ReadChildren { seq: 1 }),
         ]
     }
 
@@ -1051,6 +1053,7 @@ mod tests {
                 diagnostics: vec![],
             }),
             ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
+            ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
         ]
     }
 
@@ -1060,7 +1063,7 @@ mod tests {
     /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
     fn channel_command_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Hello" => "000503617070056163746f72020102",
+            "Hello" => "000603617070056163746f72020102",
             "ConfigCommand" => "01010109",
             "Command" => "0201010100",
             "CommandText" => "030102676f",
@@ -1079,6 +1082,8 @@ mod tests {
             "MediaFingerprint" => "10010170",
             "Bye" => "11",
             "PureCommand" => "12010101010201030104010501060107",
+            "LoadChildren" => "1301010173016301640101",
+            "ReadChildren" => "1401",
             other => panic!("channel_command_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -1087,7 +1092,7 @@ mod tests {
     /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
     fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Welcome" => "0005010101",
+            "Welcome" => "0006010101",
             "Done" => "0101",
             "Invocation" => "0201010100",
             "UiSection" => "03010101016b0100",
@@ -1103,6 +1108,7 @@ mod tests {
             "Error" => "0d000163",
             "Emit" => "0e0101010000010200",
             "Draft" => "0f01010101020164",
+            "Children" => "1001010173016301640101",
             other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }

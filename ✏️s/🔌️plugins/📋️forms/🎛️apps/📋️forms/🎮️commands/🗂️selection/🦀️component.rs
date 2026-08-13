@@ -27,11 +27,12 @@ mod tests {
     use super::*;
     use crate::apps::forms::testkit::{dispatch, forms_app, render};
     use crate::apps::forms::{FormsCommand, FORMS_PLAY_BODY_BLUEPRINT};
+    use crate::artifacts::forms::forms_steps;
 
     #[test]
     fn set_selection_reflects_in_the_blueprint_builder_render() {
         let mut app = forms_app();
-        let first_question_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
+        let first_question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
         dispatch(&mut app, FormsCommand::SetSelection(set_selection::SetSelection { ids: vec![first_question_id.clone()] }));
         let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT);
         assert!(json.contains(&format!(r#""selectedId":"{first_question_id}""#)));

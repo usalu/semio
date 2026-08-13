@@ -1,4 +1,4 @@
-//! 🧬️ Note snapshot schema — persistent fields only.
+//! 🧬️ Note snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;

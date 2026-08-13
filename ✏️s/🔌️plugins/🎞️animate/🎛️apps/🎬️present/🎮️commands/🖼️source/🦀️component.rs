@@ -22,7 +22,8 @@ pub mod set_source {
 
     pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
-        let replaced = payload.source.src != deck.source.src;
+        let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
+        let replaced = payload.source.src != deck_source.src;
         let mut operations = vec![PresentMutation::ReplaceSource(ReplaceSource { new_source: payload.source.clone() })];
         let mut config_mutations = Vec::new();
         if replaced {
@@ -90,32 +91,33 @@ mod tests {
     fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
         let mut source = crate::artifacts::present::default_figure_tile_source();
         source.src = "/new-figure.png".into();
         source.kind = "image".into();
         dispatch(&mut app, PresentCommand::SetSource(set_source::SetSource { source }));
         let deck = app.snapshot().expect("projection");
-        assert_eq!(deck.source.src, "/new-figure.png");
-        assert_eq!(deck.source.kind, "image");
-        assert!(deck.tiles.is_empty(), "changing the source src clears stale tiles");
+        let (deck_source, deck_tiles) = crate::artifacts::present::present_working_scene(&deck);
+        assert_eq!(deck_source.src, "/new-figure.png");
+        assert_eq!(deck_source.kind, "image");
+        assert!(deck_tiles.is_empty(), "changing the source src clears stale tiles");
     }
 
     #[test]
     fn set_source_with_same_src_keeps_existing_tiles() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::apps::present::commands::grid::seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        let mut source = app.snapshot().expect("projection").source;
+        let (mut source, _) = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection"));
         source.kind = "figure".into();
         dispatch(&mut app, PresentCommand::SetSource(set_source::SetSource { source }));
-        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4, "unchanged src does not clear tiles");
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unchanged src does not clear tiles");
     }
 
     #[test]
     fn set_frame_updates_source_frame() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SetFrame(set_frame::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } }));
-        let frame = app.snapshot().expect("projection").source.frame;
+        let frame = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).0.frame;
         assert_eq!(frame.x, 0.1);
         assert_eq!(frame.y, 0.2);
         assert_eq!(frame.width, 0.3);
@@ -142,7 +144,7 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <PresentSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert!(loaded.tiles.is_empty(), "resetting to demo loads the default deck, which has no tiles");
+        assert!(crate::artifacts::present::present_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no tiles");
     }
 
     #[test]

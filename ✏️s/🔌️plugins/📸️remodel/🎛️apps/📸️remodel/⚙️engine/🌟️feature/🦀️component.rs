@@ -335,7 +335,7 @@ pub fn match_brute(desc_a: &[Descriptor256], desc_b: &[Descriptor256], ratio: f3
     matches
 }
 
-fn epipolar_line_candidates(grid: &math::spatial::Grid2, line: (f64, f64, f64), bounds: (f32, f32, f32, f32), step: f64) -> Vec<u32> {
+fn epipolar_line_candidates(grid: &crate::spatial::Grid2, line: (f64, f64, f64), bounds: (f32, f32, f32, f32), step: f64) -> Vec<u32> {
     let (l0, l1, l2) = line;
     let (min_x, max_x, min_y, max_y) = bounds;
     let mut seen = std::collections::HashSet::new();
@@ -363,14 +363,14 @@ fn epipolar_line_candidates(grid: &math::spatial::Grid2, line: (f64, f64, f64), 
     out
 }
 
-/// 🧭️ Epipolar-guided matching: for each keypoint in `kp_a`, computes its epipolar line `l = F [x, y, 1]` in image B, walks that line (stepping through a [`math::spatial::Grid2`] bucketed over `kp_b` for efficiency) to gather candidates within `band_px` of the line by point-to-line distance, then runs the same Lowe's-ratio matching as [`match_brute`] restricted to those candidates.
+/// 🧭️ Epipolar-guided matching: for each keypoint in `kp_a`, computes its epipolar line `l = F [x, y, 1]` in image B, walks that line (stepping through a [`crate::spatial::Grid2`] bucketed over `kp_b` for efficiency) to gather candidates within `band_px` of the line by point-to-line distance, then runs the same Lowe's-ratio matching as [`match_brute`] restricted to those candidates.
 /// <https://en.wikipedia.org/wiki/Epipolar_geometry>
 pub fn match_guided_epipolar(kp_a: &[Keypoint], desc_a: &[Descriptor256], kp_b: &[Keypoint], desc_b: &[Descriptor256], f_matrix: &[[f64; 3]; 3], band_px: f32) -> Vec<Match> {
     if kp_b.is_empty() {
         return Vec::new();
     }
     let cell = f64::from(band_px.max(1.0));
-    let mut grid = math::spatial::Grid2::new(cell);
+    let mut grid = crate::spatial::Grid2::new(cell);
     for (j, kp) in kp_b.iter().enumerate() {
         grid.insert([f64::from(kp.x), f64::from(kp.y)], j as u32);
     }
@@ -410,13 +410,13 @@ pub fn match_guided_epipolar(kp_a: &[Keypoint], desc_a: &[Descriptor256], kp_b: 
     matches
 }
 
-/// 🩹️ ZNCC patch-correlation fallback for pairs where binary descriptors fail (cross-sensor or low-texture imagery): for each keypoint in `kp_a`, gathers `kp_b` candidates within `search_radius` via a [`math::spatial::Grid2`], scores each with [`zncc`] over patches from [`extract_patch`], and keeps the best candidate above a `0.6` correlation floor. The reported `distance` is `round((1 - zncc) * 1000)`, a monotone integer proxy so lower still means a better match.
+/// 🩹️ ZNCC patch-correlation fallback for pairs where binary descriptors fail (cross-sensor or low-texture imagery): for each keypoint in `kp_a`, gathers `kp_b` candidates within `search_radius` via a [`crate::spatial::Grid2`], scores each with [`zncc`] over patches from [`extract_patch`], and keeps the best candidate above a `0.6` correlation floor. The reported `distance` is `round((1 - zncc) * 1000)`, a monotone integer proxy so lower still means a better match.
 pub fn match_zncc_fallback(img_a: &ImageGray, kp_a: &[Keypoint], img_b: &ImageGray, kp_b: &[Keypoint], search_radius: f32) -> Vec<Match> {
     if kp_b.is_empty() {
         return Vec::new();
     }
     let cell = f64::from(search_radius.max(1.0));
-    let mut grid = math::spatial::Grid2::new(cell);
+    let mut grid = crate::spatial::Grid2::new(cell);
     for (j, kp) in kp_b.iter().enumerate() {
         grid.insert([f64::from(kp.x), f64::from(kp.y)], j as u32);
     }

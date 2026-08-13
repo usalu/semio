@@ -24,6 +24,20 @@ extern crate semio_framework_schema as schema;
 // so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
 
+//#region 🧮️MathInternals
+// 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d: crate-root
+// aliases onto the compute-internals mounted below in `artifacts::remodel::…::schema` — every
+// `crate::algebra::`/`crate::optimize::`/`crate::lie::`/`crate::signal::`/`crate::spatial::` call
+// site (the moved files' own internal references, and the app-engine files that used to say
+// `math::algebra::` etc.) resolves through these, exactly as the old `math::` extern-prelude
+// name used to. `semio-framework-math` is no longer a dependency of this crate.
+pub(crate) use artifacts::remodel::standards::v1::subsets::any::schema::algebra_internals as algebra;
+pub(crate) use artifacts::remodel::standards::v1::subsets::any::schema::optimize_internals as optimize;
+pub(crate) use artifacts::remodel::standards::v1::subsets::any::schema::lie_internals as lie;
+pub(crate) use artifacts::remodel::standards::v1::subsets::any::schema::signal_internals as signal;
+pub(crate) use artifacts::remodel::standards::v1::subsets::any::schema::spatial_internals as spatial;
+//#endregion 🧮️MathInternals
+
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {
@@ -46,6 +60,23 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            // 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d:
+                            // Rust-only compute-internals, mirroring the `✳️table/🧬️schema/📋️tabular-internals`
+                            // and `✳️brep/🧬️schema/⚙️engine` precedent — moved wholesale from `🧮️math`, sole
+                            // repo-wide consumer verified to be this crate. Crate-root aliases (`crate::algebra`,
+                            // `crate::optimize`, `crate::lie`, `crate::signal`, `crate::spatial`, below in this
+                            // file) let the moved files' own `crate::algebra::` references and the app-engine
+                            // consumer files (which used to say `math::algebra::`) resolve unchanged.
+                            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/➕️algebra-internals/🦀️component.rs"]
+                            pub mod algebra_internals;
+                            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎯️optimize-internals/🦀️component.rs"]
+                            pub mod optimize_internals;
+                            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔷️lie-internals/🦀️component.rs"]
+                            pub mod lie_internals;
+                            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📶️signal-internals/🦀️component.rs"]
+                            pub mod signal_internals;
+                            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️spatial-internals/🦀️component.rs"]
+                            pub mod spatial_internals;
                             #[path = "."]
                             pub mod snapshot {
                                 #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
@@ -68,6 +99,12 @@ pub mod artifacts {
                                 #[path = "."]
                                 pub mod bounds {
                                     #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                                #[path = "."]
+                                pub mod relative_pose {
+                                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔄relative-pose/🦀️component.rs"]
                                     mod component;
                                     pub use component::*;
                                 }

@@ -1,9 +1,11 @@
-//! 🗃 `entries` — one named inference: an opaque-container census of the persisted `model_json`
-//! body (real top-level JSON key count, real byte size, real content digest). `model_json` is not
-//! guaranteed to decode into the typed `crate::model::Model` for every persisted snapshot (the
-//! default snapshot's `"{}"` has none of `Model`'s required fields), so this leaf never assumes a
-//! successful `Model` decode — it treats the field as an opaque JSON body, the same honest
-//! treatment an archive/container facet gives its own opaque payload.
+//! 🗃 `entries` — one named inference: a census over the working-scene `Model` behind a snapshot's
+//! composed `structure`/`zones` children (real top-level `Model`-field count, real JSON byte size,
+//! real content digest). Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the old opaque
+//! `model_json` field is gone — since a composed child slot can only ever hold a real, typed
+//! `Model` (never arbitrary/malformed text), this leaf now census over
+//! `crate::artifacts::model::energy_model(snapshot)`'s own `serde_json` serialization, which is
+//! ALWAYS a full JSON object (`Model` derives `Default`, every field always present) rather than
+//! treating the body as an opaque, possibly-malformed byte string.
 
 use crate::artifacts::model::EnergyModelSnapshot;
 use serde::{Deserialize, Serialize};
@@ -11,7 +13,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 //#region 🔖️Entries
-/// 🗃️ Opaque-container census of `model_json`.
+/// 🗃️ Census of the working-scene `Model` behind a snapshot's composed children.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnergyModelEntries {
@@ -20,14 +22,16 @@ pub struct EnergyModelEntries {
     pub content_digest: String,
 }
 
-/// 🗃️ `entryCount` = number of top-level keys when `model_json` parses as a JSON object (`0`
-/// otherwise — malformed/non-object bodies still get a valid, deterministic census rather than an
-/// error); `byteSize` = real UTF-8 byte length; `contentDigest` = a deterministic (within-process)
-/// fingerprint over those same bytes. Std-only (`DefaultHasher`), same reasoning as
-/// `🏠️home/🆔digest`: no external hash crate needed for a single scalar byte-string digest.
+/// 🗃️ `entryCount` = number of top-level `Model` fields (its own `serde_json` object always has
+/// one key per field — `Model` derives `Default`, never a partial object); `byteSize` = real UTF-8
+/// byte length of that JSON; `contentDigest` = a deterministic (within-process) fingerprint over
+/// those same bytes. Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external
+/// hash crate needed for a single scalar byte-string digest.
 pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
-    let bytes = snapshot.model_json.as_bytes();
-    let entry_count = match serde_json::from_str::<serde_json::Value>(&snapshot.model_json) {
+    let model = crate::artifacts::model::energy_model(snapshot);
+    let json = serde_json::to_string(&model).unwrap_or_default();
+    let bytes = json.as_bytes();
+    let entry_count = match serde_json::to_value(&model) {
         Ok(serde_json::Value::Object(map)) => map.len() as u32,
         _ => 0,
     };
@@ -42,32 +46,54 @@ pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyMod
 mod tests {
     use super::*;
 
+    /// 🌱 `crate::model::Model` has exactly 40 top-level fields (name/version/site/zones/spaces/
+    /// surfaces/fenestrations/materials/constructions/people/lighting/equipment/thermostats/
+    /// humidistats/setpointManagers/idealLoads/zoneEquipment/airLoops/plantLoops/
+    /// outdoorAirSystems/infiltrations/mechanicalVentilations/shadingSurfaces/spaceLists/
+    /// thermalEnclosures/adjacencyPairs/airflowNetwork/electricalLoadCenters/pvSystems/
+    /// batteryStorage/shwSystems/solarThermalSystems/refrigerationSystems/waterSystems/faults/
+    /// outputVariables/sizingObjects/daylightZones/roomAirModels/groundTemperature) — counted
+    /// directly against `🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs`'s `struct Model`.
+    const MODEL_FIELD_COUNT: u32 = 40;
+
     #[test]
-    fn default_model_json_yields_zero_entries_and_a_real_byte_size() {
+    fn default_model_yields_the_full_field_count_and_a_real_byte_size() {
         let entries = compute_energy_model_entries(&EnergyModelSnapshot::default());
-        assert_eq!(entries.entry_count, 0);
-        assert_eq!(entries.byte_size, "{}".len() as u32);
+        assert_eq!(entries.entry_count, MODEL_FIELD_COUNT);
+        let expected_bytes = serde_json::to_string(&crate::model::Model::default()).expect("Model serializes").len() as u32;
+        assert_eq!(entries.byte_size, expected_bytes);
     }
 
     #[test]
-    fn top_level_keys_are_counted_exactly() {
-        let snapshot = EnergyModelSnapshot { model_json: r#"{"a":1,"b":2,"c":3}"#.into(), ..EnergyModelSnapshot::default() };
+    fn top_level_field_count_is_stable_regardless_of_content() {
+        let snapshot = crate::artifacts::model::energy_snapshot_with_state(
+            "energy.model",
+            crate::model::Model { name: "demo".into(), ..crate::model::Model::default() },
+            None,
+        );
         let entries = compute_energy_model_entries(&snapshot);
-        assert_eq!(entries.entry_count, 3);
+        assert_eq!(entries.entry_count, MODEL_FIELD_COUNT);
     }
 
+    /// 🌱 A cache-miss (fresh working scene, e.g. a snapshot decoded via `parse_dsl`/`decode_pack`
+    /// in a new process) still yields a deterministic census — `energy_model` fails soft to
+    /// `Model::default()`, never a panic; this is the honest staleness-gap consequence
+    /// `🔖️WorkingScene`'s own doc comment documents, exercised for real here.
     #[test]
-    fn malformed_json_still_yields_a_deterministic_census() {
-        let snapshot = EnergyModelSnapshot { model_json: "not json".into(), ..EnergyModelSnapshot::default() };
+    fn cache_miss_still_yields_a_deterministic_census() {
+        let snapshot = EnergyModelSnapshot::default();
         let entries = compute_energy_model_entries(&snapshot);
-        assert_eq!(entries.entry_count, 0);
         assert_eq!(entries, compute_energy_model_entries(&snapshot));
     }
 
     #[test]
     fn different_bodies_yield_different_digests() {
-        let a = EnergyModelSnapshot { model_json: "{}".into(), ..EnergyModelSnapshot::default() };
-        let b = EnergyModelSnapshot { model_json: r#"{"x":1}"#.into(), ..EnergyModelSnapshot::default() };
+        let a = crate::artifacts::model::energy_snapshot_with_state("energy.model", crate::model::Model::default(), None);
+        let b = crate::artifacts::model::energy_snapshot_with_state(
+            "energy.model",
+            crate::model::Model { name: "x".into(), ..crate::model::Model::default() },
+            None,
+        );
         assert_ne!(compute_energy_model_entries(&a).content_digest, compute_energy_model_entries(&b).content_digest);
     }
 }

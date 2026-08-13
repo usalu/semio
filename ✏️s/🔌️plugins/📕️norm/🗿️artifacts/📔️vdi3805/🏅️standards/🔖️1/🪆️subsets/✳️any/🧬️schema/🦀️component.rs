@@ -8,7 +8,7 @@ use crate::artifacts::vdi3805::{CatalogIndex, CharacteristicCurve, EditionId, Ed
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full Vdi3805 artifact state across persistent and shared-ui classes.
+/// 🧬️ Full Vdi3805 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805")]

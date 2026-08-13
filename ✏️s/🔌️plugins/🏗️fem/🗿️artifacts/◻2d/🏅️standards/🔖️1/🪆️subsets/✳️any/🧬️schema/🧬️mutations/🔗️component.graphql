@@ -1,4 +1,4 @@
-# 🧬️ Fem2d mutation schema — persistent fields only.
+# 🧬️ Fem2d mutation schema — artifact-lane fields only.
 
 type Fem2dMutation {
   nodes: [FemNode!]! @state(class: ARTIFACT)

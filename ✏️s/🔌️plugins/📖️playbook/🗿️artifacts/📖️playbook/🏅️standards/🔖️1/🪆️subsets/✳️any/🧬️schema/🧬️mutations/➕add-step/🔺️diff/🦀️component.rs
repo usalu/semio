@@ -1,11 +1,12 @@
 //! 🔺️ Sparse diff builder for `AddStep` — a real ordered insert (never a whole-snapshot capture).
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot, PlaybookStepsDelta};
+use crate::artifacts::playbook::schema::diff::text::diff_replace_content;
+use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::AddStep, base: &PlaybookSnapshot) -> PlaybookDiff {
-    let mut order: Vec<String> = base.steps.iter().map(|step| step.id.clone()).collect();
-    let at = payload.index.unwrap_or(order.len()).min(order.len());
-    order.insert(at, payload.step.id.clone());
-    PlaybookDiff { steps: Some(PlaybookStepsDelta { added: vec![payload.step.clone()], reordered: Some(order), ..Default::default() }), ..Default::default() }
+    let mut steps = crate::artifacts::playbook::playbook_working_scene(base).steps;
+    let at = payload.index.unwrap_or(steps.len()).min(steps.len());
+    steps.insert(at, payload.step.clone());
+    diff_replace_content(base.title.as_deref(), steps)
 }
 //#endregion 🔖️Diff

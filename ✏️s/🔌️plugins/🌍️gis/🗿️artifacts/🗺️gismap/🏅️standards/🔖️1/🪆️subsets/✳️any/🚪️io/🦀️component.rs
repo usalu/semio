@@ -232,13 +232,20 @@ pub const GIS_MAP_FORMAT: &str = "gis2d";
 /// had no media IO at all, and inside the bundle plugin load order silently decided the winner for
 /// an OS-global key.
 ///
-/// `register_2d_export_handlers`/`register_dwg_import_handler` are outside APA §6's covered
-/// registrar set, so `ArtifactDeclaration` models neither and this stays an imperative fn reached
-/// from `.setup()`. The `fn(&DwgDrawing)` shape of the import bridge is fixed by the OS registrar
-/// (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS G2b owns that
-/// signature until W6's media registry rewrite) — this move relocates the call, never the shape.
+/// `register_2d_export_handlers` is outside APA §6's covered registrar set, so
+/// `ArtifactDeclaration` models neither it nor its former `register_dwg_import_handler` sibling,
+/// and this stays an imperative fn reached from `.setup()`.
+///
+/// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
+/// `register_dwg_import_handler` call this used to make is DELETED, not migrated -- this facet's
+/// own `io_registry::entries()` already carries a real `ComposerEntry` for `"s.stdio.dwg"`
+/// (`DEP_DWG`), reachable via `io_dispatch` once the OS media pipeline's `native_kind` bridging bug
+/// is fixed (`component_kind` = `"gismap"`, not the raw `"2d.map"` workflow kind id — see host
+/// `🦀️component.rs`'s `native_dialect_kind`). `gis2d_document_json_from_dwg` (still called directly
+/// by this file's own tests) is unaffected -- it stops being registered into the now-redundant OS
+/// escape hatch, not deleted. `register_2d_export_handlers` is a separate function, not in this
+/// wave's five-function scope.
 pub fn register_host_io() {
     semio_framework_os::register_2d_export_handlers(GIS_MAP_KIND, GIS_MAP_FORMAT, crate::artifacts::gismap::schema::gis2d_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler(GIS_MAP_KIND, crate::artifacts::gismap::schema::gis2d_document_json_from_dwg);
 }
 //#endregion 🔌️HostIoRegistration

@@ -1,4 +1,4 @@
-# 🧬️ Curate snapshot schema — persistent fields only.
+# 🧬️ Curate snapshot schema — artifact-lane fields only.
 
 enum SortDirection {
   ASC
@@ -62,12 +62,22 @@ type ObjectKind {
   geometry: GeometryRecipe!
 }
 
+# 🧩️ Sourcing-owned overflow half of ObjectKind not representable in the composed
+# s.stdio.semio.kit subset's SemioKitType (id/name/category only).
+type ObjectKindExtra {
+  id: String!
+  typologyPath: [String!]!
+  availability: Int!
+  geometry: GeometryRecipe!
+}
+
 type CuratedItem {
   objectId: String!
   count: Int!
 }
 
 type CurateSnapshot {
-  stock: [ObjectKind!]! @state(class: ARTIFACT)
+  catalog: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.kit")
+  stockExtra: [ObjectKindExtra!]! @state(class: ARTIFACT)
   curated: [CuratedItem!]! @state(class: ARTIFACT)
 }

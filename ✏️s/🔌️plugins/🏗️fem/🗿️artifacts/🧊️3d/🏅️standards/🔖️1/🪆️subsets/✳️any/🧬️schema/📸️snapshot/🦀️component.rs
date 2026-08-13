@@ -1,4 +1,4 @@
-//! 🧬️ Fem3d snapshot schema — persistent fields only.
+//! 🧬️ Fem3d snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::fem3d::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport, FemSolid, };
 use schema::ArtifactSchema;

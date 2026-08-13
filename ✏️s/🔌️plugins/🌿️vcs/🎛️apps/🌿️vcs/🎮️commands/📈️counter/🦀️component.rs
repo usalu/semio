@@ -14,7 +14,7 @@ pub mod increment_counter {
     pub struct IncrementCounter {}
 
     pub fn handle(_payload: &IncrementCounter, doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
-        Ok(Emit::mutations(vec![VcsDemoMutation::SetCounter { counter: doc.snapshot.counter + 1 }]))
+        Ok(Emit::mutations(vec![crate::artifacts::vcs::mutations::change_counter(doc.snapshot.counter + 1)]))
     }
 }
 //#endregion 🔖️IncrementCounter

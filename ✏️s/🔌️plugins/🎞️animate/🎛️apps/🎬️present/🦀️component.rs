@@ -184,7 +184,8 @@ pub(crate) fn new_tile_id(prefix: &str) -> String {
 /// 🧹️ Retains only the ids that reference an existing tile in `deck` — shared by every command that
 /// accepts a selection/target id list.
 pub(crate) fn valid_tile_ids(deck: &PresentSnapshot, ids: Vec<String>) -> Vec<String> {
-    let valid: HashSet<&str> = deck.tiles.iter().map(|tile| tile.id.as_str()).collect();
+    let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
+    let valid: HashSet<&str> = tiles.iter().map(|tile| tile.id.as_str()).collect();
     ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
 }
 
@@ -206,7 +207,8 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
 /// Shared by `🎮️commands/🐚️shell::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
 /// `"copy"`/`"copy prompt"` keywords.
 pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> HostEffect {
-    HostEffect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&deck.source, &deck.tiles), encoding: None }
+    let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
+    HostEffect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&source, &tiles), encoding: None }
 }
 
 /// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "reset the
@@ -279,6 +281,8 @@ impl ArtifactApp for AnimatePresentPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::present::presence::PresentPresence;
     type PresenceMutation = crate::apps::present::presence::PresentPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = PresentCommand;
 
@@ -307,7 +311,7 @@ impl ArtifactApp for AnimatePresentPlayApp {
             return Err(MediaError::NotImplemented);
         }
         let deck = doc.snapshot;
-        let count = deck.tiles.len();
+        let count = crate::artifacts::present::present_working_scene(deck).1.len();
         let id = next_frame_tile_id(count);
         let crop = next_frame_tile_crop(count);
         let name = frame_media_name(port, media)?;
@@ -450,11 +454,11 @@ mod tests {
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).expect("seed grid");
-        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
         app.handle_action("undo", None, &meta("local")).expect("undo");
-        assert!(app.snapshot().expect("projection").tiles.is_empty());
+        assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
         app.handle_action("redo", None, &meta("local")).expect("redo");
-        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
     }
 
     #[test]
@@ -504,19 +508,19 @@ mod tests {
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
         instance_a.dispatch_typed(PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a")).expect("a adds tile");
-        let mut source = instance_b.snapshot().expect("projection").source;
+        let (mut source, _) = crate::artifacts::present::present_working_scene(&instance_b.snapshot().expect("projection"));
         source.kind = "video".into();
         instance_b.dispatch_typed(PresentCommand::SetSource(set_source::SetSource { source }), &meta("actor-b")).expect("b sets source kind");
 
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
 
-        let projection_a = instance_a.snapshot().expect("projection");
-        let projection_b = instance_b.snapshot().expect("projection");
-        assert_eq!(projection_a.tiles.len(), 1, "instance A keeps its own tile");
-        assert_eq!(projection_b.tiles.len(), 1, "instance B converges on A's tile");
-        assert_eq!(projection_a.source.kind, "video", "instance A converges on B's source edit");
-        assert_eq!(projection_b.source.kind, "video", "instance B keeps its own source edit");
+        let (source_a, tiles_a) = crate::artifacts::present::present_working_scene(&instance_a.snapshot().expect("projection"));
+        let (source_b, tiles_b) = crate::artifacts::present::present_working_scene(&instance_b.snapshot().expect("projection"));
+        assert_eq!(tiles_a.len(), 1, "instance A keeps its own tile");
+        assert_eq!(tiles_b.len(), 1, "instance B converges on A's tile");
+        assert_eq!(source_a.kind, "video", "instance A converges on B's source edit");
+        assert_eq!(source_b.kind, "video", "instance B keeps its own source edit");
     }
 
     //#region 🔖️PortTests
@@ -533,12 +537,12 @@ mod tests {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         use serde_json::json;
         let mut app = testkit::present_app_with_registry();
-        let before = app.snapshot().expect("projection").tiles.len();
+        let before = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "hero-frame", "src": "/frames/hero.png" }).to_string() } };
         app.import_media("frames:in", &media, &meta("local")).expect("import frames:in");
-        let after = app.snapshot().expect("projection");
-        assert_eq!(after.tiles.len(), before + 1);
-        assert_eq!(after.tiles.last().expect("imported tile").name, "hero-frame");
+        let (_, after_tiles) = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection"));
+        assert_eq!(after_tiles.len(), before + 1);
+        assert_eq!(after_tiles.last().expect("imported tile").name, "hero-frame");
     }
 
     #[test]
@@ -550,7 +554,7 @@ mod tests {
             let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "frame" }).to_string() } };
             app.import_media("frames:in", &media, &meta("local")).expect("import frames:in");
         }
-        let tiles = app.snapshot().expect("projection").tiles;
+        let (_, tiles) = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection"));
         assert_eq!(tiles.len(), 2);
         assert_ne!(tiles[0].crop, tiles[1].crop, "repeated imports land in distinct cells");
     }
@@ -565,7 +569,8 @@ mod tests {
 
     #[test]
     fn empty_present_snapshot_has_no_tiles() {
-        assert!(crate::artifacts::present::schema::empty_present_snapshot().tiles.is_empty());
+        let snapshot = crate::artifacts::present::schema::empty_present_snapshot();
+        assert!(crate::artifacts::present::present_working_scene(&snapshot).1.is_empty());
     }
 
     /// 🌱️ Relocated from the former artifact-tree `⚙️engine`'s own tests (ticket

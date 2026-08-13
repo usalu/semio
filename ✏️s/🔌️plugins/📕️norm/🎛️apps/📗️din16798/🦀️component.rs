@@ -55,6 +55,8 @@ impl ArtifactApp for Din16798PlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = NormPresence;
     type PresenceMutation = NormPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Din16798Command;
 

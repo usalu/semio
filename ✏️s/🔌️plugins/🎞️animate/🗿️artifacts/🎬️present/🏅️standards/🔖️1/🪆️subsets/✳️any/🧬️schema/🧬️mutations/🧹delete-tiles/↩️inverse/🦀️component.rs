@@ -10,8 +10,9 @@ use std::collections::HashSet;
 /// order it originally held — ids already absent from `base` contribute nothing, matching the
 /// taxonomy's rule for a mutation with nothing to undo.
 pub fn inverse(payload: &DeleteTiles, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    let (_, tiles) = crate::artifacts::present::present_working_scene(base);
     let targets: HashSet<&str> = payload.ids.iter().map(String::as_str).collect();
-    base.tiles
+    tiles
         .iter()
         .enumerate()
         .filter(|(_, tile)| targets.contains(tile.id.as_str()))

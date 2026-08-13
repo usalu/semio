@@ -2,6 +2,7 @@
 //! object kinds (parametric geometry + typology + availability) and a curated selection.
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::curate::schema::mutations::SourcingMutation;
@@ -112,6 +113,134 @@ pub struct CuratedItem {
 }
 
 //#endregion 🔖️Document
+
+//#region 🔖️CatalogComposition
+/// 🧩️ Sourcing-owned per-kind metadata NOT representable in stdio's composed `s.stdio.semio.kit`
+/// subset (`SemioKitType` carries only `id`/`name`/`category`) — typology classification,
+/// availability, and procedural geometry. Id-joined 1:1 to a `SemioKitType` in the composed
+/// `CurateSnapshot::catalog` child by `id` (see `stock_of`/`object_kind_from_parts`). Ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: replaces the former inline `stock: Vec<ObjectKind>`
+/// field, which duplicated the `kit.catalog`/type-registry vocabulary this ticket composes instead.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct ObjectKindExtra {
+    #[dsl(defines = "object")]
+    pub id: String,
+    pub typology_path: Vec<String>,
+    pub availability: u32,
+    #[dsl(statements)]
+    pub geometry: Box<GeometryRecipe>,
+}
+
+/// 🔀️ `ObjectKind` → the shared `SemioKitType` half of the composed catalog child. `category` maps
+/// from `module_id` — the closest existing kit vocabulary slot for a grouping label (`SemioKitType`
+/// has no separate module concept).
+pub fn kit_type_from_object_kind(kind: &ObjectKind) -> SemioKitType {
+    SemioKitType { id: kind.id.clone(), name: kind.name.clone(), category: kind.module_id.clone() }
+}
+
+/// 🔀️ `ObjectKind` → the sourcing-owned overflow half (`stock_extra`) the composed kit type cannot
+/// carry. Lossless together with `kit_type_from_object_kind`: every `ObjectKind` field lands in
+/// exactly one of the two halves.
+pub fn object_kind_extra_from_object_kind(kind: &ObjectKind) -> ObjectKindExtra {
+    ObjectKindExtra { id: kind.id.clone(), typology_path: kind.typology_path.clone(), availability: kind.availability, geometry: kind.geometry.clone() }
+}
+
+/// 🔀️ Inverse of the split above — reassembles one full `ObjectKind` from its two composed halves.
+pub fn object_kind_from_parts(kit_type: &SemioKitType, extra: &ObjectKindExtra) -> ObjectKind {
+    ObjectKind { id: kit_type.id.clone(), name: kit_type.name.clone(), module_id: kit_type.category.clone(), typology_path: extra.typology_path.clone(), availability: extra.availability, geometry: extra.geometry.clone() }
+}
+
+/// 🔀️ The full stock list's shared half, as a fresh (design-less, link-less) `SemioKitSnapshot` —
+/// content-addressed by `catalog_child_handle` below, never embedded inline in `CurateSnapshot`.
+pub fn catalog_snapshot_from_stock(stock: &[ObjectKind]) -> SemioKitSnapshot {
+    SemioKitSnapshot { types: stock.iter().map(kit_type_from_object_kind).collect(), ..SemioKitSnapshot::default() }
+}
+
+/// 🔀️ The full stock list's sourcing-owned overflow half.
+pub fn stock_extra_from_stock(stock: &[ObjectKind]) -> Vec<ObjectKindExtra> {
+    stock.iter().map(object_kind_extra_from_object_kind).collect()
+}
+
+/// 🔀️ Reassembles the full `Vec<ObjectKind>` catalog from its composed-child half and its
+/// sourcing-owned overflow half, id-joined. A `SemioKitType` with no matching `ObjectKindExtra`
+/// (composed-child content the working-scene cache hasn't seen yet — see `stock_of`'s doc comment) is
+/// silently dropped rather than fabricated with placeholder geometry.
+pub fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[ObjectKindExtra]) -> Vec<ObjectKind> {
+    let extra_by_id: std::collections::HashMap<&str, &ObjectKindExtra> = extra.iter().map(|e| (e.id.as_str(), e)).collect();
+    catalog.types.iter().filter_map(|kit_type| extra_by_id.get(kit_type.id.as_str()).map(|extra| object_kind_from_parts(kit_type, extra))).collect()
+}
+
+/// 🪪️ Content-addressed child handle for a stock list's shared catalog half — hashes the deterministic
+/// JSON of the derived `SemioKitType` list so peers replaying the same stock converge on the same
+/// `child_id` (never a random/incrementing id), mirroring `lowpoly`'s `mesh_child_handle`.
+pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<SemioKitSnapshot> {
+    use std::hash::{Hash, Hasher};
+    let catalog = catalog_snapshot_from_stock(stock);
+    let canonical = serde_json::to_string(&catalog.types).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    canonical.hash(&mut hasher);
+    let child_id = format!("catalog-{:016x}", hasher.finish());
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+
+//#region 🔖️CatalogScratch
+/// 🖌️ Ephemeral working-scene cache: `catalog` child_id → its live `SemioKitSnapshot` content. Per
+/// this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/`VcsArtifactApp.children`
+/// exist structurally in the framework but are NOT populated by any plugin as of 2026-08-13 (no
+/// `open_child`/`register_child` caller yet), so there is no live resolver seam to read a composed
+/// child's content back through — every render/export/inference call site funnels through `stock_of`
+/// below instead, which reads this cache. Populated wherever a `CurateSnapshot` with real stock
+/// content is built (`curate_snapshot_from_stock`, `default_document`, `empty_document`) — NEVER
+/// persisted, NEVER a snapshot field, droppable at any instant (matches the repo-wide `EngineRep`
+/// contract). Staleness gap, documented rather than fail-closed (this is a read-only catalogue display
+/// path, not a destructive edit path — `catalog` is never incrementally mutated in-history, only
+/// whole-document-replaced, same category as `stock`'s pre-migration bulk-population rule): store-
+/// level undo/redo bypasses `ArtifactApp::handle` entirely, so a live session's cache CAN go stale
+/// relative to `catalog`'s handle across an undo/redo that changes which stock was loaded; a miss
+/// falls back to an empty catalog rather than panicking.
+thread_local! {
+    static SOURCING_CATALOG_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+fn catalog_scratch_set(child_id: &str, catalog: SemioKitSnapshot) {
+    SOURCING_CATALOG_SCRATCH.with(|cell| cell.borrow_mut().insert(child_id.to_string(), catalog));
+}
+
+fn catalog_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
+    SOURCING_CATALOG_SCRATCH.with(|cell| cell.borrow().get(child_id).cloned())
+}
+//#endregion 🔖️CatalogScratch
+
+/// 🏗️ Builds a `CurateSnapshot` from a full stock list, minting its content-addressed `catalog`
+/// handle, splitting the stock into its composed-child half and sourcing-owned overflow half, and
+/// seeding the working-scene cache so this SAME call's render/export/inference paths can resolve the
+/// handle immediately. The one sanctioned construction path for "real stock content" — every fixture,
+/// test, and command that used to write `CurateSnapshot { stock, .. }` directly goes through this now.
+pub fn curate_snapshot_from_stock(stock: Vec<ObjectKind>, curated: Vec<CuratedItem>) -> CurateSnapshot {
+    let handle = catalog_child_handle(&stock);
+    catalog_scratch_set(&handle.child_id, catalog_snapshot_from_stock(&stock));
+    CurateSnapshot { catalog: handle, stock_extra: stock_extra_from_stock(&stock), curated }
+}
+
+/// 🌱 Seeds the working-scene cache for `stock`'s deterministic `catalog_child_handle`, without
+/// building a whole `CurateSnapshot` — for fixture loaders (`default_document`/`empty_document`) that
+/// parse the persisted snapshot from DSL text (which never embeds child content) but still need the
+/// SAME content-addressed handle's catalog resolvable immediately after loading.
+pub fn seed_catalog_scratch(stock: &[ObjectKind]) {
+    let handle = catalog_child_handle(stock);
+    catalog_scratch_set(&handle.child_id, catalog_snapshot_from_stock(stock));
+}
+
+/// 👁️ The one accessor every render/export/inference call site funnels through to read the full
+/// reassembled stock catalogue — see `SOURCING_CATALOG_SCRATCH`'s doc comment for the staleness gap.
+pub fn stock_of(document: &CurateSnapshot) -> Vec<ObjectKind> {
+    let catalog = catalog_scratch_get(&document.catalog.child_id).unwrap_or_default();
+    stock_from_catalog_and_extra(&catalog, &document.stock_extra)
+}
+//#endregion 🔖️CatalogComposition
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.vcs.vcs.snapshot;
 
-// 🧬️ VCS snapshot schema — persistent fields only.
+// 🧬️ VCS snapshot schema — artifact-lane fields only.
 
 message VcsSnapshot {
   // @state artifact

@@ -1,4 +1,4 @@
-/** 🧬️ Din4108 snapshot schema — persistent fields only. */
+/** 🧬️ Din4108 snapshot schema — artifact-lane fields only. */
 
 export interface Din4108Snapshot {
   /** @state artifact */

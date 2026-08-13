@@ -36,7 +36,8 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
-    let Some(kind) = cfg.selected_object_id.as_ref().and_then(|id| document.stock.iter().find(|kind| &kind.id == id)) else {
+    let stock = crate::artifacts::curate::stock_of(document);
+    let Some(kind) = cfg.selected_object_id.as_ref().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
         return ui_text(labels.no_selection);
     };
     let meshes_json = json!([kind_mesh_json(kind)]).to_string();
@@ -56,7 +57,7 @@ mod tests {
     #[test]
     fn preview_renders_selected_mesh_id() {
         let document = crate::artifacts::curate::schema::default_document();
-        let object_id = document.stock[0].id.clone();
+        let object_id = crate::artifacts::curate::stock_of(&document)[0].id.clone();
         let cfg = SourcingCurateConfig { selected_object_id: Some(object_id.clone()), ..Default::default() };
         let node = render(&document, &cfg, crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
         let json = serde_json::to_value(&node).unwrap();

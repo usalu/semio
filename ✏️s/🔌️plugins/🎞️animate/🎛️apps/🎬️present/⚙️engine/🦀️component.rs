@@ -79,11 +79,12 @@ pub mod compiler {
     }
 
     fn site_manifest(deck: &PresentSnapshot) -> serde_json::Value {
+        let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
         json!({
             "schema": "animate.present.site",
             "deckSchema": deck.schema,
-            "title": deck.tiles.first().map_or("Animate Present", |tile| tile.name.as_str()),
-            "tileCount": deck.tiles.len(),
+            "title": tiles.first().map_or("Animate Present", |tile| tile.name.as_str()),
+            "tileCount": tiles.len(),
             "player": {
                 "kind": "wgpu",
                 "wasm": "/animate/plugin/wasm/animate_plugin_bg.wasm",
@@ -239,8 +240,9 @@ pub mod compiler {
         #[test]
         fn compile_present_site_writes_static_bundle() {
             let deck = default_present_snapshot();
-            let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-            let deck = PresentSnapshot { tiles, ..deck };
+            let (source, _) = crate::artifacts::present::present_working_scene(&deck);
+            let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
+            let deck = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);
             let output = std::env::temp_dir().join(format!("animate-present-{}", std::process::id()));
             let _ = fs::remove_dir_all(&output);
             compile_present_site(&deck, &output).expect("compile site");
@@ -253,7 +255,7 @@ pub mod compiler {
             assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.present.site"));
             assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
             let deck_file: PresentSnapshot = serde_json::from_str(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
-            assert_eq!(deck_file.tiles.len(), 4);
+            assert_eq!(crate::artifacts::present::present_working_scene(&deck_file).1.len(), 4);
             let _ = fs::remove_dir_all(&output);
         }
 

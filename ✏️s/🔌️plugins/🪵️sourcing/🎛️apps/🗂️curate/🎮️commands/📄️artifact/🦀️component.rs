@@ -66,15 +66,16 @@ pub mod stock_from_catalogue {
     /// other whole-document-replace command in this file) goes through `reset_document_effect`
     /// rather than a targeted mutation: there is no `create-object-kind` mutation to emit one-by-one.
     pub fn handle(_payload: &StockFromCatalogue, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
-        let mut document = doc.snapshot.clone();
-        let existing: HashSet<String> = document.stock.iter().map(|kind| kind.id.clone()).collect();
+        let mut stock = crate::artifacts::curate::stock_of(doc.snapshot);
+        let existing: HashSet<String> = stock.iter().map(|kind| kind.id.clone()).collect();
         for module in available_modules() {
             for kind in module.kinds {
                 if !existing.contains(&kind.id) {
-                    document.stock.push(kind);
+                    stock.push(kind);
                 }
             }
         }
+        let document = crate::artifacts::curate::curate_snapshot_from_stock(stock, doc.snapshot.curated.clone());
         Ok(Emit { effects: vec![reset_document_effect(&document)], ..Default::default() })
     }
 }
@@ -119,8 +120,8 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <CurateSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert!(!loaded.stock.is_empty(), "demo-stock default materialized from the registry");
-        let object_id = loaded.stock[0].id.clone();
+        assert!(!loaded.stock_extra.is_empty(), "demo-stock default materialized from the registry");
+        let object_id = loaded.stock_extra[0].id.clone();
         let result = app
             .dispatch_typed(SourcingCurateCommand::CurateAdd(crate::apps::curate::commands::curation::curate_add::CurateAdd { object_id }), &semio_framework_plugin::testkit::meta("local"))
             .expect("curate");
@@ -132,7 +133,7 @@ mod tests {
     fn initial_document_has_populated_demo_stock() {
         let app = new_app();
         let document = app.snapshot().expect("snapshot");
-        assert!(!document.stock.is_empty());
+        assert!(!document.stock_extra.is_empty());
     }
 
     #[test]
@@ -142,7 +143,7 @@ mod tests {
         let cfg_snapshot = SourcingCurateConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }, &doc, &cfg).expect("handle");
-        assert!(!load_document_pack(&emit).stock.is_empty());
+        assert!(!load_document_pack(&emit).stock_extra.is_empty());
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: EMPTY_EXAMPLE_ID.into() }, &doc, &cfg).expect("handle");
         assert!(load_document_pack(&emit).curated.is_empty());
     }
@@ -167,11 +168,11 @@ mod tests {
         let emit = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &doc, &cfg).expect("handle");
         let loaded = load_document_pack(&emit);
         let expected: usize = crate::artifacts::curate::schema::sourcing_modules().iter().map(|module| module.demo_kinds().len()).sum();
-        assert_eq!(loaded.stock.len(), expected);
+        assert_eq!(loaded.stock_extra.len(), expected);
 
         let doc2 = ArtifactView::new(&loaded, &history);
         let emit2 = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &doc2, &cfg).expect("handle");
-        assert_eq!(load_document_pack(&emit2).stock.len(), expected, "re-running against an already-full stock does not duplicate");
+        assert_eq!(load_document_pack(&emit2).stock_extra.len(), expected, "re-running against an already-full stock does not duplicate");
     }
 }
 //#endregion 🧪️Tests

@@ -27,7 +27,6 @@ use store::{ArtifactEnvelope, ArtifactStore};
 /// directory slots — their directory/module names are leftovers of the generic slots each was
 /// repurposed from (`sharedFileRequests` in this ticket's wave2 report has the glue.rs rename that
 /// would align them; not editable here — glue.rs is shared with the sibling `procedural3d` artifact).
-use super::{change_generation_value, change_schema, clear_widget_layout, connect_synapse, create_generation, create_widget, delete_generation, delete_widget, disconnect_synapse, move_widget, rename_generation, replace_synapse, replace_widget, set_camera};
 
 //#region 🔖️Addressing
 /// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
@@ -45,38 +44,38 @@ pub fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = Procedural2dSnapshot, diff = Procedural2dDiff, schema = "procedural.2d")]
 pub enum Procedural2dMutation {
-    CreateWidget(create_widget::mutation::CreateWidget),
-    ReplaceWidget(replace_widget::ReplaceWidget),
-    DeleteWidget(delete_widget::mutation::DeleteWidget),
-    ConnectSynapse(connect_synapse::mutation::ConnectSynapse),
-    ReplaceSynapse(replace_synapse::ReplaceSynapse),
-    DisconnectSynapse(disconnect_synapse::mutation::DisconnectSynapse),
-    MoveWidget(move_widget::mutation::MoveWidget),
-    ClearWidgetLayout(clear_widget_layout::mutation::ClearWidgetLayout),
-    UpdateCamera(set_camera::mutation::UpdateCamera),
-    ChangeSchema(change_schema::mutation::ChangeSchema),
-    CreateGeneration(create_generation::CreateGeneration),
-    DeleteGeneration(delete_generation::DeleteGeneration),
-    RenameGeneration(rename_generation::RenameGeneration),
-    ChangeGenerationValue(change_generation_value::ChangeGenerationValue),
+    CreateWidget(super::create_widget::mutation::CreateWidget),
+    ReplaceWidget(super::replace_widget::mutation::ReplaceWidget),
+    DeleteWidget(super::delete_widget::mutation::DeleteWidget),
+    ConnectSynapse(super::connect_synapse::mutation::ConnectSynapse),
+    ReplaceSynapse(super::replace_synapse::mutation::ReplaceSynapse),
+    DisconnectSynapse(super::disconnect_synapse::mutation::DisconnectSynapse),
+    MoveWidget(super::move_widget::mutation::MoveWidget),
+    ClearWidgetLayout(super::clear_widget_layout::mutation::ClearWidgetLayout),
+    UpdateCamera(super::set_camera::mutation::UpdateCamera),
+    ChangeSchema(super::change_schema::mutation::ChangeSchema),
+    CreateGeneration(super::create_generation::mutation::CreateGeneration),
+    DeleteGeneration(super::delete_generation::mutation::DeleteGeneration),
+    RenameGeneration(super::rename_generation::mutation::RenameGeneration),
+    ChangeGenerationValue(super::change_generation_value::mutation::ChangeGenerationValue),
 }
 //#endregion 🔖️Mutations
 
 //#region 🔖️Builders
-pub use create_generation::create_generation;
-pub use delete_generation::delete_generation;
-pub use rename_generation::rename_generation;
-pub use change_generation_value::change_generation_value;
-pub use replace_widget::replace_widget;
-pub use replace_synapse::replace_synapse;
-pub use create_widget::mutation::create_widget;
-pub use delete_widget::mutation::delete_widget;
-pub use connect_synapse::mutation::connect_synapse;
-pub use disconnect_synapse::mutation::disconnect_synapse;
-pub use move_widget::mutation::move_widget;
-pub use clear_widget_layout::mutation::clear_widget_layout;
-pub use set_camera::mutation::update_camera;
-pub use change_schema::mutation::change_schema;
+pub use super::create_generation::mutation::create_generation;
+pub use super::delete_generation::mutation::delete_generation;
+pub use super::rename_generation::mutation::rename_generation;
+pub use super::change_generation_value::mutation::change_generation_value;
+pub use super::replace_widget::mutation::replace_widget;
+pub use super::replace_synapse::mutation::replace_synapse;
+pub use super::create_widget::mutation::create_widget;
+pub use super::delete_widget::mutation::delete_widget;
+pub use super::connect_synapse::mutation::connect_synapse;
+pub use super::disconnect_synapse::mutation::disconnect_synapse;
+pub use super::move_widget::mutation::move_widget;
+pub use super::clear_widget_layout::mutation::clear_widget_layout;
+pub use super::set_camera::mutation::update_camera;
+pub use super::change_schema::mutation::change_schema;
 //#endregion 🔖️Builders
 
 //#region 🔖️FixtureOperations

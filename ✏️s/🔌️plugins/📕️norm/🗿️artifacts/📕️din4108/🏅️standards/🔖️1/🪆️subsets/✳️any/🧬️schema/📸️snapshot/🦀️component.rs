@@ -1,4 +1,4 @@
-//! 🧬️ Din4108 snapshot schema — persistent fields only.
+//! 🧬️ Din4108 snapshot schema — artifact-lane fields only.
 
 use schema::ArtifactSchema;
 use crate::artifacts::din4108::LayerDocument;

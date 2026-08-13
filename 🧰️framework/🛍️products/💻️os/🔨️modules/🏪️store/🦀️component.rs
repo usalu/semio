@@ -739,6 +739,137 @@ impl<'a, P, Mutation> ArtifactEnvelopeView<'a, P, Mutation> {
 
 /// @emoji 📝 Draft-lane store alias — same algebra as ArtifactStore; PruneDrafts never enters a Change.
 pub type DraftStore<P, Mutation> = ArtifactStore<P, Mutation>;
+
+//#region 🔖️EphemeralLanes
+/// @emoji 👥️ The PRESENCE lane's store: ephemeral SHARED state — a last-writer-wins roster, NOT an
+/// event log.
+///
+/// 🎯️ Why not `ArtifactStore` (which `ConfigStore`/`DraftStore` both alias): presence has no
+/// history, no undo, no checkpoints and no merge. Each peer is the sole author of its own presence
+/// value, and the wire already carries whole encoded snapshots per peer
+/// (`ClientFrame::Presence { peer }` / `ServerFrame::Presence { peers }`), so a later frame from a
+/// peer simply SUPERSEDES its earlier one. Modelling that as an op log would mint an unbounded
+/// history of cursor positions nobody can ever undo.
+///
+/// `generation` bumps on every local change so the host can tell "something to broadcast" from
+/// "nothing changed" without diffing snapshots — the signal a heartbeat coalescer throttles on.
+#[derive(Clone, Debug)]
+pub struct PresenceStore<P, Mutation> {
+    local: P,
+    peers: HashMap<String, (P, i64)>,
+    generation: u64,
+    _mutation: PhantomData<fn() -> Mutation>,
+}
+
+impl<P: Clone + Default, Mutation: self::Mutation<P>> Default for PresenceStore<P, Mutation> {
+    fn default() -> Self {
+        Self::new(P::default())
+    }
+}
+
+impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
+    /// 🏗️ A roster holding only this actor's own initial presence.
+    pub fn new(local: P) -> Self {
+        Self { local, peers: HashMap::new(), generation: 0, _mutation: PhantomData }
+    }
+
+    /// 👤️ This actor's own presence — what gets broadcast.
+    pub fn local(&self) -> &P {
+        &self.local
+    }
+
+    /// ✍️ Applies local presence operations, bumping `generation` so the host knows to broadcast.
+    /// Never fails and never records history: an invalid presence value is simply the newest one.
+    pub fn apply(&mut self, mutations: &[Mutation]) {
+        for mutation in mutations {
+            self.local = mutation.diff(&self.local).apply(&self.local);
+        }
+        if !mutations.is_empty() {
+            self.generation = self.generation.wrapping_add(1);
+        }
+    }
+
+    /// 📥️ Adopts a remote peer's whole presence snapshot, superseding whatever it last sent.
+    /// `received_at_ms` is the host's receive clock, used only to expire silent peers.
+    pub fn adopt_peer(&mut self, actor: impl Into<String>, presence: P, received_at_ms: i64) {
+        self.peers.insert(actor.into(), (presence, received_at_ms));
+    }
+
+    /// 🚪️ Drops a peer that left.
+    pub fn remove_peer(&mut self, actor: &str) -> bool {
+        self.peers.remove(actor).is_some()
+    }
+
+    /// ⏳️ Drops every peer whose last update is older than `oldest_allowed_ms` — a disconnected
+    /// collaborator's cursor must not linger forever.
+    pub fn expire_peers(&mut self, oldest_allowed_ms: i64) {
+        self.peers.retain(|_, (_, received_at_ms)| *received_at_ms >= oldest_allowed_ms);
+    }
+
+    /// 👥️ Every peer's current presence, sorted by actor so readers get a stable order.
+    pub fn peers(&self) -> Vec<(&str, &P)> {
+        let mut peers: Vec<(&str, &P)> = self.peers.iter().map(|(actor, (presence, _))| (actor.as_str(), presence)).collect();
+        peers.sort_by_key(|(actor, _)| *actor);
+        peers
+    }
+
+    /// 🔢️ Bumps on every local change; never on adopting a remote peer (that needs no rebroadcast).
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+}
+
+/// @emoji 🫧️ The TRANSIENT lane's store: ephemeral LOCAL-ONLY UI state.
+///
+/// 🎯️ Presence minus the roster. Nothing here is ever shared, persisted, packed, checkpointed or
+/// undone — it is exactly the state that used to hide in plugin `thread_local!`s and untyped shell
+/// fields, given a typed home so it can be reached only through `Emit`/`Lanes` like every other
+/// lane. If a value must survive a reload it belongs in `config`; if a peer must see it, in
+/// `presence`; if it is document content, in the artifact (or its draft).
+#[derive(Clone, Debug)]
+pub struct TransientStore<P, Mutation> {
+    current: P,
+    generation: u64,
+    _mutation: PhantomData<fn() -> Mutation>,
+}
+
+impl<P: Clone + Default, Mutation: self::Mutation<P>> Default for TransientStore<P, Mutation> {
+    fn default() -> Self {
+        Self::new(P::default())
+    }
+}
+
+impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
+    pub fn new(current: P) -> Self {
+        Self { current, generation: 0, _mutation: PhantomData }
+    }
+
+    pub fn current(&self) -> &P {
+        &self.current
+    }
+
+    /// ✍️ Applies transient operations. Like presence, no history and no failure mode.
+    pub fn apply(&mut self, mutations: &[Mutation]) {
+        for mutation in mutations {
+            self.current = mutation.diff(&self.current).apply(&self.current);
+        }
+        if !mutations.is_empty() {
+            self.generation = self.generation.wrapping_add(1);
+        }
+    }
+
+    /// 🔄️ Discards everything — what a host does when a view closes.
+    pub fn reset(&mut self, current: P) {
+        self.current = current;
+        self.generation = self.generation.wrapping_add(1);
+    }
+
+    /// 🔢️ Bumps on every change, so a renderer can skip untouched frames.
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+}
+//#endregion 🔖️EphemeralLanes
 //#endregion 🔖️Authority
 
 //#region 🔖️Text

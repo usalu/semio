@@ -501,6 +501,8 @@ impl ArtifactApp for TrinityRewritePlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = RewritePresence;
     type PresenceMutation = RewritePresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = TrinityRewriteCommand;
 

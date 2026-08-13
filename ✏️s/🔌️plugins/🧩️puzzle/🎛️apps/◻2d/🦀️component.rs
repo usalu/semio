@@ -846,6 +846,8 @@ impl ArtifactApp for Puzzle2dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = Puzzle2dPresence;
     type PresenceMutation = Puzzle2dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle2dCommand;
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
@@ -1380,11 +1382,21 @@ pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::a
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e: `register_media_io` reaches this app's own
 /// `puzzle2d_document_json_to_svg`/`puzzle2d_document_json_from_dwg` callbacks directly, so it now
 /// lives beside them instead of crossing an artifact→app boundary).
+///
+/// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
+/// `register_dwg_import_handler` call this used to make is DELETED, not migrated --
+/// `🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s `io_registry::entries()`
+/// already carries a real `ComposerEntry` for `"s.stdio.dwg"` (`DEP_DWG`), reachable via
+/// `io_dispatch` once the OS media pipeline's `native_kind` bridging bug is fixed (`component_kind`
+/// = `"puzzle2d"`, not the raw `"2d.puzzle"` workflow kind id) -- and it is a strict improvement
+/// over what this call registered: `puzzle2d_document_json_from_dwg` (still kept, still exercised
+/// by its own test below) always returns an EMPTY board regardless of input (Tier C, no polygonal
+/// outlines supported), while the artifact-level DWG deserializer does real entity parsing.
+/// `register_2d_export_handlers` is a separate function, not in this wave's five-function scope.
 pub fn register_media_io() {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     {
         semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", crate::apps::puzzle2d::puzzle2d_document_json_to_svg);
-        semio_framework_os::register_dwg_import_handler("2d.puzzle", crate::apps::puzzle2d::puzzle2d_document_json_from_dwg);
     }
 }
 //#endregion 🔖️Register

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.trinity.rewrite.mutation;
 
-// 🧬️ Rewrite mutation schema — persistent fields only.
+// 🧬️ Rewrite mutation schema — artifact-lane fields only.
 
 message RewriteMutation {
   // @state artifact

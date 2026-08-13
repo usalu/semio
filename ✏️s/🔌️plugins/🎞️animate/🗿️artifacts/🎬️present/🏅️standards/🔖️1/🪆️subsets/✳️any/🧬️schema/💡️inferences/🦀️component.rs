@@ -90,9 +90,8 @@ mod tests {
     }
 
     fn sample_snapshot() -> PresentSnapshot {
-        let mut snapshot = PresentSnapshot::default();
-        snapshot.tiles = vec![tile("tile-1", "First"), tile("tile-2", "Second"), tile("tile-3", "Third")];
-        snapshot
+        let (source, _) = crate::artifacts::present::present_working_scene(&PresentSnapshot::default());
+        crate::artifacts::present::present_snapshot_with_tiles(&source, &[tile("tile-1", "First"), tile("tile-2", "Second"), tile("tile-3", "Third")])
     }
     //#endregion 🧸️Fixtures
 

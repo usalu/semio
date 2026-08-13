@@ -29,7 +29,7 @@ fn entries_census_the_demo_fixtures_stock_catalog() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     let snapshot = <crate::artifacts::curate::CurateSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::artifacts::curate::standards::v1::subsets::any::schema::inferences::CurateInference::infer(&snapshot);
-    assert_eq!(inference.entries.stock_count, snapshot.stock.len() as u32);
+    assert_eq!(inference.entries.stock_count, snapshot.stock_extra.len() as u32);
     assert_eq!(inference.entries.entry_count, snapshot.curated.len() as u32);
 }
 //#endregion 🧪️InferenceLaws

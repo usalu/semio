@@ -942,13 +942,22 @@ export function parseSpaceShellPath(path: string): SpaceShellPath | null {
   return { spaceId: route.spaceId, instanceId: route.instanceId };
 }
 
-export function appBreadcrumb(breadcrumb: readonly string[]): string {
-  return breadcrumb.join(APP_BREADCRUMB_SEPARATOR);
+/**
+ * 🗺️ Joins a breadcrumb for display.
+ *
+ * ⚠️ Accepts `undefined`: `AppDefinition.breadcrumb` is DECLARED OPTIONAL in the manifest, so every
+ * unguarded `breadcrumb.join(…)` was a latent crash — and not a cosmetic one. This runs inside
+ * `FrameworkOsShellInner`'s render, so a single app whose manifest omits the field took down the
+ * WHOLE shell, and in a multi-pane host (the demonstrator) every pane died with it. An app with no
+ * breadcrumb should render a nameless title, never destroy its host.
+ */
+export function appBreadcrumb(breadcrumb: readonly string[] | undefined): string {
+  return (breadcrumb ?? []).join(APP_BREADCRUMB_SEPARATOR);
 }
 
-/** 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to `app.breadcrumb`. */
+/** 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to `app.breadcrumb`, and an app that declares none at all to the empty breadcrumb (the field is optional — see {@link appBreadcrumb}). */
 export function resolveAppBreadcrumb(app: Pick<AppDefinition, "breadcrumb" | "terminologyBreadcrumbs">, terminology: string): readonly string[] {
-  return app.terminologyBreadcrumbs?.[terminology] ?? app.breadcrumb;
+  return app.terminologyBreadcrumbs?.[terminology] ?? app.breadcrumb ?? [];
 }
 
 /** 🗺️ Resolves the breadcrumb for a non-active app (studio spawn palette/spawned entries) by looking up its `AppDefinition` across loaded plugins; falls back to the raw breadcrumb when the app can't be found. */

@@ -1,4 +1,4 @@
-/** 🧬️ En1994 snapshot schema — persistent fields only. */
+/** 🧬️ En1994 snapshot schema — artifact-lane fields only. */
 
 export interface En1994Snapshot {
   /** @state artifact */

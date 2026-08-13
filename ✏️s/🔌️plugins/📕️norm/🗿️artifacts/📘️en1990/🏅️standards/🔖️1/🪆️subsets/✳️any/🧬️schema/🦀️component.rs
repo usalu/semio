@@ -5,7 +5,7 @@ use crate::artifacts::en1990::En1990QkChild;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full En1990 artifact state across persistent and shared-ui classes. `q_k` mirrors
+/// 🧬️ Full En1990 artifact state across the artifact and presence lanes. `q_k` mirrors
 /// `En1990Snapshot`'s composed `s.stdio.semio.table` child slot (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
 /// handle across verbatim, same as `➗️mathematical`'s `MathematicalArtifact`.

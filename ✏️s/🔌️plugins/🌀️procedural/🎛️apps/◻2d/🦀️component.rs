@@ -126,6 +126,8 @@ impl ArtifactApp for Procedural2dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::procedural2d::presence::Procedural2dPresence;
     type PresenceMutation = crate::apps::procedural2d::presence::Procedural2dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Procedural2dCommand;
 

@@ -4,7 +4,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full En1994 artifact state across persistent and shared-ui classes.
+/// 🧬️ Full En1994 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1994")]

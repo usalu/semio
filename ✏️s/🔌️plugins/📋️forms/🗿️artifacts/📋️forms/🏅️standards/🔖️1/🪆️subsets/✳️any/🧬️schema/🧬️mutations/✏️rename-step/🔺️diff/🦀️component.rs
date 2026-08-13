@@ -1,17 +1,15 @@
 //! 🔺️ `rename-step` / `change-step-description` — sparse diff construction.
 
-use super::mutation::{ChangeStepDescription, RenameStep};
+use super::mutation::RenameStep;
 use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
-use crate::artifacts::forms::{FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::schema::diff::text::forms_diff_from_delta;
+use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenameStep, base: &FormsSnapshot) -> FormsDiff {
-    if !base.steps.iter().any(|step| step.id == payload.id) {
+    if !forms_steps(base).iter().any(|step| step.id == payload.id) {
         return FormsDiff::default();
     }
     let patch = FormsStepPatch { title: Some(payload.new_title.clone()), ..Default::default() };
-    FormsDiff {
-        steps: Some(FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }),
-        ..Default::default()
-    }
+    forms_diff_from_delta(FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, base)
 }

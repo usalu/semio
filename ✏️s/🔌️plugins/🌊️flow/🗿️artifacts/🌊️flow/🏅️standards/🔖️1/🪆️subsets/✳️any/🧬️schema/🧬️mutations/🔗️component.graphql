@@ -1,4 +1,4 @@
-# 🧬️ Flow mutation schema — persistent fields only.
+# 🧬️ Flow mutation schema — artifact-lane fields only.
 
 type FlowMutation {
   schema: String! @state(class: ARTIFACT)

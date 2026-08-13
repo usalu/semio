@@ -1,4 +1,4 @@
-# 🧬️ Iso16757 mutation schema — persistent fields only.
+# 🧬️ Iso16757 mutation schema — artifact-lane fields only.
 
 type Iso16757Mutation {
   catalogue: String! @state(class: ARTIFACT)

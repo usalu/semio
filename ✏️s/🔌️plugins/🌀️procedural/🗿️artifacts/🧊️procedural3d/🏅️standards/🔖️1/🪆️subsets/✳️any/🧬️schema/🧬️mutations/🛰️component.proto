@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.procedural.procedural3d.mutation;
 
-// 🧬️ Procedural3d mutation schema — persistent fields only.
+// 🧬️ Procedural3d mutation schema — artifact-lane fields only.
 
 message Procedural3dMutation {
   // @state artifact

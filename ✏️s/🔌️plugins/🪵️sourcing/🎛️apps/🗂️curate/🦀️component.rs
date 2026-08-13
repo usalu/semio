@@ -114,6 +114,8 @@ impl ArtifactApp for SourcingCurateApp {
     type DraftMutation = NoDraftMutation;
     type Presence = SourcingCuratePresence;
     type PresenceMutation = SourcingCuratePresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = SourcingCurateCommand;
 
@@ -503,7 +505,7 @@ mod tests {
             MediaPayload::Structured { schema, json } => {
                 assert_eq!(schema, "kit.catalog");
                 let fragment: serde_json::Value = serde_json::from_str(&json).unwrap();
-                assert_eq!(fragment["objectKinds"].as_array().unwrap().len(), app.snapshot().expect("snapshot").stock.len());
+                assert_eq!(fragment["objectKinds"].as_array().unwrap().len(), app.snapshot().expect("snapshot").stock_extra.len());
             }
             MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
         }

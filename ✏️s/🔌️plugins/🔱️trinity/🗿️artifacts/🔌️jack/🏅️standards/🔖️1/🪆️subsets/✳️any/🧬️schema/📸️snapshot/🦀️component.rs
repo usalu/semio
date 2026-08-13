@@ -1,4 +1,4 @@
-//! 🧬️ Jack snapshot schema — persistent fields only.
+//! 🧬️ Jack snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::jack::{Camera, Edge, Manifest, Node};
 use schema::ArtifactSchema;

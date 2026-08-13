@@ -5,7 +5,7 @@ use crate::artifacts::din18599::{Din18599ClimateChild, MonthlyClimate, UseClass}
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full Din18599 artifact state across persistent and shared-ui classes. `climate` mirrors
+/// 🧬️ Full Din18599 artifact state across the artifact and presence lanes. `climate` mirrors
 /// `Din18599Snapshot`'s composed `s.stdio.semio.table` child slot (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
 /// handle across verbatim, same as `➗️mathematical`'s `MathematicalArtifact`/en1990's `En1990Artifact`.

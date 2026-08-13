@@ -1,4 +1,4 @@
-//! 🧬️ Mathematical snapshot schema — persistent fields only.
+//! 🧬️ Mathematical snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalGeometry, MathematicalGraph, MathematicalNotationChild, MathematicalResultsChild};
 use schema::ArtifactSchema;

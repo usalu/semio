@@ -1,4 +1,4 @@
-/** @emoji 🧬️ Forms artifact schema — persistent, shared-ui and local-ui fields. */
+/** @emoji 🧬️ Forms artifact schema — artifact-, presence- and config-lane fields. */
 export interface FormsArtifact {
   schema: string;
   id: string;

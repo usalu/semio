@@ -1,0 +1,17 @@
+TOTAL before=29456 after=29461 delta=5
+delta   before   after   kind|priority
+     2     704     706   taxonomy/plugin-registration-violation|medium
+     2      24      26   taxonomy/plugin-registration-setup-callback|medium
+     2     308     310   os-state-authority/item-scope-global|high
+    -1       1       0   taxonomy/plugin-closed-shape|high
+--- lanes-relevant kinds (must stay flat) ---
+  same      0      0   taxonomy/window-completeness|high
+  same      0      0   taxonomy/window-empty-facet|high
+  same      0      0   taxonomy/mode-completeness|high
+  same      0      0   taxonomy/mode-empty-child|high
+  same      0      0   app-schema/state-purity|high
+  same      0      0   artifact-schema/state-parity|high
+  same      0      0   artifact-schema/diff-coverage|high
+  same      0      0   inference-migration/state-leak|medium
+  same      3      3   taxonomy/emoji-prefix-uniqueness|high
+  same     94     94   taxonomy/dirs|medium

@@ -1,4 +1,4 @@
-//! 🧬️ Procedural3d snapshot schema — persistent fields only.
+//! 🧬️ Procedural3d snapshot schema — artifact-lane fields only.
 
 use flow::FlowFixture;
 use flow::playbook::GenerationPlayState;

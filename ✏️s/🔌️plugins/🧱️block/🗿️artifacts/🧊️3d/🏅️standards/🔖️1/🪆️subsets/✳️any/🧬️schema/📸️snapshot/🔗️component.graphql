@@ -1,4 +1,4 @@
-# 🧬️ Block3d snapshot schema — persistent fields only.
+# 🧬️ Block3d snapshot schema — artifact-lane fields only.
 
 type Block3dSnapshot {
   schema: String! @state(class: ARTIFACT)

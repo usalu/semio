@@ -1,7 +1,9 @@
-//! ♻️ `replace-model` payload — replaces the EnergyModel document's `model_json` body (the opaque
-//! serialized `crate::model::Model`, per `🧬️schema/💡️inferences/🦀️component.rs`'s doc comment).
-//! `schema` is infrastructure (always `ENERGY_MODEL_DOCUMENT_SCHEMA`) and is never targeted by a
-//! mutation, so this is the only meaningfully mutable root field per `📓️derivation-rules.md` rule 6.
+//! ♻️ `replace-model` payload — replaces the EnergyModel document's `structure`/`zones` composed
+//! children together, decoded from `new_model_json` (a serialized `crate::model::Model`; wire shape
+//! unchanged by ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM — only the snapshot's OWN
+//! persisted representation composes `s.stdio.semio.value`/`table`, not this mutation payload).
+//! `schema`/`referencedModel` are never targeted by a mutation, so this is the only meaningfully
+//! mutable root content per `📓️derivation-rules.md` rule 6.
 
 use crate::artifacts::model::diff::EnergyModelDiff;
 use crate::artifacts::model::mutations::EnergyModelMutation;

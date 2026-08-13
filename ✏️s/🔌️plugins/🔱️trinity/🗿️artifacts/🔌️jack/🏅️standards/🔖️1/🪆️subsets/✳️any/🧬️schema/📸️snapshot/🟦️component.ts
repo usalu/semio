@@ -1,4 +1,4 @@
-/** 🧬️ Jack snapshot schema — persistent fields only. */
+/** 🧬️ Jack snapshot schema — artifact-lane fields only. */
 
 export interface JackSnapshot {
   /** @state artifact */

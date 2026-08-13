@@ -1,4 +1,4 @@
-//! 🧬️ Shooting snapshot schema — persistent fields only.
+//! 🧬️ Shooting snapshot schema — artifact-lane fields only.
 //!
 //! `emblem: Option<ShootingEmblemChild>` is the ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
 //! composed `s.stdio.semio.image` child (see `🗿️artifacts/🎥️shooting/🦀️component.rs`'s `🔖️Composition`

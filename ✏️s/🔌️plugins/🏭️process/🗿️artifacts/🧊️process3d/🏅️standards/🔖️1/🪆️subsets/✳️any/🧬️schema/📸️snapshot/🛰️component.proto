@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.process.process3d.snapshot;
 
-// 🧬️ Process3d snapshot schema — persistent fields only.
+// 🧬️ Process3d snapshot schema — artifact-lane fields only.
 
 message Process3dSnapshot {
   // @state artifact

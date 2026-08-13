@@ -1,4 +1,4 @@
-# 🧬️ Din16798 mutation schema — persistent fields only.
+# 🧬️ Din16798 mutation schema — artifact-lane fields only.
 
 type Din16798Mutation {
   annex: String! @state(class: ARTIFACT)

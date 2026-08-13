@@ -5,7 +5,8 @@ use crate::artifacts::playbook::PlaybookSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::MoveStep, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
-    let Some(position) = base.steps.iter().position(|step| step.id == payload.step_id) else {
+    let steps = crate::artifacts::playbook::playbook_working_scene(base).steps;
+    let Some(position) = steps.iter().position(|step| step.id == payload.step_id) else {
         return Vec::new();
     };
     vec![crate::artifacts::playbook::mutations::move_step::mutation::move_step_operation(&payload.step_id, position)]

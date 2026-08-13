@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.puzzle.puzzle5d.snapshot;
 
-// 🧬️ Puzzle5d snapshot schema — persistent fields only.
+// 🧬️ Puzzle5d snapshot schema — artifact-lane fields only.
 
 message Puzzle5dSnapshot {
   // @state artifact

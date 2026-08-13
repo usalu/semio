@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.puzzle.puzzle3d.mutation;
 
-// 🧬️ Puzzle3d mutation schema — persistent fields only.
+// 🧬️ Puzzle3d mutation schema — artifact-lane fields only.
 
 message Puzzle3dMutation {
   // @state artifact

@@ -23,6 +23,9 @@ async-trait = "0.1.88"
 blake3 = "1"
 pollster = "0.4.0"
 semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
+semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+semio-framework-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+semio-framework-math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 semio-framework-mesh-engine = { path = "../../../../../🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { workspace = true }

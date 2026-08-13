@@ -1,4 +1,4 @@
-# 🧬️ Din4108 snapshot schema — persistent fields only.
+# 🧬️ Din4108 snapshot schema — artifact-lane fields only.
 
 type Din4108Snapshot {
   category: String! @state(class: ARTIFACT)

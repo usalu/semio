@@ -1,4 +1,4 @@
-# 🧬️ Puzzle3d snapshot schema — persistent fields only.
+# 🧬️ Puzzle3d snapshot schema — artifact-lane fields only.
 
 type Puzzle3dSnapshot {
   schema: String! @state(class: ARTIFACT)

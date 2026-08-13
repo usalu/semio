@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️Artifact
-/// 🧬️ Full lowpoly artifact state across persistent, shared-ui, local-ui and preview classes.
+/// 🧬️ Full lowpoly artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]

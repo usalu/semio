@@ -95,6 +95,8 @@ impl ArtifactApp for Block5dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::block5d::presence::Block5dPresence;
     type PresenceMutation = crate::apps::block5d::presence::Block5dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Block5dCommand;
 

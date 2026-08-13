@@ -2783,13 +2783,14 @@ pub mod media_export_raster {
         });
     }
 
-    /// @emoji 📥️ Registers a DWG import handler for one 2D resource kind, rasterizing DWG geometry into flat SVG first.
-    pub fn register_dwg_import_handler(artifact_kind: &'static str, from_dwg: fn(&DwgDrawing) -> Result<Value, String>) {
-        register_os_media_import_handler_kind(artifact_kind, "dwg", move |bytes| {
-            let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(bytes)?;
-            from_dwg(&drawing)
-        });
-    }
+    // 🚪️ `register_dwg_import_handler` DELETED (ticket
+    // 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1): zero remaining
+    // callers repo-wide (census re-run after migrating cad/gismap/puzzle2d/space off it — each now
+    // resolves DWG import through its own artifact `io_registry::entries()` `ComposerEntry` via
+    // `registry_import_media`'s `io_dispatch` path once its `native_dialect_kind` bridging bug and
+    // double-`"stdio."`-prefix bug were fixed, both in this same file). `register_mesh_dwg_import_handler`
+    // below is a DIFFERENT function (mesh-DWG, not plain DWG) and is NOT one of this wave's five
+    // targeted functions -- it stays.
 
     /// @emoji 🧵️ Registers one `MeshExporter` format (Obj/Glb/Stl/…) for a mesh resource kind; call once per format — `mesh_from_document` bridges the OS workflow's per-document export pipeline down to the format-agnostic `MeshData` the exporter instance actually encodes. DWG stays on `register_mesh_dwg_import_handler`'s sibling below; it is not part of the `MeshExporter` mechanism.
     pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>, exporter: Box<dyn semio_framework_plugin::MeshExporter>) {
@@ -2834,58 +2835,26 @@ pub mod media_export_raster {
         });
     }
 
-    //#region SolidMediaExport
-    type SolidExporterRegistry = HashMap<String, Box<dyn semio_framework_3d::brep::kernel::SolidExporter>>;
-
-    fn solid_exporters() -> &'static Mutex<SolidExporterRegistry> {
-        static HANDLERS: OnceLock<Mutex<SolidExporterRegistry>> = OnceLock::new();
-        HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
-    }
-
-    type SolidImporterRegistry = HashMap<String, Box<dyn semio_framework_3d::brep::kernel::SolidImporter>>;
-
-    fn solid_importers() -> &'static Mutex<SolidImporterRegistry> {
-        static HANDLERS: OnceLock<Mutex<SolidImporterRegistry>> = OnceLock::new();
-        HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
-    }
-
-    fn solid_registry_key(artifact_kind: &str, format_kind: &str) -> String {
-        format!("{}:{}", artifact_kind, format_kind)
-    }
-
-    /// @emoji 🧊️ Registers a B-Rep solid exporter (STEP/STL/OBJ/GLB, operating on `GeometryHandle` via `semio_framework_3d::brep::kernel::Brep` rather than a tessellated `MeshData`) for a resource kind; call once per format.
-    pub fn register_solid_exporter(artifact_kind: &str, exporter: Box<dyn semio_framework_3d::brep::kernel::SolidExporter>) {
-        let key = solid_registry_key(artifact_kind, exporter.format_kind());
-        solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, exporter);
-    }
-
-    /// @emoji 🧊️ Registers a B-Rep solid importer for a resource kind; see `register_solid_exporter`.
-    pub fn register_solid_importer(artifact_kind: &str, importer: Box<dyn semio_framework_3d::brep::kernel::SolidImporter>) {
-        let key = solid_registry_key(artifact_kind, importer.format_kind());
-        solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, importer);
-    }
-
-    /// @emoji 🧊️ Looks up a previously registered solid exporter for a resource kind + format.
-    pub fn solid_exporter_for(artifact_kind: &str, format_kind: &str) -> bool {
-        solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&solid_registry_key(artifact_kind, format_kind))
-    }
-
-    /// @emoji 🧊️ Exports `shapes` from `kernel` through the solid exporter registered for `artifact_kind` + `format`.
-    pub fn export_registered_solid(artifact_kind: &str, format_kind: &str, kernel: &semio_framework_3d::brep::kernel::Brep, shapes: &[semio_framework_3d::brep::engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
-        let key = solid_registry_key(artifact_kind, format_kind);
-        let handlers = solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let exporter = handlers.get(&key).ok_or_else(|| format!("no solid export handler for {key}"))?;
-        exporter.export(kernel, shapes, deflection).map_err(|error| error.to_string())
-    }
-
-    /// @emoji 🧊️ Imports bytes into `kernel` through the solid importer registered for `artifact_kind` + `format`.
-    pub fn import_registered_solid(artifact_kind: &str, format_kind: &str, kernel: &mut semio_framework_3d::brep::kernel::Brep, data: &[u8], tolerance: f64) -> Result<Vec<semio_framework_3d::brep::engine::GeometryHandle>, String> {
-        let key = solid_registry_key(artifact_kind, format_kind);
-        let handlers = solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let importer = handlers.get(&key).ok_or_else(|| format!("no solid import handler for {key}"))?;
-        importer.import(kernel, data, tolerance).map_err(|error| error.to_string())
-    }
-    //#endregion SolidMediaExport
+    // 🚪️ `//#region SolidMediaExport` DELETED WHOLESALE (ticket
+    // 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1): this used to
+    // hold `SolidExporterRegistry`/`SolidImporterRegistry`/`solid_exporters`/`solid_importers`/
+    // `solid_registry_key`/`register_solid_exporter`/`register_solid_importer`/`solid_exporter_for`/
+    // `export_registered_solid`/`import_registered_solid`, all keyed on
+    // `semio_framework_3d::brep::kernel::{SolidExporter, SolidImporter, Brep, GeometryHandle}`.
+    // Census (repo-wide, `grep -rn "register_solid_exporter(\|register_solid_importer("`, excluding
+    // `🎯️target` and this ticket's own scratch files) found exactly one registrant (cad's
+    // `register_host_io`, three formats each) and ZERO production callers of the read side --
+    // `export_registered_solid`/`import_registered_solid` were called from nowhere but this file's
+    // own self-test below (now also deleted) and cad's now-deleted `solid_exporter_for` assertions.
+    // cad's REAL per-solid export/import path (`export_solids_as`/`import_step_object`/
+    // `import_obj_object`/`import_stl_object`, `🗿️artifacts/📐️cad/…/🚪️io/🦀️component.rs`) already
+    // called the genuine stdio `ArtifactSerializer`/`ArtifactDeserializer` leaves directly
+    // (`SemioMeshToObj`, `SemioMeshToStl`, `SemioBrepToStep`, `SemioBrepFromStep`) -- this whole
+    // region was dead weight shadowing that real path, not a gap needing a new artifact-io leaf.
+    // Deleting it also removes the host's last three references to
+    // `semio_framework_3d::brep::kernel::{SolidExporter, SolidImporter, Brep, GeometryHandle}` --
+    // see the wave's report for the repo-wide census of who ELSE still depends on that module
+    // (several framework/plugin crates do; wave IO1 does not touch it further).
     // #endregion media_export_raster
 }
 
@@ -3079,7 +3048,7 @@ pub use crate::workflow_kernel::{
                 }
             }
         }
-        if let Some(format_kind) = registry_shared_stdio_dialect(&source.kind, &target.kind) {
+        if let Some(format_kind) = registry_shared_stdio_dialect(&native_dialect_kind(&source.kind), &native_dialect_kind(&target.kind)) {
             return Some(MediaWireFormat::Binary { format_kind });
         }
         source.export_formats.iter().find(|format| target.import_formats.contains(format)).map(|format| MediaWireFormat::Binary { format_kind: format.clone() })
@@ -3404,6 +3373,30 @@ pub use crate::workflow_kernel::{
     // was confirmed dead (zero callers) and deleted outright.
 
     //#region 🔖️MediaExport
+    //#region 🔖️IoDialectBridge
+    /// 🌉️ Resolves a legacy OS-workflow kind id (`ArtifactKindSpec.id`/`OsArtifactDescriptor.kind`,
+    /// e.g. `"3d.cad"`, `"3d.puzzle"`, `"2d.map"` — dimension-prefixed, what `WorkflowNode.yields`
+    /// and every `register_mesh_exporter`/`register_solid_exporter`/`register_dwg_import_handler`
+    /// call site historically keyed on) to the REAL `Dialect.artifact_kind` its `ComposerEntry` is
+    /// registered under (`"s." + component_kind`, e.g. `"s.cad"`, `"s.puzzle3d"`, `"s.gismap"`).
+    /// Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1 finding:
+    /// these are two different id namespaces that happen to look similar, so `registry_export_media`/
+    /// `registry_import_media`/`registry_shared_stdio_dialect` were silently building a `native_kind`
+    /// (`format!("s.{artifact_kind}")` off the RAW workflow id) that could never match any real
+    /// composer dialect -- the "try the typed registry first" path was dead for every production
+    /// caller, always falling through to the legacy `register_os_media_{export,import}_handler_kind`
+    /// map even for artifacts (cad, puzzle3d/5d, puzzle2d, gismap) that already carry a full
+    /// `ComposerEntry` roster for the exact same formats. `OsArtifactDescriptor.component_kind` is
+    /// the one field already carrying the un-prefixed dialect slug, so no new registry is needed --
+    /// only reading the right field. An unregistered/synthetic kind (e.g. a unit test's throwaway
+    /// `"3d.__mesh_exporter_test"`) resolves through `os_artifact_descriptor`'s own placeholder
+    /// fallback to `"s.panel"`, which will not match any registered dialect and therefore still
+    /// falls through to the legacy handler map exactly as before -- this bridge only changes
+    /// resolution for kinds that were ever registered via `register_artifact_descriptor(s)`.
+    fn native_dialect_kind(workflow_kind: &str) -> String {
+        format!("s.{}", os_artifact_descriptor(workflow_kind).component_kind)
+    }
+    //#endregion 🔖️IoDialectBridge
     //#region 🔖️MediaCapability
     #[cfg(feature = "os-host-full")]
     pub use crate::registry::os_resource_media_capability;
@@ -3487,10 +3480,17 @@ pub use crate::workflow_kernel::{
     /// the full rationale -- dispatches export via `io_dispatch` (real subset validation + one-hop
     /// fallback guard, ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT
     /// W6) before falling back to the old stringly handler map.
+    /// 🐛️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1 fix:
+    /// `format_kind` here is ALWAYS the caller's already-`normalize_format_kind`d value (see both
+    /// call sites below), which returns the canonical `FormatDescriptor.kind_id` -- already in
+    /// `"stdio.<format>"` form, e.g. `"stdio.obj"`. Prefixing another literal `"stdio."` on top
+    /// built `"s.stdio.stdio.obj"`, which can never match a registered `"s.stdio.obj"` dialect --
+    /// so this lookup silently missed for EVERY artifact/format pair and always fell through to
+    /// the legacy handler map, regardless of `native_dialect_kind`. Only `"s."` belongs here.
     fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
         use semio_framework::{IoDirection, IoKey, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload};
-        let native_kind = format!("s.{artifact_kind}");
-        let target_kind = format!("s.stdio.{format_kind}");
+        let native_kind = native_dialect_kind(artifact_kind);
+        let target_kind = format!("s.{format_kind}");
         let target = semio_framework::io_dialects_for(&native_kind, IoDirection::Export)
             .into_iter()
             .find(|d| d.artifact_kind == target_kind)?;
@@ -3554,10 +3554,11 @@ pub use crate::workflow_kernel::{
     /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: see the os-side twin of this function for
     /// the full rationale -- two-hop dispatch (target bytes -> native pack bytes -> json text)
     /// through `io_dispatch` before falling back to the old stringly handler map.
+    /// 🐛️ Same double-`"stdio."` fix as `registry_export_media` -- see that function's doc comment.
     fn registry_import_media(artifact_kind: &str, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
         use semio_framework::{IoDirection, IoKey, ErasedComposeSource, IoPayload};
-        let native_kind = format!("s.{artifact_kind}");
-        let target_kind = format!("s.stdio.{format_kind}");
+        let native_kind = native_dialect_kind(artifact_kind);
+        let target_kind = format!("s.{format_kind}");
 
         let source_dialect = semio_framework::io_dialects_for(&native_kind, IoDirection::Import)
             .into_iter().find(|d| d.artifact_kind == target_kind)?;
@@ -3635,18 +3636,16 @@ pub use crate::workflow_kernel::{
             assert!(document["vertexCount"].as_u64().expect("vertex count") > 0);
         }
 
-        #[test]
-        fn solid_exporter_and_importer_registrars_round_trip_a_box_through_step() {
-            let mut kernel = semio_framework_3d::brep::kernel::Brep::new();
-            let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).expect("box");
-            crate::media_export_raster::register_solid_exporter("3d.__solid_test", Box::new(semio_framework_3d::brep::kernel::StepSolidExporter));
-            crate::media_export_raster::register_solid_importer("3d.__solid_test", Box::new(semio_framework_3d::brep::kernel::StepSolidImporter));
-            assert!(crate::media_export_raster::solid_exporter_for("3d.__solid_test", "step"));
-            let bytes = crate::media_export_raster::export_registered_solid("3d.__solid_test", "step", &kernel, &[solid], 0.1).expect("export step");
-            assert!(!bytes.is_empty());
-            let imported = crate::media_export_raster::import_registered_solid("3d.__solid_test", "step", &mut kernel, &bytes, 0.1).expect("import step");
-            assert!(!imported.is_empty());
-        }
+        // 🚪️ `solid_exporter_and_importer_registrars_round_trip_a_box_through_step` DELETED (ticket
+        // 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1): it exercised
+        // exactly the `register_solid_exporter`/`register_solid_importer`/`solid_exporter_for`/
+        // `export_registered_solid`/`import_registered_solid` mechanism deleted above with it -- see
+        // `//#region SolidMediaExport`'s removal note for why that mechanism was dead weight, not a
+        // migration gap. The equivalent real coverage (a box round-tripped through STEP via the
+        // genuine stdio `semio/brep` bridge) lives in cad's own
+        // `export_solids_as_step_round_trips_through_real_semio_brep_bridge`
+        // (`✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs`),
+        // which this test's own STEP path always deferred to in production anyway.
 
         /// 🧷️ Hand-built node for tests that don't need a real app registration — `os_workflow_to_flow_fixture`/
         /// `build_os_workflow_operator_infos`/VFS listing all read straight off the node now (no more
@@ -4500,8 +4499,8 @@ pub use instance::{
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
 };
 pub use media_export_raster::{
-    dwg_drawing_to_svg, export_registered_solid, import_registered_solid, rasterize_svg_to_png_base64, register_2d_export_handlers, register_dwg_import_handler, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler,
-    register_mesh_exporter, register_mesh_importer, register_os_media_export_handler_kind, register_os_media_import_handler_kind, register_solid_exporter, register_solid_importer, solid_exporter_for, svg_to_dwg_bytes,
+    dwg_drawing_to_svg, rasterize_svg_to_png_base64, register_2d_export_handlers, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler,
+    register_mesh_exporter, register_mesh_importer, register_os_media_export_handler_kind, register_os_media_import_handler_kind, svg_to_dwg_bytes,
     OsMediaExportResult, media_accept_filter_kinds,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};

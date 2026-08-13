@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<CurateSnapshot> for CurateInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.sourcing.curate.inference.entries", reads: &["stock", "curated"] }]
+        &[protocol::InferenceFieldSpec { id: "s.sourcing.curate.inference.entries", reads: &["catalog", "stockExtra", "curated"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -74,7 +74,7 @@ impl ArtifactInferrer for crate::artifacts::curate::standards::v1::subsets::any:
 /// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
 /// mesh as "no visual representation yet", not an error.
 pub fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
-    let object_kinds: Vec<Value> = document.stock.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() })).collect();
+    let object_kinds: Vec<Value> = crate::artifacts::curate::stock_of(document).iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() })).collect();
     json!({
         "schema": "manifest",
         "objectKinds": object_kinds,
@@ -137,17 +137,18 @@ mod tests {
 
     //#region 🧪️PuzzleCatalogFragment
     fn sample_document() -> CurateSnapshot {
-        CurateSnapshot { stock: crate::artifacts::curate::schema::sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() }
+        crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new())
     }
 
     #[test]
     fn sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shape() {
         let document = sample_document();
+        let stock = crate::artifacts::curate::stock_of(&document);
         let fragment = sourcing_catalog_fragment(&document);
         assert_eq!(fragment["schema"], "manifest");
         let object_kinds = fragment["objectKinds"].as_array().expect("objectKinds array");
-        assert_eq!(object_kinds.len(), document.stock.len());
-        assert_eq!(object_kinds[0]["id"], document.stock[0].id);
+        assert_eq!(object_kinds.len(), stock.len());
+        assert_eq!(object_kinds[0]["id"], stock[0].id);
         assert_eq!(object_kinds[0]["meshUrl"], Value::Null);
         assert!(object_kinds[0]["vortices"].as_array().unwrap().is_empty());
         assert!(fragment["vortexKinds"].as_array().unwrap().is_empty());

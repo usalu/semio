@@ -2,11 +2,12 @@
 //! BASE-state step, at its BASE-state index; missing source step or block ⇒ `Vec::new()`.
 
 use super::mutation::MoveBlockToStep;
-use crate::artifacts::forms::{FormMutation, FormsSnapshot};
+use crate::artifacts::forms::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) -> Vec<FormMutation> {
-    let Some(source_step) = base.steps.iter().find(|step| step.id == payload.step_id) else {
+    let steps = forms_steps(base);
+    let Some(source_step) = steps.iter().find(|step| step.id == payload.step_id) else {
         return Vec::new();
     };
     let Some(original_index) = source_step.blocks.iter().position(|block| block.id == payload.block_id) else {

@@ -133,7 +133,7 @@ mod tests {
         let mut app = new_app();
         let document = app.snapshot().expect("snapshot");
         // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.
-        let object_id = document.stock[2].id.clone();
+        let object_id = document.stock_extra[2].id.clone();
         dispatch(&mut app, SourcingCurateCommand::CurateAdd(curate_add::CurateAdd { object_id: object_id.clone() }));
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 1);
 
@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn curate_set_count_supports_both_delta_and_absolute_value() {
         let mut app = new_app();
-        let object_id = app.snapshot().expect("snapshot").stock[2].id.clone();
+        let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
         dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: Some(3.0), value: None }));
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 3);
         dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: None, value: Some(2.0) }));
@@ -156,7 +156,7 @@ mod tests {
         let mut app = new_app();
         let document = app.snapshot().expect("snapshot");
         // stock[2] isn't part of the fixture's pre-curated set, so a single drop lands on count 1.
-        let object_id = document.stock[2].id.clone();
+        let object_id = document.stock_extra[2].id.clone();
         dispatch(&mut app, SourcingCurateCommand::DropOnCurated(drop_on_curated::DropOnCurated { object_id: object_id.clone() }));
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 1);
 
@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn curate_remove_on_an_uncurated_object_emits_no_mutation() {
         let mut app = new_app();
-        let object_id = app.snapshot().expect("snapshot").stock[2].id.clone();
+        let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
         let result = crate::apps::curate::testkit::dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id }));
         assert!(result.mutations.is_empty(), "removing an already-uncurated object is a no-op");

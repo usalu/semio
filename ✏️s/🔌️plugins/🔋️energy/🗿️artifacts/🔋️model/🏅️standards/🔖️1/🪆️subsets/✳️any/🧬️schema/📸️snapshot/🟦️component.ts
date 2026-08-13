@@ -1,4 +1,4 @@
-/** 🧬️ EnergyModel snapshot schema — persistent fields only. */
+/** 🧬️ EnergyModel snapshot schema — artifact-lane fields only. */
 
 export interface EnergyModelSnapshot {
   /** @state artifact */

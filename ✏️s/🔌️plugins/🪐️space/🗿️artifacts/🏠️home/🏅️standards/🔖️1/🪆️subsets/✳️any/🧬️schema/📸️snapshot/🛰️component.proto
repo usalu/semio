@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.space.home.snapshot;
 
-// 🧬️ S Home snapshot schema — persistent fields only.
+// 🧬️ S Home snapshot schema — artifact-lane fields only.
 
 message SHomeSnapshot {
   // @state artifact

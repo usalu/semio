@@ -3,7 +3,7 @@
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::{parse_value_json, reset_try_config_mutations};
 use crate::artifacts::forms::schema::{create_form_id, locate_question, update_block_operation, value_to_dsl};
-use crate::artifacts::forms::{op::FormMutation, FormQuestion, FormsSnapshot, FormVectorField};
+use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormsSnapshot, FormVectorField};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -168,7 +168,8 @@ fn resolve_step_id_from_tree_target(spec: &FormsSnapshot, target_id: &str) -> Op
 /// 🌳️ Resolves the insertion index within `step_id` implied by dropping onto `target_id` at
 /// `drop_position` (`"before"`/`"after"`/`"inside"`).
 fn resolve_question_insert_index(spec: &FormsSnapshot, step_id: &str, target_id: &str, drop_position: &str) -> Option<usize> {
-    let step = spec.steps.iter().find(|step| step.id == step_id)?;
+    let steps = forms_steps(spec);
+    let step = steps.iter().find(|step| step.id == step_id)?;
     if target_id.starts_with("step:") {
         return Some(if drop_position == "before" { 0 } else { step.blocks.len() });
     }
@@ -194,13 +195,17 @@ pub mod add_question {
 
     pub fn handle(payload: &AddQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
-        let Some(step_id) = payload.step_id.clone().or_else(|| spec.steps.first().map(|step| step.id.clone())) else {
+        let Some(step_id) = payload.step_id.clone().or_else(|| forms_steps(spec).first().map(|step| step.id.clone())) else {
             return Ok(Emit::default());
         };
         let question = default_question_for_kind(&payload.kind, create_form_id("q"));
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: vec![question.id.clone()] });
-        Ok(Emit { artifact_mutations: vec![FormMutation::AddBlock { step_id, block: question, index: None }], config_mutations, ..Default::default() })
+        Ok(Emit {
+            artifact_mutations: vec![FormMutation::CreateBlock(crate::artifacts::forms::mutations::create_block::mutation::CreateBlock { step_id, block: question, index: None })],
+            config_mutations,
+            ..Default::default()
+        })
     }
 }
 //#endregion 🔖️AddQuestion
@@ -223,7 +228,11 @@ pub mod remove_question {
         };
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: config.selected_ids.iter().filter(|id| **id != payload.question_id).cloned().collect() });
-        Ok(Emit { artifact_mutations: vec![FormMutation::RemoveBlock { step_id: location.step_id, block_id: payload.question_id.clone() }], config_mutations, ..Default::default() })
+        Ok(Emit {
+            artifact_mutations: vec![FormMutation::DeleteBlock(crate::artifacts::forms::mutations::delete_block::mutation::DeleteBlock { step_id: location.step_id, id: payload.question_id.clone() })],
+            config_mutations,
+            ..Default::default()
+        })
     }
 }
 //#endregion 🔖️RemoveQuestion
@@ -280,7 +289,12 @@ pub mod move_question {
         let target_id = payload.target_id.as_deref().unwrap_or(&payload.question_id);
         let resolved_index = payload.index.map_or_else(|| resolve_question_insert_index(spec, &payload.to_step_id, target_id, &payload.position).unwrap_or(0), |value| value as usize);
         Ok(Emit {
-            artifact_mutations: vec![FormMutation::MoveBlock { block_id: payload.question_id.clone(), from_step_id: source.step_id, to_step_id: payload.to_step_id.clone(), index: resolved_index }],
+            artifact_mutations: vec![FormMutation::MoveBlockToStep(crate::artifacts::forms::mutations::move_block_to_step::mutation::MoveBlockToStep {
+                step_id: source.step_id,
+                block_id: payload.question_id.clone(),
+                to_step_id: payload.to_step_id.clone(),
+                index: resolved_index,
+            })],
             config_mutations: reset_try_config_mutations(),
             ..Default::default()
         })
@@ -309,7 +323,11 @@ pub mod drop_question_kind {
         let question = default_question_for_kind(&payload.kind, create_form_id("q"));
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: vec![question.id.clone()] });
-        Ok(Emit { artifact_mutations: vec![FormMutation::AddBlock { step_id, block: question, index }], config_mutations, ..Default::default() })
+        Ok(Emit {
+            artifact_mutations: vec![FormMutation::CreateBlock(crate::artifacts::forms::mutations::create_block::mutation::CreateBlock { step_id, block: question, index })],
+            config_mutations,
+            ..Default::default()
+        })
     }
 }
 //#endregion 🔖️DropQuestionKind
@@ -343,10 +361,10 @@ mod tests {
     #[test]
     fn drop_question_kind_inserts_and_selects() {
         let mut app = forms_app();
-        let step_id = app.snapshot().expect("projection").steps[0].id.clone();
+        let step_id = forms_steps(&app.snapshot().expect("projection"))[0].id.clone();
         dispatch(&mut app, FormsCommand::DropQuestionKind(DropQuestionKind { kind: "slider".into(), target_id: crate::artifacts::forms::schema::forms_play_step_tree_id(&step_id), drop_position: "inside".into() }));
         let spec = app.snapshot().expect("projection");
-        assert!(spec.steps[0].blocks.iter().any(|question| question.kind == "slider"));
+        assert!(forms_steps(&spec)[0].blocks.iter().any(|question| question.kind == "slider"));
         let blueprint = crate::apps::forms::testkit::render(&mut app, crate::apps::forms::FORMS_PLAY_BODY_BLUEPRINT);
         assert!(blueprint.contains(r#""selectedId":"#));
     }
@@ -355,16 +373,16 @@ mod tests {
     fn inspector_patch_updates_required() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::SetActiveExample(crate::apps::forms::commands::import::set_active_example::SetActiveExample { example_id: "default".into() }));
-        let name_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
+        let name_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
         dispatch(&mut app, FormsCommand::PatchQuestions(PatchQuestions { question_ids: vec![name_id], field: "required".into(), value_json: "false".into(), param_key: None }));
         let spec = app.snapshot().expect("projection");
-        assert!(!spec.steps[0].blocks[0].required.unwrap_or(true));
+        assert!(!forms_steps(&spec)[0].blocks[0].required.unwrap_or(true));
     }
 
     #[test]
     fn remove_question_clears_it_from_the_selection() {
         let mut app = forms_app();
-        let question_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
+        let question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
         dispatch(&mut app, FormsCommand::RemoveQuestion(RemoveQuestion { question_id: question_id.clone() }));
         assert!(crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).iter().all(|(_, question)| question.id != question_id));
     }
@@ -374,11 +392,12 @@ mod tests {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::AddStep(crate::apps::forms::commands::step::add_step::AddStep {}));
         let spec = app.snapshot().expect("projection");
-        let question_id = spec.steps[0].blocks[0].id.clone();
-        let target_step_id = spec.steps.last().unwrap().id.clone();
+        let steps = forms_steps(&spec);
+        let question_id = steps[0].blocks[0].id.clone();
+        let target_step_id = steps.last().unwrap().id.clone();
         dispatch(&mut app, FormsCommand::MoveQuestion(MoveQuestion { question_id: question_id.clone(), to_step_id: target_step_id.clone(), target_id: None, position: "inside".into(), index: None }));
         let moved = app.snapshot().expect("projection");
-        assert!(moved.steps.iter().find(|step| step.id == target_step_id).expect("target step").blocks.iter().any(|question| question.id == question_id));
+        assert!(forms_steps(&moved).iter().find(|step| step.id == target_step_id).expect("target step").blocks.iter().any(|question| question.id == question_id));
     }
 }
 //#endregion 🧪️Tests

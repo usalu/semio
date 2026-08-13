@@ -24,6 +24,7 @@ fn catalogue_button(id: &str, label: impl Into<Label>, action: &str, args: Optio
 }
 
 pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
+    let (source, _) = crate::artifacts::present::present_working_scene(deck);
     ui_declarative_sections_to_tree(&[
         UiSectionNode {
             id: "animate.present.play.catalogue.templates".into(),
@@ -45,14 +46,14 @@ pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
             label: Some(labels.catalogue_figure_templates.into()),
             default_open: Some(true),
             children: vec![
-                catalogue_button("animate.present.play.catalogue.figure.catalogue", labels.catalogue_use_figure, "setSource", Some(json!(crate::artifacts::present::default_present_snapshot().source))),
+                catalogue_button("animate.present.play.catalogue.figure.catalogue", labels.catalogue_use_figure, "setSource", Some(json!(crate::artifacts::present::present_working_scene(&crate::artifacts::present::default_present_snapshot()).0))),
                 UiNode::Field(UiFieldNode {
                     id: "animate.present.play.catalogue.figure.src".into(),
                     label: labels.catalogue_active_source.into(),
                     child: Box::new(UiNode::Input(UiInputNode {
                         id: "animate.present.play.catalogue.figure.src.readonly".into(),
                         input_kind: "text".into(),
-                        value: deck.source.src.clone(),
+                        value: source.src.clone(),
                         placeholder: None,
                         commit: None,
                         on_change: animate_present_action("noMutation", None),
@@ -69,7 +70,7 @@ pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
                     presence: UiPresence::default(),
                     menu: None,
                 }),
-                ui_text(Label::data(format!("{}: {}", labels.catalogue_media_kind.as_str(), deck.source.kind))),
+                ui_text(Label::data(format!("{}: {}", labels.catalogue_media_kind.as_str(), source.kind))),
             ],
             menu: None,
         },

@@ -21,7 +21,8 @@ pub mod seed_grid {
 
     pub fn handle(payload: &SeedGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
-        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
+        let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
+        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
         let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
         Ok(Emit { artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
     }
@@ -42,7 +43,8 @@ pub mod reset_grid {
 
     pub fn handle(_payload: &ResetGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
-        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
+        let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
+        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
         let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
         Ok(Emit { artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
     }
@@ -75,7 +77,7 @@ mod tests {
     fn seed_grid_action_adds_tiles() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        assert_eq!(app.snapshot().expect("projection").tiles.len(), 4);
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned outright), so
@@ -103,7 +105,7 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <PresentSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert!(loaded.tiles.is_empty(), "resetting to demo loads the default deck, which has no seeded tiles");
+        assert!(crate::artifacts::present::present_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no seeded tiles");
     }
 
     #[test]
@@ -112,10 +114,10 @@ mod tests {
         use semio_framework_plugin::{PluginApp, ViewModel};
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        let first_id = app.snapshot().expect("projection").tiles[0].id.clone();
+        let first_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
         dispatch(&mut app, PresentCommand::SetSelectedIds(crate::apps::present::commands::view::set_selected_ids::SetSelectedIds { ids: vec![first_id] }));
         dispatch(&mut app, PresentCommand::ClearTiles(clear_tiles::ClearTiles {}));
-        assert!(app.snapshot().expect("projection").tiles.is_empty());
+        assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
         let node = app.render(PRESENT_PLAY_BODY_DETAILS, None, &ViewModel::default()).expect("render details");
         let json_str = serde_json::to_string(&node).unwrap();
         assert!(json_str.contains("Select a tile"), "selection was cleared alongside tiles");

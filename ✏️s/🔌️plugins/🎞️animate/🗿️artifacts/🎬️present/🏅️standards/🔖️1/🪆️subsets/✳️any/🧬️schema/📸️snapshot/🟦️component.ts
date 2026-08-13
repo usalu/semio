@@ -1,4 +1,4 @@
-/** 📸️ Present snapshot schema — persistent fields only. */
+/** 📸️ Present snapshot schema — artifact-lane fields only. */
 export interface PresentSnapshot {
   /** @state artifact */ schema: string;
   /** @state artifact */ source: FigureTileSource;

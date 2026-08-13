@@ -1,4 +1,4 @@
-//! 🧬️ Puzzle5d snapshot schema — persistent fields only.
+//! 🧬️ Puzzle5d snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, PUZZLE_5D_SCHEMA};
 use artifact_schema::ArtifactSchema;

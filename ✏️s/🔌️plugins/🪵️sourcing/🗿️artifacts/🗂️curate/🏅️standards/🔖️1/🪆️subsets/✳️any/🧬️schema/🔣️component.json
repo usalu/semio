@@ -4,17 +4,23 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "stock",
+    "catalog",
+    "stockExtra",
     "curated",
     "filters",
     "locale",
     "contributionsJson"
   ],
   "properties": {
-    "stock": {
+    "catalog": {
+      "type": "object",
+      "x-semio-state": "artifact",
+      "x-semio-child": "s.stdio.semio.kit"
+    },
+    "stockExtra": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/ObjectKind"
+        "$ref": "#/$defs/ObjectKindExtra"
       },
       "x-semio-state": "artifact"
     },
@@ -190,6 +196,35 @@
           "type": "string"
         },
         "moduleId": {
+          "type": "string"
+        },
+        "typologyPath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "availability": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "geometry": {
+          "$ref": "#/$defs/GeometryRecipe"
+        }
+      }
+    },
+    "ObjectKindExtra": {
+      "title": "ObjectKindExtra",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "typologyPath",
+        "availability",
+        "geometry"
+      ],
+      "properties": {
+        "id": {
           "type": "string"
         },
         "typologyPath": {

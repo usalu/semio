@@ -1,4 +1,4 @@
-//! 🧬️ Wires snapshot schema — persistent fields only.
+//! 🧬️ Wires snapshot schema — artifact-lane fields only.
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`reasoning/dag→C:graph`): `content` composes
 //! stdio's neutral `s.stdio.semio.graph` subset (nodes/edges) instead of an inline `board_fixture`

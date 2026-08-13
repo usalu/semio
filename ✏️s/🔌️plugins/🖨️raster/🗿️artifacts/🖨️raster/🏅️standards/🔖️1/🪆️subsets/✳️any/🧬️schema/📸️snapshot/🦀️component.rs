@@ -1,4 +1,4 @@
-//! 🧬️ Raster snapshot schema — persistent fields only.
+//! 🧬️ Raster snapshot schema — artifact-lane fields only.
 //!
 //! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):
 //! `RasterSnapshot.assets` carries real `store::ArtifactChild<SemioImageSnapshot>` handles (composed

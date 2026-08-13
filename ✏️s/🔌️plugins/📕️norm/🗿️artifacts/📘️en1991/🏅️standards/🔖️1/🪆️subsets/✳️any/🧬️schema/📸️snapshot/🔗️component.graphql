@@ -1,4 +1,4 @@
-# 🧬️ En1991 snapshot schema — persistent fields only.
+# 🧬️ En1991 snapshot schema — artifact-lane fields only.
 
 type En1991Snapshot {
   areaM2: Float! @state(class: ARTIFACT)

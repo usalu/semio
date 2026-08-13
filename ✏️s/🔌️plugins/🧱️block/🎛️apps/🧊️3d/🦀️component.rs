@@ -151,6 +151,8 @@ impl ArtifactApp for Block3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::block3d::presence::Block3dPresence;
     type PresenceMutation = crate::apps::block3d::presence::Block3dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Block3dCommand;
 

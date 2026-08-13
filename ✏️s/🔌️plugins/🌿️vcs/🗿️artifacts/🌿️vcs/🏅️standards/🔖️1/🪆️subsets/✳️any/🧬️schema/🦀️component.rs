@@ -13,7 +13,7 @@ pub fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Artifact
-/// 🧬️ Full VCS demo artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full VCS demo artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.vcs.vcs")]

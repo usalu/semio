@@ -58,7 +58,7 @@ pub fn widget_tree_label(widget: &Widget) -> String {
 //#endregion 🔖️Widgets
 
 //#region 🔹Artifact
-/// 🧬️ Full flow artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full flow artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]

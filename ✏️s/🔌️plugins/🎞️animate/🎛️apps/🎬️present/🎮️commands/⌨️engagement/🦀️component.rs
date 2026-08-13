@@ -23,8 +23,9 @@ pub mod engagement_submit {
     pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
         let trimmed = payload.value.trim();
+        let (deck_source, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
         if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
-            let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
+            let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows, columns, gap: 0.0, key_prefix: "tile" });
             let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
             return Ok(Emit {
                 artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })],
@@ -37,7 +38,7 @@ pub mod engagement_submit {
                 let id = new_tile_id("tile");
                 let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
                 Ok(Emit {
-                    artifact_mutations: vec![PresentMutation::CreateTile(CreateTile { index: deck.tiles.len(), tile })],
+                    artifact_mutations: vec![PresentMutation::CreateTile(CreateTile { index: deck_tiles.len(), tile })],
                     config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: vec![id] }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
                     ..Default::default()
                 })
@@ -83,7 +84,7 @@ mod tests {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "2x3".into() }));
         dispatch(&mut app, PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "2x3".into() }));
-        assert_eq!(app.snapshot().expect("projection").tiles.len(), 6, "2x3 grid pattern seeds 6 tiles");
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 6, "2x3 grid pattern seeds 6 tiles");
     }
 
     #[test]
@@ -91,10 +92,10 @@ mod tests {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "add".into() }));
-        assert_eq!(app.snapshot().expect("projection").tiles.len(), 1);
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 1);
 
         dispatch(&mut app, PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "clear".into() }));
-        assert!(app.snapshot().expect("projection").tiles.is_empty());
+        assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
 
         app.dispatch_typed(PresentCommand::AddTile(crate::apps::present::commands::tile::add_tile::AddTile { crop: None }), &meta("local")).expect("seed for copy");
         let copy_result = app.dispatch_typed(PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "copy prompt".into() }), &meta("local")).expect("copy keyword");

@@ -1,4 +1,4 @@
-# 🧬️ S Home mutation schema — persistent fields only.
+# 🧬️ S Home mutation schema — artifact-lane fields only.
 
 type SHomeMutation {
   schema: String! @state(class: ARTIFACT)

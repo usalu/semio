@@ -1,4 +1,4 @@
-# 🧬️ Playground mutation schema — persistent fields only.
+# 🧬️ Playground mutation schema — artifact-lane fields only.
 
 type PlaygroundMutation {
   schema: String! @state(class: ARTIFACT)

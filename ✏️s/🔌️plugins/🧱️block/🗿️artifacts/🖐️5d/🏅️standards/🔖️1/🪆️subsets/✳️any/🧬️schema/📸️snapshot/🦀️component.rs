@@ -1,4 +1,4 @@
-//! 🧬️ Block5d snapshot schema — persistent fields only.
+//! 🧬️ Block5d snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, BLOCK_5D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};

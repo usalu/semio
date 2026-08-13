@@ -1,4 +1,4 @@
-//! 🧬️ Process3d snapshot schema — persistent fields only.
+//! 🧬️ Process3d snapshot schema — artifact-lane fields only.
 //!
 //! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `stock`/`steps` are no longer
 //! inline (`Stock`/`Vec<ProcessStep>`, duplicating `SolidSpec` geometry) — they compose real

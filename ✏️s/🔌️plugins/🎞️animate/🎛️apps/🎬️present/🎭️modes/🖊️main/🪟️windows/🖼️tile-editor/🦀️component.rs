@@ -55,20 +55,21 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
 /// 🖼️ Renders the actual source figure (image) as the backdrop layer, with crop tiles drawn on top of it.
 fn deck_to_canvas_layers(deck: &PresentSnapshot, selected: &[String]) -> String {
     const SCALE: f64 = 1000.0;
+    let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
     let mut layers = Vec::new();
-    let (sx, sy, sw, sh) = frame_to_canvas(&deck.source.frame, SCALE);
-    let has_image_src = !deck.source.src.trim().is_empty() && deck.source.kind != "pdf";
+    let (sx, sy, sw, sh) = frame_to_canvas(&source.frame, SCALE);
+    let has_image_src = !source.src.trim().is_empty() && source.kind != "pdf";
     layers.push(TileCanvasLayer {
         id: "source-frame".into(),
         kind: if has_image_src { "image".into() } else { "source".into() },
-        name: deck.source.src.clone(),
+        name: source.src.clone(),
         x: sx,
         y: sy,
         width: sw,
         height: sh,
-        data_url: has_image_src.then(|| deck.source.src.clone()),
+        data_url: has_image_src.then(|| source.src.clone()),
     });
-    for tile in &deck.tiles {
+    for tile in &tiles {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
         let selected_flag = selected.contains(&tile.id);
         layers.push(TileCanvasLayer { id: tile.id.clone(), kind: if selected_flag { "tile-selected" } else { "tile" }.into(), name: tile.name.clone(), x, y, width, height, data_url: None });
@@ -113,11 +114,12 @@ mod tests {
         let deck = app.snapshot().expect("projection");
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
-        assert!(!deck.source.src.trim().is_empty());
+        let (source, _) = crate::artifacts::present::present_working_scene(&deck);
+        assert!(!source.src.trim().is_empty());
         let source_layer = layers.first().expect("source layer is first (renders behind tiles)");
         assert_eq!(source_layer.get("id").and_then(|v| v.as_str()), Some("source-frame"));
         assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("image"));
-        assert_eq!(source_layer.get("dataUrl").and_then(|v| v.as_str()), Some(deck.source.src.as_str()));
+        assert_eq!(source_layer.get("dataUrl").and_then(|v| v.as_str()), Some(source.src.as_str()));
         for tile_layer in &layers[1..] {
             assert_ne!(tile_layer.get("kind").and_then(|v| v.as_str()), Some("image"));
             assert!(tile_layer.get("dataUrl").is_none() || tile_layer.get("dataUrl") == Some(&Value::Null));
@@ -126,8 +128,10 @@ mod tests {
 
     #[test]
     fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
-        let mut deck = crate::artifacts::present::default_present_snapshot();
-        deck.source.src = String::new();
+        let base = crate::artifacts::present::default_present_snapshot();
+        let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
+        source.src = String::new();
+        let deck = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
         let source_layer = layers.first().expect("source layer present");
@@ -137,8 +141,10 @@ mod tests {
 
     #[test]
     fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
-        let mut deck = crate::artifacts::present::default_present_snapshot();
-        deck.source.kind = "pdf".into();
+        let base = crate::artifacts::present::default_present_snapshot();
+        let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
+        source.kind = "pdf".into();
+        let deck = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
         let source_layer = layers.first().expect("source layer present");

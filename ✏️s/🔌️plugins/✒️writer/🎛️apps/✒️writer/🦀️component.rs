@@ -347,6 +347,8 @@ impl ArtifactApp for WriterPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = WriterPresence;
     type PresenceMutation = WriterPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = WriterCommand;
 

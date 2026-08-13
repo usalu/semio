@@ -861,6 +861,8 @@ impl ArtifactApp for SequencePlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = SequencePresence;
     type PresenceMutation = SequencePresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = SequenceCommand;
 

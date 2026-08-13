@@ -56,11 +56,12 @@ mod tests {
     use super::*;
     use crate::apps::forms::testkit::{forms_app, render as render_body};
     use crate::apps::forms::FORMS_PLAY_BODY_BLUEPRINT as BODY_BLUEPRINT;
+    use crate::artifacts::forms::forms_steps;
 
     #[test]
     fn renders_blueprint_builder_cards() {
         let mut app = forms_app();
-        let first_question_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
+        let first_question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
         let json = render_body(&mut app, BODY_BLUEPRINT);
         assert!(json.contains(r#""componentKind":"block-list""#));
         assert!(json.contains(r#""surfaceId":"forms.play.blueprint""#));

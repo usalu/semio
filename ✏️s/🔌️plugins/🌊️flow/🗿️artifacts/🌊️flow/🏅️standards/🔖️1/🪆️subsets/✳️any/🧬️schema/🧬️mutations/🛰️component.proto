@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.flow.flow.mutation;
 
-// 🧬️ Flow mutation schema — persistent fields only.
+// 🧬️ Flow mutation schema — artifact-lane fields only.
 
 message FlowMutation {
   // @state artifact

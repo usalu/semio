@@ -71,15 +71,22 @@ type CurateStringList {
   values: [String!]!
 }
 
-type CurateObjectKindPatchEntry {
+type ObjectKindExtra {
   id: String!
-  kind: ObjectKind!
+  typologyPath: [String!]!
+  availability: Int!
+  geometry: GeometryRecipe!
 }
 
-type CurateStockDelta {
-  added: [ObjectKind!]
+type CurateObjectKindExtraPatchEntry {
+  id: String!
+  extra: ObjectKindExtra!
+}
+
+type CurateStockExtraDelta {
+  added: [ObjectKindExtra!]
   removed: [String!]
-  patched: [CurateObjectKindPatchEntry!]
+  patched: [CurateObjectKindExtraPatchEntry!]
   reordered: [String!]
 }
 
@@ -97,7 +104,8 @@ type CurateCuratedDelta {
 
 type CurateDiff {
   artifact: CurateArtifact @state(class: ARTIFACT)
-  stock: CurateStockDelta @state(class: ARTIFACT)
+  catalog: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.kit")
+  stockExtra: CurateStockExtraDelta @state(class: ARTIFACT)
   curated: CurateCuratedDelta @state(class: ARTIFACT)
   filters: Filters @state(class: CONFIG)
   selectedObjectId: String @state(class: PRESENCE)

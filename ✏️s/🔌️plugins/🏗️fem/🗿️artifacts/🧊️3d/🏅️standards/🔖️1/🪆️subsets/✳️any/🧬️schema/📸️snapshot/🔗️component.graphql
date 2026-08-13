@@ -1,4 +1,4 @@
-# 🧬️ Fem3d snapshot schema — persistent fields only.
+# 🧬️ Fem3d snapshot schema — artifact-lane fields only.
 
 type Fem3dSnapshot {
   nodes: [FemNode!]! @state(class: ARTIFACT)

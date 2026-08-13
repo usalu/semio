@@ -170,7 +170,8 @@ mod tests {
     fn pool_stepper_cell_max_equals_availability() {
         let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig::default();
-        let kind = &document.stock[0];
+        let stock = crate::artifacts::curate::stock_of(&document);
+        let kind = &stock[0];
         let node = build_pool_table(&document, &cfg, crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
         let json = serde_json::to_value(&node).unwrap();
         let rows_json = json.pointer("/table/rowsJson").and_then(|value| value.as_str()).unwrap();

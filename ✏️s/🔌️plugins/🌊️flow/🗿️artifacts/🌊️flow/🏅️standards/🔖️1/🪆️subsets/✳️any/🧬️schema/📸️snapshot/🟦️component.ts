@@ -1,4 +1,4 @@
-/** 🧬️ Flow snapshot schema — persistent fields only. */
+/** 🧬️ Flow snapshot schema — artifact-lane fields only. */
 
 export interface FlowSnapshot {
   /** @state artifact */

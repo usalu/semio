@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
-/// 🧬️ Full process3d artifact state across persistent, shared-ui, local-ui and preview classes.
+/// 🧬️ Full process3d artifact state across the artifact, presence and config lanes.
 /// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: mirrors `Process3dSnapshot`'s
 /// flattened `stock_*`/composed-child field shape exactly, so `to_snapshot`/`from_snapshot` stay a
 /// plain field-for-field copy.

@@ -4,7 +4,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full S Home launcher artifact state across persistent and local-ui classes.
+/// 🧬️ Full S Home launcher artifact state across the artifact and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.home")]

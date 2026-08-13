@@ -1584,6 +1584,8 @@ impl ArtifactApp for Puzzle5dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = Puzzle5dPresence;
     type PresenceMutation = Puzzle5dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle5dCommand;
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
@@ -2021,15 +2023,22 @@ pub(crate) fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshDa
 /// (see `crate::artifacts::puzzle5d::declaration()`'s own doc), so it stays wired through
 /// `🧩️puzzle/🦀️component.rs`'s `.setup()`. `puzzle5d_document_from_mesh` (above) stays its importer/
 /// dwg callback, now a same-file sibling instead of a cross-node `pub(crate)` reach.
+///
+/// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
+/// OBJ/STL `register_mesh_exporter`/`register_mesh_importer` calls this used to make are DELETED,
+/// not migrated -- same reasoning as puzzle3d's sibling `register_mesh_io` (see that function's doc
+/// comment): `🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s
+/// `io_registry::entries()` already carries real `ComposerEntry` rows for `"s.stdio.obj"`/
+/// `"s.stdio.stl"`, reachable via `io_dispatch` once the OS media pipeline's `native_kind` bridging
+/// bug is fixed (`component_kind` = `"puzzle5d"`, not the raw `"5d.puzzle"` workflow kind id). GLB
+/// stays registered here (same stdio-format-catalog gap as puzzle3d/cad — no `"s.stdio.glb"`
+/// dialect exists yet). `register_mesh_dwg_export_handler`/`register_mesh_dwg_import_handler` are
+/// outside this wave's five-function scope and stay untouched.
 pub fn register_mesh_io() {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     {
-        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
         semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
-        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::StlExporter));
-        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
         semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-        semio_framework_os::register_mesh_importer("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
         semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
         semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", crate::apps::puzzle5d::puzzle5d_document_from_mesh);
     }

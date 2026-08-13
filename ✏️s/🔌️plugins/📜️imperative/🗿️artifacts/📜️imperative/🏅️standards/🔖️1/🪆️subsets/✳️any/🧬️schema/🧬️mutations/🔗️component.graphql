@@ -1,4 +1,4 @@
-# 🧬️ Imperative mutation schema — persistent fields only.
+# 🧬️ Imperative mutation schema — artifact-lane fields only.
 
 type ImperativeMutation {
   schema: String! @state(class: ARTIFACT)

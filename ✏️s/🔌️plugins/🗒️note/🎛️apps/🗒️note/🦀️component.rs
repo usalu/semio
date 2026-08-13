@@ -144,6 +144,8 @@ impl ArtifactApp for NotePlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = NotePresence;
     type PresenceMutation = NotePresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = NoteCommand;
 

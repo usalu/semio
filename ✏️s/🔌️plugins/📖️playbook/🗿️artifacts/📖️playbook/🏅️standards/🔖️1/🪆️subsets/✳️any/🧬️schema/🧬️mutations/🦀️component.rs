@@ -91,9 +91,10 @@ mod tests {
     }
 
     fn sample_snapshot() -> PlaybookSnapshot {
-        let mut snapshot = PlaybookSnapshot::default();
-        snapshot.steps.push(PlaybookStep { id: "s2".into(), title: "Review".into(), description: None, blocks: vec![sample_block("b1", "number", "Team size")] });
-        snapshot
+        let base = PlaybookSnapshot::default();
+        let mut steps = base.steps();
+        steps.push(PlaybookStep { id: "s2".into(), title: "Review".into(), description: None, blocks: vec![sample_block("b1", "number", "Team size")] });
+        crate::artifacts::playbook::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps)
     }
 
     //#region 🔖️MutationLaws
@@ -131,8 +132,10 @@ mod tests {
 
     #[test]
     fn move_block_same_step_inverse_law() {
-        let mut base = sample_snapshot();
-        base.steps[1].blocks.push(sample_block("b2", "text", "Other"));
+        let base = sample_snapshot();
+        let mut steps = base.steps();
+        steps[1].blocks.push(sample_block("b2", "text", "Other"));
+        let base = crate::artifacts::playbook::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps);
         assert_mutation_inverse_law(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s2".into(), index: 1 }));
     }
 
@@ -180,8 +183,9 @@ mod tests {
         let diff = MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }.diff(&base);
         assert!(diff.artifact.is_none(), "cross-step MoveBlock diff must be a real per-field replacement, not the old whole-artifact fallback");
         let after = protocol::MutationDiff::apply(&diff, &base);
-        assert!(after.steps[0].blocks.iter().any(|block| block.id == "b1"));
-        assert!(!after.steps[1].blocks.iter().any(|block| block.id == "b1"));
+        let after_steps = after.steps();
+        assert!(after_steps[0].blocks.iter().any(|block| block.id == "b1"));
+        assert!(!after_steps[1].blocks.iter().any(|block| block.id == "b1"));
     }
 
     #[test]

@@ -275,6 +275,8 @@ impl ArtifactApp for SpaceApp {
     type DraftMutation = NoDraftMutation;
     type Presence = SpacePresence;
     type PresenceMutation = SpacePresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = SpaceCommand;
 
     const APP_ID: &'static str = S_PLAY_APP_ID;

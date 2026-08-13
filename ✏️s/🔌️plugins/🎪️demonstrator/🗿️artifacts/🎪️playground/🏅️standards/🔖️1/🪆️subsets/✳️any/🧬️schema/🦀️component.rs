@@ -4,7 +4,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full playground artifact state (persistent fields only today).
+/// 🧬️ Full playground artifact state (artifact-lane fields only today).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.demonstrator.playground")]

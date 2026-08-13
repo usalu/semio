@@ -1,11 +1,11 @@
 //! 🧬️ Present artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::present::{FigureTileDraft, FigureTileSource, PRESENT_DOCUMENT_SCHEMA};
+use crate::artifacts::present::{AnimationChild, PresentationChild, PRESENT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full present artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full present artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.present")]
@@ -13,9 +13,11 @@ pub struct PresentArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    pub source: FigureTileSource,
+    #[child(kind = "s.stdio.semio.presentation")]
+    pub presentation: PresentationChild,
     #[state(artifact)]
-    pub tiles: Vec<FigureTileDraft>,
+    #[child(kind = "s.stdio.semio.animation")]
+    pub animation: AnimationChild,
     #[state(presence)]
     pub selected_ids: Vec<String>,
     #[state(config)]
@@ -30,8 +32,8 @@ impl Default for PresentArtifact {
     fn default() -> Self {
         Self {
             schema: PRESENT_DOCUMENT_SCHEMA.into(),
-            source: crate::artifacts::present::default_figure_tile_source(),
-            tiles: Vec::new(),
+            presentation: crate::artifacts::present::presentation_child_handle_and_cache(&crate::artifacts::present::default_figure_tile_source(), &[]),
+            animation: crate::artifacts::present::animation_child_handle(),
             selected_ids: Vec::new(),
             engagement_input: String::new(),
             locale: "en-US".into(),
@@ -42,28 +44,19 @@ impl Default for PresentArtifact {
 impl PresentArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::present::PresentSnapshot {
-        crate::artifacts::present::PresentSnapshot {
-            schema: self.schema.clone(),
-            source: self.source.clone(),
-            tiles: self.tiles.clone(),
-        }
+        crate::artifacts::present::PresentSnapshot { schema: self.schema.clone(), presentation: self.presentation.clone(), animation: self.animation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub fn from_snapshot(snapshot: crate::artifacts::present::PresentSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            source: snapshot.source,
-            tiles: snapshot.tiles,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, presentation: snapshot.presentation, animation: snapshot.animation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::present::PresentSnapshot) {
         self.schema = snapshot.schema;
-        self.source = snapshot.source;
-        self.tiles = snapshot.tiles;
+        self.presentation = snapshot.presentation;
+        self.animation = snapshot.animation;
     }
 }
 //#endregion 🔖️Conversions
@@ -229,7 +222,7 @@ pub enum PresentError {
 //#region 🔖️DocumentHelpers
 /// 📄️ Empty presentation deck — the wasm VCS bridge's default projection for a fresh envelope.
 pub fn empty_present_snapshot() -> crate::artifacts::present::PresentSnapshot {
-    crate::artifacts::present::PresentSnapshot { schema: PRESENT_DOCUMENT_SCHEMA.into(), source: crate::artifacts::present::default_figure_tile_source(), tiles: Vec::new() }
+    crate::artifacts::present::present_snapshot_with_tiles(&crate::artifacts::present::default_figure_tile_source(), &[])
 }
 
 //#region 🎞️TilePlay

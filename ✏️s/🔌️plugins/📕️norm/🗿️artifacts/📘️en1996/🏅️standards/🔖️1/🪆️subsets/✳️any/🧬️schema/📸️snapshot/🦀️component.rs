@@ -1,4 +1,4 @@
-//! 🧱️ EN 1996 snapshot schema — persistent fields only.
+//! 🧱️ EN 1996 snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::en1996::{MasonryClass, part_2};
 use crate::document::{AnnexChoice, DesignSituation};

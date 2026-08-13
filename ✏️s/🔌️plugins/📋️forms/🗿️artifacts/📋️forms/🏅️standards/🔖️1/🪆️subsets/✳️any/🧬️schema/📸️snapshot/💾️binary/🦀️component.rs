@@ -1,8 +1,10 @@
 //! 📦️ Forms artifact — binary document surface + laws (constitutional: pack).
 //!
-//! `store::ArtifactPack for FormsSnapshot` is implemented directly in the shared `playbook` kernel crate; see
-//! `🗿️artifacts/📋️forms/🦀️component.rs` for why. This component only adds the thin artifact-facing
-//! `encode`/`decode` wrappers plus the pack↔dsl equivalence law and the command-envelope round-trip law.
+//! `store::ArtifactPack for FormsSnapshot` is hand-rolled directly in `📸️snapshot/🧬️schema`
+//! (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM — the composed `structure`/`results` child
+//! slots have no `flow::playbook` bridge equivalent). This component only adds the thin
+//! artifact-facing `encode`/`decode` wrappers plus the pack↔dsl equivalence law and the
+//! command-envelope round-trip law.
 
 
 //#region 📡️SemioProtocol
@@ -33,7 +35,7 @@ mod tests {
 
     #[test]
     fn building_component_fixture_pack_agrees_with_dsl() {
-        let spec = dsl::parse_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋️building-component.forms parses");
+        let spec = dsl::parse_playbook_example_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋️building-component.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
         let bytes = encode(&spec);
         assert_eq!(decode(&bytes).expect("decode"), spec);
@@ -41,7 +43,7 @@ mod tests {
 
     #[test]
     fn default_fixture_pack_agrees_with_dsl() {
-        let spec = dsl::parse_dsl(dsl::DEFAULT_EXAMPLE_TEXT).expect("📋️default.forms parses");
+        let spec = dsl::parse_playbook_example_dsl(dsl::DEFAULT_EXAMPLE_TEXT).expect("📋️default.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
         let bytes = encode(&spec);
         assert_eq!(decode(&bytes).expect("decode"), spec);
@@ -49,7 +51,7 @@ mod tests {
 
     #[test]
     fn onboarding_fixture_pack_agrees_with_dsl() {
-        let spec = dsl::parse_dsl(dsl::ONBOARDING_EXAMPLE_TEXT).expect("📋️onboarding.forms parses");
+        let spec = dsl::parse_playbook_example_dsl(dsl::ONBOARDING_EXAMPLE_TEXT).expect("📋️onboarding.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
         let bytes = encode(&spec);
         assert_eq!(decode(&bytes).expect("decode"), spec);
@@ -66,12 +68,12 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let document = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, steps: vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }] };
+        let document = crate::artifacts::forms::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
         let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None));
         let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::add_step::mutation::CreateStep { step, index: None })],
+                mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::create_step::mutation::CreateStep { step, index: None })],
                 description: None,
             })
             .expect("apply");

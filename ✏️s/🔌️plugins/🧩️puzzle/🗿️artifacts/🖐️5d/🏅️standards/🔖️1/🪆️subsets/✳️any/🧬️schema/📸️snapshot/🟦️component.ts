@@ -1,4 +1,4 @@
-/** 🧬️ Puzzle5d snapshot schema — persistent fields only. */
+/** 🧬️ Puzzle5d snapshot schema — artifact-lane fields only. */
 
 export interface Puzzle5dSnapshot {
   /** @state artifact */

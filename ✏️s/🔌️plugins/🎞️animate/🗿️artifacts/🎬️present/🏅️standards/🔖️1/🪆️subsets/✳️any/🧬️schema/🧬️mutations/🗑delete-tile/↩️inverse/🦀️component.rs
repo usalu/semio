@@ -9,9 +9,10 @@ use crate::artifacts::present::PresentSnapshot;
 /// (already absent) returns `Vec::new()` — the taxonomy's rule for a mutation with nothing to
 /// undo, replacing any sentinel no-op variant.
 pub fn inverse(payload: &DeleteTile, base: &PresentSnapshot) -> Vec<PresentMutation> {
-    let Some(index) = base.tiles.iter().position(|tile| tile.id == payload.id) else {
+    let (_, tiles) = crate::artifacts::present::present_working_scene(base);
+    let Some(index) = tiles.iter().position(|tile| tile.id == payload.id) else {
         return Vec::new();
     };
-    vec![PresentMutation::CreateTile(CreateTile { index, tile: base.tiles[index].clone() })]
+    vec![PresentMutation::CreateTile(CreateTile { index, tile: tiles[index].clone() })]
 }
 //#endregion 🔹Inverse

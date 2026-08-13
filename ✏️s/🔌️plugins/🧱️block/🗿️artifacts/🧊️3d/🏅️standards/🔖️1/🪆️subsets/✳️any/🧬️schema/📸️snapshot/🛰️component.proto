@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.block.block3d.snapshot;
 
-// 🧬️ Block3d snapshot schema — persistent fields only.
+// 🧬️ Block3d snapshot schema — artifact-lane fields only.
 
 message Block3dSnapshot {
   // @state artifact

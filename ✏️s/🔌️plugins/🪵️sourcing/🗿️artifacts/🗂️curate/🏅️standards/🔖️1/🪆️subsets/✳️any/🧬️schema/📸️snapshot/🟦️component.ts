@@ -1,4 +1,4 @@
-/** 🧬️ Curate snapshot schema — persistent fields only. */
+/** 🧬️ Curate snapshot schema — artifact-lane fields only. */
 
 export type SortDirection = "asc" | "desc";
 
@@ -30,14 +30,27 @@ export interface ObjectKind {
   geometry: GeometryRecipe;
 }
 
+/** 🧩️ Sourcing-owned overflow half of `ObjectKind` not representable in the composed
+ * `s.stdio.semio.kit` subset's `SemioKitType` (id/name/category only). */
+export interface ObjectKindExtra {
+  id: string;
+  typologyPath: string[];
+  availability: number;
+  geometry: GeometryRecipe;
+}
+
+export interface ArtifactChildHandle { childId: string; target: string; }
+
 export interface CuratedItem {
   objectId: string;
   count: number;
 }
 
 export interface CurateSnapshot {
+  /** @state artifact @child kind=s.stdio.semio.kit */
+  catalog: ArtifactChildHandle;
   /** @state artifact */
-  stock: ObjectKind[];
+  stockExtra: ObjectKindExtra[];
   /** @state artifact */
   curated: CuratedItem[];
 }

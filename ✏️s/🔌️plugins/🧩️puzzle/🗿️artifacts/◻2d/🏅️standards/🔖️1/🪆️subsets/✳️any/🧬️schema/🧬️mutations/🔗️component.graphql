@@ -1,4 +1,4 @@
-# 🧬️ Puzzle2d mutation schema — persistent fields only.
+# 🧬️ Puzzle2d mutation schema — artifact-lane fields only.
 
 type Puzzle2dMutation {
   schema: String! @state(class: ARTIFACT)

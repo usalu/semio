@@ -6,7 +6,7 @@
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::{effective_try_values, parse_value_json, reset_try_config_mutations, try_values_json_text, try_values_map};
 use crate::artifacts::forms::schema::can_advance;
-use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -140,8 +140,9 @@ pub mod next_step {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let index = config.current_step_index as usize;
-        if index + 1 < spec.steps.len() {
-            let step = &spec.steps[index];
+        let steps = forms_steps(spec);
+        if index + 1 < steps.len() {
+            let step = &steps[index];
             let values = effective_try_values(spec, config);
             if can_advance(step, &values) {
                 return Ok(Emit::config(vec![FormsConfigMutation::SetStepIndex { index: config.current_step_index + 1 }]));
@@ -228,7 +229,8 @@ mod tests {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
         let spec = app.snapshot().expect("projection");
-        let advanced = spec.steps.iter().find(|step| step.id == "advanced").expect("advanced step");
+        let steps = forms_steps(&spec);
+        let advanced = steps.iter().find(|step| step.id == "advanced").expect("advanced step");
         let values = crate::artifacts::forms::schema::initial_try_values(&spec, &Map::new());
         assert_eq!(crate::artifacts::forms::schema::visible_questions(advanced, &values).len(), 1);
     }

@@ -42,11 +42,12 @@ pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &So
         {"id": "actions", "label": ""},
     ])
     .to_string();
+    let stock = crate::artifacts::curate::stock_of(document);
     let rows: Vec<Value> = document
         .curated
         .iter()
         .filter_map(|item| {
-            let kind = document.stock.iter().find(|kind| kind.id == item.object_id)?;
+            let kind = stock.iter().find(|kind| kind.id == item.object_id)?;
             Some(table_row_json(
                 &kind.id,
                 Some(&json!({ "objectId": kind.id })),

@@ -1,4 +1,4 @@
-/** 📸️ Mathematical snapshot schema — persistent fields only. */
+/** 📸️ Mathematical snapshot schema — artifact-lane fields only. */
 
 export interface MathematicalSnapshot {
   /** @state artifact */

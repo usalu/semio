@@ -1,4 +1,4 @@
-# 🧬️ Lowpoly mutation schema — persistent fields only.
+# 🧬️ Lowpoly mutation schema — artifact-lane fields only.
 
 type LowpolyMutation {
   schema: String! @state(class: ARTIFACT)

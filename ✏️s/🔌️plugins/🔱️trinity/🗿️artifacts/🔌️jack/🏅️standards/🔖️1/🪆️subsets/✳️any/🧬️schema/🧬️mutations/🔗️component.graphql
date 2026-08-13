@@ -1,4 +1,4 @@
-# 🧬️ Jack mutation schema — persistent fields only.
+# 🧬️ Jack mutation schema — artifact-lane fields only.
 
 type JackMutation {
   schema: String! @state(class: ARTIFACT)

@@ -1,6 +1,13 @@
 //! 🧬️ Playbook diff schema — sparse field delta over the artifact.
+//!
+//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`playbook→C:document,flow`): the identified-
+//! collection `steps: Option<PlaybookStepsDelta>` (and its nested `PlaybookBlocksDelta`/
+//! `PlaybookStepPatch`/`PlaybookBlockPatch`) is replaced by single-Option whole-handle-replace
+//! `document`/`flow` fields — the slots are never absent, only ever replaced, matching writer's
+//! `document`/flow's `content` fields exactly (not `Option<Option<…>>` — that shape is for a slot
+//! whose PRESENCE itself can change, e.g. lowpoly's `mesh`, which does not apply here).
 
-use crate::artifacts::playbook::{PlaybookBlock, PlaybookStep};
+use crate::artifacts::playbook::{PlaybookDocumentChild, PlaybookFlowChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -21,7 +28,9 @@ pub struct PlaybookDiff {
     #[state(artifact)]
     pub title: Option<Option<String>>,
     #[state(artifact)]
-    pub steps: Option<PlaybookStepsDelta>,
+    pub document: Option<PlaybookDocumentChild>,
+    #[state(artifact)]
+    pub flow: Option<PlaybookFlowChild>,
     #[state(presence)]
     pub selected_ids: Option<PlaybookStringList>,
     #[state(config)]
@@ -37,57 +46,5 @@ pub struct PlaybookDiff {
 #[serde(rename_all = "camelCase", default)]
 pub struct PlaybookStringList {
     pub values: Vec<String>,
-}
-
-/// 🧩 Identified-collection delta for `steps`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct PlaybookStepsDelta {
-    pub added: Vec<PlaybookStep>,
-    pub removed: Vec<String>,
-    pub patched: Vec<PlaybookStepPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🧩 Identified-collection delta for blocks inside a step.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct PlaybookBlocksDelta {
-    pub added: Vec<PlaybookBlock>,
-    pub removed: Vec<String>,
-    pub patched: Vec<PlaybookBlockPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched step entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PlaybookStepPatchEntry {
-    pub id: String,
-    pub patch: PlaybookStepPatch,
-}
-
-/// 🩹 One patched block entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PlaybookBlockPatchEntry {
-    pub id: String,
-    pub patch: PlaybookBlockPatch,
-}
-
-/// 🩹 Sparse patch record for a step.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct PlaybookStepPatch {
-    pub title: Option<String>,
-    pub description: Option<Option<String>>,
-    pub blocks: Option<PlaybookBlocksDelta>,
-}
-
-/// 🩹 Sparse patch record for a block — whole replacement when `block` is set.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct PlaybookBlockPatch {
-    pub block: Option<PlaybookBlock>,
 }
 //#endregion 🔖️DeltaHelpers

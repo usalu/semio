@@ -1,4 +1,4 @@
-//! 🧬️ Block2d snapshot schema — persistent fields only.
+//! 🧬️ Block2d snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, BLOCK_2D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};

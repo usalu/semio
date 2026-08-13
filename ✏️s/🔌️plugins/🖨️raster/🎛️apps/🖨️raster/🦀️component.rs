@@ -164,6 +164,8 @@ impl ArtifactApp for RasterPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = RasterPresence;
     type PresenceMutation = RasterPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = RasterCommand;
 

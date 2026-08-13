@@ -325,7 +325,7 @@ pub struct CameraCalibration {
 
 /// 🎯️ One rig member's pose relative to the rig origin — a plain mirror of `remodel_camera`'s
 /// `RigExtrinsic{camera_id, pose_in_rig: Se3}`, flattened to a quaternion + translation since `Se3`
-/// (a `math::lie` manifold type) is a plugin-runtime concern, not a document one.
+/// (a `crate::lie` manifold type) is a plugin-runtime concern, not a document one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct RigExtrinsic {

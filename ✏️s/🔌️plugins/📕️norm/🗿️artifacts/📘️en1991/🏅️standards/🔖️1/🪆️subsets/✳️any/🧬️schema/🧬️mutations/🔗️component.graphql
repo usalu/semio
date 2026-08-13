@@ -1,4 +1,4 @@
-# 🧬️ En1991 mutation schema — persistent fields only.
+# 🧬️ En1991 mutation schema — artifact-lane fields only.
 
 type En1991Mutation {
   areaM2: Float! @state(class: ARTIFACT)

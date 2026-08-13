@@ -129,6 +129,8 @@ impl ArtifactApp for Procedural3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::procedural3d::presence::Procedural3dPresence;
     type PresenceMutation = crate::apps::procedural3d::presence::Procedural3dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Procedural3dCommand;
 

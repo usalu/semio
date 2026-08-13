@@ -1,4 +1,4 @@
-# 🧬️ Process3d snapshot schema — persistent fields only.
+# 🧬️ Process3d snapshot schema — artifact-lane fields only.
 
 type Process3dSnapshot {
   workshop: Workshop! @state(class: ARTIFACT)

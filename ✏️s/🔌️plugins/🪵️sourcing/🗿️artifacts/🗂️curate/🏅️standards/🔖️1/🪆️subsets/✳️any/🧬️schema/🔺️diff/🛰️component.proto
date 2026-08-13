@@ -72,15 +72,24 @@ message CurateStringList {
   repeated string values = 1;
 }
 
-message CurateObjectKindPatchEntry {
+message ObjectKindExtra {
   string id = 1;
-  ObjectKind kind = 2;
+  repeated string typology_path = 2;
+  uint32 availability = 3;
+  GeometryRecipe geometry = 4;
 }
 
-message CurateStockDelta {
-  repeated ObjectKind added = 1;
+message ArtifactChildHandle { string child_id = 1; string target = 2; }
+
+message CurateObjectKindExtraPatchEntry {
+  string id = 1;
+  ObjectKindExtra extra = 2;
+}
+
+message CurateStockExtraDelta {
+  repeated ObjectKindExtra added = 1;
   repeated string removed = 2;
-  repeated CurateObjectKindPatchEntry patched = 3;
+  repeated CurateObjectKindExtraPatchEntry patched = 3;
   repeated string reordered = 4;
 }
 
@@ -99,16 +108,18 @@ message CurateCuratedDelta {
 message CurateDiff {
   // @state artifact
   optional CurateArtifact artifact = 1;
+  // @state artifact @child kind=s.stdio.semio.kit
+  optional ArtifactChildHandle catalog = 2;
   // @state artifact
-  optional CurateStockDelta stock = 2;
+  optional CurateStockExtraDelta stock_extra = 3;
   // @state artifact
-  optional CurateCuratedDelta curated = 3;
+  optional CurateCuratedDelta curated = 4;
   // @state config
-  optional Filters filters = 4;
+  optional Filters filters = 5;
   // @state presence
-  optional string selected_object_id = 5;
+  optional string selected_object_id = 6;
   // @state config
-  optional string locale = 6;
+  optional string locale = 7;
   // @state config
-  optional string contributions_json = 7;
+  optional string contributions_json = 8;
 }

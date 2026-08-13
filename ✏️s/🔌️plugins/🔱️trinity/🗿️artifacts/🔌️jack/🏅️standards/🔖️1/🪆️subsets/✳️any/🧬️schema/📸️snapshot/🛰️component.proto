@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.trinity.jack.snapshot;
 
-// 🧬️ Jack snapshot schema — persistent fields only.
+// 🧬️ Jack snapshot schema — artifact-lane fields only.
 
 message JackSnapshot {
   // @state artifact

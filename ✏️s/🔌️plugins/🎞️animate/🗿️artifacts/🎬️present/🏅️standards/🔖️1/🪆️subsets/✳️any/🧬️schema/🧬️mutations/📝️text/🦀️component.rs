@@ -70,11 +70,12 @@ mod tests {
     #[test]
     fn replace_tiles_and_clear_round_trip() {
         let deck = default_present_snapshot();
-        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
+        let (source, _) = crate::artifacts::present::present_working_scene(&deck);
+        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
         let seeded = round_trip(&deck, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: tiles }));
-        assert_eq!(seeded.tiles.len(), 4);
+        assert_eq!(crate::artifacts::present::present_working_scene(&seeded).1.len(), 4);
         let cleared = round_trip(&seeded, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() }));
-        assert!(cleared.tiles.is_empty());
+        assert!(crate::artifacts::present::present_working_scene(&cleared).1.is_empty());
     }
 
     #[test]
@@ -82,16 +83,16 @@ mod tests {
         let deck = default_present_snapshot();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
         let added = round_trip(&deck, &PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile }));
-        assert_eq!(added.tiles.len(), 1);
+        assert_eq!(crate::artifacts::present::present_working_scene(&added).1.len(), 1);
         let renamed = round_trip(&added, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Renamed".into() }));
-        assert_eq!(renamed.tiles[0].name, "Renamed");
+        assert_eq!(crate::artifacts::present::present_working_scene(&renamed).1[0].name, "Renamed");
         let recropped = round_trip(
             &renamed,
             &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } }),
         );
-        assert_eq!(recropped.tiles[0].crop.width, 0.4);
+        assert_eq!(crate::artifacts::present::present_working_scene(&recropped).1[0].crop.width, 0.4);
         let removed = round_trip(&recropped, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() }));
-        assert!(removed.tiles.is_empty());
+        assert!(crate::artifacts::present::present_working_scene(&removed).1.is_empty());
     }
 
     //#region 🔖️OpTextTests

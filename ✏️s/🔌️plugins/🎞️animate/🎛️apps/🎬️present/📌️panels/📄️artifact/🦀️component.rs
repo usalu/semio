@@ -39,8 +39,8 @@ fn tree_item(id: impl Into<String>, label: impl Into<Label>) -> UiTreeItemNode {
 }
 
 pub fn render(deck: &PresentSnapshot, selected: &[String], labels: &AnimatePresentLabels) -> UiNode {
-    let items: Vec<UiTreeItemNode> = deck
-        .tiles
+    let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
+    let items: Vec<UiTreeItemNode> = tiles
         .iter()
         .map(|tile| UiTreeItemNode {
             id: tile.id.clone(),

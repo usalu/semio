@@ -6718,7 +6718,6 @@ dependencies = [
  "resvg",
  "rusqlite",
  "semio-framework",
- "semio-framework-3d",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
@@ -7293,7 +7292,6 @@ name = "semio-s-plugin-fem"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7945,6 +7943,9 @@ dependencies = [
  "criterion",
  "pollster",
  "semio-framework-3d",
+ "semio-framework-geometry",
+ "semio-framework-graph",
+ "semio-framework-math",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-plugin",

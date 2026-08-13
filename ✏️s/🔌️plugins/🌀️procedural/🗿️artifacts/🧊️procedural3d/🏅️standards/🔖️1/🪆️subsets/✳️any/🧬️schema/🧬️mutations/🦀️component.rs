@@ -48,9 +48,10 @@ pub(crate) fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
 
 //#region 🔖️NewLeaves
 // 🌱️ Triad leaves that needed a fresh directory (no pre-migration slot to repurpose) — self-wired
-// here since glue.rs is outside this facet's writable boundary; the eight repurposed leaves
-// (`remove_layout`/`remove_synapse`/`remove_widget`/`set_camera`/`set_layout`/`set_schema`/
-// `set_synapse`/`set_widget`) stay wired by glue.rs's existing sibling `pub mod` blocks, unchanged.
+// here since glue.rs is outside this facet's writable boundary; the eight leaves already carrying a
+// semantic name (`delete_widget_position`/`disconnect_synapse`/`delete_widget`/`update_camera`/
+// `move_widget`/`change_schema`/`update_synapse`/`update_widget`) stay wired by glue.rs's existing
+// sibling `pub mod` blocks, unchanged — imported by those names just below.
 #[path = "."]
 pub mod create_widget {
     #[path = "🌱create-widget/🦠️mutation/🦀️component.rs"]
@@ -118,14 +119,14 @@ pub mod change_generation_value {
 // into this file's own scope the same way `cad`'s already-migrated `🧬️mutations/🦀️component.rs`
 // reaches its own siblings (`use super::create_object;` etc.): `pub use component::*` only lifts
 // `component`'s items UP into `mutations`, it doesn't inject `mutations`'s OTHER children back down.
-use super::remove_layout;
-use super::remove_synapse;
-use super::remove_widget;
-use super::set_camera;
-use super::set_layout;
-use super::set_schema;
-use super::set_synapse;
-use super::set_widget;
+use super::delete_widget_position;
+use super::disconnect_synapse;
+use super::delete_widget;
+use super::update_camera;
+use super::move_widget;
+use super::change_schema;
+use super::update_synapse;
+use super::update_widget;
 //#endregion 🔖️RepurposedLeaves
 
 //#region 🔖️Mutations

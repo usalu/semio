@@ -1,4 +1,4 @@
-//! 🧬️ GIS terrain snapshot schema — persistent fields only.
+//! 🧬️ GIS terrain snapshot schema — artifact-lane fields only.
 //!
 //! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):
 //! `GisTerrainSnapshot` now carries a real `store::ArtifactChild<SemioMeshSnapshot>` handle for its

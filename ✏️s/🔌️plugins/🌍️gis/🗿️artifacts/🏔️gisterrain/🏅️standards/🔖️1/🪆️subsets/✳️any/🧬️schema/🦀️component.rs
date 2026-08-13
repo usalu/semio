@@ -8,7 +8,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full GIS terrain artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full GIS terrain artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain")]

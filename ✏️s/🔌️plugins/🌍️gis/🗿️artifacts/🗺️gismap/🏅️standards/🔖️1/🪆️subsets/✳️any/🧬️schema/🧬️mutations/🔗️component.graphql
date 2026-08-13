@@ -1,4 +1,4 @@
-# 🧬️ GIS map mutation schema — persistent fields only.
+# 🧬️ GIS map mutation schema — artifact-lane fields only.
 
 type GisMapMutation {
   positions: [GisMapFeature!]! @state(class: ARTIFACT)

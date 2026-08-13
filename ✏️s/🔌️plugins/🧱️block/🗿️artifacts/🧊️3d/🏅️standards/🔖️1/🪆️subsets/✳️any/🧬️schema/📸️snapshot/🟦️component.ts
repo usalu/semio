@@ -1,4 +1,4 @@
-/** 🧬️ Block3d snapshot schema — persistent fields only. */
+/** 🧬️ Block3d snapshot schema — artifact-lane fields only. */
 
 export interface Block3dSnapshot {
   /** @state artifact */

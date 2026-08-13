@@ -1,4 +1,4 @@
-# 🧬️ Rewrite mutation schema — persistent fields only.
+# 🧬️ Rewrite mutation schema — artifact-lane fields only.
 
 type RewriteMutation {
   beforeFixtureJson: String! @state(class: ARTIFACT)

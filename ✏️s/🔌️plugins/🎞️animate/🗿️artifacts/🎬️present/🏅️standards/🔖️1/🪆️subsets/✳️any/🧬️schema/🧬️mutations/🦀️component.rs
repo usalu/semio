@@ -51,7 +51,7 @@ pub enum PresentMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, FigureTileFrame};
+    use crate::artifacts::present::{default_present_snapshot, present_snapshot_with_tiles, present_working_scene, FigureTileDraft, FigureTileFrame};
 
     fn tile(id: &str) -> FigureTileDraft {
         FigureTileDraft { id: id.into(), name: id.into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }
@@ -65,6 +65,9 @@ mod tests {
         for undo in &backward {
             restored = vcs::apply_mutation(&restored, undo);
         }
+        // 🔒️ Structural equality, not just working-scene equality: `presentation_child_handle_and_cache`
+        // content-addresses deterministically off `(source, tiles)`, so restoring the exact pre-mutation
+        // working-scene content also restores the exact pre-mutation child handle byte-for-byte.
         assert_eq!(&restored, base, "inverse (reversed) must exactly restore the pre-mutation snapshot");
         forward
     }
@@ -73,40 +76,42 @@ mod tests {
     fn tiles_create_rename_resize_delete_round_trip() {
         let base = default_present_snapshot();
         let created = round_trip(&base, &PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: tile("t1") }));
-        assert_eq!(created.tiles.len(), 1);
+        assert_eq!(present_working_scene(&created).1.len(), 1);
         let renamed = round_trip(&created, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Hero".into() }));
-        assert_eq!(renamed.tiles[0].name, "Hero");
+        assert_eq!(present_working_scene(&renamed).1[0].name, "Hero");
         let resized = round_trip(
             &renamed,
             &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } }),
         );
-        assert_eq!(resized.tiles[0].crop.width, 0.4);
+        assert_eq!(present_working_scene(&resized).1[0].crop.width, 0.4);
         let deleted = round_trip(&resized, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() }));
-        assert!(deleted.tiles.is_empty());
+        assert!(present_working_scene(&deleted).1.is_empty());
     }
 
     #[test]
     fn delete_tiles_removes_the_multi_select_and_reorder_tiles_moves_by_id() {
-        let base = PresentSnapshot { tiles: vec![tile("t1"), tile("t2"), tile("t3")], ..default_present_snapshot() };
+        let (source, _) = present_working_scene(&default_present_snapshot());
+        let base = present_snapshot_with_tiles(&source, &[tile("t1"), tile("t2"), tile("t3")]);
         let reordered = round_trip(&base, &PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "t1".into(), to_index: 2 }));
-        assert_eq!(reordered.tiles.iter().map(|item| item.id.clone()).collect::<Vec<_>>(), vec!["t2", "t3", "t1"]);
+        assert_eq!(present_working_scene(&reordered).1.iter().map(|item| item.id.clone()).collect::<Vec<_>>(), vec!["t2", "t3", "t1"]);
         let culled = round_trip(&base, &PresentMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["t1".into(), "t3".into()] }));
-        assert_eq!(culled.tiles.iter().map(|item| item.id.clone()).collect::<Vec<_>>(), vec!["t2"]);
+        assert_eq!(present_working_scene(&culled).1.iter().map(|item| item.id.clone()).collect::<Vec<_>>(), vec!["t2"]);
     }
 
     #[test]
     fn replace_tiles_and_replace_source_and_resize_source_frame_round_trip() {
         let base = default_present_snapshot();
         let seeded = round_trip(&base, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: vec![tile("t1"), tile("t2")] }));
-        assert_eq!(seeded.tiles.len(), 2);
+        assert_eq!(present_working_scene(&seeded).1.len(), 2);
         let cleared = round_trip(&seeded, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() }));
-        assert!(cleared.tiles.is_empty());
-        let mut next_source = base.source.clone();
+        assert!(present_working_scene(&cleared).1.is_empty());
+        let (base_source, _) = present_working_scene(&base);
+        let mut next_source = base_source.clone();
         next_source.kind = "video".into();
         let replaced = round_trip(&base, &PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: next_source.clone() }));
-        assert_eq!(replaced.source.kind, "video");
+        assert_eq!(present_working_scene(&replaced).0.kind, "video");
         let resized = round_trip(&base, &PresentMutation::ResizeSourceFrame(resize_source_frame::mutation::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.2, y: 0.2, width: 0.5, height: 0.5 } }));
-        assert_eq!(resized.source.frame.width, 0.5);
+        assert_eq!(present_working_scene(&resized).0.frame.width, 0.5);
     }
 
     #[test]
@@ -123,7 +128,8 @@ mod tests {
 
     #[test]
     fn create_tile_obeys_the_inverse_and_diff_absorb_laws() {
-        let base = PresentSnapshot { tiles: vec![tile("t1")], ..default_present_snapshot() };
+        let (source, _) = present_working_scene(&default_present_snapshot());
+        let base = present_snapshot_with_tiles(&source, &[tile("t1")]);
         let mutation = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 1, tile: tile("t2") });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
@@ -133,7 +139,8 @@ mod tests {
 
     #[test]
     fn rename_tile_obeys_the_inverse_law() {
-        let base = PresentSnapshot { tiles: vec![tile("t1")], ..default_present_snapshot() };
+        let (source, _) = present_working_scene(&default_present_snapshot());
+        let base = present_snapshot_with_tiles(&source, &[tile("t1")]);
         let mutation = PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Hero".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
@@ -141,9 +148,10 @@ mod tests {
     #[test]
     fn replace_source_obeys_the_inverse_and_diff_absorb_laws() {
         let base = default_present_snapshot();
-        let mut source_a = base.source.clone();
+        let (base_source, _) = present_working_scene(&base);
+        let mut source_a = base_source.clone();
         source_a.kind = "video".into();
-        let mut source_b = base.source.clone();
+        let mut source_b = base_source.clone();
         source_b.kind = "figure".into();
         source_b.src = "/other.png".into();
         let mutation = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: source_a });

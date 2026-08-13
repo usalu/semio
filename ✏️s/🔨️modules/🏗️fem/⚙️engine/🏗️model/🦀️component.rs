@@ -8,7 +8,7 @@
 pub use crate::elements2d::{Bar2, BeamEb2};
 pub use crate::elements3d::{Bar3, Frame3};
 
-use math::algebra::{MatD, VecD};
+use crate::algebra::{MatD, VecD};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt;

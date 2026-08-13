@@ -1,20 +1,25 @@
 //! 🧬️ Curate artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::curate::{CuratedItem, CurateSnapshot, Filters, GeometryRecipe, ObjectKind};
+use crate::artifacts::curate::{CuratedItem, CurateSnapshot, Filters, GeometryRecipe, ObjectKind, ObjectKindExtra};
 use schema::ArtifactSchema;
 use semio_framework::parse_contributions;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::Mutex;
 
 //#region 🔖️Artifact
-/// 🧬️ Full curate artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full curate artifact state across the artifact, presence and config lanes. `catalog`/
+/// `stock_extra` mirror `CurateSnapshot`'s own composed-child split (see that struct's doc comment).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curate")]
 pub struct CurateArtifact {
     #[state(artifact)]
-    pub stock: Vec<ObjectKind>,
+    #[child(kind = "s.stdio.semio.kit")]
+    pub catalog: store::ArtifactChild<SemioKitSnapshot>,
+    #[state(artifact)]
+    pub stock_extra: Vec<ObjectKindExtra>,
     #[state(artifact)]
     pub curated: Vec<CuratedItem>,
     #[state(config)]
@@ -36,7 +41,8 @@ fn default_contributions_json() -> String {
 impl Default for CurateArtifact {
     fn default() -> Self {
         Self {
-            stock: Vec::new(),
+            catalog: crate::artifacts::curate::catalog_child_handle(&[]),
+            stock_extra: Vec::new(),
             curated: Vec::new(),
             filters: Filters::default(),
             selected_object_id: None,
@@ -50,7 +56,8 @@ impl CurateArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::curate::CurateSnapshot {
         crate::artifacts::curate::CurateSnapshot {
-            stock: self.stock.clone(),
+            catalog: self.catalog.clone(),
+            stock_extra: self.stock_extra.clone(),
             curated: self.curated.clone(),
         }
     }
@@ -58,7 +65,8 @@ impl CurateArtifact {
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub fn from_snapshot(snapshot: crate::artifacts::curate::CurateSnapshot) -> Self {
         Self {
-            stock: snapshot.stock,
+            catalog: snapshot.catalog,
+            stock_extra: snapshot.stock_extra,
             curated: snapshot.curated,
             ..Self::default()
         }
@@ -66,7 +74,8 @@ impl CurateArtifact {
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::curate::CurateSnapshot) {
-        self.stock = snapshot.stock;
+        self.catalog = snapshot.catalog;
+        self.stock_extra = snapshot.stock_extra;
         self.curated = snapshot.curated;
     }
 }
@@ -269,10 +278,9 @@ pub fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected
 /// 🔎️ The stock kinds that currently satisfy every active filter dimension. `filters` lives on
 /// `crate::apps::curate::config::SourcingCurateConfig` (session-only view state), so this takes it as a
 /// separate parameter rather than reading it off the document.
-pub fn filtered_stock<'a>(document: &'a CurateSnapshot, filters: &Filters) -> Vec<&'a ObjectKind> {
-    document
-        .stock
-        .iter()
+pub fn filtered_stock(document: &CurateSnapshot, filters: &Filters) -> Vec<ObjectKind> {
+    crate::artifacts::curate::stock_of(document)
+        .into_iter()
         .filter(|kind| {
             let query = filters.query.trim().to_lowercase();
             let matches_query = query.is_empty() || kind.name.to_lowercase().contains(&query);
@@ -319,18 +327,21 @@ pub enum CurationDecision {
 /// 🎯️ Resolves a relative count adjustment against `document`'s CURRENT `curated`/`stock`, clamped
 /// to `0..=availability`. Unknown `object_id` (absent from stock) resolves to `NoOp`.
 pub fn curation_decision_for_delta(document: &CurateSnapshot, object_id: &str, delta: i64) -> CurationDecision {
-    let Some(kind) = document.stock.iter().find(|kind| kind.id == object_id) else { return CurationDecision::NoOp };
-    let next = (curated_count(document, object_id) as i64 + delta).clamp(0, kind.availability as i64) as u32;
+    // 🔎️ `availability` lives on `stock_extra` (the sourcing-owned overflow half) — no need to
+    // resolve the composed `catalog` child just to clamp a count, so this reads `stock_extra`
+    // directly rather than going through `stock_of`'s full reassembly.
+    let Some(extra) = document.stock_extra.iter().find(|extra| extra.id == object_id) else { return CurationDecision::NoOp };
+    let next = (curated_count(document, object_id) as i64 + delta).clamp(0, extra.availability as i64) as u32;
     curation_decision_for_set(document, object_id, next)
 }
 
 /// 🎯️ Resolves an absolute count set against `document`, clamped to `0..=availability`. Unknown
 /// `object_id` (absent from stock) resolves to `NoOp`.
 pub fn curation_decision_for_set(document: &CurateSnapshot, object_id: &str, count: u32) -> CurationDecision {
-    let Some(kind) = document.stock.iter().find(|kind| kind.id == object_id) else { return CurationDecision::NoOp };
-    let clamped = count.min(kind.availability);
+    let Some(extra) = document.stock_extra.iter().find(|extra| extra.id == object_id) else { return CurationDecision::NoOp };
+    let clamped = count.min(extra.availability);
     match document.curated.iter().find(|item| item.object_id == object_id) {
-        Some(item) if clamped == 0 => CurationDecision::Delete { object_id: object_id.to_string() },
+        Some(_item) if clamped == 0 => CurationDecision::Delete { object_id: object_id.to_string() },
         Some(item) if item.count == clamped => CurationDecision::NoOp,
         Some(_) => CurationDecision::ChangeCount { object_id: object_id.to_string(), new_count: clamped },
         None if clamped > 0 => CurationDecision::Create(CuratedItem { object_id: object_id.to_string(), count: clamped }),
@@ -666,15 +677,29 @@ pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
 //#endregion 🔖️GridLayout
 
 //#region 🔖️Fixtures
+/// 🧩️ The canonical demo-stock catalogue — every built-in module's demo kinds, in module-registration
+/// order. Single source of truth for `default_document`'s catalog content and every test fixture that
+/// used to independently duplicate `sourcing_modules().iter().flat_map(...)`.
+pub fn demo_stock() -> Vec<ObjectKind> {
+    sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect()
+}
+
 /// 📄️ The demo-stock example, parsed once from `crate::artifacts::curate::dsl::DEMO_STOCK_TEXT` — the
 /// source of truth for every "demo stock" call site (`setActiveExample`, `initial_snapshot`, tests).
+/// The fixture's persisted `catalog` handle is content-addressed from `demo_stock()` (see
+/// `crate::artifacts::curate::catalog_child_handle`) — re-deriving the same stock here and seeding the
+/// working-scene cache with it resolves that exact handle, since a composed child is a handle only,
+/// never inline content, in the persisted DSL text itself.
 pub fn default_document() -> CurateSnapshot {
+    crate::artifacts::curate::seed_catalog_scratch(&demo_stock());
     <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).unwrap_or_default()
 }
 
 /// 📄️ The empty-curation example, parsed once from
-/// `crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT`.
+/// `crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT` — empty stock, so its `catalog` handle is the
+/// same content-addressed empty-catalog handle `CurateSnapshot::default()` mints.
 pub fn empty_document() -> CurateSnapshot {
+    crate::artifacts::curate::seed_catalog_scratch(&[]);
     <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).unwrap_or_default()
 }
 //#endregion 🔖️Fixtures
@@ -789,7 +814,7 @@ mod tests {
     use super::*;
 
     fn sample_document() -> CurateSnapshot {
-        CurateSnapshot { stock: sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() }
+        crate::artifacts::curate::curate_snapshot_from_stock(demo_stock(), Vec::new())
     }
 
     #[test]

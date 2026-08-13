@@ -55,6 +55,8 @@ impl ArtifactApp for Iso16757PlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = NormPresence;
     type PresenceMutation = NormPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Iso16757Command;
 

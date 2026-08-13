@@ -5,7 +5,7 @@
 
 use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
-use math::algebra::{MatD, VecD};
+use crate::algebra::{MatD, VecD};
 use std::collections::{HashMap, HashSet};
 
 // #region 🔖️Model

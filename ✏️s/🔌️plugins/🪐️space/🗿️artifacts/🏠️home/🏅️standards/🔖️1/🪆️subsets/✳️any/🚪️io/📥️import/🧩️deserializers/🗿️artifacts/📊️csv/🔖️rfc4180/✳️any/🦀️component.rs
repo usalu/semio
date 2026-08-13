@@ -4,9 +4,14 @@ use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEM
 
 pub fn register() {}
 
+/// 🌉 `SHomeSnapshot` requires `schema`/`catalogGeneration`, neither of which a bare csv
+/// table carries — this bridge was always a hard failure regardless of csv content, even
+/// before `CsvSnapshot` dropped `headers`/`rows` for `has_header`/`records` (stdio's own
+/// RFC4180 rework). Preserved verbatim under the new shape rather than inventing a mapping
+/// this snapshot pair never had.
 pub fn deserialize(from: &CsvSnapshot) -> Result<SHomeSnapshot, store::TextError> {
     let _ = STDIO_CSV_DOCUMENT_SCHEMA;
-    let value = serde_json::json!({ "headers": from.headers, "rows": from.rows });
+    let value = serde_json::json!({ "hasHeader": from.has_header, "records": from.records });
     serde_json::from_value(value).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 

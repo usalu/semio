@@ -1,4 +1,4 @@
-//! 🧬️ S Home snapshot schema — persistent fields only.
+//! 🧬️ S Home snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;

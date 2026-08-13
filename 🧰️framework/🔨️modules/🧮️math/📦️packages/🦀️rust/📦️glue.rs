@@ -11,9 +11,6 @@ pub use dsl_core::os_dsl;
 #[path = "../../➕️algebra/🦀️component.rs"]
 pub mod algebra;
 
-#[path = "../../🔗️causal/🦀️component.rs"]
-pub mod causal;
-
 #[path = "../../🎲️entropy/🦀️component.rs"]
 pub mod entropy;
 
@@ -29,9 +26,6 @@ pub mod number;
 #[path = "../../🎯️optimize/🦀️component.rs"]
 pub mod optimize;
 
-#[path = "../../🎲️probability/🦀️component.rs"]
-pub mod probability;
-
 #[path = "../../🎯️sampling/🦀️component.rs"]
 pub mod sampling;
 
@@ -40,12 +34,6 @@ pub mod signal;
 
 #[path = "../../🗺️spatial/🦀️component.rs"]
 pub mod spatial;
-
-#[path = "../../📊️statistics/🦀️component.rs"]
-pub mod statistics;
-
-#[path = "../../📋️tabular/🦀️component.rs"]
-pub mod tabular;
 
 #[path = "."]
 pub mod graph {

@@ -1,4 +1,4 @@
-# 🧬️ Din18599 mutation schema — persistent fields only.
+# 🧬️ Din18599 mutation schema — artifact-lane fields only.
 
 type Din18599Mutation {
   useClass: String! @state(class: ARTIFACT)

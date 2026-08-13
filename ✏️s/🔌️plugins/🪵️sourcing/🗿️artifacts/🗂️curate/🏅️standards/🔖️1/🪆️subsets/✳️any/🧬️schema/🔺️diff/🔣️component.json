@@ -10,8 +10,13 @@
       "type": "object",
       "x-semio-state": "artifact"
     },
-    "stock": {
-      "$ref": "#/$defs/CurateStockDelta",
+    "catalog": {
+      "type": "object",
+      "x-semio-state": "artifact",
+      "x-semio-child": "s.stdio.semio.kit"
+    },
+    "stockExtra": {
+      "$ref": "#/$defs/CurateStockExtraDelta",
       "x-semio-state": "artifact"
     },
     "curated": {
@@ -301,8 +306,37 @@
         }
       }
     },
-    "CurateStockDelta": {
-      "title": "CurateStockDelta",
+    "ObjectKindExtra": {
+      "title": "ObjectKindExtra",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "typologyPath",
+        "availability",
+        "geometry"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "typologyPath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "availability": {
+          "type": "integer",
+          "format": "uint32"
+        },
+        "geometry": {
+          "$ref": "#/$defs/GeometryRecipe"
+        }
+      }
+    },
+    "CurateStockExtraDelta": {
+      "title": "CurateStockExtraDelta",
       "type": "object",
       "additionalProperties": false,
       "required": [],
@@ -310,7 +344,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ObjectKind"
+            "$ref": "#/$defs/ObjectKindExtra"
           }
         },
         "removed": {
@@ -322,7 +356,7 @@
         "patched": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/CurateObjectKindPatchEntry"
+            "$ref": "#/$defs/CurateObjectKindExtraPatchEntry"
           }
         },
         "reordered": {
@@ -333,20 +367,20 @@
         }
       }
     },
-    "CurateObjectKindPatchEntry": {
-      "title": "CurateObjectKindPatchEntry",
+    "CurateObjectKindExtraPatchEntry": {
+      "title": "CurateObjectKindExtraPatchEntry",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
-        "kind"
+        "extra"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
-        "kind": {
-          "$ref": "#/$defs/ObjectKind"
+        "extra": {
+          "$ref": "#/$defs/ObjectKindExtra"
         }
       }
     },

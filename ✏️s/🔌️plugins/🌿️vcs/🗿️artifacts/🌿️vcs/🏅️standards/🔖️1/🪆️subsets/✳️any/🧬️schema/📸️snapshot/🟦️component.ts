@@ -1,4 +1,4 @@
-/** 🧬️ VCS snapshot schema — persistent fields only. */
+/** 🧬️ VCS snapshot schema — artifact-lane fields only. */
 
 export interface VcsSnapshot {
   /** @state artifact */

@@ -4,13 +4,13 @@
 // this file is byte-identical to the crate it was moved from (see 📦️glue.rs for the wiring).
 use crate::apps::remodel::engine::{camera as remodel_camera, feature as remodel_feature, images as remodel_image, sfm as remodel_sfm};
 
-pub use math::lie::Se3;
+pub use crate::lie::Se3;
 pub use remodel_camera::{CameraPose, Intrinsics};
 pub use remodel_image::{ImageGray, Pyramid};
 
-use math::algebra::{solve_llsq, MatD, VecD};
-use math::optimize::{levenberg_marquardt, numeric_jacobian, LeastSquaresProblem, LmConfig};
-use math::spatial::KdTree;
+use crate::algebra::{solve_llsq, MatD, VecD};
+use crate::optimize::{levenberg_marquardt, numeric_jacobian, LeastSquaresProblem, LmConfig};
+use crate::spatial::KdTree;
 use remodel_feature::{forward_backward_prune, klt_track, shi_tomasi_grid};
 
 // #region 🔖️Vec3Helpers
@@ -159,7 +159,7 @@ const MOT_MAX_MISSED: u32 = 5;
 
 /// 🕵️ Multi-object α–β tracker over 2D detections: predicts every track forward at constant velocity,
 /// associates detections by gated nearest-cost greedy matching, and spawns/prunes tracks for
-/// unmatched detections/tracks. `math::graph_matching` (this crate's originally-planned
+/// unmatched detections/tracks. `crate::graph_matching` (this crate's originally-planned
 /// max-weight-matching dependency) is an unimplemented one-line stub with no public API — confirmed by
 /// direct inspection and reflected in this crate's `Cargo.toml`, which no longer depends on it — so
 /// [`MultiObjectTracker::update`] solves the gated assignment with a real, working, greedy
@@ -328,7 +328,7 @@ fn mean_dt(traj: &Trajectory3d) -> f64 {
 
 /// 📈️ Shared Savitzky-Golay derivative kernel for [`velocity`]/[`acceleration`]: assumes roughly-uniform
 /// sampling (`dt` = mean spacing between consecutive timestamps) and applies
-/// [`math::signal::savitzky_golay`] independently to each of the x/y/z channels. Falls back to all
+/// [`crate::signal::savitzky_golay`] independently to each of the x/y/z channels. Falls back to all
 /// zeros when there are too few samples for even the smallest valid odd window (`< 3` points).
 fn sg_derivative(traj: &Trajectory3d, deriv: usize) -> Vec<[f64; 3]> {
     let n = traj.samples.len();
@@ -342,9 +342,9 @@ fn sg_derivative(traj: &Trajectory3d, deriv: usize) -> Vec<[f64; 3]> {
     let xs: Vec<f64> = traj.samples.iter().map(|s| s.1[0]).collect();
     let ys: Vec<f64> = traj.samples.iter().map(|s| s.1[1]).collect();
     let zs: Vec<f64> = traj.samples.iter().map(|s| s.1[2]).collect();
-    let vx = math::signal::savitzky_golay(&xs, window, order, deriv, dt);
-    let vy = math::signal::savitzky_golay(&ys, window, order, deriv, dt);
-    let vz = math::signal::savitzky_golay(&zs, window, order, deriv, dt);
+    let vx = crate::signal::savitzky_golay(&xs, window, order, deriv, dt);
+    let vy = crate::signal::savitzky_golay(&ys, window, order, deriv, dt);
+    let vz = crate::signal::savitzky_golay(&zs, window, order, deriv, dt);
     (0..n).map(|i| [vx[i], vy[i], vz[i]]).collect()
 }
 
@@ -376,7 +376,7 @@ pub struct StrainPair {
 const STRAIN_MIN_NEIGHBORS: usize = 3;
 
 /// 🧩️ Solves the best-fit local linear map `F` (`d1_k ≈ F d0_k`) for a neighbourhood's offset vectors via
-/// independent per-row least squares ([`solve_llsq`]) — this crate depends on `math::algebra`
+/// independent per-row least squares ([`solve_llsq`]) — this crate depends on `crate::algebra`
 /// (already required transitively via `remodel_camera`/`remodel_sfm`), so a hand-rolled 3x3 normal-equation
 /// solve would just duplicate its QR-based `solve_llsq`.
 fn fit_affine_3x3(d0: &[[f64; 3]], d1: &[[f64; 3]]) -> Option<[[f64; 3]; 3]> {
@@ -471,10 +471,10 @@ fn half_power_bandwidth_damping(psd: &[f64], peak_idx: usize, bin_hz: f64, freq_
 }
 
 /// 🎵️ Per-track Welch-PSD modal analysis: extracts each track's y-displacement signal, computes
-/// `reference_track`'s power spectral density ([`math::signal::welch_psd`]), picks the strongest
-/// `max_modes` peaks ([`math::signal::find_peaks`]) above a PSD-relative prominence floor, estimates
+/// `reference_track`'s power spectral density ([`crate::signal::welch_psd`]), picks the strongest
+/// `max_modes` peaks ([`crate::signal::find_peaks`]) above a PSD-relative prominence floor, estimates
 /// each mode's half-power-bandwidth damping ratio, and derives every track's mode shape from cross-spectral
-/// analysis ([`math::signal::cross_spectrum`]) against the reference track at each modal frequency.
+/// analysis ([`crate::signal::cross_spectrum`]) against the reference track at each modal frequency.
 /// <https://en.wikipedia.org/wiki/Q_factor#Bandwidth_definition>
 pub fn modal_analysis(tracks: &[Track2d], fps: f64, reference_track: usize, max_modes: usize) -> ModalResult {
     if tracks.is_empty() || fps <= 0.0 || max_modes == 0 || reference_track >= tracks.len() {
@@ -485,17 +485,17 @@ pub fn modal_analysis(tracks: &[Track2d], fps: f64, reference_track: usize, max_
         return ModalResult { frequencies_hz: Vec::new(), damping_ratios: Vec::new(), mode_shapes: Vec::new() };
     }
     let seg_len = MODAL_WELCH_SEG_LEN.min(signals[reference_track].len());
-    let psd = math::signal::welch_psd(&signals[reference_track], seg_len, MODAL_WELCH_OVERLAP);
-    let nfft = math::signal::next_pow2(seg_len);
+    let psd = crate::signal::welch_psd(&signals[reference_track], seg_len, MODAL_WELCH_OVERLAP);
+    let nfft = crate::signal::next_pow2(seg_len);
     let bin_hz = fps / nfft as f64;
     let max_psd = psd.iter().copied().fold(0.0f64, f64::max);
 
-    let mut peaks = math::signal::find_peaks(&psd, max_psd * MODAL_PROMINENCE_FRACTION);
+    let mut peaks = crate::signal::find_peaks(&psd, max_psd * MODAL_PROMINENCE_FRACTION);
     peaks.sort_by(|a, b| b.value.total_cmp(&a.value));
     peaks.truncate(max_modes);
     peaks.sort_by_key(|p| p.index);
 
-    let cross: Vec<(Vec<f64>, Vec<f64>)> = signals.iter().map(|sig| math::signal::cross_spectrum(&signals[reference_track], sig, seg_len, MODAL_WELCH_OVERLAP)).collect();
+    let cross: Vec<(Vec<f64>, Vec<f64>)> = signals.iter().map(|sig| crate::signal::cross_spectrum(&signals[reference_track], sig, seg_len, MODAL_WELCH_OVERLAP)).collect();
 
     let mut frequencies_hz = Vec::with_capacity(peaks.len());
     let mut damping_ratios = Vec::with_capacity(peaks.len());
@@ -529,8 +529,8 @@ pub struct SyncResult {
 
 /// 🔗️ Coarse sync-offset estimate between two per-frame motion-activity signals (e.g. mean optical-flow
 /// magnitude or track-position-change per frame): normalized cross-correlation
-/// ([`math::signal::xcorr_normalized`]) locates the lag, sub-sample-refined
-/// ([`math::signal::subsample_peak`]) to fractional-frame precision. `fps` is accepted for interface
+/// ([`crate::signal::xcorr_normalized`]) locates the lag, sub-sample-refined
+/// ([`crate::signal::subsample_peak`]) to fractional-frame precision. `fps` is accepted for interface
 /// symmetry with time-domain callers (and to mirror [`refine_subframe`]'s frame-domain contract) — the
 /// correlation itself already operates in frame-index units, so it does not change the computation.
 pub fn estimate_offset(motion_signal_a: &[f64], motion_signal_b: &[f64], fps: f64) -> SyncResult {
@@ -539,9 +539,9 @@ pub fn estimate_offset(motion_signal_a: &[f64], motion_signal_b: &[f64], fps: f6
         return SyncResult { offset_frames: 0.0, confidence: 0.0 };
     }
     let max_lag = (motion_signal_a.len().min(motion_signal_b.len()) / 4).max(4);
-    let xc = math::signal::xcorr_normalized(motion_signal_a, motion_signal_b, max_lag);
+    let xc = crate::signal::xcorr_normalized(motion_signal_a, motion_signal_b, max_lag);
     let confidence = xc.iter().copied().fold(f64::MIN, f64::max).max(0.0);
-    let Some(peak_idx_f) = math::signal::subsample_peak(&xc) else {
+    let Some(peak_idx_f) = crate::signal::subsample_peak(&xc) else {
         return SyncResult { offset_frames: 0.0, confidence };
     };
     SyncResult { offset_frames: peak_idx_f - max_lag as f64, confidence }
@@ -573,14 +573,14 @@ fn correlation_at_offset(a: &[f64], b: &[f64], offset: f64) -> f64 {
 }
 
 /// 🔬️ Sub-frame polish of a coarse sync offset: a local golden-section search
-/// ([`math::optimize::golden_section`]) over `[coarse_offset - 1, coarse_offset + 1]` maximizing the
+/// ([`crate::optimize::golden_section`]) over `[coarse_offset - 1, coarse_offset + 1]` maximizing the
 /// linearly-interpolated normalized correlation between `motion_signal_a` and a continuously-shifted
 /// `motion_signal_b`.
 pub fn refine_subframe(motion_signal_a: &[f64], motion_signal_b: &[f64], coarse_offset: f64) -> f64 {
     if motion_signal_a.is_empty() || motion_signal_b.is_empty() {
         return coarse_offset;
     }
-    let (best_offset, _best_value) = math::optimize::golden_section(|o| -correlation_at_offset(motion_signal_a, motion_signal_b, o), coarse_offset - 1.0, coarse_offset + 1.0, 1e-4);
+    let (best_offset, _best_value) = crate::optimize::golden_section(|o| -correlation_at_offset(motion_signal_a, motion_signal_b, o), coarse_offset - 1.0, coarse_offset + 1.0, 1e-4);
     best_offset
 }
 // #endregion 🔖️Sync
@@ -682,7 +682,7 @@ pub fn smooth_camera_path(poses: &[Se3], window: usize) -> Vec<Se3> {
     let smoothed_twists = if twists.len() >= 3 {
         let win = odd_window(window, twists.len());
         let order = STABILIZE_SG_ORDER.min(win - 1);
-        let channels: Vec<Vec<f64>> = (0..6).map(|c| math::signal::savitzky_golay(&twists.iter().map(|t| t[c]).collect::<Vec<f64>>(), win, order, 0, 1.0)).collect();
+        let channels: Vec<Vec<f64>> = (0..6).map(|c| crate::signal::savitzky_golay(&twists.iter().map(|t| t[c]).collect::<Vec<f64>>(), win, order, 0, 1.0)).collect();
         (0..twists.len()).map(|i| std::array::from_fn(|c| channels[c][i])).collect()
     } else {
         twists
@@ -776,15 +776,15 @@ pub fn estimate_motion_psf(track_velocity_px_per_frame: (f32, f32), exposure_fra
 }
 
 /// 🔍️ Frequency-domain Wiener deconvolution against a known [`Psf`]: `G = conj(H) / (|H|² + 1/snr)` applied
-/// to the DFT of the (zero-padded, power-of-two) image via [`math::signal::fft2`]/[`math::signal::ifft2`],
+/// to the DFT of the (zero-padded, power-of-two) image via [`crate::signal::fft2`]/[`crate::signal::ifft2`],
 /// with the PSF's center wrapped to the origin for circular convolution, then cropped back to the input size.
 /// <https://en.wikipedia.org/wiki/Wiener_deconvolution>
 pub fn wiener_deconvolve(img: &ImageGray, psf: &Psf, snr: f32) -> ImageGray {
     if img.width == 0 || img.height == 0 || psf.width == 0 || psf.height == 0 {
         return img.clone();
     }
-    let pad_w = math::signal::next_pow2((img.width + psf.width) as usize);
-    let pad_h = math::signal::next_pow2((img.height + psf.height) as usize);
+    let pad_w = crate::signal::next_pow2((img.width + psf.width) as usize);
+    let pad_h = crate::signal::next_pow2((img.height + psf.height) as usize);
     let mut img_re = vec![0.0f64; pad_w * pad_h];
     let mut img_im = vec![0.0f64; pad_w * pad_h];
     for y in 0..img.height {
@@ -804,8 +804,8 @@ pub fn wiener_deconvolve(img: &ImageGray, psf: &Psf, snr: f32) -> ImageGray {
             psf_re[oy * pad_w + ox] += f64::from(value);
         }
     }
-    math::signal::fft2(&mut img_re, &mut img_im, pad_w, pad_h);
-    math::signal::fft2(&mut psf_re, &mut psf_im, pad_w, pad_h);
+    crate::signal::fft2(&mut img_re, &mut img_im, pad_w, pad_h);
+    crate::signal::fft2(&mut psf_re, &mut psf_im, pad_w, pad_h);
     let inv_snr = 1.0f64 / f64::from(snr.max(DEBLUR_WIENER_EPS));
     let mut out_re = vec![0.0f64; pad_w * pad_h];
     let mut out_im = vec![0.0f64; pad_w * pad_h];
@@ -816,7 +816,7 @@ pub fn wiener_deconvolve(img: &ImageGray, psf: &Psf, snr: f32) -> ImageGray {
         out_re[i] = gr * img_re[i] - gi * img_im[i];
         out_im[i] = gr * img_im[i] + gi * img_re[i];
     }
-    math::signal::ifft2(&mut out_re, &mut out_im, pad_w, pad_h);
+    crate::signal::ifft2(&mut out_re, &mut out_im, pad_w, pad_h);
     let mut result = ImageGray::new(img.width, img.height);
     for y in 0..img.height {
         for x in 0..img.width {
@@ -993,8 +993,8 @@ pub fn track_rigid_body(model_points: &[[f64; 3]], per_frame_obs: &[(u32, Vec<Op
 #[cfg(test)]
 mod tests {
     use super::*;
-    use math::algebra::{vec3d_cross, vec3d_normalize, vec3d_sub, Mat3d};
-    use math::lie::So3;
+    use crate::algebra::{vec3d_cross, vec3d_normalize, vec3d_sub, Mat3d};
+    use crate::lie::So3;
     use remodel_camera::Distortion;
     use remodel_image::{build_pyramid, scharr_gradients, warp_affine};
 

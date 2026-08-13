@@ -42,8 +42,9 @@ mod tests {
     #[test]
     fn dsl_round_trip_present_deck_with_tiles() {
         let deck = default_present_snapshot();
-        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        let deck = PresentSnapshot { tiles, ..deck };
+        let (source, _) = crate::artifacts::present::present_working_scene(&deck);
+        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
+        let deck = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);
         test_support::assert_dsl_round_trip(&deck);
         test_support::assert_dsl_pack_equivalence(&deck);
     }

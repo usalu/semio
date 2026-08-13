@@ -1,4 +1,4 @@
-//! 🧬️ Cad snapshot schema — persistent fields only.
+//! 🧬️ Cad snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::cad::{empty_cad_snapshot, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
 use schema::ArtifactSchema;

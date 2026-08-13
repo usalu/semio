@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.lowpoly.lowpoly.mutation;
 
-// 🧬️ Lowpoly mutation schema — persistent fields only.
+// 🧬️ Lowpoly mutation schema — artifact-lane fields only.
 
 message LowpolyMutation {
   // @state artifact

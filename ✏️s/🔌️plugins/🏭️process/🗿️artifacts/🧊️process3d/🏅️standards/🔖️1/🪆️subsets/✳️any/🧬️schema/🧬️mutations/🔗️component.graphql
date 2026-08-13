@@ -1,4 +1,4 @@
-# 🧬️ Process3d mutation schema — persistent fields only.
+# 🧬️ Process3d mutation schema — artifact-lane fields only.
 
 type Process3dMutation {
   workshop: Workshop! @state(class: ARTIFACT)

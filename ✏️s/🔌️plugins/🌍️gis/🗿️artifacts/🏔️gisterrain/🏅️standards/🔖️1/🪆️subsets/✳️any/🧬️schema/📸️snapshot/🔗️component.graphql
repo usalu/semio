@@ -1,4 +1,4 @@
-# 🧬️ GIS terrain snapshot schema — persistent fields only.
+# 🧬️ GIS terrain snapshot schema — artifact-lane fields only.
 
 type GisTerrainSnapshot {
   exaggeration: Float! @state(class: ARTIFACT)

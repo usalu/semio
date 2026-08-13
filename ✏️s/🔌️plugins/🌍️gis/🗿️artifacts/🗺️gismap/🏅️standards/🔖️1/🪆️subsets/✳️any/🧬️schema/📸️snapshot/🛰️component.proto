@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.gis.gismap.snapshot;
 
-// 🧬️ GIS map snapshot schema — persistent fields only.
+// 🧬️ GIS map snapshot schema — artifact-lane fields only.
 
 message GisMapSnapshot {
   // @state artifact

@@ -1,4 +1,4 @@
-# 🧬️ Procedural2d mutation schema — persistent fields only.
+# 🧬️ Procedural2d mutation schema — artifact-lane fields only.
 
 type Procedural2dMutation {
   fixture: FlowFixture! @state(class: ARTIFACT)

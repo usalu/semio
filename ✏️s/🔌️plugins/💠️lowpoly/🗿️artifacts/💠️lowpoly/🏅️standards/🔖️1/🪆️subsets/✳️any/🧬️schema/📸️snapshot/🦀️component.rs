@@ -1,4 +1,4 @@
-//! 🧬️ Lowpoly snapshot schema — persistent fields only.
+//! 🧬️ Lowpoly snapshot schema — artifact-lane fields only.
 //!
 //! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):
 //! `LowpolyObject` carries a real `store::ArtifactChild<SemioMeshSnapshot>` handle for its `mesh`

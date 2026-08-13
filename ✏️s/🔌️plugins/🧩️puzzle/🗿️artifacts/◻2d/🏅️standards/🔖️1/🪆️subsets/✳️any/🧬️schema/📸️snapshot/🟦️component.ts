@@ -1,4 +1,4 @@
-/** 🧬️ Puzzle2d snapshot schema — persistent fields only. */
+/** 🧬️ Puzzle2d snapshot schema — artifact-lane fields only. */
 
 export interface Puzzle2dSnapshot {
   /** @state artifact */

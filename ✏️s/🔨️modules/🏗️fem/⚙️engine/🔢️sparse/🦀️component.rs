@@ -2,10 +2,10 @@
 //! Jacobi-preconditioned conjugate-gradient iterative solver, a subspace-iteration eigensolver
 //! (modal/buckling `Kφ=λBφ`) backed by a dense cyclic-Jacobi eigensolver for its small projected
 //! subproblem, and reverse-Cuthill-McKee bandwidth-reduction ordering. No dependency beyond
-//! `math::algebra`'s dense `MatD`/`VecD`, used here as both scratch storage for small
+//! `crate::algebra`'s dense `MatD`/`VecD`, used here as both scratch storage for small
 //! projected problems and as the correctness oracle in this module's tests.
 
-use math::algebra::{MatD, VecD};
+use crate::algebra::{MatD, VecD};
 use std::collections::{BTreeMap, VecDeque};
 
 // #region 🔖️Coo

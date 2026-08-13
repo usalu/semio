@@ -1,4 +1,4 @@
-# 🧬️ Remodel snapshot schema — persistent fields only.
+# 🧬️ Remodel snapshot schema — artifact-lane fields only.
 
 type RemodelSnapshot {
   schema: String! @state(class: ARTIFACT)

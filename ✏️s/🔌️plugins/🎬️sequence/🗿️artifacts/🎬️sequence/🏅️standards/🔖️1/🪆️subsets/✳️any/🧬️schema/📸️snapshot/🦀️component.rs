@@ -1,4 +1,4 @@
-//! 🧬️ Sequence snapshot schema — persistent fields only.
+//! 🧬️ Sequence snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::sequence::{sequence_content_child_handle_and_cache, sequence_working_scene, SequenceContentChild, SequenceEdge, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;

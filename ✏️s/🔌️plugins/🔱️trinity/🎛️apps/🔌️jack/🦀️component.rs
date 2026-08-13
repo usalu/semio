@@ -276,6 +276,8 @@ impl ArtifactApp for TrinityJackPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = JackPresence;
     type PresenceMutation = JackPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = TrinityJackCommand;
 

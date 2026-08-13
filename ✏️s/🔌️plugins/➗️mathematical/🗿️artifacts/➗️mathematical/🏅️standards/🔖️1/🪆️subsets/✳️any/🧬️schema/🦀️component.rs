@@ -6,7 +6,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full mathematical artifact across persistent and local-ui classes. `notation`/`results`/
+/// 🧬️ Full mathematical artifact across the artifact and config lanes. `notation`/`results`/
 /// `computed` mirror `MathematicalSnapshot`'s own composed-child slots (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, `mathematical→C:text,table,value`); `equation`
 /// mirrors its plain (non-`#[child]`) persistent sibling added in wave M3a of

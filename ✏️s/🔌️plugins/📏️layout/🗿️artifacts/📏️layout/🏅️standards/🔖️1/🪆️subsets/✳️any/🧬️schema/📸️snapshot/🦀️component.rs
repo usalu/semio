@@ -1,4 +1,4 @@
-//! 🧬️ Layout snapshot schema — persistent fields only.
+//! 🧬️ Layout snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::layout::{
     CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, Page, PageColumns, PageMargins, ParagraphStyle,

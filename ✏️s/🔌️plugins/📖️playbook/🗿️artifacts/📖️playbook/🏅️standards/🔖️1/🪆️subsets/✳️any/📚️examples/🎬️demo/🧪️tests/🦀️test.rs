@@ -16,7 +16,7 @@ fn inference_determinism_law() {
     let inference = PlaybookInference::infer(&snapshot);
     assert_eq!(inference, PlaybookInference::infer(&snapshot));
 
-    let expected_nodes: u32 = snapshot.steps.iter().map(|step| 1 + step.blocks.len() as u32).sum();
+    let expected_nodes: u32 = snapshot.steps().iter().map(|step| 1 + step.blocks.len() as u32).sum();
     assert_eq!(inference.topology.node_count, expected_nodes);
     assert!(inference.topology.cycle_free, "the demo document has no cyclic block conditions");
 }

@@ -1097,9 +1097,9 @@ mod tests {
         let world_up = if forward[1].abs() > 0.95 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
         let right = normalize3(cross3(forward, world_up));
         let up = cross3(right, forward);
-        let rotation = math::algebra::Mat3d::from_axes(right, up, forward).transpose();
+        let rotation = crate::algebra::Mat3d::from_axes(right, up, forward).transpose();
         let translation = scale3(rotation.mul_vec3(eye), -1.0);
-        remodel_camera::CameraPose(math::lie::Se3 { r: math::lie::So3(rotation), t: translation })
+        remodel_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(rotation), t: translation })
     }
 
     /// 📦️ Ray/axis-aligned-box slab intersection: nearest `t >= 0` hit point plus which axis (0=x, 1=y,
@@ -1402,7 +1402,7 @@ mod tests {
         /// MP4/MJPEG mux), `push_video` the raw bytes, drive `advance` to `Done` with zero host and zero
         /// file fixtures, then assert the extracted mesh is non-empty, its bounding box — after
         /// Sim3-aligning the reconstruction's arbitrary monocular-SfM gauge onto the synthetic scene's
-        /// own known world frame via [`math::lie::umeyama`] over true-vs-recovered camera centers
+        /// own known world frame via [`crate::lie::umeyama`] over true-vs-recovered camera centers
         /// (camera 0 is pinned to `Se3::identity` and two-view translation is only unit-baseline-
         /// normalized, so raw reconstruction-vs-world-frame bbox comparison is meaningless without this)
         /// — roughly matches the cube's known extent, and — the literal "watertight" half of the
@@ -1481,7 +1481,7 @@ mod tests {
                 .iter()
                 .map(|&(frame_idx, pose)| (pose.0.inverse().act([0.0, 0.0, 0.0]), true_eyes[frame_idx]))
                 .unzip();
-            let gauge = math::lie::umeyama(&recovered_centers, &true_centers, true).expect("Sim3 alignment between recovered and true camera centers must be solvable");
+            let gauge = crate::lie::umeyama(&recovered_centers, &true_centers, true).expect("Sim3 alignment between recovered and true camera centers must be solvable");
             println!("[long] gauge-fixing Sim3 from {} registered camera(s): scale={:.4}", recovered_centers.len(), gauge.s);
 
             let mut gauged_lo = [f64::INFINITY; 3];

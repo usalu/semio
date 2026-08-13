@@ -1,6 +1,6 @@
 //! 🧬️ EnergyModel artifact schema — every field with its state class.
 
-use crate::artifacts::model::{EnergyModelSnapshot, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
+use crate::artifacts::model::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,31 +12,42 @@ pub fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
     EnergyModelSnapshot::default()
 }
 
-/// 🏢️ Decode the typed `Model` from a snapshot's opaque JSON body.
+/// 🏢️ The typed `Model` behind a snapshot's composed `structure`/`zones` children — reads through
+/// the working-scene cache (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old
+/// `serde_json::from_str(&snapshot.model_json)` decode-on-demand now that `model_json` is gone.
 pub fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
-    serde_json::from_str(&snapshot.model_json).map_err(|e| e.to_string())
+    Ok(crate::artifacts::model::energy_model(snapshot))
 }
 
-/// 📕️ Encode a typed `Model` into snapshot form.
+/// 📕️ Encode a typed `Model` into snapshot form — mints+caches its composed `structure`/`zones`
+/// children in one call via [`crate::artifacts::model::energy_snapshot_with_state`].
 pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
-    Ok(EnergyModelSnapshot {
-        schema: ENERGY_MODEL_DOCUMENT_SCHEMA.into(),
-        model_json: serde_json::to_string(model).map_err(|e| e.to_string())?,
-    })
+    Ok(crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model.clone(), None))
 }
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Artifact
-/// 🧬️ Full energy-model artifact across persistent and preview classes (no UI app).
+/// 🧬️ Full energy-model artifact across the artifact lane (no UI app). Ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: mirrors `EnergyModelSnapshot`'s `structure`/`zones`/
+/// `referenced_model` field swap identically (same shape every composed exemplar's full-artifact
+/// struct mirrors its snapshot). `results_json` is UNCHANGED — a preview-only field (recomputed by
+/// the BEM engine, never persisted, never part of the snapshot), no composition applies to it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelArtifact {
     #[state(artifact)]
     pub schema: String,
-    /// 🏢️ Opaque JSON of `crate::Model` — building inputs that persist.
     #[state(artifact)]
-    pub model_json: String,
+    #[child(kind = "s.stdio.semio.value")]
+    pub structure: EnergyStructureChild,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.table")]
+    pub zones: EnergyZonesChild,
+    #[state(artifact)]
+    #[link_slot(roles("model"))]
+    #[serde(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
+    pub referenced_model: Option<store::ArtifactLink>,
     /// 📋️ Opaque JSON of `crate::Results` — recomputed by the BEM engine; never persisted.
     #[state(artifact)]
     pub results_json: String,
@@ -55,7 +66,9 @@ impl EnergyModelArtifact {
     pub fn to_snapshot(&self) -> EnergyModelSnapshot {
         EnergyModelSnapshot {
             schema: self.schema.clone(),
-            model_json: self.model_json.clone(),
+            structure: self.structure.clone(),
+            zones: self.zones.clone(),
+            referenced_model: self.referenced_model.clone(),
         }
     }
 
@@ -63,7 +76,9 @@ impl EnergyModelArtifact {
     pub fn from_snapshot(snapshot: EnergyModelSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            model_json: snapshot.model_json,
+            structure: snapshot.structure,
+            zones: snapshot.zones,
+            referenced_model: snapshot.referenced_model,
             results_json: String::new(),
         }
     }
@@ -71,7 +86,9 @@ impl EnergyModelArtifact {
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: EnergyModelSnapshot) {
         self.schema = snapshot.schema;
-        self.model_json = snapshot.model_json;
+        self.structure = snapshot.structure;
+        self.zones = snapshot.zones;
+        self.referenced_model = snapshot.referenced_model;
     }
 }
 //#endregion 🔖️Conversions
@@ -226,7 +243,9 @@ mod tests {
     }
 
     /// 🌱 Relocated from `⚙️engine/🦀️component.rs` — DSL-parse sanity check with zero
-    /// `EnergyModelEngine` dependency, so it survives that struct's deletion.
+    /// `EnergyModelEngine` dependency, so it survives that struct's deletion. Ticket
+    /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `model_json` is gone — asserts the composed
+    /// `structure`/`zones` child handles are real (non-empty ids) instead.
     #[test]
     fn example_fixture_parses() {
         let document = crate::artifacts::model::dsl::parse_dsl(
@@ -234,7 +253,8 @@ mod tests {
         )
         .expect("parse");
         assert_eq!(document.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
-        assert!(!document.model_json.is_empty());
+        assert!(!document.structure.child_id.is_empty());
+        assert!(!document.zones.child_id.is_empty());
     }
 }
 //#endregion 🧪️Tests

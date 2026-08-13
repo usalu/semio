@@ -63,22 +63,33 @@ message ObjectKind {
   GeometryRecipe geometry = 6;
 }
 
+message ObjectKindExtra {
+  string id = 1;
+  repeated string typology_path = 2;
+  uint32 availability = 3;
+  GeometryRecipe geometry = 4;
+}
+
+message ArtifactChildHandle { string child_id = 1; string target = 2; }
+
 message CuratedItem {
   string object_id = 1;
   uint32 count = 2;
 }
 
 message CurateArtifact {
+  // @state artifact @child kind=s.stdio.semio.kit
+  ArtifactChildHandle catalog = 1;
   // @state artifact
-  repeated ObjectKind stock = 1;
+  repeated ObjectKindExtra stock_extra = 2;
   // @state artifact
-  repeated CuratedItem curated = 2;
+  repeated CuratedItem curated = 3;
   // @state config
-  Filters filters = 3;
+  Filters filters = 4;
   // @state presence
-  optional string selected_object_id = 4;
+  optional string selected_object_id = 5;
   // @state config
-  string locale = 5;
+  string locale = 6;
   // @state config
-  string contributions_json = 6;
+  string contributions_json = 7;
 }

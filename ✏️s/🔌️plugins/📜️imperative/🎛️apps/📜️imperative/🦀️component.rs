@@ -83,6 +83,8 @@ impl ArtifactApp for ImperativePlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = ImperativePresence;
     type PresenceMutation = ImperativePresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = ImperativeCommand;
 

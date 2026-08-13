@@ -119,6 +119,8 @@ impl ArtifactApp for DrawPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = DrawPresence;
     type PresenceMutation = DrawPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = DrawCommand;
 

@@ -1,4 +1,4 @@
-//! 🧬️ En1990 snapshot schema — persistent fields only.
+//! 🧬️ En1990 snapshot schema — artifact-lane fields only.
 
 use schema::ArtifactSchema;
 use crate::artifacts::en1990::En1990QkChild;

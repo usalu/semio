@@ -1180,6 +1180,8 @@ impl ArtifactApp for ArchitectPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = ArchitectPresence;
     type PresenceMutation = ArchitectPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = ArchitectCommand;
 

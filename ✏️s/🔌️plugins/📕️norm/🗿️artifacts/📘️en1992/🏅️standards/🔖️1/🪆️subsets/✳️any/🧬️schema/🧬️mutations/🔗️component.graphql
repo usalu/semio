@@ -1,4 +1,4 @@
-# 🧬️ En1992 mutation schema — persistent fields only.
+# 🧬️ En1992 mutation schema — artifact-lane fields only.
 
 type En1992Mutation {
   annex: String! @state(class: ARTIFACT)

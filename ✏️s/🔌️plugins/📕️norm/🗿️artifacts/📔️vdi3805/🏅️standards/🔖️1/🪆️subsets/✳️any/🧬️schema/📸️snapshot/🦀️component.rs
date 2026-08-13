@@ -1,4 +1,4 @@
-//! 🧬️ Vdi3805 snapshot schema — persistent fields only.
+//! 🧬️ Vdi3805 snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::vdi3805::{
     CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile,

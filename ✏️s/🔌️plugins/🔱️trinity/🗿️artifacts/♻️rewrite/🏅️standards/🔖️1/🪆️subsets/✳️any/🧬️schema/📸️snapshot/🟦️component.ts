@@ -1,4 +1,4 @@
-/** 🧬️ Rewrite snapshot schema — persistent fields only. */
+/** 🧬️ Rewrite snapshot schema — artifact-lane fields only. */
 
 export interface RewriteSnapshot {
   /** @state artifact */

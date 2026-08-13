@@ -254,12 +254,13 @@ fn json_value_from_dsl(question: &FormQuestion) -> Value {
 }
 
 pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
-    if spec.steps.is_empty() {
+    let steps = crate::artifacts::forms::forms_steps(spec);
+    if steps.is_empty() {
         return semio_framework_plugin::ui_text(labels.no_steps_in_form);
     }
     let contributions = parse_contributions(config);
-    let step_index = (config.current_step_index as usize).min(spec.steps.len().saturating_sub(1));
-    let step = &spec.steps[step_index];
+    let step_index = (config.current_step_index as usize).min(steps.len().saturating_sub(1));
+    let step = &steps[step_index];
     let values = effective_try_values(spec, config);
     let visible = visible_questions(step, &values);
     let errors = step_errors(step, &values);
@@ -267,7 +268,7 @@ pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfi
     let errors_by_question: HashMap<&str, &str> = errors.iter().map(|error| (error.block_id.as_str(), error.message.as_str())).collect();
     let mut children = vec![
         ui_text_emphasized(Label::data(spec.title.clone().unwrap_or_else(|| labels.form_fallback_title.into()))),
-        semio_framework_plugin::ui_text(Label::data(format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, spec.steps.len()))),
+        semio_framework_plugin::ui_text(Label::data(format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, steps.len()))),
         ui_text_emphasized(Label::data(step.title.clone())),
     ];
     if let Some(description) = &step.description {
@@ -286,7 +287,7 @@ pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfi
             presence: UiPresence::disabled_if(step_index == 0),
             menu: None,
         }),
-        if step_index + 1 < spec.steps.len() {
+        if step_index + 1 < steps.len() {
             UiNode::Button(UiButtonNode { id: Some("forms-try.next".into()), icon_id: "chevron-right".into(), label: labels.next.into(), action: forms_action("nextStep", None), style: None, presence: UiPresence::disabled_if(!advance), menu: None })
         } else {
             UiNode::Button(UiButtonNode { id: Some("forms-try.submit".into()), icon_id: "check".into(), label: labels.submit.into(), action: forms_action("submit", None), style: None, presence: UiPresence::disabled_if(!advance), menu: None })

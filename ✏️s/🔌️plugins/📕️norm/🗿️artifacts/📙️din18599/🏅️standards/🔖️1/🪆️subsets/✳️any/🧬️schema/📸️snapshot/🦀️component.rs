@@ -1,4 +1,4 @@
-//! 🧬️ Din18599 snapshot schema — persistent fields only.
+//! 🧬️ Din18599 snapshot schema — artifact-lane fields only.
 
 use schema::ArtifactSchema;
 use crate::artifacts::din18599::{Din18599ClimateChild, MonthlyClimate, UseClass};

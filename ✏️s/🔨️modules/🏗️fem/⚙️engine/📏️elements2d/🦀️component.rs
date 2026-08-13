@@ -4,7 +4,7 @@
 
 use crate::formulation::{b_matrix_plane, d_matrix_plane_strain, d_matrix_plane_stress, gauss_quad, gauss_tri, jacobian_2d, shape_quad4, shape_quad8, shape_tri3, shape_tri6};
 use crate::model::{Dof, Element, ElementContext, ElementResult, MemberUdl, PlaneStress, PlateMoments};
-use math::algebra::{MatD, VecD};
+use crate::algebra::{MatD, VecD};
 
 // #region 🔖️Geometry
 fn segment_geometry(ctx: &ElementContext) -> (f64, f64, f64) {

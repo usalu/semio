@@ -1,4 +1,4 @@
-//! 🧬️ Rewrite snapshot schema — persistent fields only.
+//! 🧬️ Rewrite snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::jack::PropertyValue;
 use crate::artifacts::rewrite::LayoutPoint;

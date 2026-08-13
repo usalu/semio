@@ -192,6 +192,8 @@ impl ArtifactApp for ShootingPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = ShootingPresence;
     type PresenceMutation = ShootingPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = ShootingCommand;
 

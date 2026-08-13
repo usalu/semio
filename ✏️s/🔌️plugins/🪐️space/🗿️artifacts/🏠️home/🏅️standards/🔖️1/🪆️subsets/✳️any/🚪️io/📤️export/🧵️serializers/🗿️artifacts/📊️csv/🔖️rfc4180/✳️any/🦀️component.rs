@@ -4,11 +4,14 @@ use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEM
 
 pub fn register() {}
 
+/// 🌉 `SHomeSnapshot` has no `headers`/`rows`-shaped fields (its own JSON shape is
+/// `{schema, catalogGeneration}`), so this bridge was always degenerate — an empty table,
+/// regardless of snapshot content — even before `CsvSnapshot` dropped `headers`/`rows` for
+/// `has_header`/`records` (stdio's own RFC4180 rework). Preserved verbatim under the new shape
+/// rather than inventing table content this snapshot was never able to carry.
 pub fn serialize(snapshot: &SHomeSnapshot) -> Result<CsvSnapshot, store::TextError> {
-    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    let headers = value.get("headers").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
-    let rows = value.get("rows").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
-    Ok(CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), headers, rows })
+    let _ = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    Ok(CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: Vec::new() })
 }
 
 pub fn serialize_bytes(snapshot: &SHomeSnapshot) -> Result<Vec<u8>, store::TextError> {

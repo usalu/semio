@@ -1,4 +1,4 @@
-# 🧬️ Din4108 mutation schema — persistent fields only.
+# 🧬️ Din4108 mutation schema — artifact-lane fields only.
 
 type Din4108Mutation {
   category: String! @state(class: ARTIFACT)

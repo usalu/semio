@@ -8954,3 +8954,898 @@ help: remove the unnecessary path segments
 338 +         let after1 = <HtmlDiff as MutationDiff<HtmlSnapshot>>::apply(&d1, &base);
     |
 
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3797:5
+     |
+3797 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:3796:5
+     |
+3796 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+     = note: `#[warn(unused_attributes)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4217:5
+     |
+4217 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4216:5
+     |
+4216 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4393:5
+     |
+4393 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4392:5
+     |
+4392 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4705:5
+     |
+4705 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4704:5
+     |
+4704 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4888:5
+     |
+4888 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:4887:5
+     |
+4887 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5103:5
+     |
+5103 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5102:5
+     |
+5102 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5325:5
+     |
+5325 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5324:5
+     |
+5324 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5544:5
+     |
+5544 |     #[path = "."]
+     |     ^^^^^^^^^^^^^ help: remove this attribute
+     |
+note: attribute also specified here
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5543:5
+     |
+5543 |     #[path = "."]
+     |     ^^^^^^^^^^^^^
+     = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:17:9
+   |
+17 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:9
+   |
+10 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:65:9
+   |
+65 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::OpBinary`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:34:5
+   |
+34 | use protocol::OpBinary;
+   |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/🦀️component.rs:19:30
+   |
+19 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🦀️component.rs:14:30
+   |
+14 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:17:9
+   |
+17 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:168:9
+    |
+168 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/🦀️component.rs:13:9
+   |
+13 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:471:9
+    |
+471 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🦀️component.rs:15:9
+   |
+15 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:323:9
+    |
+323 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:473:9
+    |
+473 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🚪️io/🦀️component.rs:13:30
+   |
+13 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:9
+   |
+23 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🚪️io/🦀️component.rs:11:30
+   |
+11 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:30
+   |
+10 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🚪️io/🦀️component.rs:11:30
+   |
+11 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs:31:9
+   |
+31 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:111:9
+    |
+111 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🚪️io/🦀️component.rs:12:30
+   |
+12 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🚪️io/🦀️component.rs:12:30
+   |
+12 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, I...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:27:9
+   |
+27 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:8:30
+  |
+8 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:21:9
+   |
+21 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🚪️io/🦀️component.rs:7:30
+  |
+7 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, ComposerEntry, Dialect, Io...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🦀️component.rs:180:9
+    |
+180 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:48:9
+   |
+48 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/🦀️component.rs:19:30
+   |
+19 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/🦀️component.rs:22:30
+   |
+22 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Stand...
+   |                            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:22:9
+   |
+22 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:8:9
+  |
+8 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:9:30
+  |
+9 | ...   ArtifactComposition, ArtifactAnalyzer as _, AnalyzeSource, ComposeError, ComposeSource, Composition, Dialect, IoPayload, Standa...
+  |                            ^^^^^^^^^^^^^^^^
+
+warning: unused variable: `tolerance`
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs:1514:55
+     |
+1514 |     fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+     |                                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tolerance`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: trait `artifacts::gltf::standards::v2_0::subsets::any::schema::diff::component::ItemDiff<T>` is more private than the item `GltfCollectionDiff<T, D>`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:243:1
+    |
+243 | impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ implementation `GltfCollectionDiff<T, D>` is reachable at visibility `pub`
+    |
+note: but trait `artifacts::gltf::standards::v2_0::subsets::any::schema::diff::component::ItemDiff<T>` is only usable at visibility `pub(crate)`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:184:1
+    |
+184 | pub(crate) trait ItemDiff<T>: Clone + PartialEq {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_bounds)]` on by default
+
+warning: function `parse_u32` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:435:4
+    |
+435 | fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+    |    ^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `u64_le` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:138:4
+    |
+138 | fn u64_le(n: u64) -> [u8; 8] { n.to_le_bytes() }
+    |    ^^^^^^
+
+warning: method `absorb` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:416:8
+    |
+362 | impl StepEntitiesDiff {
+    | --------------------- method in this implementation
+...
+416 |     fn absorb(&mut self, other: Self) {
+    |        ^^^^^^
+
+warning: function `demo_diff_cases` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1316:15
+     |
+1316 | pub(crate) fn demo_diff_cases() -> Vec<StepDiff> {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:379:15
+    |
+379 | pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1183:15
+     |
+1183 | pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:423:15
+    |
+423 | pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:531:15
+    |
+531 | pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:231:15
+    |
+231 | pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:394:15
+    |
+394 | pub(crate) fn demo_mutation_cases() -> Vec<GltfMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `encode_option` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:640:15
+    |
+640 | pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+    |               ^^^^^^^^^^^^^
+
+warning: function `decode_option` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:646:15
+    |
+646 | pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    |               ^^^^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:750:15
+    |
+750 | pub(crate) fn demo_diff_cases() -> Vec<StlDiff> {
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:334:15
+    |
+334 | pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: field `0` is never read
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1091:27
+     |
+1091 | enum ContentOperand { Num(f64), Str(Vec<u8>), Name(String), Array(Vec<ContentOperand>) }
+     |                       --- ^^^
+     |                       |
+     |                       field in this variant
+     |
+     = note: `ContentOperand` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+     |
+1091 - enum ContentOperand { Num(f64), Str(Vec<u8>), Name(String), Array(Vec<ContentOperand>) }
+1091 + enum ContentOperand { Num(()), Str(Vec<u8>), Name(String), Array(Vec<ContentOperand>) }
+     |
+
+warning: function `demo_jpg_snapshot` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:253:15
+    |
+253 | pub(crate) fn demo_jpg_snapshot() -> crate::artifacts::jpg::JpgSnapshot {
+    |               ^^^^^^^^^^^^^^^^^
+
+warning: method `is_empty` is never used
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:98:8
+   |
+97 | impl JpgFrameFieldsDiff {
+   | ----------------------- method in this implementation
+98 |     fn is_empty(&self) -> bool { self == &Self::default() }
+   |        ^^^^^^^^
+
+warning: method `is_empty` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:293:8
+    |
+292 | impl JpgOtherSegmentsDiff {
+    | ------------------------- method in this implementation
+293 |     fn is_empty(&self) -> bool { self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() }
+    |        ^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1715:15
+     |
+1715 | pub(crate) fn demo_diff_cases() -> Vec<JpgDiff> {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:458:15
+    |
+458 | pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:468:15
+    |
+468 | pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:67:15
+   |
+67 | pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
+   |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:696:15
+    |
+696 | pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:79:15
+   |
+79 | pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
+   |               ^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `of` is never used
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:90:8
+   |
+89 | impl Endian {
+   | ----------- associated function in this implementation
+90 |     fn of(bo: TiffByteOrder) -> Self {
+   |        ^^
+
+warning: function `xml_node` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2503:15
+     |
+2503 | pub(crate) fn xml_node(name: &str) -> XmlNode {
+     |               ^^^^^^^^
+
+warning: function `snapshot_a` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2507:15
+     |
+2507 | pub(crate) fn snapshot_a() -> DocxSnapshot {
+     |               ^^^^^^^^^^
+
+warning: function `snapshot_b` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2541:15
+     |
+2541 | pub(crate) fn snapshot_b() -> DocxSnapshot {
+     |               ^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2572:15
+     |
+2572 | pub(crate) fn demo_diff_cases() -> Vec<DocxDiff> {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `fixture` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:665:4
+    |
+665 | fn fixture() -> DocxSnapshot {
+    |    ^^^^^^^
+
+warning: function `table_path` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:675:4
+    |
+675 | fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
+    |    ^^^^^^^^^^
+
+warning: function `sweep_a` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:687:4
+    |
+687 | fn sweep_a() -> DocxSnapshot {
+    |    ^^^^^^^
+
+warning: function `sweep_b` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:729:4
+    |
+729 | fn sweep_b() -> DocxSnapshot {
+    |    ^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:786:15
+    |
+786 | pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `demo_snapshot_a` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2292:15
+     |
+2292 | pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_snapshot_b` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2323:15
+     |
+2323 | pub(crate) fn demo_snapshot_b() -> PptxSnapshot {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2351:15
+     |
+2351 | pub(crate) fn demo_diff_cases() -> Vec<PptxDiff> {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_fixture` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:513:15
+    |
+513 | pub(crate) fn demo_fixture() -> PptxSnapshot {
+    |               ^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:522:15
+    |
+522 | pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `cell_with_diff_applied` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:310:4
+    |
+310 | fn cell_with_diff_applied(cell: &XlsxCell, diff: &XlsxCellDiff) -> XlsxCell {
+    |    ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `sheet_with_diff_applied` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:338:4
+    |
+338 | fn sheet_with_diff_applied(sheet: &XlsxSheet, diff: &XlsxSheetDiff) -> XlsxSheet {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `snapshot_a` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1665:15
+     |
+1665 | pub(crate) fn snapshot_a() -> XlsxSnapshot {
+     |               ^^^^^^^^^^
+
+warning: function `snapshot_b` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1675:15
+     |
+1675 | pub(crate) fn snapshot_b() -> XlsxSnapshot {
+     |               ^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1700:15
+     |
+1700 | pub(crate) fn demo_diff_cases() -> Vec<XlsxDiff> {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `fixture` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:515:15
+    |
+515 | pub(crate) fn fixture() -> XlsxSnapshot {
+    |               ^^^^^^^
+
+warning: function `sweep_a` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:536:15
+    |
+536 | pub(crate) fn sweep_a() -> XlsxSnapshot {
+    |               ^^^^^^^
+
+warning: function `sweep_b` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:591:15
+    |
+591 | pub(crate) fn sweep_b() -> XlsxSnapshot {
+    |               ^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:639:15
+    |
+639 | pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `demo_snapshot_a` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1335:15
+     |
+1335 | pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_snapshot_b` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1381:15
+     |
+1381 | pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_diff_cases` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1425:15
+     |
+1425 | pub(crate) fn demo_diff_cases() -> Vec<BcfDiff> {
+     |               ^^^^^^^^^^^^^^^
+
+warning: function `demo_mutation_cases` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:606:15
+    |
+606 | pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `parse_usize` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🔺️diff/🦀️component.rs:446:4
+    |
+446 | fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+    |    ^^^^^^^^^^^
+
+warning: function `frame_with_diff_applied` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:523:4
+    |
+523 | fn frame_with_diff_applied(frame: &SlideFrame, diff: &SlideFrameDiff) -> SlideFrame {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `image_with_diff_applied` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:557:4
+    |
+557 | fn image_with_diff_applied(image: &SlidePictureImage, diff: &SlidePictureImageDiff) -> SlidePictureImage {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `enc_bool` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:973:15
+    |
+973 | pub(crate) fn enc_bool(b: bool) -> String { if b { "1".to_string() } else { "0".to_string() } }
+    |               ^^^^^^^^
+
+warning: function `dec_bool` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs:974:15
+    |
+974 | pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+    |               ^^^^^^^^
+
+warning: function `enc_ports` is never used
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:59:4
+   |
+59 | fn enc_ports(ports: &[SemioGraphPort]) -> String { format!("[{}]", ports.iter().map(enc_port).collect::<Vec<_>>().join(",")) }
+   |    ^^^^^^^^^
+
+warning: function `enc_properties` is never used
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/📝️text/🦀️component.rs:63:4
+   |
+63 | fn enc_properties(properties: &[SemioValueEntry]) -> String { format!("[{}]", properties.iter().map(enc_property).collect::<Vec<_>>(...
+   |    ^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+ --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️test.rs:8:45
+  |
+8 | use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
+  |                                             ^^^^^^^^^^^^^^^^
+
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🧪️tests/🦀️test.rs:13:45
+   |
+13 | use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
+   |                                             ^^^^^^^^^^^^^^^^
+
+warning: unused variable: `mid2`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🔺️diff/🦀️component.rs:859:13
+    |
+859 |         let mid2 = d2.apply(&mid1);
+    |             ^^^^ help: if this is intentional, prefix it with an underscore: `_mid2`
+
+warning: unused variable: `base`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:445:13
+    |
+445 |         let base = fixture();
+    |             ^^^^ help: if this is intentional, prefix it with an underscore: `_base`
+
+warning: function `object_diff` is never used
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1095:8
+     |
+1095 |     fn object_diff(d: JsonObjectDiff) -> JsonDiff {
+     |        ^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `parse_u32` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:435:4
+    |
+435 | fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+    |    ^^^^^^^^^
+
+warning: `semio-s-plugin-stdio` (lib) generated 682 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 336 suggestions)
+warning: `semio-s-plugin-stdio` (lib test) generated 784 warnings (597 duplicates) (run `cargo fix --lib -p semio-s-plugin-stdio --tests` to apply 181 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 27.80s

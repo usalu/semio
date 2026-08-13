@@ -1,4 +1,4 @@
-/** 🧬️ Iso16757 snapshot schema — persistent fields only. */
+/** 🧬️ Iso16757 snapshot schema — artifact-lane fields only. */
 
 export interface Iso16757Snapshot {
   /** @state artifact */

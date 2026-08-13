@@ -2224,6 +2224,8 @@ impl ArtifactApp for Puzzle3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = Puzzle3dPresence;
     type PresenceMutation = Puzzle3dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle3dCommand;
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
@@ -2709,15 +2711,25 @@ pub fn register_puzzle3d_exports() {
 /// `puzzle3d_mesh_from_document`/`puzzle3d_document_from_mesh`, so it belongs here). No
 /// `ArtifactDeclaration` field covers this OS-host media registry (see `declaration()`'s own doc), so
 /// it stays wired through `🧩️puzzle/🦀️component.rs`'s `.setup()`.
+///
+/// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
+/// OBJ/STL `register_mesh_exporter`/`register_mesh_importer` calls this used to make are DELETED,
+/// not migrated -- `🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s
+/// `io_registry::entries()` already carries real `ComposerEntry` rows for `"s.stdio.obj"` and
+/// `"s.stdio.stl"` (`DEP_OBJ`/`DEP_STL` import, `EXPORT_OBJ_DIALECT`/`EXPORT_STL_DIALECT` export),
+/// so the OS media pipeline's `registry_export_media`/`registry_import_media` (host
+/// `🦀️component.rs`) now resolves those two formats via `io_dispatch` once its `native_kind`
+/// bridging bug is fixed (same wave: it must read `OsArtifactDescriptor.component_kind`, i.e.
+/// `"puzzle3d"`, not the raw `"3d.puzzle"` workflow kind id). GLB stays registered here — no
+/// `"s.stdio.glb"` dialect exists in stdio's format catalog (only `"s.stdio.gltf"`, JSON text), so
+/// binary-glTF has no artifact-io equivalent to migrate to yet; flagged as a genuine remainder, not
+/// silently dropped. `register_mesh_dwg_export_handler`/`register_mesh_dwg_import_handler` are a
+/// separate pair of functions, not in this wave's five-function scope, so both stay untouched.
 pub fn register_mesh_io() {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     {
-        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
         semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
-        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
         semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
         semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
         semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
     }

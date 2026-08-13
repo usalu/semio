@@ -6,13 +6,16 @@ use crate::artifacts::forms::op::FormMutation;
 // submodule under the bare name would shadow that crate and break every `dsl::DslValue`/`dsl::to_dsl_value`
 // reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
 use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{FormQuestion, FormStep, FormsSnapshot, FORMS_DOCUMENT_SCHEMA};
+use crate::artifacts::forms::{forms_snapshot_with_state, forms_steps, FormQuestion, FormStep, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️Artifact
-/// 🧬️ Full forms artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full forms artifact state across the artifact, presence and config lanes. Ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): `steps: Vec<FormStep>` is
+/// replaced by the same `structure`/`results` composed-child slot pair as `FormsSnapshot` — read
+/// through `crate::artifacts::forms::forms_artifact_steps`, never a bare field.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
@@ -27,7 +30,11 @@ pub struct FormsArtifact {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[state(artifact)]
-    pub steps: Vec<FormStep>,
+    #[child(kind = "s.stdio.semio.value")]
+    pub structure: FormsStructureChild,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.table")]
+    pub results: FormsResultsChild,
     #[state(presence)]
     pub selected_ids: Vec<String>,
     #[state(config)]
@@ -44,12 +51,14 @@ pub struct FormsArtifact {
 //#region 🔖️Conversions
 impl Default for FormsArtifact {
     fn default() -> Self {
+        let empty = forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
         Self {
-            schema: FORMS_DOCUMENT_SCHEMA.into(),
-            id: "forms".into(),
-            version: "1".into(),
-            title: None,
-            steps: Vec::new(),
+            schema: empty.schema,
+            id: empty.id,
+            version: empty.version,
+            title: empty.title,
+            structure: empty.structure,
+            results: empty.results,
             selected_ids: Vec::new(),
             current_step_index: 0,
             try_values_json: "{}".into(),
@@ -67,7 +76,8 @@ impl FormsArtifact {
             id: self.id.clone(),
             version: self.version.clone(),
             title: self.title.clone(),
-            steps: self.steps.clone(),
+            structure: self.structure.clone(),
+            results: self.results.clone(),
         }
     }
 
@@ -78,7 +88,8 @@ impl FormsArtifact {
             id: snapshot.id,
             version: snapshot.version,
             title: snapshot.title,
-            steps: snapshot.steps,
+            structure: snapshot.structure,
+            results: snapshot.results,
             ..Self::default()
         }
     }
@@ -89,7 +100,8 @@ impl FormsArtifact {
         self.id = snapshot.id;
         self.version = snapshot.version;
         self.title = snapshot.title;
-        self.steps = snapshot.steps;
+        self.structure = snapshot.structure;
+        self.results = snapshot.results;
     }
 
 }
@@ -112,19 +124,21 @@ pub fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<Stri
 //#region 🔖️DocumentHelpers
 /// 🌱️ The forms app's empty document — a single "Inputs" step with no blocks yet.
 pub fn empty_forms_snapshot() -> FormsSnapshot {
-    FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, steps: vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }] }
+    forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }])
 }
 
 /// 🌱️ The forms app's default document — the building-component fixture, seeded from its derive-
 /// generated `.forms` DSL text.
 pub fn building_component_spec() -> FormsSnapshot {
-    forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
+    forms_dsl::parse_playbook_example_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
 /// 📄️ The `default` (Contact) example, parsed once from `forms_dsl::DEFAULT_EXAMPLE_TEXT` — the source of truth
-/// for every "default" example call site (`setActiveExample`, `App::example`).
+/// for every "default" example call site (`setActiveExample`, `App::example`). Loaded through
+/// `parse_playbook_example_dsl` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM), not `parse_dsl`
+/// — see that function's own doc comment for why.
 pub fn default_example_spec() -> FormsSnapshot {
-    forms_dsl::parse_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
+    forms_dsl::parse_playbook_example_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
 /// 📄️ JSON re-serialization of [`default_example_spec`], for the framework-generic call sites that
@@ -135,7 +149,7 @@ pub fn default_example_json() -> String {
 
 /// 📄️ The `onboarding` example, parsed once from `forms_dsl::ONBOARDING_EXAMPLE_TEXT`.
 pub fn onboarding_example_spec() -> FormsSnapshot {
-    forms_dsl::parse_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
+    forms_dsl::parse_playbook_example_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_snapshot())
 }
 
 /// 📄️ JSON re-serialization of [`onboarding_example_spec`], for the framework-generic call sites that
@@ -147,7 +161,13 @@ pub fn onboarding_example_json() -> String {
 /// 🔠️ Every `(step title, question)` pair in document order — the empty-inspector diagnostic and every
 /// command test's "did the edit land" assertion share this flattening.
 pub fn flatten_questions(spec: &FormsSnapshot) -> Vec<(String, FormQuestion)> {
-    spec.steps.iter().flat_map(|step| step.blocks.iter().map(|question| (step.title.clone(), question.clone()))).collect()
+    let mut pairs = Vec::new();
+    for step in forms_steps(spec) {
+        for question in step.blocks {
+            pairs.push((step.title.clone(), question));
+        }
+    }
+    pairs
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -160,9 +180,9 @@ pub struct QuestionLocation {
 /// 🔎️ Locates a question by id anywhere in the document — the single lookup every question-editing
 /// command (`❓️question`, `🔘️option`, `📐️vector`) and the inspection panel share.
 pub fn locate_question(spec: &FormsSnapshot, question_id: &str) -> Option<QuestionLocation> {
-    for step in &spec.steps {
-        if let Some(question) = step.blocks.iter().find(|question| question.id == question_id) {
-            return Some(QuestionLocation { step_id: step.id.clone(), question: question.clone() });
+    for step in forms_steps(spec) {
+        if let Some(question) = step.blocks.into_iter().find(|question| question.id == question_id) {
+            return Some(QuestionLocation { step_id: step.id, question });
         }
     }
     None
@@ -175,7 +195,7 @@ pub fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: i
     let location = locate_question(spec, question_id)?;
     let mut question = location.question;
     mutate(&mut question);
-    Some(FormMutation::ReplaceBlock(crate::artifacts::forms::mutations::update_block::mutation::ReplaceBlock { step_id: location.step_id, block: question }))
+    Some(FormMutation::ReplaceBlock(crate::artifacts::forms::mutations::replace_block::mutation::ReplaceBlock { step_id: location.step_id, block: question }))
 }
 //#endregion 🔖️QuestionLocation
 
@@ -371,9 +391,10 @@ mod tests {
     #[test]
     fn locate_question_finds_a_question_anywhere_in_the_document() {
         let spec = building_component_spec();
-        let first_id = spec.steps[0].blocks[0].id.clone();
+        let steps = forms_steps(&spec);
+        let first_id = steps[0].blocks[0].id.clone();
         let location = locate_question(&spec, &first_id).expect("question located");
-        assert_eq!(location.step_id, spec.steps[0].id);
+        assert_eq!(location.step_id, steps[0].id);
     }
 
     #[test]
@@ -385,10 +406,10 @@ mod tests {
     #[test]
     fn update_block_operation_patches_the_located_question() {
         let mut spec = building_component_spec();
-        let question_id = spec.steps[0].blocks[0].id.clone();
+        let question_id = forms_steps(&spec)[0].blocks[0].id.clone();
         let operation = update_block_operation(&spec, &question_id, |question| question.label = "Renamed".into()).expect("operation");
         spec = apply_form_edit_mutation(&spec, &operation);
-        assert_eq!(spec.steps[0].blocks[0].label, "Renamed");
+        assert_eq!(forms_steps(&spec)[0].blocks[0].label, "Renamed");
     }
 
     fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {

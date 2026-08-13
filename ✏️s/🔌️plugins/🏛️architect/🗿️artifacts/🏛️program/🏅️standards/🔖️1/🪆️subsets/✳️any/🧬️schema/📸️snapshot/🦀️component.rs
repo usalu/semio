@@ -1,4 +1,4 @@
-//! 🧬️ ProgramSnapshot snapshot schema — persistent fields only.
+//! 🧬️ ProgramSnapshot snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::program::kernel::*;
 use crate::artifacts::program::registers::*;

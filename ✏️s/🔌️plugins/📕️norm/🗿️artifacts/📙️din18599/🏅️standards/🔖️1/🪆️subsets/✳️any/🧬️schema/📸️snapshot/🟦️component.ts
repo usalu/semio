@@ -1,4 +1,4 @@
-/** 🧬️ Din18599 snapshot schema — persistent fields only. */
+/** 🧬️ Din18599 snapshot schema — artifact-lane fields only. */
 
 export interface Din18599Snapshot {
   /** @state artifact */

@@ -225,6 +225,8 @@ impl ArtifactApp for MathematicalPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = MathematicalPresence;
     type PresenceMutation = MathematicalPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = MathematicalCommand;
 

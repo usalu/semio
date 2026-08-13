@@ -1,4 +1,4 @@
-//! 🌋️ EN 1998 snapshot schema — persistent fields only.
+//! 🌋️ EN 1998 snapshot schema — artifact-lane fields only.
 
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};

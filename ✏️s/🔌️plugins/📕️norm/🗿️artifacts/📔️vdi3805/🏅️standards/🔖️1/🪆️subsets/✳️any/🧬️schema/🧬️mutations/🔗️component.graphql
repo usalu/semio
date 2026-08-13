@@ -1,4 +1,4 @@
-# 🧬️ Vdi3805 mutation schema — persistent fields only.
+# 🧬️ Vdi3805 mutation schema — artifact-lane fields only.
 
 type Vdi3805Mutation {
   manufacturerFile: String! @state(class: ARTIFACT)

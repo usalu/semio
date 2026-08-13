@@ -1,4 +1,4 @@
-/** 🧬️ Note snapshot schema — persistent fields only. */
+/** 🧬️ Note snapshot schema — artifact-lane fields only. */
 
 export interface NoteSnapshot {
   /** @state artifact */

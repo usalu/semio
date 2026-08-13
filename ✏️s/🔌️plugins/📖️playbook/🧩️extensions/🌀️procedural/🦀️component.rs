@@ -738,6 +738,8 @@ impl ArtifactApp for ModuleApp {
     type DraftMutation = NoDraftMutation;
     type Presence = semio_framework_plugin::NoPresence;
     type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Command;
 

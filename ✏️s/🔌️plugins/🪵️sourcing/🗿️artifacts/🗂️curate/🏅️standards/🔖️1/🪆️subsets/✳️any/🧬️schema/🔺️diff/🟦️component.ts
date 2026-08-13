@@ -39,15 +39,26 @@ export interface CurateStringList {
   values: string[];
 }
 
-export interface CurateObjectKindPatchEntry {
+/** 🧩️ Sourcing-owned overflow half of `ObjectKind` not representable in the composed
+ * `s.stdio.semio.kit` subset's `SemioKitType` (id/name/category only). */
+export interface ObjectKindExtra {
   id: string;
-  kind: ObjectKind;
+  typologyPath: string[];
+  availability: number;
+  geometry: GeometryRecipe;
 }
 
-export interface CurateStockDelta {
-  added?: ObjectKind[];
+export interface ArtifactChildHandle { childId: string; target: string; }
+
+export interface CurateObjectKindExtraPatchEntry {
+  id: string;
+  extra: ObjectKindExtra;
+}
+
+export interface CurateStockExtraDelta {
+  added?: ObjectKindExtra[];
   removed?: string[];
-  patched?: CurateObjectKindPatchEntry[];
+  patched?: CurateObjectKindExtraPatchEntry[];
   reordered?: string[];
 }
 
@@ -66,8 +77,10 @@ export interface CurateCuratedDelta {
 export interface CurateDiff {
   /** @state artifact */
   artifact?: CurateArtifact | null;
+  /** @state artifact @child kind=s.stdio.semio.kit */
+  catalog?: ArtifactChildHandle | null;
   /** @state artifact */
-  stock?: CurateStockDelta | null;
+  stockExtra?: CurateStockExtraDelta | null;
   /** @state artifact */
   curated?: CurateCuratedDelta | null;
   /** @state config */

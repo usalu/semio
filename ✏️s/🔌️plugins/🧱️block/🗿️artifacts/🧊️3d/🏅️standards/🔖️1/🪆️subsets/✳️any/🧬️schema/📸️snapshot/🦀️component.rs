@@ -1,4 +1,4 @@
-//! 🧬️ Block3d snapshot schema — persistent fields only.
+//! 🧬️ Block3d snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};

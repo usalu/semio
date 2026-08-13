@@ -1,4 +1,4 @@
-//! 🧬️ Imperative snapshot schema — persistent fields only.
+//! 🧬️ Imperative snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::imperative::{ImperativeFlowChild, ImperativeTextChild};
 use schema::ArtifactSchema;

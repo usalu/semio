@@ -1126,6 +1126,18 @@ describe("framework renderer types", () => {
     expect(appBreadcrumb(resolveAppBreadcrumb(app, "reuse"))).toBe("Entwerfen mit Bestand · Aggregator");
   });
 
+  it("survives an app whose manifest declares no breadcrumb at all", () => {
+    // 🛡️ `AppDefinition.breadcrumb` is OPTIONAL, so an app may legitimately ship without one — and
+    // `appBreadcrumb` runs inside `FrameworkOsShellInner`'s RENDER. Before this guard, one such app
+    // threw `Cannot read properties of undefined (reading 'join')` and took the whole shell down
+    // with it; in a multi-pane host (the demonstrator) that killed all six panes at once and left
+    // the page blank. A nameless title is the correct degradation, never a dead host.
+    const app = { breadcrumb: undefined, terminologyBreadcrumbs: undefined } as Parameters<typeof resolveAppBreadcrumb>[0];
+    expect(resolveAppBreadcrumb(app, "native")).toEqual([]);
+    expect(appBreadcrumb(resolveAppBreadcrumb(app, "native"))).toBe("");
+    expect(appBreadcrumb(undefined)).toBe("");
+  });
+
   it("flattens a recursive panelTabs tree to its leaves, depth-first", () => {
     const tabs = [
       { id: "framework.panel.artifact", label: "Artifact", group: "workbench", bodyKey: "doc" },

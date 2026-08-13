@@ -1,4 +1,4 @@
-//! 🧬️ Playground snapshot schema — persistent fields only.
+//! 🧬️ Playground snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;

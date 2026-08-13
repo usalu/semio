@@ -69,7 +69,7 @@ mod tests {
     fn apply_playbook_add_step_roundtrip() {
         let spec = empty_playbook_snapshot();
         let next = apply_playbook_mutation(&spec, &add_step_operation(&spec, "step-test".into()));
-        assert_eq!(next.steps.len(), 2);
+        assert_eq!(next.steps().len(), 2);
     }
 
     fn sample_block() -> crate::artifacts::playbook::PlaybookBlock {

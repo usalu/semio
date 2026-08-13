@@ -178,6 +178,8 @@ impl ArtifactApp for ReasoningWiresPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::wires::presence::WiresPresence;
     type PresenceMutation = crate::apps::wires::presence::WiresPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = WiresCommand;
 

@@ -22,11 +22,14 @@ pub struct PresentTopology {
     pub node_count: u32,
 }
 
-/// 🧮️ Computes [`PresentTopology`] from a present snapshot's persisted tile order.
+/// 🧮️ Computes [`PresentTopology`] from a present snapshot's persisted tile order (read through the
+/// working-scene accessor off the `presentation` child handle — see
+/// `crate::artifacts::present::present_working_scene`).
 pub fn compute_present_topology(snapshot: &PresentSnapshot) -> PresentTopology {
-    let topo_order: Vec<String> = snapshot.tiles.iter().map(|tile| tile.id.clone()).collect();
+    let (_, tiles) = crate::artifacts::present::present_working_scene(snapshot);
+    let topo_order: Vec<String> = tiles.iter().map(|tile| tile.id.clone()).collect();
     let depth = topo_order.iter().enumerate().map(|(index, id)| (id.clone(), index as u32)).collect();
-    PresentTopology { topo_order, depth, cycle_free: true, node_count: snapshot.tiles.len() as u32 }
+    PresentTopology { topo_order, depth, cycle_free: true, node_count: tiles.len() as u32 }
 }
 //#endregion 🔖️Topology
 
@@ -42,7 +45,7 @@ mod tests {
 
     #[test]
     fn empty_tiles_is_the_vacuous_topology() {
-        let snapshot = PresentSnapshot { tiles: Vec::new(), ..PresentSnapshot::default() };
+        let snapshot = PresentSnapshot::default();
         let topology = compute_present_topology(&snapshot);
         assert!(topology.topo_order.is_empty());
         assert!(topology.depth.is_empty());
@@ -52,7 +55,8 @@ mod tests {
 
     #[test]
     fn depth_matches_persisted_index() {
-        let snapshot = PresentSnapshot { tiles: vec![tile("a"), tile("b")], ..PresentSnapshot::default() };
+        let (source, _) = crate::artifacts::present::present_working_scene(&PresentSnapshot::default());
+        let snapshot = crate::artifacts::present::present_snapshot_with_tiles(&source, &[tile("a"), tile("b")]);
         let topology = compute_present_topology(&snapshot);
         assert_eq!(topology.depth.get("a"), Some(&0));
         assert_eq!(topology.depth.get("b"), Some(&1));

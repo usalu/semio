@@ -18,7 +18,8 @@ pub struct AddStep {
 /// 🏗️ Builder — names the new step by its position in `spec` (the app's own step-add gesture never
 /// prompts for a title up front).
 pub fn add_step_operation(spec: &PlaybookSnapshot, step_id: String) -> PlaybookMutation {
-    PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: step_id, title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() }, index: None })
+    let step_count = crate::artifacts::playbook::playbook_working_scene(spec).steps.len();
+    PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: step_id, title: format!("Step {}", step_count + 1), description: None, blocks: Vec::new() }, index: None })
 }
 
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddStep {

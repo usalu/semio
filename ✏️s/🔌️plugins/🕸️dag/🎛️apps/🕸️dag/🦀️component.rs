@@ -119,6 +119,8 @@ impl ArtifactApp for DagPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::dag::presence::DagPresence;
     type PresenceMutation = crate::apps::dag::presence::DagPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = DagCommand;
 

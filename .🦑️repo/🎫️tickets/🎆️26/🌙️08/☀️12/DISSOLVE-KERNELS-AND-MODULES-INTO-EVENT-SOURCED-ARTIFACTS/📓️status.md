@@ -770,6 +770,89 @@ The agent correctly **refused** step 3 (remove `MeshData` from the SDK's public 
 
 **Consequence for the mesh wave: `MeshData`'s blast radius is not the ~30 direct importers previously counted — it is those plus everything reaching it through this glob.** Recorded as the real gate on deleting `MeshData`.
 
+## 🚪️ NEW BINDING RULING — io through artifacts; effort is not an exemption
+
+> *"All importers and exporters must flow over the io mechanism of artifacts. Everything must be migrated to artifacts, no matter the effort, unless it is domain-neutral framework functionality."*
+
+Recorded in `📌️important.md`. Two consequences that overturn earlier decisions in this very log:
+
+1. **"Too large / too risky" stops being a valid parking reason.** Only a *proven* structural impossibility is — and it must be demonstrated, not inferred.
+2. **The exemption test is whether the code names a domain.** `ComposerEntry`/`register_composer_entries`/`resolve`/`io_dispatch`/`IoKey`/`Dialect` are generic dispatch over dialects → **exempt, they stay, everything routes through them.** `register_solid_exporter`/`register_mesh_importer`/`register_dwg_import_handler`/`SolidExporter`/`MeshExporter` name solids/meshes/DWG → **no exemption; they become artifact `🚪️io` facets.** Measured surface: ~144 references across five hand-rolled registries.
+
+## 🛑 THE BREP BLOCKER WAS A MISATTRIBUTION — there was never a cycle
+
+G5 parked the brep dissolution on: *"`semio-framework-os-kernel` is framework-tier and can never depend on stdio, so framework-3d's kernel cannot be deleted."* **Measured, and false:**
+- `semio-framework-os-kernel`'s glue defines none of the five registries, and its `Cargo.toml` does **not** depend on `semio-framework-3d`.
+- They are compiled by **`semio-framework-os`** (`💻️os/🖥️host/📦️packages/🦀️rust`), whose manifest **already depends on BOTH** `semio-framework-3d` (:31) **and** `semio-s-plugin-stdio` (:32, added earlier today by G2b).
+
+So the migration was always a normal repoint. The trap is the by-now-familiar one: **`💻️os` names several crates**, and the genuinely-dead `💻️os/🦀️component.rs` sits beside the live `💻️os/🖥️host/🦀️component.rs` — the same overloaded-path family that produced the mount confusion twice already today.
+
+**Rule added:** a cycle claim licenses abandoning work, so it carries the same evidentiary bar as a deletion claim — **name the crate from its `Cargo.toml` and read that manifest's real deps** before declaring one. Wave IO1 dispatched to do the migration and then close the brep duplication window.
+
+## ✅ M3c — statistics family dissolved into `✳️table` inferences; window closed
+
+`📋️tabular`+`🎲️probability`+`📊️statistics`+`🔗️causal` (4,610 LOC, 106 tests) → Rust-only compute-internals under `✳️table/🧬️schema/`, plus one genuine `impl InferredField<SemioTableSnapshot>` at `💡️inferences/📊moments/` with cache-transparency and incrementality-law tests. **Full copy→verify→delete→verify cycle completed in one wave; no duplication window left open.**
+
+Coordinator-verified: `semio-framework-math --lib` → **1296 passed / 2 failed** (was 1402/2 — exactly −106), `📊moments` confirmed a real `InferredField` at `:63`. Math is now **50,900 LOC**, down from 72,439.
+
+**The placement call is the valuable part**, and it followed the ruling rather than the directory names: moments/fits/distributions/entropy/causal-queries are *derivations over tabular data*, not a new persisted shape — so they became inferences on an existing subset instead of a `✳️statistics` subset. **A directory name is not a content shape.**
+
+Two measurement corrections from the agent, both the right kind: the ticket's hypothesised "entropy↔graph coupling" **does not exist** (entropy's internal `graph`/`spatial` submodules are its own measures, not references to math's siblings), and a real `causal → graph_core::algorithms` coupling that the initial grep **missed** was caught by the compiler after copying — precisely why the mandated copy-then-verify ordering is not optional.
+
+## 🛑 CORRECTION — I recorded "G5 DID NOT LAND THE MOVE". That was FALSE. It landed.
+
+I am leaving the error visible rather than quietly overwriting it, because how I produced it matters more than the correction.
+
+G5 terminated three times mid-verification, so I measured the tree myself. My command printed, among the `✳️brep` facet files:
+```
+  1695  ⚙️engine/🦀️component.rs
+```
+**I classified that as pre-existing without checking, and concluded the wave had moved nothing.** I then wrote that conclusion into this log as a finding. Checked properly: that file was **created at 15:54 today** and contains `GeometryHandle` (:76), `pub trait BrepKernel` (:129), `pub struct Brep` (:283), `pub trait SolidExporter` (:1482) — the entire migrated consumer contract, ~1,695 LOC. And 12+ consumer files across cad, process3d and flow-ext-brep now import `…subsets::brep::schema::engine`.
+
+**The evidence was in my own output and I read past it.** Two hours earlier I had recorded the opposite lesson — that when my fresh measurement contradicted an agent's older one, *mine* was the unreliable number (the cad 138/1 case). I then made the same error in the same direction, and this time published a false judgement of correct work rather than catching it. A number I did not seek out, sitting in output I skimmed for something else, is not evidence I have examined.
+
+## ✅ G5 (brep flip) — what actually landed
+
+- **~1,704 LOC of consumer contract migrated** into `✳️brep/🧬️schema/⚙️engine/`: `Brep`, `BrepKernel`, `GeometryHandle`, `GeometryKind`, `block_on`, `BrepError`, `BrepTopology`, `ClosestPoint`, `SolidExporter`/`SolidImporter` + 4 codec pairs.
+- **10 of 12 consumer files repointed** (cad ×5, process3d ×2, flow-ext-brep, os-flow's `📐️brep-geometry`, lowpoly).
+- `Vec3`/`Aabb`/`ParamDomain`/`MeshTransfer` stay in framework-3d as briefed — **plus `PointClassification`, a correction to my brief**: the compiler showed `boolean`/`classify` still use it directly.
+- `stdio → semio-framework-3d` edge landed (`stdio/Cargo.toml:25`).
+
+Verified: `semio-framework-3d` **413/0** · `semio-s-plugin-stdio` **2439/5** at its run (+9 migrated kernel tests; the 7 I later measured include 2 unrelated UCAS grammar failures that appeared afterwards) · cad **140/0/1** · process **158/0** · flow-ext-brep **18/0** · lowpoly 123/1 (failure traced to an untouched, differently-gated module). Test-sum 413+2439 = **2852**, above the 2843 floor — the 9 kernel tests are temporarily doubled by the open duplication window; nothing lost.
+
+### 🔑 The real blocker, found by the compiler rather than by design
+
+`semio-framework-os-kernel` — **framework-tier, can never depend on stdio** — defines an escape-hatch registry (`register_solid_exporter`/`register_solid_importer`) typed directly against framework-3d's `Brep`/`SolidExporter`. So deleting framework-3d's kernel, the naive reading of "the flip", breaks a crate that structurally cannot follow the code to stdio. The agent **restored framework-3d's kernel/host/engine to their exact original content** (which is why `📐️brep` still measures 17,910 LOC and 413/0 holds) and left the registry, `semio-framework-os`'s parallel one, and the registry-coupled `demonstrator` untouched. That surface is APA's escape-hatch territory per this ticket's own ownership table.
+
+**So the duplication window is open by design and cannot close until the escape-hatch registries are retired.** That is the true remaining gate on `📐️brep` — not the peel batches, which were never the hard part.
+
+**And it makes G2c's ruling final rather than provisional**: with `stdio → semio-framework-3d` real, the reverse edge is a hard cycle, so `📦️mesh-io`'s last DWG caller cannot repoint and `🔺️mesh`'s deletion rides on the same gate.
+
+## ✅ RESOLVED — the stdio 5→7 excursion closed itself; baseline is 5 again
+
+`semio-s-plugin-stdio --lib` → **2442 passed / 5 failed**, the original five. UCAS confirmed the two grammar failures were theirs, and by the time I re-checked, the 4-segment `format!("s.stdio.semio.{subset}")` construction was **gone** and the tests had been *renamed* (`every_semio_subset_has_a_registered_child_store_factory` → `every_composable_subset_dispatches_to_a_real_child_store`) — i.e. rewritten to ask the right question rather than patched to pass, which was the outcome I'd suggested was likelier correct. Both green when re-run.
+
+Worth keeping as a clean instance of the standing rule: **both my measurement and UCAS's were correct, ten minutes apart.** Neither was wrong; the tree changed underneath. The failure mode to avoid is not "measuring wrong", it is treating any measurement as a durable property of the repo.
+
+## 🌀️ Live foreign churn at hand-off: `NoTransient` re-pathing (NOT ours)
+
+`semio-s-plugin-cad --lib` currently fails to compile — 2× `E0425: cannot find type NoTransient / NoTransientMutation in crate semio_framework_plugin` at `🎛️apps/📐️cad/🦀️component.rs:928-929`. It was **140/0/1 an hour ago** and both of this ticket's cad waves verified green.
+
+Attributed, not assumed: the types **do** exist, at `crate::app::NoTransient` (`🔌️plugin/🦀️component.rs:4279` region) — so they are being *moved*, not deleted. **54 files across `✏️s/` reference them**, and the SDK file's mtime was `16:59:34` against a check at `17:03:14`. That is a repo-wide re-pathing landing right now, from the app-state-machine work (`NoTransient` is the `transient` member of the persistent/config/presence/transient state-class vocabulary — squarely #2553's territory, nothing to do with geometry or math).
+
+**Not fixed, not ours, and it will clear as that session finishes.** Recorded so the next session does not read a red cad as this ticket's regression.
+
+## ⚠️ stdio baseline moved 5 → 7 — foreign, evidenced, and reported to its owner (SUPERSEDED above)
+
+`semio-s-plugin-stdio --lib` is now **2439 passed / 7 failed**. The two new ones:
+```
+artifacts::semio::component::tests::every_semio_subset_has_a_registered_child_store_factory
+artifacts::semio::component::tests::a_registered_factory_mints_and_reopens_a_real_child_envelope
+```
+**Not a registration failure at all** — the panic is a grammar mismatch: the tests build `format!("s.stdio.semio.{subset}")` (four segments) while `ArtifactKindId::parse` now enforces three (`s.<plugin>.<artifact>`). It dies on `animation`, the *first* loop entry, so it never reaches any subset. `child_store_factory`/`register_child_store_factories` are UCAS's composition surface; that file's mtime is 16:39 today vs a 13:05 last commit. Reported to UCAS with the evidence and the observation that if the 3-segment grammar is intentional, those tests are probably *stale* rather than *broken* — the sibling test's `ArtifactDialect { artifact_kind, standard, subset }` suggests the subset already travels as its own field. Not fixed, not mine.
+
+**Gates from here diff against 7, not 5.**
+
 ## G2c — 22 of 23 sites closed. `🔺️mesh` now blocked on ONE call site, for a real reason.
 
 All 21 flow sites repointed (`🖍️drawing` 19, `🌉️wasm` 2) after adding the stdio dep to os-flow, plus the `🪐️space` and `🎥️shooting` residuals. `🎥️shooting` verified green (2/2 DWG tests).

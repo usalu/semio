@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.sourcing.curate.snapshot;
 
-// 🧬️ Curate snapshot schema — persistent fields only.
+// 🧬️ Curate snapshot schema — artifact-lane fields only.
 
 message TableSort {
   string column_id = 1;
@@ -63,14 +63,27 @@ message ObjectKind {
   GeometryRecipe geometry = 6;
 }
 
+// 🧩️ Sourcing-owned overflow half of ObjectKind not representable in the composed
+// s.stdio.semio.kit subset's SemioKitType (id/name/category only).
+message ObjectKindExtra {
+  string id = 1;
+  repeated string typology_path = 2;
+  uint32 availability = 3;
+  GeometryRecipe geometry = 4;
+}
+
+message ArtifactChildHandle { string child_id = 1; string target = 2; }
+
 message CuratedItem {
   string object_id = 1;
   uint32 count = 2;
 }
 
 message CurateSnapshot {
+  // @state artifact @child kind=s.stdio.semio.kit
+  ArtifactChildHandle catalog = 1;
   // @state artifact
-  repeated ObjectKind stock = 1;
+  repeated ObjectKindExtra stock_extra = 2;
   // @state artifact
-  repeated CuratedItem curated = 2;
+  repeated CuratedItem curated = 3;
 }

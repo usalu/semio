@@ -15,7 +15,7 @@ pub mod add_step {
     pub struct AddStep {}
 
     pub fn handle(_payload: &AddStep, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
-        let step_id = format!("step-{}", doc.snapshot.steps.len() + 1);
+        let step_id = format!("step-{}", doc.snapshot.steps().len() + 1);
         Ok(Emit::mutations(vec![add_step_operation(doc.snapshot, step_id)]))
     }
 }
@@ -91,28 +91,28 @@ mod tests {
     #[test]
     fn add_step_action_appends_step() {
         let mut app = playbook_app();
-        let before = app.snapshot().expect("projection").steps.len();
+        let before = app.snapshot().expect("projection").steps().len();
         dispatch(&mut app, PlaybookCommand::AddStep(AddStep {}));
-        assert_eq!(app.snapshot().expect("projection").steps.len(), before + 1);
+        assert_eq!(app.snapshot().expect("projection").steps().len(), before + 1);
     }
 
     #[test]
     fn remove_and_move_step_actions() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddStep(AddStep {}));
-        let last_step_id = app.snapshot().expect("projection").steps.last().unwrap().id.clone();
+        let last_step_id = app.snapshot().expect("projection").steps().last().unwrap().id.clone();
         dispatch(&mut app, PlaybookCommand::MoveStep(MoveStep { step_id: last_step_id.clone(), index: 0 }));
-        assert_eq!(app.snapshot().expect("projection").steps[0].id, last_step_id);
+        assert_eq!(app.snapshot().expect("projection").steps()[0].id, last_step_id);
         dispatch(&mut app, PlaybookCommand::RemoveStep(RemoveStep { step_id: last_step_id.clone() }));
-        assert!(app.snapshot().expect("projection").steps.iter().all(|step| step.id != last_step_id));
+        assert!(app.snapshot().expect("projection").steps().iter().all(|step| step.id != last_step_id));
     }
 
     #[test]
     fn remove_step_with_empty_id_is_a_no_op() {
         let mut app = playbook_app();
-        let before = app.snapshot().expect("projection").steps.len();
+        let before = app.snapshot().expect("projection").steps().len();
         dispatch(&mut app, PlaybookCommand::RemoveStep(RemoveStep { step_id: String::new() }));
-        assert_eq!(app.snapshot().expect("projection").steps.len(), before);
+        assert_eq!(app.snapshot().expect("projection").steps().len(), before);
     }
 
     #[test]

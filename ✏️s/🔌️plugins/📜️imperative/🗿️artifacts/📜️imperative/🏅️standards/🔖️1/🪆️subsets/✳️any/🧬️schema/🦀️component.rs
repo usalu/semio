@@ -5,7 +5,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full imperative artifact state across persistent, shared-ui, local-ui and effect classes.
+/// 🧬️ Full imperative artifact state across the artifact, presence, config and transient lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.imperative.imperative")]

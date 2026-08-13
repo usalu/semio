@@ -3169,6 +3169,8 @@ pub mod app {
                 type DraftMutation = NoDraftMutation;
                 type Presence = NoPresence;
                 type PresenceMutation = NoPresenceMutation;
+                type Transient = crate::app::NoTransient;
+                type TransientMutation = crate::app::NoTransientMutation;
                 type Command = DummyCommand;
 
                 fn initial_snapshot() -> DummySnapshot {
@@ -4064,6 +4066,21 @@ pub mod app {
         pub snapshot: &'a D,
     }
 
+    /// @emoji 👥️ Read-only view of the PRESENCE lane: this actor's own live shared state plus every
+    /// peer's, as last broadcast. Ephemeral and shared — never persisted, never undoable.
+    pub struct PresenceView<'a, P> {
+        /// 👤️ This actor's own presence — the value that gets broadcast.
+        pub local: &'a P,
+        /// 👥️ Every other peer's presence, sorted by actor id for a stable render order.
+        pub peers: Vec<(&'a str, &'a P)>,
+    }
+
+    /// @emoji 🫧️ Read-only view of the TRANSIENT lane: ephemeral state local to this client that is
+    /// never document content — the typed replacement for plugin `thread_local!` scratch state.
+    pub struct TransientView<'a, T> {
+        pub snapshot: &'a T,
+    }
+
     //#region 🔖️NoConfig
     /// @emoji 🧮️ Default `ArtifactApp::Config` for apps with no config artifact yet.
     #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -4258,6 +4275,107 @@ pub mod app {
         }
     }
     //#endregion 🔖️NoPresence
+
+    //#region 🔖️NoTransient
+    /// @emoji 🫧️ Default `ArtifactApp::Transient` for apps with no ephemeral local UI state yet.
+    ///
+    /// 🎯️ The FOURTH and last state mechanism. The four are exhaustive and mutually exclusive:
+    /// **artifact** = persisted + shared, **config** = persisted + local-only, **presence** =
+    /// ephemeral + shared, **transient** = ephemeral + local-only. Anything that used to live in a
+    /// plugin `thread_local!`, a process-local ephemeral box, or an untyped shell field belongs
+    /// here — typed, dispatched through `Emit`, and readable through `Lanes`, exactly like the other
+    /// three, rather than reachable from anywhere at any time.
+    ///
+    /// ⚠️ Transient is NOT the draft lane. A DRAFT is an ephemeral *artifact* — real document
+    /// content that simply has not been committed. TRANSIENT is UI state that is never document
+    /// content at all (which pane is focused, what is hovered, an in-flight gesture). They differ in
+    /// what the state IS, not in how long it lives.
+    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct NoTransient {}
+
+    impl store::ArtifactDsl for NoTransient {
+        const EXTENSION: &'static str = "notrans";
+        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+            if text.trim().is_empty() {
+                return Ok(Self::default());
+            }
+            Err(store::TextError::new("no transient", store::TextSpan::at(1, 1)))
+        }
+        fn print_dsl(&self) -> String {
+            String::new()
+        }
+    }
+
+    impl ArtifactPack for NoTransient {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+            Ok(Vec::new())
+        }
+        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            Ok(Self::default())
+        }
+    }
+
+    impl ::protocol::MutationDiff<NoTransient> for NoTransient {
+        fn apply(&self, base: &NoTransient) -> NoTransient {
+            base.clone()
+        }
+        fn absorb(&mut self, _other: Self) {}
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    #[serde(rename_all = "camelCase")]
+    pub enum NoTransientMutation {
+        Noop,
+    }
+
+    impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
+        type Diff = NoTransient;
+
+        fn diff(&self, _base: &NoTransient) -> NoTransient {
+            NoTransient::default()
+        }
+
+        fn inverse(&self, _base: &NoTransient) -> Vec<Self> {
+            vec![NoTransientMutation::Noop]
+        }
+    }
+
+    impl ::protocol::OpText for NoTransientMutation {
+        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            let variants = <Self as ::dsl::DslVariants>::variants();
+            for (keyword, spec_fn) in &variants {
+                let probe = format!("{keyword} ");
+                if line == keyword.as_str() || line.starts_with(&probe) {
+                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                }
+            }
+            Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        }
+        fn print_op(&self) -> String {
+            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
+            let variants = <Self as ::dsl::DslVariants>::variants();
+            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+            if body.is_empty() {
+                keyword
+            } else {
+                format!("{keyword} {body}")
+            }
+        }
+    }
+
+    impl ::protocol::OpBinary for NoTransientMutation {
+        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::encode_op(self)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::decode_op(bytes)
+        }
+    }
+    //#endregion 🔖️NoTransient
 
     //#region 🔖️CommandLog
     /// @emoji 🎚️ Tri-state operations filter of the framework history panel — `All` is the default.
@@ -4529,6 +4647,50 @@ pub mod app {
             Self { artifact_mutations: Vec::new(), config_mutations: Vec::new(), draft_mutations: Vec::new(), description: None, coalesce_key: None, effects: Vec::new(), events: Vec::new(), ui_scope: semio_framework::kernel::UiDirtyScope::default(), child_emits: Vec::new() }
         }
     }
+
+    //#region 🔖️EphemeralEmit
+    /// @emoji 👥️🫧️ The two EPHEMERAL lanes' emission, deliberately separate from {@link Emit}.
+    ///
+    /// 🎯️ Why not more fields on `Emit`: the document lanes (artifact/config/draft) all have an op
+    /// log, an edit id, an undo group and a failure mode; presence and transient have NONE of those.
+    /// They cannot fail, cannot be undone, never enter a checkpoint and never appear in the command
+    /// log. Folding them into `Emit` would put five type parameters on ~1000 signatures to express a
+    /// thing that shares none of `Emit`'s machinery — and would force every app that emits no
+    /// presence to name its presence type anyway.
+    ///
+    /// Apps opt in by overriding {@link ArtifactApp::ephemeral}; the default emits nothing, so an
+    /// app with no shareable or UI-local state writes no code at all.
+    #[derive(Debug)]
+    pub struct EphemeralEmit<A: ArtifactApp + ?Sized> {
+        /// 👥️ Ephemeral SHARED — broadcast to peers, never persisted.
+        pub presence: Vec<A::PresenceMutation>,
+        /// 🫧️ Ephemeral LOCAL-ONLY — never leaves this client.
+        pub transient: Vec<A::TransientMutation>,
+    }
+
+    impl<A: ArtifactApp + ?Sized> Default for EphemeralEmit<A> {
+        fn default() -> Self {
+            Self { presence: Vec::new(), transient: Vec::new() }
+        }
+    }
+
+    impl<A: ArtifactApp + ?Sized> EphemeralEmit<A> {
+        /// 👥️ Presence-only emission — the common case (a moved cursor, a changed selection).
+        pub fn presence(presence: Vec<A::PresenceMutation>) -> Self {
+            Self { presence, transient: Vec::new() }
+        }
+
+        /// 🫧️ Transient-only emission — the common case (a hover, an in-flight gesture).
+        pub fn transient(transient: Vec<A::TransientMutation>) -> Self {
+            Self { presence: Vec::new(), transient }
+        }
+
+        /// 🈳️ Whether this emission touches neither ephemeral lane.
+        pub fn is_empty(&self) -> bool {
+            self.presence.is_empty() && self.transient.is_empty()
+        }
+    }
+    //#endregion 🔖️EphemeralEmit
 
     /// 🧩️ One composed child's share of an `Emit` — the plugin-layer twin of `store::ChildDispatch`,
     /// minted exclusively by `ChildEmit::of` so a plugin author never hand-encodes an op or
@@ -5114,6 +5276,23 @@ pub mod app {
         type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
         /// @emoji 👥️ Presence-lane operations applied to the app's typed presence snapshot.
         type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+        /// @emoji 🫧️ Ephemeral LOCAL-ONLY UI state — use {@link NoTransient} when the app has none.
+        /// The fourth and last state mechanism; see `NoTransient`'s doc for how it differs from a
+        /// draft (which is ephemeral *artifact* content, not UI state).
+        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
+        /// @emoji 🫧️ Transient-lane operations applied to {@link store::TransientStore}.
+        type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+
+        /// @emoji 👥️🫧️ The two EPHEMERAL lanes this command touches — presence (shared) and
+        /// transient (local-only UI). Separate from `handle` because neither lane has an op log, an
+        /// undo group, or a failure mode: they are applied unconditionally and cannot fail, so
+        /// folding them into `handle`'s `Result<Emit, Fault>` would misrepresent them.
+        ///
+        /// Defaults to emitting nothing, so an app with no shareable or UI-local state writes no
+        /// code. Called on every dispatched command, right before `handle`.
+        fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
+            EphemeralEmit::default()
+        }
         /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
         /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
         /// `handle_typed_command` trio. Decoded off the wire once, by `VcsArtifactApp::dispatch_typed_command`,
@@ -5777,6 +5956,14 @@ pub mod app {
         /// @emoji 📝️ Volatile draft lane — never checkpoints; prune via `ArtifactCommand::PruneDrafts`.
         /// Moves to host `ArtifactSession` when CHANNEL_VERSION 5 exchange lands.
         draft_store: store::DraftStore<A::Draft, A::DraftMutation>,
+        /// @emoji 👥️ Ephemeral SHARED lane — a last-writer-wins peer roster, not an event log. Holds
+        /// this actor's own presence plus whatever peers last broadcast; never persisted, never
+        /// checkpointed, never undoable.
+        pub(crate) presence_store: store::PresenceStore<A::Presence, A::PresenceMutation>,
+        /// @emoji 🫧️ Ephemeral LOCAL-ONLY lane — typed UI state that never leaves this client and
+        /// never becomes document content. The typed home for what used to live in plugin
+        /// `thread_local!`s.
+        pub(crate) transient_store: store::TransientStore<A::Transient, A::TransientMutation>,
         /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
         last_emit_wire: Option<(Vec<u8>, Vec<u8>, Vec<u8>)>,
         /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
@@ -5866,6 +6053,8 @@ pub mod app {
                 store,
                 config_store,
                 draft_store,
+                presence_store: store::PresenceStore::new(A::Presence::default()),
+                transient_store: store::TransientStore::new(A::Transient::default()),
                 last_emit_wire: None,
                 cache: None,
                 registry,
@@ -6952,17 +7141,27 @@ pub mod app {
         fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.refresh_cache()?;
             let draft_snapshot = self.draft_store.snapshot().map_err(|error| error.into_fault())?;
-                let (verb, emit) = {
-                let VcsArtifactApp { app, cache, children, .. } = self;
+                let (verb, emit, ephemeral) = {
+                let VcsArtifactApp { app, cache, children, presence_store, transient_store, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                 let cfg = ConfigView { snapshot: config };
                 let draft = DraftView { snapshot: &draft_snapshot };
+                let presence = PresenceView { local: presence_store.local(), peers: presence_store.peers() };
+                let transient = TransientView { snapshot: transient_store.current() };
                 let engines = EngineHandles::empty();
                 let verb = A::command_id(&command).to_string();
+                // 👥️🫧️ The ephemeral lanes are computed BEFORE `handle` so they still see the
+                // pre-command state, and they are computed unconditionally: a command that fails
+                // still moved the cursor that provoked it.
+                let ephemeral = A::ephemeral(&command, &doc, &cfg, &presence, &transient);
                 let emit = A::handle(&command, &doc, &cfg, &draft, &engines)?;
-                (verb, emit)
+                (verb, emit, ephemeral)
             };
+            // 👥️🫧️ Applied outside the borrow above, and never through `dispatch_emit`: neither lane
+            // has an op log, an edit id, an undo group or a command-log row.
+            self.presence_store.apply(&ephemeral.presence);
+            self.transient_store.apply(&ephemeral.transient);
             // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
             // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
             // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
@@ -9029,10 +9228,24 @@ pub mod plugin_runtime {
             type DraftMutation = NoDraftMutation;
             type Presence = NoPresence;
             type PresenceMutation = NoPresenceMutation;
+            type Transient = crate::app::NoTransient;
+            type TransientMutation = crate::app::NoTransientMutation;
             type Command = TestCommand;
 
             fn initial_snapshot() -> TestSnapshot {
                 TestSnapshot::default()
+            }
+
+            /// 👥️🫧️ Emits into BOTH ephemeral lanes on `increment`, so the dispatch path that
+            /// reaches `presence_store`/`transient_store` is actually exercised rather than merely
+            /// compiled. `Noop` is a real mutation of the `No*` lane types — it changes no content
+            /// but does bump each store's generation, which is exactly the signal the host
+            /// broadcasts (presence) and re-renders (transient) on.
+            fn ephemeral(command: &TestCommand, _doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _presence: &crate::app::PresenceView<'_, NoPresence>, _transient: &crate::app::TransientView<'_, crate::app::NoTransient>) -> crate::app::EphemeralEmit<Self> {
+                match command {
+                    TestCommand::Increment => crate::app::EphemeralEmit { presence: vec![NoPresenceMutation::Noop], transient: vec![crate::app::NoTransientMutation::Noop] },
+                    _ => crate::app::EphemeralEmit::default(),
+                }
             }
 
             fn command_id(command: &TestCommand) -> &'static str {
@@ -9219,6 +9432,39 @@ pub mod plugin_runtime {
             assert_eq!(result.inverse_group.mutations.len(), 1);
             assert_eq!(app.test_snapshot().count, 1);
         }
+
+        //#region 🔖️EphemeralLaneTests
+        #[test]
+        fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            assert_eq!(app.presence_store.generation(), 0);
+            assert_eq!(app.transient_store.generation(), 0);
+
+            app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
+
+            assert_eq!(app.presence_store.generation(), 1, "presence lane never received the command's emission");
+            assert_eq!(app.transient_store.generation(), 1, "transient lane never received the command's emission");
+
+            // 🧾️ Neither ephemeral lane may appear in history: they have no edits, no undo, and no
+            // command-log rows of their own — the document's single edit is the only thing recorded.
+            assert_eq!(app.test_store().envelope().vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
+
+            // ↩️ Undo rolls back the DOCUMENT; the ephemeral lanes are not restored, because they
+            // were never part of the undoable gesture in the first place.
+            app.dispatch_action("undo", None, &meta()).expect("undo");
+            assert_eq!(app.test_snapshot().count, 0);
+            assert_eq!(app.presence_store.generation(), 1, "undo must not rewind presence");
+            assert_eq!(app.transient_store.generation(), 1, "undo must not rewind transient");
+        }
+
+        #[test]
+        fn a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched() {
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta()).expect("set label");
+            assert_eq!(app.presence_store.generation(), 0);
+            assert_eq!(app.transient_store.generation(), 0);
+        }
+        //#endregion 🔖️EphemeralLaneTests
 
         //#region 🔖️CompositionTests
         /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, boxed as `Box<dyn
@@ -11073,6 +11319,8 @@ pub use app::{
     node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactBuilder, ArtifactDecomposer, ArtifactAnalyzer, ArtifactComposer, ArtifactAnalysis, ArtifactChildren, ArtifactComposition, ArtifactInferrer, ArtifactSerializer, ArtifactDeserializer, DerivedArtifactSpec, DerivedArtifactParts, DerivedArtifactBuilder, DerivedArtifactAnalyzer, DerivedArtifactComposer, composer_entry_of, deserializer_entry_of, serializer_entry_of, ArtifactKindSpec, Confidence, Decomposition, DecomposeSource, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, ExampleSource, HistoryView,
     KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoChildren, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBuilder, PluginProgram, VcsArtifactApp,
     WindowKindSpec, ArtifactDeclaration,
+    // 🧸️👥️🫧️ Composition child-read seam plus the two ephemeral state lanes.
+    ChildContentView, EphemeralEmit, NoTransient, NoTransientMutation, PresenceView, TransientView,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};

@@ -1,4 +1,4 @@
-# 🧬️ Procedural3d snapshot schema — persistent fields only.
+# 🧬️ Procedural3d snapshot schema — artifact-lane fields only.
 
 type Procedural3dSnapshot {
   fixture: FlowFixture! @state(class: ARTIFACT)

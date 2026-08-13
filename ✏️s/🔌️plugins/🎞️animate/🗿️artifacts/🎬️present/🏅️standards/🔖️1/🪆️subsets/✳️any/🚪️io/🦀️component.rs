@@ -248,11 +248,9 @@ pub fn animate_present_document_json_from_dwg(drawing: &semio_s_plugin_stdio::ar
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
     let frame = crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
-    let deck = crate::artifacts::present::PresentSnapshot {
-        schema: crate::artifacts::present::PRESENT_DOCUMENT_SCHEMA.into(),
-        source: crate::artifacts::present::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None },
-        tiles: vec![crate::artifacts::present::FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }],
-    };
+    let source = crate::artifacts::present::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None };
+    let tiles = vec![crate::artifacts::present::FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }];
+    let deck = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);
     serde_json::to_value(&deck).map_err(|error| error.to_string())
 }
 
@@ -289,9 +287,10 @@ mod tests {
         let document = animate_present_document_json_from_dwg(&drawing).expect("from_dwg");
         let deck: crate::artifacts::present::PresentSnapshot = serde_json::from_value(document).expect("deck");
         assert_eq!(deck.schema, crate::artifacts::present::PRESENT_DOCUMENT_SCHEMA);
-        assert_eq!(deck.tiles.len(), 1);
-        assert_eq!(deck.tiles[0].name, "Imported Drawing");
-        assert!(deck.source.src.starts_with("data:image/png;base64,"));
+        let (source, tiles) = crate::artifacts::present::present_working_scene(&deck);
+        assert_eq!(tiles.len(), 1);
+        assert_eq!(tiles[0].name, "Imported Drawing");
+        assert!(source.src.starts_with("data:image/png;base64,"));
     }
 
     #[test]
@@ -299,7 +298,8 @@ mod tests {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = animate_present_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
         let deck: crate::artifacts::present::PresentSnapshot = serde_json::from_value(document).expect("deck");
-        assert_eq!(deck.tiles.len(), 1);
+        let (_, tiles) = crate::artifacts::present::present_working_scene(&deck);
+        assert_eq!(tiles.len(), 1);
     }
 }
 //#endregion 🔖️MediaCodec

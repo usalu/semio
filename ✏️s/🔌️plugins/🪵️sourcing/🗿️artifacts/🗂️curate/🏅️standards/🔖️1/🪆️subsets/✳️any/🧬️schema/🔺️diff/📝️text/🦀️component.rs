@@ -1,10 +1,10 @@
 //! 🔺️ Sourcing curate artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::curate::schema::diff::{
-    CurateCuratedDelta, CurateCuratedPatchEntry, CurateDiff, CurateObjectKindPatchEntry, CurateStockDelta,
+    CurateCuratedDelta, CurateCuratedPatchEntry, CurateDiff, CurateObjectKindExtraPatchEntry, CurateStockExtraDelta,
 };
 use crate::artifacts::curate::schema::CurateArtifact;
-use crate::artifacts::curate::{CuratedItem, CurateSnapshot, ObjectKind};
+use crate::artifacts::curate::{CuratedItem, CurateSnapshot, ObjectKindExtra};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -17,25 +17,25 @@ use crate::artifacts::curate::schema::diff::*;
 
 
 //#region 🔖️Apply
-pub fn apply_stock_delta(stock: &[ObjectKind], delta: &CurateStockDelta) -> Vec<ObjectKind> {
-    let mut by_id: std::collections::BTreeMap<String, ObjectKind> =
-        stock.iter().map(|kind| (kind.id.clone(), kind.clone())).collect();
+pub fn apply_stock_extra_delta(stock_extra: &[ObjectKindExtra], delta: &CurateStockExtraDelta) -> Vec<ObjectKindExtra> {
+    let mut by_id: std::collections::BTreeMap<String, ObjectKindExtra> =
+        stock_extra.iter().map(|extra| (extra.id.clone(), extra.clone())).collect();
     for id in &delta.removed {
         by_id.remove(id);
     }
-    for kind in &delta.added {
-        by_id.insert(kind.id.clone(), kind.clone());
+    for extra in &delta.added {
+        by_id.insert(extra.id.clone(), extra.clone());
     }
     for entry in &delta.patched {
         if by_id.contains_key(&entry.id) {
-            by_id.insert(entry.id.clone(), entry.kind.clone());
+            by_id.insert(entry.id.clone(), entry.extra.clone());
         }
     }
     if let Some(order) = &delta.reordered {
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
-            if let Some(kind) = by_id.remove(id) {
-                ordered.push(kind);
+            if let Some(extra) = by_id.remove(id) {
+                ordered.push(extra);
             }
         }
         ordered.extend(by_id.into_values());
@@ -80,8 +80,11 @@ impl CurateDiff {
             return (**replacement).clone();
         }
         let mut next = artifact.clone();
-        if let Some(delta) = &self.stock {
-            next.stock = apply_stock_delta(&next.stock, delta);
+        if let Some(handle) = &self.catalog {
+            next.catalog = handle.clone();
+        }
+        if let Some(delta) = &self.stock_extra {
+            next.stock_extra = apply_stock_extra_delta(&next.stock_extra, delta);
         }
         if let Some(delta) = &self.curated {
             next.curated = apply_curated_delta(&next.curated, delta);
@@ -116,8 +119,11 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
             return replacement.to_snapshot();
         }
         let mut next = snapshot.clone();
-        if let Some(delta) = &self.stock {
-            next.stock = apply_stock_delta(&next.stock, delta);
+        if let Some(handle) = &self.catalog {
+            next.catalog = handle.clone();
+        }
+        if let Some(delta) = &self.stock_extra {
+            next.stock_extra = apply_stock_extra_delta(&next.stock_extra, delta);
         }
         if let Some(delta) = &self.curated {
             next.curated = apply_curated_delta(&next.curated, delta);
@@ -137,11 +143,12 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
                 }
             };
         }
+        take!(catalog);
         take!(filters);
         take!(selected_object_id);
         take!(locale);
         take!(contributions_json);
-        match (&mut self.stock, other.stock) {
+        match (&mut self.stock_extra, other.stock_extra) {
             (Some(dst), Some(src)) => {
                 dst.added.extend(src.added);
                 dst.removed.extend(src.removed);
@@ -150,7 +157,7 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
                     dst.reordered = src.reordered;
                 }
             }
-            (None, Some(src)) => self.stock = Some(src),
+            (None, Some(src)) => self.stock_extra = Some(src),
             _ => {}
         }
         match (&mut self.curated, other.curated) {
@@ -181,7 +188,7 @@ mod tests {
     #[test]
     fn diff_set_snapshot_carries_whole_replacement() {
         let base = CurateSnapshot::default();
-        let next = CurateSnapshot { stock: vec![], curated: vec![] };
+        let next = CurateSnapshot::default();
         let diff = diff_set_snapshot(&next);
         assert_eq!(diff.apply(&base), next);
     }
@@ -189,11 +196,7 @@ mod tests {
     #[test]
     fn absorb_keeps_later_artifact_replacement() {
         let mut first = CurateDiff {
-            artifact: Some(Box::new(CurateArtifact {
-                stock: vec![],
-                curated: vec![],
-                ..Default::default()
-            })),
+            artifact: Some(Box::new(CurateArtifact::default())),
             ..Default::default()
         };
         let second = CurateDiff::default();

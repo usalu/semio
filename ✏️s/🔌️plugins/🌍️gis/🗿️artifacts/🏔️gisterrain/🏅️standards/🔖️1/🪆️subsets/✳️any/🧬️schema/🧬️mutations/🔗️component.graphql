@@ -1,4 +1,4 @@
-# 🧬️ GIS terrain mutation schema — persistent fields only.
+# 🧬️ GIS terrain mutation schema — artifact-lane fields only.
 
 type GisTerrainMutation {
   exaggeration: Float! @state(class: ARTIFACT)

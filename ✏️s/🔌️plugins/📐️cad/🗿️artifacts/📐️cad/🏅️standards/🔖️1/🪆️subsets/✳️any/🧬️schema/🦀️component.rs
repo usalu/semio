@@ -55,7 +55,7 @@ impl Default for CadDislocateOptions {
 //#endregion 🔖️ArtifactHelpers
 
 //#region 🔖️Artifact
-/// 🧬️ Full cad artifact state across persistent, shared-ui, local-ui and preview classes.
+/// 🧬️ Full cad artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad")]

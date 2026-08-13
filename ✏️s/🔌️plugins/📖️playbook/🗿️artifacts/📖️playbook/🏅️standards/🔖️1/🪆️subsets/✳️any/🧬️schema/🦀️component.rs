@@ -1,11 +1,11 @@
 //! 🧬️ Playbook artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::playbook::{PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
+use crate::artifacts::playbook::{PlaybookDocumentChild, PlaybookFlowChild, PLAYBOOK_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full playbook artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full playbook artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.playbook.playbook")]
@@ -19,7 +19,11 @@ pub struct PlaybookArtifact {
     #[state(artifact)]
     pub title: Option<String>,
     #[state(artifact)]
-    pub steps: Vec<PlaybookStep>,
+    #[child(kind = "s.stdio.semio.document")]
+    pub document: PlaybookDocumentChild,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.flow")]
+    pub flow: PlaybookFlowChild,
     #[state(presence)]
     pub selected_ids: Vec<String>,
     #[state(config)]
@@ -32,17 +36,14 @@ pub struct PlaybookArtifact {
 //#region 🔖️Conversions
 impl Default for PlaybookArtifact {
     fn default() -> Self {
+        let snapshot = crate::artifacts::playbook::PlaybookSnapshot::default();
         Self {
             schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
             id: "playbook".into(),
             version: "1".into(),
             title: None,
-            steps: vec![crate::artifacts::playbook::PlaybookStep {
-                id: "s".into(),
-                title: "Steps".into(),
-                description: None,
-                blocks: Vec::new(),
-            }],
+            document: snapshot.document,
+            flow: snapshot.flow,
             selected_ids: Vec::new(),
             locale: "en-US".into(),
             contributions_json: "[]".into(),
@@ -58,7 +59,8 @@ impl PlaybookArtifact {
             id: self.id.clone(),
             version: self.version.clone(),
             title: self.title.clone(),
-            steps: self.steps.clone(),
+            document: self.document.clone(),
+            flow: self.flow.clone(),
         }
     }
 
@@ -69,7 +71,8 @@ impl PlaybookArtifact {
             id: snapshot.id,
             version: snapshot.version,
             title: snapshot.title,
-            steps: snapshot.steps,
+            document: snapshot.document,
+            flow: snapshot.flow,
             ..Self::default()
         }
     }
@@ -80,7 +83,8 @@ impl PlaybookArtifact {
         self.id = snapshot.id;
         self.version = snapshot.version;
         self.title = snapshot.title;
-        self.steps = snapshot.steps;
+        self.document = snapshot.document;
+        self.flow = snapshot.flow;
     }
 }
 //#endregion 🔖️Conversions

@@ -18,12 +18,13 @@ pub struct CurateEntries {
     pub total_count: u32,
 }
 
-/// 🗃️ `stockCount` = `stock.len()`; `entryCount` = `curated.len()`; `totalCount` = sum of every
-/// curated line's `count` — real derived quantities over the only two persistent lists this
-/// document has.
+/// 🗃️ `stockCount` = `stock_extra.len()` (one entry per stock kind, 1:1 with the composed catalog's
+/// `types` — reading the sourcing-owned overflow list directly avoids resolving the composed child
+/// just to count it); `entryCount` = `curated.len()`; `totalCount` = sum of every curated line's
+/// `count`.
 pub fn compute_curate_entries(snapshot: &CurateSnapshot) -> CurateEntries {
     CurateEntries {
-        stock_count: snapshot.stock.len() as u32,
+        stock_count: snapshot.stock_extra.len() as u32,
         entry_count: snapshot.curated.len() as u32,
         total_count: snapshot.curated.iter().map(|item| item.count).sum(),
     }
@@ -48,10 +49,10 @@ mod tests {
 
     #[test]
     fn stock_and_curated_lines_are_counted_exactly() {
-        let snapshot = CurateSnapshot {
-            stock: vec![object_kind("a"), object_kind("b"), object_kind("c")],
-            curated: vec![CuratedItem { object_id: "a".into(), count: 5 }, CuratedItem { object_id: "b".into(), count: 3 }],
-        };
+        let snapshot = crate::artifacts::curate::curate_snapshot_from_stock(
+            vec![object_kind("a"), object_kind("b"), object_kind("c")],
+            vec![CuratedItem { object_id: "a".into(), count: 5 }, CuratedItem { object_id: "b".into(), count: 3 }],
+        );
         let entries = compute_curate_entries(&snapshot);
         assert_eq!(entries.stock_count, 3);
         assert_eq!(entries.entry_count, 2);
@@ -60,7 +61,7 @@ mod tests {
 
     #[test]
     fn entries_is_deterministic() {
-        let snapshot = CurateSnapshot { stock: Vec::new(), curated: vec![CuratedItem { object_id: "a".into(), count: 1 }] };
+        let snapshot = crate::artifacts::curate::curate_snapshot_from_stock(Vec::new(), vec![CuratedItem { object_id: "a".into(), count: 1 }]);
         assert_eq!(compute_curate_entries(&snapshot), compute_curate_entries(&snapshot));
     }
 }

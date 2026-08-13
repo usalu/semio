@@ -62,10 +62,10 @@ mod tests {
     /// mutations have a real target, and `beam-kvh-c24` left uncurated so `create` has a real
     /// not-yet-existing target — mirrors `din16798`'s `sample_snapshot()` fixture shape.
     fn sample_snapshot() -> CurateSnapshot {
-        CurateSnapshot {
-            stock: crate::artifacts::curate::schema::sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(),
-            curated: vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 2 }],
-        }
+        crate::artifacts::curate::curate_snapshot_from_stock(
+            crate::artifacts::curate::schema::demo_stock(),
+            vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 2 }],
+        )
     }
 
     /// ⚖️ One value per `SourcingMutation` variant — the closed set the semantics/round-trip tests

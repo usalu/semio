@@ -43,7 +43,7 @@ mod tests {
     #[test]
     fn facade_generator_example_matches_the_handcrafted_spec() {
         let document = parse_dsl(FACADE_GENERATOR_EXAMPLE_TEXT).expect("parse example");
-        assert!(!document.steps.is_empty());
+        assert!(!document.steps().is_empty());
         assert_eq!(print_dsl(&document).trim_end(), FACADE_GENERATOR_EXAMPLE_TEXT.trim_end());
     }
 

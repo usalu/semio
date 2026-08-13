@@ -42,10 +42,10 @@ mod tests {
 
     #[test]
     fn curate_document_text_round_trips_through_a_vcs_store() {
-        let document = CurateSnapshot { stock: crate::artifacts::curate::schema::sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() };
+        let document = crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new());
         let envelope = store::create_document_envelope(crate::artifacts::curate::SOURCING_CURATE_SCHEMA, "sourcing-curate-test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope);
-        let object_id = doc_store.snapshot().expect("snapshot").stock[0].id.clone();
+        let object_id = crate::artifacts::curate::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
         let mutation = crate::artifacts::curate::schema::mutations::create_curated_item(crate::artifacts::curate::CuratedItem { object_id, count: 3 });
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);

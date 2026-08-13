@@ -8,7 +8,7 @@ use crate::artifacts::iso16757::CatalogueValue;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full Iso16757 artifact state across persistent and shared-ui classes.
+/// 🧬️ Full Iso16757 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.iso16757")]

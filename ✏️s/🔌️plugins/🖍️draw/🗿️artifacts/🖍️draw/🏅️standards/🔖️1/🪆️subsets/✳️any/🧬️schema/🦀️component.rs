@@ -13,7 +13,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 //#region 🔖️Artifact
-/// 🧬️ Full draw artifact state across persistent, shared-ui, local-ui and preview classes.
+/// 🧬️ Full draw artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.draw.draw")]

@@ -1,11 +1,13 @@
 //! 🧬️ EnergyModel artifact — closed semantic mutation dispatch enum (constitutional: op).
 //!
-//! Derived from `EnergyModelSnapshot`'s shape per `📓️derivation-rules.md`: the snapshot has only
-//! two persistent fields, `schema` (fixed infrastructure, always `ENERGY_MODEL_DOCUMENT_SCHEMA`,
-//! never targeted by a mutation) and `model_json` (the opaque serialized `crate::model::Model`
-//! body — the document's entire substantive content). Rule 6's "big but targeted change on one
-//! field" clause applies: `♻️replace-model` swaps `model_json` alone, leaving `schema` untouched —
-//! narrower than the banned whole-snapshot `SetSnapshot`. `NoMutation` is gone outright (a
+//! Derived from `EnergyModelSnapshot`'s shape per `📓️derivation-rules.md`: `schema` is fixed
+//! infrastructure (always `ENERGY_MODEL_DOCUMENT_SCHEMA`, never targeted by a mutation);
+//! `structure`/`zones` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: composed `s.stdio.
+//! semio.value`/`table` children, replacing the old opaque `model_json` field) are the document's
+//! entire substantive content, always regenerated TOGETHER from the same `crate::model::Model`.
+//! Rule 6's "big but targeted change on one field" clause applies: `♻️replace-model` swaps
+//! `structure`+`zones` together (still narrower than the banned whole-snapshot `SetSnapshot`,
+//! which would also replace `schema`/`referencedModel`). `NoMutation` is gone outright (a
 //! mutation with nothing to undo returns `Vec::new()` from `MutationKind::inverse`); `SetSnapshot`
 //! is gone with NO replacement — file-open/import/load-example now goes through
 //! `store::ArtifactStore::reset`, entirely outside this enum.
@@ -23,7 +25,7 @@ use super::replace_model;
 
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the energy-model document, derived per
-/// `📓️derivation-rules.md` from `EnergyModelSnapshot`'s two-field opaque-body shape.
+/// `📓️derivation-rules.md` from `EnergyModelSnapshot`'s composed `structure`/`zones` shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = EnergyModelSnapshot, diff = EnergyModelDiff, schema = "energy.model")]
@@ -36,21 +38,32 @@ pub enum EnergyModelMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::MutationDiff;
     use protocol::SemanticMutation;
     use protocol::Mutation;
 
+    /// 🧾️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `new_model_json` must be a FULL,
+    /// validly-shaped `Model` — `structure`/`zones` are minted by decoding it into a real typed
+    /// `Model` (falling back to `Model::default()` on parse failure, see the triad's own `diff`
+    /// doc comment), so a partial JSON literal like the pre-migration `{"a":1}` would silently
+    /// collapse to the SAME default model for every payload, making round-trip/absorb assertions
+    /// meaningless. `Model` derives `Default`, so every field is always present in its own
+    /// `serde_json` output.
+    fn demo_model_json(name: &str) -> String {
+        serde_json::to_string(&crate::model::Model { name: name.into(), ..crate::model::Model::default() }).expect("Model serializes")
+    }
+
     fn every_mutation() -> Vec<EnergyModelMutation> {
         vec![EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel {
-            new_model_json: r#"{"name":"demo","zones":[]}"#.to_string(),
+            new_model_json: demo_model_json("demo"),
         })]
     }
 
     fn round_trip(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) -> EnergyModelSnapshot {
-        let mut forward = base.clone();
-        forward.model_json = mutation.diff(base).model_json.unwrap_or(base.model_json.clone());
+        let forward = mutation.diff(base).apply(base);
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored.model_json = back.diff(&restored).model_json.unwrap_or(restored.model_json.clone());
+            restored = back.diff(&restored).apply(&restored);
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -77,10 +90,10 @@ mod tests {
     #[test]
     fn replace_model_satisfies_the_inverse_and_absorb_laws() {
         let base = EnergyModelSnapshot::default();
-        let mutation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: r#"{"a":1}"#.to_string() });
+        let mutation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("a") });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base);
-        let d2 = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: r#"{"b":2}"#.to_string() }).diff(&base);
+        let d2 = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("b") }).diff(&base);
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

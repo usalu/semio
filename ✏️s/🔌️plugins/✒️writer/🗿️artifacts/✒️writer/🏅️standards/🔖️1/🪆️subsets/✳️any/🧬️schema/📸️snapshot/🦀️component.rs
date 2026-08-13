@@ -1,4 +1,4 @@
-//! 🧬️ Writer snapshot schema — persistent fields only.
+//! 🧬️ Writer snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::writer::{document_child_handle_and_cache, WriterDocumentChild, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;

@@ -39,7 +39,7 @@ mod tests {
     fn set_selection_reflects_in_the_builder_render() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(crate::apps::playbook::commands::block::add_block::AddBlock { kind: "text".into(), step_id: None }));
-        let block_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
+        let block_id = app.snapshot().expect("projection").steps()[0].blocks[0].id.clone();
         dispatch(&mut app, PlaybookCommand::SetSelection(set_selection::SetSelection { ids: vec![block_id.clone()] }));
         let json = render(&mut app, PLAYBOOK_PLAY_BODY_BUILDER);
         assert!(json.contains(&format!(r#""selectedId":"{block_id}""#)));

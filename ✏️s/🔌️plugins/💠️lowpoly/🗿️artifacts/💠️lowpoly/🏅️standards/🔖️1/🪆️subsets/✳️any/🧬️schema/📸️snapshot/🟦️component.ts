@@ -1,4 +1,4 @@
-/** 🧬️ Lowpoly snapshot schema — persistent fields only. */
+/** 🧬️ Lowpoly snapshot schema — artifact-lane fields only. */
 
 export interface LowpolySnapshot {
   /** @state artifact */

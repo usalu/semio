@@ -8,7 +8,7 @@ use crate::artifacts::program::ProgramSnapshot;
 use graph::{orient_endpoints, Undirected};
 
 //#region 🔖️Artifact
-/// 🧬️ Full program artifact state across persistent, shared-ui, local-ui and preview classes.
+/// 🧬️ Full program artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.architect.program")]

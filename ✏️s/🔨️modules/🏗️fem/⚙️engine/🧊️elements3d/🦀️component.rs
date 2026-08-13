@@ -4,7 +4,7 @@
 
 use crate::formulation::{b_matrix_plane, d_matrix_plane_stress, gauss_tri, jacobian_2d, shape_tri3};
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, ShellState, SolidStress};
-use math::algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
+use crate::algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
 
 // #region 🔖️Bar3
 /// 🪵️ Two-node 3D axial truss element — carries only translational DOFs, stiffness `k = EA/L`

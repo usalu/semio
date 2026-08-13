@@ -1,8 +1,8 @@
 //! 🔺️ Animate present artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::present::schema::PresentArtifact;
-use crate::artifacts::present::{FigureTileDraft, PresentSnapshot};
-use protocol::{MutationDiff, Patchable};
+use crate::artifacts::present::PresentSnapshot;
+use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -12,70 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::present::schema::diff::*;
 
-
 //#region 🔖️Apply
-pub fn apply_tiles_delta(items: &[FigureTileDraft], delta: &PresentTilesDelta) -> Vec<FigureTileDraft> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &PresentTilePatchEntry| {
-        (&entry.id, &entry.patch)
-    })
-}
-
-fn apply_identified_delta<T, P, E, F>(
-    items: &[T],
-    removed: &[String],
-    added: &[T],
-    patched: &[E],
-    reordered: Option<&Vec<String>>,
-    entry_parts: F,
-) -> Vec<T>
-where
-    T: Clone + protocol::Identified<String> + Patchable<P>,
-    P: Clone,
-    F: Fn(&E) -> (&String, &P),
-{
-    let mut next = items.to_vec();
-    for id in removed {
-        next.retain(|item| item.id() != id);
-    }
-    for item in added {
-        next.push(item.clone());
-    }
-    for entry in patched {
-        let (id, patch) = entry_parts(entry);
-        if let Some(item) = next.iter_mut().find(|item| item.id() == id) {
-            item.apply_patch(patch);
-        }
-    }
-    if let Some(order) = reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|item| (item.id().clone(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
-fn absorb_tiles_delta(target: &mut Option<PresentTilesDelta>, incoming: Option<PresentTilesDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                if src.reordered.is_some() {
-                    dst.reordered = src.reordered;
-                }
-            }
-            None => *target = Some(src),
-        }
-    }
-}
-
 impl PresentDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &PresentArtifact) -> PresentArtifact {
@@ -86,11 +23,8 @@ impl PresentDiff {
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
-        if let Some(source) = &self.source {
-            next.source = source.clone();
-        }
-        if let Some(delta) = &self.tiles {
-            next.tiles = apply_tiles_delta(&next.tiles, delta);
+        if let Some(presentation) = &self.presentation {
+            next.presentation = presentation.clone();
         }
         if let Some(list) = &self.selected_ids {
             next.selected_ids = list.values.clone();
@@ -114,11 +48,8 @@ impl MutationDiff<PresentSnapshot> for PresentDiff {
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
-        if let Some(source) = &self.source {
-            next.source = source.clone();
-        }
-        if let Some(delta) = &self.tiles {
-            next.tiles = apply_tiles_delta(&next.tiles, delta);
+        if let Some(presentation) = &self.presentation {
+            next.presentation = presentation.clone();
         }
         next
     }
@@ -128,7 +59,6 @@ impl MutationDiff<PresentSnapshot> for PresentDiff {
             *self = other;
             return;
         }
-        absorb_tiles_delta(&mut self.tiles, other.tiles);
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -137,7 +67,7 @@ impl MutationDiff<PresentSnapshot> for PresentDiff {
             };
         }
         take!(schema);
-        take!(source);
+        take!(presentation);
         take!(selected_ids);
         take!(engagement_input);
         take!(locale);
@@ -146,12 +76,12 @@ impl MutationDiff<PresentSnapshot> for PresentDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub fn tiles_delta_from_set_tiles(base: &[FigureTileDraft], tiles: &[FigureTileDraft]) -> PresentTilesDelta {
-    PresentTilesDelta {
-        removed: base.iter().map(|t| t.id.clone()).collect(),
-        added: tiles.to_vec(),
-        ..Default::default()
-    }
+/// 🔺️ Mints a new content-addressed `presentation` handle for a whole `(source, tiles)`
+/// replacement and seeds the working-scene cache with it (`presentation_child_handle_and_cache`) —
+/// real handcrafted construction, never apply-then-capture, never a snapshot clone. The standard
+/// builder every mutation triad in this facet's `🧬️mutations` uses.
+pub fn diff_set_presentation(source: &crate::artifacts::present::FigureTileSource, tiles: &[crate::artifacts::present::FigureTileDraft]) -> PresentDiff {
+    PresentDiff { presentation: Some(crate::artifacts::present::presentation_child_handle_and_cache(source, tiles)), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 
@@ -167,13 +97,15 @@ mod tests {
     #[test]
     fn replace_source_diff_applies_onto_the_base_snapshot() {
         let base = default_present_snapshot();
-        let mut next_source = base.source.clone();
+        let (source, _tiles) = crate::artifacts::present::present_working_scene(&base);
+        let mut next_source = source.clone();
         next_source.kind = "video".into();
         let operation = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: next_source.clone() });
         let diff: PresentDiff = operation.diff(&base);
-        assert_eq!(diff.source, Some(next_source));
-        assert!(diff.artifact.is_none() && diff.tiles.is_none());
-        assert_eq!(diff.apply(&base).source.kind, "video");
+        assert!(diff.presentation.is_some());
+        assert!(diff.artifact.is_none());
+        let (applied_source, _) = crate::artifacts::present::present_working_scene(&diff.apply(&base));
+        assert_eq!(applied_source.kind, "video");
     }
 }
 //#endregion 🧪️Tests

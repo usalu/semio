@@ -20,10 +20,11 @@ pub mod add_block {
 
     pub fn handle(payload: &AddBlock, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
         let spec = doc.snapshot;
-        let Some(step_id) = payload.step_id.clone().or_else(|| spec.steps.first().map(|step| step.id.clone())) else {
+        let steps = spec.steps();
+        let Some(step_id) = payload.step_id.clone().or_else(|| steps.first().map(|step| step.id.clone())) else {
             return Ok(Emit::default());
         };
-        let block_id = format!("block-{}", spec.steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
+        let block_id = format!("block-{}", steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
         Ok(Emit { artifact_mutations: vec![add_block_operation(&step_id, default_block(block_id.clone(), &payload.kind), None)], config_mutations: vec![PlaybookConfigMutation::SetSelectedIds { ids: vec![block_id] }], ..Default::default() })
     }
 }
@@ -85,8 +86,9 @@ mod tests {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
         let projection = app.snapshot().expect("projection");
-        assert_eq!(projection.steps[0].blocks.len(), 1);
-        assert_eq!(projection.steps[0].blocks[0].kind, "text");
+        let steps = projection.steps();
+        assert_eq!(steps[0].blocks.len(), 1);
+        assert_eq!(steps[0].blocks[0].kind, "text");
     }
 
     #[test]
@@ -95,17 +97,18 @@ mod tests {
         dispatch(&mut app, PlaybookCommand::AddStep(crate::apps::playbook::commands::step::add_step::AddStep {}));
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
         let projection = app.snapshot().expect("materialize projection");
-        assert_eq!(projection.steps[0].blocks.last().unwrap().kind, "text", "kind default materialized from the registry");
+        assert_eq!(projection.steps()[0].blocks.last().unwrap().kind, "text", "kind default materialized from the registry");
     }
 
     #[test]
     fn remove_block_clears_it_from_selection() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
-        let step_id = app.snapshot().expect("projection").steps[0].id.clone();
-        let block_id = app.snapshot().expect("projection").steps[0].blocks[0].id.clone();
+        let steps = app.snapshot().expect("projection").steps();
+        let step_id = steps[0].id.clone();
+        let block_id = steps[0].blocks[0].id.clone();
         dispatch(&mut app, PlaybookCommand::RemoveBlock(RemoveBlock { step_id, block_id }));
-        assert!(app.snapshot().expect("projection").steps[0].blocks.is_empty());
+        assert!(app.snapshot().expect("projection").steps()[0].blocks.is_empty());
     }
 
     #[test]
@@ -114,13 +117,15 @@ mod tests {
         dispatch(&mut app, PlaybookCommand::AddStep(crate::apps::playbook::commands::step::add_step::AddStep {}));
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
         let projection = app.snapshot().expect("projection");
-        let from_step_id = projection.steps[0].id.clone();
-        let to_step_id = projection.steps[1].id.clone();
-        let block_id = projection.steps[0].blocks[0].id.clone();
+        let steps = projection.steps();
+        let from_step_id = steps[0].id.clone();
+        let to_step_id = steps[1].id.clone();
+        let block_id = steps[0].blocks[0].id.clone();
         dispatch(&mut app, PlaybookCommand::MoveBlock(MoveBlock { block_id: block_id.clone(), from_step_id, to_step_id, index: 0 }));
         let projection = app.snapshot().expect("projection");
-        assert!(projection.steps[0].blocks.is_empty());
-        assert_eq!(projection.steps[1].blocks[0].id, block_id);
+        let steps = projection.steps();
+        assert!(steps[0].blocks.is_empty());
+        assert_eq!(steps[1].blocks[0].id, block_id);
     }
 }
 //#endregion 🧪️Tests

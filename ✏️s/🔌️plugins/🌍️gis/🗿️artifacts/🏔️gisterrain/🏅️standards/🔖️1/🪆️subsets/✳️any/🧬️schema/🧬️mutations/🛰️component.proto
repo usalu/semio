@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.gis.gisterrain.mutation;
 
-// 🧬️ GIS terrain mutation schema — persistent fields only.
+// 🧬️ GIS terrain mutation schema — artifact-lane fields only.
 
 message GisTerrainMutation {
   // @state artifact

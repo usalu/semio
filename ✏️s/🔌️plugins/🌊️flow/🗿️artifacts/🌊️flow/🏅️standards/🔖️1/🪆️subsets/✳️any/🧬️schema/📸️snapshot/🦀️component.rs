@@ -1,4 +1,4 @@
-//! 🧬️ Flow snapshot schema — persistent fields only.
+//! 🧬️ Flow snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::flow::{flow_content_child_handle_and_cache, flow_working_scene, FlowContentChild};
 use flow::CameraJson;

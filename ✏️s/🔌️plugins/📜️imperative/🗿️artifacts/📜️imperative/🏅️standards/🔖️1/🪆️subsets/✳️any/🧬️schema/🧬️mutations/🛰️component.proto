@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.imperative.imperative.mutation;
 
-// 🧬️ Imperative mutation schema — persistent fields only.
+// 🧬️ Imperative mutation schema — artifact-lane fields only.
 
 message ImperativeMutation {
   // @state artifact

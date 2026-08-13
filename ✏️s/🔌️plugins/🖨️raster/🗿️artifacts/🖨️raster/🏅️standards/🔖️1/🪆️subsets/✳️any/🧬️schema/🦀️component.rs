@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
-/// 🧬️ Full raster artifact state across persistent, shared-ui, local-ui and preview classes.
+/// 🧬️ Full raster artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster")]

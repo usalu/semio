@@ -1,9 +1,8 @@
 //! 🔺️ Playbook artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::playbook::schema::diff::{PlaybookBlockPatch, PlaybookBlocksDelta, PlaybookDiff, PlaybookStepPatch, PlaybookStepsDelta};
+use crate::artifacts::playbook::schema::diff::PlaybookDiff;
 use crate::artifacts::playbook::schema::PlaybookArtifact;
 use crate::artifacts::playbook::schema::snapshot::PlaybookSnapshot;
-use crate::playbook::PlaybookBlock;
 use crate::playbook::PlaybookStep;
 use protocol::MutationDiff;
 
@@ -15,78 +14,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 
 //#region 🔖️Apply
-pub fn apply_blocks_delta(items: &[PlaybookBlock], delta: &PlaybookBlocksDelta) -> Vec<PlaybookBlock> {
-    let mut next = items.to_vec();
-    for id in &delta.removed {
-        next.retain(|block| block.id != *id);
-    }
-    for block in &delta.added {
-        next.push(block.clone());
-    }
-    for entry in &delta.patched {
-        if let Some(block) = next.iter_mut().find(|block| block.id == entry.id) {
-            apply_block_patch(block, &entry.patch);
-        }
-    }
-    if let Some(order) = &delta.reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|block| (block.id.clone(), block)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(block) = by_id.remove(id) {
-                ordered.push(block);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
-fn apply_block_patch(block: &mut PlaybookBlock, patch: &PlaybookBlockPatch) {
-    if let Some(replacement) = &patch.block {
-        *block = replacement.clone();
-    }
-}
-
-fn apply_step_patch(step: &mut PlaybookStep, patch: &PlaybookStepPatch) {
-    if let Some(title) = &patch.title {
-        step.title = title.clone();
-    }
-    if let Some(description) = &patch.description {
-        step.description = description.clone();
-    }
-    if let Some(delta) = &patch.blocks {
-        step.blocks = apply_blocks_delta(&step.blocks, delta);
-    }
-}
-
-pub fn apply_steps_delta(items: &[PlaybookStep], delta: &PlaybookStepsDelta) -> Vec<PlaybookStep> {
-    let mut next = items.to_vec();
-    for id in &delta.removed {
-        next.retain(|step| step.id != *id);
-    }
-    for step in &delta.added {
-        next.push(step.clone());
-    }
-    for entry in &delta.patched {
-        if let Some(step) = next.iter_mut().find(|step| step.id == entry.id) {
-            apply_step_patch(step, &entry.patch);
-        }
-    }
-    if let Some(order) = &delta.reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|step| (step.id.clone(), step)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(step) = by_id.remove(id) {
-                ordered.push(step);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
 impl PlaybookDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> PlaybookArtifact {
@@ -106,8 +33,11 @@ impl PlaybookDiff {
         if let Some(title) = &self.title {
             next.title = title.clone();
         }
-        if let Some(delta) = &self.steps {
-            next.steps = apply_steps_delta(&next.steps, delta);
+        if let Some(document) = &self.document {
+            next.document = document.clone();
+        }
+        if let Some(flow) = &self.flow {
+            next.flow = flow.clone();
         }
         if let Some(list) = &self.selected_ids {
             next.selected_ids = list.values.clone();
@@ -140,8 +70,11 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
         if let Some(title) = &self.title {
             next.title = title.clone();
         }
-        if let Some(delta) = &self.steps {
-            next.steps = apply_steps_delta(&next.steps, delta);
+        if let Some(document) = &self.document {
+            next.document = document.clone();
+        }
+        if let Some(flow) = &self.flow {
+            next.flow = flow.clone();
         }
         next
     }
@@ -162,22 +95,11 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
         take!(id);
         take!(version);
         take!(title);
+        take!(document);
+        take!(flow);
         take!(selected_ids);
         take!(locale);
         take!(contributions_json);
-        if let Some(src) = other.steps {
-            match &mut self.steps {
-                Some(dst) => {
-                    dst.added.extend(src.added);
-                    dst.removed.extend(src.removed);
-                    dst.patched.extend(src.patched);
-                    if src.reordered.is_some() {
-                        dst.reordered = src.reordered;
-                    }
-                }
-                None => self.steps = Some(src),
-            }
-        }
     }
 }
 //#endregion 🔖️Apply
@@ -191,4 +113,14 @@ pub fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
     }
 }
 
+/// 🔺️ Mints new content-addressed `document`+`flow` handles for the whole-scene replacement
+/// `steps` and seeds the working-scene cache with them (`playbook_content_handles_and_cache`) —
+/// real handcrafted construction, never apply-then-capture. Every one of the nine step/block
+/// mutation triads' `🔺️diff` leaf reads the CURRENT scene off `base` (via `playbook_working_scene`),
+/// applies its own specific semantics to that scene, then calls this shared builder — mirrors
+/// writer's `diff_set_text`/flow's `diff_replace_content`.
+pub fn diff_replace_content(title: Option<&str>, steps: Vec<PlaybookStep>) -> PlaybookDiff {
+    let (document, flow) = crate::artifacts::playbook::playbook_content_handles_and_cache(title, steps);
+    PlaybookDiff { document: Some(document), flow: Some(flow), ..Default::default() }
+}
 //#endregion 🔖️Builders

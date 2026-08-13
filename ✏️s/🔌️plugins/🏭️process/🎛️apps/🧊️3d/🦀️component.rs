@@ -162,6 +162,8 @@ impl ArtifactApp for Process3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = Process3dPresence;
     type PresenceMutation = Process3dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Process3dCommand;
 

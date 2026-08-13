@@ -7,8 +7,8 @@
 pub use crate::artifacts::forms::mutations::FormMutation;
 
 use crate::artifacts::forms::mutations::{
-    add_block::mutation::CreateBlock, add_step::mutation::CreateStep, move_block::mutation::MoveBlockToStep, move_step::mutation::ReorderStep, remove_block::mutation::DeleteBlock,
-    remove_step::mutation::DeleteStep, update_block::mutation::ReplaceBlock, update_playbook::mutation::ChangeFormTitle, update_step::mutation::{ChangeStepDescription, RenameStep},
+    create_block::mutation::CreateBlock, create_step::mutation::CreateStep, move_block_to_step::mutation::MoveBlockToStep, reorder_step::mutation::ReorderStep, delete_block::mutation::DeleteBlock,
+    delete_step::mutation::DeleteStep, replace_block::mutation::ReplaceBlock, change_form_title::mutation::ChangeFormTitle, rename_step::mutation::RenameStep, change_step_description::mutation::ChangeStepDescription,
 };
 use crate::artifacts::forms::{FormQuestion, FormStep};
 

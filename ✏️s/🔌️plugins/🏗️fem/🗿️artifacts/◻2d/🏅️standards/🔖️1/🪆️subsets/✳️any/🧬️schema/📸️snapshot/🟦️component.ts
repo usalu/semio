@@ -1,4 +1,4 @@
-/** 🧬️ Fem2d snapshot schema — persistent fields only. */
+/** 🧬️ Fem2d snapshot schema — artifact-lane fields only. */
 
 export interface Fem2dSnapshot {
   /** @state artifact */

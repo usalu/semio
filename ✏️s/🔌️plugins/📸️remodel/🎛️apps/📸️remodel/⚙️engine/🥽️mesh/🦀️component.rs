@@ -59,10 +59,10 @@ fn lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
 
 /// 🧮️ Builds a dense `MatD` from row-major `f64` rows (`MatD` itself only exposes `zeros`/`set`,
 /// unlike the generic `MatG<T>::from_rows`).
-fn matd_from_rows(rows: &[Vec<f64>]) -> math::algebra::MatD {
+fn matd_from_rows(rows: &[Vec<f64>]) -> crate::algebra::MatD {
     let r = rows.len();
     let c = rows.first().map_or(0, Vec::len);
-    let mut m = math::algebra::MatD::zeros(r, c);
+    let mut m = crate::algebra::MatD::zeros(r, c);
     for (row, values) in rows.iter().enumerate() {
         for (col, &v) in values.iter().enumerate() {
             m.set(row, col, v);
@@ -1297,7 +1297,7 @@ fn fair_new_vertices(mesh: &mut TriMesh, patch_faces: &[u32], new_vertices: &Has
     let index_of: HashMap<u32, usize> = free.iter().enumerate().map(|(i, &v)| (v, i)).collect();
     let n = free.len();
     let mut triplets = Vec::new();
-    let mut rhs = [math::algebra::VecD::zeros(n), math::algebra::VecD::zeros(n), math::algebra::VecD::zeros(n)];
+    let mut rhs = [crate::algebra::VecD::zeros(n), crate::algebra::VecD::zeros(n), crate::algebra::VecD::zeros(n)];
     for (row, &v) in free.iter().enumerate() {
         let nbrs = neighbors.get(&v).cloned().unwrap_or_default();
         let degree = nbrs.len().max(1) as f64;
@@ -1313,9 +1313,9 @@ fn fair_new_vertices(mesh: &mut TriMesh, patch_faces: &[u32], new_vertices: &Has
             }
         }
     }
-    let a = math::algebra::CsrMatrix::from_triplets(n, n, &triplets);
+    let a = crate::algebra::CsrMatrix::from_triplets(n, n, &triplets);
     for (axis, rhs_axis) in rhs.iter().enumerate() {
-        if let Ok(x) = math::algebra::conjugate_gradient(&a, rhs_axis, 1e-8, 500) {
+        if let Ok(x) = crate::algebra::conjugate_gradient(&a, rhs_axis, 1e-8, 500) {
             for (row, &v) in free.iter().enumerate() {
                 mesh.positions[v as usize][axis] = x.get(row);
             }
@@ -1733,7 +1733,7 @@ fn count_self_intersections(mesh: &TriMesh) -> usize {
         return 0;
     }
     let centroids: Vec<[f64; 3]> = (0..mesh.triangles.len()).map(|f| mesh.face_centroid(f)).collect();
-    let tree = math::spatial::KdTree::<3>::build(&centroids);
+    let tree = crate::spatial::KdTree::<3>::build(&centroids);
     let max_edge: f64 = mesh
         .triangles
         .iter()
@@ -1858,9 +1858,9 @@ impl Quadric {
     fn optimal_point(&self, fallback_a: [f64; 3], fallback_b: [f64; 3]) -> [f64; 3] {
         let q = self.0;
         let m = matd_from_rows(&[vec![q[0], q[1], q[2]], vec![q[1], q[4], q[5]], vec![q[2], q[5], q[7]]]);
-        let rhs = math::algebra::VecD::from_vec(vec![-q[3], -q[6], -q[8]]);
-        if let Ok(l) = math::algebra::cholesky(&m) {
-            let x = math::algebra::cholesky_solve(&l, &rhs);
+        let rhs = crate::algebra::VecD::from_vec(vec![-q[3], -q[6], -q[8]]);
+        if let Ok(l) = crate::algebra::cholesky(&m) {
+            let x = crate::algebra::cholesky_solve(&l, &rhs);
             return [x.get(0), x.get(1), x.get(2)];
         }
         let mid = lerp3(fallback_a, fallback_b, 0.5);
@@ -2189,7 +2189,7 @@ fn fallback_unwrap_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]
     uv
 }
 
-/// 🪢️ LSCM (least-squares conformal map) for one chart via `math::algebra::CsrMatrix` +
+/// 🪢️ LSCM (least-squares conformal map) for one chart via `crate::algebra::CsrMatrix` +
 /// `conjugate_gradient` on the FEM-assembled normal equations (`JᵀJ x = Jᵀb`, one small dense 2x6
 /// contribution per triangle, accumulated directly rather than via sparse-sparse multiply). Two
 /// boundary vertices are pinned to known UV values to remove the conformal gauge freedom
@@ -2219,7 +2219,7 @@ fn lscm_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]> {
     let free_col = |v: u32, is_v: bool| -> Option<usize> { free.iter().position(|&x| x == v).map(|i| 2 * i + usize::from(is_v)) };
     let m = 2 * free.len();
     let mut triplet_acc: HashMap<(usize, usize), f64> = HashMap::new();
-    let mut rhs = math::algebra::VecD::zeros(m);
+    let mut rhs = crate::algebra::VecD::zeros(m);
     for &f in &chart.faces {
         let tri = mesh.triangles[f as usize];
         let (a, b, c) = (mesh.positions[tri[0] as usize], mesh.positions[tri[1] as usize], mesh.positions[tri[2] as usize]);
@@ -2256,9 +2256,9 @@ fn lscm_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]> {
         *triplet_acc.entry((i, i)).or_insert(0.0) += regularization;
     }
     let triplets: Vec<(usize, usize, f64)> = triplet_acc.into_iter().map(|((r, c), v)| (r, c, v)).collect();
-    let a = math::algebra::CsrMatrix::from_triplets(m, m, &triplets);
+    let a = crate::algebra::CsrMatrix::from_triplets(m, m, &triplets);
     let cg_max_iter = m.clamp(50, 600);
-    let Ok(x) = math::algebra::conjugate_gradient(&a, &rhs, 1e-7, cg_max_iter) else {
+    let Ok(x) = crate::algebra::conjugate_gradient(&a, &rhs, 1e-7, cg_max_iter) else {
         return fallback_unwrap_chart(mesh, chart);
     };
     let mut uv = pinned_uv;
@@ -2548,7 +2548,7 @@ fn level_seam(a_samples: &[[f32; 3]], b_samples: &[[f32; 3]]) -> [(f64, f64); 3]
             b.push(f64::from(b_samples[i][c]));
         }
         let mat = matd_from_rows(&rows);
-        if let Ok(x) = math::algebra::solve_llsq(&mat, &math::algebra::VecD::from_vec(b)) {
+        if let Ok(x) = crate::algebra::solve_llsq(&mat, &crate::algebra::VecD::from_vec(b)) {
             out[c] = (x.get(0), x.get(1));
         }
     }
@@ -2593,7 +2593,7 @@ fn view_exposure_compensation(mesh: &TriMesh, views: &[TextureView], visible: &[
             let rows: Vec<Vec<f64>> = samples.iter().map(|&(a, _)| vec![a, 1.0]).collect();
             let b: Vec<f64> = samples.iter().map(|&(_, r)| r).collect();
             let mat = matd_from_rows(&rows);
-            math::algebra::solve_llsq(&mat, &math::algebra::VecD::from_vec(b)).map_or((1.0, 0.0), |x| (x.get(0), x.get(1)))
+            crate::algebra::solve_llsq(&mat, &crate::algebra::VecD::from_vec(b)).map_or((1.0, 0.0), |x| (x.get(0), x.get(1)))
         })
         .collect()
 }
@@ -2945,9 +2945,9 @@ mod tests {
         let world_up = if forward[1].abs() > 0.95 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
         let right = normalize3(cross3(forward, world_up));
         let up = cross3(right, forward);
-        let rotation = math::algebra::Mat3d::from_axes(right, up, forward).transpose();
+        let rotation = crate::algebra::Mat3d::from_axes(right, up, forward).transpose();
         let translation = scale3(rotation.mul_vec3(eye), -1.0);
-        remodel_camera::CameraPose(math::lie::Se3 { r: math::lie::So3(rotation), t: translation })
+        remodel_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(rotation), t: translation })
     }
 
     fn checkerboard_image(width: u32, height: u32, cell: u32) -> remodel_image::ImageRgba8 {
@@ -3674,7 +3674,7 @@ mod tests {
     #[test]
     fn face_projected_area_none_behind_camera_some_in_front() {
         let intr = intrinsics_for(64, 64);
-        let identity_pose = remodel_camera::CameraPose(math::lie::Se3 { r: math::lie::So3(math::algebra::Mat3d::IDENTITY), t: [0.0, 0.0, 0.0] });
+        let identity_pose = remodel_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(crate::algebra::Mat3d::IDENTITY), t: [0.0, 0.0, 0.0] });
         let behind = TriMesh { positions: vec![[-0.1, -0.1, -1.0], [0.1, -0.1, -1.0], [0.0, 0.1, -1.0]], triangles: vec![[0, 1, 2]] };
         assert!(face_projected_area(&behind, 0, &intr, &identity_pose).is_none());
         let front = TriMesh { positions: vec![[-0.1, -0.1, 2.0], [0.1, -0.1, 2.0], [0.0, 0.1, 2.0]], triangles: vec![[0, 1, 2]] };

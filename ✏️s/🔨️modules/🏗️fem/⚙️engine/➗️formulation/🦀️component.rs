@@ -2,7 +2,7 @@
 //! their parametric derivatives, Jacobians, plane/solid B-matrices, and constitutive D-matrices —
 //! consumed by the continuum/plate/shell elements in `elements2d`/`elements3d`.
 
-use math::algebra::MatD;
+use crate::algebra::MatD;
 
 // #region 🔖️Quadrature
 /// 🎯️ 1D Gauss-Legendre points/weights on `[-1,1]`, `n = 1..=4`.

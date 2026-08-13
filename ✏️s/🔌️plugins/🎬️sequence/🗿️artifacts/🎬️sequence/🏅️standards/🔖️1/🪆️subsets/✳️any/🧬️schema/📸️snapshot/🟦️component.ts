@@ -1,4 +1,4 @@
-/** 🧬️ Sequence snapshot schema — persistent fields only. */
+/** 🧬️ Sequence snapshot schema — artifact-lane fields only. */
 export interface SequenceSnapshot {
   /** @state artifact */ schema: string;
   /** @state artifact */ steps: SequenceStep[];

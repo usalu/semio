@@ -131,6 +131,8 @@ impl ArtifactApp for Gis3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::gis3d::presence::Gis3dPresence;
     type PresenceMutation = crate::apps::gis3d::presence::Gis3dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Gis3dCommand;
 

@@ -1,0 +1,3 @@
+semio-framework-os-kernel: test result: FAILED. 835 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+semio-framework-plugin: test result: ok. 155 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+semio-s-plugin-stdio: test result: FAILED. 2442 passed; 5 failed; 4 ignored; 0 measured; 0 filtered out; finished in 15.53s

@@ -137,6 +137,8 @@ impl ArtifactApp for LayoutPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::layout::presence::LayoutPresence;
     type PresenceMutation = crate::apps::layout::presence::LayoutPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = LayoutCommand;
 

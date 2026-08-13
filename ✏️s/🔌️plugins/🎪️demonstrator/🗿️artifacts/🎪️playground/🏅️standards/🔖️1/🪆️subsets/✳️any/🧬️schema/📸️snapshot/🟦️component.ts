@@ -1,4 +1,4 @@
-/** 🧬️ Playground snapshot schema — persistent fields only. */
+/** 🧬️ Playground snapshot schema — artifact-lane fields only. */
 
 export interface PlaygroundSnapshot {
   /** @state artifact */

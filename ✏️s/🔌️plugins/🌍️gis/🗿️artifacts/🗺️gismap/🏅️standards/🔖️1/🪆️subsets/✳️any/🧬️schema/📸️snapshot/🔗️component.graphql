@@ -1,4 +1,4 @@
-# 🧬️ GIS map snapshot schema — persistent fields only.
+# 🧬️ GIS map snapshot schema — artifact-lane fields only.
 
 type GisMapSnapshot {
   positions: [GisMapFeature!]! @state(class: ARTIFACT)

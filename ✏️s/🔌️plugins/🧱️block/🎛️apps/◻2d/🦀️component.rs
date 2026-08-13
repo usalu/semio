@@ -110,6 +110,8 @@ impl ArtifactApp for Block2dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::block2d::presence::Block2dPresence;
     type PresenceMutation = crate::apps::block2d::presence::Block2dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Block2dCommand;
 

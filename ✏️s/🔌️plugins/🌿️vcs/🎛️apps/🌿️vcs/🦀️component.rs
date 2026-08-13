@@ -19,7 +19,6 @@ use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEM
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode};
 use store::EngineHandles;
 use serde_json::Value;
-use store::{ArtifactCommand, ArtifactStore};
 
 //#region 🔖️Constants
 pub const VCS_PLAY_APP_ID: &str = "vcs-play";
@@ -156,91 +155,18 @@ use selection::set_selection;
 //#endregion 🔖️Commands
 
 //#region 🔖️DocumentHelpers
-fn demo_authors() -> Vec<vcs_kernel::Author> {
-    vec![
-        vcs_kernel::Author { id: "author-alice".into(), name: "Alice".into(), avatar: None },
-        vcs_kernel::Author { id: "author-bob".into(), name: "Bob".into(), avatar: None },
-        vcs_kernel::Author { id: "author-carol".into(), name: "Carol".into(), avatar: None },
-    ]
-}
-
-/// 🌱️ Seeds a rich, forked checkpoint/alternative history directly against the store — this app's
-/// whole point is exercising the history UI (swimlane graph, checkpoints, alternatives, undo/redo),
-/// so its "initial document" is itself a populated history, not a bare projection. Dispatched via
-/// `ArtifactApp::seed`, called once by `VcsArtifactApp::new` right after store construction.
-fn seed_vcs_demo_history(store: &mut ArtifactStore<VcsSnapshot, VcsDemoMutation>) {
-    let authors = demo_authors();
-    let alice = authors[0].clone();
-    let bob = authors[1].clone();
-    let carol = authors[2].clone();
-    let last_checkpoint_id = |store: &ArtifactStore<VcsSnapshot, VcsDemoMutation>| -> String { store.envelope().vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
-
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 1 }, VcsDemoMutation::SetTitle { title: "VCS Demo".into() }], description: Some("bootstrap".into()) });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Bootstrap".into()), authors: vec![alice.clone()] });
-    let c1 = last_checkpoint_id(store);
-
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetNotes { notes: "main line".into() }, VcsDemoMutation::SetStatus { status: "draft".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Annotate main draft".into()), authors: vec![alice.clone(), bob.clone()] });
-    let c2 = last_checkpoint_id(store);
-
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 2 }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Main milestone".into()), authors: vec![alice.clone(), bob.clone(), carol.clone()] });
-    let c3 = last_checkpoint_id(store);
-
-    let _ = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
-    let _ = store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Feature A".into() }, VcsDemoMutation::AddTag { tag: "feature-a".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Start feature A".into()), authors: vec![alice.clone()] });
-    let c4 = last_checkpoint_id(store);
-    let feature_a_id = store.envelope().active_alternative_id.clone().expect("feature-a alternative id");
-
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 10 }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Feature A progress".into()), authors: vec![alice.clone(), bob.clone()] });
-
-    let _ = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
-    let _ = store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Feature B".into() }, VcsDemoMutation::SetNotes { notes: "branch b".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Start feature B".into()), authors: vec![bob.clone()] });
-    let feature_b_id = store.envelope().active_alternative_id.clone().expect("feature-b alternative id");
-
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 20 }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Feature B try".into()), authors: vec![bob.clone(), carol.clone()] });
-
-    let _ = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c3 });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetStatus { status: "active".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Resume main".into()), authors: vec![carol.clone()] });
-    let c8 = last_checkpoint_id(store);
-
-    let _ = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: feature_a_id });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 11 }, VcsDemoMutation::AddTag { tag: "wip".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Feature A sprint".into()), authors: vec![alice.clone(), carol.clone()] });
-
-    let _ = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c4 });
-    let _ = store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a-hotfix".into() });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetStatus { status: "hotfix".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Hotfix off feature A".into()), authors: vec![bob.clone()] });
-
-    let _ = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: feature_b_id });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::AddTag { tag: "review".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Feature B review".into()), authors: vec![bob.clone()] });
-
-    let _ = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c8 });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetCounter { counter: 3 }, VcsDemoMutation::SetNotes { notes: "main polish".into() }, VcsDemoMutation::AddTag { tag: "release".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Main batch polish".into()), authors: vec![alice.clone(), bob.clone(), carol.clone()] });
-
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetStatus { status: "done".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Main release".into()), authors: vec![alice] });
-
-    let _ = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c2 });
-    let _ = store.dispatch(ArtifactCommand::CreateAlternative { name: "docs".into() });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetNotes { notes: "documentation pass".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Docs branch".into()), authors: vec![carol.clone()] });
-
-    let _ = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c1 });
-    let _ = store.dispatch(ArtifactCommand::CreateAlternative { name: "spike".into() });
-    let _ = store.dispatch(ArtifactCommand::Apply { mutations: vec![VcsDemoMutation::SetTitle { title: "Spike prototype".into() }], description: None });
-    let _ = store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("Spike experiment".into()), authors: vec![bob, carol] });
-}
+// 🌱️ `seed_vcs_demo_history` (test-only demo history seeding) now lives in the `🔖️Testkit` region
+// below — it must dispatch through `VcsArtifactApp`'s public surface (`dispatch_typed`/
+// `handle_action`), not a raw `store::ArtifactStore`, since `ArtifactApp::seed(&mut ArtifactStore)`
+// (this app's old direct-store-touch hook) no longer exists on the trait as of ticket
+// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M4 (`ArtifactApp::genesis() -> Vec<Self::Mutation>`
+// replaced it, but `genesis` can only emit flat document mutations — it has no way to express
+// `CommitCheckpoint`/`CreateAlternative`/`SwitchAlternative`, so it cannot reconstruct branching
+// checkpoint history at construction time). Consequence: this demo's rich seeded history is reachable
+// from tests (`testkit::app`/`app_with_registry` seed it explicitly) but no longer auto-populates a
+// freshly constructed production instance the way `ArtifactApp::seed` used to — restoring that would
+// need a framework-level hook `genesis` doesn't provide, which is out of this plugin's boundary
+// (`🔌️plugin/🦀️component.rs` is W1-owned).
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️VcsPlayApp
@@ -259,6 +185,8 @@ impl ArtifactApp for VcsPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = VcsDemoPresence;
     type PresenceMutation = VcsDemoPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = VcsCommand;
 
@@ -267,10 +195,6 @@ impl ArtifactApp for VcsPlayApp {
 
     fn initial_snapshot() -> VcsSnapshot {
         crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot()
-    }
-
-    fn seed(store: &mut ArtifactStore<VcsSnapshot, VcsDemoMutation>) {
-        seed_vcs_demo_history(store);
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -345,14 +269,20 @@ pub(crate) mod testkit {
 
     pub type VcsApp = VcsArtifactApp<VcsPlayApp>;
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ A bare, pre-seeded app instance — no `AppActionRegistry`, so undeclared internal commands
+    /// dispatch freely. Seeded via `seed_vcs_demo_history` (see its own doc comment for why this
+    /// replaced `ArtifactApp::seed`).
     pub fn app() -> VcsApp {
-        new_app::<VcsPlayApp>()
+        let mut instance = new_app::<VcsPlayApp>();
+        seed_vcs_demo_history(&mut instance);
+        instance
     }
 
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    /// 🧪️ A pre-seeded app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub fn app_with_registry() -> VcsApp {
-        new_app_with_registry::<VcsPlayApp>(create_vcs_app)
+        let mut instance = new_app_with_registry::<VcsPlayApp>(create_vcs_app);
+        seed_vcs_demo_history(&mut instance);
+        instance
     }
 
     pub fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
@@ -369,6 +299,106 @@ pub(crate) mod testkit {
     pub fn seeded_envelope(instance: &VcsApp) -> ArtifactEnvelope<VcsSnapshot, VcsDemoMutation> {
         let files = instance.document_pack().expect("document pack");
         store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).expect("parse document pack").envelope
+    }
+
+    /// 🌱️ Seeds a rich, forked checkpoint/alternative history through `VcsApp`'s own public dispatch
+    /// surface (`dispatch_typed`/`handle_action`) — this app's whole point is exercising the history UI
+    /// (swimlane graph, checkpoints, alternatives, undo/redo), so every test instance starts as a
+    /// populated history, not a bare projection. Replaces the old direct-`ArtifactStore`-touch
+    /// `seed_vcs_demo_history(&mut ArtifactStore)` dispatched via the now-removed `ArtifactApp::seed`
+    /// hook (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M4). Field edits go through
+    /// `VcsCommand::TextEdit` (whole-projection diff, matching `patch::text_edit_operations`) so one
+    /// call can bundle several field changes into one undo-log entry, mirroring the original narrative's
+    /// grouping. Per-checkpoint authorship is lost here: `handle_action`'s `"commitCheckpoint"` arm
+    /// hardcodes `authors: Vec::new()` with no wire path for real authors (framework-owned, out of this
+    /// plugin's boundary) — no test asserts on authorship, so this is a silent, documented fidelity
+    /// loss, not a functional gap.
+    pub fn seed_vcs_demo_history(app: &mut VcsApp) {
+        let local = meta("local");
+        let edit = |app: &mut VcsApp, f: fn(&mut VcsSnapshot)| {
+            let mut next = app.snapshot().expect("materialize snapshot");
+            f(&mut next);
+            let text = serde_json::to_string(&next).expect("serialize snapshot");
+            let _ = app.dispatch_typed(VcsCommand::TextEdit(text_edit::TextEdit { text }), &local);
+        };
+        let commit = |app: &mut VcsApp, message: &str| {
+            let _ = app.handle_action("commitCheckpoint", Some(&serde_json::json!({ "message": message })), &local);
+        };
+        let checkout = |app: &mut VcsApp, checkpoint_id: &str| {
+            let _ = app.handle_action("checkoutCheckpoint", Some(&serde_json::json!({ "checkpointId": checkpoint_id })), &local);
+        };
+        let create_alternative = |app: &mut VcsApp, name: &str| -> String {
+            let _ = app.handle_action("createAlternative", Some(&serde_json::json!({ "name": name })), &local);
+            seeded_envelope(app).active_alternative_id.clone().expect("alternative id")
+        };
+        let switch_alternative = |app: &mut VcsApp, alternative_id: &str| {
+            let _ = app.handle_action("switchAlternative", Some(&serde_json::json!({ "alternativeId": alternative_id })), &local);
+        };
+        let last_checkpoint_id = |app: &VcsApp| -> String { seeded_envelope(app).vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
+
+        edit(app, |s| { s.counter = 1; s.title = "VCS Demo".into(); });
+        commit(app, "Bootstrap");
+        let c1 = last_checkpoint_id(app);
+
+        edit(app, |s| { s.notes = "main line".into(); s.status = "draft".into(); });
+        commit(app, "Annotate main draft");
+        let c2 = last_checkpoint_id(app);
+
+        edit(app, |s| { s.counter = 2; });
+        commit(app, "Main milestone");
+        let c3 = last_checkpoint_id(app);
+
+        checkout(app, &c3);
+        let feature_a_id = create_alternative(app, "feature-a");
+        edit(app, |s| { s.title = "Feature A".into(); s.tags.push("feature-a".into()); });
+        commit(app, "Start feature A");
+        let c4 = last_checkpoint_id(app);
+
+        edit(app, |s| { s.counter = 10; });
+        commit(app, "Feature A progress");
+
+        checkout(app, &c3);
+        let feature_b_id = create_alternative(app, "feature-b");
+        edit(app, |s| { s.title = "Feature B".into(); s.notes = "branch b".into(); });
+        commit(app, "Start feature B");
+
+        edit(app, |s| { s.counter = 20; });
+        commit(app, "Feature B try");
+
+        checkout(app, &c3);
+        edit(app, |s| { s.status = "active".into(); });
+        commit(app, "Resume main");
+        let c8 = last_checkpoint_id(app);
+
+        switch_alternative(app, &feature_a_id);
+        edit(app, |s| { s.counter = 11; s.tags.push("wip".into()); });
+        commit(app, "Feature A sprint");
+
+        checkout(app, &c4);
+        let _ = create_alternative(app, "feature-a-hotfix");
+        edit(app, |s| { s.status = "hotfix".into(); });
+        commit(app, "Hotfix off feature A");
+
+        switch_alternative(app, &feature_b_id);
+        edit(app, |s| { s.tags.push("review".into()); });
+        commit(app, "Feature B review");
+
+        checkout(app, &c8);
+        edit(app, |s| { s.counter = 3; s.notes = "main polish".into(); s.tags.push("release".into()); });
+        commit(app, "Main batch polish");
+
+        edit(app, |s| { s.status = "done".into(); });
+        commit(app, "Main release");
+
+        checkout(app, &c2);
+        let _ = create_alternative(app, "docs");
+        edit(app, |s| { s.notes = "documentation pass".into(); });
+        commit(app, "Docs branch");
+
+        checkout(app, &c1);
+        let _ = create_alternative(app, "spike");
+        edit(app, |s| { s.title = "Spike prototype".into(); });
+        commit(app, "Spike experiment");
     }
 }
 //#endregion 🧪️Testkit

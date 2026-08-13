@@ -55,6 +55,8 @@ impl ArtifactApp for En1994PlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = NormPresence;
     type PresenceMutation = NormPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = En1994Command;
 

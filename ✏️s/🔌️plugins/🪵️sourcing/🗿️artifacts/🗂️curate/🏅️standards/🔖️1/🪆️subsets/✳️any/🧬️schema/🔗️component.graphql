@@ -62,13 +62,21 @@ type ObjectKind {
   geometry: GeometryRecipe!
 }
 
+type ObjectKindExtra {
+  id: String!
+  typologyPath: [String!]!
+  availability: Int!
+  geometry: GeometryRecipe!
+}
+
 type CuratedItem {
   objectId: String!
   count: Int!
 }
 
 type CurateArtifact {
-  stock: [ObjectKind!]! @state(class: ARTIFACT)
+  catalog: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.kit")
+  stockExtra: [ObjectKindExtra!]! @state(class: ARTIFACT)
   curated: [CuratedItem!]! @state(class: ARTIFACT)
   filters: Filters! @state(class: CONFIG)
   selectedObjectId: String @state(class: PRESENCE)

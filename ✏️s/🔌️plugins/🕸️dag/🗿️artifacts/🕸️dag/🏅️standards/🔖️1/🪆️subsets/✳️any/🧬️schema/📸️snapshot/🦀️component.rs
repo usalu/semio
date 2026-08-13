@@ -1,4 +1,4 @@
-//! 🧬️ DAG snapshot schema — persistent fields only.
+//! 🧬️ DAG snapshot schema — artifact-lane fields only.
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` are gone from this STRUCT —
 //! replaced by a single composed `content: DagContentChild` slot (`s.stdio.semio.graph`). The old

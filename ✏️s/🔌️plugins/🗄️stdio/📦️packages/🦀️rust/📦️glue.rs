@@ -7685,6 +7685,8 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🌫️fuzzy-internals/🦀️component.rs"]
+                            pub mod fuzzy_internals;
                             #[path = "."]
                             pub mod snapshot {
                                 #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/📸️snapshot/🦀️component.rs"]
@@ -8161,6 +8163,16 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📋️tabular-internals/🦀️component.rs"]
+                            pub mod tabular_internals;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🎲️probability-internals/🦀️component.rs"]
+                            pub mod probability_internals;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📊️statistics-internals/🦀️component.rs"]
+                            pub mod statistics_internals;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🔗️causal-internals/🦀️component.rs"]
+                            pub mod causal_internals;
+                            #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🎲️entropy-internals/🦀️component.rs"]
+                            pub mod entropy_internals;
                             #[path = "."]
                             pub mod snapshot {
                                 #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📸️snapshot/🦀️component.rs"]
@@ -8193,6 +8205,18 @@ pub mod artifacts {
                                 #[path = "."]
                                 pub mod shape {
                                     #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/💡️inferences/📐shape/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                                #[path = "."]
+                                pub mod moments {
+                                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/💡️inferences/📊moments/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                                #[path = "."]
+                                pub mod entropy {
+                                    #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/💡️inferences/🎲entropy/🦀️component.rs"]
                                     mod component;
                                     pub use component::*;
                                 }

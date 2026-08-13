@@ -217,6 +217,23 @@ The other half, learned the same evening by two sessions making the *identical* 
 
 **A pattern match locates candidates; it does not size a problem.** Check what each hit actually *does* before quoting a number — especially before sending it to another session, where an inflated number can trigger a wave of work against nothing.
 
+## 🚪️ BINDING USER RULING (2026-08-13) — io flows through artifacts; effort is not an exemption
+
+> **"All importers and exporters must flow over the io mechanism of artifacts. Everything must be migrated to artifacts, no matter the effort, unless it is domain-neutral framework functionality."**
+
+Two consequences that override earlier reasoning in this ticket:
+
+1. **"This would be a large job" is NOT a reason to stop.** Several waves have parked work as blocked when the real obstacle was size. Size is now explicitly not a blocker. A **proven structural impossibility** (a genuine Cargo cycle, demonstrated — not inferred) still is. Distinguish the two and report which one you hit, with evidence.
+2. **The only exemption is DOMAIN-NEUTRAL framework functionality.** Test it by asking whether the code names a domain. `ComposerEntry`/`register_composer_entries`/`resolve`/`io_dispatch`/`IoKey`/`Dialect` in `🧰️framework/🔨️modules/🚪️io/` are generic dispatch over dialects and know nothing about geometry → **exempt, they stay, route everything through them.** `register_solid_exporter`/`register_mesh_importer`/`register_dwg_import_handler`/`SolidExporter`/`MeshExporter` name solids, meshes and DWG → **domain-specific, no exemption, they become artifact `🚪️io` facets.**
+
+**Do not build a parallel io mechanism.** The artifact-side shape already exists and is in production: `🚪️io/{📥️import/🧩️deserializers,📤️export/🧵️serializers}/🗿️artifacts/<format>/🔖️<std>/✳️<subset>/` implementing `ArtifactDeserializer`/`ArtifactSerializer` (`type From`/`type Into`, `const FROM`/`INTO: Dialect`), registered via `register_composer_entries`, resolved by `io_dispatch`. Read a working pair and mirror it.
+
+### ⚠️ The blocker that wasn't — check WHICH CRATE before declaring a cycle
+
+Wave G5 stopped the brep dissolution on "`semio-framework-os-kernel` is framework-tier and can never depend on stdio, so framework-3d's kernel cannot be deleted." **Measured: false.** os-kernel defines none of those registries and does not depend on `semio-framework-3d`. They are compiled by **`semio-framework-os`** (`💻️os/🖥️host/📦️packages/🦀️rust`), which **already depends on both framework-3d AND stdio**. No cycle existed.
+
+The trap: `💻️os` names several crates, and the genuinely-dead `💻️os/🦀️component.rs` sits beside the live `💻️os/🖥️host/🦀️component.rs`. **Before declaring a dependency cycle, name the crate from its `Cargo.toml` and read that manifest's actual deps.** A cycle claim licenses abandoning work — so it carries the same evidentiary bar as a deletion claim.
+
 ## 🧿️ Where a dissolved kernel's artifact goes — BINDING (settled with the stdio roster owner, 2026-08-13)
 
 The `🧿️semio` v1 subset roster is **frozen at 18 + `✳️any`**. The bar for a 19th was never "nothing new ever" — it is *"genuinely shared content shape needed by ≥2 independent plugins"* (the bar `mesh`, `graph` and `kit` each cleared). Nothing in the math dissolution clears it today. **So: plugin-owned artifacts, no new stdio subsets.**

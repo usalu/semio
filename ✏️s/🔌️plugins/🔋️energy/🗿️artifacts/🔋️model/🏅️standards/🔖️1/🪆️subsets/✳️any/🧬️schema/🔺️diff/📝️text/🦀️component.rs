@@ -24,8 +24,14 @@ impl EnergyModelDiff {
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
-        if let Some(model_json) = &self.model_json {
-            next.model_json = model_json.clone();
+        if let Some(structure) = &self.structure {
+            next.structure = structure.clone();
+        }
+        if let Some(zones) = &self.zones {
+            next.zones = zones.clone();
+        }
+        if let Some(referenced_model) = &self.referenced_model {
+            next.referenced_model = referenced_model.clone();
         }
         if let Some(results_json) = &self.results_json {
             next.results_json = results_json.clone();
@@ -43,8 +49,14 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
-        if let Some(model_json) = &self.model_json {
-            next.model_json = model_json.clone();
+        if let Some(structure) = &self.structure {
+            next.structure = structure.clone();
+        }
+        if let Some(zones) = &self.zones {
+            next.zones = zones.clone();
+        }
+        if let Some(referenced_model) = &self.referenced_model {
+            next.referenced_model = referenced_model.clone();
         }
         next
     }
@@ -62,7 +74,9 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
             };
         }
         take!(schema);
-        take!(model_json);
+        take!(structure);
+        take!(zones);
+        take!(referenced_model);
         take!(results_json);
     }
 }
@@ -77,12 +91,13 @@ pub fn diff_set_snapshot(snapshot: &EnergyModelSnapshot) -> EnergyModelDiff {
     }
 }
 
-/// 🏢️ Model-json field delta.
-pub fn diff_set_model_json(model_json: impl Into<String>) -> EnergyModelDiff {
-    EnergyModelDiff {
-        model_json: Some(model_json.into()),
-        ..Default::default()
-    }
+/// 🏢️ Whole-model replacement diff — mints+caches `structure`/`zones` together from `model` via
+/// [`crate::artifacts::model::energy_children_from_model`] (ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old `diff_set_model_json` (which set
+/// the now-removed `model_json` field directly).
+pub fn diff_from_model(model: &crate::model::Model) -> EnergyModelDiff {
+    let (structure, zones) = crate::artifacts::model::energy_children_from_model(model);
+    EnergyModelDiff { structure: Some(structure), zones: Some(zones), ..Default::default() }
 }
 
 /// 📋️ Preview results-json field delta (not applied by MutationDiff).
@@ -114,6 +129,16 @@ mod tests {
         let artifact = EnergyModelArtifact::from_snapshot(base);
         let next = diff.apply_to_artifact(&artifact);
         assert_eq!(next.results_json, "{\"ok\":true}");
+    }
+
+    #[test]
+    fn diff_from_model_regenerates_structure_and_zones_together() {
+        let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
+        let model = crate::model::Model { name: "Demo".into(), ..crate::model::Model::default() };
+        let diff = diff_from_model(&model);
+        let applied = diff.apply(&base);
+        assert_eq!(crate::artifacts::model::energy_model(&applied), model);
+        assert_eq!(applied.structure.child_id, applied.zones.child_id, "structure/zones must share one scene id");
     }
 }
 //#endregion 🧪️Tests

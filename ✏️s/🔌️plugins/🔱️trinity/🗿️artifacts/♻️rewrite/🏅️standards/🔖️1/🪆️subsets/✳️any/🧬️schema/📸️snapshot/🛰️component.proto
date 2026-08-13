@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.trinity.rewrite.snapshot;
 
-// 🧬️ Rewrite snapshot schema — persistent fields only.
+// 🧬️ Rewrite snapshot schema — artifact-lane fields only.
 
 message RewriteSnapshot {
   // @state artifact

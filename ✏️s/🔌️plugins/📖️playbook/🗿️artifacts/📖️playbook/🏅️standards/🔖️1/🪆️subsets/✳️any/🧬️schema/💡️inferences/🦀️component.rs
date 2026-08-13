@@ -30,7 +30,7 @@ impl Default for PlaybookInference {
 
 impl protocol::Inference<PlaybookSnapshot> for PlaybookInference {
     fn infer(snapshot: &PlaybookSnapshot) -> Self {
-        Self { topology: compute_playbook_topology(&snapshot.steps) }
+        Self { topology: compute_playbook_topology(&snapshot.steps()) }
     }
 }
 
@@ -78,29 +78,47 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
+    /// 🧸️ Built via `PlaybookStep`/`PlaybookBlock` construction (not raw JSON with a `"steps"` key —
+    /// `PlaybookSnapshot` no longer has that field; it composes `document`/`flow` children instead)
+    /// and minted through `playbook_snapshot_with_steps` so the working-scene cache is seeded.
     fn step_with_conditional_block() -> PlaybookSnapshot {
-        let json = r#"{
-            "schema": "playbook.playbook",
-            "id": "playbook",
-            "version": "1",
-            "title": null,
-            "steps": [
-                {
-                    "id": "s1",
-                    "title": "Step 1",
-                    "blocks": [
-                        { "id": "material", "label": "Material", "kind": "single" },
-                        {
-                            "id": "finish",
-                            "label": "Finish",
-                            "kind": "text",
-                            "condition": { "kind": "truthy", "expr": { "kind": "var", "name": "material" } }
-                        }
-                    ]
-                }
-            ]
-        }"#;
-        serde_json::from_str::<PlaybookSnapshot>(json).expect("valid playbook snapshot json")
+        use crate::artifacts::playbook::PlaybookBlock;
+
+        fn block(id: &str, kind: &str, condition: Option<crate::artifacts::playbook::PlaybookExpr>) -> PlaybookBlock {
+            PlaybookBlock {
+                id: id.into(),
+                label: id.into(),
+                kind: kind.into(),
+                description: None,
+                required: None,
+                placeholder: None,
+                default: None,
+                min: None,
+                max: None,
+                step: None,
+                unit: None,
+                text: None,
+                options: None,
+                fields: None,
+                schema: None,
+                src: None,
+                accept: None,
+                fixture_slug: None,
+                params: None,
+                condition,
+            }
+        }
+
+        let steps = vec![crate::artifacts::playbook::PlaybookStep {
+            id: "s1".into(),
+            title: "Step 1".into(),
+            description: None,
+            blocks: vec![
+                block("material", "single", None),
+                block("finish", "text", Some(crate::artifacts::playbook::PlaybookExpr::Truthy { expr: Box::new(crate::artifacts::playbook::PlaybookExpr::Var { name: "material".into() }) })),
+            ],
+        }];
+        crate::artifacts::playbook::playbook_snapshot_with_steps("playbook.playbook", "playbook", "1", None, steps)
     }
     //#endregion 🧸️Fixtures
 

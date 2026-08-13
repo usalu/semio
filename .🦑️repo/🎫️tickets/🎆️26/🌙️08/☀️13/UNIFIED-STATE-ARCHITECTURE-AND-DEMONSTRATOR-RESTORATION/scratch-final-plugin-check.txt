@@ -1,0 +1,5 @@
+semio-s-plugin-writer: 5 errors
+semio-s-plugin-lowpoly: 4 errors
+semio-s-plugin-mathematical: 4 errors
+semio-s-plugin-sequence: 4 errors
+semio-s-plugin-norm: 32 errors

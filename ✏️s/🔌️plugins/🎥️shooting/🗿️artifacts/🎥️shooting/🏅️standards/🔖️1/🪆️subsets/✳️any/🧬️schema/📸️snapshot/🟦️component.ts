@@ -1,4 +1,4 @@
-/** 🧬️ Shooting snapshot schema — persistent fields only. */
+/** 🧬️ Shooting snapshot schema — artifact-lane fields only. */
 
 export interface ShootingSnapshot {
   /** @state artifact */

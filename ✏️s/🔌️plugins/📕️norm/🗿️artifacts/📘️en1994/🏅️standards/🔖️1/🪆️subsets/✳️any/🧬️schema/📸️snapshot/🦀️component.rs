@@ -1,4 +1,4 @@
-//! 🧬️ En1994 snapshot schema — persistent fields only.
+//! 🧬️ En1994 snapshot schema — artifact-lane fields only.
 
 use schema::ArtifactSchema;
 use crate::document::AnnexChoice;

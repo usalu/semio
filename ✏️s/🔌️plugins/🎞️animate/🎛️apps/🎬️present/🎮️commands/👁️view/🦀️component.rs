@@ -36,8 +36,9 @@ pub mod canvas_pointer_down {
 
     pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
         let deck = doc.snapshot;
+        let (_, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
         match &payload.layer_id {
-            Some(id) if deck.tiles.iter().any(|tile| &tile.id == id) => Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: vec![id.clone()] }])),
+            Some(id) if deck_tiles.iter().any(|tile| &tile.id == id) => Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: vec![id.clone()] }])),
             _ => Ok(Emit::config(vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }])),
         }
     }
@@ -112,7 +113,7 @@ mod tests {
     fn canvas_pointer_down_selects_matching_tile_and_clears_on_miss() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(crate::apps::present::commands::tile::add_tile::AddTile { crop: None }), &meta("local")).expect("add tile");
-        let tile_id = app.snapshot().expect("projection").tiles[0].id.clone();
+        let tile_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
         app.dispatch_typed(PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some(tile_id) }), &meta("local")).expect("pointer hit");
         let details = render(&mut app, PRESENT_PLAY_BODY_DETAILS);
         assert!(details.contains("animate.present.play.details.crop"), "hitting a tile populates the details panel");
@@ -126,7 +127,7 @@ mod tests {
     fn build_details_tree_reports_tile_not_found_for_stale_selection() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SetSelectedIds(set_selected_ids::SetSelectedIds { ids: vec!["was-deleted".into()] }), &meta("local")).expect("select stale");
-        assert!(app.snapshot().expect("projection").tiles.is_empty());
+        assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
     }
 }
 //#endregion 🧪️Tests

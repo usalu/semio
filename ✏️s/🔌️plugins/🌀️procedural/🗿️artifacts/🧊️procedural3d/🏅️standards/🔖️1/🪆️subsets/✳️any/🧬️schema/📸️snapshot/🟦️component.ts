@@ -1,4 +1,4 @@
-/** 🧬️ Procedural3d snapshot schema — persistent fields only. */
+/** 🧬️ Procedural3d snapshot schema — artifact-lane fields only. */
 
 export interface Procedural3dSnapshot {
   /** @state artifact */

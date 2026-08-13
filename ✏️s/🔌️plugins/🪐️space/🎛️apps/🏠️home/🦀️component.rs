@@ -335,6 +335,8 @@ impl ArtifactApp for HomeApp {
     type DraftMutation = NoDraftMutation;
     type Presence = HomePresence;
     type PresenceMutation = HomePresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = HomeCommand;
 
     const APP_ID: &'static str = S_HOME_APP_ID;

@@ -925,6 +925,8 @@ impl ArtifactApp for CadPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::cad::presence::CadPresence;
     type PresenceMutation = crate::apps::cad::presence::CadPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = CadCommand;
 
     const APP_ID: &'static str = CAD_PLAY_APP_ID;

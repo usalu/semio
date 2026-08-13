@@ -4,7 +4,7 @@
 //! dirs directly — `📦️glue.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::forms::FormsSnapshot;
+use crate::artifacts::forms::{forms_steps, FormsSnapshot};
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
@@ -30,7 +30,7 @@ impl Default for FormsInference {
 
 impl protocol::Inference<FormsSnapshot> for FormsInference {
     fn infer(snapshot: &FormsSnapshot) -> Self {
-        Self { topology: compute_forms_topology(&snapshot.steps) }
+        Self { topology: compute_forms_topology(&forms_steps(snapshot)) }
     }
 }
 
@@ -75,10 +75,13 @@ pub fn forms_artifact_inference_descriptor() -> schema::ArtifactInferenceDescrip
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::forms::FormStep;
     use protocol::Inference;
 
     //#region 🧸️Fixtures
+    /// 🩹️ `FormsSnapshot` composes `structure`/`results` handles (ticket
+    /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM) so it no longer deserializes raw step/block JSON
+    /// directly — `flow::playbook::PlaybookSpec` is the SAME `{schema,id,version,title,steps}`
+    /// camelCase shape, so this fixture deserializes through it instead.
     fn step_with_conditional_block() -> FormsSnapshot {
         let json = r#"{
             "schema": "forms.form",
@@ -101,7 +104,8 @@ mod tests {
                 }
             ]
         }"#;
-        serde_json::from_str::<FormsSnapshot>(json).expect("valid forms snapshot json")
+        let spec = serde_json::from_str::<flow::playbook::PlaybookSpec>(json).expect("valid playbook spec json");
+        crate::artifacts::forms::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps)
     }
     //#endregion 🧸️Fixtures
 
@@ -129,7 +133,7 @@ mod tests {
 
     #[test]
     fn empty_steps_produce_empty_topology() {
-        let snapshot = FormsSnapshot { steps: Vec::<FormStep>::new(), ..FormsSnapshot::default() };
+        let snapshot = FormsSnapshot::default();
         let inferred = FormsInference::infer(&snapshot);
         assert!(inferred.topology.topo_order.is_empty());
         assert_eq!(inferred.topology.node_count, 0);

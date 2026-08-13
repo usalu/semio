@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.shooting.shooting.mutation;
 
-// 🧬️ Shooting mutation schema — persistent fields only.
+// 🧬️ Shooting mutation schema — artifact-lane fields only.
 
 message ShootingMutation {
   // @state artifact

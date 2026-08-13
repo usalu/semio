@@ -1,4 +1,4 @@
-# 🧬️ Flow snapshot schema — persistent fields only.
+# 🧬️ Flow snapshot schema — artifact-lane fields only.
 
 type FlowSnapshot {
   schema: String! @state(class: ARTIFACT)

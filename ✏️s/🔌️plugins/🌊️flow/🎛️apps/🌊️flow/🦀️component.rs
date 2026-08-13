@@ -294,6 +294,8 @@ impl ArtifactApp for FlowPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = FlowPresence;
     type PresenceMutation = FlowPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = FlowCommand;
 

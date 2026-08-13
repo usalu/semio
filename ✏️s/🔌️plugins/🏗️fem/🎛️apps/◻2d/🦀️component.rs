@@ -199,6 +199,8 @@ impl ArtifactApp for Fem2dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::fem2d::presence::Fem2dPresence;
     type PresenceMutation = crate::apps::fem2d::presence::Fem2dPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Fem2dCommand;
 

@@ -49,6 +49,13 @@ pub mod formulation;
 pub mod mesh;
 #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs"]
 pub mod sparse;
+// 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d: FEM's own
+// dense-basics duplicate of `🧮️math/➕️algebra` (Mat2/VecD/MatD/Mat3d/vec3d_*) — the only slice FEM
+// ever called; `crate::model`/`crate::analyses`/`crate::elements2d`/`crate::elements3d`/
+// `crate::formulation`/`crate::sparse` were repointed from `math::algebra::` to `crate::algebra::`
+// in the same wave. `semio-framework-math` is no longer a dependency of this crate.
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/➕️algebra/🦀️component.rs"]
+pub mod algebra;
 #[path = "../../🎛️apps/◻2d/⚙️engine/🖥️app-surface/🦀️component.rs"]
 pub mod app_surface;
 

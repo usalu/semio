@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
-/// 🧬️ Full sequence artifact state across persistent, shared-ui and local-ui classes. Ticket
+/// 🧬️ Full sequence artifact state across the artifact, presence and config lanes. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`sequence→C:flow`): `steps`/`edges` are replaced
 /// by the same composed `content` CHILD slot `SequenceSnapshot` carries, mirroring `WriterArtifact`/
 /// `FlowArtifact`'s precedent so `to_snapshot`/`from_snapshot`/`set_snapshot` stay consistent.

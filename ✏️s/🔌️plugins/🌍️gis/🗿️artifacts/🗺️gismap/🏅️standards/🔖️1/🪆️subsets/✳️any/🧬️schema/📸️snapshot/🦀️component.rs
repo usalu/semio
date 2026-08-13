@@ -1,4 +1,4 @@
-//! 🧬️ GIS map snapshot schema — persistent fields only.
+//! 🧬️ GIS map snapshot schema — artifact-lane fields only.
 //!
 //! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):
 //! `GisMapSnapshot` now carries real `store::ArtifactChild<…>` handles for its composed

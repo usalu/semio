@@ -3,7 +3,7 @@ name = "semio-framework-math"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Semio math framework — algebra, number theory, WFC, probability/statistics, signal and spatial domains in one crate. Geometry/random live in semio-framework-geometry; the graph vocabulary, algorithms, drawing and manifest live in semio-framework-graph; symbolic algebra (CAS) and polynomials live in the ➗️mathematical plugin's own artifact tree (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, wave M3a)."
+description = "Semio math framework — algebra, number theory, entropy, fuzzy logic, WFC, LLM sampling, signal and spatial domains in one crate. Geometry/random live in semio-framework-geometry; the graph vocabulary, algorithms, drawing and manifest live in semio-framework-graph; symbolic algebra (CAS) and polynomials live in the ➗️mathematical plugin's own artifact tree (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, wave M3a); tabular/probability/statistics/causal live as ✳️table inference compute internals in the 🗄️stdio plugin's 🧿️semio artifact (same ticket, wave M3c)."
 
 [package.metadata.semio]
 role = "framework"

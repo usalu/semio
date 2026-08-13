@@ -1,23 +1,41 @@
-//! 🧬️ Curate snapshot schema — persistent fields only.
+//! 🧬️ Curate snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::curate::{CuratedItem, ObjectKind};
+use crate::artifacts::curate::{CuratedItem, ObjectKindExtra};
 use schema::ArtifactSchema;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted curate document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
+/// 📸️ Persisted curate document snapshot (persistent fields of the artifact). `catalog`/`stock_extra`
+/// together replace the former inline `stock: Vec<ObjectKind>` field: `catalog` composes stdio's
+/// `s.stdio.semio.kit` subset as an owned child (the shared `id`/`name`/`category` type-registry
+/// vocabulary), `stock_extra` carries the sourcing-owned overflow (`typologyPath`/`availability`/
+/// `geometry`) that subset can't represent — see `crate::artifacts::curate::stock_of` for the
+/// reassembly accessor every reader funnels through.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[dsl(id = "curate.curate", layout = "lines")]
 #[artifact_schema(id = "s.sourcing.curate")]
 pub struct CurateSnapshot {
     #[state(artifact)]
+    #[child(kind = "s.stdio.semio.kit")]
+    pub catalog: store::ArtifactChild<SemioKitSnapshot>,
+    #[state(artifact)]
     #[serde(default)]
-    pub stock: Vec<ObjectKind>,
+    pub stock_extra: Vec<ObjectKindExtra>,
     #[state(artifact)]
     #[serde(default)]
     #[dsl(table)]
     pub curated: Vec<CuratedItem>,
+}
+
+impl Default for CurateSnapshot {
+    /// 🌱 `ArtifactChild<S>` has no blanket `Default` (its target is content-addressed, never
+    /// arbitrary), so this is hand-written rather than derived — mints the same empty-stock handle
+    /// `catalog_child_handle(&[])` would, matching an explicitly-built empty document.
+    fn default() -> Self {
+        Self { catalog: crate::artifacts::curate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new() }
+    }
 }
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).

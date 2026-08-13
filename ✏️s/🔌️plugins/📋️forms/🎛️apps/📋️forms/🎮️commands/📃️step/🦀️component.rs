@@ -3,7 +3,7 @@
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::reset_try_config_mutations;
 use crate::artifacts::forms::schema::create_form_id;
-use crate::artifacts::forms::{op::FormMutation, FormsSnapshot, FormStep};
+use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot, FormStep};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -17,8 +17,12 @@ pub mod add_step {
 
     pub fn handle(_payload: &AddStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
-        let step = FormStep { id: create_form_id("step"), title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() };
-        Ok(Emit { artifact_mutations: vec![FormMutation::AddStep { step, index: None }], config_mutations: reset_try_config_mutations(), ..Default::default() })
+        let step = FormStep { id: create_form_id("step"), title: format!("Step {}", forms_steps(spec).len() + 1), description: None, blocks: Vec::new() };
+        Ok(Emit {
+            artifact_mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::create_step::mutation::CreateStep { step, index: None })],
+            config_mutations: reset_try_config_mutations(),
+            ..Default::default()
+        })
     }
 }
 //#endregion 🔖️AddStep
@@ -35,17 +39,24 @@ pub mod patch_step {
         pub value: String,
     }
 
+    /// ✏️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `FormMutation` has no whole-step-replace
+    /// variant (the old `UpdateStep{step}` is banned `SetSnapshot`-shaped vocabulary at the
+    /// per-collection scale) — emits the granular `RenameStep`/`ChangeStepDescription` verb the field
+    /// actually maps onto instead of building a whole replacement `FormStep`.
     pub fn handle(payload: &PatchStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
         let spec = doc.snapshot;
-        let Some(step) = spec.steps.iter().find(|step| step.id == payload.step_id).cloned() else {
+        if !forms_steps(spec).iter().any(|step| step.id == payload.step_id) {
             return Ok(Emit::default());
-        };
-        let step = match payload.field.as_str() {
-            "title" => FormStep { title: payload.value.clone(), ..step },
-            "description" => FormStep { description: Some(payload.value.clone()).filter(|description| !description.is_empty()), ..step },
+        }
+        let mutation = match payload.field.as_str() {
+            "title" => FormMutation::RenameStep(crate::artifacts::forms::mutations::rename_step::mutation::RenameStep { id: payload.step_id.clone(), new_title: payload.value.clone() }),
+            "description" => FormMutation::ChangeStepDescription(crate::artifacts::forms::mutations::change_step_description::mutation::ChangeStepDescription {
+                id: payload.step_id.clone(),
+                new_description: Some(payload.value.clone()).filter(|description| !description.is_empty()),
+            }),
             _ => return Ok(Emit::default()),
         };
-        Ok(Emit { artifact_mutations: vec![FormMutation::UpdateStep { step }], config_mutations: reset_try_config_mutations(), coalesce_key: Some(format!("patch-step:{}:{}", payload.step_id, payload.field)), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![mutation], config_mutations: reset_try_config_mutations(), coalesce_key: Some(format!("patch-step:{}:{}", payload.step_id, payload.field)), ..Default::default() })
     }
 }
 //#endregion 🔖️PatchStep
@@ -66,10 +77,10 @@ pub mod remove_step {
         }
         let spec = doc.snapshot;
         let config = cfg.snapshot;
-        let removed_ids: Vec<String> = spec.steps.iter().filter(|step| step.id == payload.step_id).flat_map(|step| step.blocks.iter().map(|question| question.id.clone())).collect();
+        let removed_ids: Vec<String> = forms_steps(spec).iter().filter(|step| step.id == payload.step_id).flat_map(|step| step.blocks.iter().map(|question| question.id.clone())).collect();
         let mut config_mutations = reset_try_config_mutations();
         config_mutations.push(FormsConfigMutation::SetSelection { ids: config.selected_ids.iter().filter(|id| !removed_ids.contains(id)).cloned().collect() });
-        Ok(Emit { artifact_mutations: vec![FormMutation::RemoveStep { step_id: payload.step_id.clone() }], config_mutations, ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![FormMutation::DeleteStep(crate::artifacts::forms::mutations::delete_step::mutation::DeleteStep { id: payload.step_id.clone() })], config_mutations, ..Default::default() })
     }
 }
 //#endregion 🔖️RemoveStep
@@ -89,7 +100,11 @@ pub mod move_step {
         if payload.step_id.is_empty() {
             return Ok(Emit::default());
         }
-        Ok(Emit { artifact_mutations: vec![FormMutation::MoveStep { step_id: payload.step_id.clone(), index: payload.index as usize }], config_mutations: reset_try_config_mutations(), ..Default::default() })
+        Ok(Emit {
+            artifact_mutations: vec![FormMutation::ReorderStep(crate::artifacts::forms::mutations::reorder_step::mutation::ReorderStep { id: payload.step_id.clone(), to_index: payload.index as usize })],
+            config_mutations: reset_try_config_mutations(),
+            ..Default::default()
+        })
     }
 }
 //#endregion 🔖️MoveStep
@@ -105,7 +120,11 @@ pub mod update_form {
     }
 
     pub fn handle(payload: &UpdateForm, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-        Ok(Emit { artifact_mutations: vec![FormMutation::UpdatePlaybook { title: Some(payload.title.clone()).filter(|title| !title.is_empty()) }], coalesce_key: Some("update-playbook".into()), ..Default::default() })
+        Ok(Emit {
+            artifact_mutations: vec![FormMutation::ChangeFormTitle(crate::artifacts::forms::mutations::change_form_title::mutation::ChangeFormTitle { new_title: Some(payload.title.clone()).filter(|title| !title.is_empty()) })],
+            coalesce_key: Some("change-form-title".into()),
+            ..Default::default()
+        })
     }
 }
 //#endregion 🔖️UpdateForm
@@ -125,28 +144,28 @@ mod tests {
     #[test]
     fn add_step_action_appends_step() {
         let mut app = forms_app();
-        let before = app.snapshot().expect("projection").steps.len();
+        let before = forms_steps(&app.snapshot().expect("projection")).len();
         dispatch(&mut app, FormsCommand::AddStep(AddStep {}));
-        assert_eq!(app.snapshot().expect("projection").steps.len(), before + 1);
+        assert_eq!(forms_steps(&app.snapshot().expect("projection")).len(), before + 1);
     }
 
     #[test]
     fn patch_step_updates_title_and_description() {
         let mut app = forms_app();
-        let step_id = app.snapshot().expect("projection").steps[0].id.clone();
+        let step_id = forms_steps(&app.snapshot().expect("projection"))[0].id.clone();
         dispatch(&mut app, FormsCommand::PatchStep(PatchStep { step_id, field: "title".into(), value: "Renamed".into() }));
-        assert_eq!(app.snapshot().expect("projection").steps[0].title, "Renamed");
+        assert_eq!(forms_steps(&app.snapshot().expect("projection"))[0].title, "Renamed");
     }
 
     #[test]
     fn remove_and_move_step_actions() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::AddStep(AddStep {}));
-        let last_step_id = app.snapshot().expect("projection").steps.last().unwrap().id.clone();
+        let last_step_id = forms_steps(&app.snapshot().expect("projection")).last().unwrap().id.clone();
         dispatch(&mut app, FormsCommand::MoveStep(MoveStep { step_id: last_step_id.clone(), index: 0 }));
-        assert_eq!(app.snapshot().expect("projection").steps[0].id, last_step_id);
+        assert_eq!(forms_steps(&app.snapshot().expect("projection"))[0].id, last_step_id);
         dispatch(&mut app, FormsCommand::RemoveStep(RemoveStep { step_id: last_step_id.clone() }));
-        assert!(app.snapshot().expect("projection").steps.iter().all(|step| step.id != last_step_id));
+        assert!(forms_steps(&app.snapshot().expect("projection")).iter().all(|step| step.id != last_step_id));
     }
 
     #[test]

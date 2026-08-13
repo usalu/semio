@@ -55,8 +55,8 @@ mod tests {
     fn select_row_and_world_select_update_config_selection() {
         let mut app = new_app();
         let document = app.snapshot().expect("snapshot");
-        let object_id = document.stock[0].id.clone();
-        let other_id = document.stock[1].id.clone();
+        let object_id = document.stock_extra[0].id.clone();
+        let other_id = document.stock_extra[1].id.clone();
 
         dispatch(&mut app, SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: Some(object_id.clone()) }));
         let selected = render(&mut app, grid::SOURCING_CURATE_BODY_GRID);

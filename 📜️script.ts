@@ -5362,6 +5362,103 @@ function policyPluginPurityTsFiles(repoRoot: string, rootRel: string): string[] 
   return found.sort();
 }
 
+//#region 🔖️StateLaneExhaustiveness
+/**
+ * 🫧️Files that may touch browser/native storage directly, because they ARE a sanctioned storage owner:
+ * - `🖥️platform` is the config lane's persistence adapter (`StoragePort`).
+ * - `🟦️backbone-worker.ts` backs `BlobStore` — content-addressed ARTIFACT content (what a
+ *   `LinkPin::Snapshot` escrows), which belongs to the artifact mechanism, not to config. Flagging it
+ *   would be a category error: it is not local-only UI state routing around a lane.
+ */
+const POLICY_STATE_LANE_CONFIG_ADAPTER_PREFIXES = ["🧰️framework/🔨️modules/🖥️platform/", "🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts"];
+
+/** 🫧️Trees excluded from the lane rules: the parallel `compose/` stack and product/site code that is not an app. */
+const POLICY_STATE_LANE_EXCLUDED_PREFIXES = ["compose/", "♻️mit-bestand/", "🌎️hub/", "🧰️framework/🛍️products/🦑️repo/"];
+
+/** 🫧️Direct browser/native persistence — legal only inside the config-lane adapter. */
+const POLICY_STATE_LANE_STORAGE_RE = /\b(?:localStorage|sessionStorage|indexedDB)\b/;
+
+/** 🫧️The TS process-local ephemeral boxes the Transient lane replaces. */
+const POLICY_STATE_LANE_EPHEMERAL_BOX_RE = /\bephemeral(?:Box|Map|Set|WeakMap)\b/;
+
+/**
+ * 📏️State-lane exhaustiveness: exactly FOUR state mechanisms exist, and nothing may route around them —
+ * **artifacts** (persisted + shared), **config** (persisted + local-only), **presence** (ephemeral + shared),
+ * **transient** (ephemeral + local-only UI). Ticket `26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION`.
+ *
+ * 🎯️ The lanes became reachable in wave A1 (`PresenceStore`/`TransientStore`, `EphemeralEmit`,
+ * `ArtifactApp::ephemeral`). This rule is the other half of the mandate — "enforced by api AND policies":
+ * an available lane that nothing forces you to use just becomes a fifth option beside the ad-hoc ones.
+ *
+ * Two sub-kinds, both REPORT-MODE at medium priority (they measure a real, large existing surface —
+ * ~158 `ephemeralBox*` uses and the shell's direct `localStorage` writes — which wave A4 retires):
+ * - `storage-outside-config-lane`: direct `localStorage`/`sessionStorage`/`indexedDB` outside the
+ *   `🖥️platform` adapter. Persisted local-only state IS the config lane; the medium is an adapter
+ *   detail, so bypassing the lane is what is banned, never the API itself.
+ * - `ephemeral-box`: the `ephemeralBox`/`ephemeralMap`/`ephemeralSet`/`ephemeralWeakMap` helpers in
+ *   `🎠️kernel/🟦️component.ts`, whose own docstring calls them the "sole lane until the OS draft
+ *   snapshot owns these keys". The Transient lane now owns them.
+ */
+export function policyStateLaneExhaustivenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const roots = ["🧰️framework", "✏️s"];
+  const seen = new Set<string>();
+
+  for (const root of roots) {
+    for (const relPath of policyPluginPurityTsFiles(repoRoot, root)) {
+      if (seen.has(relPath)) continue;
+      seen.add(relPath);
+      if (POLICY_STATE_LANE_EXCLUDED_PREFIXES.some((prefix) => relPath.startsWith(prefix))) continue;
+      // 🧪️ Test files are exempt: a test that drives the storage adapter, or asserts that an
+      // ephemeral box was retired, must be able to NAME the thing it is testing.
+      if (/\.test\.tsx?$/.test(relPath) || relPath.includes("/🧪️")) continue;
+      const isConfigAdapter = POLICY_STATE_LANE_CONFIG_ADAPTER_PREFIXES.some((prefix) => relPath.startsWith(prefix));
+      const content = policyReadFileSafe(repoRoot, relPath);
+      if (!content) continue;
+
+      content.split(/\r?\n/).forEach((raw, i) => {
+        const lineNo = i + 1;
+        // 🎯️ Mask literals, then strip BOTH comment forms: this rule greps raw source, and prose
+        // explaining that a helper was retired must not itself trip the rule — a hazard this repo's
+        // vocabulary policies have already been bitten by. `//` alone is not enough; the block-comment
+        // continuation (` * …`) is exactly where a docstring mentioning `localStorage` lives.
+        const trimmed = raw.trimStart();
+        if (trimmed.startsWith("*") || trimmed.startsWith("/*") || trimmed.startsWith("//")) return;
+        const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "").replace(/\/\*.*?\*\//g, "");
+
+        if (!isConfigAdapter && POLICY_STATE_LANE_STORAGE_RE.test(codeOnly)) {
+          breaches.push({
+            id: `state-lane-storage-${relPath}-${lineNo}`,
+            summary: `"${relPath}:${lineNo}" persists local state outside the config lane`,
+            kind: "taxonomy/state-lane-storage-outside-config-lane",
+            scope: relPath,
+            line: lineNo,
+            priority: "medium",
+            reason: "Only four state mechanisms exist. Persisted local-only state IS the config lane; a direct localStorage/sessionStorage/indexedDB write is a fifth, untyped, unvalidated one that no schema facet describes and no policy can check the shape of.",
+            solution: `Move the state at ${relPath}:${lineNo} into the app's (or the OS shell's) config record and let the 🖥️platform StoragePort adapter persist it. The storage MEDIUM stays legal — bypassing the lane is what does not.`,
+          });
+        }
+
+        if (POLICY_STATE_LANE_EPHEMERAL_BOX_RE.test(codeOnly)) {
+          breaches.push({
+            id: `state-lane-ephemeral-box-${relPath}-${lineNo}`,
+            summary: `"${relPath}:${lineNo}" uses a process-local ephemeral box`,
+            kind: "taxonomy/state-lane-ephemeral-box",
+            scope: relPath,
+            line: lineNo,
+            priority: "medium",
+            reason: "The ephemeralBox/Map/Set/WeakMap helpers are untyped process-local state keyed by string — their own docstring calls them the sole lane 'until the OS draft snapshot owns these keys'. The Transient lane (ephemeral + local-only) now owns exactly that role, typed and dispatched.",
+            solution: `Replace the ephemeral box at ${relPath}:${lineNo} with the app's Transient lane (ArtifactApp::Transient + ArtifactApp::ephemeral), or — if the value is genuinely render-internal (no plugin render depends on it, no second surface reads it, losing it on re-render breaks only a visual nicety, and it is never persisted) — keep it as ordinary component-local state instead of a module-level box.`,
+          });
+        }
+      });
+    }
+  }
+
+  return breaches;
+}
+//#endregion 🔖️StateLaneExhaustiveness
+
 /**
  * 📏️Plugin purity: every `.rs` file under `✏️s/🔌️plugins/` may not perform filesystem, env/process, or
  * network IO, nor own item-scope ambient mutable state (`thread_local!`/`static mut`/`lazy_static!`/
@@ -5436,8 +5533,8 @@ function policyPluginPurityBreaches(repoRoot: string): BreachRecord[] {
           emit(
             "thread-local-state",
             "declares thread_local! ambient state",
-            "APA: thread_local! has no framework-sanctioned owner in a plugin — every app that needed session state independently reinvented this because ArtifactApp gives it none (100% of apps are type Draft = NoDraft today, 📓️w0-c-purity.md §5).",
-            `Replace thread_local! at ${relPath}:${lineNo} with typed Draft-lane state once the Draft mechanism lands (W1), or route through the artifact's own engine state.`,
+            "APA: thread_local! has no framework-sanctioned owner in a plugin — every app that needed session state independently reinvented this because ArtifactApp gave it none. That gap is now closed: the four state mechanisms (artifact/config/presence/transient) are all typed lanes on ArtifactApp.",
+            `Replace thread_local! at ${relPath}:${lineNo} with the lane that matches what the state actually IS — ephemeral local UI state → the Transient lane (ArtifactApp::Transient, emitted via ArtifactApp::ephemeral); ephemeral shared state → Presence; uncommitted document content → the Draft lane; a cached view of an owned CHILD's content → do not cache at all, read it through ArtifactView.children, which cannot go stale (see 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION/📓️cw2-child-cache-finding.md for the one case still blocked: codecs take no context, so a child-content cache cannot be deleted until the parent's serialized form drops resolved child content in favour of the handle).`,
           );
         }
         if (POLICY_PLUGIN_PURITY_STATIC_MUT_RE.test(raw)) {
@@ -5953,6 +6050,7 @@ function policyApaBreaches(repoRoot: string): BreachRecord[] {
   return policyApaRatchetApply([
     ...policyPluginClosedShapeBreaches(repoRoot),
     ...policyPluginPurityBreaches(repoRoot),
+    ...policyStateLaneExhaustivenessBreaches(repoRoot),
     ...policyDeclarativeRegistrationBreaches(repoRoot),
     ...policyPluginDependencyAllowlistBreaches(repoRoot),
     ...policyEffectCapabilityParityBreaches(repoRoot),

@@ -58,7 +58,8 @@ pub fn render(deck: &PresentSnapshot, selected: &[String], labels: &AnimatePrese
             menu: None,
         }]);
     }
-    let tiles: Vec<&FigureTileDraft> = selected.iter().filter_map(|id| deck.tiles.iter().find(|tile| &tile.id == id)).collect();
+    let (_, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
+    let tiles: Vec<&FigureTileDraft> = selected.iter().filter_map(|id| deck_tiles.iter().find(|tile| &tile.id == id)).collect();
     if tiles.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.not-found".into(),

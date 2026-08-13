@@ -306,6 +306,8 @@ impl ArtifactApp for LowpolyPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::apps::lowpoly::presence::LowpolyPresence;
     type PresenceMutation = crate::apps::lowpoly::presence::LowpolyPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = LowpolyCommand;
 

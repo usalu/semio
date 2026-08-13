@@ -1,4 +1,4 @@
-# 🧬️ Imperative snapshot schema — persistent fields only.
+# 🧬️ Imperative snapshot schema — artifact-lane fields only.
 
 type ImperativeSnapshot {
   schema: String! @state(class: ARTIFACT)

@@ -1,4 +1,4 @@
-//! 🧬️ Draw snapshot schema — persistent fields only.
+//! 🧬️ Draw snapshot schema — artifact-lane fields only.
 
 use crate::artifacts::draw::{DrawArtboard, DrawImageAsset, DrawLayerNode, DRAW_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;

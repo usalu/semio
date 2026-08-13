@@ -1,4 +1,4 @@
-/** 📸️ DAG snapshot schema — persistent fields only. */
+/** 📸️ DAG snapshot schema — artifact-lane fields only. */
 export interface DagSnapshot {
   /** @state artifact */ schema: string;
   /** @state artifact */ nodes: DagNodeSpec[];

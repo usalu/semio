@@ -1,4 +1,4 @@
-/** 🧬️ GIS terrain snapshot schema — persistent fields only. */
+/** 🧬️ GIS terrain snapshot schema — artifact-lane fields only. */
 
 export interface GisTerrainSnapshot {
   /** @state artifact */

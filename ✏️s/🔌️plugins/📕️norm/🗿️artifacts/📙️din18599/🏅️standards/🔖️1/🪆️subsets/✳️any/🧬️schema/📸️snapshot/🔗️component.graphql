@@ -1,4 +1,4 @@
-# 🧬️ Din18599 snapshot schema — persistent fields only.
+# 🧬️ Din18599 snapshot schema — artifact-lane fields only.
 
 type Din18599Snapshot {
   useClass: String! @state(class: ARTIFACT)

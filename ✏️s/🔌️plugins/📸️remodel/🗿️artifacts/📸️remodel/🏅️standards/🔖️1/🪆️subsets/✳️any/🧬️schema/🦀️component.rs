@@ -63,7 +63,7 @@ pub fn video_codec_from_label(label: &str) -> VideoCodec {
 //#endregion 🔖️Codecs
 
 //#region 🔖️Artifact
-/// 🧬️ Full remodel artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full remodel artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel")]

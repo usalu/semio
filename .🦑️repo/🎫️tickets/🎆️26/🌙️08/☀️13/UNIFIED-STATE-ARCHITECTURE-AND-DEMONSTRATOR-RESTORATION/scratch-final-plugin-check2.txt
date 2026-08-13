@@ -1,0 +1,6 @@
+semio-s-plugin-writer: 0 errors
+semio-s-plugin-lowpoly: 0 errors
+semio-s-plugin-mathematical: 0 errors
+semio-s-plugin-sequence: 0 errors
+semio-s-plugin-norm: 0 errors
+semio-s-plugin-cad: 0 errors

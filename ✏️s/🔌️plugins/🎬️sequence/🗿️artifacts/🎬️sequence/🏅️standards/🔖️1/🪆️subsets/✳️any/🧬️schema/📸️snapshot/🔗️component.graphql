@@ -1,4 +1,4 @@
-# 🧬️ Sequence snapshot schema — persistent fields only.
+# 🧬️ Sequence snapshot schema — artifact-lane fields only.
 type SequenceSnapshot {
   schema: String! @state(class: ARTIFACT)
   steps: [SequenceStep!]! @state(class: ARTIFACT)

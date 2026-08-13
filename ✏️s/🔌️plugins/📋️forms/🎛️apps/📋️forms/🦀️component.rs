@@ -302,6 +302,8 @@ impl ArtifactApp for FormsPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = FormsPresence;
     type PresenceMutation = FormsPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = FormsCommand;
 
@@ -525,6 +527,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::apps::forms::testkit::{building_component_contributions, building_component_question, forms_app, forms_app_with_registry};
+    use crate::artifacts::forms::forms_steps;
     use semio_framework_plugin::testkit::meta;
 
     //#region 🔖️CommandSurface
@@ -637,7 +640,7 @@ mod tests {
     #[test]
     fn add_question_materializes_kind_default() {
         let mut app = forms_app_with_registry();
-        let steps_before = app.snapshot().expect("projection").steps.len();
+        let steps_before = forms_steps(&app.snapshot().expect("projection")).len();
         assert!(steps_before > 0, "seeded fixture has at least one step to receive the question");
         app.dispatch_typed(FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), &meta("local")).expect("add question");
         let spec = app.snapshot().expect("projection");
@@ -723,7 +726,8 @@ mod tests {
     fn two_instances_converge_disjoint_edits() {
         semio_framework_plugin::testkit::assert_two_instances_converge::<FormsPlayApp, (usize, usize)>("mem://forms-convergence", FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), FormsCommand::AddStep(add_step::AddStep {}), |app| {
             let projection = app.snapshot().expect("materialize projection");
-            (projection.steps.len(), projection.steps[0].blocks.len())
+            let steps = forms_steps(&projection);
+            (steps.len(), steps[0].blocks.len())
         });
     }
     //#endregion 🔖️CrossCutting

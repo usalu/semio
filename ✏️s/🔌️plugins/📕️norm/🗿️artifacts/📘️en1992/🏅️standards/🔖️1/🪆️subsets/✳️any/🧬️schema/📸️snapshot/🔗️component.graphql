@@ -1,4 +1,4 @@
-# 🧬️ En1992 snapshot schema — persistent fields only.
+# 🧬️ En1992 snapshot schema — artifact-lane fields only.
 
 type En1992Snapshot {
   annex: String! @state(class: ARTIFACT)

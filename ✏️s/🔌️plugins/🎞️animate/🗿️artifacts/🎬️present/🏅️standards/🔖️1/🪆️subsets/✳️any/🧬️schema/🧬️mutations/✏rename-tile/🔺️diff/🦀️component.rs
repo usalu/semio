@@ -1,21 +1,17 @@
 //! 🔺️ Sparse diff construction for `rename-tile`.
 use super::mutation::RenameTile;
-use crate::artifacts::present::diff::{PresentDiff, PresentTilePatchEntry, PresentTilesDelta};
-use crate::artifacts::present::{FigureTileDraftPatch, PresentSnapshot};
+use crate::artifacts::present::diff::PresentDiff;
+use crate::artifacts::present::PresentSnapshot;
 
 //#region 🔹Diff
-/// 🔺️ Builds the sparse `tiles` name-only patch delta directly from the payload — real handcrafted
-/// construction, never apply-then-capture, never a snapshot clone.
-pub fn diff(payload: &RenameTile, _base: &PresentSnapshot) -> PresentDiff {
-    PresentDiff {
-        tiles: Some(PresentTilesDelta {
-            patched: vec![PresentTilePatchEntry {
-                id: payload.id.clone(),
-                patch: FigureTileDraftPatch { name: Some(payload.new_name.clone()), crop: None },
-            }],
-            ..Default::default()
-        }),
-        ..Default::default()
+/// 🔺️ Reads the working-scene `(source, tiles)` off `base.presentation`, applies the name-only
+/// patch to the addressed tile, and mints a new content-addressed `presentation` handle for the
+/// result — real handcrafted construction from `(payload, base)`, never apply-then-capture.
+pub fn diff(payload: &RenameTile, base: &PresentSnapshot) -> PresentDiff {
+    let (source, mut tiles) = crate::artifacts::present::present_working_scene(base);
+    if let Some(tile) = tiles.iter_mut().find(|tile| tile.id == payload.id) {
+        tile.name = payload.new_name.clone();
     }
+    crate::artifacts::present::diff::diff_set_presentation(&source, &tiles)
 }
 //#endregion 🔹Diff

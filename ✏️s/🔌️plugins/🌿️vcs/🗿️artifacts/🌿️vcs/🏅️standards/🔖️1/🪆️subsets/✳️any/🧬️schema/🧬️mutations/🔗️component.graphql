@@ -1,4 +1,4 @@
-# 🧬️ VCS mutation schema — persistent fields only.
+# 🧬️ VCS mutation schema — artifact-lane fields only.
 
 type VcsMutation {
   schema: String! @state(class: ARTIFACT)
