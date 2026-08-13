@@ -518,10 +518,42 @@
     \int_incr:N \l_tmpa_int
   }
 }
-\NewDocumentCommand \SemioTreeMarks { O{\semio@tree@marks@sep} m }
+% xparse's O{default} substitutes the DEFAULT TOKENS literally when the
+% optional argument is omitted -- it does not expand them first. Written as
+% O{\semio@tree@marks@sep}, an omitted call passed the macro NAME itself as
+% #1, not its ";" expansion, so \seq_set_split:Nnn never found a real
+% separator to split on: the whole marks string passed through as ONE
+% segment, raw semicolons and all, and the join loop's \textperiodcentered
+% separator (and the break opportunity it carries) never fired -- which is
+% also why a taxon with many marks segments overflowed its column rather
+% than wrapping (found by inspecting the full appendix, not the smoke test,
+% whose short mark lists happened to still look plausible with the bug
+% present).
+%
+% O{} (a genuinely empty default) resolves the macro's current expansion
+% instead -- but the resolved separator has to be MATERIALISED into a plain
+% variable first, not handed to \semio_tree_marks_format:nn as a live
+% \tl_if_blank:nTF{...}{...}{...} call: that function's :nn signature does
+% not expand its arguments, so \seq_set_split:Nnn would receive the
+% CONDITIONAL'S OWN TOKENS as the thing to split on, not the value the
+% conditional resolves to (this was tried first; it threw "You can't use
+% `macro parameter character #' in horizontal mode", since seq_set_split
+% ended up scanning the unexpanded #1/#2 inside the conditional's own
+% branches as literal text). \exp_args:Nc-style generated Vn variant reads
+% the already-resolved scratch variable's value in place instead.
+\tl_new:N \l_semio_tree_marks_sep_tl
+\cs_new_protected:Npn \semio_tree_marks_sep_set:n #1 {
+  \tl_if_blank:nTF {#1}
+    { \tl_set:Nx \l_semio_tree_marks_sep_tl { \semio@tree@marks@sep } }
+    { \tl_set:Nx \l_semio_tree_marks_sep_tl {#1} }
+}
+\cs_generate_variant:Nn \semio_tree_marks_format:nn { Vn }
+\NewDocumentCommand \SemioTreeMarks { O{} m }
   {
+    \semio_tree_marks_sep_set:n {#1}
     {\SemioMono\fontsize{7pt}{8.4pt}\selectfont
-     \color{semio-chrome-text-normal}\semio_tree_marks_format:nn {#1}{#2}}
+     \color{semio-chrome-text-normal}
+     \semio_tree_marks_format:Vn \l_semio_tree_marks_sep_tl {#2}}
   }
 %endregion Marks
 

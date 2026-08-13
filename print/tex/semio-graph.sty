@@ -271,9 +271,9 @@
   \exp_args:NV \file_if_exist:nT \l_semio_graph_image_path_tl {
     \begin{scope}
       \clip (#1) circle [ radius=\semio@graph@node@radius ] ;
-      \node [ inner~sep=0pt ] at (#1) {
+      \node [ inner~sep=0pt , outer~sep=0pt , fill=none , draw=none ] at (#1) {
         \includegraphics
-          [ width=\dim_eval:n { 2 \semio@graph@node@radius } ]
+          [ width=\dim_eval:n { \semio@graph@node@radius * 2 } ]
           { \tl_use:N \l_semio_graph_image_path_tl }
       } ;
     \end{scope}
