@@ -2,7 +2,7 @@
 
 # Akteursnetz – Faktencheck (Review)
 
-**Erhebungsstand:** 13.08.2026  ·  **Abdeckung:** 955 Knoten live geprüft (AT, BE, CH, DE, DK, FI, FR, GB, NL, NO, SE)  ·  **Entfernungskandidaten:** 90  ·  **Status-Legende:** offen / übernommen / abgelehnt
+**Erhebungsstand:** 13.08.2026  ·  **Abdeckung:** 955 Knoten live geprüft (AT, BE, CH, DE, DK, FI, FR, GB, NL, NO, SE)  ·  **Entfernungskandidaten:** 91  ·  **Status-Legende:** offen / übernommen / abgelehnt
 
 ## Methode
 
@@ -67,9 +67,9 @@ Jeder `kern`-Knoten und jede `belegt`-Kante trägt eine Beleg-URL und ein wörtl
 
 ## Berechnete Entfernungskandidaten
 
-**90** Knoten erfüllen R1–R3. Nichts davon ist bereits gelöscht — diese Liste ist ein Vorschlag zur manuellen Freigabe (`prune_faktencheck.json`).
+**91** Knoten erfüllen R1–R3. Nichts davon ist bereits gelöscht — diese Liste ist ein Vorschlag zur manuellen Freigabe (`prune_faktencheck.json`).
 
-Nach Regel: R1 (Duplikat) 6 · R2 (ohne_beleg + isoliert) 84 · R3 (falsches Land, kein gezeichnetes Panel) 0
+Nach Regel: R1 (Duplikat) 6 · R2 (ohne_beleg + isoliert) 84 · R3 (falsches Land, kein gezeichnetes Panel) 1
 
 | Land | tid | Name | Grad | Regel/Begründung | Status |
 |---|---|---|---|---|---|
@@ -157,6 +157,7 @@ Nach Regel: R1 (Duplikat) 6 · R2 (ohne_beleg + isoliert) 84 · R3 (falsches Lan
 | NL | M03 | Brocantiek de Linde | ohne_beleg | R2 ohne_beleg + structurally isolated | offen |
 | NL | M20 | Willem Schermerhorn | ohne_beleg | R2 ohne_beleg + structurally isolated | offen |
 | NL | P1 | Aa en Maas Office Building | ohne_beleg | R2 ohne_beleg + structurally isolated | offen |
+| NL | U25 | EDGE (SXB S.à r.l.) | bezug | R3 wrong country (manual: SXB S.a r.l. is registered in Luxembourg (land_ist=LU); Luxembourg is not a drawn panel) | offen |
 | NL | U28 | Fred Stolwijk B.V. | ohne_beleg | R2 ohne_beleg + structurally isolated | offen |
 | NL | U47 | Space&Matter | ohne_beleg | R2 ohne_beleg + structurally isolated | offen |
 | NL | U52 | TKF / Twente cable factory | ohne_beleg | R2 ohne_beleg + all incident edges unklar | offen |
@@ -170,11 +171,11 @@ Diese Knoten sind geflaggt, erfüllen aber keine Entfernungsregel — sie bleibe
 
 ### Falsches Land
 
-**Drei verschiedene Fälle unter diesem Flag — jeder von Hand gegen seine Begründung geprüft, offen für Entscheidung:**
+**Drei verschiedene Fälle unter diesem Flag, jeder von Hand gegen seine Begründung geprüft:**
 
 - Vier DE-Fälle sind tatsächlich dänische Organisationen (Roskilde Universität/Kommune, Høje-Taastrup Kommune, Region Hovedstaden), gezeichnet im DE-Panel. Das korrekte Land (DK) ist selbst ein gezeichnetes Panel — keine Entfernung angezeigt, nur Panel-Korrektur.
-- Zwei NL-Fälle (BlueCity, Workspot) sind **keine** Landfehler der Akteure, sondern **falsche gespeicherte Quell-URLs**, die zufällig zu gleichnamigen ausländischen Firmen zeigen. Die realen Akteure sind korrekt niederländisch.
-- Ein NL-Fall (EDGE/SXB) ist ein **echter** Landfehler: die registrierte Klientin ist luxemburgisch, nicht niederländisch, und Luxemburg ist kein gezeichnetes Panel — nach der R3-Regel wäre das ein legitimer Entfernungskandidat. **`merge_verdicts.py` prüft aktuell das falsche der beiden Landfelder (`land_soll` statt `land_ist`) und würde bei einer naiven Korrektur auch BlueCity und Workspot fälschlich zur Entfernung vorschlagen — deshalb hier manuell aufgelöst statt automatisiert.**
+- Zwei NL-Fälle (BlueCity, Workspot) sind **keine** Landfehler der Akteure, sondern **falsche gespeicherte Quell-URLs**, die zufällig zu gleichnamigen ausländischen Firmen zeigen. Die realen Akteure sind korrekt niederländisch. Bleiben im Netz, unten aufgeführt.
+- Ein NL-Fall (EDGE/SXB, tid U25) ist ein **echter** Landfehler: die registrierte Klientin ist luxemburgisch, nicht niederländisch, und Luxemburg ist kein gezeichnetes Panel. `merge_verdicts.py`s allgemeine R3-Regel prüft weiterhin das falsche der beiden Landfelder (`land_soll` statt `land_ist`) und würde bei einer naiven Korrektur auch BlueCity und Workspot fälschlich zur Entfernung vorschlagen — deshalb bleibt die Regel unverändert, und dieser eine Fall wurde von Hand als R3-Kandidat ergänzt. **Steht daher nicht unten, sondern oben unter Entfernungskandidaten.**
 
 | Land (gezeichnet) | tid | Name | Grad | Land laut Flag | Einordnung |
 |---|---|---|---|---|---|
@@ -183,7 +184,6 @@ Diese Knoten sind geflaggt, erfüllen aber keine Entfernungsregel — sie bleibe
 | DE | I06 | Roskilde Kommune | kern | DK | Panel-Fehlzuordnung: Akteur ist real dänisch, gehört ins DK-Panel. (R3 nicht anwendbar — DK ist selbst ein gezeichnetes Panel) |
 | DE | U39 | Region Hovedstaden | bezug | DK | Panel-Fehlzuordnung: Akteur ist real dänisch, gehört ins DK-Panel. (R3 nicht anwendbar — DK ist selbst ein gezeichnetes Panel) |
 | NL | O03 | BlueCity / Blue City 010 BV | bezug | CN | Gespeicherte Quell-URL zeigt auf eine gleichnamige chinesische Firma; das reale BlueCity Rotterdam ist korrekt niederländisch. (kein Landfehler des Akteurs) |
-| NL | U25 | EDGE (SXB S.à r.l.) | bezug | LU | Echter Landfehler: SXB S.à r.l. ist in Luxemburg registriert (Klientin des Berliner EDGE-Projekts), nicht niederländisch. Nicht in prune_faktencheck.json enthalten, da merge_verdicts.py derzeit auf das andere Landfeld prüft — offene Korrektur, siehe Text unten. (R3-Kandidat wäre zulässig — LU ist kein gezeichnetes Panel) |
 | NL | U65 | Workspot | bezug | US | Gespeicherte Quell-URL zeigt auf einen gleichnamigen US-SaaS-Anbieter; das reale Workspot (Bürovermieter Rotterdam) ist korrekt niederländisch. (kein Landfehler des Akteurs) |
 
 ### Falscher Typ (Person/Organisation als Projekt oder umgekehrt)
