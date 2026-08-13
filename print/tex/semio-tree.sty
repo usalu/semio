@@ -1,73 +1,446 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-tree}[2026/08/12 v0.1.0 semio hierarchical tree tables]
+\ProvidesPackage{semio-tree}[2026/08/13 v0.3.0 semio phylogenetic trees]
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
-\RequirePackage{semio-table}
-% array/colortbl/longtable arrive with semio-table.sty; nothing extra to load.
+\RequirePackage{semio-window}
+% tikz itself arrives with semio-window.sty. `calc` does NOT -- no .sty in this
+% system loads a tikz library (only the two document preambles do), so a
+% package that wants one must say so here.
+\usetikzlibrary{calc}
 
-% 🌳 A phylogenetic/outline tree is a hierarchy that must PAGINATE (a real
-% tree can run to hundreds of leaves), so it cannot be a tikzpicture (one
-% unbreakable box -- see semio-graph.sty's GraphSpread comment). It is built
-% on the SAME longtable substrate as \SemioTableLong: every row's height comes
-% from real `array` text measurement, not an estimate, and pagination is
-% native, not precomputed. This package does not reimplement that substrate --
-% it opens \SemioTableLong exactly as GraphFigure opens the existing Figure
-% window, and adds only the tree-specific vocabulary: row kinds, indentation
-% and mark formatting.
-\providecommand{\semio@tree@text@size}{7.2pt}
-\providecommand{\semio@tree@marks@size}{7pt}
+% 🌳 A rectangular cladogram: one vertical rail per parent, dropping from that
+% parent's own bottom-left corner, with a horizontal branch into each child,
+% ending after the last child. A table row cannot draw its own connector (a
+% \rule spanning a row must know the row's height, which is only known after
+% the cell has already been broken into lines), so this is TikZ: the rail is
+% drawn from measured ANCHORS, and connectedness is structural rather than
+% tuned. The cost is the cost GraphFigure already pays: a tikzpicture is one
+% unbreakable box, so a tree that outgrows a page is split into plates by the
+% caller -- exactly what the reference rendering of this appendix did
+% ("Detailbaum ECO (Teil 1/2)").
+%
+% 📐 The grid is a single INDENT STEP, not one x per named level: a node's
+% column is `depth * step`, so adding a level between two existing ones (or
+% deeper than the deepest) is registering a kind at that integer depth via
+% \SemioTreeKind -- no new x constant to invent, and every level scales
+% together if the step ever changes. `width`/step values are millimetres
+% because `semio tree picture` sets x=1mm; the column widths carry units
+% because they are handed to a tabular, a different consumer.
+\providecommand{\semio@tree@width}{147}
+\providecommand{\semio@tree@indent@step}{7.3mm}
+\providecommand{\semio@tree@w@code}{21.5mm}
+\providecommand{\semio@tree@w@label}{72.5mm}
+\providecommand{\semio@tree@w@marks}{33mm}
+\providecommand{\semio@tree@w@gutter}{1.5mm}
+% 📏 Vertical rhythm: only the GAPS between nodes -- the nodes size
+% themselves, so no line-height estimate exists anywhere in this package.
+\providecommand{\semio@tree@gap@box}{3.4mm}
+\providecommand{\semio@tree@gap@row}{2.4mm}
+% ↳ Where a branch meets a "row" kind (a leaf: text, not a box): the branch
+% must land ON the first text line, not on the row's vertical middle --
+% otherwise a three-line taxon reads as joined at its second line. Expressed
+% as a FRACTION of that row's own leading (registered per kind, see
+% KindRegistry) rather than a fixed length, so it stays correct if a kind's
+% font size changes and self-scales for any new row-kind level a caller adds.
+% As a numerator/denominator pair, not a decimal: \dimexpr's `*`/`/` operators
+% only accept integers, so a decimal factor (`*0.5`) is not valid syntax --
+% this is the same <coefficient><dimen> family of pitfall documented at the
+% Primitives region's \semio_tree_elbow:n, worked around the same way
+% dimensions are multiplied by a fraction everywhere else in this file.
+% Calibrated against real output: factor 1/2 landed the branch 1.2pt above
+% the first line's glyph top (measured via PyMuPDF word/line extraction) --
+% visibly grazing above the text rather than pointing at it. Solving for the
+% factor that lands on that line's CAP-HEIGHT CENTER instead (matching how a
+% box kind's branch already centers on its box, via anchor=west) gives
+% 9/8=1.125, not a small fraction -- the tabular's own internal row padding,
+% not just the font's ascent, is part of what the branch has to clear.
+\providecommand{\semio@tree@elbow@num}{9}
+\providecommand{\semio@tree@elbow@den}{8}
 \providecommand{\semio@tree@marks@sep}{;}
-% Colspec/header are NOT indirected through a macro: \SemioTableLong is a
-% plain \newcommand (not expl3-aware) that reads its 3rd/4th arguments as
-% literal text -- every other call site in this codebase (register, glossary,
-% the D-set appendices) passes that text inline for the same reason. A macro
-% reference there is read as ONE unexpanded token, not split on its commas.
+
+% 🔤 Row bodies are plain \newcommands, deliberately defined OUTSIDE
+% \ExplSyntaxOn: they are ordinary LaTeX (a tabular preamble, font switches,
+% \hspace) where a literal space is meaningful, and writing them under expl3
+% catcodes would mean spelling every space `~` inside a tabular spec. Both
+% are parametrized by FONT SWITCHES the caller's kind registration supplies
+% (not hardcoded per named level), so a custom \SemioTreeKind gets the same
+% two-part (code, label) formatting as root/group/leaf for free.
+\newcommand{\semio@tree@box}[5]{% code-font, code, label-font, label, count
+  {#1 #2}\hspace{0.55em}{#3 #4}\semio@tree@boxcount{#3}{#5}%
+}
+% An empty count is the normal case (most box kinds have none, or not yet),
+% so it is tested rather than required -- \ifx\relax#1\relax is the
+% plain-TeX empty test, valid here because this macro lives outside expl3: an
+% EMPTY braced argument contributes no tokens at the call site, so
+% "\ifx\relax#1\relax" degrades to "\ifx\relax\relax" exactly when #1 was {}.
+\newcommand{\semio@tree@boxcount}[2]{%
+  \ifx\relax#2\relax\else\ \textperiodcentered\ {#1 #2}\fi
+}
+% A row is three aligned columns, not three nodes: one tabular makes the
+% row's height the maximum of code/label/marks automatically, and keeps the
+% columns flush across every row without a shared coordinate system. The
+% code-font switch wraps the WHOLE tabular, not just its own cell: a tabular
+% opened under the document's ambient (body-text-sized) font computes its
+% row padding from THAT font, not the small one used inside it, inflating
+% the gap between a node's top edge and where its first line actually sits
+% -- this is what the elbow alignment fix in the Primitives region depends on.
+\newcommand{\semio@tree@row}[5]{% code-font, code, label-font, label, marks
+  {#1
+   \begin{tabular}[t]{@{}p{\semio@tree@w@code}@{\hspace{\semio@tree@w@gutter}}p{\semio@tree@w@label}@{\hspace{\semio@tree@w@gutter}}>{\raggedleft\arraybackslash}p{\semio@tree@w@marks}@{}}
+     {\color{semio-chrome-text-normal}#2}
+     & {#3\color{semio-chrome-foreground}#4}
+     & {#5}
+   \end{tabular}}%
+}
 
 \ExplSyntaxOn
 
 %region Diagnostics
 \msg_new:nnn { semio-tree } { unknown-kind }
-  { Unknown~semio~tree~row~kind~'#1'.~Known~kinds:~
+  { Unknown~semio~tree~node~kind~'#1'.~Known~kinds:~
     \seq_use:Nn \g_semio_tree_kinds_seq { ,~ } . }
 \msg_new:nnn { semio-tree } { kind-exists }
-  { Semio~tree~row~kind~'#1'~is~already~defined. }
-%endregion
+  { Semio~tree~node~kind~'#1'~is~already~defined. }
+\msg_new:nnn { semio-tree } { outside-figure }
+  { \iow_char:N\\#1~needs~an~enclosing~TreeFigure~(it~draws~into~its~tikzpicture). }
+%endregion Diagnostics
+
+%region StyleVocabulary
+% 🎨 The tree vocabulary, namespaced `semio tree *`. It used to live in the
+% document preamble, which is why every document that wanted a tree
+% redeclared it. Depth reads through stroke weight and fill tone, never
+% through hue, so the dark build needs no second vocabulary.
+\tikzset{
+  semio~tree~picture/.style={
+    x=1mm, y=1mm,
+    every~node/.append~style={ outer~sep=0pt },
+  },
+  semio~tree~branch/.style={
+    draw=semio-chrome-border-normal,
+    line~width=\semio@stroke@hairline,
+  },
+}
+%endregion StyleVocabulary
 
 %region KindRegistry
-% 🧬 A row KIND is a delta on the plain leaf row: which band fill it uses (or
-% none, for an ordinary leaf), which font it sets, and how many indent units
-% it steps in. Mirrors \semio_graph_state_define:nnn in semio-graph.sty: kinds
-% never overwrite each other, and a new kind is added with \SemioTreeKind,
-% never by editing the defaults below. `leaf` is the base (unstyled, deepest)
-% member; `group` is a spanning band one level shallower.
+% 🧬 A node KIND carries everything that differs between hierarchy levels:
+% how it is drawn (a tikz style), how deep it sits (an integer -- its column
+% is `depth * \semio@tree@indent@step`, and it is what an incoming branch
+% looks up its parent by), how a branch lands on it (`box` = at its
+% middle-left, for a bordered box; `row` = on its first text line, for a bare
+% text row), and the two font switches its content formatter uses for the
+% code/label parts. Mirrors \semio_graph_state_define:nnn -- kinds never
+% overwrite each other, and a deeper hierarchy adds a kind with \SemioTreeKind
+% rather than editing the defaults below. Two SEPARATE depth=2, say, kinds
+% are fine (a tree can have more than one flavour of node at one level); what
+% matters for placement/connection is only the integer itself.
 \seq_new:N \g_semio_tree_kinds_seq
+\int_new:N \g_semio_tree_maxdepth_int
 
-\cs_new_protected:Npn \semio_tree_kind_define:nnnn #1#2#3#4 {
+% Leading (#7) is stored here too, not via a separate call: a "row" kind's
+% branch-elbow height (Primitives region) needs it, and a caller extending
+% the hierarchy should not have to leave the public API to register a new
+% level -- \SemioTreeKind alone is enough, no \ExplSyntaxOn required at the
+% call site.
+\cs_new_protected:Npn \semio_tree_kind_define:nnnnnnn #1#2#3#4#5#6#7 {
   \seq_if_in:NnTF \g_semio_tree_kinds_seq {#1}
     { \msg_error:nnn { semio-tree } { kind-exists } {#1} }
     {
       \seq_gput_right:Nn \g_semio_tree_kinds_seq {#1}
-      \tl_const:cn { c_semio_tree_kind_#1_fill_tl }   {#2}
-      \tl_const:cn { c_semio_tree_kind_#1_font_tl }   {#3}
-      \tl_const:cn { c_semio_tree_kind_#1_indent_tl } {#4}
+      \tl_const:cn { c_semio_tree_kind_#1_depth_tl }     {#3}
+      \tl_const:cn { c_semio_tree_kind_#1_inlet_tl }     {#4}
+      \tl_const:cn { c_semio_tree_kind_#1_codefont_tl }  {#5}
+      \tl_const:cn { c_semio_tree_kind_#1_labelfont_tl } {#6}
+      \tl_const:cn { c_semio_tree_kind_#1_leading_tl }   {#7}
+      \tikzset{ semio~tree~node~#1/.style={#2} }
+      % The open-ancestor slot for this depth (see Primitives) is created
+      % once per depth, not per kind -- two kinds sharing a depth share a
+      % slot, which is correct: only one node can be "currently open" at a
+      % given depth at a time regardless of which kind it was.
+      \tl_if_exist:cF { g_semio_tree_open_#3_tl } { \tl_new:c { g_semio_tree_open_#3_tl } }
+      \int_compare:nNnT {#3} > \g_semio_tree_maxdepth_int
+        { \int_gset:Nn \g_semio_tree_maxdepth_int {#3} }
     }
 }
 \cs_new_protected:Npn \semio_tree_kind_require:n #1 {
   \seq_if_in:NnF \g_semio_tree_kinds_seq {#1}
     { \msg_error:nnn { semio-tree } { unknown-kind } {#1} }
 }
-\NewDocumentCommand \SemioTreeKind { m m m m }
-  { \semio_tree_kind_define:nnnn {#1}{#2}{#3}{#4} }
+\NewDocumentCommand \SemioTreeKind { m m m m m m m }
+  { \semio_tree_kind_define:nnnnnnn {#1}{#2}{#3}{#4}{#5}{#6}{#7} }
 
-% 🌱 Defaults. `group` bands one step above the base; a caller building a
-% deeper hierarchy (e.g. a 4-level hürden/klade/familie/taxon tree) adds a new
-% kind rather than edit these two.
-\semio_tree_kind_define:nnnn { group } { semio-chrome-window } { \SemioSans } { 0 }
-\semio_tree_kind_define:nnnn { leaf }  {}                       { \SemioSans } { 1 }
-%endregion
+% 🌱 Defaults: clade box (depth 0), family box (depth 1), taxon row (depth 2).
+% A caller building a deeper hierarchy registers a new kind at depth 2, 3, …
+% rather than editing these -- e.g. a "familie"/"unterfamilie"/"taxon" tree
+% inserts one at depth 2 and moves taxon-like rows to depth 3 under a NEW
+% name (leaf, at depth 2, is simply left unused by that tree; nothing forces
+% every registered kind to appear in every tree). Leading is the SAME number
+% already in each kind's own code-font \fontsize{}{leading} switch --
+% duplicated here (not derived) because there is no clean way to pull it back
+% out of that token stream once assembled; see \semio_tree_elbow:n.
+\semio_tree_kind_define:nnnnnnn { root }
+  {
+    draw=semio-chrome-border-emphasized,
+    line~width=\semio@stroke@focus,
+    fill=semio-chrome-panel,
+    text=semio-chrome-foreground,
+    align=left, minimum~height=8mm,
+    inner~xsep=0.5em, inner~ysep=0.32em,
+  }
+  { 0 } { box }
+  { \SemioMono\fontsize{8.4pt}{10pt}\selectfont }
+  { \SemioSans\fontsize{8.4pt}{10pt}\selectfont }
+  { 10pt }
+\semio_tree_kind_define:nnnnnnn { group }
+  {
+    draw=semio-chrome-border-normal,
+    line~width=\semio@stroke@default,
+    fill=semio-chrome-window,
+    text=semio-chrome-foreground,
+    align=left, minimum~height=6.4mm,
+    inner~xsep=0.45em, inner~ysep=0.28em,
+  }
+  { 1 } { box }
+  { \SemioMono\fontsize{7.4pt}{8.8pt}\selectfont }
+  { \SemioSans\fontsize{7.4pt}{8.8pt}\selectfont }
+  { 8.8pt }
+\semio_tree_kind_define:nnnnnnn { leaf }
+  { inner~sep=0pt, align=left }
+  { 2 } { row }
+  { \SemioMono\fontsize{7pt}{8.2pt}\selectfont }
+  { \SemioSans\fontsize{7.6pt}{9pt}\selectfont }
+  { 8.2pt }
+%endregion KindRegistry
+
+%region Keys
+% 🔑 Reset-before-set, never `.initial:n` -- this is how every semio key tree
+% distinguishes "not passed, use the default" from "explicitly set to the
+% default value". `window` is an opaque passthrough rather than a mirrored
+% key set, exactly as in GraphFigure.
+\tl_new:N \l_semio_tree_title_tl
+\tl_new:N \l_semio_tree_window_tl
+\keys_define:nn { semio / tree / figure }
+  {
+    title  .tl_set:N = \l_semio_tree_title_tl ,
+    window .tl_set:N = \l_semio_tree_window_tl ,
+  }
+\cs_new_protected:Npn \semio_tree_figure_keys_reset: {
+  \tl_clear:N \l_semio_tree_title_tl
+  \tl_clear:N \l_semio_tree_window_tl
+}
+%endregion Keys
+
+%region Figure
+% 🪟 TreeFigure does NOT reimplement Figure -- it opens the existing window
+% kind from semio-window.sty and adds only what a tree needs: the picture
+% style, the millimetre unit contract and a minimum width so every plate of a
+% multi-part tree lines up. break=false is structural (a tikzpicture is one
+% unbreakable box), so it is not exposed as a key.
+%
+% The bounding box is NOT fixed with \useasboundingbox, unlike GraphFigure: a
+% graph declares its frame up front, a tree's height is whatever its content
+% turns out to be. A bare \path across the full width pins the horizontal
+% extent and lets the vertical one grow.
+\bool_new:N \l_semio_tree_in_figure_bool
+\int_new:N \g_semio_tree_node_int
+\tl_new:N \l_semio_tree_name_tl
+\tl_new:N \l_semio_tree_prev_tl
+
+\cs_new_protected:Npn \semio_tree_figure_open:n #1 {
+  \begin{Figure}[#1]
+  \begin{tikzpicture}[ semio~tree~picture ]
+  \path (0,0) -- ( \semio@tree@width , 0 ) ;
+}
+% Every open-ancestor slot (see Primitives) is cleared, not just root/group's
+% two: a plate that repeats the root box starts a fresh chain at EVERY depth,
+% not only the two levels the earlier, hardcoded version tracked. Depths are
+% integers 0..maxdepth by construction (KindRegistry only ever grows that
+% ceiling), so stepping the whole range is exhaustive.
+\cs_new_protected:Npn \semio_tree_open_reset: {
+  \int_step_inline:nnn { 0 } { \g_semio_tree_maxdepth_int }
+    { \tl_if_exist:cT { g_semio_tree_open_##1_tl } { \tl_gclear:c { g_semio_tree_open_##1_tl } } }
+}
+\cs_new_protected:Npn \semio_tree_figure_begin:n #1 {
+  \semio_tree_figure_keys_reset:
+  \keys_set:nn { semio / tree / figure } {#1}
+  \tl_set:Nx \l_tmpa_tl {
+    title = { \exp_not:V \l_semio_tree_title_tl } ,
+    break = false ,
+    \exp_not:V \l_semio_tree_window_tl
+  }
+  \exp_args:NV \semio_tree_figure_open:n \l_tmpa_tl
+  \bool_set_true:N \l_semio_tree_in_figure_bool
+  \tl_clear:N \l_semio_tree_prev_tl
+  \semio_tree_open_reset:
+}
+\cs_new_protected:Npn \semio_tree_figure_end: {
+  \bool_set_false:N \l_semio_tree_in_figure_bool
+  \end{tikzpicture}
+  \end{Figure}
+}
+\NewDocumentEnvironment { TreeFigure } { O{} }
+  { \semio_tree_figure_begin:n {#1} }
+  { \semio_tree_figure_end: }
+%endregion Figure
+
+%region Primitives
+\cs_new_protected:Npn \semio_tree_frame_require:n #1 {
+  \bool_if:NF \l_semio_tree_in_figure_bool
+    { \msg_error:nnn { semio-tree } { outside-figure } {#1} }
+}
+
+% 🪢 Placement. No y-accumulator and no measured line heights: a node is put
+% below its predecessor's real `.south`, so TikZ's own typesetting decides how
+% far down that is -- what makes a three-line taxon push the next row down by
+% three lines without anybody counting them. X comes from `depth * step`, so
+% a caller-registered kind at any depth places itself correctly with no
+% further code.
+%
+% Built through \use:x so the node name, the column and the gap are already
+% resolved when TikZ reads them, and \exp_not:n keeps the caller's content
+% untouched. The column coordinate gets a name unique to THIS node (suffix
+% "col" on the node's own name) rather than one shared/reused name per
+% picture, removing any question about redefining a shared coordinate
+% repeatedly.
+\cs_new_protected:Npn \semio_tree_node_name:N #1 {
+  \int_gincr:N \g_semio_tree_node_int
+  \tl_set:Nx #1 { semiotreenode \int_use:N \g_semio_tree_node_int }
+}
+\tl_new:N \l_semio_tree_colname_tl
+\cs_new_protected:Npn \semio_tree_place:nnnn #1#2#3#4 { % kind, depth, gap-before, content
+  \semio_tree_node_name:N \l_semio_tree_name_tl
+  \tl_set:Nx \l_semio_tree_colname_tl { \l_semio_tree_name_tl col }
+  \use:x {
+    \exp_not:N \coordinate ( \l_semio_tree_colname_tl )
+      at ( \dimexpr \semio@tree@indent@step * #2 \relax , 0mm ) ;
+  }
+  \tl_if_empty:NTF \l_semio_tree_prev_tl
+    {
+      \use:x {
+        \exp_not:N \node [ semio~tree~node~#1 , anchor=north~west ]
+          ( \l_semio_tree_name_tl ) at ( \l_semio_tree_colname_tl )
+          { \exp_not:n {#4} } ;
+      }
+    }
+    {
+      % Split into two coordinates rather than one nested "-| ([shift]point)"
+      % expression: pgf's shape lookup choked on the nested form (read the
+      % whole "[yshift=...]..." sub-expression as an attempted node name).
+      % Materialising the shifted point on its own line, THEN combining two
+      % plain names with -|, sidesteps whatever that parsing conflict was.
+      \use:x {
+        \exp_not:N \coordinate ( \l_semio_tree_colname_tl below )
+          at ( [ yshift=-#3 ] \l_semio_tree_prev_tl.south ) ;
+      }
+      % (P1 -| P2) takes its Y from P1 and its X from P2 -- confirmed by an
+      % isolated test, since it is easy to misremember backwards (which the
+      % first version of this line did: every node landed at y=0, the column
+      % coordinates' own y, because the operands were swapped).
+      \use:x {
+        \exp_not:N \node [ semio~tree~node~#1 , anchor=north~west ]
+          ( \l_semio_tree_name_tl )
+          at ( \l_semio_tree_colname_tl below -| \l_semio_tree_colname_tl )
+          { \exp_not:n {#4} } ;
+      }
+    }
+  \tl_set_eq:NN \l_semio_tree_prev_tl \l_semio_tree_name_tl
+}
+
+% 🎯 Elbow height for a "row"-kind branch: a FRACTION
+% (\semio@tree@elbow@num/\semio@tree@elbow@den) of that specific kind's OWN
+% registered leading (KindRegistry's 7th field), not one global constant --
+% a caller-registered row-kind with a different font size gets a correctly
+% placed branch with no extra work. Macro (the leading, via \tl_use:c) FIRST,
+% multiplier/divisor as bare integers AFTER, via dimexpr's */ operators --
+% the same <coefficient><macro-expanding-to-dimension> pitfall documented
+% throughout this file (\dimexpr's number scanner cannot tell where a
+% macro's own digits end and a following coefficient begins), avoided the
+% same way each time.
+\cs_new_protected:Npn \semio_tree_elbow:n #1 { % kind -> leaves result in \l_semio_tree_elbow_dim
+  \dim_set:Nn \l_semio_tree_elbow_dim
+    {
+      \dimexpr \tl_use:c { c_semio_tree_kind_#1_leading_tl }
+        * \semio@tree@elbow@num / \semio@tree@elbow@den \relax
+    }
+}
+\dim_new:N \l_semio_tree_elbow_dim
+
+% 🌿 The connector, and the whole reason this package is TikZ. `|-` goes
+% vertical first, then horizontal, starting at the parent box's own
+% bottom-left corner -- so for several children the vertical segments coincide
+% into ONE continuous rail that stops at the last child, with no last-child
+% flag, no per-row state and nothing for a page break to desynchronise.
+\cs_new_protected:Npn \semio_tree_connect:nnn #1#2#3 { % parent, child, child-kind
+  \str_if_eq:eeTF { \tl_use:c { c_semio_tree_kind_#3_inlet_tl } } { row }
+    {
+      \semio_tree_elbow:n {#3}
+      \use:x {
+        \exp_not:N \draw [ semio~tree~branch ] ( #1.south\space west )
+          |- ( [ yshift=-\l_semio_tree_elbow_dim ] #2.north\space west ) ;
+      }
+    }
+    {
+      \use:x {
+        \exp_not:N \draw [ semio~tree~branch ] ( #1.south\space west ) |- ( #2.west ) ;
+      }
+    }
+}
+\cs_generate_variant:Nn \semio_tree_connect:nnn { VVn }
+
+% 🧭 One generic node command replaces three hardcoded ones: it looks up the
+% kind's depth, places the node, records itself as the currently-open
+% ancestor AT that depth (for its own future children to find), and -- if
+% something is open one depth shallower -- connects to it. This is what
+% makes "more tree levels" a registration, not a code change: a 4th level
+% is a new kind at depth 3, placed and connected by this same function.
+\tl_new:N \l_semio_tree_depth_tl
+\tl_new:N \l_semio_tree_parent_tl
+\cs_new_protected:Npn \semio_tree_node:nnn #1#2#3 { % kind, gap-before, content
+  \semio_tree_kind_require:n {#1}
+  \tl_set:Nx \l_semio_tree_depth_tl { \tl_use:c { c_semio_tree_kind_#1_depth_tl } }
+  \semio_tree_place:nnnn {#1} { \l_semio_tree_depth_tl } {#2} {#3}
+  \tl_gset_eq:cN { g_semio_tree_open_ \l_semio_tree_depth_tl _tl } \l_semio_tree_name_tl
+  \int_compare:nNnT { \l_semio_tree_depth_tl } > { 0 }
+    {
+      \tl_set:Nx \l_semio_tree_parent_tl
+        { \tl_use:c { g_semio_tree_open_ \int_eval:n { \l_semio_tree_depth_tl - 1 } _tl } }
+      \tl_if_empty:NF \l_semio_tree_parent_tl
+        { \semio_tree_connect:VVn \l_semio_tree_parent_tl \l_semio_tree_name_tl {#1} }
+    }
+}
+
+\cs_new_protected:Npn \semio_tree_box:nnnn #1#2#3#4 { % kind, code, label, count
+  \semio_tree_frame_require:n { SemioTreeBox }
+  \semio_tree_node:nnn {#1} { \semio@tree@gap@box }
+    {
+      \semio@tree@box
+        { \tl_use:c { c_semio_tree_kind_#1_codefont_tl } } {#2}
+        { \tl_use:c { c_semio_tree_kind_#1_labelfont_tl } } {#3}
+        {#4}
+    }
+}
+\cs_new_protected:Npn \semio_tree_row:nnnn #1#2#3#4 { % kind, code, label, marks
+  \semio_tree_frame_require:n { SemioTreeRow }
+  \semio_tree_node:nnn {#1} { \semio@tree@gap@row }
+    {
+      \semio@tree@row
+        { \tl_use:c { c_semio_tree_kind_#1_codefont_tl } } {#2}
+        { \tl_use:c { c_semio_tree_kind_#1_labelfont_tl } } {#3}
+        {#4}
+    }
+}
+
+% Generic entry points for a caller-registered kind at any depth, plus
+% root/group/leaf as thin, familiar wrappers around the two above.
+\NewDocumentCommand \SemioTreeBox { m m m O{} } { \semio_tree_box:nnnn {#1}{#2}{#3}{#4} }
+\NewDocumentCommand \SemioTreeRow { m m m m }   { \semio_tree_row:nnnn {#1}{#2}{#3}{#4} }
+\NewDocumentCommand \SemioTreeRoot  { m m }   { \semio_tree_box:nnnn { root }  {#1}{#2}{} }
+\NewDocumentCommand \SemioTreeGroup { m m m } { \semio_tree_box:nnnn { group } {#1}{#2}{#3} }
+\NewDocumentCommand \SemioTreeLeaf  { m m m } { \semio_tree_row:nnnn { leaf }  {#1}{#2}{#3} }
+%endregion Primitives
 
 %region Marks
 % 🏷 A leaf's marks column is a delimited list of already-formatted segments
@@ -88,218 +461,36 @@
 }
 \NewDocumentCommand \SemioTreeMarks { O{\semio@tree@marks@sep} m }
   {
-    {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr \semio@tree@marks@size*6/5\relax}\selectfont
+    {\SemioMono\fontsize{7pt}{8.4pt}\selectfont
      \color{semio-chrome-text-normal}\semio_tree_marks_format:nn {#1}{#2}}
   }
-%endregion
-
-%region Rows
-% 🌲 The reference this package targets (the pre-.sty TikZ rendering of this
-% same appendix, kept for comparison, and a hand-drawn diagram of the
-% pattern) is a rectangular cladogram: each node's trunk starts at its OWN
-% bottom-left corner -- not carried over from a sibling above it -- runs
-% down through ONLY that node's own children with one branch stub per
-% child, and STOPS after the last child (a closing corner, not a line that
-% keeps going). A group node itself carries no incoming trunk/stub; it is
-% the anchor its children's trunk hangs from, not a stop along someone
-% else's. A tikzpicture cannot paginate (one unbreakable box -- see
-% semio-graph.sty's GraphSpread comment), so this is built from independent
-% per-row segments, not one drawn path: every row already draws itself
-% against the SAME strut envelope every ordinary cell uses
-% (\semio@table@vtop above baseline, \semio@table@vbot below), so a \vrule
-% with that exact height+depth, drawn fresh by consecutive LEAF rows at the
-% same x, abuts with zero gap and reads as one line -- right up until the
-% last child of a group, whose segment is cut short (zero depth) to close
-% the branch instead of continuing into whatever comes next.
-\newcommand{\semio@tree@trunk@x}{2mm}
-% Continues into the row below (used by every leaf except a group's last).
-\newcommand{\semio@tree@trunk}{%
-  {\color{semio-chrome-border-normal}%
-   \rule[-\semio@table@vbot]{0.6pt}{\dimexpr\semio@table@vtop+\semio@table@vbot\relax}}%
-}
-% Stops at this row (used by a group's last leaf) -- zero depth, so nothing
-% is drawn below the branch stub; the line closes here instead of carrying
-% on toward whatever row (a new group, or nothing) comes next.
-\newcommand{\semio@tree@trunk@last}{%
-  {\color{semio-chrome-border-normal}%
-   \rule[0pt]{0.6pt}{\semio@table@vtop}}%
-}
-% Stub width IS the indent step: a leaf's code lands at trunk@x + this
-% width, so this is what makes a leaf read as visibly nested under its
-% group box rather than sitting at nearly the same x as it. Measured
-% directly off the reference PDF (huerden_final.pdf, "Detailbaum ECO"):
-% ECO.COST starts at x=100.13pt, ECO.COST.01 at x=120.73pt -- a 20.6pt
-% (~7.3mm) step. 7mm here matches that; it only fit once the Code column
-% itself was widened (0.16 -> 0.24 in \SemioTree below), which is the fix
-% that was actually missing, not the stub width.
-% Raise amount: same <coefficient><macro> \dimexpr hazard as everywhere else
-% in this file (\raisebox's argument is a plain <dimen>, and
-% \semio@tree@text@size is TEXT ("7.2pt"), not an internal dimen) -- macro
-% first, multiplier after via \dimexpr's */ operators.
-\newcommand{\semio@tree@stub@w}{7mm}
-\newcommand{\semio@tree@stub}{%
-  {\color{semio-chrome-border-normal}%
-   \raisebox{\dimexpr\semio@tree@text@size*7/50\relax}{\rule{\semio@tree@stub@w}{0.6pt}}}%
-}
-
-% 🪟 A GROUP node is a content-sized bordered box (\fcolorbox, auto width),
-% not a full-width filled band -- matching the reference's family/clade
-% boxes, not \SemioTableBandRow's edge-to-edge band (which is unused
-% anywhere in the report; nothing else in the codebase actually renders
-% this way). It carries NO trunk/stub of its own (see this region's opening
-% comment) -- just \hspace*{trunk@x} to sit at the same x its children's
-% trunk will hang from. Still a \multicolumn spanning all 3 real columns,
-% because the box's content (code+label+count together) does not map onto
-% the table's 3-column grid -- but the multicolumn's own format spec only
-% supplies alignment (border@L/R + padendL/R, matching the outer colspec so
-% the box starts at the same x as the header), not a background fill.
-%
-% Found by isolated bisection (minimal macros run through \SemioTableLong
-% standalone, one axis varied at a time -- plain vs expl3, protected vs not,
-% direct vs through \SemioTableRow, assignment vs pure expansion before the
-% call): the ONE thing that reproduces "Misplaced \omit" is a \protected
-% macro (\cs_new_protected:Npn) whose expansion contains \multicolumn --
-% \cs_new:Npn with byte-identical body compiles clean. The array/longtable
-% cell-start scan that looks for \multicolumn's leading \omit does not
-% transparently expand a \protected macro the way it does an ordinary one
-% (\protected exists precisely to stop exactly this kind of silent
-% expansion, so this is consistent, if easy to miss). \omit still has to be
-% the FIRST thing reached, so the row is not routed through \SemioTableRow
-% either (its long/short \ifnum sits in the way); it hand-rolls the
-% long-table row terminator, matching \SemioTableBandRow.
-% ?? \hspace{...} not ~ between the segments below: an active-character
-% nbsp measurably produces NO width at all here (confirmed by extracting the
-% compiled PDF's text layer -- "ECO.COSTKosten-..." came back as one glued
-% word with zero space between), while the identical ~ works completely
-% normally as ordinary body text elsewhere in the same document. Root cause
-% not chased further since \hspace is unambiguous and side-steps whatever
-% babel/active-char interaction is specific to this multicolumn cell.
-% ?? Row ends in a plain \\, not \\*\semio@table@rule: a tree is an outline,
-% not a data grid -- a hairline under every single row read as "normal table"
-% rather than hierarchy-by-indentation (the whole point of this package).
-% The outer table border stayed (it gives the tree the same contained-module
-% look as every other Figure/Table -- an earlier attempt to drop it left the
-% header's own corner-tick rule floating disconnected above a sideless body).
-\cs_new:Npn \semio_tree_group_row:nnn #1#2#3 { % code, label, count
-  \multicolumn{3}{@{\semio@table@border@L}@{\semio@table@padendL}%
-    >{\raggedright\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
-    p{\semio@table@long@inner@w}<{\semio@cell@strutbot}%
-    @{\semio@table@padendR}@{\semio@table@border@R}}{%
-    \hspace*{\semio@tree@trunk@x}%
-    {\fboxsep=2.2pt\fboxrule=0.6pt
-     \fcolorbox{semio-chrome-border-normal}{\tl_use:c{c_semio_tree_kind_group_fill_tl}}{%
-       {\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr \semio@tree@marks@size*6/5\relax}\selectfont #1}%
-       \hspace{0.5em}{\tl_use:c{c_semio_tree_kind_group_font_tl}\color{semio-chrome-foreground} #2}%
-       \tl_if_blank:nF {#3} { \hspace{0.35em}\textperiodcentered\hspace{0.35em}{\SemioMono\fontsize{\semio@tree@marks@size}{\dimexpr \semio@tree@marks@size*6/5\relax}\selectfont #3}}%
-     }}%
-  }%
-  \\
-}
-
-% 🍃 A LEAF row is three ordinary cells from \SemioTableLong's own
-% fraction-driven colspec (real `array` p{} measurement -- no estimated line
-% count anywhere). #5 (last) selects which trunk segment closes the branch:
-% every leaf but a group's final one carries the trunk on into the row
-% below; the final one stops it (see this region's opening comment) --
-% the caller decides via \SemioTreeLeaf vs \SemioTreeLeafLast, since the
-% data layer already knows which taxon ends its family's list. (The kind
-% registry's `indent` field is unused here now -- the connector is
-% fixed-position by design, so every leaf shares one trunk x -- but stays
-% registered as a hook for a future kind wanting a second indent level.)
-\cs_new_protected:Npn \semio_tree_leaf_row:nnnnn #1#2#3#4#5 { % kind, code, label, marks, last(0/1)
-  \semio_tree_kind_require:n {#1}
-  % Not routed through \SemioTableRow, for the same reason the group row
-  % isn't (see its comment): \SemioTableRow always appends \\*\semio@table@rule
-  % in long mode, and a hairline under every leaf item is exactly the
-  % table-grid look this package exists to avoid. Content ends in a plain \\
-  % -- ordinary longtable row end, natural page breaks allowed between items.
-  \hspace*{\semio@tree@trunk@x}%
-  \tl_if_eq:nnTF {#5}{1} { \semio@tree@trunk@last } { \semio@tree@trunk }
-  \semio@tree@stub
-  {\SemioMono\fontsize{\semio@tree@text@size}{\dimexpr \semio@tree@text@size*6/5\relax}\selectfont
-   \color{semio-chrome-text-normal}#2}
-  &
-  {\tl_use:c{c_semio_tree_kind_#1_font_tl}#3}
-  &
-  #4
-  \\
-}
-
-% 🩹 Plain \newcommand, not xparse, and every argument mandatory (pass {}
-% when a leaf has no marks, or a group no count). Matches the documented
-% precedent in \SemioTableBandRow above: an xparse-generated command whose
-% expansion reaches a \multicolumn inside a longtable row breaks with
-% "Misplaced \omit"; plain argument grabbing does not have that problem. Leaf
-% carries no \multicolumn but is kept in the same mandatory-args shape for
-% one consistent authoring idiom across both row kinds.
-\newcommand{\SemioTreeGroup}[3]{\semio_tree_group_row:nnn{#1}{#2}{#3}}
-% Two commands, not one with a last/not-last switch argument: the same
-% "plain \newcommand, mandatory args only" reasoning as \SemioTreeGroup
-% above (consistency, not a hard requirement here -- leaf carries no
-% \multicolumn) and it keeps a group's LAST call visually distinct at the
-% call site, where the data layer is already iterating its taxon list and
-% knows which one is last without having to compute or pass a boolean.
-\newcommand{\SemioTreeLeaf}[3]{\semio_tree_leaf_row:nnnnn{leaf}{#1}{#2}{#3}{0}}
-\newcommand{\SemioTreeLeafLast}[3]{\semio_tree_leaf_row:nnnnn{leaf}{#1}{#2}{#3}{1}}
-%endregion
-
-%region Tree
-% 🌲 SemioTree does NOT reimplement the long-table substrate -- it opens the
-% existing \SemioTableLong exactly as GraphFigure opens the existing Figure
-% window, supplying only the tree-shaped colspec/header. Body content is a
-% brace-delimited sequence of \SemioTreeGroup/\SemioTreeLeaf/
-% \SemioTreeLeafLast calls, matching how \SemioTableLong's own body is
-% already a sequence of \SemioTableRow calls everywhere else in this
-% codebase -- no new authoring idiom introduced.
-\NewDocumentCommand \SemioTree { m m }
-  {
-    % The outer left/right table border (\semio@table@border@L/R) stays --
-    % removing it left the header's own little corner-tick rule (drawn
-    % directly by \semio@table@rule@band, independent of border@L/R) floating
-    % disconnected above a sideless body, reading as broken rather than
-    % deliberately open. The border gives the tree the same contained-module
-    % look as every other Figure/Table in the report; what actually made it
-    % read as a data grid was the hairline under every single row, which is
-    % what the Rows region's plain \\ (instead of \\*\semio@table@rule)
-    % removes -- that is the part that stays gone.
-    % Code column widened from the register/glossary-style 0.16 -- measured
-    % against the reference PDF (huerden_final.pdf), the real indent step
-    % between a family and its taxa is ~20.6pt (~7.3mm); at 0.16 that step
-    % overflowed the column by 8.4pt. 0.16 was sized for flush-left codes
-    % with no connector; this tree needs room for trunk+stub+indent too.
-    \SemioTableLong
-      [ text-size = 7.2pt ]
-      {#1}
-      {0.24,0.50,0.26}
-      {Code & Bezeichnung & Merkmale}
-      {#2}
-  }
-%endregion
+%endregion Marks
 
 %region Legend
-% 🔖 Draws the vocabulary instead of describing it: each entry is a real
-% swatch in that kind's own fill, so a token change updates the legend
-% automatically -- mirrors \SemioGraphLegend exactly (split on the first `=`,
-% look the key up in the registry, let the registry supply the visual).
+% 🔖 Draws the vocabulary instead of describing it: each entry is a real node
+% in that kind's own style, so a token change updates the legend
+% automatically -- mirrors \SemioGraphLegend exactly (split on `=`, look the
+% key up in the registry, let the registry supply the visual).
 \seq_new:N \l_semio_tree_legend_pair_seq
 \tl_new:N \l_semio_tree_legend_key_tl
 \tl_new:N \l_semio_tree_legend_value_tl
 \int_new:N \l_semio_tree_legend_int
 
-\tl_new:N \l_semio_tree_swatch_fill_tl
+% A "row"-inlet kind (leaves) has no draw/fill of its own -- it is plain
+% text, reached by a branch, not a box -- so its node style alone would
+% swatch as an empty rectangle. Draw the branch stub itself instead: the
+% actual mark a leaf carries in the tree.
 \cs_new_protected:Npn \semio_tree_legend_swatch:n #1 {
-  % \tl_use:c{...} is a csname lookup wrapped in a further token-list lookup
-  % -- more than one expansion step from its stored content, so a direct
-  % tl_if_blank:n/:o test on it is unreliable (it tests the accessor call's
-  % raw tokens, never blank, not what it resolves to). Materialise it into a
-  % scratch variable with a fully expanding (:x) assignment first, then test
-  % THAT variable with tl_if_empty:N (an :N signature genuinely exists for
-  % "empty", unlike "blank"; kind fills are registered as {} with no stray
-  % space, so empty and blank coincide here).
-  \tl_set:Nx \l_semio_tree_swatch_fill_tl { \tl_use:c{c_semio_tree_kind_#1_fill_tl} }
-  \tl_if_empty:NTF \l_semio_tree_swatch_fill_tl
-    { \rule[-0.15em]{1.6em}{0.68em} }
-    { {\color{\l_semio_tree_swatch_fill_tl}\rule[-0.15em]{1.6em}{0.68em}} }
+  \str_if_eq:eeTF { \tl_use:c { c_semio_tree_kind_#1_inlet_tl } } { row }
+    {
+      \tikz[ semio~tree~picture , baseline=-0.4ex ]
+        \draw [ semio~tree~branch ] (0,0) -- (3.4mm,0) ;
+    }
+    {
+      \tikz[ semio~tree~picture , baseline=-0.5ex ]
+        \node [ semio~tree~node~#1 , minimum~height=0pt , minimum~width=3.4mm ,
+                inner~sep=0.5mm ] {} ;
+    }
 }
 \cs_new_protected:Npn \semio_tree_legend_item:nn #1#2 {
   \semio_tree_kind_require:n {#1}
@@ -318,10 +509,10 @@
 \NewDocumentCommand \SemioTreeLegend { m }
   {
     \int_zero:N \l_semio_tree_legend_int
-    {\SemioSans\fontsize{\semio@tree@marks@size}{\dimexpr \semio@tree@marks@size*6/5\relax}\selectfont
+    {\SemioSans\fontsize{7pt}{8.4pt}\selectfont
      \color{semio-chrome-text-normal}
      \clist_map_inline:nn {#1} { \semio_tree_legend_entry:n {##1} }}
   }
-%endregion
+%endregion Legend
 
 \ExplSyntaxOff

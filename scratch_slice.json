@@ -1,0 +1,281 @@
+[
+  {
+    "tid": "M16",
+    "actor_degree": "kern",
+    "beleg_url": "https://baticycle.fr/",
+    "beleg_zitat": "Bâticycle est un magasin de matériaux et d'équipements de construction d'occasion pour les professionnels du bâtiment.",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [],
+    "geprueft_urls": [
+      "https://baticycle.fr/",
+      "https://marketplace.skop.app/"
+    ],
+    "begruendung": "Eigener Shop/Betrieb fuer gebrauchte Baumaterialien, Reemploi ist Kerngeschaeft (Dépose/Reconditionnement/Verkauf) -> kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "4:5f542910-8dcf-46a9-a77c-dfff0c64ee65:39519"
+  },
+  {
+    "tid": "M18",
+    "actor_degree": "kern",
+    "beleg_url": "https://www.cycle-up.fr/",
+    "beleg_zitat": "économiser les ressources et réduire les déchets du bâtiment au travers du réemploi des matériaux",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [],
+    "geprueft_urls": [
+      "https://www.cycle-up.fr/",
+      "https://site.cycle-up.fr/annonceurs-partenaires/"
+    ],
+    "begruendung": "Eigene Domain, Marktplatz für Bauteil-Wiederverwendung als Kerngeschäft (gegründet 2017), dauerhaft platziert.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "4:5f542910-8dcf-46a9-a77c-dfff0c64ee65:39524"
+  },
+  {
+    "tid": "M19",
+    "actor_degree": "kern",
+    "beleg_url": "https://www.delanpatrick.com/",
+    "beleg_zitat": "Patrick Delan Antiquaire, boiseries anciennes : restauration de portes, bibliothèques, meubles",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"DELAN PATRICK\" Antiquaires France"
+    ],
+    "geprueft_urls": [
+      "https://www.delanpatrick.com/"
+    ],
+    "begruendung": "Eigene Seite delanpatrick.com fuehrt boiseries anciennes/cheminées anciennes/sols anciens (alte Bauteile: Tueren, Kaminen, Boeden) als dauerhafte Angebotslinien, nicht als Einzelprojekt.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:delanpatrickantiquaires"
+  },
+  {
+    "tid": "M20",
+    "name": "Dussel Matériaux Anciens",
+    "actor_degree": "kern",
+    "beleg_url": "https://dussel-materiaux-anciens.com/",
+    "beleg_zitat": "Vous trouverez un vaste choix de matériaux anciens qui pourront vous satisfaire pour rénover votre appartement ou maison.",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"Dussel Matériaux Anciens\" réemploi"
+    ],
+    "geprueft_urls": [
+      "https://dussel-materiaux-anciens.com/"
+    ],
+    "begruendung": "Eigene Seite zeigt dauerhaft den Verkauf alter Baumaterialien als Kerntätigkeit (Materialhub/Bauteilbörse) — kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:dusselmateriauxanciens"
+  },
+  {
+    "tid": "M21",
+    "name": "Démolition William Perreault",
+    "actor_degree": "kern",
+    "beleg_url": "https://demolition-perreault.fr/",
+    "beleg_zitat": "Donner un avenir au passé",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"Démolition William Perreault\" réemploi OR reclaimed",
+      "\"Démolition William Perreault\" site officiel matériaux"
+    ],
+    "geprueft_urls": [
+      "https://demolition-perreault.fr/"
+    ],
+    "begruendung": "Eigene Seite (Slogan 'Donner un avenir au passé', Materialverkaufsbereich materiaux.demolition-perreault.fr) stellt Bauteil-/Materialwiederverwendung als dauerhafte Leistungslinie des Abbruchunternehmens dar — kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:demolitionwilliamperreault"
+  },
+  {
+    "tid": "M22",
+    "name": "EKO reemploi",
+    "actor_degree": "kern",
+    "beleg_url": "https://www.ekoreemploi.fr/",
+    "beleg_zitat": "Ressourcerie & Matériaux de Seconde Main",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"EKO reemploi\" France"
+    ],
+    "geprueft_urls": [
+      "https://www.ekoreemploi.fr/"
+    ],
+    "begruendung": "Eigene Seite positioniert Betrieb explizit als Ressourcerie fuer gebrauchte Baumaterialien — kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:ekoreemploi"
+  },
+  {
+    "tid": "M24",
+    "name": "Fer et Pierre",
+    "actor_degree": "kern",
+    "beleg_url": "https://fer-et-pierre.com/",
+    "beleg_zitat": "Spécialiste Ferronnerie d'art et Matériaux Anciens",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"Fer et Pierre\" réemploi matériaux anciens"
+    ],
+    "geprueft_urls": [
+      "https://fer-et-pierre.com/"
+    ],
+    "begruendung": "Eigene Seite fuehrt 'Matériaux Anciens' als dauerhaften Leistungsbereich neben Ferronnerie — kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:feretpierre"
+  },
+  {
+    "tid": "M25",
+    "name": "Gauthey Cheminées",
+    "actor_degree": "kern",
+    "beleg_url": "https://cheminees-gauthey.fr/cheminee-ancienne/",
+    "beleg_zitat": "Nous posons nos cheminées anciennes grâce à notre savoir faire acquis depuis plus de 45 ans.",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"Gauthey Cheminées\" réemploi OR occasion",
+      "\"Gauthey\" cheminées ancien Bourgogne OR \"matériaux anciens\""
+    ],
+    "geprueft_urls": [
+      "https://cheminees-gauthey.fr/cheminee-ancienne/"
+    ],
+    "begruendung": "Eigene Seite mit dauerhafter Produktlinie 'Cheminée ancienne' (Handel/Einbau alter Kamine als Bauteil-Wiederverwendung) — kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:gautheycheminees"
+  },
+  {
+    "tid": "M26",
+    "name": "Grayo tailleur de pierre",
+    "actor_degree": "kern",
+    "beleg_url": "https://www.tailleurdepierre-bretagne.fr/",
+    "beleg_zitat": "nous sommes spécialisés depuis 40 ans dans la fourniture et la retaille de pierres de taille anciennes et neuves",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"Grayo\" tailleur de pierre réemploi"
+    ],
+    "geprueft_urls": [
+      "https://www.tailleurdepierre-bretagne.fr/"
+    ],
+    "begruendung": "Eigene Seite stellt Lieferung/Wiederaufarbeitung alter Bausteine als dauerhafte Kerntätigkeit dar — kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:grayotailleurdepierre"
+  },
+  {
+    "tid": "M27",
+    "actor_degree": "kern",
+    "beleg_url": "https://www.guerin-cheminees.com/",
+    "beleg_zitat": "Restauration ou rénovation de cheminées anciennes",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"Guérin Cheminées\" matériaux réemploi",
+      "\"Guérin Cheminées\" site officiel cheminées anciennes récupération"
+    ],
+    "geprueft_urls": [
+      "https://www.guerin-cheminees.fr/",
+      "https://www.guerin-cheminees.com/"
+    ],
+    "begruendung": "Eigene Seite (guerin-cheminees.com) stellt Restaurierung und Handkopien antiker Kamine sowie Steinmetzarbeit dauerhaft als Kerngeschäft dar (Handel/Restaurierung antiker Bauteile) -> kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:guerincheminees"
+  },
+  {
+    "tid": "M28",
+    "actor_degree": "kern",
+    "beleg_url": "https://www.laboiscyclerie.fr/page/1755093-mais-qui-sommes-nous-donc",
+    "beleg_zitat": "La matériauthèque bois est un projet de récupération de bois perdu ou jeté",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"La Bois'Cyclerie\" réemploi bois matériaux"
+    ],
+    "geprueft_urls": [
+      "https://www.laboiscyclerie.fr/page/1755093-mais-qui-sommes-nous-donc"
+    ],
+    "begruendung": "Eigene Seite beschreibt Matériauthèque als Kernprojekt zur dauerhaften Sammlung/Wiederverwendung von Restholz -> kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:laboiscyclerie"
+  },
+  {
+    "tid": "M29",
+    "actor_degree": "kern",
+    "beleg_url": "https://brocantedubatiment.fr/",
+    "beleg_zitat": "le site internet la Brocante du Bâtiment vous propose divers objets et matériaux de récupération",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"La brocante du Bâtiment\" DRS matériaux"
+    ],
+    "geprueft_urls": [
+      "https://brocantedubatiment.fr/"
+    ],
+    "begruendung": "Eigene Seite von DRS-Betrieb stellt dauerhaftes Depot fuer Wiederverwendungsmaterialien (Abriss/Ueberschuss) dar -> kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:labrocantedubtiment"
+  },
+  {
+    "tid": "M30",
+    "actor_degree": "kern",
+    "beleg_url": "https://www.la-reserve.bzh",
+    "beleg_zitat": "La Réserve des Matériaux agit pour rendre attractif le réemploi, pour réduire les déchets et pour créer de l'emploi durable.",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"La Réserve des Matériaux\" réemploi",
+      "\"La Réserve des Matériaux\" Brest site officiel matériauthèque"
+    ],
+    "geprueft_urls": [
+      "https://www.la-reserve.bzh"
+    ],
+    "begruendung": "Eigene Seite (la-reserve.bzh, Brest) stellt Réemploi als erklärtes Ziel/Kerntaetigkeit dar (Laden, Ausbau vor Abriss, Sourcing) -> kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:lareservedesmateriaux"
+  },
+  {
+    "tid": "M31",
+    "actor_degree": "kern",
+    "beleg_url": "https://antiquairedemateriaux.com/fr/content/6-antiquaire-du-batiment",
+    "beleg_zitat": "Lorsqu'une maison ou un château doit être démoli, il fait un inventaire de tout ce qui peut avoir une seconde vie (portes, cheminées, escaliers, parquets, pavés, portails etc.)",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"Labrouche\" \"Matériaux Anciens\" pierre récupération"
+    ],
+    "geprueft_urls": [
+      "https://antiquairedemateriaux.com/fr/content/6-antiquaire-du-batiment"
+    ],
+    "begruendung": "Eigene Seite (antiquairedemateriaux.com, La Rochelle) beschreibt Bergung und Zweitverwertung von Bauteilen aus Abrissobjekten als Kerngeschaeft -> kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:labroucheantiquairedemateriaux"
+  },
+  {
+    "tid": "M33",
+    "actor_degree": "kern",
+    "beleg_url": "https://www.lascombesmateriauxanciens.com/fr/",
+    "beleg_zitat": "expert en Tomettes anciennes, Cheminées, Pavés de rue et autres matériaux",
+    "abrufdatum": "2026-08-12",
+    "such_begriffe": [
+      "\"Lascombes\" \"Matériaux Anciens\" pierre récupération"
+    ],
+    "geprueft_urls": [
+      "https://www.lascombesmateriauxanciens.com/fr/"
+    ],
+    "begruendung": "Eigene Seite (Soindres/Yvelines) stellt Handel mit alten Baumaterialien (Tometten, Kamine, Pflastersteine) als dauerhafte Kernleistung dar -> kern.",
+    "flags": [],
+    "budget_erschoepft": false,
+    "cc": "FR",
+    "eid": "NEW:H:lascombesmateriauxanciens"
+  }
+]
