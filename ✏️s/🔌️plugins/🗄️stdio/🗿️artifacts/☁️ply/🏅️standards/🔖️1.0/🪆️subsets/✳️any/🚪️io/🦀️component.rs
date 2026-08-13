@@ -50,13 +50,13 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Codec
-//! Real ply codec. Decode supports the real §PLY header grammar: arbitrary `element <name>
-//! <count>` / `property <type> <name>` / `property list <count-type> <value-type> <name>`
-//! declarations, walked fully generically (never hardcoded to `x y z` + `vertex_indices`),
-//! across all three `format` variants (`ascii`, `binary_little_endian`, `binary_big_endian`),
-//! retaining every declared property's real type and every row's real typed cell values. Encode
-//! walks the same generic element/property/row model back out in whichever wire format is
-//! requested — round-tripping any element/property layout, not just vertex/face meshes.
+// Real ply codec. Decode supports the real §PLY header grammar: arbitrary `element <name>
+// <count>` / `property <type> <name>` / `property list <count-type> <value-type> <name>`
+// declarations, walked fully generically (never hardcoded to `x y z` + `vertex_indices`),
+// across all three `format` variants (`ascii`, `binary_little_endian`, `binary_big_endian`),
+// retaining every declared property's real type and every row's real typed cell values. Encode
+// walks the same generic element/property/row model back out in whichever wire format is
+// requested — round-tripping any element/property layout, not just vertex/face meshes.
 use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
 use crate::artifacts::ply::{PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
 

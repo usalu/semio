@@ -91,7 +91,7 @@ pub mod derived_construction {
         /// this wraps doesn't materialize either until actual encode.
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let mut snapshot = self.inner.build()?;
-            crate::artifacts::docx::standards::v_ecma_376::engine::sync_main_part(&mut snapshot);
+            crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::sync_main_part(&mut snapshot);
             let hard: Vec<Diagnostic> = check_transitional_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)

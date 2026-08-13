@@ -43,7 +43,13 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
         surface_kind: SurfaceKind::World3d,
         icon_id: "puzzle5d-3d".into(),
         options: WindowOptions { measures: window_measures(envelope, precompute, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
-        actions: actions::ids(),
+        actions: vec![
+            actions::translate_selection::reference(),
+            actions::rotate_selection::reference(),
+            actions::scale_selection::reference(),
+            actions::world_relocate::reference(),
+            actions::set_camera::reference(),
+        ],
         utilities: vec![
             utilities::transform::MOVE_UTILITY_ID.into(),
             utilities::transform::ROTATE_UTILITY_ID.into(),

@@ -5,38 +5,37 @@
 // #region 🔌️Adapters
 import { CstParser, createToken, Lexer } from "chevrotain";
 import type { CstNode, IToken } from "chevrotain";
+import { kernelGeometry, solidRef, type Vec3 } from "@semio-tech/kernel-3d-js";
+import {
+  Model,
+  buildTypologyToEntityKindMapForModelDefinition,
+  applyTransformation,
+  loadTransformation,
+  actionAvailableInModelDefinition,
+  defaultModelDefinitionId,
+  type Expr,
+  type ExprBinop,
+  type ExprField,
+  type ExprVar,
+  type ModelEntityKind,
+  type ModelEntityRef,
+  type ObjectRef,
+  type AttributeTable,
+  evalExpr,
+  type ExprEnv,
+} from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+import { applyModelDiff, EMPTY_MODEL_DIFF, type SpatialKernel, type ModelDiff } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
 import {
   type ActionRegistry,
   runRegisteredAction,
   modelDefinitionActionRegistry,
   type ActionResult,
-  Model,
-  applyModelDiff,
-  buildTypologyToEntityKindMapForModelDefinition,
-  applyTransformation,
-  loadTransformation,
-  solidRef,
   isSelectionConstructActionId,
-  actionAvailableInModelDefinition,
-  defaultModelDefinitionId,
   type ConstructQueryContext,
   type ConstructQueryResult,
   type ConstructQueryRow,
   type ConstructRunner,
-  type Expr,
-  type ExprBinop,
-  type ExprField,
-  type ExprVar,
-  kernelGeometry,
-  type SpatialKernel,
-  type ModelDiff,
-  EMPTY_MODEL_DIFF,
-  type ModelEntityKind,
-  type ModelEntityRef,
-  type Vec3,
-  evalExpr,
-  type ExprEnv,
-} from "../🟦️index.ts";
+} from "../../../../../../../../🎛️apps/📐️cad/⚙️engine/🎬️actions/🟦️component.ts";
 
 type SolidRef = kernelGeometry.SolidRef;
 type FaceRef = kernelGeometry.FaceRef;
@@ -1173,7 +1172,7 @@ export function planConstruct(ast: ConstructAst): ExecutionPlan {
 // #region Executor
 type Row = Record<string, ModelEntityRef | unknown>;
 
-function rowVarsToEnv(row: Row, model: Model, meta: import("../🟦️index.ts").AttributeStore, preview: SpatialKernel, activeModelDefinitionId?: string | null): ExprEnv {
+function rowVarsToEnv(row: Row, model: Model, meta: AttributeTable, preview: SpatialKernel, activeModelDefinitionId?: string | null): ExprEnv {
   const vars: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(row)) {
     if (v && typeof v === "object" && "kind" in (v as object) && "id" in (v as object)) vars[k] = v;
@@ -1400,8 +1399,8 @@ export class ConstructEngine {
 // #endregion Api
 
 // #region 🧪️Tests
-const __spatialQueryTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️component.ts") : null;
-const __spatialQueryTestKernel = import.meta.vitest ? await import("../🧱️brepjs/🟦️component.ts") : null;
+const __spatialQueryTestRuntime = import.meta.vitest ? await import("../../../../../../../../🎛️apps/📐️cad/⚙️engine/🏃️runtime/🟦️component.ts") : null;
+const __spatialQueryTestKernel = import.meta.vitest ? await import("../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
 
 if (import.meta.vitest) {
   __spatialQueryTestRuntime!.bootstrapCadModules();
@@ -1641,7 +1640,7 @@ if (import.meta.vitest) {
       const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
       applyModelDiff(model, r);
       model.objects["energy-hull"] = {
-        id: "energy-hull" as import("../🟦️index.ts").ObjectRef,
+        id: "energy-hull" as ObjectRef,
         typology: "energy.energy.hull",
         primitives: { solid: String(r.solid ?? "box") },
       };
@@ -1671,7 +1670,7 @@ if (import.meta.vitest) {
       const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
       applyModelDiff(model, r);
       model.objects["object-box"] = {
-        id: "object-box" as import("../🟦️index.ts").ObjectRef,
+        id: "object-box" as ObjectRef,
         typology: "spatial.shape.primitive.box",
         primitives: { solid: String(r.solid ?? "box") },
       };

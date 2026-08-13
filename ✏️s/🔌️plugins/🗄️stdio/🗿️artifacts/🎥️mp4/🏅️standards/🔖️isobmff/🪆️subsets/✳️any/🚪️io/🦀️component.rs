@@ -63,28 +63,28 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-//! ⚙️ Mp4 (isobmff) engine — real ISO-BMFF box-tree decode/encode. Moved wholesale from
-//! remodel's video engine (`✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🎥️video/🦀️component.rs`,
-//! 5,163 LOC) per the master plan's extraction map, split into `📦️boxes` (box iterator/reader,
-//! moved from that file's `🔖️Bmff`/`🔖️Bytes` regions lines 12-236) and `🎥️h264` (moved from its
-//! `🔖️Bits`/`🔖️Rbsp`/`🔖️Sps` regions plus the `avcC` extract/build helpers from `🔖️Bmff`/
-//! `🔖️Mux`) submodules. `decode_mp4`/`encode_mp4` below are this file's own adaptation of that
-//! source's `probe_mp4` (lines 536-604) + `mp4_mux`/`mp4_build_moov`/`write_mp4_avc` (lines
-//! 3648-3740) — generalized from remodel's fixed single-run-length fixture muxer into a real
-//! per-sample `stts`/`ctts`/`stss` run-length encoder/decoder pair driven by this artifact's own
-//! `Mp4Snapshot` schema (moved logic, adapted shape — not reimplemented from first principles).
-//!
-//! **codec_retention_law scope** (documented per the general law's own "or documented normal
-//! form" allowance): `ftyp` is byte-exact; every top-level box this codec doesn't type
-//! (`unknown_boxes`, e.g. `free`) is byte-exact; every sample's exact payload bytes/duration/
-//! cts_offset/sync flag are byte-exact (the actual codec payload — the substance of
-//! `codec_retention_law`'s "real codec works on real data" proof). NOT preserved byte-for-byte:
-//! `moov`'s untyped auxiliary fields this schema (as specified) has no slot for — `mvhd`
-//! creation/modification time, volume, matrix; `tkhd` matrix/volume/timestamps; `hdlr` name
-//! string; exact `stsc`/`stco` chunking layout (this encoder always re-chunks to one chunk per
-//! track). A round-tripped file is a fresh, spec-valid, ffprobe-readable MP4 carrying identical
-//! samples/timing/codec-config to the source — a "documented normal form", not literal
-//! byte-identity of the whole file.
+// ⚙️ Mp4 (isobmff) engine — real ISO-BMFF box-tree decode/encode. Moved wholesale from
+// remodel's video engine (`✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/⚙️engine/🎥️video/🦀️component.rs`,
+// 5,163 LOC) per the master plan's extraction map, split into `📦️boxes` (box iterator/reader,
+// moved from that file's `🔖️Bmff`/`🔖️Bytes` regions lines 12-236) and `🎥️h264` (moved from its
+// `🔖️Bits`/`🔖️Rbsp`/`🔖️Sps` regions plus the `avcC` extract/build helpers from `🔖️Bmff`/
+// `🔖️Mux`) submodules. `decode_mp4`/`encode_mp4` below are this file's own adaptation of that
+// source's `probe_mp4` (lines 536-604) + `mp4_mux`/`mp4_build_moov`/`write_mp4_avc` (lines
+// 3648-3740) — generalized from remodel's fixed single-run-length fixture muxer into a real
+// per-sample `stts`/`ctts`/`stss` run-length encoder/decoder pair driven by this artifact's own
+// `Mp4Snapshot` schema (moved logic, adapted shape — not reimplemented from first principles).
+//
+// **codec_retention_law scope** (documented per the general law's own "or documented normal
+// form" allowance): `ftyp` is byte-exact; every top-level box this codec doesn't type
+// (`unknown_boxes`, e.g. `free`) is byte-exact; every sample's exact payload bytes/duration/
+// cts_offset/sync flag are byte-exact (the actual codec payload — the substance of
+// `codec_retention_law`'s "real codec works on real data" proof). NOT preserved byte-for-byte:
+// `moov`'s untyped auxiliary fields this schema (as specified) has no slot for — `mvhd`
+// creation/modification time, volume, matrix; `tkhd` matrix/volume/timestamps; `hdlr` name
+// string; exact `stsc`/`stco` chunking layout (this encoder always re-chunks to one chunk per
+// track). A round-tripped file is a fresh, spec-valid, ffprobe-readable MP4 carrying identical
+// samples/timing/codec-config to the source — a "documented normal form", not literal
+// byte-identity of the whole file.
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box as SnapMp4Box, Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track, STDIO_MP4_DOCUMENT_SCHEMA};
 

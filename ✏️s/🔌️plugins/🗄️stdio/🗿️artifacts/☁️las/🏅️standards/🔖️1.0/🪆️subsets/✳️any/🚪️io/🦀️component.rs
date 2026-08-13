@@ -50,15 +50,15 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Codec
-//! Real las codec. Decode reads the full LAS 1.0 public header block (§2.3: version, system
-//! identifier, generating software, creation date, header size, offset to point data, VLR count,
-//! point data format id + record length, point record count, points-by-return histogram,
-//! scale/offset, max/min bounds), walks `number_of_vlrs` Variable Length Records starting at
-//! `header_size` (payload retained byte-verbatim), then decodes point data record formats 0-3
-//! (§LAS 1.2). Trusts the header's own `offset_to_point_data`/`header_size` fields as ground
-//! truth for where VLRs/point data start (no hardcoded 227-byte clamp), and falls back to the
-//! LAS 1.4 extended point count (offset 247, u64) when the legacy count field (offset 107) is
-//! zero. Encode always emits a fixed 227-byte header — see 🚫️EncodeScopeNote below.
+// Real las codec. Decode reads the full LAS 1.0 public header block (§2.3: version, system
+// identifier, generating software, creation date, header size, offset to point data, VLR count,
+// point data format id + record length, point record count, points-by-return histogram,
+// scale/offset, max/min bounds), walks `number_of_vlrs` Variable Length Records starting at
+// `header_size` (payload retained byte-verbatim), then decodes point data record formats 0-3
+// (§LAS 1.2). Trusts the header's own `offset_to_point_data`/`header_size` fields as ground
+// truth for where VLRs/point data start (no hardcoded 227-byte clamp), and falls back to the
+// LAS 1.4 extended point count (offset 247, u64) when the legacy count field (offset 107) is
+// zero. Encode always emits a fixed 227-byte header — see 🚫️EncodeScopeNote below.
 use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
 use crate::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
 

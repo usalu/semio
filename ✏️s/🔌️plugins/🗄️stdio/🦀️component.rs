@@ -13,7 +13,7 @@ pub fn plugin() -> Plugin {
     crate::artifacts::semio::standards::v1::engine::register();
     crate::artifacts::wav::standards::riff_pcm::engine::register();
     crate::artifacts::epw::standards::energyplus::engine::register();
-    crate::artifacts::tsv::standards::iana::engine::register();
+    crate::artifacts::tsv::register();
     crate::artifacts::html::standards::v5::engine::register();
     Plugin::builder("stdio")
         .label("Stdio")

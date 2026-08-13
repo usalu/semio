@@ -1,6 +1,6 @@
 -- #region 🧲️Header
 
--- sql/sqlite/repo/🛢️schema.sql
+-- sql/sqlite/repo/📐️schema.sql
 
 -- 2025 Ueli Saluz <ueli@semio-tech.com>
 

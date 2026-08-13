@@ -377,10 +377,12 @@ The following architecture must be reached:
 - Every artifact has a schema, snapshot, diff, mutations, inferences, io system.
 - Every artifact is tracked over vcs.
 - Every artifact has children artifacts that have their own version history and referenced artifacts that also have their own version history.
-- Every app have a headless engine.
+- Every app has a headless engine.
 - Every app has modes.
 - Every mode has windows.
-- Every window has actions, utilities, options, presence.
+- Every window has actions, utilities, options, presence, config.
+
+Get the demonstrator working again end to end with the new architecture.
 
 ---
 

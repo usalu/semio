@@ -586,3 +586,34 @@ Those 73 `fn set_` are **setters on a render-side projection**, not CRUD over au
 - `GraphHost.dag`'s owner (`💻️os/🔨️modules/🌊️flow/🌿️vcs`) is **not yet event-sourced**; node-graph's `move`/`connect`/`disconnect` verbs are designed and were sent to SMO, but cannot be authored until W3c lands the conforming dispatch enum.
 - The framework-module schema placement question **remains genuinely unpiloted repo-wide** — not because it was dodged, but because after tracing, no surface module needed a schema to place.
 - `semio-s-plugin-gis` has 3 pre-existing errors in `🏔️gisterrain` (not `🗺️gismap`), confirmed by mtime/git-log as concurrent churn predating this wave. Not fixed, not attributed here.
+
+## W3c — `🪐️space` DONE and independently re-verified; `🌊️flow/🌿️vcs` correctly BLOCKED
+
+Agent died on a session limit mid-write of its own final report, but landed clean beforehand. Coordinator re-verified independently:
+
+```
+cargo test -p semio-framework-os-kernel --lib   →  828 passed, 1 failed   (identical to baseline, 0 regression)
+```
+
+⚠️ **A verification trap in my own re-check, caught before recording it as a defect.** `grep -c CollectionMutation` on space's file read 70→74 and looked like a regression. It isn't: `CollectionMutation` is the file's own **local, correctly-named enum** (distinct from the banned generic wrapper — established at W0), so the string count was never a compliance metric, only a count of a legitimate type's own name. Verified the real thing instead: old CRUD verb names (`SetName`/`AddFolder`/`RemoveFolder`/`MoveFolder`/`AddEntry`/`RemoveEntry`/`MoveEntry`) inside `CollectionMutation` → **0**; new verbs (`RenameCollection`/`CreateFolder`/`DeleteFolder`/`MoveToCollection`/`CreateEntry`/`DeleteEntry`/`MoveToFolder`) → **72**. The 7 residual `SetName` hits are `SpaceMutation::SetName` — an entirely different, pre-existing enum in the same file, correctly out of this wave's boundary. **Yet another instance of counting a string instead of measuring the property**, this time almost committed by the coordinator against its own agent's clean work.
+
+### `🪐️space` — landed
+
+Verb renames per SMO's binding ruling; the whole-record `CollectionDiff` replaced with a **handcrafted sparse diff** (`MovedToContainer`/`RenamedItem`/`ReplacedEntryBody` as small shared-shape record types); `DeleteFolder` cascade **newly implemented** correctly (BFS subtree capture, leaves-first inverse — entries before folders, folders deepest-first) where the prior code only removed the target and relied on post-hoc orphan cleanup, which the design doc's inverse-story table does not sanction; `absorb()` changed from overwrite to extend for the new plural id-list fields, since cascade deletes now produce multi-id diffs an overwrite would corrupt.
+
+**Verification was constrained honestly, not silently downgraded.** The mandated gate crate never mounts `space.rs`; the file's real owning crate (`semio-framework-os`) compiles it only under a non-default feature (`os-host-full`) that is **108-errors red for reasons proven unrelated** — the agent demonstrated this by finding the identical failure on an untouched pre-existing test (`SpaceMutation::SetName` in a different, unedited region) and re-running twice for stability. Real crate-level green was therefore unobtainable through no fault of the change; the agent extracted the new cascade-delete algorithm into a standalone Rust file and ran it as a real program (`ALL SCRATCH ASSERTIONS PASSED`) rather than claiming untested code works — and labelled it explicitly as scratch verification, not equivalent to the crate suite.
+
+### `🌊️flow/🌿️vcs` — correctly left unauthored, `blocked-cross-session`
+
+Three independent, individually-decisive findings, each measured against the plugin's real code rather than assumed:
+1. The plugin's existing `ReorderWidgets{id, to_index}` is **id-addressed**; the approved framework target is **index-addressed** (`{from, to}`). Converting requires a snapshot lookup, but the bridge functions are pure syntactic converters with no snapshot parameter — structurally impossible without changing the wire-codec trait signatures themselves.
+2. The plugin's `ReplaceWidget{id, widget}` carries a whole new value with no old-value context, so there is no way to know which of ~15 new field-level framework variants it corresponds to — the plugin doesn't carry the "was this field touched" information the decomposition needs.
+3. Two of the plugin's own variants (`ReorderSynapses`, `UpdateSynapseEndpoints`'s endpoint-change case) have **no destination** in the approved framework shape at all, and `MoveWidgets` (plural) vs. the new singular `MoveWidget` is a cardinality mismatch the current one-op-in-one-op-out wire contract cannot express.
+
+Any one of the three would justify stopping; together they rule out "minimal, mechanical" decisively. **Framework file read in full, not edited.** This is a genuine cross-cutting redesign of the plugin's own vocabulary — exactly what SMO's own design doc anticipated as "rewritten, not unwrapped" and assigned to their side, sequenced after DKM's shape landed. SMO wound down before doing it.
+
+### Handoff, since SMO is not reachable
+
+Written into this ticket for whoever next holds mutation-vocabulary work: land the target `FlowMutation` shape from `📓️wave3c-design/flow-target-shape.md` in the framework file first (enum + sparse `FlowDiff` regions), **then** rewrite the plugin's own 9-variant vocabulary to field-level granularity — that rewrite is the actual size of the job, not a codec patch — **then** delete `🔹WireCodecs`/`🌉️FrameworkBridge` per SMO's original ruling. The `camera` doctrine violation and two open design questions (`replace-cluster-tree`/`-flow` as composition; `ChangeActionTarget` naming) remain outstanding, unaffected by this block.
+
+The space-side plugin delta is pre-scoped for whoever picks it up: `grep -rln "CollectionMutation" ✏️s/🔌️plugins/🪐️space/` → exactly one file, using it only as a generic type parameter, never constructing a variant by name — **zero required edits** to the plugin.

@@ -1,0 +1,1 @@
+//! 🧪️ Rust-only negative fixture.

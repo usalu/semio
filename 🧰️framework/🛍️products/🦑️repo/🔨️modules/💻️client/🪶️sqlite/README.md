@@ -4,7 +4,7 @@ SQLite schema definitions for repo exports.
 
 # Docs
 
-## 🛢️schema.sql
+## 📐️schema.sql
 
 SQLite schema with ticket UI storage alongside LLM and commit metadata.
 

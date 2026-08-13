@@ -601,7 +601,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 		},
 		{
 			name: "native windows bootstrap builds the repo client from its canonical source",
-			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "⌨️script.ps1"),
+			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🪟️script.ps1"),
 			requiredFragments: []string{
 				`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go`,

@@ -56,5 +56,11 @@
   "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-element": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑🧩️delete-element",
   "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-node": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑⚪️delete-node",
   "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-combination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱🔗️create-combination",
-  "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️options": "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🛠️options"
+  "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️options": "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🛠️options",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🛂️manifest.jsonrewrite-rhs.manifest.json": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/➡️manifest.jsonrewrite-rhs.manifest.json",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🛂️manifest.jsonconcrete-forest.manifest.json": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🌲️manifest.jsonconcrete-forest.manifest.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🧪️extension.test.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/🛢️schema.sql": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📐️schema.sql",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️nx-plugin.mjs": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/⌨️script.ps1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️script.ps1"
 }

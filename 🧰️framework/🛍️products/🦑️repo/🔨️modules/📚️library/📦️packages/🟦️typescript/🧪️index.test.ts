@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyEmojiPrefixBreaches } from "../../../../../../../📜️script.ts";
+import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyEmojiPrefixBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -78,6 +78,44 @@ describe("emoji-prefix policy", () => {
   });
 });
 //#endregion 🧪️EmojiPrefixPolicy
+
+//#region 🪟️WindowCompletenessPolicy
+describe("window completeness policy", () => {
+  test("requires item-only capability facets and their language mirrors", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-window-policy-"));
+    const ownerRel = "🧪️owner";
+    const window = join(root, ownerRel, "🎛️apps", "🧪️app", "🎭️modes", "🧪️mode", "🪟️windows", "🧪️window");
+    const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
+    try {
+      mkdirSync(window, { recursive: true });
+      const missingFacets = policyWindowCompletenessBreaches(root, [crate]);
+      expect(missingFacets.filter((breach) => breach.kind === "taxonomy/window-completeness")).toHaveLength(4);
+      for (const facet of ["🎬️actions", "🪛️utilities", "🎚️options", "👥️presence"] as const) {
+        const dir = join(window, facet);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, "📌️empty.md"), "");
+      }
+      expect(policyWindowCompletenessBreaches(root, [crate])).toEqual([]);
+      const action = join(window, "🎬️actions", "🧪️action");
+      mkdirSync(action);
+      expect(policyWindowCompletenessBreaches(root, [crate]).filter((breach) => breach.kind === "taxonomy/window-component")).toHaveLength(2);
+      expect(policyWindowCompletenessBreaches(root, [crate]).filter((breach) => breach.kind === "taxonomy/window-empty-facet")).toHaveLength(1);
+      rmSync(join(window, "🎬️actions", "📌️empty.md"));
+      writeFileSync(join(action, "🦀️component.rs"), "");
+      writeFileSync(join(action, "🟦️component.ts"), "");
+      expect(policyWindowCompletenessBreaches(root, [crate])).toEqual([]);
+      writeFileSync(join(window, "🎬️actions", "🦀️component.rs"), "");
+      expect(policyWindowCompletenessBreaches(root, [crate]).map((breach) => breach.kind)).toEqual(["taxonomy/window-facet-component"]);
+      rmSync(join(window, "🎬️actions", "🦀️component.rs"));
+      rmSync(join(action, "🟦️component.ts"));
+      const missingMirror = policyWindowCompletenessBreaches(root, [crate]);
+      expect(missingMirror.map((breach) => breach.kind)).toEqual(["taxonomy/window-component"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+//#endregion 🪟️WindowCompletenessPolicy
 
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
@@ -1190,8 +1228,10 @@ describe("loadTaxonomy", () => {
     });
     expect(taxonomy.artifactSpecFilenames["📸️snapshot/🎒️pack"]).toBe("📡️component.protocol.semio");
     expect("🎒️pack" in taxonomy.artifactSpecFilenames).toBe(false);
-    expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options"]);
-    expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "🎚️options"]);
+    expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "👥️presence"]);
+    expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "🎚️options", "👥️presence"]);
+    expect(taxonomy.windowComponentLangs).toEqual(["🦀️rust", "🟦️typescript"]);
+    expect(taxonomy.windowEmptyFacetFilename).toBe("📌️empty.md");
     expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
     expect(taxonomy.taxonomyLeafFilenames["🟦️typescript"]).toBe("🟦️component.ts");
     expect(taxonomy.artifactSpecFilenames["🗣️dsl"]).toBe("📖️component.grammar.semio");
@@ -1357,6 +1397,16 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy(missing).some((problem) => problem.includes("windowRequiredChildDirs must be a non-empty array"))).toBe(true);
     const outsideAllowlist = { ...taxonomy, windowRequiredChildDirs: [...taxonomy.windowRequiredChildDirs, "🧪️unknown"] };
     expect(validateTaxonomy(outsideAllowlist).some((problem) => problem.includes('"🧪️unknown" is missing from windowChildDirs'))).toBe(true);
+  });
+
+  test("reports an invalid window component language set", () => {
+    const taxonomy = loadTaxonomy();
+    const missing = { ...taxonomy, windowComponentLangs: [] };
+    expect(validateTaxonomy(missing).some((problem) => problem.includes("windowComponentLangs must be a non-empty array"))).toBe(true);
+    const unknown = { ...taxonomy, windowComponentLangs: [...taxonomy.windowComponentLangs, "🧪️unknown"] };
+    expect(validateTaxonomy(unknown).some((problem) => problem.includes('"🧪️unknown" has no taxonomyLeafFilenames entry'))).toBe(true);
+    const missingMarker = { ...taxonomy, windowEmptyFacetFilename: "" };
+    expect(validateTaxonomy(missingMarker).some((problem) => problem.includes("windowEmptyFacetFilename must be a non-empty string"))).toBe(true);
   });
 
   test("reports empty pluginChildDirs", () => {

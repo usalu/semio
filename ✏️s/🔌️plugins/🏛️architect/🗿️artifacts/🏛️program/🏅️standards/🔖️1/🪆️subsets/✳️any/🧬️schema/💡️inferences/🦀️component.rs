@@ -30,7 +30,7 @@ use crate::artifacts::program::registers::{AdjacencyKind, AnalysisKind, AuditEve
 use crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA;
 use semio_s_plugin_stdio::artifacts::csv as stdio_csv;
 use semio_s_plugin_stdio::artifacts::tsv as stdio_tsv;
-use semio_s_plugin_stdio::artifacts::tsv::standards::iana::engine as stdio_tsv_engine;
+use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;
 use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_line_ending;
 use std::collections::{HashMap, HashSet};
 //#endregion 🔖️DerivedComputeImports

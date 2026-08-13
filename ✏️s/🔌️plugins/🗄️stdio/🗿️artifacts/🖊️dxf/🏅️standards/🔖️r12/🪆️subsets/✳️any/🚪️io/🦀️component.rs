@@ -48,3 +48,17 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use std::sync::OnceLock;
+    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+    use crate::artifacts::dxf::standards::v_r12::subsets::any::schema::DxfComposer as DxfRawAnyComposer;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<DxfRawAnyComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

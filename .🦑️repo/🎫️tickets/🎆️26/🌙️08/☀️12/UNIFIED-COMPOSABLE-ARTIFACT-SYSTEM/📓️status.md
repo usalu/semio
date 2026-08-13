@@ -21,6 +21,19 @@ Peer session *names* rotate after session-limit restarts and I have misrouted me
 - **A merge, not a revert.** Blindly restoring 496 would have destroyed the peer's inference work; diffing per-subset mount counts made the merge safe.
 - Unicode normalisation defeats literal emoji filenames in scripts — detect files by listing a directory, never by comparing a hard-coded `"🦀️component.rs"`.
 
+## ⏸️ W3 exemplars CODE-COMPLETE, final verification blocked by fresh concurrent churn (#2553)
+
+**lowpoly and cad migrations both landed on disk and both compiled clean at last check** (see their reports). Both W3 agents were then terminated mid-final-verification by a session limit.
+
+**Orchestrator repaired 2 genuine mine-to-fix defects found while re-verifying stdio:**
+1. Two stray `//!` inner-doc-comment lines in `☁️ply`'s `🚪️io/🦀️component.rs` (E0753, invalid mid-file inner doc) — converted to plain `//`.
+2. `🖊️dxf`'s schema facet had `DxfSnapshot` imported twice (two separate `use` statements) — consolidated to one.
+3. `📜️docx/🦀️component.rs`'s top-level `io_registry` still imported the pre-migration path `standards::v_ecma_376::engine::io_registry`; repointed to `standards::v_ecma_376::subsets::any::io::io_registry`, matching the pattern already working for `json`/`mp4`/`wav`/`mp3`/`avi`. Also removed 3 identical stale `pub mod engine { pub use …engine::*; }` external-caller shims in `📦️glue.rs` for docx's `any`/`strict`/`transitional` subsets — the underlying `⚙️engine` dir was already deleted per an in-file comment citing ticket #2553's mandate; the shim just hadn't been removed in the same change.
+
+**Then hit a genuinely live, moving target — did not chase it, per this ticket's own established rule.** Immediately after the docx fix, stdio broke again: `📷️png` lost its `⚙️engine` dir (confirmed via `git log`, commit 501 — landed *during* this verification pass, after this session's earlier clean check). Widening further to `pptx`/`xlsx`/`docx` again as more commits landed while checking. This is ticket **#2553's own active fan-out** deleting `⚙️engine` directories across many stdio artifacts in real time — not a defect, not attributable to W1/W2/W3, and chasing a target that a peer session is actively rewriting is the exact trap this ticket already documented once today (the brep/drawing mount race). **Stopped here rather than continue fighting it.**
+
+**Resume condition**: wait for #2553 to signal their stdio `⚙️engine` fan-out complete (or re-check `cargo check -p semio-s-plugin-stdio --all-targets` periodically), then: (1) re-verify lowpoly + cad end-to-end, (2) distill `📓️migration-recipe.md` from their two reports, (3) launch W4 fan-out across the remaining ~29 plugins, batched by SMO/APA/DKM/#2553 clearance exactly as W2's batching was. W4→W7 not started — realistic remaining scope at this pace is multiple further agent-hours, not completable in one sitting given the frequency of legitimate concurrent-session interruptions today.
+
 ## ▶️ W3 RUNNING — stdio unblocked, plugin migration started
 
 DKM completed `✳️brep`/`✳️drawing`/`✳️mesh`. **stdio is green**: `cargo check --all-targets` clean; suite **2409 run / 2404 passed / 5 failed / 5 skipped**.

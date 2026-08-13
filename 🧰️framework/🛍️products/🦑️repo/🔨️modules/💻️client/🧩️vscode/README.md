@@ -8,7 +8,7 @@ VS Code extension source for repo tooling workflows.
 
 VS Code test-cli configuration entrypoint that defines the compiled test glob and Electron launch arguments for extension tests.
 
-## 🟦️extension.test.ts
+## 🧪️extension.test.ts
 
 VS Code extension integration tests covering command registration, diagnostics, sidebar view contributions, filter state behavior, and monorepo tree provider roots.
 

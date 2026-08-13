@@ -122,8 +122,8 @@ pub use derived_construction::*;
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
     use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
+    use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot;
     use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
-    use crate::artifacts::tsv::standards::iana::engine as engine;
 
     #[derive(Clone, Debug, Default)]
     pub struct TsvParts { pub snapshot: Option<TsvSnapshot> }
@@ -137,14 +137,14 @@ pub mod derived_analysis {
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if engine::sniff_real_bytes(bytes) {
+                    if snapshot::sniff_real_bytes(bytes) {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_TSV_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
                 }
                 AnalyzeSource::Text(text) => {
-                    if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_TSV_DOCUMENT_SCHEMA) {
+                    if snapshot::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_TSV_DOCUMENT_SCHEMA) {
                         IoConfidence::High
                     } else {
                         IoConfidence::Low

@@ -36,7 +36,7 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
         surface_kind: SurfaceKind::Board2d,
         icon_id: "layout-grid".into(),
         options: WindowOptions { measures: window_measures(envelope, precompute, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
-        actions: actions::ids(),
+        actions: vec![actions::apply_board_events::reference(), actions::set_camera::reference()],
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::fill::UTILITY_ID.into()],
         params_schema: None,
         artifact_snapshot_schema: None,

@@ -112,9 +112,9 @@ export class NativeOsScript extends Script {
     const cmd = segments[0] ?? "setup";
     const env = { ...process.env, COMPOSE_REPO_ROOT: this.root };
     if (process.platform === "win32") {
-      const ps1 = join(NATIVE_BOOTSTRAP_DIR, "⌨️script.ps1");
+      const ps1 = join(NATIVE_BOOTSTRAP_DIR, "🪟️script.ps1");
       if (!existsSync(ps1)) {
-        console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/⌨️script.ps1.`);
+        console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/🪟️script.ps1.`);
         process.exit(1);
       }
       runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root, env });
@@ -1876,7 +1876,7 @@ export class Neo4jCypherExport {
 /**
  * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
  * V2 (structure), V3 (coupling) audit findings under `.🦑️repo/🎫️tickets/26/07/18/WAVE-4-*-AUDIT`, wired via
- * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
+ * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
  * breaches, never as a hard `policy` failure — see `POLICY_SDK_GAP_ALLOWLIST` below.
@@ -4205,9 +4205,9 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
 }
 
 /**
- * 📏️Window completeness: every app window declares actions, utilities, and options explicitly. A
- * capability may be empty, but its taxonomy node may never be absent; the required set comes from the
- * shared vocabulary so policy and package discovery cannot drift.
+ * 📏️Window completeness: every app window declares every required facet explicitly. Empty facets
+ * carry only their tracked marker; components are forbidden at facet level and required on every
+ * specific item. Shape, marker, and implementation languages come from shared vocabulary.
  */
 export function policyWindowCompletenessBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
@@ -4223,16 +4223,74 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
             const windowDir = `${childRel}/${window.name}`;
             const actual = new Set(policyReaddirSafe(repoRoot, windowDir).filter((candidate) => candidate.isDirectory).map((candidate) => candidate.name));
             for (const required of taxonomy.windowRequiredChildDirs) {
-              if (actual.has(required)) continue;
-              breaches.push({
-                id: `taxonomy-window-completeness-${windowDir}-${required}`,
-                summary: `"${windowDir}" is missing required window capability dir "${required}"`,
-                kind: "taxonomy/window-completeness",
-                scope: `${scopeId}/${policyStripEmoji(window.name)}`,
-                priority: "high",
-                reason: `Every window must explicitly carry ${taxonomy.windowRequiredChildDirs.join(", ")}; an empty capability is valid, an absent capability is not.`,
-                solution: `Add ${windowDir}/${required}/${taxonomy.taxonomyLeafFilenames["🦀️rust"] ?? "🦀️component.rs"}; keep the module empty when the window has no ${policyStripEmoji(required)} yet.`,
-              });
+              const capabilityDir = `${windowDir}/${required}`;
+              if (!actual.has(required)) {
+                breaches.push({
+                  id: `taxonomy-window-completeness-${windowDir}-${required}`,
+                  summary: `"${windowDir}" is missing required window capability dir "${required}"`,
+                  kind: "taxonomy/window-completeness",
+                  scope: `${scopeId}/${policyStripEmoji(window.name)}`,
+                  priority: "high",
+                  reason: `Every window must explicitly carry ${taxonomy.windowRequiredChildDirs.join(", ")}; an empty capability is valid, an absent capability is not.`,
+                  solution: `Add ${capabilityDir}/${taxonomy.windowEmptyFacetFilename}; replace the marker with specific item directories when the facet gains members.`,
+                });
+                continue;
+              }
+              const members = policyReaddirSafe(repoRoot, capabilityDir).filter((candidate) => candidate.isDirectory);
+              const markerRel = `${capabilityDir}/${taxonomy.windowEmptyFacetFilename}`;
+              for (const filename of new Set(Object.values(taxonomy.taxonomyLeafFilenames))) {
+                if (!existsSync(join(repoRoot, capabilityDir, filename))) continue;
+                breaches.push({
+                  id: `taxonomy-window-facet-component-${capabilityDir}-${filename}`,
+                  summary: `"${capabilityDir}" contains forbidden facet-level component leaf "${filename}"`,
+                  kind: "taxonomy/window-facet-component",
+                  scope: `${scopeId}/${policyStripEmoji(window.name)}/${policyStripEmoji(required)}`,
+                  priority: "high",
+                  reason: `Window facets are collections; only specific item directories may contain component leaves.`,
+                  solution: `Move ${capabilityDir}/${filename} into ${capabilityDir}/<specific-item>/${filename}, or remove it and add ${markerRel} when the facet is empty.`,
+                });
+              }
+              if (members.length === 0) {
+                if (!existsSync(join(repoRoot, markerRel))) {
+                  breaches.push({
+                    id: `taxonomy-window-empty-facet-${capabilityDir}`,
+                    summary: `Empty window facet "${capabilityDir}" is missing marker "${taxonomy.windowEmptyFacetFilename}"`,
+                    kind: "taxonomy/window-empty-facet",
+                    scope: `${scopeId}/${policyStripEmoji(window.name)}/${policyStripEmoji(required)}`,
+                    priority: "high",
+                    reason: `An empty required facet must remain tracked without pretending that the facet itself is a specific component.`,
+                    solution: `Add ${markerRel}.`,
+                  });
+                }
+                continue;
+              }
+              if (existsSync(join(repoRoot, markerRel))) {
+                breaches.push({
+                  id: `taxonomy-window-populated-facet-marker-${capabilityDir}`,
+                  summary: `Populated window facet "${capabilityDir}" still contains empty marker "${taxonomy.windowEmptyFacetFilename}"`,
+                  kind: "taxonomy/window-empty-facet",
+                  scope: `${scopeId}/${policyStripEmoji(window.name)}/${policyStripEmoji(required)}`,
+                  priority: "high",
+                  reason: `A facet cannot be both empty and populated with specific items.`,
+                  solution: `Remove ${markerRel}.`,
+                });
+              }
+              for (const member of members) {
+                const unit = { name: member.name, rel: `${capabilityDir}/${member.name}` };
+                for (const lang of taxonomy.windowComponentLangs) {
+                  const filename = taxonomy.taxonomyLeafFilenames[lang];
+                  if (!filename || existsSync(join(repoRoot, unit.rel, filename))) continue;
+                  breaches.push({
+                    id: `taxonomy-window-component-${unit.rel}-${lang}`,
+                    summary: `"${unit.rel}" is missing required ${lang} component leaf "${filename}"`,
+                    kind: "taxonomy/window-component",
+                    scope: `${scopeId}/${policyStripEmoji(window.name)}/${policyStripEmoji(unit.name)}`,
+                    priority: "high",
+                    reason: `Every specific window capability item must mirror ${taxonomy.windowComponentLangs.join(", ")}.`,
+                    solution: `Add ${unit.rel}/${filename}.`,
+                  });
+                }
+              }
             }
           }
           continue;

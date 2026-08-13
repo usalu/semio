@@ -168,6 +168,10 @@ export interface Taxonomy {
   readonly windowChildDirs: readonly string[];
   /** 🪟️ COMPLETENESS set: capability directories every window must carry, empty modules allowed. */
   readonly windowRequiredChildDirs: readonly string[];
+  /** 🌐️ IMPLEMENTATION set: language component leaves every concrete capability member must carry. */
+  readonly windowComponentLangs: readonly string[];
+  /** 📌️ Tracked marker used only when a required window facet has no specific items. */
+  readonly windowEmptyFacetFilename: string;
   readonly taxonomyLeafParentDirs: readonly string[];
   /** 🍃️ Leaf component filename, keyed by target when a package has one (e.g. `"🧊️wgpu"`), else by lang (e.g. `"🦀️rust"` for plugins, which never have a target level). */
   readonly taxonomyLeafFilenames: Readonly<Record<string, string>>;
@@ -430,6 +434,21 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
         problems.push(`windowRequiredChildDirs member "${dir}" is missing from taxonomyLeafParentDirs.`);
       }
     }
+  }
+  if (!Array.isArray(taxonomy.windowComponentLangs) || taxonomy.windowComponentLangs.length === 0) {
+    problems.push(`windowComponentLangs must be a non-empty array.`);
+  } else {
+    const seen = new Set<string>();
+    for (const lang of taxonomy.windowComponentLangs) {
+      if (seen.has(lang)) problems.push(`windowComponentLangs contains duplicate member "${lang}".`);
+      seen.add(lang);
+      if (!taxonomy.taxonomyLeafFilenames[lang]) {
+        problems.push(`windowComponentLangs member "${lang}" has no taxonomyLeafFilenames entry.`);
+      }
+    }
+  }
+  if (typeof taxonomy.windowEmptyFacetFilename !== "string" || taxonomy.windowEmptyFacetFilename.length === 0) {
+    problems.push(`windowEmptyFacetFilename must be a non-empty string.`);
   }
   //#endregion WindowShapeContract
   //#region MutationFacetContract

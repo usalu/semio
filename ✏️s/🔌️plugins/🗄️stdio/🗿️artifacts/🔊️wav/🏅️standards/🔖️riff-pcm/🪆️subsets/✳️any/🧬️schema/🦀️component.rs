@@ -122,7 +122,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
-    use crate::artifacts::wav::standards::riff_pcm::engine as engine;
+    use crate::artifacts::wav::standards::riff_pcm::subsets::any::io as io;
 
     #[derive(Clone, Debug, Default)]
     pub struct WavParts { pub snapshot: Option<WavSnapshot> }
@@ -136,14 +136,14 @@ pub mod derived_analysis {
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if engine::sniff_real_bytes(bytes) {
+                    if io::sniff_real_bytes(bytes) {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_WAV_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) { IoConfidence::High } else { IoConfidence::Low }
                 }
                 AnalyzeSource::Text(text) => {
-                    if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_WAV_DOCUMENT_SCHEMA) {
+                    if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_WAV_DOCUMENT_SCHEMA) {
                         IoConfidence::High
                     } else {
                         IoConfidence::Low

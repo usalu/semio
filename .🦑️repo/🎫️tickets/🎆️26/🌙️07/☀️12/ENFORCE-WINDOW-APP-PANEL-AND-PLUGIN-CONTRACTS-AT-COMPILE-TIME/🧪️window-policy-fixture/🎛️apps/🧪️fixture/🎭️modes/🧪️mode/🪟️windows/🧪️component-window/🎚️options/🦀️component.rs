@@ -1,0 +1,1 @@
+//! 🧪️ Complete Rust fixture half.

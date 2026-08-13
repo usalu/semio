@@ -2107,8 +2107,13 @@ pub mod apps {
                         mod component;
                         pub use component::*;
 
-                        #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🎬️actions/🦀️component.rs"]
-                        pub mod actions;
+                        #[path = "."]
+                        pub mod actions {
+                            #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🎬️actions/🧩️apply-board-events/🦀️component.rs"]
+                            pub mod apply_board_events;
+                            #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/◻2d/🎬️actions/📷️set-camera/🦀️component.rs"]
+                            pub mod set_camera;
+                        }
 
                         #[path = "."]
                         pub mod options {
@@ -2133,8 +2138,19 @@ pub mod apps {
                         mod component;
                         pub use component::*;
 
-                        #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎬️actions/🦀️component.rs"]
-                        pub mod actions;
+                        #[path = "."]
+                        pub mod actions {
+                            #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎬️actions/↔️translate-selection/🦀️component.rs"]
+                            pub mod translate_selection;
+                            #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎬️actions/🔄️rotate-selection/🦀️component.rs"]
+                            pub mod rotate_selection;
+                            #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎬️actions/📐️scale-selection/🦀️component.rs"]
+                            pub mod scale_selection;
+                            #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎬️actions/🚚️world-relocate/🦀️component.rs"]
+                            pub mod world_relocate;
+                            #[path = "../../🎛️apps/🖐️5d/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎬️actions/📷️set-camera/🦀️component.rs"]
+                            pub mod set_camera;
+                        }
 
                         #[path = "."]
                         pub mod options {

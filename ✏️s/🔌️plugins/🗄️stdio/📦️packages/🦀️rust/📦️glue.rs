@@ -2578,8 +2578,13 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_r12 {
-                #[path = "../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+                // so every existing `standards::v_r12::engine::*`/root `engine::*` path still resolves.
+                pub mod engine {
+                    pub use super::subsets::any::io::*;
+                    pub use super::subsets::any::schema::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -3660,6 +3665,9 @@ pub mod artifacts {
             pub use super::standards::v1_2::subsets::any::schema::*;
         }
         pub mod io {
+            pub use super::standards::v1_2::subsets::any::io::*;
+        }
+        pub mod engine {
             pub use super::standards::v1_2::subsets::any::io::*;
         }
 
@@ -4768,8 +4776,17 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ecma_376 {
-                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                // `DocxEngine` (zero construction sites) deleted outright; `register()`/
+                // `register_artifact_inferences()`/`register_pilot_languages()` were already orphaned
+                // (superseded by `docx::declaration()`) and deleted outright too; `build_minimal_docx`/
+                // `sync_main_part`/`encode_docx` + the `*_to_xml` mapping moved to `subsets::any::io::
+                // export::serializers`; `decode_docx`/`sniff_docx_bytes` + the `*_from_xml` mapping
+                // moved to `subsets::any::io::import::deserializers`; `DocxError` + shared OPC/XML
+                // constants moved to `subsets::any::io`; `io_registry` moved to `subsets::any::io`;
+                // `empty_docx_snapshot`/`demo_docx_snapshot` + tests moved to `subsets::any::schema`.
+                // docx is NOT one of stdio's 10 protected imperative plugin-root `engine::register()`
+                // calls, so no `engine` shim remains — external callers (`✒️writer`) were repointed.
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
@@ -4844,6 +4861,9 @@ pub mod artifacts {
                             pub mod import {
                                 #[path = "."]
                                 pub mod deserializers {
+                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
@@ -4877,6 +4897,9 @@ pub mod artifacts {
                             pub mod export {
                                 #[path = "."]
                                 pub mod serializers {
+                                    #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[path = "."]
                                     pub mod artifacts {
                                         #[path = "."]
@@ -4930,11 +4953,13 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v_ecma_376::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v_ecma_376::engine::*;
-        }
         pub mod io {
             pub use super::standards::v_ecma_376::subsets::any::io::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ecma_376::subsets::any::io::import::deserializers::*;
+            pub use super::standards::v_ecma_376::subsets::any::io::export::serializers::*;
+            pub use super::standards::v_ecma_376::subsets::any::io::io_registry;
         }
 
 
@@ -5138,11 +5163,11 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v_ecma_376::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v_ecma_376::engine::*;
-        }
         pub mod io {
             pub use super::standards::v_ecma_376::subsets::any::io::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ecma_376::engine::*;
         }
 
 
@@ -5344,11 +5369,11 @@ pub mod artifacts {
         pub mod schema {
             pub use super::standards::v_ecma_376::subsets::any::schema::*;
         }
-        pub mod engine {
-            pub use super::standards::v_ecma_376::engine::*;
-        }
         pub mod io {
             pub use super::standards::v_ecma_376::subsets::any::io::*;
+        }
+        pub mod engine {
+            pub use super::standards::v_ecma_376::engine::*;
         }
 
 
@@ -8837,8 +8862,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod riff_pcm {
-                #[path = "../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/⚙️engine/🦀️component.rs"]
-                pub mod engine;
+                /// 🗂️ ⚙️️→🚪️ dissolution shim (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+                /// the real codec/`io_registry` moved to `subsets::any::io`; this inline module keeps
+                /// only `register()` reachable at its historical path because the plugin root
+                /// (`✏️s/🔌️plugins/🗄️stdio/🦀️component.rs`) still calls
+                /// `standards::riff_pcm::engine::register()` imperatively (one of the ticket's 10
+                /// protected `dsl::registry` entrypoints — its call site is explicitly not to be
+                /// touched).
+                pub mod engine {
+                    pub fn register() {
+                        super::subsets::any::io::register();
+                    }
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]

@@ -58,7 +58,7 @@ impl ArtifactInferrer for crate::artifacts::block2d::standards::v1::subsets::any
 //#region 🔖️PuzzleCatalogFragment
 /// 🌉️ Maps this `NodeKind` definition into the `s/plugin/puzzle` 2d manifest shape (`portKinds`/
 /// `wireKinds`/`edgeKinds`/`nodeKinds`/`kindCompatibility` — see
-/// `s/plugin/puzzle/app/2d/manifest/🛂️manifest.jsonconcrete-forest.manifest.json`), the seam puzzle imports through
+/// `s/plugin/puzzle/app/2d/manifest/🌲️manifest.jsonconcrete-forest.manifest.json`), the seam puzzle imports through
 /// its `Kit×Type` media port. Block owns no wire/edge-kind rows (`AGENTS.md`: referenced by
 /// `default_wire_kind` only), so those arrays stay empty here — a merge keeps the puzzle manifest's
 /// existing rows.

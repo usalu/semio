@@ -117,7 +117,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, STDIO_HTML_DOCUMENT_SCHEMA};
-    use crate::artifacts::html::standards::v5::engine as engine;
+    use crate::artifacts::html::standards::v5::subsets::any::io::import::deserializers as engine;
 
     #[derive(Clone, Debug, Default)]
     pub struct HtmlParts { pub snapshot: Option<HtmlSnapshot> }

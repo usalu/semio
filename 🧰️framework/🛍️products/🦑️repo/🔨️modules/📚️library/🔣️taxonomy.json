@@ -331,13 +331,20 @@
     "🪀️widgets",
     "🪛️utilities",
     "🎬️actions",
-    "🎚️options"
+    "🎚️options",
+    "👥️presence"
   ],
   "windowRequiredChildDirs": [
     "🎬️actions",
     "🪛️utilities",
-    "🎚️options"
+    "🎚️options",
+    "👥️presence"
   ],
+  "windowComponentLangs": [
+    "🦀️rust",
+    "🟦️typescript"
+  ],
+  "windowEmptyFacetFilename": "📌️empty.md",
   "taxonomyLeafParentDirs": [
     "🧬️schema",
     "🧬️mutations",

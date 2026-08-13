@@ -114,12 +114,12 @@ impl store::ArtifactDsl for WavSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::wav::standards::riff_pcm::engine::decode_wav(&bytes)
+        crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&bytes)
             .map_err(|e| store::TextError::new(format!("wav decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::wav::standards::riff_pcm::engine::encode_wav(self);
+        let bytes = crate::artifacts::wav::standards::riff_pcm::subsets::any::io::encode_wav(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
@@ -133,7 +133,7 @@ impl store::ArtifactDsl for WavSnapshot {
 impl store::ArtifactPack for WavSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::wav::standards::riff_pcm::engine::encode_wav(self);
+        let raw = crate::artifacts::wav::standards::riff_pcm::subsets::any::io::encode_wav(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -152,7 +152,7 @@ impl store::ArtifactPack for WavSnapshot {
             )));
         }
         let _ = options;
-        crate::artifacts::wav::standards::riff_pcm::engine::decode_wav(&inner).map_err(store::PackError::Schema)
+        crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

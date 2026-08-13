@@ -8,7 +8,7 @@ class DevScript extends BundleScript {
   }
 }
 
-/** ⏱️The extension-host Mocha suite (`js/🟦️extension.test.ts`) can only run inside the VSCode test harness — no fast in-repo unit split without a second test file (disallowed). Runs only at `long` and above. */
+/** ⏱️The extension-host Mocha suite (`js/🧪️extension.test.ts`) can only run inside the VSCode test harness — no fast in-repo unit split without a second test file (disallowed). Runs only at `long` and above. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { level } = resolveTestLevel(segments);
