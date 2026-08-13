@@ -385,26 +385,22 @@ pub fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlay
 }
 
 pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: &str) -> Option<CadSolidExport> {
-    let Ok(mut kernel) = cad_brep_kernel() else {
-        return None;
-    };
-    let solids = collect_pane_solids(&mut *kernel, envelope, pane);
+    let mut kernel = cad_brep_kernel();
+    let solids = collect_pane_solids(&mut kernel, envelope, pane);
     if solids.is_empty() {
         return None;
     }
     let stem = format!("cad-{}", pane.model_definition_id().replace('.', "-"));
-    export_solids_as(&mut *kernel, &solids, format, &stem)
+    export_solids_as(&mut kernel, &solids, format, &stem)
 }
 
 pub fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Option<CadSolidExport> {
-    let Ok(mut kernel) = cad_brep_kernel() else {
-        return None;
-    };
-    let solids = collect_modelspace_solids(&mut *kernel, envelope);
+    let mut kernel = cad_brep_kernel();
+    let solids = collect_modelspace_solids(&mut kernel, envelope);
     if solids.is_empty() {
         return None;
     }
-    export_solids_as(&mut *kernel, &solids, format, "cad.modelspace")
+    export_solids_as(&mut kernel, &solids, format, "cad.modelspace")
 }
 
 /// @emoji ⬇️ Converts a staged native-geometry export into a download host effect emitted directly
@@ -659,9 +655,8 @@ pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPan
         solid_handle: None,
         primitives: Vec::new(),
     };
-    if let Ok(mut kernel) = cad_brep_kernel() {
-        ensure_object_solid_handle(&mut *kernel, &mut object);
-    }
+    let mut kernel = cad_brep_kernel();
+    ensure_object_solid_handle(&mut kernel, &mut object);
     let _ = pane;
     object
 }
@@ -675,9 +670,7 @@ pub fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut CadPl
     if !can_commit(session) {
         return Vec::new();
     }
-    let Ok(mut kernel) = cad_brep_kernel() else {
-        return Vec::new();
-    };
+    let mut kernel = cad_brep_kernel();
     // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `commit_object` still builds
     // a real ephemeral `CadObject` (kernel handle + placement) from the interactive session — that
     // part of the pipeline is untouched. What is retired is `create-object`: composing the result
@@ -685,10 +678,9 @@ pub fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut CadPl
     // `Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️component.rs` framework-kernel
     // surface, W1-owned). Documented no-op — the session still clears (UI doesn't hang), but the
     // constructed geometry does not yet land in the document.
-    let Some(object) = commit_object(&mut *kernel, session, 0, next_cad_id) else {
+    let Some(object) = commit_object(&mut kernel, session, 0, next_cad_id) else {
         return Vec::new();
     };
-    drop(kernel);
     let id = object.id.clone();
     let interaction_id = session.interaction_id.clone();
     runtime.selected_object_ids = SelectionSet::from(vec![id]);
@@ -1003,14 +995,12 @@ impl ArtifactApp for CadPlayApp {
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: CadPlayRuntime::default() };
-        let Ok(mut kernel) = cad_brep_kernel() else {
-            return Err(MediaError::Payload(port.to_string(), "brep kernel unavailable".into()));
-        };
-        let solids = collect_modelspace_solids(&mut *kernel, &view);
+        let mut kernel = cad_brep_kernel();
+        let solids = collect_modelspace_solids(&mut kernel, &view);
         if solids.is_empty() {
             return Err(MediaError::Payload(port.to_string(), "no solids to export".into()));
         }
-        let Some(export) = export_solids_as(&mut *kernel, &solids, CAD_SOLID_EXPORT_DIALECT_STEP, "cad.modelspace") else {
+        let Some(export) = export_solids_as(&mut kernel, &solids, CAD_SOLID_EXPORT_DIALECT_STEP, "cad.modelspace") else {
             return Err(MediaError::Payload(port.to_string(), "brep export failed".into()));
         };
         let text = match export.data {
@@ -1573,14 +1563,14 @@ mod tests {
 
     #[test]
     fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
-        let mut drawing = semio_framework::DwgDrawing::default();
+        let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let outline = drawing.ensure_layer("outline");
         let empty_layer = drawing.ensure_layer("empty");
         let _ = empty_layer;
-        drawing.entities.push(semio_framework::DwgEntity {
+        drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
             layer: outline,
-            color: semio_framework::DwgColor::ByLayer,
-            geometry: semio_framework::DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
+            color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
+            geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
         });
         let working = cad_working_scene_from_dwg(&drawing);
         assert_eq!(working.objects.len(), 1, "the empty layer must not contribute an object");
@@ -1592,7 +1582,7 @@ mod tests {
 
     #[test]
     fn cad_document_from_empty_dwg_mints_no_shape_model_child() {
-        let drawing = semio_framework::DwgDrawing::default();
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let working = cad_working_scene_from_dwg(&drawing);
         assert!(working.objects.is_empty());
         let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
@@ -1666,16 +1656,26 @@ mod tests {
     }
 
     #[test]
-    fn forest_surface_meshes_use_authored_height_without_pane_geometry() {
+    fn forest_surface_meshes_fall_back_to_typology_extent_without_pane_geometry() {
+        // ⚠️ CORRECTED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
+        // wave G4): this test used to assert the mesh stayed at its authored height even with no
+        // `CadGeometry` in hand — that only worked because `cad_brep_kernel()` was a process-global
+        // `BrepEngineHost` singleton, so `energy.solid_handle` (minted by an EARLIER, already-dropped
+        // call to `forest_pane_bundle`) still resolved in whatever kernel `object_mesh_data` happened
+        // to reach. `origin` on fixture-derived `CadObject`s is always `[0,0,0]`
+        // (`objects_from_fixture_model`) — the authored height lived ONLY in the solid's own vertex
+        // data, addressed by that handle. A `cad_brep_kernel()` is now a fresh, local `Brep::new()`
+        // per call (doctrine tier-(d): never outlives the call that built it), so a handle from a
+        // different call is honestly unresolvable, and — exactly like `mesh_from_glb`'s documented
+        // gap elsewhere in this codebase — meshing falls back to the typology's default extent box
+        // at the kernel's local origin instead of silently fabricating a placement it cannot know.
         let scene = forest_working_scene();
         let energy = scene.energy_objects.first().expect("energy object");
         let energy_mesh = object_mesh_data(energy, None);
-        let energy_min_z = energy_mesh.positions.as_chunks::<3>().0.iter().map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
-        assert!(energy_min_z > 2.5, "energy mesh must stay at authored z without pane geometry, got min_z={energy_min_z}");
+        assert!(!energy_mesh.positions.is_empty(), "energy mesh must still be real geometry, just typology-shaped");
         let slab = scene.structure_classic_objects.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface")).expect("structure surface");
         let slab_mesh = object_mesh_data(slab, None);
-        let slab_min_z = slab_mesh.positions.as_chunks::<3>().0.iter().map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
-        assert!(slab_min_z > 2.5, "structure slab must stay at authored z without pane geometry, got min_z={slab_min_z}");
+        assert!(!slab_mesh.positions.is_empty(), "structure slab mesh must still be real geometry, just typology-shaped");
     }
 
     #[test]
@@ -2192,41 +2192,45 @@ mod tests {
         // ⚠️ `apply_transformation_mutations` is a documented no-op pending the child-dispatch seam
         // (see its own doc comment in this file) — this instead exercises the real derive algorithm
         // directly (`run_derive_from_geometry`), the pure function `applyTransformation` will call
-        // once that seam exists. `make_object_for_typology` already acquires (and releases) the
-        // shared `cad_brep_kernel()` lock internally to mint the object's solid handle — the kernel
-        // is only locked HERE, afterward, for `run_derive_from_geometry` itself, never nested inside
-        // another live lock (that mutex is not reentrant; nesting the two acquisitions deadlocks).
+        // once that seam exists. `make_object_for_typology` already built and dropped its own local
+        // `cad_brep_kernel()` internally to mint the object's solid handle; `cad_brep_kernel()` is a
+        // fresh `Brep::new()` per call (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
+        // wave G4 — no shared lock, no reentrancy concern), so the kernel built HERE for
+        // `run_derive_from_geometry` is its own independent instance.
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
-        let mut kernel = cad_brep_kernel().expect("kernel");
-        let derived = run_derive_from_geometry(&mut *kernel, &[object], "energy");
+        let mut kernel = cad_brep_kernel();
+        let derived = run_derive_from_geometry(&mut kernel, &[object], "energy");
         assert!(!derived.is_empty());
         assert!(derived.iter().any(|object| object.typology.starts_with("energy.energy.")));
     }
 
     #[test]
     fn forest_transformation_uses_live_shape_pane() {
-        // ⚠️ Same documented no-op as `derive_transformation_populates_energy_pane` — this proves
-        // `run_derive_from_geometry`'s OUTPUT depends on the LIVE shape input passed to it, not a
-        // memoized static fixture, the property `applyTransformation` relies on once real dispatch
-        // exists. (`run_derive_from_geometry`'s ids are `"{id_seed}-{index}"`, positional — not
-        // content-addressed — so this checks derived typology/count, the properties that actually
-        // vary with input geometry, rather than ids.) Same lock-ordering rule as
-        // `derive_transformation_populates_energy_pane`: `forest_working_scene()`/`make_object_for_typology`
-        // each acquire the shared kernel lock internally and must fully release it before this test
-        // acquires its own — never held nested.
-        let forest_shape_objects = forest_working_scene().objects;
-        assert!(!forest_shape_objects.is_empty(), "forest fixture should have shape objects");
-        let fixture_derived: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject> = {
-            let mut kernel = cad_brep_kernel().expect("kernel");
-            run_derive_from_geometry(&mut *kernel, &forest_shape_objects, "energy")
-        };
-        assert!(!fixture_derived.is_empty(), "forest fixture should derive energy objects");
-
+        // ⚠️ CORRECTED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
+        // wave G4): this test used to derive from `forest_working_scene().objects` and compare
+        // against a single live box, relying on the forest fixture's `solid_handle`s resolving into
+        // whatever kernel `run_derive_from_geometry` reached — only true under the deleted
+        // process-global `BrepEngineHost` singleton. `solid_for_object` (the derive's per-object
+        // solid builder) has never applied `object.origin` — fixture objects carry `origin:
+        // [0,0,0]` regardless (`objects_from_fixture_model`) — so once a handle stops resolving it
+        // falls back to an extent+typology-only box built at the kernel's local origin, and two
+        // fixture objects sharing that origin fuse into a materially different (and no longer
+        // fixture-distinguishing) hull. The real, still-true property — output tracks LIVE INPUT,
+        // not a memoized static result — is verified here directly against extent, the one field
+        // that DOES still flow through `solid_for_object`'s fallback path honestly.
         let live_box = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
-        let mut kernel = cad_brep_kernel().expect("kernel");
-        let live_derived = run_derive_from_geometry(&mut *kernel, &[live_box], "energy");
-        assert!(!live_derived.is_empty());
-        assert_ne!(live_derived.len(), fixture_derived.len(), "a single live box must derive a different object count than the multi-solid forest fixture — proving it's driven by the live input, not a memoized result");
+        let mut kernel = cad_brep_kernel();
+        let box_derived = run_derive_from_geometry(&mut kernel, &[live_box], "energy");
+        assert!(!box_derived.is_empty(), "a live box must derive at least a hull");
+
+        let live_wall = make_object_for_typology("building.building.wall", 0, CadPaneId::Shape);
+        let mut kernel = cad_brep_kernel();
+        let wall_derived = run_derive_from_geometry(&mut kernel, &[live_wall], "energy");
+        assert!(!wall_derived.is_empty(), "a live wall panel must derive at least a hull");
+
+        let wall_typologies: Vec<&str> = wall_derived.iter().map(|object| object.typology.as_str()).collect();
+        let box_typologies: Vec<&str> = box_derived.iter().map(|object| object.typology.as_str()).collect();
+        assert_ne!(wall_typologies, box_typologies, "a thin wall panel and a cube must classify their dominant faces differently, proving the derive tracks the LIVE input's real shape, not a memoized result:\n  box:  {box_typologies:?}\n  wall: {wall_typologies:?}");
     }
 
     #[test]

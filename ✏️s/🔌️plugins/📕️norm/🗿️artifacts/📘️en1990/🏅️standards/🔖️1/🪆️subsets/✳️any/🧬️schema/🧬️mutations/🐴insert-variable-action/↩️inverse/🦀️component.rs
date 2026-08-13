@@ -7,7 +7,7 @@ use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &InsertVariableAction, base: &En1990Snapshot) -> Vec<En1990Mutation> {
-    let at = payload.index.min(base.q_k.len());
+    let at = payload.index.min(crate::artifacts::en1990::en1990_qk(base).len());
     vec![En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: at })]
 }
 //#endregion 🔖️Inverse

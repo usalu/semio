@@ -5,7 +5,7 @@ use crate::artifacts::program::registers::*;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use crate::artifacts::program::ProgramSnapshot;
-use math::graph::{orient_endpoints, Undirected};
+use graph::{orient_endpoints, Undirected};
 
 //#region 🔖️Artifact
 /// 🧬️ Full program artifact state across persistent, shared-ui, local-ui and preview classes.

@@ -1,16 +1,21 @@
 //! 🧠️ Wires artifact — the document entity this plugin's one app (🔌️wires) edits.
 //!
-//! `WiresSnapshot`'s `wires_fixture`/`board_fixture` fields stay opaque `dsl::DslValue` HERE,
-//! deliberately: `⚙️engine`/`🖱️commands`/`🔧️op` all address board nodes/edges and wires relationships
-//! generically by id (`array_mut`/`entity_id`/JSON-patch-style ops) for mergeable, granular edits, and
-//! re-typing this struct's own fields would force all of that machinery onto typed field access. The
-//! `.wires` TEXTUAL surface doesn't need that genericity, so it's fully typed via the `*Dsl` mirror
-//! types in `🔖️DslMirror` below, converted at the `parse_dsl`/`print_dsl`/pack boundary — same "local
-//! twin" pattern as `procedural_3d`'s `CameraJsonDsl`/`WidgetDsl`/`SynapseSpecDsl`.
+//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`reasoning/dag→C:graph`): the old inline
+//! `board_fixture` field (a `DslValue` blob duplicating a neutral node/edge graph model) is replaced
+//! by a composed `s.stdio.semio.graph` CHILD slot (`🔖️ContentBridge` below) — this plugin no longer
+//! defines its own persisted node/edge graph model, it composes stdio's neutral `graph` subset
+//! instead. `camera`/`meta` (pan/zoom view state, kind-catalog/allowed-identity config) are NOT part
+//! of the neutral graph subset — they stay as their own small persisted `DslValue` fields on
+//! `WiresSnapshot`, exactly as they always were, just no longer nested inside the now-gone
+//! `board_fixture` blob. `wires_fixture`'s own shape (identities/relationships semantic layer, incl.
+//! its pre-existing internal `board` mirror) is UNCHANGED by this migration — it's a separate,
+//! narrower duplication concern this pass doesn't touch (see `📓️wave4-reports/reasoning-report.md`).
+//! `⚙️engine`/`🖱️commands`/`🔧️op` still address board nodes/edges generically by id
+//! (`array_mut`/`entity_id`/JSON-patch-style ops) via [`wires_working_board`], the single accessor
+//! every call site that used to read `snapshot.board_fixture` now goes through.
 
 use dsl::DslValue;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 pub use crate::artifacts::wires::schema::mutations::WiresMutation;
@@ -47,11 +52,205 @@ pub fn empty_wires_fixture() -> DslValue {
     DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(vec![])), ("relationships".into(), DslValue::Array(vec![])), ("board".into(), empty_board_fixture())])
 }
 
+/// 📭️ `{x:0, y:0, zoom:1}` — the default board camera, persisted as its own `WiresSnapshot.camera`
+/// field (never part of the composed graph child — pan/zoom is app view state, not graph data).
+pub fn empty_camera() -> DslValue {
+    DslValue::object([("x".into(), DslValue::Number(0.0)), ("y".into(), DslValue::Number(0.0)), ("zoom".into(), DslValue::Number(1.0))])
+}
+
 /// 📭️ Fresh wires snapshot with empty fixtures.
 pub fn empty_wires_snapshot() -> WiresSnapshot {
-    WiresSnapshot { wires_fixture: empty_wires_fixture(), board_fixture: empty_board_fixture() }
+    WiresSnapshot { wires_fixture: empty_wires_fixture(), content: wires_content_child_handle_and_cache(Vec::new(), Vec::new()), camera: empty_camera(), meta: DslValue::Null }
 }
 //#endregion 🔖️EmptyFixtures
+
+//#region 🔖️ContentBridge
+/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — the wires board's
+/// nodes/edges now live in this composed child rather than inline on `WiresSnapshot`.
+pub type WiresContentChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot>;
+
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
+    GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
+};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+
+/// 🏷️ `wires.node` is the honest string boundary carrying the FULL raw board node `DslValue` (every
+/// key a board node can dynamically carry — `nodeKind`/`shape`/`radius`/`width`/`height`/`text`/
+/// `root`/`handles`/... — this app's board nodes are an untyped `DslValue` object, not a fixed Rust
+/// struct, so no fixed field list could ever be exhaustive) as JSON. `id`/`label`(=`text`)/
+/// `kind`(=`nodeKind`)/`position`(=`x`,`y`) are ALSO projected onto the composed `SemioGraphNode`'s
+/// own native fields for genuine graph-shape tooling that only understands the neutral subset — but
+/// the JSON blob is the round-trip SOURCE OF TRUTH on decode (matches `dag`'s own `dag.node`
+/// precedent, `📓️wave4-reports/dag-report.md`).
+const WIRES_NODE_JSON_PROPERTY: &str = "wires.node";
+
+fn semio_node_from_board_node(node: &DslValue) -> SemioGraphNode {
+    let (x, y) = crate::artifacts::wires::schema::node_position(node);
+    SemioGraphNode {
+        id: SemioGraphNodeId::new(crate::artifacts::wires::schema::entity_id(node, "id").unwrap_or("").to_string()),
+        kind: node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("").to_string(),
+        label: node.get("text").and_then(|value| value.as_str()).unwrap_or("").to_string(),
+        position: SemioPoint2 { x, y },
+        ports: Vec::new(),
+        properties: vec![SemioValueEntry { key: WIRES_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: crate::artifacts::wires::schema::fixture_json_string(node) } }],
+    }
+}
+
+/// 🌉 Inverse of [`semio_node_from_board_node`] — falls back to a minimal node built from the
+/// graph-native `id`/`label`/`position` fields only if the property is missing (content authored
+/// outside this plugin, e.g. by a hand-written `graph` doc) — never panics.
+fn board_node_from_semio_node(node: &SemioGraphNode) -> DslValue {
+    for property in &node.properties {
+        if property.key == WIRES_NODE_JSON_PROPERTY {
+            if let SemioValue::Str { value } = &property.value {
+                if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(value) {
+                    if let Ok(restored) = dsl::to_dsl_value(&parsed) {
+                        return restored;
+                    }
+                }
+            }
+        }
+    }
+    DslValue::object([
+        ("id".into(), DslValue::String(node.id.value.clone())),
+        ("nodeKind".into(), DslValue::String(node.kind.clone())),
+        ("shape".into(), DslValue::String("circle".into())),
+        ("x".into(), DslValue::Number(node.position.x)),
+        ("y".into(), DslValue::Number(node.position.y)),
+        ("text".into(), DslValue::String(node.label.clone())),
+        ("handles".into(), DslValue::Array(vec![])),
+    ])
+}
+
+/// 🏷️ `SemioGraphEdge` has no `properties` slot (unlike `SemioGraphNode`) — its `label` field (which
+/// this app's own board edges never populate on their own behalf) is repurposed to carry the FULL raw
+/// board edge `DslValue` as JSON, the round-trip source of truth on decode. `source`/`target` are also
+/// projected onto their native fields, and `kind` from `edgeKind` when present, for genuine
+/// graph-shape tooling.
+fn semio_edge_from_board_edge(edge: &DslValue) -> SemioGraphEdge {
+    SemioGraphEdge {
+        id: SemioGraphEdgeId::new(crate::artifacts::wires::schema::entity_id(edge, "id").unwrap_or("").to_string()),
+        source: SemioGraphNodeId::new(edge.get("source").and_then(|value| value.as_str()).unwrap_or("").to_string()),
+        target: SemioGraphNodeId::new(edge.get("target").and_then(|value| value.as_str()).unwrap_or("").to_string()),
+        kind: edge.get("edgeKind").and_then(|value| value.as_str()).unwrap_or("").to_string(),
+        label: crate::artifacts::wires::schema::fixture_json_string(edge),
+    }
+}
+
+/// 🌉 Inverse of [`semio_edge_from_board_edge`] — falls back to a bare node-id edge if `label` isn't
+/// valid JSON (content authored outside this plugin) — never panics.
+fn board_edge_from_semio_edge(edge: &SemioGraphEdge) -> DslValue {
+    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&edge.label) {
+        if let Ok(restored) = dsl::to_dsl_value(&parsed) {
+            return restored;
+        }
+    }
+    DslValue::object([("id".into(), DslValue::String(edge.id.value.clone())), ("source".into(), DslValue::String(edge.source.value.clone())), ("target".into(), DslValue::String(edge.target.value.clone()))])
+}
+
+/// 🌉 REAL bidirectional converter between the app's live board node/edge `DslValue` editing state and
+/// the composed child's own `SemioGraphSnapshot` node/edge graph (the "ModelBridge"/"DocumentBridge"
+/// pattern from `📓️wave3-reports/cad-report.md` and `📓️wave4-reports/flow-report.md`/`dag-report.md`).
+pub fn wires_content_snapshot_from_scene(nodes: &[DslValue], edges: &[DslValue]) -> SemioGraphSnapshot {
+    SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: nodes.iter().map(semio_node_from_board_node).collect(), edges: edges.iter().map(semio_edge_from_board_edge).collect() }
+}
+
+/// 🌉 Inverse of [`wires_content_snapshot_from_scene`].
+pub fn scene_from_wires_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<DslValue>, Vec<DslValue>) {
+    (content.nodes.iter().map(board_node_from_semio_node).collect(), content.edges.iter().map(board_edge_from_semio_edge).collect())
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle for the wires board content — same
+/// `(child_id, target)` for identical `(nodes, edges)`, a different pair once the content actually
+/// changes; mirrors `dag`'s `dag_content_child_handle`/writer's `document_child_handle`.
+pub fn wires_content_child_handle(nodes: &[DslValue], edges: &[DslValue]) -> WiresContentChild {
+    use std::hash::{Hash, Hasher};
+    let snapshot = wires_content_snapshot_from_scene(nodes, edges);
+    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_json.hash(&mut hasher);
+    let content_hash = hasher.finish();
+    let child_id = format!("wires-content-{content_hash:016x}");
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: "wires-content".into(), dialect };
+    store::ArtifactChild::new(child_id, target)
+}
+//#endregion 🔖️ContentBridge
+
+//#region 🔖️WorkingScene
+/// 🌱 Ephemeral, session-side working representation of the composed content child's live
+/// nodes/edges — NEVER persisted, NEVER a durable field on `WiresSnapshot` itself (matches the
+/// `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base). Exists because
+/// no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet (checked directly
+/// against `🔌️plugin/🦀️component.rs` — same standing gap cad/lowpoly/writer/flow/dag's reports all
+/// document); until one exists, the only way a persisted content-addressed HANDLE can round-trip to
+/// real nodes/edges within one process is this cache, keyed by `WiresContentChild::child_id` —
+/// mirrors `DagWorkingScene`/`FlowWorkingScene`/`WriterWorkingScene`.
+///
+/// ⚠️ Same documented gap as dag/flow/lowpoly/writer: store-level undo/redo bypasses
+/// `ArtifactApp::handle` entirely, and a bare `parse_dsl`/`decode_pack` of persisted bytes recovers
+/// only the opaque handle unless the codec ALSO carries the real node/edge data and re-mints+caches on
+/// every decode (which this plugin's hand-rolled codec does — see `📸️snapshot/🦀️component.rs`).
+/// [`wires_working_scene`] fails soft (an empty scene) rather than panicking. A real fix needs
+/// child-document resolution, which no WASM-guest plugin in this repo has yet.
+#[derive(Clone, Debug, Default)]
+pub struct WiresWorkingScene {
+    pub nodes: Vec<DslValue>,
+    pub edges: Vec<DslValue>,
+}
+
+thread_local! {
+    static WIRES_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, WiresWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to become
+/// a document's `content` field (every mutation-diff/fixture/codec builder in this plugin does, via
+/// [`wires_content_child_handle_and_cache`]).
+pub fn cache_wires_content(child_id: &str, nodes: Vec<DslValue>, edges: Vec<DslValue>) {
+    WIRES_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), WiresWorkingScene { nodes, edges }));
+}
+
+/// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
+/// nothing has cached it yet.
+pub fn wires_working_scene_for_handle(handle: &WiresContentChild) -> WiresWorkingScene {
+    WIRES_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_default()
+}
+
+/// 🔎 Reads the current document's live nodes/edges off its `content` child handle.
+pub fn wires_working_scene(snapshot: &WiresSnapshot) -> WiresWorkingScene {
+    wires_working_scene_for_handle(&snapshot.content)
+}
+
+/// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its scene in one call —
+/// the standard way every mutation-diff/fixture/codec builder in this plugin creates a `content` field
+/// value; never construct a handle without also caching, or [`wires_working_scene`] will read back empty.
+pub fn wires_content_child_handle_and_cache(nodes: Vec<DslValue>, edges: Vec<DslValue>) -> WiresContentChild {
+    let handle = wires_content_child_handle(&nodes, &edges);
+    cache_wires_content(&handle.child_id, nodes, edges);
+    handle
+}
+
+/// 🔎 Reconstructs the FULL legacy board-shaped `DslValue`
+/// (`schema`/`camera`/`nodes`/`edges`/`meta`?/`wires`) from the working scene plus the snapshot's own
+/// `camera`/`meta` fields — the single accessor every render/panel/command call site that used to read
+/// `snapshot.board_fixture` directly now goes through. `meta` is omitted entirely when absent
+/// (`DslValue::Null`), matching the old `BoardFixtureDsl.meta`'s `skip_serializing_if` behavior.
+pub fn wires_working_board(snapshot: &WiresSnapshot) -> DslValue {
+    let scene = wires_working_scene(snapshot);
+    let mut entries: Vec<(String, DslValue)> = vec![
+        ("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())),
+        ("camera".into(), snapshot.camera.clone()),
+        ("nodes".into(), DslValue::Array(scene.nodes)),
+        ("edges".into(), DslValue::Array(scene.edges)),
+    ];
+    if !matches!(snapshot.meta, DslValue::Null) {
+        entries.push(("meta".into(), snapshot.meta.clone()));
+    }
+    entries.push(("wires".into(), DslValue::Array(vec![])));
+    DslValue::Object(entries)
+}
+//#endregion 🔖️WorkingScene
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -74,190 +273,6 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
-//#region 🔖️Dsl
-//#region 🔖️DslMirror
-/// 🎥️ Camera for a `reasoning.mindmap.fixture` board — pan/zoom, mirrors `puzzle_2d`'s
-/// `Puzzle2dCamera` (the same generic board-fixture family, see the module doc above).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-pub struct CameraDsl {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
-}
-
-/// 🔵️ One mindmap-board node — mirrors `puzzle_2d`'s `Puzzle2dNode` field-for-field (`shape:
-/// "circle"` is radius-sized, `"rectangle"` is width/height-sized). `handles` is always an empty
-/// array in every fixture and call site this app has (mindmap nodes have no ports) — kept as a
-/// justified `Vec<Value>` escape hatch rather than typed purely so a future populated handle never
-/// silently fails to round-trip; see `dsl::Shape::Value`'s doc for the escape-hatch contract.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct NodeDsl {
-    #[dsl(defines = "node")]
-    pub id: String,
-    pub node_kind: String,
-    pub shape: String,
-    pub x: f64,
-    pub y: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub radius: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub width: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub height: Option<f64>,
-    pub text: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub root: Option<bool>,
-    #[serde(default)]
-    pub handles: Vec<DslValue>,
-}
-
-/// ➡️ One board edge — connects two `NodeDsl::id`s directly (mindmap nodes have no ports, unlike
-/// `puzzle_2d`'s handle-to-handle edges).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-pub struct EdgeDsl {
-    pub id: String,
-    #[dsl(refs = "node")]
-    pub source: String,
-    #[dsl(refs = "node")]
-    pub target: String,
-}
-
-/// 🎨️ One `meta.kindCatalogs.identityKinds` row — a node-kind's display style.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-pub struct IdentityKindDsl {
-    pub id: String,
-    pub name: String,
-    pub shape: String,
-    pub color: String,
-}
-
-/// 🔗️ One `meta.kindCatalogs.relationshipKinds` row — a relationship-kind's display style.
-/// `stroke` is a CSS-style stroke-width string (e.g. `"2.5"`), not a number, in every real fixture.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct RelationshipKindDsl {
-    pub id: String,
-    pub name: String,
-    pub directed: bool,
-    pub pattern: String,
-    pub stroke: String,
-    pub target_tip: String,
-    pub color: String,
-}
-
-/// 🗂️ `board.meta.kindCatalogs` — the two style catalogs a WIRES board's identities/relationships
-/// resolve their `identityKind`/relationship `kind` display against.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct KindCatalogsDsl {
-    #[serde(default)]
-    #[dsl(table)]
-    pub identity_kinds: Vec<IdentityKindDsl>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub relationship_kinds: Vec<RelationshipKindDsl>,
-}
-
-/// 🔒️ `board.meta.wires` — the fixed identity-id vocabulary this WIRES board is allowed to
-/// reference (mirrors `crate::apps::wires::panels::inspection::DefaultWiresExtension::allowed_identities`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct MetaWiresDsl {
-    #[serde(default)]
-    pub allowed_identity_ids: Vec<u64>,
-}
-
-/// 🗂️ `board.meta` — present whenever a board carries kind catalogs / an allowed-identity set;
-/// absent for the degenerate empty document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct MetaDsl {
-    #[dsl(block)]
-    pub kind_catalogs: KindCatalogsDsl,
-    #[dsl(block)]
-    pub wires: MetaWiresDsl,
-}
-
-/// 🕸️ The `reasoning.mindmap.fixture` board — schema/camera/nodes/edges/meta, plus an always-empty
-/// `wires` routing-line array (see `NodeDsl::handles`'s doc — same "kept for lossless round-trip with
-/// the shared generic board-fixture family" reasoning; nothing in this app ever populates it).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct BoardFixtureDsl {
-    pub schema: String,
-    #[dsl(block)]
-    pub camera: CameraDsl,
-    #[serde(default)]
-    #[dsl(table)]
-    pub nodes: Vec<NodeDsl>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub edges: Vec<EdgeDsl>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(block)]
-    pub meta: Option<MetaDsl>,
-    #[serde(default)]
-    pub wires: Vec<DslValue>,
-}
-
-/// 🪪️ One `wires_fixture.identities` row — a board node wearing a semantic WIRES identity.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct IdentityDsl {
-    pub identity_id: u64,
-    pub identity_kind: String,
-    pub label: String,
-    pub node_id: String,
-}
-
-/// 🔗️ One `wires_fixture.relationships` row — a semantic WIRES relationship between two identities,
-/// `kind` is one of `crate::apps::wires::panels::inspection::RelationshipKind::label()`'s four values
-/// (`"owns"`/`"is"`/`"references"`/`"has"`), kept as a plain string here since that enum lives in the
-/// engine component — see the module doc above for why this component stays generic.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct RelationshipDsl {
-    pub relationship_id: u64,
-    pub kind: String,
-    pub source_identity_id: u64,
-    pub target_identity_id: u64,
-    pub edge_id: String,
-}
-
-/// 📦️ `wires_fixture.source` — provenance of the kit this fixture was generated from;
-/// absent for hand-authored fixtures with no kit origin.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct SourceDsl {
-    pub kit_id: String,
-    pub kit_name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub kit_path: Option<String>,
-}
-
-/// 🧠️ The `reasoning.wires.fixture` semantic layer — schema/identities/relationships, its own
-/// nested board-fixture copy (`board`, the same `BoardFixtureDsl` shape as the top-level
-/// `board_fixture`), and optional kit `source` provenance.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct WiresFixtureDsl {
-    pub schema: String,
-    #[serde(default)]
-    #[dsl(table)]
-    pub identities: Vec<IdentityDsl>,
-    #[serde(default)]
-    #[dsl(table)]
-    pub relationships: Vec<RelationshipDsl>,
-    #[dsl(block)]
-    pub board: BoardFixtureDsl,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(block)]
-    pub source: Option<SourceDsl>,
-}
-//#endregion 🔖️DslMirror
-//#endregion 🔖️Dsl
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -273,7 +288,38 @@ mod tests {
     fn empty_snapshot_has_empty_fixtures() {
         let snapshot = empty_wires_snapshot();
         assert_eq!(snapshot.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
-        assert_eq!(snapshot.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
+        assert_eq!(wires_working_board(&snapshot).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
+    }
+
+    /// 🧪️ Round-trip law: every board node/edge field survives `wires_content_snapshot_from_scene`
+    /// → `scene_from_wires_content_snapshot`, including fields the neutral `SemioGraphNode`/
+    /// `SemioGraphEdge` shape has no native slot for (`radius`/`root`/`edgeKind`/...).
+    #[test]
+    fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
+        let node = dsl::to_dsl_value(&serde_json::json!({
+            "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 3.0, "y": 4.0,
+            "radius": 24.0, "text": "Alpha", "root": true, "handles": []
+        }))
+        .unwrap();
+        let edge = dsl::to_dsl_value(&serde_json::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
+        let content = wires_content_snapshot_from_scene(std::slice::from_ref(&node), std::slice::from_ref(&edge));
+        assert_eq!(content.nodes.len(), 1);
+        assert_eq!(content.nodes[0].id.value, "node-1");
+        assert_eq!(content.nodes[0].label, "Alpha");
+        assert_eq!(content.edges[0].source.value, "node-1");
+        let (nodes, edges) = scene_from_wires_content_snapshot(&content);
+        assert_eq!(nodes, vec![node]);
+        assert_eq!(edges, vec![edge]);
+    }
+
+    #[test]
+    fn content_child_handle_is_content_addressed_and_deterministic() {
+        let node = dsl::to_dsl_value(&serde_json::json!({ "id": "a", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "text": "A", "handles": [] })).unwrap();
+        let handle_a = wires_content_child_handle(std::slice::from_ref(&node), &[]);
+        let handle_b = wires_content_child_handle(std::slice::from_ref(&node), &[]);
+        assert_eq!(handle_a.child_id, handle_b.child_id, "same content must mint the same handle");
+        let handle_c = wires_content_child_handle(&[], &[]);
+        assert_ne!(handle_a.child_id, handle_c.child_id, "different content must mint a different handle");
     }
 }
 //#endregion 🧪️Tests

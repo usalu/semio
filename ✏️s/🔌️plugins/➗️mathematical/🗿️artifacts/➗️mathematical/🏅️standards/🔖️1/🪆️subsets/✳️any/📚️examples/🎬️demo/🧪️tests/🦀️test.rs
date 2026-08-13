@@ -14,7 +14,7 @@ fn inference_determinism_law() {
     let snapshot = MathematicalSnapshot::default();
     let inference = MathematicalInference::infer(&snapshot);
     assert_eq!(inference, MathematicalInference::infer(&snapshot));
-    assert_eq!(inference.topology.node_count, snapshot.graph.nodes.len() as u32);
+    assert_eq!(inference.topology.node_count, crate::artifacts::mathematical::mathematical_graph(&snapshot).nodes.len() as u32);
 }
 
 #[test]

@@ -1,8 +1,8 @@
 //! 🔺️ Imperative artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::imperative::schema::diff::{ImperativeDiff, ImperativePathDelta, ImperativeStepsDelta, ImperativeStringList};
+use crate::artifacts::imperative::schema::diff::ImperativeDiff;
 use crate::artifacts::imperative::schema::ImperativeArtifact;
-use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, Path, PathRef, Step};
+use crate::artifacts::imperative::ImperativeSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -15,61 +15,6 @@ use crate::artifacts::imperative::schema::diff::*;
 
 
 //#region 🔖️Apply
-fn apply_steps_delta(items: &[Step], delta: &ImperativeStepsDelta) -> Vec<Step> {
-    let mut next = items.to_vec();
-    for id in &delta.removed {
-        next.retain(|step| step.id != *id);
-    }
-    for item in &delta.added {
-        next.push(item.clone());
-    }
-    for entry in &delta.patched {
-        if let Some(step) = next.iter_mut().find(|step| step.id == entry.id) {
-            step.params = entry.patch.clone();
-        }
-    }
-    if let Some(order) = &delta.reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|step| (step.id.clone(), step)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(step) = by_id.remove(id) {
-                ordered.push(step);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
-fn resolve_steps_mut<'a>(snapshot: &'a mut ImperativeSnapshot, path_ref: &PathRef) -> Option<&'a mut Vec<Step>> {
-    if path_ref.owner.is_none() && path_ref.slot.is_none() {
-        return Some(&mut snapshot.path.steps);
-    }
-    let owner = path_ref.owner.clone()?;
-    let slot = path_ref.slot.clone()?;
-    let owner_step = snapshot.path.steps.iter_mut().find(|step| step.id == owner)?;
-    Some(&mut owner_step.bodies.entry(slot).or_insert_with(Path::new).steps)
-}
-
-fn prune_empty_slot(snapshot: &mut ImperativeSnapshot, path_ref: &PathRef) {
-    let (Some(owner), Some(slot)) = (&path_ref.owner, &path_ref.slot) else {
-        return;
-    };
-    if let Some(owner_step) = snapshot.path.steps.iter_mut().find(|step| &step.id == owner) {
-        if owner_step.bodies.get(slot).is_some_and(|path| path.steps.is_empty()) {
-            owner_step.bodies.remove(slot);
-        }
-    }
-}
-
-fn apply_path_delta(snapshot: &mut ImperativeSnapshot, delta: &ImperativePathDelta) {
-    if let Some(steps) = resolve_steps_mut(snapshot, &delta.path_ref) {
-        *steps = apply_steps_delta(steps, &delta.steps);
-    }
-    prune_empty_slot(snapshot, &delta.path_ref);
-}
-
 impl ImperativeDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &ImperativeArtifact) -> ImperativeArtifact {
@@ -80,13 +25,11 @@ impl ImperativeDiff {
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
-        if let Some(delta) = &self.path {
-            let mut snapshot = next.to_snapshot();
-            apply_path_delta(&mut snapshot, delta);
-            next.set_snapshot(snapshot);
+        if let Some(handle) = &self.flow {
+            next.flow = handle.clone();
         }
-        if let Some(seed) = &self.seed {
-            next.seed = seed.clone();
+        if let Some(handle) = &self.text {
+            next.text = handle.clone();
         }
         if let Some(list) = &self.selected_step_ids {
             next.selected_step_ids = list.values.clone();
@@ -101,38 +44,6 @@ impl ImperativeDiff {
     }
 }
 
-fn absorb_steps_delta(target: &mut Option<ImperativeStepsDelta>, incoming: Option<ImperativeStepsDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                if src.reordered.is_some() {
-                    dst.reordered = src.reordered;
-                }
-            }
-            None => *target = Some(src),
-        }
-    }
-}
-
-fn absorb_path_delta(target: &mut Option<ImperativePathDelta>, incoming: Option<ImperativePathDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) if dst.path_ref == src.path_ref => {
-                dst.steps.added.extend(src.steps.added);
-                dst.steps.removed.extend(src.steps.removed);
-                dst.steps.patched.extend(src.steps.patched);
-                if src.steps.reordered.is_some() {
-                    dst.steps.reordered = src.steps.reordered;
-                }
-            }
-            _ => *target = Some(src),
-        }
-    }
-}
-
 impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
     fn apply(&self, snapshot: &ImperativeSnapshot) -> ImperativeSnapshot {
         if let Some(replacement) = &self.artifact {
@@ -142,11 +53,11 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
-        if let Some(delta) = &self.path {
-            apply_path_delta(&mut next, delta);
+        if let Some(handle) = &self.flow {
+            next.flow = handle.clone();
         }
-        if let Some(seed) = &self.seed {
-            next.seed = seed.clone();
+        if let Some(handle) = &self.text {
+            next.text = handle.clone();
         }
         next
     }
@@ -156,7 +67,6 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
             *self = other;
             return;
         }
-        absorb_path_delta(&mut self.path, other.path);
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -165,7 +75,8 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
             };
         }
         take!(schema);
-        take!(seed);
+        take!(flow);
+        take!(text);
         take!(selected_step_ids);
         take!(locale);
         take!(contributions_json);
@@ -188,19 +99,11 @@ pub fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
 mod tests {
     use super::*;
     use crate::artifacts::imperative::schema::default_snapshot;
-    use std::collections::BTreeMap;
-
-    fn step(id: &str, kind: &str) -> Step {
-        Step { id: id.into(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() }
-    }
 
     #[test]
     fn imperative_diff_absorb_whole_artifact_wins() {
         let mut diff = ImperativeDiff {
-            path: Some(ImperativePathDelta {
-                path_ref: PathRef::default(),
-                steps: ImperativeStepsDelta { removed: vec!["step-1".into()], ..Default::default() },
-            }),
+            flow: Some(crate::artifacts::imperative::imperative_flow_child_handle_and_cache(&crate::artifacts::imperative::Path::new())),
             ..Default::default()
         };
         let replacement = ImperativeDiff {
@@ -209,21 +112,23 @@ mod tests {
         };
         diff.absorb(replacement);
         assert!(diff.artifact.is_some());
-        assert!(diff.path.is_none());
+        assert!(diff.flow.is_none());
     }
 
+    /// 🔁 Replaces the retired `path_delta_remove_round_trips_via_apply` — whole-list
+    /// `ImperativePathDelta` deltas no longer exist, since composed children are opaque and a diff
+    /// only ever whole-handle-replaces `flow` — with the equivalent real-behavior law: a `flow`
+    /// handle minted from an edited working scene applies as a clean whole-handle replace.
     #[test]
-    fn path_delta_remove_round_trips_via_apply() {
+    fn flow_handle_replace_round_trips_via_apply() {
         let base = default_snapshot();
-        let diff = ImperativeDiff {
-            path: Some(ImperativePathDelta {
-                path_ref: PathRef::default(),
-                steps: ImperativeStepsDelta { removed: vec!["step-1".into()], ..Default::default() },
-            }),
-            ..Default::default()
-        };
+        let mut path = crate::artifacts::imperative::imperative_working_scene(&base).path;
+        assert!(path.steps.iter().any(|step| step.id == "step-1"));
+        path.steps.retain(|step| step.id != "step-1");
+        let diff = crate::artifacts::imperative::diff_replace_flow(&path);
         let next = diff.apply(&base);
-        assert!(next.path.steps.iter().all(|step| step.id != "step-1"));
+        let next_path = crate::artifacts::imperative::imperative_working_scene(&next).path;
+        assert!(next_path.steps.iter().all(|step| step.id != "step-1"));
     }
 }
 //#endregion 🧪️Tests

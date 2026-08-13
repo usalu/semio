@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use crate::graph::{EdgeId, EdgeRef, GraphView, NodeId};
+use graph_core::{EdgeId, EdgeRef, GraphView, NodeId};
 
 // #region 🔖️Shared
 /// 🔗️ Picks the first (lowest `EdgeId`) edge connecting `u` to `v`; safe to `expect` because every caller only invokes this for a pair already reported by `out_neighbors`/`neighbors`, which guarantees at least one connecting edge exists.
@@ -348,7 +348,7 @@ pub fn bfs_beam_edges<G: GraphView>(graph: &G, source: NodeId, width: usize, val
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{Directed, Normal, Ported, Storage, Undirected};
+    use graph_core::{Directed, Normal, Ported, Storage, Undirected};
 
     // #subregion Fixtures
     fn chain() -> (Storage<Normal, Directed>, Vec<NodeId>) {

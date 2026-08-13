@@ -411,7 +411,7 @@ mod tests {
         use semio_framework_plugin::{ContextMenuHit, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
         let mut app: DagApp = new_app_with_registry();
-        let node_ids: Vec<String> = app.snapshot().expect("projection").nodes.iter().map(|node| node.id.clone()).collect();
+        let node_ids: Vec<String> = app.snapshot().expect("projection").nodes().iter().map(|node| node.id.clone()).collect();
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: node_ids.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
         let request = ContextMenuRequest {
             menu: UiMenuRef { id: "nodeGraph".into(), args: None },
@@ -458,14 +458,15 @@ mod tests {
             DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }),
             |app| {
                 let projection = app.snapshot().expect("projection");
-                (projection.nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Note { .. })), projection.nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Slider { .. })))
+                let nodes = projection.nodes();
+                (nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Slider { .. })))
             },
         );
     }
 
     #[test]
     fn ingest_operations_is_idempotent_for_dag() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<DagPlayApp, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes.len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<DagPlayApp, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len());
     }
     //#endregion 🔖️CrossCutting
 }

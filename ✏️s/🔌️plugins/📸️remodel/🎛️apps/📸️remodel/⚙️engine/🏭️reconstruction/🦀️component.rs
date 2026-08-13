@@ -1154,7 +1154,7 @@ mod tests {
     /// 🎲️ `count` random markers per cube face (6 faces, axis 0/1/2 × sign), from a fixed seed so every
     /// render call across every synthesized frame sees the identical marker layout.
     fn generate_face_markers(seed: u64, count: usize, half: f64) -> [Vec<FaceMarker>; 6] {
-        let mut rng = math::random::Rng::from_seed(seed);
+        let mut rng = geometry::random::Rng::from_seed(seed);
         std::array::from_fn(|_face| {
             (0..count)
                 .map(|_| FaceMarker {

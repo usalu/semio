@@ -592,7 +592,7 @@ pub mod sobject {
     use crate::apps::present::engine::text::color::Color;
     use crate::apps::present::engine::rate::updater::Updater;
     use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
-    use math::geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
+    use geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
 
 
     fn next_id() -> u64 {
@@ -745,7 +745,7 @@ pub mod sobject {
             s
         }
 
-        pub fn from_shape<'a>(shape: impl Into<math::geometry::ShapeRef<'a>>) -> Self {
+        pub fn from_shape<'a>(shape: impl Into<geometry::ShapeRef<'a>>) -> Self {
             let mut path = BezPath::new();
             append_shape_to_path(&mut path, shape, 0.01);
             Self::from_path(path)
@@ -1324,7 +1324,7 @@ pub mod sobject {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use math::geometry::Circle;
+        use geometry::Circle;
 
         #[test]
         fn vobject_has_finite_bounds() {

@@ -60,8 +60,14 @@ impl WiresDiff {
         if let Some(wires) = &self.wires_fixture {
             next.wires_fixture = wires.clone();
         }
-        if let Some(board) = &self.board_fixture {
-            next.board_fixture = board.clone();
+        if let Some(content) = &self.content {
+            next.content = content.clone();
+        }
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        if let Some(meta) = &self.meta {
+            next.meta = meta.clone();
         }
         if let Some(list) = &self.selected_ids {
             next.selected_ids = list.values.clone();
@@ -91,8 +97,14 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
         if let Some(wires) = &self.wires_fixture {
             next.wires_fixture = wires.clone();
         }
-        if let Some(board) = &self.board_fixture {
-            next.board_fixture = board.clone();
+        if let Some(content) = &self.content {
+            next.content = content.clone();
+        }
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        if let Some(meta) = &self.meta {
+            next.meta = meta.clone();
         }
         next
     }
@@ -110,7 +122,9 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
             };
         }
         take!(wires_fixture);
-        take!(board_fixture);
+        take!(content);
+        take!(camera);
+        take!(meta);
         take!(drag_node_id);
         take!(drag_last_x);
         take!(drag_last_y);
@@ -134,9 +148,17 @@ pub fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
     }
 }
 
+/// 🔺️ Mints+caches a fresh content-addressed handle from `board`'s `nodes`/`edges` and wraps it as a
+/// single always-present-slot diff entry — the sole builder every board-mutating triad's `diff.rs`
+/// goes through (`create-node`/`delete-node`/`move-node`/`resize-node`/`change-node-kind`/
+/// `change-node-shape`/`edit-node-text`/`set-node-root` all call this via `board_after_*`/directly).
+/// `board`'s `camera`/`meta`/`schema`/`wires` keys are intentionally ignored here — those live outside
+/// the composed content on `WiresSnapshot.camera`/`.meta` and no triad in this plugin ever writes them.
 pub fn diff_board_fixture(board: DslValue) -> WiresDiff {
+    let nodes = crate::artifacts::wires::schema::fixture_nodes(&board).to_vec();
+    let edges = crate::artifacts::wires::schema::fixture_edges(&board).to_vec();
     WiresDiff {
-        board_fixture: Some(board),
+        content: Some(crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges)),
         ..Default::default()
     }
 }
@@ -149,41 +171,39 @@ pub fn diff_wires_fixture(wires: DslValue) -> WiresDiff {
 }
 
 pub fn diff_wires_and_board(wires: DslValue, board: DslValue) -> WiresDiff {
-    WiresDiff {
-        wires_fixture: Some(wires),
-        board_fixture: Some(board),
-        ..Default::default()
-    }
+    let mut diff = diff_board_fixture(board);
+    diff.wires_fixture = Some(wires);
+    diff
 }
 
 pub fn board_after_add_node(snapshot: &WiresSnapshot, node: &DslValue) -> DslValue {
-    let mut board = snapshot.board_fixture.clone();
+    let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     array_mut(&mut board, "nodes").push(node.clone());
     board
 }
 
 pub fn fixtures_after_add_edge(snapshot: &WiresSnapshot, edge: &DslValue, relationship: &DslValue) -> (DslValue, DslValue) {
     let mut wires = snapshot.wires_fixture.clone();
-    let mut board = snapshot.board_fixture.clone();
+    let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     apply_board_step(&mut wires, &mut board, None, None, None, Some((edge, relationship)), None);
     (wires, board)
 }
 
 pub fn board_after_remove_node(snapshot: &WiresSnapshot, node_id: &str) -> DslValue {
-    let mut board = snapshot.board_fixture.clone();
+    let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     apply_board_step(&mut DslValue::Null, &mut board, None, Some(node_id), None, None, None);
     board
 }
 
 pub fn board_after_patch_node(snapshot: &WiresSnapshot, node_id: &str, patch: &BTreeMap<String, DslValue>) -> DslValue {
-    let mut board = snapshot.board_fixture.clone();
+    let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     apply_board_step(&mut DslValue::Null, &mut board, None, None, Some((node_id, patch)), None, None);
     board
 }
 
 pub fn fixtures_after_remove_edge(snapshot: &WiresSnapshot, edge_id: &str) -> (DslValue, DslValue) {
     let mut wires = snapshot.wires_fixture.clone();
-    let mut board = snapshot.board_fixture.clone();
+    let mut board = crate::artifacts::wires::wires_working_board(snapshot);
     apply_board_step(&mut wires, &mut board, None, None, None, None, Some(edge_id));
     (wires, board)
 }
@@ -205,7 +225,7 @@ mod tests {
         let snapshot = empty_wires_snapshot();
         let diff = diff_board_fixture(board_after_add_node(&snapshot, &node("node-1", "Alpha")));
         let after = diff.apply(&snapshot);
-        assert_eq!(after.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
+        assert_eq!(crate::artifacts::wires::wires_working_board(&after).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 
     #[test]
@@ -213,7 +233,7 @@ mod tests {
         let mut diff = diff_board_fixture(board_after_add_node(&empty_wires_snapshot(), &node("node-1", "Alpha")));
         let replacement = empty_wires_snapshot();
         diff.absorb(diff_set_snapshot(&replacement));
-        assert!(diff.board_fixture.is_none());
+        assert!(diff.content.is_none());
         assert!(diff.artifact.is_some());
     }
 }

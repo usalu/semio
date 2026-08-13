@@ -249,7 +249,7 @@ type BriefOffsetPair = ((i32, i32), (i32, i32));
 fn brief_pattern() -> &'static [BriefOffsetPair; 256] {
     static PATTERN: std::sync::OnceLock<[BriefOffsetPair; 256]> = std::sync::OnceLock::new();
     PATTERN.get_or_init(|| {
-        let mut rng = math::random::Rng::from_seed(BRIEF_SEED);
+        let mut rng = geometry::random::Rng::from_seed(BRIEF_SEED);
         let span = 2 * BRIEF_PATCH_RADIUS as u64 + 1;
         std::array::from_fn(|_| {
             let mut next_offset = || rng.next_range(0, span) as i32 - BRIEF_PATCH_RADIUS as i32;
@@ -258,7 +258,7 @@ fn brief_pattern() -> &'static [BriefOffsetPair; 256] {
     })
 }
 
-/// 🧬️ Oriented rBRIEF description: for each keypoint, extracts a `(2 BRIEF_PATCH_RADIUS + 1)^2` patch steered by the keypoint's angle (rotation folded into the bilinear sampling grid of [`extract_patch`]), gaussian pre-blurs it to damp noise, then sets bit `i` when the blurred intensity at the pattern's first fixed point-pair offset is less than at its second. The 256 offset pairs are generated once from a fixed published seed via `math::random`, so the pattern — and hence every descriptor — is identical across builds and runs.
+/// 🧬️ Oriented rBRIEF description: for each keypoint, extracts a `(2 BRIEF_PATCH_RADIUS + 1)^2` patch steered by the keypoint's angle (rotation folded into the bilinear sampling grid of [`extract_patch`]), gaussian pre-blurs it to damp noise, then sets bit `i` when the blurred intensity at the pattern's first fixed point-pair offset is less than at its second. The 256 offset pairs are generated once from a fixed published seed via `geometry::random`, so the pattern — and hence every descriptor — is identical across builds and runs.
 /// <https://en.wikipedia.org/wiki/Oriented_FAST_and_rotated_BRIEF>
 pub fn describe_orb(pyramid: &Pyramid, keypoints: &[Keypoint]) -> Vec<Descriptor256> {
     let pattern = brief_pattern();
@@ -814,7 +814,7 @@ pub fn detect_akaze_keypoints(scale_space: &ScaleSpace, target_count: usize) -> 
 fn mldb_pattern() -> &'static [(u8, u8); 256] {
     static PATTERN: std::sync::OnceLock<[(u8, u8); 256]> = std::sync::OnceLock::new();
     PATTERN.get_or_init(|| {
-        let mut rng = math::random::Rng::from_seed(MLDB_SEED);
+        let mut rng = geometry::random::Rng::from_seed(MLDB_SEED);
         std::array::from_fn(|_| {
             let a = rng.next_range(0, MLDB_VALUES as u64) as u8;
             let mut b = rng.next_range(0, MLDB_VALUES as u64) as u8;
@@ -826,7 +826,7 @@ fn mldb_pattern() -> &'static [(u8, u8); 256] {
     })
 }
 
-/// 🧬️ M-LDB (Modified Local Difference Binary) description: for each keypoint, extracts a `(2 MLDB_PATCH_RADIUS + 1)^2` patch from its owning [`ScaleLevel`] (looked up via `Keypoint::octave` as a flat scale-space index, per [`detect_akaze_keypoints`]), steered by the keypoint's angle via [`extract_patch`], splits it into a `4x4` grid of sub-cells and averages 3 channels per cell — mean intensity and the two mean [`scharr_gradients`] components — into 48 scalar values, then sets bit `i` from a fixed published-seed pattern of 256 value-index pairs (generated once via `math::random`, so identical across builds and runs) whenever the pattern's first value is less than its second. Emits into the same [`Descriptor256`] the rBRIEF path produces, so [`match_brute`]/[`hamming`] work unchanged on AKAZE descriptors.
+/// 🧬️ M-LDB (Modified Local Difference Binary) description: for each keypoint, extracts a `(2 MLDB_PATCH_RADIUS + 1)^2` patch from its owning [`ScaleLevel`] (looked up via `Keypoint::octave` as a flat scale-space index, per [`detect_akaze_keypoints`]), steered by the keypoint's angle via [`extract_patch`], splits it into a `4x4` grid of sub-cells and averages 3 channels per cell — mean intensity and the two mean [`scharr_gradients`] components — into 48 scalar values, then sets bit `i` from a fixed published-seed pattern of 256 value-index pairs (generated once via `geometry::random`, so identical across builds and runs) whenever the pattern's first value is less than its second. Emits into the same [`Descriptor256`] the rBRIEF path produces, so [`match_brute`]/[`hamming`] work unchanged on AKAZE descriptors.
 /// <https://en.wikipedia.org/wiki/AKAZE>
 pub fn describe_akaze(scale_space: &ScaleSpace, keypoints: &[Keypoint]) -> Vec<Descriptor256> {
     let pattern = mldb_pattern();

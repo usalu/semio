@@ -1,0 +1,21 @@
+[package]
+name = "semio-framework-geometry"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "2D geometry facade over kurbo (Point/Vec2/Affine/shapes, selection and curve math), the fixed-size render matrices Vec3/Mat4, and the seeded reproducible Rng — the framework-internal geometric vocabulary every framework crate may name without reaching a plugin."
+
+[package.metadata.semio]
+role = "framework"
+id = "geometry"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_geometry"
+path = "📦️glue.rs"
+
+[dependencies]
+kurbo = "0.13.1"
+serde = { version = "1.0.219", features = ["derive"] }

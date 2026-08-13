@@ -357,7 +357,8 @@ mod tests {
         // materialized by the registry's action-arg default resolution.
         app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).expect("add step");
         let document = app.snapshot().expect("materialize projection");
-        assert_eq!(document.path.steps.last().unwrap().kind, "log.print");
+        let path = crate::artifacts::imperative::imperative_working_scene(&document).path;
+        assert_eq!(path.steps.last().unwrap().kind, "log.print");
         // `run` is a View-kind command: under registry enforcement it must not emit document operations.
         let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local")).expect("run");
         assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
@@ -366,27 +367,30 @@ mod tests {
     #[test]
     fn default_snapshot_has_steps() {
         let app = imperative_app();
-        assert_eq!(app.snapshot().expect("projection").path.steps.len(), 2);
+        let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path;
+        assert_eq!(path.steps.len(), 2);
     }
 
     #[test]
     fn add_step_command_appends_step() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }));
-        assert!(app.snapshot().expect("projection").path.steps.len() > 2);
+        let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path;
+        assert!(path.steps.len() > 2);
     }
 
     #[test]
     fn add_step_at_owner_slot_nests_into_control_body() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
-        let owner_id = app.snapshot().expect("projection").path.steps.last().expect("owner").id.clone();
-        let root_len = app.snapshot().expect("projection").path.steps.len();
+        let owner_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
+        let root_len = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.len();
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) }));
         let document = app.snapshot().expect("projection");
-        let owner_step = document.path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
+        let path = crate::artifacts::imperative::imperative_working_scene(&document).path;
+        let owner_step = path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
         assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
-        assert_eq!(document.path.steps.len(), root_len, "nested step lives in the slot, not the root path");
+        assert_eq!(path.steps.len(), root_len, "nested step lives in the slot, not the root path");
     }
 
     #[test]
@@ -394,15 +398,18 @@ mod tests {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) }));
         let document = app.snapshot().expect("projection");
-        let added_id = document.path.steps.last().expect("added").id.clone();
-        assert!(document.path.steps.iter().any(|step| step.id == added_id));
+        let path = crate::artifacts::imperative::imperative_working_scene(&document).path;
+        let added_id = path.steps.last().expect("added").id.clone();
+        assert!(path.steps.iter().any(|step| step.id == added_id));
     }
 
     #[test]
     fn undo_after_add_step_restores_original_document_exactly() {
         let mut app = imperative_app();
-        let mut expected_after = default_snapshot();
-        expected_after.path.steps.push(crate::artifacts::imperative::Step { id: "step-3".into(), kind: "log.print".into(), params: crate::artifacts::imperative::Dictionary::new(), bodies: BTreeMap::new() });
+        let base = default_snapshot();
+        let mut path = crate::artifacts::imperative::imperative_working_scene(&base).path;
+        path.steps.push(crate::artifacts::imperative::Step { id: "step-3".into(), kind: "log.print".into(), params: crate::artifacts::imperative::Dictionary::new(), bodies: BTreeMap::new() });
+        let expected_after = crate::artifacts::imperative::imperative_snapshot_with_content(&base.schema, &path, &crate::artifacts::imperative::imperative_working_scene(&base).seed);
         assert_undo_redo_round_trip(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), |app| app.snapshot().expect("projection"), default_snapshot(), expected_after);
     }
 
@@ -411,7 +418,7 @@ mod tests {
         let mut app = imperative_app();
         let original = app.snapshot().expect("projection");
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }));
-        let added_id = app.snapshot().expect("projection").path.steps.last().expect("added").id.clone();
+        let added_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("added").id.clone();
         dispatch(&mut app, ImperativeCommand::RemoveStep(remove_step::RemoveStep { id: added_id }));
         assert_eq!(app.snapshot().expect("projection"), original);
     }
@@ -434,7 +441,9 @@ mod tests {
 
     #[test]
     fn ingest_operations_is_idempotent_for_imperative() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<ImperativePlayApp, _>(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), |app| app.snapshot().expect("projection").path.steps.len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<ImperativePlayApp, _>(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), |app| {
+            crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.len()
+        });
     }
 
     #[test]

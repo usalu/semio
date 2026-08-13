@@ -1,22 +1,11 @@
 //! 📜️ Wires artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! The `.wires` textual DSL and op-text grammar are declared, not hand-rolled — see
-//! `impl store::ArtifactDsl for WiresSnapshot` (in `crate::artifacts::wires`, `🔖️Dsl` region) and
-//! `#[derive(dsl::DslEnum)]` on `WiresMutation` (in `crate::artifacts::wires::op`).
-//! `WiresSnapshot` itself keeps `wires_fixture`/`board_fixture` as opaque `dsl::DslValue` (the
-//! `op`/`ui`/`engine` code addresses board nodes/edges and wires relationships generically by id for
-//! mergeable, granular JSON-patch edits), but the TEXTUAL `.wires` surface is fully typed via the
-//! `WiresFixtureDsl`/`BoardFixtureDsl`/... local DSL-mirror twins declared in the artifact component's
-//! `🔖️DslMirror` region — converted Value<->typed right at the `parse_dsl`/`print_dsl`/pack boundary,
-//! same "local twin" pattern as `procedural_3d`'s `CameraJsonDsl`/`WidgetDsl`/`SynapseSpecDsl`.
-//!
-//! 🕸️ The unified `a:Kind@port->b@port` wire syntax (`dsl::Wire`/`Shape::Wire`) does NOT apply here:
-//! `EdgeDsl::source`/`target` are plain `#[dsl(refs = "node")]` strings against `NodeDsl`'s
-//! `#[dsl(defines = "node")]` id — not `dsl::Wire` — because the same bare `source`/`target` string-id
-//! shape is shared by every other generic board/map fixture in the repo (`reasoning.mindmap.fixture`,
-//! tiled-map, puzzle boards, ...); adopting `dsl::Wire` here alone, ahead of those siblings, would just
-//! fork one shared shape into two incompatible encodings for no present benefit — a structural,
-//! cross-crate schema change out of scope here.
+//! The `.wires` text/binary codecs are hand-rolled directly on `WiresSnapshot` — see
+//! `impl store::ArtifactDsl for WiresSnapshot` (in `📸️snapshot/🦀️component.rs`'s
+//! `🔖️HandcraftedArtifactCodecs` region, ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) — since
+//! `content` is now a composed `store::ArtifactChild<SemioGraphSnapshot>`, which has no
+//! `dsl::DslRecord` derive support. `WiresMutation`'s own op-text grammar is unaffected
+//! (`#[derive(dsl::DslEnum)]`, in `crate::artifacts::wires::op`).
 
 
 //#region 📖️SemioGrammar
@@ -58,9 +47,9 @@ mod tests {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot();
         assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         assert_eq!(document.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(9));
-        assert_eq!(document.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
+        assert_eq!(crate::artifacts::wires::wires_working_board(&document).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         let reparsed = parse_dsl(&print_dsl(&document)).expect("metabolism dsl round trip");
-        assert_eq!(reparsed.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
+        assert_eq!(crate::artifacts::wires::wires_working_board(&reparsed).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
     }
 }
 //#endregion 🧪️Tests

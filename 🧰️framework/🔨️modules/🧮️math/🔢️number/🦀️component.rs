@@ -2558,7 +2558,7 @@ pub mod primes {
     }
 
     /// 🌱️ Deterministic splitmix64-derived witness stream, used only to seed extra Miller-Rabin rounds for
-    /// [`is_prime`]'s big-integer path — reproducible across runs, and deliberately not `crate::random`
+    /// [`is_prime`]'s big-integer path — reproducible across runs, and deliberately not `geometry::random`
     /// (this crate has zero dependencies).
     struct InlineSplitMix64(u64);
     impl InlineSplitMix64 {

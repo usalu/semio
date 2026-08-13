@@ -21,7 +21,7 @@ pub mod add_relationship {
     pub fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.snapshot;
         let kind = if payload.kind.is_empty() { "owns" } else { payload.kind.as_str() };
-        let edge_id = format!("edge-{}", fixture_edges(&document.board_fixture).len() + 1);
+        let edge_id = format!("edge-{}", fixture_edges(&crate::artifacts::wires::wires_working_board(document)).len() + 1);
         let edge = dsl::to_dsl_value(&json!({
             "id": edge_id,
             "edgeKind": format!("wires.{kind}"),
@@ -36,7 +36,7 @@ pub mod add_relationship {
             "targetIdentityId": 2
         }))
         .expect("relationship serializes");
-        Ok(Emit { artifact_mutations: vec![WiresMutation::AddRelationship { edge, relationship }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![edge_id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::connect_nodes(edge, relationship)], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![edge_id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddRelationship
@@ -53,7 +53,7 @@ mod tests {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }));
         let projection = app.snapshot().expect("snapshot");
-        assert_eq!(fixture_edges(&projection.board_fixture).len(), 1);
+        assert_eq!(fixture_edges(&crate::artifacts::wires::wires_working_board(&projection)).len(), 1);
     }
 }
 //#endregion 🧪️Tests

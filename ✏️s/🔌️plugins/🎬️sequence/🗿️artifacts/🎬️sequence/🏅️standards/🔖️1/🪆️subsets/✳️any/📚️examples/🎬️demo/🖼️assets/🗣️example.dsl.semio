@@ -1,9 +1,3 @@
 semio sequence.sequence.dsl v1
-schema=sequence.sequence
-steps [id:TEXT kind:TEXT params:TEXT x:NUM y:NUM slot:BLOCK collapsed:BOOL] {
-  step-1 state.set "{\"key\":\"counter\",\"value\":0.0}" 0 0 _ false
-  step-2 log.print "{\"message\":\"hello sequence\"}" 280 0 _ false
-}
-edges [id:TEXT link:WIRE] {
-  edge-1 step-1->step-2
-}
+schema=73657175656e63652e73657175656e6365
+content=[73657175656e63652d636f6e74656e742d35613239326333396164393136653763,73657175656e63652d636f6e74656e7421732e737464696f2e73656d696f4076312f666c6f77]

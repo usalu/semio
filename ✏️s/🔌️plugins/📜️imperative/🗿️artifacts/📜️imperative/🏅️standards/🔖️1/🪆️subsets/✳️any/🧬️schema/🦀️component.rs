@@ -1,10 +1,8 @@
 //! 🧬️ Imperative artifact schema — every field with its state class.
 
-use crate::artifacts::imperative::Path;
-use neural_engine::Value;
+use crate::artifacts::imperative::{ImperativeFlowChild, ImperativeTextChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
 /// 🧬️ Full imperative artifact state across persistent, shared-ui, local-ui and effect classes.
@@ -15,10 +13,11 @@ pub struct ImperativeArtifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
-    pub path: Path,
+    #[child(kind = "s.stdio.semio.flow")]
+    pub flow: ImperativeFlowChild,
     #[state(persistent)]
-    #[serde(default)]
-    pub seed: BTreeMap<String, Value>,
+    #[child(kind = "s.stdio.semio.text")]
+    pub text: ImperativeTextChild,
     #[state(shared_ui)]
     #[serde(default)]
     pub selected_step_ids: Vec<String>,
@@ -40,10 +39,11 @@ fn default_contributions_json() -> String {
 
 impl Default for ImperativeArtifact {
     fn default() -> Self {
+        let empty = crate::artifacts::imperative::schema::snapshot::ImperativeSnapshot::default();
         Self {
-            schema: "imperative.document".into(),
-            path: Path::new(),
-            seed: BTreeMap::new(),
+            schema: empty.schema,
+            flow: empty.flow,
+            text: empty.text,
             selected_step_ids: Vec::new(),
             locale: "en-US".into(),
             contributions_json: default_contributions_json(),
@@ -57,8 +57,8 @@ impl ImperativeArtifact {
     pub fn to_snapshot(&self) -> crate::artifacts::imperative::ImperativeSnapshot {
         crate::artifacts::imperative::ImperativeSnapshot {
             schema: self.schema.clone(),
-            path: self.path.clone(),
-            seed: self.seed.clone(),
+            flow: self.flow.clone(),
+            text: self.text.clone(),
         }
     }
 
@@ -66,8 +66,8 @@ impl ImperativeArtifact {
     pub fn from_snapshot(snapshot: crate::artifacts::imperative::ImperativeSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            path: snapshot.path,
-            seed: snapshot.seed,
+            flow: snapshot.flow,
+            text: snapshot.text,
             ..Self::default()
         }
     }
@@ -75,8 +75,8 @@ impl ImperativeArtifact {
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::imperative::ImperativeSnapshot) {
         self.schema = snapshot.schema;
-        self.path = snapshot.path;
-        self.seed = snapshot.seed;
+        self.flow = snapshot.flow;
+        self.text = snapshot.text;
     }
 }
 //#endregion 🔖️Conversions
@@ -222,11 +222,40 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
-/// 📄️ The default `imperative` document, handcrafted in the `.imperative` DSL (see `🗣️dsl`) instead of a
-/// hand-built Rust literal or a JSON fixture — {@link default_snapshot} is the only way it should be
-/// consumed. Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
-/// — pure over document types, no app-runtime parameter, so it belongs beside the schema it builds.
+/// 📄️ The default `imperative` document's live `Path` — two steps (`state.set counter=1`,
+/// `log.print message="hello"`), the same content the pre-migration `.imperative`-DSL-authored
+/// fixture carried. Built directly in Rust rather than recovered by parsing `IMPERATIVE_EXAMPLE_TEXT`:
+/// since `flow`/`text` are now opaque content-addressed handles (ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`), a bare `parse_dsl` of persisted/fixture text
+/// recovers only the handles, never the content (no `LinkResolver` exists yet — see
+/// `ImperativeWorkingScene`'s doc comment) — building the canonical default directly here, then
+/// printing it to regenerate the fixture text (see `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`),
+/// is the honest source of truth, matching `writer`'s/`flow`'s own fixture-builder precedent.
+fn default_path() -> crate::artifacts::imperative::Path {
+    use crate::artifacts::imperative::{Dictionary, Path, Step};
+    use neural_engine::{Atom, Value};
+    Path {
+        steps: vec![
+            Step {
+                id: "step-1".into(),
+                kind: "state.set".into(),
+                params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Integer(1))),
+                bodies: Default::default(),
+            },
+            Step {
+                id: "step-2".into(),
+                kind: "log.print".into(),
+                params: Dictionary::new().insert("message", Value::Atom(Atom::String("hello".into()))),
+                bodies: Default::default(),
+            },
+        ],
+    }
+}
+
+/// 📄️ The default `imperative` document — {@link default_path}'s two steps, empty seed. Relocated
+/// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure
+/// over document types, no app-runtime parameter, so it belongs beside the schema it builds.
 pub fn default_snapshot() -> crate::artifacts::imperative::ImperativeSnapshot {
-    crate::artifacts::imperative::dsl::parse_dsl(crate::artifacts::imperative::dsl::IMPERATIVE_EXAMPLE_TEXT).expect("📜️default.imperative is a static, hand-authored fixture that must always parse")
+    crate::artifacts::imperative::imperative_snapshot_with_content("imperative.document", &default_path(), &std::collections::BTreeMap::new())
 }
 //#endregion 🔖️DocumentHelpers

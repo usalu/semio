@@ -717,6 +717,239 @@ grep CollectionMutation / SetSnapshot|NoMutation → 3 hits total, all inside ex
 
 Full report: `📓️wave5-reports/infinite-dag-report.md`.
 
+## 🚨 ESCALATION (2026-08-13) — TOTAL dissolution; the engine carve-outs themselves must die
+
+User: *"You must migrate all kernels into artifacts with snapshot, diff, mutations, inferences, io. e.g. mesh and mesh engine must not exist after you are done. e.g. `🧰️framework/🔨️modules/🧊️3d/📐️brep` must not exist anymore because the brep artifact must absorb every feature."* Plus, on scope: **all of `🧊️3d` dies**; **`🧮️math` dissolves too**; **nothing is deleted — every line migrates** ("Keep every math code it will be used by later apps. Turn everything into artifacts such as Assembly (collection of Slots, Modules, Rules) that have WFC as inference. Same for equations, functions, where roots can be inferred. Design a full blown artifact system"); `🎯️sampling` becomes an artifact with inferences, not deleted; **"everything that the framework internally needs is a framework module"**; machines/UI/renderer stay (framework-needed).
+
+This **reverses tonight's own mesh-engine carve-out**: `semio-framework-mesh-engine`, created hours earlier as the fix to a Cargo cycle, is itself now a violation. Plan: `/Users/ueli/.claude/plans/dissolve-and-unify-all-splendid-fountain.md`.
+
+**Scale measured (not estimated):** `🔺️mesh` 1,648 · `🔺️mesh-engine` 912 · `🧊️3d` 23,014 · `🧮️math` 72,439 = **98,013 LOC** to relocate.
+
+### The dependency law that shapes every wave
+
+`stdio → semio-framework-plugin → semio-framework → {ui, math, os-kernel, hash, schema}`. Nothing in that closure may ever name a stdio symbol. So framework consumers are **de-geometrized or repointed to framework residue first**; they never gain stdio edges. Legal stdio-edge holders (verified acyclic): `os-{flow,infinite,renderer-wgpu}`, `os` host, every plugin crate.
+
+### ⚠️ Baselines re-measured — the ones in the plan were STALE
+
+A verification is a timestamp, not a property, and this ticket's own recorded numbers had drifted in ~9 hours:
+
+| Crate | Plan assumed | **Actually measured 14:08** |
+|---|---|---|
+| `semio-s-plugin-stdio` | 2246 passed / 2 failed | **2414 passed / 5 failed** |
+| `semio-framework-math` | (not recorded) | **1738 passed / 15 failed** |
+| `semio-framework-3d` | 413 / 0 | 413 / 0 ✅ unchanged |
+
+Exact failure names in `scratch-w0-baseline-failures-sorted.txt` — diff against that file, never against zero. stdio's 5: the 2 known `dwg`/`ifc` `fixture_honesty_law` plus 3 new peer-introduced (`binary` extent, `dxf` bounds, `zip` entries `inference_default_law`). math's 15 are all in `cas::*` / `polynomial::*` / `graph::dsl::*` — **none** in the geometry/random/graph-root/algorithms/drawing/manifest content the residue wave touches.
+
+### 🛑 Method correction: commit-message dates are a frozen template
+
+Every auto-commit subject reads `🎆️26🌙️06☀️04` regardless of when it landed; real dates come from `git log --date=iso`. Commit `515271bf60` says "June 4", really 2026-08-13 13:05. **I used `git log --oneline` for attribution earlier tonight** — the `♾️infinite/🌍️world` "predates by two months (June commits)" claim was reasoned off this artefact. Re-checked with `--date=iso`: real dates Aug 6–7, still pre-session, so the *conclusion* survived on independent mtime evidence, but the *stated reasoning was worthless*. Flagged by UCAS, confirmed here, rule added to `📌️important.md`. Corollary also recorded: your own `touch`-to-defeat-the-cargo-cache overwrites mtime, so a file you touched proves nothing about its author.
+
+### Cross-session state
+
+`ListAgents` shows **one** peer: UCAS (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`), mid-W4. Its replies, verified against live `git status` on its side:
+- **cad window: OPEN.** All four cad files I need are committed and idle; one live exception is a single test-assertion string in `🚪️io/🦀️component.rs` (`repair_step_trailing_comma_before_close_paren_is_quote_aware`) which I will not touch. `📐️cad/…/✳️any/⚙️engine/` no longer exists on disk — already fully dissolved.
+- **`✏️s/🔨️modules/🌐️spatial-kernel/`: no claim, no plans, role unknown.** Not UCAS's. Also not mine — both `🟦️component.ts` files were already dirty in my tree before my first edit this session. Treated as unowned-but-live; staying out.
+- **Taxonomy amendment: UCAS is the wrong owner** (that's #2553 ENGINELESS, which is NOT in `ListAgents` — wound down). UCAS gave substantive no-objection and recommended I make it myself rather than wait on its W6. Proceeding on that basis, narrowly, recorded as claimed-late-and-announced.
+
+## M0 — dead math deps deleted (DONE, verified)
+
+`🖱️ui/📦️packages/🦀️rust/Cargo.toml` (:45 feature entry + :52 optional dep) and `🗺️surface/…/Cargo.toml` (:40) both declared `semio-framework-math`. **Both are 100% dead** — `grep -rn "semio_framework_math\|\bmath::" --include="*.rs"` over each module returns **0** (ui's only apparent hits were `"math-app"` icon-name string literals in `🤖️generated` and an unrelated `ui_styling::metrics::math`). ui's was `optional = true` behind a `wgpu-engine` feature that never used it. Deleted both. `cargo metadata --no-deps` → **WORKSPACE_OK**. Strictly negative change: two fewer edges in the dependency graph, zero code touched.
+
+This also **falsifies the premise I was briefing agents with** ("🖱️ui STAYS because it needs math") — ui needs nothing from math. The real framework consumer is `♾️infinite`, whose `🎲️board/🦀️component.rs:4-12` re-exports ~40 math symbols wholesale, reached transitively by renderer-wgpu, `✍️editor` and `🗺️surface`. That re-export block *is* the residue specification.
+
+## G1c — plugin-SDK mesh helpers (DONE, independently re-verified)
+
+Agent deleted `export_mesh_obj` / `export_mesh_glb_bytes` from `💻️os/🔨️modules/🔌️plugin/🦀️component.rs` after a census showed **zero call sites**; trimmed the dangling import to the one symbol still used; removed both names from the crate-root re-export.
+
+Coordinator re-ran with the forced recheck: `grep -rn "export_mesh_obj\|export_mesh_glb_bytes"` repo-wide → **0 hits including the definitions**; `cargo check -p semio-framework-plugin --all-targets` → **0 errors**.
+
+### 🔑 The finding that matters more than the deletion
+
+The agent correctly **refused** step 3 (remove `MeshData` from the SDK's public surface) and explained why: there is no named re-export to delete. The mechanism is a blanket **`pub use semio_framework::*;` at `🔌️plugin/🦀️component.rs:10761`**, and that glob is how `semio_framework_plugin::MeshData` reaches **11 live files** across process/cad/procedural/puzzle/lowpoly/playbook plus `💻️os/🦀️component.rs` and `💻️os/🖥️host/🦀️component.rs` (verified by the coordinator; a 12th–14th hit are ticket backups, excluded). Narrowing a glob to exclude one symbol means converting it to an explicit allow-list, which requires those consumers to move first.
+
+**Consequence for the mesh wave: `MeshData`'s blast radius is not the ~30 direct importers previously counted — it is those plus everything reaching it through this glob.** Recorded as the real gate on deleting `MeshData`.
+
+## ✅ M3b — WFC IS NOW AN INFERENCE. The user's own example, delivered.
+
+*"Turn everything into artifacts such as Assembly (collection of Slots, Modules, Rules, etc) that have WFC as inference."* — that artifact now exists at `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/`.
+
+**Coordinator-verified as a real artifact, not a relocation** (the distinction M3a fell short of):
+```
+9 mutation triads:  🌱create-slot 🗑️delete-slot 🌱create-rule 🗑️delete-rule
+                    🔗connect-slots ✂️disconnect-slots 🔢change-weight 🗑️remove-weight 🎲change-seed
+3 real inferences:  impl store::InferredField<AssemblySnapshot> for AssemblySolve
+                    … for AssemblyContradiction     … for AssemblyEntropy
+```
+Every verb is from the approved closed taxonomy; the `compute()` bodies call the actual copied `GraphSolver`/`ModelBuilder`/`GraphTopologyBuilder`. **The 10,930-LOC solver is now reached only through an inference over a snapshot authored by mutations** — which is precisely the doctrine.
+
+**The snapshot composes rather than mints private types**, per the roster ruling: slots/edges, modules as `ArtifactChild<kit>`, weights, and rules as `value`-shaped data. No parallel `Slot`/`Module`/`Rule` tower. Owner chosen on evidence (`🌀️procedural`'s own charter is generative content; `block`/`puzzle` are user-manipulation domains, not constraint-solving). Dependency map came back minimal: only `geometry::random::Rng` and `graph_core::{GraphView,NodeId,EdgeRef}` — both legal plugin→framework edges — and **zero** coupling to `sampling`/`entropy`, so those remain cleanly separable for their own lane.
+
+The agent found and fixed 3 bugs of its own, including **an inverse-law bug in `change-weight` caught by reading before running anything**.
+
+### Verified blocker, correctly attributed — and step 4 correctly refused
+
+`cargo check -p semio-s-plugin-procedural --all-targets` → **0 errors in `🧩️assembly`**; all ~93 errors live in `🧊️procedural3d`/`🌀️procedural2d`'s own `🧬️mutations` files (31 + 19 + a scatter across `🔄replace-synapse`, `🔢change-generation-value`, `🏷️rename-generation` triads — an unrelated in-flight mutation-vocabulary migration). Real dates via `git log --date=iso`: last touched **2026-08-13 01:03**, ~13 hours before this escalation began. Not this wave's, not fixed, not counted.
+
+**Step 4 (delete `🧩️wfc` from `🧮️math`) deliberately NOT done**, and the reasoning is right: *deleting the only verified copy before the destination has a genuinely green test run would be premature.* The duplication window stays open here **by choice**, with the reason recorded — which is categorically different from M3a's window, which was open by exhaustion. Closing it needs someone to clear procedural's pre-existing breakage first.
+
+## ⏳ M3a (CAS → Equation/Function) — STEP 1 ONLY; duplication window is OPEN
+
+**State to be unmissable: `🧮️cas` (6,323) and `📈️polynomial` (2,366) now exist in BOTH `🧮️math` and the `➗️mathematical` plugin — 8,689 LOC duplicated.** Acceptable inside a wave, unacceptable as a resting state, because that is exactly the condition where two copies drift and neither is authoritative. Continuation dispatched to close it.
+
+Landed: both files copied verbatim into `➗️mathematical/…/✳️any/🧬️schema/💡️inferences/{🌿️cas-internals,📈️polynomial-internals}/`, `crate::number`/`crate::algebra` rewritten to `math::*` against a new dep. `cargo check -p semio-s-plugin-mathematical --all-targets` → 0 errors; `--lib` → **238 passed / 14 failed**, where the cas+polynomial subset is **166 passed / 13 failed — byte-identical to the same filter run against `semio-framework-math`.** That equality is the real evidence the copy was lossless. Zero external consumers of `math::cas`/`math::polynomial` (grepped twice), so the repoint step is trivially satisfied.
+
+**A Rust trap worth keeping:** the agent's first mount used a private module plus a glob re-export, which **silently dropped non-`pub` inner modules** (e.g. `mod canon`) — privacy does not leak through an alias, and the failure is quiet rather than a compile error. Caught and fixed.
+
+### The honest part: it stopped before the actual deliverable
+
+The `EquationSnapshot`, all 10 designed mutation triads and all 12 designed inferences are **not authored** — the agent judged the remaining design (a `NodePath` addressing scheme, DSL/pack codecs, `InferredField`/`DepHash` wiring) unsafe to rush, and said so plainly instead of shipping stubs. Correct call, and it named the consequence itself: *"deleting now would just relocate a library, not complete the artifact conversion."* **Relocating code into a directory named `💡️inferences/` does not make it an inference.**
+
+Continuation instructed to: prove ONE end-to-end vertical slice first (`roots` — the user's own example) rather than ten unproven horizontals; and to prefer a **`PersistentLabel`-style never-reused node id** over positional `expr.children[2]` addressing, because a mutation address must stay stable under unrelated edits or an `inverse()` computed against `base` stops resolving once a sibling is inserted — the identical problem brep solved with `PersistentLabel`.
+
+## G2 — DWG codec relocated into its artifact; deletion correctly deferred to G2b
+
+**Design chosen: option (b)** — the codec (`DwgDrawing`/`DwgEntity`/`DwgGeometry`/bit reader-writer/`dwg_to_bytes`/`dwg_from_bytes`/bridges) lands in `🖊️dwg/🏅️standards/🔖️ac1024/…/🚪️io/🦀️component.rs`; **`DwgSnapshot` untouched.** The agent justified this from the file's own pre-existing precedent for byte↔structural-value functions, and from evidence that raster/note/layout's existing deserializers already treated this codec as a *side-decode of* `DwgSnapshot.bytes`, not a replacement for it. **My "the snapshot is just a bytes blob, replace it" framing would have overwritten another ticket's deliberate Decision #5** — the agent read before writing and didn't.
+
+Two new `ArtifactSerializer`/`ArtifactDeserializer` bridge pairs authored against `SemioMeshSnapshot`/`SemioDrawingSnapshot`, mirroring the shipped `SemioCadFromDwg`/`SemioDrawingToDxf` shapes rather than inventing a mechanism. ~7 plugin consumers repointed. Verified: stdio **2430/5** (same 5), mesh-engine **20/0**, framework **127/0**, 3d **413/0**.
+
+### 🎁 20 of the "29 DWG tests" were never DWG tests
+
+Moving the file forced an accounting nobody had done: only **9** of the 29 tests in `🔺️mesh/🦀️component.rs` actually test DWG. The other **20 test `semio_framework_mesh_engine`** — orphaned in this file when the mesh content was extracted earlier tonight, and never re-homed. They moved to that crate, which until now had **zero** tests. A file whose name, contents and test suite each described a different thing.
+
+### ⚠️ A near-miss the agent caught and reverted
+
+`📐️cad`'s DWG functions are pinned to the *framework* type by a cross-crate **function-pointer registration** — `register_dwg_import_handler(CAD_KIND, cad_document_from_dwg)`, called from `🎪️demonstrator`, signature `fn(&DwgDrawing) -> Result<Value, String>`. Repointing cad alone would have compiled on one side and broken the plugin. Reverted; cad/gismap/puzzle2d/animate/shooting/space left untouched for the same class of reason. **A type can be pinned across crates by a function pointer that no import graph shows you.**
+
+## 🔍 I resolved G2's blocker myself — and BOTH prior claims about it were wrong
+
+G2 blocked deletion on two files. Neither prior reading survived contact with path resolution:
+
+| File | Earlier recon said | G2 said | **Truth (realpath resolution of every `#[path]` in the repo)** |
+|---|---|---|---|
+| `💻️os/🦀️component.rs` | unmounted | live blocker | **ZERO mounts — genuinely dead code** |
+| `💻️os/🖥️host/🦀️component.rs` | unmounted | live blocker | **LIVE** — mounted at `💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:27` |
+
+Both were misled by the same thing: the mount is `#[path = "../../🦀️component.rs"]`, a string containing **no `🖥️host` at all**, while `grep '🖥️host/🦀️component.rs'` matches two *unrelated* files (brep's own engine host, flow's own host). Rule added to `📌️important.md`: **a mount is not a string — resolve realpaths**; and "this file is dead" is an action-licensing claim, so it needs the strongest evidence, not a substring match.
+
+**The unlock:** the live file's crate is `semio-framework-os`, which is **not** in stdio's forbidden closure (`stdio → framework-plugin → framework → {ui, geometry, os-kernel, hash, schema}` — it appears nowhere). So it may legally depend on stdio, exactly as the wgpu renderer already depends on the puzzle plugin. G2b dispatched to repoint it, flip the `register_dwg_import_handler` signature together with its cad + demonstrator registrants in one change, and only then delete `🔺️mesh`.
+
+## 🏆 G4 phase 1 — `BrepEngineHost` IS DEAD. The ticket's headline anti-pattern is gone.
+
+`BrepEngineHost { cache: Mutex<EngineCache>, kernel: Mutex<Brep> }` — the process-global mutable geometry session, the single purest instance of the anti-pattern this ticket exists to remove — **no longer has a live consumer anywhere.** Coordinator-verified: `grep -rn "BrepEngineHost" --include="*.rs" "✏️s/"` → **4 hits, every one a doc comment describing the removal**; zero constructions, zero `OnceLock`, zero `Mutex`.
+
+```
+semio-s-plugin-cad       139 passed, 0 failed, 1 ignored
+semio-s-plugin-process   158 passed, 0 failed
+semio-framework-3d       413 passed, 0 failed          ← baseline held
+semio-s-plugin-stdio    2430 passed, 5 failed          ← was 2414/5: +16 tests, SAME 5 failures
+```
+
+### The brief was wrong in my favour twice, and the agent measured rather than trusted
+
+1. **cad had 14 call sites, not the 1 my brief cited** — spread across 3 files including an app-layer file my subset-scoped brief never mentioned. Had the agent worked to the brief it would have left 13 live uses of a "deleted" type.
+2. **process3d's `ProcessKernelReplay` was *already* tier-(d) shaped** — constructed fresh per call everywhere. It was never the violation I described; it merely wrapped an owned `Brep` in a pointless `BrepEngineHost`. Simplified to the owned field. The agent also reported, without being asked, that its "prefix memo" **never actually provides cross-call incrementality as wired** — i.e. the performance justification for the singleton was already fictional.
+
+### 🔑 Deleting the singleton exposed two tests that had been silently depending on it
+
+Two cad tests passed only because a *process-global arena* let handles survive across calls and across tests. With per-call `Brep::new()` they failed — correctly. They were diagnosed to root cause and rewritten to assert the honest post-fix behaviour, **not weakened to restore green**. This is the clearest evidence available that the singleton was real shared mutable state and not just ceremony: something was reaching through it.
+
+### Job 3 — 24 compute subdirs pre-allocated and mounted
+
+Under `✳️brep/🧬️schema/{📸️snapshot,🔺️diff,💡️inferences}/`, Rust-only, no TS twins (TS mirrors boundary vocabulary, never algorithms). Verified by a repo-wide dangling-mount sweep: **0 missing of 1,632 checked**. This is what makes the later peel waves cheap — they never touch stdio's 9,400-line `📦️glue.rs`, which every stdio session edits and which would otherwise serialize the whole effort.
+
+### Job 2 correctly reported UNDONE
+
+The agent read the destination before writing and found the STEP↔SemioBrep io facet **already complete** — a real bidirectional AP214 walk, tested, zero duplication. The actual remaining duplicate is framework's own hand-rolled Part-21 codec (1,034 LOC), whose removal requires rewiring the shared `BrepKernel` trait contract. Bigger and riskier than this wave; reported with evidence instead of attempted. Correct call.
+
+### ⚠️ A verification-is-a-timestamp catch in my own re-check
+
+My first cad run read **138 passed / 1 failed**, contradicting the agent's claimed 139/0. Rather than record a discrepancy I looked: `stat` showed `📐️cad/…/🚪️io/🦀️component.rs` modified at **15:03**, mid-run — a peer session's live edit. A clean re-run gave exactly **139/0/1**. The agent was right and my measurement was the unreliable one. Had I trusted my own newer number over its older one purely because mine was newer, I would have filed a false regression against correct work.
+
+## ✅ M2 — framework residue extracted; ALL FIVE STEPS, independently re-verified
+
+Two new framework modules now hold everything the framework itself needs, so the rest of `🧮️math` is free to become artifacts.
+
+```
+🧰️framework/🔨️modules/📐️geometry/{⚙️engine,🎲️random}/     crate semio-framework-geometry   1,997 LOC
+🧰️framework/🔨️modules/🕸️graph/{⚙️engine,🧮️algorithms,🖊️drawing,🛂️manifest,🤖️generated}/
+                                                          crate semio-framework-graph      6,236 LOC
+🧮️math:  72,439 → 64,217 LOC
+```
+
+**Measured residue 6,594 LOC vs the ~6,500 hypothesis — within 1.5%.** The budget rule ("over ~8,000 means something dissolvable got smuggled in") held.
+
+### Coordinator's independent re-verification (not the agent's numbers — my own run)
+
+```
+cargo metadata --no-deps                     → WORKSPACE_OK
+cargo test -p semio-framework-geometry --lib →   57 passed, 0 failed
+cargo test -p semio-framework-graph    --lib →  113 passed, 0 failed
+cargo test -p semio-framework-math     --lib → 1568 passed, 15 failed
+cargo test -p semio-framework-3d       --lib →  413 passed, 0 failed   ← baseline held
+```
+**The arithmetic is the real evidence: 1568 + 57 + 113 = 1738 = the exact pre-wave math test count.** Not one test was lost or silently dropped while relocating 8,233 LOC. And `diff` of math's failure set against `scratch-w0-baseline-failures-sorted.txt` → **identical**: zero new failures, and zero accidentally "fixed" (which would equally have signalled that something moved that shouldn't have).
+
+Residual `math::` references in the live tree: **23, all `math::graph::dsl`** — the Jack DSL, which I explicitly scoped OUT of this wave because it has consumers on both sides of the Cargo law. Expected, not stale.
+
+### Four hypothesis corrections the agent measured (I was wrong four times)
+
+1. **`algebra::Mat2` is not residue** — repo-wide it appears only in algebra's own tests. The algebra residue is exactly `Vec3` + `Mat4`.
+2. **`semio-framework-ui` is a residue consumer nobody had listed** — the same cross-directory `#[path]` mount that caused my M0 regression. Confirmed and handled in both crates.
+3. **`neural-engine` is not a consumer at all** — its two `math::` hits are inside a comment. No dep added. (A grep-to-find/enumerate-to-count catch.)
+4. **`🕸️graph/🛂️manifest` is not a vocabulary, it is a codegen machine.** It `include!`s a generated registry produced by a `build.rs` plus a 343-line `📜️script.ts` that walks the entire repo. The whole machine moved to the graph module; math lost its `build.rs` and its nx `generate` target. This is the same inverted framework→plugin codegen dependency flagged earlier in this ticket — it now at least lives next to the vocabulary it generates, though retargeting it to owner-root `🤖️generated/` remains open.
+
+### Honest remainders
+
+- `🕸️graph/🗣️dsl` **is** reachable from framework code (`♾️infinite/🕸️dag`, `🧠️neural`), so those crates keep a `math` dep alongside `graph`. That entanglement is also why the agent could not verify step 4 before step 5 — a `PropertyValue` mismatch across the duplication window forced it to complete the deletion and then verify. It said so rather than reordering the report to look clean.
+- The graph module has **no TypeScript package of its own**; `@semio-tech/framework-math-js` still re-exports the manifest TS surface through a cross-module relative import. No Cargo-law impact, but it wants a follow-up.
+- `blocked-churn` correctly attributed and not touched: `♾️infinite`'s 12 errors are wave G1b's live GLB/mesh rewrite (mtime 14:18, `git diff` shows `mesh_from_kind`→`placeholder_mesh`), **zero of which mention a residue symbol**; seven plugin crates are blocked only by the live DWG relocation (`E0753`, mtime 14:38).
+
+## 🛑 M0 REGRESSION — self-inflicted, caught by an agent, and it corrupted two waves' baselines
+
+**I broke `semio-framework-ui` and did not notice for ~40 minutes.** Recording it in full because the failure mode is more instructive than the fix.
+
+I deleted `semio-framework-math` from `🖱️ui/Cargo.toml` after `grep -rn "semio_framework_math\|\bmath::" "🧰️framework/🔨️modules/🖱️ui" --include="*.rs"` returned **0**. The grep was correct and the conclusion was wrong: `🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:222` mounts
+`#[path = "../../../../../🧊️3d/🎬️scene/🦀️component.rs"] pub mod kernel_3d_scene;`
+and that file's line 3 is `pub use semio_framework_math::algebra::{Mat4, Vec3};`. **A crate in this repo is composed across directories via `#[path]`, so a directory-scoped grep structurally cannot see the crate's own dependency edges.** Six errors, in a crate upstream of nearly everything.
+
+### The part that matters: two independent agents wrote it off as foreign churn
+
+G1a and G1b each measured those 6 errors as their baseline and each attributed them — correctly by procedure, wrongly in fact — to another session, because a *plausible* story was available: "`🧊️3d` is being dissolved by another wave, so this is theirs." G1b was honest enough to say outright that it therefore **could not obtain a compile signal for its own crate** rather than claiming one. G1a's error-set diff stayed valid (my breakage sat on both sides of it), but its *baseline* was measuring my bug, not os-flow — so its report's "baseline is 6, not the >100 in host/vcs/playbook you briefed" is not evidence about os-flow's real state.
+
+**Rule adopted, now in `📌️important.md`:** a novel error appearing in two different waves' baselines *at the same moment* is evidence of a shared recent cause, and the most available cause is your own last change. One minute of suspicion beats hours of masked signal. Also: to census a crate's inputs, read its `📦️glue.rs` mounts first — or just delete the dep and let `cargo check --all-features` answer, instead of asking the filesystem.
+
+**Fixed and verified**: dep restored with a comment naming the cross-directory mount so the next reader doesn't repeat it; `cargo check -p semio-framework-ui --features wgpu` → **0 errors**; `cargo metadata --no-deps` → WORKSPACE_OK.
+
+**`🗺️surface`'s removal was genuinely safe** — checked properly this time: its `📦️glue.rs` mounts only `🎨️paint`/`🏔️terrain`/`🕸️node-graph`/`🗺️tiled-map`, all inside `🗺️surface/`. Re-measured post-fix: **0 errors**. So M0 is half-right: surface's dep was dead, ui's was not.
+
+## G1a / G1b — both landed small, and both were RIGHT to refuse the big deletion
+
+Neither wave did what I briefed, and in both cases the refusal was correct.
+
+**G1a (`os-flow`)**: I briefed "`📐️brep-geometry` is a near-duplicate of the flow-ext-brep plugin — reconcile and delete the framework module." **The premise was false.** The plugin holds *zero* local duplication; it glob-imports the framework module (`use flow_extension_sdk::brep_geometry::*`). And the module has live external callers outside the boundary — `flow::tessellate_geometry` in `🌀️procedural/🎛️apps/🧊️3d/🦀️component.rs:670`, and `flow::{export_solid_json, import_solid_json, tessellate_geometry}` at four sites in `📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs`. Deleting it would have broken two crates or silently desynced geometry handles. Left intact, reported. Of the 4 DWG bridge functions, **1** (`dwg_decode_mesh_json`) had zero callers and was deleted; the other 3 have real consumers (including a TS file in `🌐️spatial-kernel`) and were left with exact patches filed.
+
+**G1b (`os-infinite`)**: dual-copy trap confirmed real (both files byte-identical at 4,092 lines, both mounted); every edit mirrored and `diff -q`-verified identical before and after. `MeshData` → local `WorldMeshBuffers` mirroring the renderer's shipped TS `WorldMeshData` field-for-field, minus two fields neither side uses. `mesh_from_kind` → local `placeholder_mesh` — and the agent censused rather than ported blindly: only **5 of 9** kinds are reachable, and `vertex-marker` appears only as a lookup key, never as a `kind` argument. `mesh_from_glb` **left blocked and honest**: stdio's `SemioMeshFromGltf` deserializer yields a structured snapshot, not flat render buffers, so wiring it needs a snapshot→buffer adapter with no existing precedent. Marked `🚧️`, not faked.
+
+**Consequence for the plan:** the "de-geometrize the framework first" gate is only partly achievable. `📐️brep-geometry` cannot leave until `🌀️procedural` and `📖️playbook` move, which makes those two plugins part of the geometry migration rather than bystanders.
+
+## ❎ The taxonomy amendment is NOT needed — measured, then cancelled
+
+The approved plan called for extending `📜️script.ts`'s `🧬️mutations` wildcard escape to `📸️snapshot`/`🔺️diff`/`💡️inferences`, so the dissolved kernel could land as named Rust-only compute subdirs inside facets. **Measured before writing it, and it turns out to be unnecessary.**
+
+`policyTaxonomyDirsBreaches` (`📜️script.ts:4076+`) walks `<owner>/🗿️artifacts/<artifact>/<child>` and only enters its `NestedFacetWalk` when `<child>` is literally `🧬️schema` or `🚪️io`. But `artifactChildDirs = ["🧬️schema","🚪️io","📚️examples"]` — it does **not** contain `🏅️standards`, and every artifact in this repo is new-shape (`<artifact>/🏅️standards/🔖️v/🪆️subsets/✳️x/🧬️schema/…`). So for new-shape artifacts the walker takes the else-branch at `🏅️standards` and **never descends to subset facets at all**. The only walker that does read `schemaChildDirs` at subset depth (`:9840+`) is a *completeness* check ("every facet must contain these four"), not a *restrictiveness* check.
+
+Confirmed empirically rather than by reading alone — `bun ./📜️script.ts policy`:
+```
+"not a recognized artifact component dir"  → 0
+"not a recognized representation dir"      → 0
+```
+Corroborated by the fact that `✳️brep/🧬️schema/💡️inferences/✅validation-report/`, authored earlier in this ticket, sits under exactly the contested depth and is reported by nothing.
+
+**Decision: do not amend.** Adding a rule to permit something along a path the walker never visits would be dead policy — it would look like governance while enforcing nothing, and it would misinform the next reader about where the real boundary is. Compute subdirs are authored directly. UCAS's substantive no-objection is recorded and unused; #2553 (the actual taxonomy owner) never had to be woken.
+
+**W12 policy baseline captured** for comparison: **23,792 breach lines**, dominated by `handcrafted-grammar/spec-distinctness` (22,274 — systemic, pre-existing, unrelated). Full set: `scratch-w0-policy-baseline.txt`.
+
 ## W5 — all four waves complete
 
 Mesh-engine dissolution, `◻2d` store deletion, `🛢️db` LiveQuery→InferredField, and `♾️infinite/…/🕸️dag` triad conversion are all landed and independently re-verified by the coordinator (not merely accepted from agent reports) — the fourth and last of the "everything that can be migrated must be migrated" gaps identified after the user's pivot instruction. Honest remainders carried forward, none silently dropped: the DWG binary codec still embedded in `🔺️mesh/🦀️component.rs` (flagged, own future home); ~20 plugin-app ad-hoc mesh-construction call sites (`procedural`/`process`/`puzzle`/`lowpoly`/`remodel`) not yet routed through artifact dispatch (separate, larger, higher-risk wave); `🌊️flow/🌿️vcs`'s `CollectionMutation` still `blocked-cross-session` on SMO's wound-down plugin-vocabulary rewrite; `BrepEngineHost` cross-session deletion still APA's territory.

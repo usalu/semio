@@ -54,9 +54,17 @@ pub fn imperative_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Host
-/// 🎛️ Native imperative path host.
+/// 🎛️ Native imperative path host. `path`/`seed` are the LIVE working representation this host
+/// mutates directly (matches `📓️wave4-reports/flow-report.md`'s working-scene pattern); `document`
+/// is kept in sync via [`Self::sync_document`] after every mutating call so its `flow`/`text`
+/// composed-child handles always reflect the current `path`/`seed` (ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — `ImperativeSnapshot` no longer carries `path`/
+/// `seed` inline). `document` stays `pub` for API parity with the pre-migration shape; `path`/`seed`
+/// are the ones every method here actually reads/writes.
 pub struct ImperativeHost {
     pub document: ImperativeSnapshot,
+    path: Path,
+    seed: std::collections::BTreeMap<String, neural_engine::Value>,
     registry: Registry,
     next_serial: u64,
 }
@@ -68,9 +76,13 @@ impl Default for ImperativeHost {
 }
 
 impl ImperativeHost {
+    /// 🌱 Reads the live `path`/`seed` off `document`'s working scene (the cache, keyed by the
+    /// snapshot's own `flow`/`text` handles — see `ImperativeWorkingScene`'s doc comment for the
+    /// staleness gap this inherits in a fresh process with an unseeded cache).
     pub fn from_snapshot(document: ImperativeSnapshot) -> Self {
         crate::artifacts::imperative::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
-        Self { document, registry: imperative_module_registry(), next_serial: 100 }
+        let scene = crate::artifacts::imperative::imperative_working_scene(&document);
+        Self { document, path: scene.path, seed: scene.seed, registry: imperative_module_registry(), next_serial: 100 }
     }
 
     pub fn load_json(json: &str) -> Result<Self, ImperativeCoreError> {
@@ -89,13 +101,20 @@ impl ImperativeHost {
         imperative_catalogue_json(&self.registry)
     }
 
+    /// 🔄 Re-mints `document.flow` from the live `path` (mint+cache, never persisted elsewhere) —
+    /// called after every mutating method so `document` never drifts from `path`. `seed` never
+    /// changes through this host's own methods, so `document.text` is left as-is.
+    fn sync_document(&mut self) {
+        self.document.flow = crate::artifacts::imperative::imperative_flow_child_handle_and_cache(&self.path);
+    }
+
     fn resolve_path_mut<'a>(&'a mut self, path_ref: &PathRef) -> Result<&'a mut Path, ImperativeCoreError> {
         if path_ref.owner.is_none() && path_ref.slot.is_none() {
-            return Ok(&mut self.document.path);
+            return Ok(&mut self.path);
         }
         let owner = path_ref.owner.as_ref().ok_or(ImperativeCoreError::MissingOwner)?;
         let slot = path_ref.slot.as_ref().ok_or(ImperativeCoreError::MissingSlot)?;
-        let owner_step = self.document.path.steps.iter_mut().find(|step| step.id == *owner).ok_or_else(|| ImperativeCoreError::UnknownOwnerStep(owner.clone()))?;
+        let owner_step = self.path.steps.iter_mut().find(|step| step.id == *owner).ok_or_else(|| ImperativeCoreError::UnknownOwnerStep(owner.clone()))?;
         Ok(owner_step.bodies.entry(slot.clone()).or_insert_with(Path::new))
     }
 
@@ -110,6 +129,7 @@ impl ImperativeHost {
         let path = self.resolve_path_mut(path_ref)?;
         let insert_at = index.unwrap_or(path.steps.len()).min(path.steps.len());
         path.steps.insert(insert_at, step);
+        self.sync_document();
         Ok(id)
     }
 
@@ -124,7 +144,11 @@ impl ImperativeHost {
         };
         let before = path.steps.len();
         path.steps.retain(|step| step.id != id);
-        path.steps.len() != before
+        let changed = path.steps.len() != before;
+        if changed {
+            self.sync_document();
+        }
+        changed
     }
 
     pub fn move_step(&mut self, id: &str, new_index: usize) -> bool {
@@ -142,6 +166,7 @@ impl ImperativeHost {
         let step = path.steps.remove(current);
         let insert_at = new_index.min(path.steps.len());
         path.steps.insert(insert_at, step);
+        self.sync_document();
         true
     }
 
@@ -156,15 +181,16 @@ impl ImperativeHost {
             return Err(ImperativeCoreError::UnknownStep(id.into()));
         };
         step.params = params;
+        self.sync_document();
         Ok(())
     }
 
     pub fn run(&self) -> RunResult {
-        Executor::new(&self.registry).run(&self.document.path, &crate::artifacts::imperative::seed_dictionary(&self.document.seed))
+        Executor::new(&self.registry).run(&self.path, &crate::artifacts::imperative::seed_dictionary(&self.seed))
     }
 
     pub fn compile_text(&self) -> String {
-        compile_to_text(&self.document.path)
+        compile_to_text(&self.path)
     }
 }
 //#endregion 🔖️Host
@@ -203,7 +229,7 @@ mod tests {
         let path_ref = PathRef { owner: Some(owner.clone()), slot: Some("then".into()) };
         let nested = host.add_step_at(&path_ref, "log.print", None).expect("add nested");
         assert_eq!(nested, "step-102");
-        let owner_step = host.document.path.steps.iter().find(|step| step.id == owner).expect("owner");
+        let owner_step = host.path.steps.iter().find(|step| step.id == owner).expect("owner");
         assert_eq!(owner_step.bodies.get("then").map(|path| path.steps.len()), Some(1));
     }
 
@@ -218,7 +244,7 @@ mod tests {
 
     #[test]
     fn host_load_json_rejects_unsupported_schema() {
-        let json = r#"{"schema":"not.imperative","path":{"steps":[]},"seed":{}}"#;
+        let json = r#"{"schema":"not.imperative","flow":{"childId":"f","target":{"artifactId":"f","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"flow"}}},"text":{"childId":"t","target":{"artifactId":"t","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"text"}}}}"#;
         assert!(matches!(ImperativeHost::load_json(json), Err(ImperativeCoreError::UnsupportedSchema(schema)) if schema == "not.imperative"));
     }
 
@@ -258,10 +284,10 @@ mod tests {
     #[test]
     fn host_add_step_clamps_out_of_range_index() {
         let mut host = ImperativeHost::default();
-        let before = host.document.path.steps.len();
+        let before = host.path.steps.len();
         let id = host.add_step("log.print", Some(9999));
-        assert_eq!(host.document.path.steps.last().map(|step| &step.id), Some(&id));
-        assert_eq!(host.document.path.steps.len(), before + 1);
+        assert_eq!(host.path.steps.last().map(|step| &step.id), Some(&id));
+        assert_eq!(host.path.steps.len(), before + 1);
     }
 
     #[test]
@@ -276,7 +302,7 @@ mod tests {
     fn host_remove_step_true_when_removed() {
         let mut host = ImperativeHost::default();
         assert!(host.remove_step("step-1"));
-        assert!(host.document.path.steps.iter().all(|step| step.id != "step-1"));
+        assert!(host.path.steps.iter().all(|step| step.id != "step-1"));
     }
 
     #[test]
@@ -291,7 +317,7 @@ mod tests {
     fn host_move_step_true_and_reorders() {
         let mut host = ImperativeHost::default();
         assert!(host.move_step("step-2", 0));
-        assert_eq!(host.document.path.steps[0].id, "step-2");
+        assert_eq!(host.path.steps[0].id, "step-2");
     }
 
     #[test]
@@ -308,7 +334,7 @@ mod tests {
         use neural_engine::{Atom, Value};
         let mut host = ImperativeHost::default();
         host.set_step_params_json("step-2", r#"{"message":"updated"}"#).expect("sets params");
-        let step = host.document.path.steps.iter().find(|step| step.id == "step-2").expect("step-2 exists");
+        let step = host.path.steps.iter().find(|step| step.id == "step-2").expect("step-2 exists");
         assert_eq!(step.params.get("message"), Some(&Value::Atom(Atom::String("updated".into()))));
     }
 

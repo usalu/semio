@@ -63,16 +63,18 @@ impl En1990Mutation {
     /// indices stay valid mid-sequence) before `target`'s entries are re-inserted in order — a plain
     /// per-field decomposition can't express "replace the whole table" on its own.
     pub fn from_snapshot(base: &En1990Snapshot, target: &En1990Snapshot) -> Vec<En1990Mutation> {
-        let mut mutations = Vec::with_capacity(5 + base.q_k.len() + target.q_k.len());
+        let base_q_k = crate::artifacts::en1990::en1990_qk(base);
+        let target_q_k = crate::artifacts::en1990::en1990_qk(target);
+        let mut mutations = Vec::with_capacity(5 + base_q_k.len() + target_q_k.len());
         mutations.push(En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: target.annex.clone() }));
         mutations.push(En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: target.g_k.clone() }));
         mutations.push(En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: target.resistance_kn.clone() }));
         mutations.push(En1990Mutation::ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass { new_consequence_class: target.consequence_class.clone() }));
         mutations.push(En1990Mutation::ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction { new_seismic_a_ed_kn: target.seismic_a_ed_kn.clone() }));
-        for index in (0..base.q_k.len()).rev() {
+        for index in (0..base_q_k.len()).rev() {
             mutations.push(En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index }));
         }
-        for (index, entry) in target.q_k.iter().enumerate() {
+        for (index, entry) in target_q_k.iter().enumerate() {
             mutations.push(En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index, category: entry.category.clone(), value: entry.value.clone() }));
         }
         mutations
@@ -131,22 +133,28 @@ mod tests {
         }
     }
 
+    /// 🔎 `q_k` is a composed `s.stdio.semio.table` child slot — every assertion below reads
+    /// through the `en1990_qk` working-scene accessor instead of indexing the field directly.
+    fn qk(snapshot: &En1990Snapshot) -> Vec<crate::artifacts::en1990::En1990QkEntry> {
+        crate::artifacts::en1990::en1990_qk(snapshot)
+    }
+
     #[test]
     fn insert_remove_variable_action_round_trips() {
         let base = En1990Snapshot::default();
 
         let insert = En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index: 1, category: "snow".into(), value: 20.0 });
         let after_insert = round_trip(&base, &insert);
-        assert_eq!(after_insert.q_k.len(), base.q_k.len() + 1);
-        assert_eq!(after_insert.q_k[1].category, "snow");
+        assert_eq!(qk(&after_insert).len(), qk(&base).len() + 1);
+        assert_eq!(qk(&after_insert)[1].category, "snow");
 
         let undo = insert.inverse(&base);
         assert_eq!(undo, vec![En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 1 })]);
 
         let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 0 });
         let after_remove = round_trip(&base, &remove);
-        assert_eq!(after_remove.q_k.len(), base.q_k.len() - 1);
-        assert_eq!(after_remove.q_k[0], base.q_k[1]);
+        assert_eq!(qk(&after_remove).len(), qk(&base).len() - 1);
+        assert_eq!(qk(&after_remove)[0], qk(&base)[1]);
     }
 
     #[test]
@@ -160,12 +168,12 @@ mod tests {
     #[test]
     fn reorder_variable_actions_round_trips() {
         let base = En1990Snapshot::default();
-        assert!(base.q_k.len() >= 2, "fixture must have at least two variable actions to exercise reorder");
+        assert!(qk(&base).len() >= 2, "fixture must have at least two variable actions to exercise reorder");
 
         let reorder = En1990Mutation::ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions { from: 0, to: 1 });
         let after = round_trip(&base, &reorder);
-        assert_eq!(after.q_k[0], base.q_k[1]);
-        assert_eq!(after.q_k[1], base.q_k[0]);
+        assert_eq!(qk(&after)[0], qk(&base)[1]);
+        assert_eq!(qk(&after)[1], qk(&base)[0]);
     }
 
     #[test]
@@ -174,12 +182,12 @@ mod tests {
 
         let category = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 0, new_category: "storage".into() });
         let after = round_trip(&base, &category);
-        assert_eq!(after.q_k[0].category, "storage");
-        assert_eq!(after.q_k[0].value, base.q_k[0].value);
+        assert_eq!(qk(&after)[0].category, "storage");
+        assert_eq!(qk(&after)[0].value, qk(&base)[0].value);
 
         let value = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 0, new_value: 65.0 });
         let after = round_trip(&base, &value);
-        assert_eq!(after.q_k[0].value, 65.0);
+        assert_eq!(qk(&after)[0].value, 65.0);
 
         let missing = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 99, new_category: "x".into() });
         assert!(missing.inverse(&base).is_empty(), "changing an absent index has nothing to undo");

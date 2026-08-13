@@ -377,6 +377,7 @@ The following architecture must be reached:
 - Every artifact has a schema, snapshot, diff, mutations, inferences, io system.
 - Every artifact is tracked over vcs.
 - Every artifact has children artifacts that have their own version history and referenced artifacts that also have their own version history.
+- Every app consumes and produces artifacts.
 - Every app has a headless engine, modes, config, presence, transient.
 - Every mode has windows, config, presence, transient.
 - Every window has actions, utilities, options, config, presence, transient.
@@ -386,13 +387,64 @@ Get the demonstrator working again end to end with the new architecture.
 ---
 
 The state management system is extremely adhoc.
-Make sure that only these 4 different mechanisms are used:
+Make sure that only these 4 different mechanisms are used and enforced by api and policies:
 artifacts are persisted shared state.
 config is persisted local-only state.
 presence is ephemeral shared state.
 transient is ephemaral local-only state.
 
-Every engine depending on the config produces a 
+---
+
+Introduce compaction to the artifact system.
+Every mutation defines read dependencies and write dependencies on the schema (either from snaphot or inferences)
+
+First automatic compaction is done by the engine and then the manual compaction for each artifact kind is done.
+
+Automatic compaction e.g. includes:
+- When then the diff is empty, then the mutation can be skipped (e.g. renaming something with the name that it already has, flattening a design twice, etc)
+- 
+
+
+Every artifact must define inside schema: `compaction/component.rs` that receives a list of mutations and produces a compacted list of mutations.
+
+e.g. when a mutation only affects a static subset of the schema and rerunning the mutation again just overwrites the same data, then only the last mutation wins, as long as no other mutation needed that data in between.
+an
+
+
+```
+<artifact>
+  schema
+    mutations
+      <mutation>
+        dependencies
+          read
+            snapshot
+              dependencies
+                <dependency> e.g. name
+                  component.rs
+                <inference> e.g. flatPosition
+                  component.rs
+                  …
+          write
+            snapshot
+              dependencies
+                <dependency> e.g. name
+                  component.rs
+                <inference> e.g. flatPosition
+                  component.rs
+                  …
+    compaction
+      component.rs
+      examples
+        assets
+          <assetfile>
+        tests
+          component.rs
+        
+```
+
+---
+
 
 
 ---

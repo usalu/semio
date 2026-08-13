@@ -1,7 +1,7 @@
 //! 🎯️ Nonlinear least squares and robust estimation: Gauss-Newton, Levenberg-Marquardt, Schur-complement bundle solvers, robust losses and RANSAC consensus.
 
 use crate::algebra::{cholesky, cholesky_solve, weighted_normal_equations, MatD, VecD};
-use crate::random::Rng;
+use geometry::random::Rng;
 use std::collections::HashMap;
 
 // #region 🔖️Problem

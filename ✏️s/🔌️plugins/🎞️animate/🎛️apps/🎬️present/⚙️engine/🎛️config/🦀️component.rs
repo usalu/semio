@@ -293,7 +293,7 @@ pub mod graph {
     use crate::apps::present::engine::geometry::geometry::{arrow, circle, line};
     use crate::apps::present::engine::scene::sobject::{Group, Sobject};
     use crate::apps::present::engine::text::text::Text;
-    use math::geometry::Point;
+    use geometry::Point;
     use std::collections::HashMap;
 
     /// 🔵️ Undirected graph with circular layout.

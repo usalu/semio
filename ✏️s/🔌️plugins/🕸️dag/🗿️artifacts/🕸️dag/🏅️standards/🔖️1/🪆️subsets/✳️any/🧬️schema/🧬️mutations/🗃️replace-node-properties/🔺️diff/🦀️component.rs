@@ -1,11 +1,15 @@
-//! 🔺️ Sparse diff builder for `ReplaceNodeProperties` — via `DagNodeExtraPatch` (see
-//! `🖼️change-node-icon/🔺️diff` for why: `properties` isn't a `DagNodePatch` field either).
-use crate::artifacts::dag::diff::{DagDiff, DagNodeExtraPatch, DagNodeExtraPatchEntry, DagNodesDelta};
-use crate::artifacts::dag::DagSnapshot;
+//! 🔺️ Sparse diff builder for `ReplaceNodeProperties`.
+use crate::artifacts::dag::diff::DagDiff;
+use crate::artifacts::dag::schema::diff::text::diff_replace_content;
+use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ReplaceNodeProperties, _base: &DagSnapshot) -> DagDiff {
-    let patch = DagNodeExtraPatch { properties: Some(payload.new_properties.clone()), ..Default::default() };
-    DagDiff { nodes: Some(DagNodesDelta { extra_patched: vec![DagNodeExtraPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() }
+pub fn diff(payload: &super::mutation::ReplaceNodeProperties, base: &DagSnapshot) -> DagDiff {
+    let scene = dag_working_scene(base);
+    let mut nodes = scene.nodes;
+    if let Some(node) = nodes.iter_mut().find(|node| node.id == payload.id) {
+        node.properties = payload.new_properties.clone();
+    }
+    diff_replace_content(nodes, scene.edges)
 }
 //#endregion 🔖️Diff

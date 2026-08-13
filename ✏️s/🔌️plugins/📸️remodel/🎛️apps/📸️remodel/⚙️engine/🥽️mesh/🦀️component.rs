@@ -2442,7 +2442,7 @@ fn visible_views(mesh: &TriMesh, views: &[TextureView]) -> Vec<Vec<usize>> {
 }
 
 /// ✂️ Graph-cut view labeling via Lempitsky–Ivanov alpha-expansion on top of
-/// `math::graph::FlowNetwork`'s Dinic max-flow: data cost rewards a view with large
+/// `graph::FlowNetwork`'s Dinic max-flow: data cost rewards a view with large
 /// projected area, strong image gradient and cross-view color agreement; Potts smoothness
 /// penalizes adjacent faces disagreeing on their view label. Cycles through candidate labels,
 /// expanding each via one min-cut, until a full pass makes no change or the iteration cap fires.
@@ -2497,7 +2497,7 @@ fn graph_cut_view_labels(mesh: &TriMesh, views: &[TextureView], visible: &[Vec<u
             let index_of: HashMap<u32, u32> = active.iter().enumerate().map(|(i, &f)| (f, i as u32)).collect();
             let source = active.len() as u32;
             let sink = source + 1;
-            let mut net = math::graph::FlowNetwork::new(active.len() as u32 + 2);
+            let mut net = graph::FlowNetwork::new(active.len() as u32 + 2);
             for (i, &f) in active.iter().enumerate() {
                 let cost_alpha = data_cost[f as usize].get(&alpha).copied().unwrap_or(1e6);
                 let cost_current = labels[f as usize].and_then(|l| data_cost[f as usize].get(&l).copied()).unwrap_or(1e6);

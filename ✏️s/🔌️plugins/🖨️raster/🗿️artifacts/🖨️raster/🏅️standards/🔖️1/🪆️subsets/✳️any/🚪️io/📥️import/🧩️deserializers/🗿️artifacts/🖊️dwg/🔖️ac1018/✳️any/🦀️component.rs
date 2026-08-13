@@ -1,8 +1,7 @@
 //! raster <- dwg
 use crate::artifacts::raster::RasterSnapshot;
-use semio_framework::{dwg_from_bytes, DwgDrawing};
 use semio_s_plugin_stdio::artifacts::dwg::schema::snapshot::decode_dwg;
-use semio_s_plugin_stdio::artifacts::dwg::DwgSnapshot;
+use semio_s_plugin_stdio::artifacts::dwg::{dwg_from_bytes, DwgDrawing, DwgSnapshot};
 pub fn register() {}
 pub fn deserialize(from: &DwgSnapshot) -> Result<RasterSnapshot, String> { deserialize_bytes(&from.bytes) }
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {

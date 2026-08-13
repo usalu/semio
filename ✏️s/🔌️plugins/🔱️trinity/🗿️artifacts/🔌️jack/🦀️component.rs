@@ -4,11 +4,11 @@
 pub use crate::artifacts::jack::schema::mutations::TrinityGraphMutation;
 pub use crate::artifacts::jack::schema::diff::JackDiff;
 
-use math::graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
+use graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use math::graph::manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
+pub use graph::manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
 
 /// 📜️ Compile-time trinity manifest (projection of {@link GraphManifest}).
 pub type Manifest = TrinityManifest;

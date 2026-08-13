@@ -720,13 +720,31 @@ pub fn process_steps_from_flow_snapshot(flow: &SemioFlowSnapshot) -> Vec<Process
 //#endregion 🔖️FlowConverters
 
 //#region 🔖️SceneConverters
+/// 🧠️ Same-process working-scene cache, keyed by the composed child's own content-addressed
+/// `child_id` — populated at mint time (`process_working_scene_to_snapshot`, the only place literal
+/// content is in hand), read at scene-reconstruction time
+/// (`process_working_scene_from_snapshot`). Mirrors `🌊️flow`'s own `FLOW_SCRATCH` pattern (this
+/// ticket's wave 4, `📓️wave4-reports/flow-report.md`) rather than lowpoly/cad/writer's plain
+/// "always empty" fallback: within the SAME process, a document round-tripped only through this
+/// module (never serialized out and a fresh process spun up to read it back) gets its real content
+/// back, not a fabricated empty scene. Still an `EngineRep`-shaped bridge, not a real resolver —
+/// crossing a process boundary (a fresh process loading a saved document, or an undo/redo that
+/// bypasses `ArtifactApp::handle`) still degrades to the honest empty fallback, matching every
+/// other exemplar's documented staleness gap.
+thread_local! {
+    static PROCESS3D_STOCK_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Stock>> = std::cell::RefCell::new(std::collections::HashMap::new());
+    static PROCESS3D_STEPS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<ProcessStep>>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
 /// 🌉️ WRITE direction, real: builds the full persisted `Process3dSnapshot` from a literal
 /// `ProcessWorkingScene` — the only place this migration can mint real composed-child CONTENT
 /// (fixture construction, `empty_process3d_snapshot`, and any host-level "mint then dispatch"
 /// gesture), since there is no `LinkResolver` to pull literal content back out of an
 /// already-persisted child handle later. Mints one `stock_solid` brep child, one `steps` flow
 /// child, and one `tool_solids` brep child per `Cut`/`Attach` step (skipped for `Drill`, which
-/// carries no `WorkingSolid`).
+/// carries no `WorkingSolid`) — and caches the literal `Stock`/`Vec<ProcessStep>` behind each
+/// minted handle's `child_id` (see `PROCESS3D_STOCK_SCRATCH`/`PROCESS3D_STEPS_SCRATCH` above) so a
+/// same-process `process_working_scene_from_snapshot` call gets real content back.
 pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: Workshop, resolved_up_to: Option<usize>) -> Process3dSnapshot {
     let mut tool_solids = Vec::new();
     let mut tool_child_ids = std::collections::BTreeMap::new();
@@ -745,22 +763,29 @@ pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: 
     }
     let stock_content = brep_snapshot_for_working_solid(&scene.stock.solid);
     let stock_solid = brep_child_handle("stock", &stock_content);
+    PROCESS3D_STOCK_SCRATCH.with(|cache| cache.borrow_mut().insert(stock_solid.child_id.clone(), scene.stock.clone()));
     let flow_content = flow_snapshot_for_steps(&scene.steps, &tool_child_ids);
     let steps = flow_child_handle(&flow_content);
+    PROCESS3D_STEPS_SCRATCH.with(|cache| cache.borrow_mut().insert(steps.child_id.clone(), scene.steps.clone()));
     Process3dSnapshot { workshop, stock_id: scene.stock.id.clone(), stock_label: scene.stock.label.clone(), stock_pose: scene.stock.pose.clone(), stock_solid, steps, tool_solids, resolved_up_to }
 }
 
-/// 🌉️ READ direction, documented gap: `Process3dSnapshot` composes its `stock_solid`/`steps`/
-/// `tool_solids` fields as HANDLES only (`child_id`+`target`, never resolved content — see
-/// `🏪️store/🦀️component.rs`'s `🔖️Composition` region). No `LinkResolver`/`ChildStoreFactory` seam
-/// reaches `ArtifactApp::handle` yet (confirmed directly against `🔌️plugin/🦀️component.rs`, W1-
-/// owned, read-only for this wave), so a plain snapshot alone cannot recover its own children's
-/// content — this returns the honest empty scene (default stock, no steps) rather than fabricating
-/// data, exactly mirroring `📐️cad`'s empty per-pane object list until a real resolver lands. Once a
-/// resolver exists, replace this with real calls to `working_solid_from_brep_snapshot`/
-/// `process_steps_from_flow_snapshot` against the resolved child content.
-pub fn process_working_scene_from_snapshot(_snapshot: &Process3dSnapshot) -> ProcessWorkingScene {
-    ProcessWorkingScene::default()
+/// 🌉️ READ direction: `Process3dSnapshot` composes its `stock_solid`/`steps`/`tool_solids` fields
+/// as HANDLES only (`child_id`+`target`, never resolved content — see `🏪️store/🦀️component.rs`'s
+/// `🔖️Composition` region), and no `LinkResolver`/`ChildStoreFactory` seam reaches
+/// `ArtifactApp::handle` yet (confirmed directly against `🔌️plugin/🦀️component.rs`, W1-owned,
+/// read-only for this wave). Real for the same-process case (checks
+/// `PROCESS3D_STOCK_SCRATCH`/`PROCESS3D_STEPS_SCRATCH` first — populated by
+/// `process_working_scene_to_snapshot`); degrades to the honest empty scene (default stock, no
+/// steps) only once the handle crosses a process boundary or the cache was never populated for it
+/// — never fabricates data, exactly mirroring `📐️cad`'s empty per-pane object list for the
+/// cross-process case. Once a real resolver exists, replace the fallback arms with real calls to
+/// `working_solid_from_brep_snapshot`/`process_steps_from_flow_snapshot` against the resolved
+/// child content.
+pub fn process_working_scene_from_snapshot(snapshot: &Process3dSnapshot) -> ProcessWorkingScene {
+    let stock = PROCESS3D_STOCK_SCRATCH.with(|cache| cache.borrow().get(&snapshot.stock_solid.child_id).cloned()).unwrap_or_default();
+    let steps = PROCESS3D_STEPS_SCRATCH.with(|cache| cache.borrow().get(&snapshot.steps.child_id).cloned()).unwrap_or_default();
+    ProcessWorkingScene { stock, steps }
 }
 //#endregion 🔖️SceneConverters
 //#endregion 🔖️WorkingScene

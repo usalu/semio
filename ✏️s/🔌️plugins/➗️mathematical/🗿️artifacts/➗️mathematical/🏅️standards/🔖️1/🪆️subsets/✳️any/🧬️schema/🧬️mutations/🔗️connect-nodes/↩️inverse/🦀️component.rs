@@ -8,7 +8,7 @@ use super::mutation::ConnectNodes;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ConnectNodes, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
-    if base.graph.edges.iter().any(|edge| edge.id == payload.id) {
+    if crate::artifacts::mathematical::mathematical_graph(base).edges.iter().any(|edge| edge.id == payload.id) {
         return Vec::new();
     }
     vec![MathematicalMutation::DisconnectNodes(disconnect_nodes::mutation::DisconnectNodes { id: payload.id.clone() })]

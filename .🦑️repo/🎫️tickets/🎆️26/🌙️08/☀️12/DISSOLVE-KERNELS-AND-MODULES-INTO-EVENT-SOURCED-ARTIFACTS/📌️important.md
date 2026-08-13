@@ -217,6 +217,70 @@ The other half, learned the same evening by two sessions making the *identical* 
 
 **A pattern match locates candidates; it does not size a problem.** Check what each hit actually *does* before quoting a number — especially before sending it to another session, where an inflated number can trigger a wave of work against nothing.
 
+## 🧿️ Where a dissolved kernel's artifact goes — BINDING (settled with the stdio roster owner, 2026-08-13)
+
+The `🧿️semio` v1 subset roster is **frozen at 18 + `✳️any`**. The bar for a 19th was never "nothing new ever" — it is *"genuinely shared content shape needed by ≥2 independent plugins"* (the bar `mesh`, `graph` and `kit` each cleared). Nothing in the math dissolution clears it today. **So: plugin-owned artifacts, no new stdio subsets.**
+
+| Dissolved content | Home |
+|---|---|
+| CAS + polynomial | `➗️mathematical`'s own artifact — Equation/Function |
+| WFC | plugin-owned Assembly (procedural-flavoured), **composing `✳️kit` children + `✳️value` rules** |
+| statistics / entropy / probability / tabular / causal | **inferences over the existing `✳️table` + `✳️value`** — NOT a new artifact |
+| sampling (an LLM token-sampler misfiled under math) | neural-flavoured plugin home |
+| fuzzy, number theory | inference helpers under whichever artifact needs them |
+
+**The cost of plugin-ownership is smaller than it looks, and this is the load-bearing fact:** `ArtifactChild` (owned composition) does require a stdio snapshot type, but **`ArtifactLink` (reference) does not** — any plugin can bind a link to ANY artifact in ANY plugin. So a plugin-owned artifact is still fully *referenceable* repo-wide. The only thing forgone is being an *owned child of two different parents at once*, which none of these want.
+
+**Two design traps this ruling exists to prevent:**
+1. **Do not mint private `Slot`/`Module`/`Rule` type towers.** `✳️kit` already generalizes "types/designs"; rules are `✳️value`-shaped data. Minting private equivalents re-creates the duplicated-vocabulary problem this whole ticket removes, one layer up.
+2. **A directory name is not a content shape.** "statistics" reads like it wants a `✳️statistics` subset; measured, moments/fits/entropy/causal-queries are *derivations over tabular data* — inferences on `table`+`value`, not a new persisted shape. Sorting these correctly moved ~20k LOC from "design new artifacts" to "author inferences on existing ones."
+
+If a case genuinely acquires a second independent plugin consumer, reopen it with the specific consumer named — not with a general argument.
+
+### 🛑 A MOUNT IS NOT A STRING — to ask "is this file live?", RESOLVE the paths
+
+"Is `X/🦀️component.rs` mounted?" cannot be answered by grepping for its name, because relative mounts routinely name a file whose distinguishing path segments **do not appear in the mount text at all**.
+
+Worked example, which cost two agents a wrong answer *in opposite directions* on the same file. `🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs` is mounted — by `💻️os/🖥️host/📦️packages/🦀️rust/📦️glue.rs:27` as:
+```rust
+#[path = "../../🦀️component.rs"]
+```
+The string contains no `🖥️host`. So `grep -rn '🖥️host/🦀️component.rs'` returns **only unrelated files** — `🧊️3d/📐️brep/⚙️engine/🖥️host/…` and `🌊️flow/🖥️host/…`, two *different* files that happen to share the segment name. One agent concluded "unmounted, dead"; another concluded "unmounted twin of the real one"; both were wrong, and one of them nearly blocked a deletion on it while the other nearly licensed editing a live file.
+
+**The reliable method** — resolve every `#[path]` against its containing directory and compare realpaths:
+```python
+resolved = os.path.realpath(os.path.join(os.path.dirname(source_file), path_attr))
+```
+Run that over the tree and compare to your target. It also gives you the dangling-mount sweep for free.
+
+Two corollaries that keep biting here: `🖥️host`, `⚙️engine`, `🧊️3d`, `◻2d`, `🌿️vcs`, `🪐️space` each name **several unrelated files**, so any bare-segment grep is ambiguous by construction. And "this file is unmounted/dead" is an **action-licensing** conclusion (it invites deletion) — so per the evidentiary-bar rule it needs the strongest available evidence, which is path resolution, never a substring match.
+
+### 🛑 A CRATE IS NOT A DIRECTORY — never scope a dependency census by folder
+
+This repo composes crates out of `#[path]` mounts that reach **across the tree**, so "does module X use Y" cannot be answered by grepping X's folder. The coordinator got this wrong and broke the build for two other waves:
+
+`grep -rn "semio_framework_math\|\bmath::" "🧰️framework/🔨️modules/🖱️ui" --include="*.rs"` → **0 hits**, so the `semio-framework-math` dep in `🖱️ui`'s `Cargo.toml` was deleted as dead. But `🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:222` mounts
+`#[path = "../../../../../🧊️3d/🎬️scene/🦀️component.rs"] pub mod kernel_3d_scene;`
+and **that** file's line 3 is `pub use semio_framework_math::algebra::{Mat4, Vec3};`. The ui crate was a real math consumer through a file living five directories away. Result: 6 errors in `semio-framework-ui`, which is upstream of nearly everything — two independent waves then measured it as their own baseline and **both attributed it to foreign churn**, because a plausible story ("`🧊️3d` is being dissolved by another wave, so this is theirs") fit perfectly.
+
+**Two rules from this:**
+1. To census a crate's real inputs, read its `📦️glue.rs` `#[path]` mounts first and include every mounted file, wherever it lives. Or ask cargo instead of the filesystem: remove the dep, `cargo check -p <crate> --all-features`, and let the compiler answer.
+2. **A "pre-existing foreign error" that appears in more than one wave's baseline at the same moment deserves one minute of suspicion before it is written off** — especially when it sits in a crate that everything depends on. Shared novelty is evidence of a shared *recent cause*, and the most available cause is your own last change.
+
+### 🛑 Commit-message dates are a STALE FIXED TEMPLATE — never attribute with them
+
+Every auto-commit subject in this repo reads `🐙️ueli🎆️26🌙️06☀️04🚩️<n>` — the `🎆️🌙️☀️` date is a **frozen template string**, not the commit's date. Measured 2026-08-13:
+
+```
+git log -3 --date=iso --format='%h | %cd | %s'
+515271bf60 | 2026-08-13 13:05:26 +0200 | 🐙️ueli🎆️26🌙️06☀️04🚩️503   ← says "June 4", really Aug 13
+3550b3dc09 | 2026-08-13 10:05:39 +0200 | 🐙️ueli🎆️26🌙️06☀️04🚩️502
+```
+
+So `git log --oneline` is **actively misleading** for attribution: it makes today's churn look months old, which is precisely the direction that licenses the dangerous conclusion ("this file is stale/abandoned, therefore I may edit it"). The coordinator recorded one such attribution tonight ("June 2026 commits only") off this artefact; re-checked with real dates, the conclusion happened to survive on independent mtime evidence, but the stated reasoning was worthless. Flagged by UCAS, confirmed independently here.
+
+**Use `git log --date=iso` (or `%cd` with `--date=iso`) and `stat -f '%Sm %N'`. Never quote a date read from a commit subject.** Note also that `stat` mtime is corrupted by your own `touch`-to-force-recheck — if you touched a file to defeat the cargo cache, its mtime is now yours and proves nothing about its author.
+
 ### ⚠️ Two cargo artefacts that manufacture false confidence
 
 1. **`cargo check` does not compile `#[cfg(test)]`.** Six separate instances in this repo in one day, including test code that **landed unverified in a closed ticket** because its own gate could not see it. Use `--tests`/`--all-targets`, and treat a green `check` as saying nothing about test code.

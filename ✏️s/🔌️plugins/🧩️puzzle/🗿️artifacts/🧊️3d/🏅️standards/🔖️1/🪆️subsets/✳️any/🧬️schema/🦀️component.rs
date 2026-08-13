@@ -810,7 +810,7 @@ mod precompute_model_tests {
     fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
         let fixture = crate::artifacts::puzzle3d::dsl::parse_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
         let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
-        let manifest = math::graph::manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
+        let manifest = graph::manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
         let wire_kind_ids: std::collections::BTreeSet<_> = manifest.wire_kinds.iter().map(|row| row.id.as_str()).collect();
         let edge_kind_ids: std::collections::BTreeSet<_> = manifest.edge_kinds.iter().map(|row| row.id.as_str()).collect();
         for vortex in &catalogs.vortices {

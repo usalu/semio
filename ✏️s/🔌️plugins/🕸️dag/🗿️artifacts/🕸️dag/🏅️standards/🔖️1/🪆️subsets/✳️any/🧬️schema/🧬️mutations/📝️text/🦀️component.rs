@@ -19,7 +19,7 @@ use crate::artifacts::dag::mutations::{
 };
 use crate::artifacts::dag::{DagNodeKind, DagNodeSpec};
 use infinite_board_port_directed_dag::EdgeRouteStyle;
-use math::graph::manifest::PropertyBag;
+use graph::manifest::PropertyBag;
 use protocol::OpText;
 
 //#region 🔖️OpText

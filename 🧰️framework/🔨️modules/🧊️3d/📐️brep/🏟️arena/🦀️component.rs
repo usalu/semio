@@ -231,7 +231,7 @@ mod tests {
 
         #[test]
         fn random_insert_remove_sequence_never_aliases_a_removed_id() {
-            let mut rng = semio_framework_math::random::Rng::from_seed(83);
+            let mut rng = semio_framework_geometry::random::Rng::from_seed(83);
             let mut store: Store<u64, TestId> = Store::new();
             let mut live: Vec<(TestId, u64)> = Vec::new();
             let mut removed: Vec<TestId> = Vec::new();

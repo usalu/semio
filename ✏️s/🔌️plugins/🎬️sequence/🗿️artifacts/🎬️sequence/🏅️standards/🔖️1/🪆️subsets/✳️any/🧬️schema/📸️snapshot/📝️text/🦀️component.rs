@@ -1,8 +1,12 @@
 //! 📜️ Sequence artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
 //! `store::ArtifactDsl for SequenceSnapshot` is implemented on the snapshot facet (see
-//! `📸️snapshot/🧬️schema`). This component only adds edge wire mirrors, example text, and laws.
-
+//! `📸️snapshot/🧬️schema`, `🔖️HandcraftedArtifactCodecs`). This component only carries the grammar
+//! doc-string, example text, and round-trip laws. Ticket
+//! `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`sequence→C:flow`) dropped the old
+//! `SequenceEdgeDsl` unified-`dsl::Wire` mirror here — the snapshot no longer embeds `edges`
+//! structurally in its own text grammar at all (only the opaque composed `content` handle), so a
+//! per-edge DSL mirror has nothing left to mirror.
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -10,44 +14,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-use crate::artifacts::sequence::{SequenceEdge, SequenceSnapshot};
-
-//#region 🔖️Dsl
-/// 🔌️ DSL-only mirror of `SequenceEdge` — models the `from`/`to` step-id pair as a single unified
-/// `dsl::Wire` literal (`from->to`) instead of two separate string fields, per the unified syntax
-/// law for graph edges/connections. Converts at the `store::ArtifactDsl`/`protocol::OpText` boundary
-/// only; `SequenceEdge` itself (and every consumer matching on its `from`/`to` fields directly)
-/// is completely untouched.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-pub struct SequenceEdgeDsl {
-    pub id: String,
-    pub link: dsl::Wire,
-}
-
-pub fn sequence_edge_to_dsl(edge: &SequenceEdge) -> SequenceEdgeDsl {
-    let from = dsl::WireNode { id: edge.from.clone(), kind: None, port: None };
-    let to = dsl::WireNode { id: edge.to.clone(), kind: None, port: None };
-    SequenceEdgeDsl {
-        id: edge.id.clone(),
-        link: dsl::Wire(dsl::WireValue {
-            from,
-            edge: Some((true, to)),
-            edge_label: dsl::WireEdgeLabel::default(),
-            properties: dsl::DslValue::Object(Vec::new()),
-        }),
-    }
-}
-
-pub fn sequence_edge_from_dsl(edge: SequenceEdgeDsl) -> Result<SequenceEdge, String> {
-    let dsl::WireValue { from, edge: link, .. } = edge.link.0;
-    let (directed, to) = link.ok_or_else(|| "sequence edge wire literal must have a target".to_string())?;
-    if !directed {
-        return Err("sequence edge wire literal must be directed".into());
-    }
-    Ok(SequenceEdge { id: edge.id, from: from.id, to: to.id })
-}
-//#endregion 🔖️Dsl
+use crate::artifacts::sequence::SequenceSnapshot;
 
 //#region 🔖️Example
 /// 📄️ The handcrafted `.sequence` DSL-text fixture (regenerated from `default_snapshot()`'s canonical
@@ -70,8 +37,7 @@ pub fn print_dsl(snapshot: &SequenceSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{default_snapshot, SlotRef, StepParams};
-    use neural_engine::{Atom, Dictionary, Value};
+    use crate::artifacts::sequence::{default_snapshot, SequenceStep, SlotRef, StepParams};
 
     #[test]
     fn dsl_round_trips_default_snapshot() {
@@ -86,8 +52,9 @@ mod tests {
 
     #[test]
     fn dsl_round_trips_snapshot_with_slots_and_nested_params() {
-        let mut snapshot = default_snapshot();
-        snapshot.steps.push(crate::artifacts::sequence::SequenceStep {
+        use neural_engine::{Atom, Dictionary, Value};
+        let mut fixture = default_snapshot().to_fixture();
+        fixture.steps.push(SequenceStep {
             id: "step-3".into(),
             kind: "control.if".into(),
             params: StepParams::new().insert("flag", Value::Atom(Atom::Boolean(true))),
@@ -96,7 +63,7 @@ mod tests {
             slot: None,
             collapsed: true,
         });
-        snapshot.steps.push(crate::artifacts::sequence::SequenceStep {
+        fixture.steps.push(SequenceStep {
             id: "step-4".into(),
             kind: "log.print".into(),
             params: StepParams::new()
@@ -107,6 +74,7 @@ mod tests {
             slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }),
             collapsed: false,
         });
+        let snapshot = SequenceSnapshot::from_fixture(fixture);
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 }

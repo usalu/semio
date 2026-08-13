@@ -413,7 +413,7 @@ mod tests {
         #[test]
         fn random_remove_re_add_sequences_preserve_invariants() {
             let w = WeightTable::new(&[1.0, 3.0, 5.0, 2.0, 7.0, 1.0, 9.0, 4.0]).unwrap();
-            let mut rng = crate::random::Rng::from_seed(999);
+            let mut rng = geometry::random::Rng::from_seed(999);
             for _ in 0..100 {
                 let mut d = Domain::new_full(&w);
                 let mut removed_stack: Vec<PatternId> = Vec::new();

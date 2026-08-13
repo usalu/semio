@@ -14,7 +14,12 @@ pub struct WiresArtifact {
     #[state(persistent)]
     pub wires_fixture: DslValue,
     #[state(persistent)]
-    pub board_fixture: DslValue,
+    #[child(kind = "s.stdio.semio.graph")]
+    pub content: crate::artifacts::wires::WiresContentChild,
+    #[state(persistent)]
+    pub camera: DslValue,
+    #[state(persistent)]
+    pub meta: DslValue,
     #[state(shared_ui)]
     pub selected_ids: Vec<String>,
     #[state(preview)]
@@ -33,7 +38,9 @@ impl Default for WiresArtifact {
     fn default() -> Self {
         Self {
             wires_fixture: crate::artifacts::wires::empty_wires_fixture(),
-            board_fixture: crate::artifacts::wires::empty_board_fixture(),
+            content: crate::artifacts::wires::wires_content_child_handle_and_cache(Vec::new(), Vec::new()),
+            camera: crate::artifacts::wires::empty_camera(),
+            meta: DslValue::Null,
             selected_ids: Vec::new(),
             drag_node_id: None,
             drag_last_x: 0.0,
@@ -48,7 +55,9 @@ impl WiresArtifact {
     pub fn to_snapshot(&self) -> crate::artifacts::wires::WiresSnapshot {
         crate::artifacts::wires::WiresSnapshot {
             wires_fixture: self.wires_fixture.clone(),
-            board_fixture: self.board_fixture.clone(),
+            content: self.content.clone(),
+            camera: self.camera.clone(),
+            meta: self.meta.clone(),
         }
     }
 
@@ -56,7 +65,9 @@ impl WiresArtifact {
     pub fn from_snapshot(snapshot: crate::artifacts::wires::WiresSnapshot) -> Self {
         Self {
             wires_fixture: snapshot.wires_fixture,
-            board_fixture: snapshot.board_fixture,
+            content: snapshot.content,
+            camera: snapshot.camera,
+            meta: snapshot.meta,
             ..Self::default()
         }
     }
@@ -64,7 +75,9 @@ impl WiresArtifact {
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::wires::WiresSnapshot) {
         self.wires_fixture = snapshot.wires_fixture;
-        self.board_fixture = snapshot.board_fixture;
+        self.content = snapshot.content;
+        self.camera = snapshot.camera;
+        self.meta = snapshot.meta;
     }
 }
 //#endregion 🔖️Conversions
@@ -310,7 +323,7 @@ pub fn force_layout_board(board: &mut DslValue) {
 /// — falls back to the empty document if the fixture ever fails to parse.
 pub fn metabolism_wires_example_snapshot() -> crate::artifacts::wires::WiresSnapshot {
     match <crate::artifacts::wires::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
-        Ok(snapshot) if fixture_nodes(&snapshot.board_fixture).len() >= 7 => snapshot,
+        Ok(snapshot) if fixture_nodes(&crate::artifacts::wires::wires_working_board(&snapshot)).len() >= 7 => snapshot,
         _ => handcrafted_metabolism_snapshot(),
     }
 }
@@ -360,9 +373,10 @@ fn handcrafted_metabolism_snapshot() -> crate::artifacts::wires::WiresSnapshot {
         .expect("relationship serializes");
         snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::connect_nodes(edge, relationship));
     }
+    let board = crate::artifacts::wires::wires_working_board(&snapshot);
     if let DslValue::Object(entries) = &mut snapshot.wires_fixture {
         if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == "board") {
-            *slot = snapshot.board_fixture.clone();
+            *slot = board;
         }
     }
     snapshot

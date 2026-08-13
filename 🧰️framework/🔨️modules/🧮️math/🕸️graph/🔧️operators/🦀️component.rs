@@ -1,6 +1,6 @@
-//! ➕️ Graph combination and transformation operators: union, products, complement, contractions, line graphs — NetworkX `operators` module parity, built generically over `crate::graph::Storage<P, D>`.
+//! ➕️ Graph combination and transformation operators: union, products, complement, contractions, line graphs — NetworkX `operators` module parity, built generically over `graph_core::Storage<P, D>`.
 
-use crate::graph::{AttrView, Directed, Directedness, EdgeId, GraphError, GraphView, HandleId, NodeId, Normal, PortModel, PropertyBag, Storage};
+use graph_core::{AttrView, Directed, Directedness, EdgeId, GraphError, GraphView, HandleId, NodeId, Normal, PortModel, PropertyBag, Storage};
 use std::collections::{BTreeMap, BTreeSet};
 
 // #region 🔖️Internal
@@ -513,7 +513,7 @@ pub fn mycielskian<D: Directedness>(g: &Storage<Normal, D>) -> Storage<Normal, D
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::Undirected;
+    use graph_core::Undirected;
 
     fn und_edge(a: NodeId, b: NodeId) -> Storage<Normal, Undirected> {
         let mut g: Storage<Normal, Undirected> = Storage::new();
@@ -526,7 +526,7 @@ mod tests {
     fn attrs_of(pairs: &[(&str, &str)]) -> PropertyBag {
         let mut bag = PropertyBag::new();
         for (k, v) in pairs {
-            bag.insert(k.to_string(), crate::graph::PropertyValue::String(v.to_string()));
+            bag.insert(k.to_string(), graph_core::PropertyValue::String(v.to_string()));
         }
         bag
     }

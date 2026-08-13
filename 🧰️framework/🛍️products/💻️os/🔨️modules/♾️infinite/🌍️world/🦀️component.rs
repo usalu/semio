@@ -9,7 +9,11 @@ use ui_wgpu::wgpu::{
     UiComponentSceneNode, Vec3, WidgetContext,
 };
 
-use semio_framework::{mesh_from_glb, mesh_from_kind, optional_json_to_dsl, MeshData};
+// 🚧️ `mesh_from_glb`/`MeshData` are the one remaining `semio_framework::` geometry import: real
+// GLB decoding, not reimplemented locally and not yet routed through stdio's gltf/mesh artifact
+// facet (that facet yields a structured document snapshot, not flat render buffers — see
+// 📓️wave-g1b-infinite-report.md for why wiring it is not a bounded edit).
+use semio_framework::{mesh_from_glb, optional_json_to_dsl, MeshData};
 use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
@@ -76,7 +80,7 @@ struct WorldMeshLodEntry {
 #[serde(rename_all = "camelCase")]
 struct WorldMeshRecord {
     id: String,
-    data: Option<MeshData>,
+    data: Option<WorldMeshBuffers>,
     url: Option<String>,
     lods: Option<Vec<WorldMeshLodEntry>>,
 }
@@ -719,7 +723,7 @@ fn rebuild_instance_draws(state: &mut World3dState, scene_lod: f64) {
             if state.mesh_url_fallback.contains_key(&logical_mesh_id) || state.mesh_lod_catalog.contains_key(&logical_mesh_id) {
                 queue_lod_mesh_fetch(state, &logical_mesh_id, scene_lod);
             } else {
-                let primitive = mesh_from_kind(&logical_mesh_id);
+                let primitive = placeholder_mesh(&logical_mesh_id);
                 store_mesh(state, physical_mesh_id.clone(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
             }
         }
@@ -1050,7 +1054,254 @@ impl GumballHandle {
 }
 
 //#region MeshHelpers
-fn mesh_from_data(data: &MeshData) -> Mesh3d {
+//#region WorldMeshBuffers
+/// 🧱️ Infinite-owned flat render-buffer twin of the renderer's `WorldMeshData` (see
+/// `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx`
+/// ~line 98). Ephemeral view state, not document content: the document owns mesh content through
+/// the artifact system, this is only the wire shape the viewport deserializes and rasterizes.
+#[derive(Clone, Debug, PartialEq, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct WorldMeshBuffers {
+    #[serde(default)]
+    positions: Vec<f32>,
+    #[serde(default)]
+    normals: Vec<f32>,
+    #[serde(default)]
+    indices: Vec<u32>,
+    #[serde(default)]
+    #[allow(dead_code)]
+    colors: Vec<f32>,
+    #[serde(default)]
+    uvs: Vec<f32>,
+    #[serde(default)]
+    face_ids: Vec<u32>,
+    #[serde(default)]
+    vertex_ids: Vec<u32>,
+    #[serde(default)]
+    edge_positions: Vec<f32>,
+    #[serde(default)]
+    edge_ids: Vec<u32>,
+    #[serde(default)]
+    paint_texture_base64: Option<String>,
+}
+
+impl WorldMeshBuffers {
+    fn vertex_count(&self) -> usize {
+        self.positions.len() / 3
+    }
+
+    /// 🧭️ Per-triangle flat-shaded normals, accumulated per vertex and renormalized — same
+    /// algorithm as the dissolved mesh-engine's `MeshData::compute_normals`.
+    fn compute_normals(&mut self) {
+        let count = self.vertex_count();
+        self.normals = vec![0.0; count * 3];
+        for tri in self.indices.chunks_exact(3) {
+            let i0 = tri[0] as usize;
+            let i1 = tri[1] as usize;
+            let i2 = tri[2] as usize;
+            let p0 = [self.positions[i0 * 3], self.positions[i0 * 3 + 1], self.positions[i0 * 3 + 2]];
+            let p1 = [self.positions[i1 * 3], self.positions[i1 * 3 + 1], self.positions[i1 * 3 + 2]];
+            let p2 = [self.positions[i2 * 3], self.positions[i2 * 3 + 1], self.positions[i2 * 3 + 2]];
+            let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+            let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+            let n = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+            for &idx in tri {
+                let i = idx as usize * 3;
+                self.normals[i] += n[0];
+                self.normals[i + 1] += n[1];
+                self.normals[i + 2] += n[2];
+            }
+        }
+        for chunk in self.normals.chunks_exact_mut(3) {
+            let len = (chunk[0] * chunk[0] + chunk[1] * chunk[1] + chunk[2] * chunk[2]).sqrt();
+            if len > 1e-8 {
+                chunk[0] /= len;
+                chunk[1] /= len;
+                chunk[2] /= len;
+            }
+        }
+    }
+}
+
+/// 🚧️ Adapts the one remaining `semio_framework::MeshData` producer (`mesh_from_glb`, blocked
+/// job 3 — see the import docstring above) into our own local buffer shape. Field-for-field copy
+/// only, no geometry logic, so it does not reintroduce a geometry dependency on the framework.
+impl From<&MeshData> for WorldMeshBuffers {
+    fn from(data: &MeshData) -> Self {
+        WorldMeshBuffers {
+            positions: data.positions.clone(),
+            normals: data.normals.clone(),
+            indices: data.indices.clone(),
+            colors: data.colors.clone(),
+            uvs: data.uvs.clone(),
+            face_ids: data.face_ids.clone(),
+            vertex_ids: data.vertex_ids.clone(),
+            edge_positions: data.edge_positions.clone(),
+            edge_ids: data.edge_ids.clone(),
+            paint_texture_base64: data.paint_texture_base64.clone(),
+        }
+    }
+}
+//#endregion WorldMeshBuffers
+
+//#region PlaceholderMesh
+/// 🧊️ Viewport placeholder markers only (gumball plane, reference plane, vortex arrow parts, and
+/// the box fallback for an unresolved `mesh_id`) — demo geometry, never document content. Ports
+/// only the primitive kinds actually reachable from this file's `mesh_from_kind` call sites
+/// (census in 📓️wave-g1b-infinite-report.md); the dissolved mesh-engine's other primitives
+/// (uv-sphere, ico-sphere at other radii, torus, …) are not reachable here and were not ported.
+fn placeholder_mesh(kind: &str) -> WorldMeshBuffers {
+    match kind {
+        "vortex-marker" => placeholder_ico_sphere(0.12, 1),
+        "plane" => placeholder_plane(1.0, 1.0),
+        "cylinder" => placeholder_cylinder(0.5, 1.0, 16),
+        "cone" => placeholder_cone(0.5, 1.0, 16),
+        _ => placeholder_box(1.0, 1.0, 1.0),
+    }
+}
+
+fn placeholder_push_triangle(mesh: &mut WorldMeshBuffers, a: [f32; 3], b: [f32; 3], c: [f32; 3]) {
+    let base = mesh.vertex_count() as u32;
+    mesh.positions.extend_from_slice(&[a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]]);
+    mesh.indices.extend_from_slice(&[base, base + 1, base + 2]);
+}
+
+fn placeholder_box(width: f32, height: f32, depth: f32) -> WorldMeshBuffers {
+    let hw = width * 0.5;
+    let hh = height * 0.5;
+    let hd = depth * 0.5;
+    let mut mesh = WorldMeshBuffers::default();
+    let faces = [
+        ([-hw, -hh, hd], [hw, -hh, hd], [hw, hh, hd], [-hw, hh, hd]),
+        ([hw, -hh, -hd], [-hw, -hh, -hd], [-hw, hh, -hd], [hw, hh, -hd]),
+        ([-hw, hh, hd], [hw, hh, hd], [hw, hh, -hd], [-hw, hh, -hd]),
+        ([-hw, -hh, -hd], [hw, -hh, -hd], [hw, -hh, hd], [-hw, -hh, hd]),
+        ([hw, -hh, hd], [hw, -hh, -hd], [hw, hh, -hd], [hw, hh, hd]),
+        ([-hw, -hh, -hd], [-hw, -hh, hd], [-hw, hh, hd], [-hw, hh, -hd]),
+    ];
+    for (a, b, c, d) in faces {
+        placeholder_push_triangle(&mut mesh, a, b, c);
+        placeholder_push_triangle(&mut mesh, a, c, d);
+    }
+    mesh.compute_normals();
+    mesh
+}
+
+fn placeholder_plane(width: f32, depth: f32) -> WorldMeshBuffers {
+    let hw = width * 0.5;
+    let hd = depth * 0.5;
+    let mut mesh = WorldMeshBuffers::default();
+    placeholder_push_triangle(&mut mesh, [-hw, 0.0, -hd], [hw, 0.0, -hd], [hw, 0.0, hd]);
+    placeholder_push_triangle(&mut mesh, [-hw, 0.0, -hd], [hw, 0.0, hd], [-hw, 0.0, hd]);
+    mesh.compute_normals();
+    mesh
+}
+
+fn placeholder_cylinder(radius: f32, height: f32, segments: u32) -> WorldMeshBuffers {
+    let mut mesh = WorldMeshBuffers::default();
+    let half = height * 0.5;
+    for seg in 0..segments {
+        let u0 = seg as f32 / segments as f32;
+        let u1 = (seg + 1) as f32 / segments as f32;
+        let a0 = u0 * std::f32::consts::TAU;
+        let a1 = u1 * std::f32::consts::TAU;
+        let p00 = [radius * a0.cos(), -half, radius * a0.sin()];
+        let p01 = [radius * a1.cos(), -half, radius * a1.sin()];
+        let p10 = [radius * a0.cos(), half, radius * a0.sin()];
+        let p11 = [radius * a1.cos(), half, radius * a1.sin()];
+        placeholder_push_triangle(&mut mesh, p00, p01, p11);
+        placeholder_push_triangle(&mut mesh, p00, p11, p10);
+        placeholder_push_triangle(&mut mesh, [0.0, -half, 0.0], p01, p00);
+        placeholder_push_triangle(&mut mesh, [0.0, half, 0.0], p10, p11);
+    }
+    mesh.compute_normals();
+    mesh
+}
+
+fn placeholder_cone(radius: f32, height: f32, segments: u32) -> WorldMeshBuffers {
+    let mut mesh = WorldMeshBuffers::default();
+    let apex = [0.0, height, 0.0];
+    for seg in 0..segments {
+        let u0 = seg as f32 / segments as f32;
+        let u1 = (seg + 1) as f32 / segments as f32;
+        let a0 = u0 * std::f32::consts::TAU;
+        let a1 = u1 * std::f32::consts::TAU;
+        let p0 = [radius * a0.cos(), 0.0, radius * a0.sin()];
+        let p1 = [radius * a1.cos(), 0.0, radius * a1.sin()];
+        placeholder_push_triangle(&mut mesh, apex, p1, p0);
+        placeholder_push_triangle(&mut mesh, [0.0, 0.0, 0.0], p0, p1);
+    }
+    mesh.compute_normals();
+    mesh
+}
+
+fn placeholder_normalize3(v: [f32; 3]) -> [f32; 3] {
+    let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
+    [v[0] / len, v[1] / len, v[2] / len]
+}
+
+fn placeholder_scale3(v: [f32; 3], s: f32) -> [f32; 3] {
+    [v[0] * s, v[1] * s, v[2] * s]
+}
+
+fn placeholder_midpoint(verts: &mut Vec<[f32; 3]>, cache: &mut std::collections::HashMap<(u32, u32), u32>, a: u32, b: u32) -> u32 {
+    let key = if a < b { (a, b) } else { (b, a) };
+    if let Some(index) = cache.get(&key) {
+        return *index;
+    }
+    let mid = placeholder_normalize3([(verts[a as usize][0] + verts[b as usize][0]) * 0.5, (verts[a as usize][1] + verts[b as usize][1]) * 0.5, (verts[a as usize][2] + verts[b as usize][2]) * 0.5]);
+    let index = verts.len() as u32;
+    verts.push(mid);
+    cache.insert(key, index);
+    index
+}
+
+fn placeholder_ico_sphere(radius: f32, subdivisions: u32) -> WorldMeshBuffers {
+    let t = (1.0 + 5.0_f32.sqrt()) * 0.5;
+    let mut verts = vec![
+        placeholder_normalize3([-1.0, t, 0.0]),
+        placeholder_normalize3([1.0, t, 0.0]),
+        placeholder_normalize3([-1.0, -t, 0.0]),
+        placeholder_normalize3([1.0, -t, 0.0]),
+        placeholder_normalize3([0.0, -1.0, t]),
+        placeholder_normalize3([0.0, 1.0, t]),
+        placeholder_normalize3([0.0, -1.0, -t]),
+        placeholder_normalize3([0.0, 1.0, -t]),
+        placeholder_normalize3([t, 0.0, -1.0]),
+        placeholder_normalize3([t, 0.0, 1.0]),
+        placeholder_normalize3([-t, 0.0, -1.0]),
+        placeholder_normalize3([-t, 0.0, 1.0]),
+    ];
+    let mut faces = vec![
+        [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+        [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+        [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+        [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],
+    ];
+    for _ in 0..subdivisions {
+        let mut next = Vec::new();
+        let mut midpoint_cache = std::collections::HashMap::new();
+        for face in &faces {
+            let a = placeholder_midpoint(&mut verts, &mut midpoint_cache, face[0], face[1]);
+            let b = placeholder_midpoint(&mut verts, &mut midpoint_cache, face[1], face[2]);
+            let c = placeholder_midpoint(&mut verts, &mut midpoint_cache, face[2], face[0]);
+            next.extend_from_slice(&[[face[0], a, c], [face[1], b, a], [face[2], c, b], [a, b, c]]);
+        }
+        faces = next;
+    }
+    let mut mesh = WorldMeshBuffers::default();
+    for face in faces {
+        let a = placeholder_scale3(verts[face[0] as usize], radius);
+        let b = placeholder_scale3(verts[face[1] as usize], radius);
+        let c = placeholder_scale3(verts[face[2] as usize], radius);
+        placeholder_push_triangle(&mut mesh, a, b, c);
+    }
+    mesh.compute_normals();
+    mesh
+}
+//#endregion PlaceholderMesh
+
+fn mesh_from_data(data: &WorldMeshBuffers) -> Mesh3d {
     let mut mesh = Mesh3d::from_buffers(data.positions.clone(), data.normals.clone(), data.indices.clone());
     mesh.face_ids = data.face_ids.clone();
     mesh.vertex_ids = data.vertex_ids.clone();
@@ -1987,7 +2238,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         if let Some(origin) = preview.origin {
             let mesh_id = brush_preview_mesh_id(preview.mesh_url.as_deref());
             if !state.meshes.contains_key(&mesh_id) {
-                let primitive = mesh_from_kind("box");
+                let primitive = placeholder_mesh("box");
                 store_mesh(state, mesh_id.clone(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
             }
             let rotation = preview.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
@@ -2015,7 +2266,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
     }
     let mut textured_draws = Vec::new();
     if !state.meshes.contains_key("reference-plane") {
-        let primitive = mesh_from_kind("plane");
+        let primitive = placeholder_mesh("plane");
         store_mesh(state, "reference-plane".into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
     }
     let mut textured_instances = Vec::new();
@@ -2039,7 +2290,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         textured_draws.push(TexturedDraw3d { instances: textured_instances });
     }
     if !state.meshes.contains_key("gumball-plane") {
-        let primitive = mesh_from_kind("plane");
+        let primitive = placeholder_mesh("plane");
         store_mesh(state, "gumball-plane".into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
     }
     if !state.selected_ids.is_empty() && state.active_utility == "select" {
@@ -2481,7 +2732,7 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
 
 pub fn ingest_glb_mesh(state: &mut World3dState, url: &str, mesh: MeshData, mesh_id: String) {
     state.pending_glb_urls.remove(url);
-    store_mesh(state, mesh_id, mesh_from_data(&mesh));
+    store_mesh(state, mesh_id, mesh_from_data(&WorldMeshBuffers::from(&mesh)));
 }
 
 fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<ActionDescriptor> {
@@ -3035,7 +3286,7 @@ fn ensure_primitive_mesh(state: &mut World3dState, mesh_key: &str) {
     if state.meshes.contains_key(mesh_key) {
         return;
     }
-    let primitive = mesh_from_kind(mesh_key);
+    let primitive = placeholder_mesh(mesh_key);
     store_mesh(state, mesh_key.into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
 }
 
@@ -3882,7 +4133,7 @@ mod tests {
 
         rebuild_instance_draws(&mut state, 1.0);
 
-        assert!(!state.meshes.contains_key("mesh:capsule"), "a URL-backed mesh must not be shadowed by an empty mesh_from_kind placeholder");
+        assert!(!state.meshes.contains_key("mesh:capsule"), "a URL-backed mesh must not be shadowed by an empty placeholder_mesh placeholder");
         let pending = collect_pending_glb_fetches(&HashMap::from([("surface-1".into(), state)]));
         assert_eq!(pending.len(), 1);
         assert_eq!(pending[0].url, "/mesh/capsule.glb");

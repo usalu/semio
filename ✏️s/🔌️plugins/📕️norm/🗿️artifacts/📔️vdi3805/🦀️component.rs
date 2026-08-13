@@ -12,17 +12,22 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 // #region Shared
-/// 🌐️ Locale-tagged text.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-pub struct LocalizedText {
-    pub de: String,
-    pub en: String,
+/// 🌐️ Locale-tagged text — re-exported from `crate::document`, the single canonical definition
+/// shared across every norm artifact (kills this type's former duplicate here and in `iso16757`;
+/// see `crate::document`'s `🔖️LocalizedText` region for the full rationale).
+pub use crate::document::LocalizedText;
+
+/// 🇩🇪️🇬🇧️ Builds a two-entry `de`+`en` `LocalizedText` list — this artifact's product titles were
+/// always exactly a German+English pair before the `LocalizedText` unification; a `Vec` (matching
+/// `iso16757::Names.alternatives`'s established `Vec<LocalizedText>` convention) is genuinely
+/// more general than the old hardcoded-bilingual struct, not just a rename.
+pub fn bilingual(de: impl Into<String>, en: impl Into<String>) -> Vec<LocalizedText> {
+    vec![LocalizedText::new("de", de), LocalizedText::new("en", en)]
 }
 
-impl LocalizedText {
-    pub fn new(de: impl Into<String>, en: impl Into<String>) -> Self {
-        Self { de: de.into(), en: en.into() }
-    }
+/// 🔎️ Reads the text for one `locale` out of a `Vec<LocalizedText>`, `""` if absent.
+pub fn text_in(variants: &[LocalizedText], locale: &str) -> String {
+    variants.iter().find(|t| t.locale == locale).map(|t| t.text.clone()).unwrap_or_default()
 }
 
 /// 🔒️ A `QuantityKind` tag mirroring `crate::document::QuantityKind`'s 19 variants, kept locally: the DSL
@@ -826,7 +831,8 @@ pub struct Configuration {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CatalogueProduct {
     pub identity: ProductIdentity,
-    pub title: LocalizedText,
+    #[dsl(table)]
+    pub title: Vec<LocalizedText>,
     pub sheet: SheetId,
     #[dsl(table)]
     pub records: Vec<NativeRecord>,
@@ -979,7 +985,7 @@ impl CatalogIndex {
             .map(|p| CatalogIndexEntry {
                 product_id: p.identity.article_number.clone(),
                 sheet: p.sheet,
-                tags: vec![p.title.de.clone(), p.title.en.clone()],
+                tags: p.title.iter().map(|t| t.text.clone()).collect(),
                 dn: p.configuration.parameters.get("dn").and_then(|v| match v {
                     VdiValue::Integer { value } => Some(*value as u16),
                     VdiValue::Decimal { value, .. } => Some(*value as u16),
@@ -1060,7 +1066,7 @@ pub fn reference_fixture() -> Vdi3805Snapshot {
     parameters.insert("kvs".into(), VdiValue::Decimal { value: 4.5, unit: Some(VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0)) });
     let product = CatalogueProduct {
         identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-50-001".into() },
-        title: LocalizedText::new("Stellventil DN50", "Control valve DN50"),
+        title: bilingual("Stellventil DN50", "Control valve DN50"),
         sheet: SheetId(2),
         records: vec![
             NativeRecord { family: RecordFamilyId(RecordFamilyId::R100.to_string()), fields: vec!["100".into(), "DEMO".into(), "HV".into(), "VLV-50-001".into(), "2".into()], extensions: ExtensionBag::default() },

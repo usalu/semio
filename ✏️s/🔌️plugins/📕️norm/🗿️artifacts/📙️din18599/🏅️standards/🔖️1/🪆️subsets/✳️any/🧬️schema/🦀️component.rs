@@ -1,11 +1,14 @@
 //! 🧬️ Din18599 artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
-use crate::artifacts::din18599::{MonthlyClimate, UseClass};
+use crate::artifacts::din18599::{Din18599ClimateChild, MonthlyClimate, UseClass};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full Din18599 artifact state across persistent and shared-ui classes.
+/// 🧬️ Full Din18599 artifact state across persistent and shared-ui classes. `climate` mirrors
+/// `Din18599Snapshot`'s composed `s.stdio.semio.table` child slot (ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
+/// handle across verbatim, same as `➗️mathematical`'s `MathematicalArtifact`/en1990's `En1990Artifact`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599")]
@@ -15,7 +18,9 @@ pub struct Din18599Artifact {
     #[state(persistent)] pub occupants: u32,
     #[state(persistent)] pub h_t: f64,
     #[state(persistent)] pub h_v: f64,
-    #[state(persistent)] pub climate: crate::artifacts::din18599::MonthlyClimate,
+    #[state(persistent)]
+    #[child(kind = "s.stdio.semio.table")]
+    pub climate: Din18599ClimateChild,
     #[state(persistent)] pub internal_gains_w_m2: f64,
     #[state(persistent)] pub solar_gains_kwh: f64,
     #[state(persistent)] pub system_losses_kwh: f64,
@@ -292,7 +297,7 @@ pub fn from_building(wall_layers: &[Layer], floor_area_m2: f64, occupants: u32, 
         occupants,
         h_t,
         h_v,
-        climate: MonthlyClimate::german_reference(climate),
+        climate: crate::artifacts::din18599::din18599_climate_child_from_data(&MonthlyClimate::german_reference(climate)),
         internal_gains_w_m2: 3.5,
         solar_gains_kwh: solar,
         system_losses_kwh: 8.0 * floor_area_m2,
@@ -308,12 +313,12 @@ pub fn reference_wall_layers() -> Vec<Layer> {
 }
 
 fn transmission_losses_kwh(inputs: &BalancingInputs) -> f64 {
-    let dh = heating_degree_hours(&inputs.climate, 19.0);
+    let dh = heating_degree_hours(&crate::artifacts::din18599::din18599_climate(inputs), 19.0);
     inputs.h_t * dh / 1000.0
 }
 
 fn ventilation_losses_kwh(inputs: &BalancingInputs) -> f64 {
-    let dh = heating_degree_hours(&inputs.climate, 19.0);
+    let dh = heating_degree_hours(&crate::artifacts::din18599::din18599_climate(inputs), 19.0);
     inputs.h_v * dh / 1000.0
 }
 
@@ -338,7 +343,7 @@ fn net_heating_demand_kwh(inputs: &BalancingInputs) -> f64 {
 }
 
 fn cooling_demand_kwh(inputs: &BalancingInputs) -> f64 {
-    let cdh = cooling_degree_hours(&inputs.climate, 26.0);
+    let cdh = cooling_degree_hours(&crate::artifacts::din18599::din18599_climate(inputs), 26.0);
     let gain_factor = 0.35;
     (inputs.h_t + inputs.h_v) * cdh * gain_factor / 1000.0
 }
@@ -805,7 +810,7 @@ mod compliance_helpers_tests {
     #[test]
     fn part_8_cooling_demand_numeric_worked_example() {
         let inputs = reference_100m2_inputs();
-        let cdh = part_8::cooling_degree_hours(&inputs.climate);
+        let cdh = part_8::cooling_degree_hours(&crate::artifacts::din18599::din18599_climate(&inputs));
         let expected_q_c = (inputs.h_t + inputs.h_v) * cdh * 0.35 / 1000.0;
         let q_c = part_8::cooling_demand_kwh(&inputs);
         assert!((q_c - expected_q_c).abs() < 1e-6, "q_c = {q_c}, expected {expected_q_c}");

@@ -137,6 +137,7 @@ pub enum LayoutError {
 /// region's own header on the "more than one consumer" rule).
 use crate::artifacts::layout::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId, io_dispatch};
+use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
     DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
@@ -279,10 +280,10 @@ pub fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), 
 }
 
 /// 📥️ Extracts axis-aligned rectangular boundaries from closed 4-vertex `LwPolyline`s and frames one page per rectangle, falling back to a single page framed to the drawing extents. Reads an already-decoded `DwgDrawing` (real geometry, not raw bytes) — see `dwg_drawing_to_semio_drawing` for how this feeds the shared `DrawNode` shape.
-fn dwg_rect_pages(drawing: &semio_framework_os::DwgDrawing) -> Vec<(f64, f64, f64, f64)> {
+fn dwg_rect_pages(drawing: &DwgDrawing) -> Vec<(f64, f64, f64, f64)> {
     let mut rects = Vec::new();
     for entity in &drawing.entities {
-        let semio_framework_os::DwgGeometry::LwPolyline { closed: true, vertices, .. } = &entity.geometry else { continue };
+        let DwgGeometry::LwPolyline { closed: true, vertices, .. } = &entity.geometry else { continue };
         if vertices.len() != 4 {
             continue;
         }
@@ -306,7 +307,7 @@ fn dwg_rect_pages(drawing: &semio_framework_os::DwgDrawing) -> Vec<(f64, f64, f6
 /// does — it still avoids hand-rolling anything by funneling the already-decoded `DwgDrawing`
 /// geometry through the real, schema-owning `SemioDrawingSnapshot`/`DrawNode` shape instead of a
 /// bespoke tuple list, symmetric with the export direction above.
-fn dwg_drawing_to_semio_drawing(drawing: &semio_framework_os::DwgDrawing) -> SemioDrawingSnapshot {
+fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
     let children: Vec<DrawNode> = dwg_rect_pages(drawing)
         .into_iter()
         .map(|(x, y, width, height)| DrawNode::Path { segments: rect_path_segments(x, y, width, height), style: None })
@@ -320,7 +321,7 @@ fn dwg_drawing_to_semio_drawing(drawing: &semio_framework_os::DwgDrawing) -> Sem
 }
 
 /// 📥️ Builds a schema-valid layout document from a parsed DWG drawing, framing one page per rectangular boundary found — routed through the real `SemioDrawingSnapshot`/`DrawNode` shape (`dwg_drawing_to_semio_drawing`/`path_bounds`) rather than a bespoke tuple list.
-pub fn layout_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
+pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let drawing_snapshot = dwg_drawing_to_semio_drawing(drawing);
     let root_children: &[DrawNode] = match drawing_snapshot.layers.first().map(|layer| &layer.root) {
         Some(DrawNode::Group { children, .. }) => children,
@@ -395,11 +396,11 @@ mod media_import_export_tests {
 
     #[test]
     fn dwg_import_frames_page_to_rectangular_polyline() {
-        let mut drawing = semio_framework_os::DwgDrawing::default();
-        drawing.entities.push(semio_framework_os::DwgEntity {
+        let mut drawing = DwgDrawing::default();
+        drawing.entities.push(DwgEntity {
             layer: 0,
-            color: semio_framework_os::DwgColor::ByLayer,
-            geometry: semio_framework_os::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]], bulges: vec![0.0; 4] },
+            color: DwgColor::ByLayer,
+            geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]], bulges: vec![0.0; 4] },
         });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
         let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
@@ -410,8 +411,8 @@ mod media_import_export_tests {
 
     #[test]
     fn dwg_import_without_rectangles_falls_back_to_extents() {
-        let mut drawing = semio_framework_os::DwgDrawing::default();
-        drawing.entities.push(semio_framework_os::DwgEntity { layer: 0, color: semio_framework_os::DwgColor::ByLayer, geometry: semio_framework_os::DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [200.0, 150.0, 0.0] } });
+        let mut drawing = DwgDrawing::default();
+        drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [200.0, 150.0, 0.0] } });
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [200.0, 150.0, 0.0];
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");

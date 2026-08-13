@@ -1,13 +1,15 @@
 //! 🔺️ Sparse diff builder for `MoveStep`.
-use crate::artifacts::sequence::diff::{SequenceDiff, SequenceStepPatchEntry, SequenceStepsDelta};
-use crate::artifacts::sequence::{SequenceSnapshot, SequenceStepPatch};
+use crate::artifacts::sequence::diff::SequenceDiff;
+use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::MoveStep, _base: &SequenceSnapshot) -> SequenceDiff {
-    let patch = SequenceStepPatch { x: Some(payload.x), y: Some(payload.y), ..Default::default() };
-    SequenceDiff {
-        steps: Some(SequenceStepsDelta { patched: vec![SequenceStepPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }),
-        ..Default::default()
+pub fn diff(payload: &super::mutation::MoveStep, base: &SequenceSnapshot) -> SequenceDiff {
+    let scene = sequence_working_scene(base);
+    let mut steps = scene.steps;
+    if let Some(step) = steps.iter_mut().find(|step| step.id == payload.id) {
+        step.x = payload.x;
+        step.y = payload.y;
     }
+    diff_replace_content(steps, scene.edges)
 }
 //#endregion 🔖️Diff

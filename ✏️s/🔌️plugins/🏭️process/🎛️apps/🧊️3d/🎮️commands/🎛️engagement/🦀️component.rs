@@ -20,15 +20,18 @@ pub mod engagement_submit {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let command_word = config.engagement_input.trim().to_lowercase();
-        let len = fixture.steps.len();
-        let current = fixture.resolved_up_to.unwrap_or(len);
+        // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed
+        // CHILD HANDLE now (no `.len()` — see `ProcessWorkingScene`'s doc comment); `forward`'s
+        // upper clamp against the real step count is dropped honestly, matching `⏱️cursor`'s own
+        // commands.
+        let current = fixture.resolved_up_to.unwrap_or(0);
         let clear_input = Process3dConfigMutation::SetEngagementInput { value: String::new() };
         match command_word.split_whitespace().next() {
             Some("cut") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("cut")], ..Default::default() }),
             Some("drill") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("drill")], ..Default::default() }),
             Some("attach") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("attach")], ..Default::default() }),
             Some("back") => Ok(Emit { artifact_mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(current.saturating_sub(1)) })], config_mutations: vec![clear_input], ..Default::default() }),
-            Some("forward") => Ok(Emit { artifact_mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some((current + 1).min(len)) })], config_mutations: vec![clear_input], ..Default::default() }),
+            Some("forward") => Ok(Emit { artifact_mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(current + 1) })], config_mutations: vec![clear_input], ..Default::default() }),
             Some("all") => Ok(Emit { artifact_mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: None })], config_mutations: vec![clear_input], ..Default::default() }),
             _ => Ok(Emit::config(vec![clear_input])),
         }

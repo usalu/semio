@@ -379,7 +379,7 @@ mod tests {
 
         #[test]
         fn circle_to_nurbs_traces_the_circle_exactly_for_random_arcs() {
-            let mut rng = semio_framework_math::random::Rng::from_seed(53);
+            let mut rng = semio_framework_geometry::random::Rng::from_seed(53);
             for _ in 0..100 {
                 let frame =
                     Frame3::from_normal(Pnt3::new(rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0), Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5).normalized().unwrap_or(Vec3::Z))

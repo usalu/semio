@@ -1360,7 +1360,7 @@ pub(crate) fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u3
 /// state, and this import path produces a bare document with no live app instance to receive it.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 #[allow(clippy::unnecessary_wraps, reason = "the fallible signature is fixed by `semio_framework_os::register_dwg_import_handler`; puzzle-2d simply has no failure mode.")]
-pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
+pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
     Ok(default_empty_fixture())
 }
 
@@ -1738,7 +1738,7 @@ mod tests {
     /// `"camera"` key at all, regardless of the drawing's extents.
     #[test]
     fn dwg_import_returns_empty_board_with_no_camera_field() {
-        let drawing = semio_framework::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..semio_framework::DwgDrawing::default() };
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default() };
         let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();
         assert_eq!(fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
         assert!(fixture_nodes(&fixture).is_empty());

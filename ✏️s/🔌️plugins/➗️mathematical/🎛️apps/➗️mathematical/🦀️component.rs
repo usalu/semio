@@ -96,7 +96,7 @@ pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> U
 //#region 🔖️GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
 pub fn algorithm_overlay(graph: &MathematicalGraph) -> std::collections::HashMap<String, String> {
-    use math::graph::algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
+    use graph::algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
 
     let index = IdIndex::from_ids(graph.nodes.iter().map(|n| n.id.as_str()));
     let edge_pairs: Vec<(usize, usize)> = graph.edges.iter().filter_map(|e| Some((index.index_of(&e.source)?, index.index_of(&e.target)?))).collect();
@@ -166,9 +166,9 @@ pub fn workflow_json(graph: &MathematicalGraph) -> (Vec<NodeGraphNodeRecord>, Ve
 
 //#region 🔖️Geometry
 pub fn geometry_layers_json(geometry: &MathematicalGeometry) -> String {
-    let points: Vec<math::geometry::Point> = geometry.points.iter().map(|p| math::geometry::Point::new(p.x, p.y)).collect();
-    let hull = math::geometry::convex_hull(&points);
-    let centroid = math::geometry::polygon_centroid(&hull);
+    let points: Vec<geometry::Point> = geometry.points.iter().map(|p| geometry::Point::new(p.x, p.y)).collect();
+    let hull = geometry::convex_hull(&points);
+    let centroid = geometry::polygon_centroid(&hull);
 
     let mut layers: Vec<Value> = Vec::new();
     for (i, p) in points.iter().enumerate() {
@@ -261,8 +261,9 @@ impl ArtifactApp for MathematicalPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, MathematicalSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
-                let overlay = algorithm_overlay(&doc.snapshot.graph);
-                let json = serde_json::to_string(&serde_json::json!({ "algorithm": doc.snapshot.graph.algorithm, "overlay": overlay })).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let graph = crate::artifacts::mathematical::mathematical_graph(doc.snapshot);
+                let overlay = algorithm_overlay(&graph);
+                let json = serde_json::to_string(&serde_json::json!({ "algorithm": graph.algorithm, "overlay": overlay })).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.mathematical".into(), json } })
             }
             "document:out" => {
@@ -276,8 +277,8 @@ impl ArtifactApp for MathematicalPlayApp {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>) -> UiNode {
         match body_key {
-            MATH_PLAY_BODY_GRAPH => graph_window::render(&doc.snapshot.graph, &cfg.snapshot.camera),
-            MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&doc.snapshot.geometry),
+            MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::artifacts::mathematical::mathematical_graph(doc.snapshot), &cfg.snapshot.camera),
+            MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::artifacts::mathematical::mathematical_geometry(doc.snapshot)),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -389,13 +390,24 @@ mod tests {
     }
 
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-    /// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
-    /// undeclared host-pushed command).
+    /// kebab-cased command id, except for the two documented divergences: `setLocale` → `locale`
+    /// (an undeclared host-pushed command) and `setDocument` → `set-artifact` (the `app_commands!`
+    /// row's own `"setDocument" as "set-artifact" => set_artifact::SetArtifact` explicitly pins a
+    /// non-kebab wire keyword, matching `SetArtifact`'s own `#[dsl(keyword = "set-artifact")]`).
+    /// **Pre-existing bug, independently traced**: `git log -1 --date=iso -- 🎮️commands/📄️artifact/
+    /// 🦀️component.rs` shows `SetArtifact`'s explicit `set-artifact` keyword predates this ticket's
+    /// own edits to this file (which only touched `render`/`export_media`); this test's hardcoded
+    /// exception list simply never accounted for the second declared divergence. Fixed outright
+    /// per this ticket's own "trivial, safe, unambiguous" guidance rather than left unresolved.
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
-            let expected = if id == "setLocale" { "locale".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
+            let expected = match id {
+                "setLocale" => "locale".to_string(),
+                "setDocument" => "set-artifact".to_string(),
+                _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
+            };
             let printed = protocol::OpText::print_op(&command);
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
         }

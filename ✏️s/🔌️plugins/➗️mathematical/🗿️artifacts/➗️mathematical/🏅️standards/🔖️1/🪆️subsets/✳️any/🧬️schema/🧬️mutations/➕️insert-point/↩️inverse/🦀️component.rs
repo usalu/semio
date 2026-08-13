@@ -8,7 +8,7 @@ use super::mutation::InsertPoint;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &InsertPoint, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
-    let index = payload.index.min(base.geometry.points.len());
+    let index = payload.index.min(crate::artifacts::mathematical::mathematical_geometry(base).points.len());
     vec![MathematicalMutation::RemovePoint(remove_point::mutation::RemovePoint { index })]
 }
 //#endregion 🔖️Inverse

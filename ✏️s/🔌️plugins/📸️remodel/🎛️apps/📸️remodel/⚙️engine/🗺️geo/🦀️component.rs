@@ -959,7 +959,7 @@ pub fn build_quality_report(recon: &Reconstruction, observations: &[(usize, usiz
 mod tests {
     use super::*;
     use math::lie::So3;
-    use math::random::{normal, Rng};
+    use geometry::random::{normal, Rng};
 
     // #region 🔖️GeodesyTests
     #[test]

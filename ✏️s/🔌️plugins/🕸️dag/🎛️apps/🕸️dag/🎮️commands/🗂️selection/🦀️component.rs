@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn set_selection_select_node_and_node_graph_select_all_drive_config_selection() {
         let mut app = testkit::new_app();
-        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
 
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id.clone()] }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
         assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render")).unwrap().contains(&node_id));
@@ -152,7 +152,7 @@ mod tests {
     #[test]
     fn graph_pointer_down_clears_the_selection() {
         let mut app = testkit::new_app();
-        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         app.dispatch_typed(DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}), &semio_framework_plugin::testkit::meta("local")).expect("clear");
         let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");

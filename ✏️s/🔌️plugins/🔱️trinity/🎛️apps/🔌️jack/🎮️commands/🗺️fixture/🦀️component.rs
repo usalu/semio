@@ -13,8 +13,8 @@ fn force_layout_fixture(fixture: &JackSnapshot) -> Option<JackSnapshot> {
     if fixture.nodes.is_empty() {
         return None;
     }
-    use math::geometry::Vec2;
-    use math::graph::drawing::force::{run_force_layout, ForceLayoutOptions};
+    use geometry::Vec2;
+    use graph::drawing::force::{run_force_layout, ForceLayoutOptions};
     use std::collections::HashMap;
     let mut positions: Vec<Vec2> = fixture.nodes.iter().map(|node| Vec2::new(node.x, node.y)).collect();
     let radii: Vec<f64> = fixture.nodes.iter().map(|node| (node.width.max(48.0) + node.height.max(24.0)) * 0.25).collect();

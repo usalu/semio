@@ -15,9 +15,6 @@ use protocol::MutationDiff;
 //#region 🔖️Apply
 impl Din18599Diff {
     pub fn apply_to_artifact(&self, artifact: &Din18599Artifact) -> Din18599Artifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
         let mut next = artifact.clone();
         if let Some(value) = &self.use_class { next.use_class = value.clone(); }
         if let Some(value) = &self.heated_area_m2 { next.heated_area_m2 = value.clone(); }
@@ -41,9 +38,6 @@ impl Din18599Diff {
 
 impl MutationDiff<Din18599Snapshot> for Din18599Diff {
     fn apply(&self, snapshot: &Din18599Snapshot) -> Din18599Snapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
         let mut next = snapshot.clone();
         if let Some(value) = &self.use_class { next.use_class = value.clone(); }
         if let Some(value) = &self.heated_area_m2 { next.heated_area_m2 = value.clone(); }
@@ -62,10 +56,6 @@ impl MutationDiff<Din18599Snapshot> for Din18599Diff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -90,12 +80,3 @@ impl MutationDiff<Din18599Snapshot> for Din18599Diff {
     }
 }
 //#endregion 🔖️Apply
-
-//#region 🔖️Helpers
-pub fn diff_set_snapshot(snapshot: &Din18599Snapshot) -> Din18599Diff {
-    Din18599Diff {
-        artifact: Some(Box::new(Din18599Artifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-//#endregion 🔖️Helpers

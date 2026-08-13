@@ -9803,7 +9803,7 @@ pub mod world3d_host {
     // #region world3d_host
     //! 🌐️ Shared world-3d scene payload builders for plugin apps.
 
-    use semio_framework::{mesh_from_kind, mesh_to_glb, mesh_to_obj, MeshData};
+    use semio_framework::mesh_from_kind;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::f64::consts::PI;
@@ -10361,14 +10361,6 @@ pub mod world3d_host {
         world3d_camera_json([4.0, -4.0, 3.0], [0.0, 0.0, 0.0], 45.0)
     }
 
-    pub fn export_mesh_obj(mesh: &MeshData, name: &str) -> (String, String) {
-        (mesh_to_obj(mesh, name), "text/plain".into())
-    }
-
-    pub fn export_mesh_glb_bytes(mesh: &MeshData) -> (Vec<u8>, String) {
-        (mesh_to_glb(mesh), "model/gltf-binary".into())
-    }
-
     /** @emoji ✅️ Ordered selection ids with O(1) membership — serializes as a plain JSON string array. */
     #[derive(Clone, Debug, Default, PartialEq, Eq)]
     pub struct SelectionSet {
@@ -10769,7 +10761,7 @@ pub use plugin_runtime::{
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};
 pub use world3d_host::{
-    apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera,
+    apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera,
     world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures,
     world3d_projection_pose, world3d_projection_spec_json, world3d_scene, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, SelectionSet, WorldProjectionConfig, WorldSunConfig,
 };

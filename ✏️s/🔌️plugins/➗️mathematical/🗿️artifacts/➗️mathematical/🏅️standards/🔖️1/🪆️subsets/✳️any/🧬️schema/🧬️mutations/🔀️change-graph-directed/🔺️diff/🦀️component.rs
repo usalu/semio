@@ -1,15 +1,16 @@
 //! 🔺️ `change-graph-directed` — sparse diff construction.
 
 use super::mutation::ChangeGraphDirected;
-use crate::artifacts::mathematical::{MathematicalDiff, MathematicalSnapshot};
+use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, mathematical_graph, MathematicalDiff, MathematicalSnapshot};
 
 //#region 🔖️Diff
-/// 🔺️ Clones the current graph and flips only the `directed` field, wrapping the whole (still
-/// sparse at the snapshot level) graph slot — `MathematicalDiff` has no finer-than-`graph`
-/// granularity, so every graph-scoped mutation shares this "clone + patch one field" shape.
+/// 🔺️ Clones the current graph and flips only the `directed` field, then re-derives all three
+/// composed children from the patched `(graph, geometry)` pair — every graph-scoped mutation shares
+/// this "clone + patch one field + re-derive" shape.
 pub fn diff(payload: &ChangeGraphDirected, base: &MathematicalSnapshot) -> MathematicalDiff {
-    let mut graph = base.graph.clone();
+    let mut graph = mathematical_graph(base);
     graph.directed = payload.new_directed;
-    MathematicalDiff { graph: Some(graph), ..Default::default() }
+    let (notation, results, computed) = mathematical_children_from_state(&graph, &mathematical_geometry(base));
+    MathematicalDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() }
 }
 //#endregion 🔖️Diff

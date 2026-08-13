@@ -83,7 +83,7 @@ impl Din18599Mutation {
         mutations.push(Din18599Mutation::ChangeAnnualLimitKwh(change_annual_limit_kwh::mutation::ChangeAnnualLimitKwh { new_annual_limit_kwh: snapshot.annual_limit_kwh.clone() }));
         mutations.push(Din18599Mutation::ChangeEnergyCarrier(change_energy_carrier::mutation::ChangeEnergyCarrier { new_energy_carrier: snapshot.energy_carrier.clone() }));
         mutations.push(Din18599Mutation::ChangeReferenceQPKwh(change_reference_q_p_kwh::mutation::ChangeReferenceQPKwh { new_reference_q_p_kwh: snapshot.reference_q_p_kwh.clone() }));
-        mutations.push(Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate { new_climate: snapshot.climate.clone() }));
+        mutations.push(Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate { new_climate: crate::artifacts::din18599::din18599_climate(snapshot) }));
         mutations
     }
 }

@@ -12,7 +12,7 @@ pub fn diff(payload: &RenameProduct, base: &Vdi3805Snapshot) -> Vdi3805Diff {
     }
     let mut index = base.index.clone();
     if let Some(entry) = index.entries.iter_mut().find(|entry| entry.product_id == payload.id) {
-        entry.tags = vec![payload.new_title.de.clone(), payload.new_title.en.clone()];
+        entry.tags = payload.new_title.iter().map(|t| t.text.clone()).collect();
     }
     Vdi3805Diff { catalog: Some(catalog), index: Some(index), ..Default::default() }
 }

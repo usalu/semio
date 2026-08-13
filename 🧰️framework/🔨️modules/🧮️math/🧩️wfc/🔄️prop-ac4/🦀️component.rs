@@ -248,7 +248,7 @@ mod tests {
     /// is) but not for comparing two propagators' fixed points directly: this crate's AC-3 engine
     /// (per its own module docs) only reaches *full* arc-consistency when both directions of an
     /// edge encode the same well-formed constraint, which requires a validated, symmetric table.
-    fn random_symmetric_model(rng: &mut crate::random::Rng, pattern_count: usize, density: f64) -> (CompiledModel, RelationId) {
+    fn random_symmetric_model(rng: &mut geometry::random::Rng, pattern_count: usize, density: f64) -> (CompiledModel, RelationId) {
         let mut b = ModelBuilder::new();
         let patterns: Vec<_> = (0..pattern_count).map(|_| b.add_pattern(1.0 + rng.next_range(0, 5) as f64)).collect();
         let r = b.add_relation("r");
@@ -273,7 +273,7 @@ mod tests {
     /// exactly the same result as applying them one at a time (one `propagate` call each).
     #[test]
     fn sequential_and_batch_seed_application_agree() {
-        let mut rng = crate::random::Rng::from_seed(4040);
+        let mut rng = geometry::random::Rng::from_seed(4040);
         for trial in 0..100 {
             let pattern_count = 1 + rng.next_range(0, 4) as usize;
             let node_count = 1 + rng.next_range(0, 8) as usize;
@@ -361,7 +361,7 @@ mod tests {
         /// internally-valid, propagation strengths rather than testing for a real disagreement.
         #[test]
         fn ac3_and_ac4_reach_identical_fixed_points_on_random_instances() {
-            let mut rng = crate::random::Rng::from_seed(4040);
+            let mut rng = geometry::random::Rng::from_seed(4040);
             for trial in 0..300 {
                 let pattern_count = 1 + rng.next_range(0, 4) as usize;
                 let node_count = 1 + rng.next_range(0, 8) as usize;

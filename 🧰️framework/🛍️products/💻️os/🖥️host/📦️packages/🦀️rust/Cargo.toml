@@ -29,6 +29,7 @@ semio-framework = { path = "../../../../../📦️packages/🦀️rust", package
 semio-framework-plugin = { path = "../../../🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 ui_wgpu = { path = "../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-3d = { path = "../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-s-plugin-stdio = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

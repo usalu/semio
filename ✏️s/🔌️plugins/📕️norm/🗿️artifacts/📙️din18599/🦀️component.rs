@@ -17,7 +17,11 @@ pub enum UseClass {
     School,
 }
 
-/// 📐️ Monthly climate data for balancing.
+/// 📐️ Monthly climate data for balancing. Keeps its `dsl::DslRecord` derive — unlike the snapshot's
+/// own storage (now a composed `s.stdio.semio.table` child, see `🔖️Composition` below),
+/// `update-climate`'s mutation PAYLOAD still carries a literal `MonthlyClimate` on the wire (the
+/// payload is real data, never a handle — `📓️migration-recipe.md`'s pattern), so this type still
+/// needs its own `DslField` impl for `Din18599MutationDsl`'s `#[dsl(block)]`-nested encoding.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct MonthlyClimate {
     pub theta_e_c: [f64; 12],
@@ -39,6 +43,116 @@ impl MonthlyClimate {
         Self { theta_e_c: theta_e, g_h_w_m2: g_h }
     }
 }
+
+//#region 🔖️Composition
+/// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2 (orchestrator-dispatched
+/// correction, `norm→C:table` on `din18599.climate`): the inline `MonthlyClimate` (two twelve-month
+/// arrays) is replaced by a fixed composed `s.stdio.semio.table` CHILD slot — twelve rows (one per
+/// calendar month), two columns (`thetaEC`/`gHWM2`). The single `update-climate` mutation triad
+/// keeps its exact public payload/wire shape (`MonthlyClimate` travels on the wire as a literal
+/// value, same as before — only the SNAPSHOT's own storage becomes a composed child) — only the
+/// internal diff/inverse implementation is rewired to mint a fresh content-addressed child handle,
+/// mirroring `➗️mathematical`'s/en1990's equivalent pattern.
+//#region 🔖️ChildTypes
+pub type Din18599ClimateChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+//#endregion 🔖️ChildTypes
+
+//#region 🔖️Converters
+/// 🌉 REAL bidirectional converter: `MonthlyClimate`'s two parallel twelve-month arrays <-> `table`
+/// rows — one row per calendar month (index-addressed, month = row index + 1), two columns
+/// (`thetaEC: Float`, `gHWM2: Float`).
+pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    SemioTableSnapshot {
+        schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
+        columns: vec![
+            SemioTableColumn { name: "thetaEC".into(), kind: SemioTableCellKind::Float },
+            SemioTableColumn { name: "gHWM2".into(), kind: SemioTableCellKind::Float },
+        ],
+        rows: climate.theta_e_c.iter().zip(climate.g_h_w_m2.iter()).map(|(theta, g)| SemioTableRow { cells: vec![SemioValue::Float { lexeme: format!("{theta}") }, SemioValue::Float { lexeme: format!("{g}") }] }).collect(),
+    }
+}
+
+/// 🌉 Inverse of the converter above — real reconstruction, not a stub. A short/missing row
+/// degrades honestly (`0.0` for the missing month(s)) rather than panicking, since an
+/// externally-composed mismatch is possible in principle.
+pub fn din18599_climate_data_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    fn cell_f64(row: Option<&SemioTableRow>, index: usize) -> f64 {
+        match row.and_then(|row| row.cells.get(index)) {
+            Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
+            _ => 0.0,
+        }
+    }
+    let mut theta_e_c = [0.0; 12];
+    let mut g_h_w_m2 = [0.0; 12];
+    for month in 0..12 {
+        let row = table.rows.get(month);
+        theta_e_c[month] = cell_f64(row, 0);
+        g_h_w_m2[month] = cell_f64(row, 1);
+    }
+    MonthlyClimate { theta_e_c, g_h_w_m2 }
+}
+//#endregion 🔖️Converters
+
+//#region 🔖️WorkingScene
+/// 🌱 Ephemeral, session-side cache of the live `climate` data behind a composed-child handle —
+/// NEVER persisted (matches the `EngineRep` contract). No `LinkResolver`/child-dispatch seam exists
+/// in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
+/// read-only — same standing gap every prior wave's report documents), so this is the only way a
+/// persisted content-addressed handle round-trips to the real climate data within one process —
+/// mirrors `➗️mathematical`'s `MATH_SCRATCH`/en1990's `EN1990_QK_SCRATCH`.
+///
+/// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
+/// undo/redo past this session's history, or a genuinely reloaded persisted `.din18599` document)
+/// sees a `climate` handle whose cache entry was never populated — `din18599_climate` fails soft to
+/// an all-zero `MonthlyClimate` rather than panicking. Every energy-balance calculation this
+/// artifact performs already routes through `din18599_climate`, so the gap is visibly zeroed, not
+/// silently wrong-but-plausible. Not a fix for the missing resolver — a bridge until one lands.
+thread_local! {
+    static DIN18599_CLIMATE_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, MonthlyClimate>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
+    use std::hash::{Hash, Hasher};
+    let content_json = serde_json::to_string(climate).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_json.hash(&mut hasher);
+    format!("din18599-climate-{:016x}", hasher.finish())
+}
+
+fn din18599_climate_target() -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef {
+        artifact_id: "din18599-climate".into(),
+        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() },
+    }
+}
+
+/// 🏗️ Mints the composed-child handle for a `MonthlyClimate` value AND seeds the scratch cache in
+/// one call — the standard way every mutation-diff/fixture builder in this artifact creates
+/// `climate` field values; never construct this handle without also caching, or
+/// `din18599_climate` will read back all-zero.
+pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599ClimateChild {
+    let scene_id = din18599_climate_scene_id(climate);
+    DIN18599_CLIMATE_SCRATCH.with(|cache| {
+        cache.borrow_mut().insert(scene_id.clone(), climate.clone());
+    });
+    store::ArtifactChild::new(scene_id, din18599_climate_target())
+}
+
+/// 🔎 The live `MonthlyClimate` behind a snapshot's composed child — the single read call site
+/// every energy-balance/compliance/inference/mutation-diff call path in this artifact now uses
+/// instead of the old `.climate` field. All-zero (never a panic) on a cache miss, per this
+/// region's own doc comment.
+pub fn din18599_climate(snapshot: &crate::artifacts::din18599::Din18599Snapshot) -> MonthlyClimate {
+    DIN18599_CLIMATE_SCRATCH
+        .with(|cache| cache.borrow().get(&snapshot.climate.child_id).cloned())
+        .unwrap_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] })
+}
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Composition
 
 /// 📋️ Inputs for annual energy balancing.
 // BalancingInputs remains the nested persistent payload type; snapshot is Din18599Snapshot.

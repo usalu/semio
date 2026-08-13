@@ -1,12 +1,15 @@
 //! 🧬️ Sequence artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceSnapshot, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceContentChild, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
-/// 🧬️ Full sequence artifact state across persistent, shared-ui and local-ui classes.
+/// 🧬️ Full sequence artifact state across persistent, shared-ui and local-ui classes. Ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`sequence→C:flow`): `steps`/`edges` are replaced
+/// by the same composed `content` CHILD slot `SequenceSnapshot` carries, mirroring `WriterArtifact`/
+/// `FlowArtifact`'s precedent so `to_snapshot`/`from_snapshot`/`set_snapshot` stay consistent.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence")]
@@ -14,9 +17,8 @@ pub struct SequenceArtifact {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
-    pub steps: Vec<SequenceStep>,
-    #[state(persistent)]
-    pub edges: Vec<SequenceEdge>,
+    #[child(kind = "s.stdio.semio.flow")]
+    pub content: SequenceContentChild,
     #[state(shared_ui)]
     pub selected_step_ids: Vec<String>,
     #[state(local_ui)]
@@ -35,8 +37,7 @@ impl Default for SequenceArtifact {
     fn default() -> Self {
         Self {
             schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
-            steps: Vec::new(),
-            edges: Vec::new(),
+            content: crate::artifacts::sequence::sequence_content_child_handle_and_cache(Vec::new(), Vec::new()),
             selected_step_ids: Vec::new(),
             last_run_json: String::new(),
             orientation: "leftRight".into(),
@@ -49,28 +50,26 @@ impl Default for SequenceArtifact {
 impl SequenceArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::sequence::SequenceSnapshot {
-        crate::artifacts::sequence::SequenceSnapshot {
-            schema: self.schema.clone(),
-            steps: self.steps.clone(),
-            edges: self.edges.clone(),
-        }
+        crate::artifacts::sequence::SequenceSnapshot { schema: self.schema.clone(), content: self.content.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub fn from_snapshot(snapshot: crate::artifacts::sequence::SequenceSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
-            steps: snapshot.steps,
-            edges: snapshot.edges,
-            ..Self::default()
+            content: snapshot.content,
+            selected_step_ids: Vec::new(),
+            last_run_json: String::new(),
+            orientation: "leftRight".into(),
+            camera: SequenceCamera::default(),
+            locale: "en-US".into(),
         }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::sequence::SequenceSnapshot) {
         self.schema = snapshot.schema;
-        self.steps = snapshot.steps;
-        self.edges = snapshot.edges;
+        self.content = snapshot.content;
     }
 }
 //#endregion 🔖️Conversions

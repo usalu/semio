@@ -1,13 +1,16 @@
 //! 🧬️ Imperative diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::imperative::{Dictionary, Path, PathRef, Step};
-use neural_engine::Value;
+use crate::artifacts::imperative::{ImperativeFlowChild, ImperativeTextChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region 🔖️Diff
-/// 🔺️ Sparse field delta for the imperative artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
+/// 🔺️ Sparse field delta for the imperative artifact; persistent entries apply via
+/// [`MutationDiff`](protocol::MutationDiff). `flow`/`text` carry a whole-handle replacement
+/// (content-addressed, so a changed handle IS the change signal — see
+/// `📓️wave3-reports/writer-report.md`'s `document: Option<WriterDocumentChild>` precedent; both
+/// slots are never absent, only ever replaced, so a single `Option<…Child>` — not the double-
+/// `Option` an optional slot needs — is the sparse-vs-unchanged signal here).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.imperative.imperative")]
@@ -17,9 +20,9 @@ pub struct ImperativeDiff {
     #[state(persistent)]
     pub schema: Option<String>,
     #[state(persistent)]
-    pub path: Option<ImperativePathDelta>,
+    pub flow: Option<ImperativeFlowChild>,
     #[state(persistent)]
-    pub seed: Option<BTreeMap<String, Value>>,
+    pub text: Option<ImperativeTextChild>,
     #[state(shared_ui)]
     pub selected_step_ids: Option<ImperativeStringList>,
     #[state(local_ui)]
@@ -35,31 +38,5 @@ pub struct ImperativeDiff {
 #[serde(rename_all = "camelCase", default)]
 pub struct ImperativeStringList {
     pub values: Vec<String>,
-}
-
-/// 🧭 Step-list edit at a nested `PathRef`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct ImperativePathDelta {
-    pub path_ref: PathRef,
-    pub steps: ImperativeStepsDelta,
-}
-
-/// 🧩 Identified-collection delta for a step list at `pathRef`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct ImperativeStepsDelta {
-    pub added: Vec<Step>,
-    pub removed: Vec<String>,
-    pub patched: Vec<ImperativeStepPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-/// 🩹 One patched step entry (params dictionary patch).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ImperativeStepPatchEntry {
-    pub id: String,
-    pub patch: Dictionary,
 }
 //#endregion 🔖️DeltaHelpers

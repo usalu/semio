@@ -3,8 +3,7 @@ name = "semio-framework-math"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Semio math framework — algebra, geometry, graph theory, CAS, WFC, probability/statistics and signal domains in one crate"
-build = "build.rs"
+description = "Semio math framework — algebra, CAS, number theory, WFC, probability/statistics, signal and spatial domains in one crate. Geometry/random live in semio-framework-geometry; the graph vocabulary, algorithms, drawing and manifest live in semio-framework-graph."
 
 [package.metadata.semio]
 role = "framework"
@@ -20,14 +19,11 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-neural_engine = { path = "../../../../🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
-kurbo = "0.13.1"
+semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+semio-framework-graph = { path = "../../../🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"
-
-[build-dependencies]
-serde_json = "1.0.140"

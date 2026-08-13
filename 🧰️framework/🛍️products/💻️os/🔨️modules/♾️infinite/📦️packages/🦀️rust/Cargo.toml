@@ -32,6 +32,8 @@ path = "📦️glue.rs"
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
+geometry = { path = "../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 semio_framework_3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }

@@ -15,12 +15,9 @@ use protocol::MutationDiff;
 //#region 🔖️Apply
 impl En1990Diff {
     pub fn apply_to_artifact(&self, artifact: &En1990Artifact) -> En1990Artifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
         let mut next = artifact.clone();
         if let Some(value) = &self.g_k { next.g_k = value.clone(); }
-        if let Some(list) = &self.q_k { next.q_k = list.values.clone(); }
+        if let Some(child) = &self.q_k { next.q_k = child.clone(); }
         if let Some(value) = &self.resistance_kn { next.resistance_kn = value.clone(); }
         if let Some(value) = &self.consequence_class { next.consequence_class = value.clone(); }
         if let Some(value) = &self.annex { next.annex = value.clone(); }
@@ -34,12 +31,9 @@ impl En1990Diff {
 
 impl MutationDiff<En1990Snapshot> for En1990Diff {
     fn apply(&self, snapshot: &En1990Snapshot) -> En1990Snapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
         let mut next = snapshot.clone();
         if let Some(value) = &self.g_k { next.g_k = value.clone(); }
-        if let Some(list) = &self.q_k { next.q_k = list.values.clone(); }
+        if let Some(child) = &self.q_k { next.q_k = child.clone(); }
         if let Some(value) = &self.resistance_kn { next.resistance_kn = value.clone(); }
         if let Some(value) = &self.consequence_class { next.consequence_class = value.clone(); }
         if let Some(value) = &self.annex { next.annex = value.clone(); }
@@ -48,10 +42,6 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -69,12 +59,3 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
     }
 }
 //#endregion 🔖️Apply
-
-//#region 🔖️Helpers
-pub fn diff_set_snapshot(snapshot: &En1990Snapshot) -> En1990Diff {
-    En1990Diff {
-        artifact: Some(Box::new(En1990Artifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-//#endregion 🔖️Helpers

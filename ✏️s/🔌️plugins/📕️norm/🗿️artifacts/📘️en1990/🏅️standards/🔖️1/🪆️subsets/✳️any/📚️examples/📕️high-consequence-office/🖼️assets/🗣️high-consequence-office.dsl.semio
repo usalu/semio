@@ -1,7 +1,7 @@
 semio norm.en1990.dsl v1
-g-k=250 resistance-kn=420 consequence-class=3 annex=en seismic-a-ed-kn=0
-q-k [category:TEXT value:NUM] {
-  office 60
-  partition-walls 12
-  snow 18
-}
+gK=250
+qK=[656e313939302d716b2d65316535333637653130343739316435,656e313939302d716b21732e737464696f2e73656d696f4076312f7461626c65]
+resistanceKn=420
+consequenceClass=3
+annex=en
+seismicAEdKn=0

@@ -39,10 +39,7 @@ mod tests {
         };
         graph.nodes.clear();
         graph.edges.clear();
-        let snapshot = MathematicalSnapshot {
-            graph,
-            geometry: MathematicalGeometry { points: Vec::new() },
-        };
+        let snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph, MathematicalGeometry { points: Vec::new() });
         store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
     }
 

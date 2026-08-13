@@ -11,7 +11,7 @@ pub use remodel_camera::{CameraPose, Distortion, Intrinsics};
 use math::algebra::{jacobi_eigen_symmetric, poly_roots_companion, real_eigenvalues, svd, svd_nullvector, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
 use math::lie::umeyama;
 use math::optimize::{lo_ransac, numeric_jacobian, ransac, schur_lm, BipartiteResiduals, LeastSquaresProblem, LmConfig, MinimalSolver, RansacConfig, RansacScoring, ResidualTerm, SchurResult};
-use math::random::{normal, Rng};
+use geometry::random::{normal, Rng};
 use remodel_camera::reproject;
 use remodel_feature::{match_brute, Descriptor256, Keypoint, Match};
 use remodel_image::ImageGray;

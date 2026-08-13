@@ -19,12 +19,13 @@ pub mod delete_selection {
     pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
+        let board = crate::artifacts::wires::wires_working_board(document);
         let mut operations = Vec::new();
         for id in &config.selected_ids {
             if find_board_node(document, id).is_some() {
-                operations.push(WiresMutation::RemoveNode { node_id: id.clone() });
-            } else if fixture_edges(&document.board_fixture).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
-                operations.push(WiresMutation::RemoveEdge { edge_id: id.clone() });
+                operations.push(crate::artifacts::wires::mutations::delete_node(id.clone()));
+            } else if fixture_edges(&board).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
+                operations.push(crate::artifacts::wires::mutations::disconnect_nodes(id.clone()));
             }
         }
         let config_mutations = if operations.is_empty() { Vec::new() } else { vec![WiresConfigMutation::SetSelection { ids: Vec::new() }] };
@@ -49,7 +50,7 @@ mod tests {
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
         dispatch(&mut app, WiresCommand::SetSelection(set_selection::SetSelection { ids: vec!["node-1".into()] }));
         dispatch(&mut app, WiresCommand::DeleteSelection(delete_selection::DeleteSelection {}));
-        assert!(fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).is_empty());
+        assert!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).is_empty());
     }
 }
 //#endregion 🧪️Tests

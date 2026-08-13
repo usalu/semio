@@ -14,16 +14,22 @@ pub mod set_snapshot {
     /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds
     /// `apps::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`, outside undo
     /// history) instead of an `artifact_mutations` entry.
+    ///
+    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `Process3dSnapshot` dropped
+    /// its `dsl::DslRecord` derive (composed `ArtifactChild<S>` fields have no `dsl::DslField` impl
+    /// — see the snapshot facet's own doc comment), so this payload carries the snapshot as JSON
+    /// text now, parsed at the handler — matches the migration recipe's `SetSnapshot`/
+    /// `SetSnapshotJson` collapse.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "document")]
     pub struct SetDocument {
-        #[dsl(block)]
-        pub snapshot: Process3dSnapshot,
+        pub json: String,
     }
 
     pub fn handle(payload: &SetDocument, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let snapshot: Process3dSnapshot = serde_json::from_str(&payload.json).map_err(|e| Fault::from(e.to_string()))?;
         Ok(Emit {
-            effects: vec![crate::apps::process3d::reset_process3d_document_effect(&payload.snapshot)],
+            effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)],
             config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }],
             ..Default::default()
         })

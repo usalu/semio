@@ -8,7 +8,8 @@ use super::mutation::DeleteNode;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteNode, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
-    let Some(node) = base.graph.nodes.iter().find(|node| node.id == payload.id) else {
+    let graph = crate::artifacts::mathematical::mathematical_graph(base);
+    let Some(node) = graph.nodes.iter().find(|node| node.id == payload.id) else {
         return Vec::new();
     };
     let mut steps = vec![MathematicalMutation::CreateNode(create_node::mutation::CreateNode {
@@ -18,7 +19,7 @@ pub fn inverse(payload: &DeleteNode, base: &MathematicalSnapshot) -> Vec<Mathema
         y: node.y,
     })];
     steps.extend(
-        base.graph
+        graph
             .edges
             .iter()
             .filter(|edge| edge.source == payload.id || edge.target == payload.id)

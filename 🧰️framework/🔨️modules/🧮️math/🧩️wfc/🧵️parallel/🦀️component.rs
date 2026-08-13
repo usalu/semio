@@ -17,7 +17,7 @@ use crate::wfc::topology::Topology;
 
 // #region 🔖️Seed
 /// 🧵️ Deterministically derives attempt `i`'s seed from `base_seed` — a single splitmix64-style
-/// mixing step, not a call into `crate::random::Rng` (this only needs to be a fast,
+/// mixing step, not a call into `geometry::random::Rng` (this only needs to be a fast,
 /// collision-resistant *derivation*, not a full PRNG stream).
 fn derive_seed(base_seed: u64, i: usize) -> u64 {
     let mut z = base_seed.wrapping_add((i as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15));

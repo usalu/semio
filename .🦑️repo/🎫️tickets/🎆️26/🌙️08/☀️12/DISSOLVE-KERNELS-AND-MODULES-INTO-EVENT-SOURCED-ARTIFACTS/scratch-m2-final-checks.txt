@@ -1,0 +1,20 @@
+### cargo check -p semio-framework-geometry --all-targets
+    Finished `dev` profile [unoptimized] target(s) in 0.33s
+
+### cargo check -p semio-framework-graph --all-targets
+    Finished `dev` profile [unoptimized] target(s) in 0.66s
+
+### cargo check -p semio-framework-math --all-targets
+    Finished `dev` profile [unoptimized] target(s) in 1.67s
+
+### cargo check -p semio-framework-3d --all-targets
+    Finished `dev` profile [unoptimized] target(s) in 2.03s
+
+### cargo check -p semio-framework-os-flow --all-targets
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/../../../📚️examples/🌊️default.flow`: No such file or directory (os error 2)
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/../../../📚️examples/🌊️default.flow`: No such file or directory (os error 2)
+error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`
+error[E0425]: cannot find function `assert_dsl_round_trip` in module `store::test_support`
+error[E0425]: cannot find function `assert_dsl_pack_equivalence` in module `store::test_support`
+

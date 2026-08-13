@@ -1,5 +1,5 @@
 //! 🔗️ Connectivity and reachability constraints, checked exactly at completion via a small
-//! hand-rolled union-find (`crate::graph`'s own union-find lives in a private region of that
+//! hand-rolled union-find (`graph_core`'s own union-find lives in a private region of that
 //! crate, so this crate owns a minimal one rather than reaching into it).
 
 use crate::wfc::bitset::PatternSet;

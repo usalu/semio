@@ -2,7 +2,7 @@
 
 #![allow(clippy::needless_range_loop, reason = "index-based numerics loops mirror the crate::algebra style for matrix and rule iteration")]
 use crate::algebra::{MatD, VecD};
-use crate::random::Rng;
+use geometry::random::Rng;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::E;
 use thiserror::Error;

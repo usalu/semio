@@ -1,8 +1,8 @@
 //! 🔺️ Sequence artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::sequence::schema::SequenceArtifact;
-use crate::artifacts::sequence::{SequenceEdge, SequenceEdgePatch, SequenceSnapshot, SequenceStep, SequenceStepPatch};
-use protocol::{MutationDiff, Patchable};
+use crate::artifacts::sequence::SequenceSnapshot;
+use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -14,90 +14,6 @@ use crate::artifacts::sequence::schema::diff::*;
 
 
 //#region 🔖️Apply
-pub fn apply_steps_delta(items: &[SequenceStep], delta: &SequenceStepsDelta) -> Vec<SequenceStep> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &SequenceStepPatchEntry| {
-        (&entry.id, &entry.patch)
-    })
-}
-
-pub fn apply_edges_delta(items: &[SequenceEdge], delta: &SequenceEdgesDelta) -> Vec<SequenceEdge> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &SequenceEdgePatchEntry| {
-        (&entry.id, &entry.patch)
-    })
-}
-
-fn apply_identified_delta<T, P, E, F>(
-    items: &[T],
-    removed: &[String],
-    added: &[T],
-    patched: &[E],
-    reordered: Option<&Vec<String>>,
-    entry_parts: F,
-) -> Vec<T>
-where
-    T: Clone + protocol::Identified<String> + Patchable<P>,
-    P: Clone,
-    F: Fn(&E) -> (&String, &P),
-{
-    let mut next = items.to_vec();
-    for id in removed {
-        next.retain(|item| item.id() != id);
-    }
-    for item in added {
-        next.push(item.clone());
-    }
-    for entry in patched {
-        let (id, patch) = entry_parts(entry);
-        if let Some(item) = next.iter_mut().find(|item| item.id() == id) {
-            item.apply_patch(patch);
-        }
-    }
-    if let Some(order) = reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|item| (item.id().clone(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
-            }
-        }
-        ordered.extend(by_id.into_values());
-        next = ordered;
-    }
-    next
-}
-
-fn absorb_steps_delta(target: &mut Option<SequenceStepsDelta>, incoming: Option<SequenceStepsDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                if src.reordered.is_some() {
-                    dst.reordered = src.reordered;
-                }
-            }
-            None => *target = Some(src),
-        }
-    }
-}
-
-fn absorb_edges_delta(target: &mut Option<SequenceEdgesDelta>, incoming: Option<SequenceEdgesDelta>) {
-    if let Some(src) = incoming {
-        match target {
-            Some(dst) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                if src.reordered.is_some() {
-                    dst.reordered = src.reordered;
-                }
-            }
-            None => *target = Some(src),
-        }
-    }
-}
-
 impl SequenceDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> SequenceArtifact {
@@ -108,11 +24,8 @@ impl SequenceDiff {
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
-        if let Some(delta) = &self.steps {
-            next.steps = apply_steps_delta(&next.steps, delta);
-        }
-        if let Some(delta) = &self.edges {
-            next.edges = apply_edges_delta(&next.edges, delta);
+        if let Some(content) = &self.content {
+            next.content = content.clone();
         }
         if let Some(list) = &self.selected_step_ids {
             next.selected_step_ids = list.values.clone();
@@ -142,11 +55,8 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();
         }
-        if let Some(delta) = &self.steps {
-            next.steps = apply_steps_delta(&next.steps, delta);
-        }
-        if let Some(delta) = &self.edges {
-            next.edges = apply_edges_delta(&next.edges, delta);
+        if let Some(content) = &self.content {
+            next.content = content.clone();
         }
         next
     }
@@ -156,8 +66,6 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
             *self = other;
             return;
         }
-        absorb_steps_delta(&mut self.steps, other.steps);
-        absorb_edges_delta(&mut self.edges, other.edges);
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -166,6 +74,7 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
             };
         }
         take!(schema);
+        take!(content);
         take!(selected_step_ids);
         take!(last_run_json);
         take!(orientation);
@@ -180,7 +89,7 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{default_snapshot, StepParams};
+    use crate::artifacts::sequence::{default_snapshot, SequenceStep, StepParams};
     use protocol::Mutation;
 
     #[test]
@@ -189,9 +98,8 @@ mod tests {
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
         let operation = crate::artifacts::sequence::mutations::create_step::mutation::create_step(step);
         let diff: SequenceDiff = operation.diff(&base);
-        assert!(diff.steps.is_some(), "CreateStep must produce a steps diff: {diff:?}");
-        assert!(diff.edges.is_none(), "CreateStep must touch only the steps slot: {diff:?}");
-        assert_eq!(diff.apply(&base).steps.len(), base.steps.len() + 1);
+        assert!(diff.content.is_some(), "CreateStep must produce a content diff: {diff:?}");
+        assert_eq!(diff.apply(&base).to_fixture().steps.len(), base.to_fixture().steps.len() + 1);
     }
 }
 //#endregion 🧪️Tests

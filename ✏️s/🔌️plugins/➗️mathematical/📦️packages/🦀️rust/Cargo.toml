@@ -26,7 +26,13 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
-math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
+geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+# 🚚 Wave M3a (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS): `🌿️cas-internals`/
+# `📈️polynomial-internals` (migrated from `🧮️math`'s `🧮️cas`/`📈️polynomial`) still read `crate::number`/
+# `crate::algebra`, which stay in `🧮️math` for now — hence this new dependency, aliased `math` to match
+# `🧮️math`'s own `extern crate … as math`-free crate-root module names (`math::number`, `math::algebra`).
+semio-framework-math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 # 🧭️ `workspace = true` only works when this crate's local dependency KEY matches the key in root
 # `[workspace.dependencies]` verbatim — Cargo resolves workspace inheritance by that key, and a `package =`
 # override does NOT redirect the lookup (verified empirically: `cargo check` errors

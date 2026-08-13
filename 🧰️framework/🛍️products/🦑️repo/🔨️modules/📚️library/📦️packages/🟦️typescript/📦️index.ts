@@ -3401,13 +3401,13 @@ export function safeGitEnv(extraEnv?: Record<string, string>): Record<string, st
 }
 
 function git(root: string, args: string[]): { ok: boolean; out: string } {
-  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, env: safeGitEnv() });
+  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 512 * 1024 * 1024, env: safeGitEnv() });
   if (r.status !== 0) return { ok: false, out: (r.stderr ?? r.stdout ?? "").trim() };
   return { ok: true, out: (r.stdout ?? "").trim() };
 }
 
 function gitCachedNames(root: string, extra: string[] = []): string[] {
-  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 64 * 1024 * 1024, env: safeGitEnv() });
+  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 512 * 1024 * 1024, env: safeGitEnv() });
   if (r.status !== 0) return [];
   const raw = (r.stdout ?? Buffer.alloc(0)).toString("utf8");
   if (!raw) return [];
@@ -3759,13 +3759,9 @@ function readDiffBulletsInput(root: string, bulletsFile: string | null): string[
     const path = bulletsFile.startsWith("/") ? bulletsFile : join(root, bulletsFile);
     return normalizeBulletLines(readFileSync(path, "utf8"));
   }
-  // If stdin is not a TTY, check if data is available before reading to avoid blocking.
   if (!process.stdin.isTTY) {
     try {
-      const stats = fstatSync(0);
-      if (stats.size > 0) {
-        return normalizeBulletLines(readFileSync(0, "utf8"));
-      }
+      return normalizeBulletLines(readFileSync(0, "utf8"));
     } catch {
       // ignore errors and fall through to empty
     }

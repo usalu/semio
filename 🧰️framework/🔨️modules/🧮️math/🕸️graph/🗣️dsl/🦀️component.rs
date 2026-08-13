@@ -50,7 +50,7 @@ pub mod queryable {
     //! 🔍️ Queryable graph interface for Jack.
 
     use crate::graph::dsl::GraphDslError;
-    use crate::graph::manifest::{manifest_by_id, GraphManifest, PropertyBag, PropertyValue};
+    use graph_core::manifest::{manifest_by_id, GraphManifest, PropertyBag, PropertyValue};
     use serde_json::Value;
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -321,7 +321,7 @@ pub mod wire {
     //! these exact type/function signatures, unchanged by this unification.
 
     use crate::graph::dsl::GraphDslError;
-    use crate::graph::manifest::{PropertyBag, PropertyValue};
+    use graph_core::manifest::{PropertyBag, PropertyValue};
 
     // #region 🔖️WireTypes
     /// 🧩️ Neutral node row for wire-literal emission.
@@ -346,7 +346,7 @@ pub mod wire {
     // #endregion 🔖️WireTypes
 
     // #region 🔖️PropertyBridge
-    /// 🌉️ `crate::graph::manifest::PropertyValue` <-> `dsl_schema::DslValue` — the two crates'
+    /// 🌉️ `graph_core::manifest::PropertyValue` <-> `dsl_schema::DslValue` — the two crates'
     /// dynamic-JSON-equivalent literal types are structurally identical, so this is a pure reshape.
     fn dsl_value_from_property_value(value: &PropertyValue) -> dsl_schema::DslValue {
         match value {
@@ -593,7 +593,7 @@ pub mod wire {
 pub use queryable::{manifest_edge_kinds, manifest_node_kinds, manifest_port_kinds, manifest_property_names, BoardQueryableGraph, QueryableEdge, QueryableGraph};
 pub use wire::{dag_from_wire_literal, wire_literal_from_dag, WireEdge, WireNode};
 
-use crate::graph::manifest::PropertyValue;
+use graph_core::manifest::PropertyValue;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -1617,7 +1617,7 @@ fn idiom_complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
     // an empty graph still exercises the syntax-only completions (clause/logic keywords).
     struct EmptyGraph;
     impl QueryableGraph for EmptyGraph {
-        fn manifest(&self) -> Option<&crate::graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&graph_core::manifest::GraphManifest> {
             None
         }
         fn node_ids(&self) -> Vec<String> {

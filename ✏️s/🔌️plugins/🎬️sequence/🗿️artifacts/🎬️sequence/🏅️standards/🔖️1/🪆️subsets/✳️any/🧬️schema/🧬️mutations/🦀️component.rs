@@ -11,7 +11,8 @@
 //! wave2 report for the exact replacement block and the `blocked-mechanism` status.
 
 use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::artifacts::sequence::{SequenceFixture, SequenceSnapshot};
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Store
@@ -48,8 +49,10 @@ pub use super::duplicate_step::mutation::{duplicate_step, DuplicateStep};
 pub use super::edit_step_params::mutation::{edit_step_params, EditStepParams};
 pub use super::move_step::mutation::{move_step, MoveStep};
 
-/// 🔀️ Diffs two snapshots into a minimal typed semantic mutation set.
-pub fn sequence_snapshot_mutations(before: &SequenceSnapshot, after: &SequenceSnapshot) -> Vec<SequenceMutation> {
+/// 🔀️ Diffs two fixtures into a minimal typed semantic mutation set. Operates on the plain
+/// `SequenceFixture` shape (not `SequenceSnapshot` directly) since the composed `content` child is
+/// opaque — callers pass `before.to_fixture()`/a live `SequenceHost.snapshot` as `after`.
+pub fn sequence_snapshot_mutations(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceMutation> {
     let mut mutations = Vec::new();
     for step in &before.steps {
         if !after.steps.iter().any(|entry| entry.id == step.id) {
@@ -123,17 +126,17 @@ mod tests {
         let snapshot = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
         let added = round_trip(&snapshot, &create_step(step));
-        assert_eq!(added.steps.len(), 3);
+        assert_eq!(added.to_fixture().steps.len(), 3);
         let moved = round_trip(&added, &move_step("step-99".into(), 120.0, 6.0));
-        assert_eq!(moved.steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
+        assert_eq!(moved.to_fixture().steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
         let removed = round_trip(&moved, &delete_step("step-99".into()));
-        assert!(!removed.steps.iter().any(|step| step.id == "step-99"));
+        assert!(!removed.to_fixture().steps.iter().any(|step| step.id == "step-99"));
     }
 
     #[test]
     fn delete_step_severs_and_reconnects_edges() {
         let snapshot = default_snapshot();
-        assert!(snapshot.edges.iter().any(|edge| edge.from == "step-1" && edge.to == "step-2"));
+        assert!(snapshot.to_fixture().edges.iter().any(|edge| edge.from == "step-1" && edge.to == "step-2"));
         round_trip(&snapshot, &delete_step("step-1".into()));
     }
 
@@ -142,7 +145,7 @@ mod tests {
         // 🧭️ Built by hand rather than via `SequenceHost` (that editing host now lives in
         // `crate::apps::sequence` — an artifact must never depend on an app): a step add is enough
         // to exercise `sequence_snapshot_mutations`'s before/after diff directly.
-        let before = default_snapshot();
+        let before = default_snapshot().to_fixture();
         let id = "step-99".to_string();
         let mut after = before.clone();
         after.steps.push(SequenceStep { id: id.clone(), kind: "math.add".into(), params: StepParams::new(), x: 40.0, y: 40.0, slot: None, collapsed: false });
@@ -159,7 +162,7 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        assert_eq!(store.snapshot().expect("snapshot").steps.len(), 3);
+        assert_eq!(store.snapshot().expect("snapshot").to_fixture().steps.len(), 3);
     }
 
     //#region 🔖️MutationLaws

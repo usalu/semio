@@ -7,5 +7,5 @@
     "resolveJsonModule": true,
     "types": ["vitest/importMeta"]
   },
-  "include": ["📦️index.ts", "../../🕸️graph/🗣️dsl/🟦️component.ts", "../../🕸️graph/🛂️manifest/🟦️component.ts"]
+  "include": ["📦️index.ts", "../../🕸️graph/🗣️dsl/🟦️component.ts", "../../../🕸️graph/🛂️manifest/🟦️component.ts"]
 }

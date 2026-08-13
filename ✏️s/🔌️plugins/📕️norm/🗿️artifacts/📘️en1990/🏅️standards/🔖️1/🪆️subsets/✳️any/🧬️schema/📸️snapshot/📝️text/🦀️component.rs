@@ -46,11 +46,21 @@ mod tests {
 
     #[test]
     fn high_consequence_office_example_fixture_parses_and_round_trips() {
+        // 🌱️ `q_k` is a composed `s.stdio.semio.table` child slot (ticket
+        // 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — the printed DSL text only encodes
+        // the content-addressed HANDLE, never the entries themselves (that's the whole point of
+        // composition). Seeding the working-scene cache via the canonical fixture builder first
+        // means the handle `parse_dsl` decodes from the file matches an already-cached entry list
+        // with the SAME content hash, so `en1990_qk` resolves real entries here — same documented
+        // bridge pattern every other wave-4 composed-child exemplar uses (see
+        // `🗿️artifacts/📘️en1990/🦀️component.rs`'s `🔖️WorkingScene` doc comment for the staleness
+        // gap this depends on).
+        let _ = crate::examples::art_en1990_high_consequence_office::reference_snapshot();
         let document = parse_dsl(EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT).expect("parse high consequence office example");
         assert_eq!(document.consequence_class, 3);
         assert_eq!(document.annex, AnnexChoice::En);
         assert_eq!(document.seismic_a_ed_kn, 0.0);
-        assert_eq!(document.q_k.len(), 3);
+        assert_eq!(crate::artifacts::en1990::en1990_qk(&document).len(), 3);
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }

@@ -2,7 +2,7 @@
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
-use math::graph::manifest::PropertyBag;
+use graph::manifest::PropertyBag;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

@@ -26,17 +26,21 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+/// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.steps` is a composed
+/// `s.stdio.semio.flow` CHILD HANDLE now, with no resolvable content without a `LinkResolver` (see
+/// `ProcessWorkingScene`'s doc comment) — the steps section renders empty, a documented gap
+/// matching `📐️cad`'s own per-pane panels.
 pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
-    let stock = &fixture.stock;
     let stock_item = UiTreeItemNode {
         icon_id: Some("box".into()),
-        presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(stock.id.as_str())),
-        action: Some(process3d_action("setSelection", Some(json!({ "id": stock.id })))),
+        presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(fixture.stock_id.as_str())),
+        action: Some(process3d_action("setSelection", Some(json!({ "id": fixture.stock_id })))),
         menu: None,
-        ..UiTreeItemNode::base(stock.id.clone(), Label::data(stock.label.clone()))
+        ..UiTreeItemNode::base(fixture.stock_id.clone(), Label::data(fixture.stock_label.clone()))
     };
-    let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len());
-    let step_items: Vec<UiTreeItemNode> = fixture
+    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
+    let cursor = fixture.resolved_up_to.unwrap_or(scene.steps.len());
+    let step_items: Vec<UiTreeItemNode> = scene
         .steps
         .iter()
         .enumerate()

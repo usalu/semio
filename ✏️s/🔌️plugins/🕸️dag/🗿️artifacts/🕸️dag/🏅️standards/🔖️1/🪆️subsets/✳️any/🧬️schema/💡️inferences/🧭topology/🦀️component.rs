@@ -90,7 +90,7 @@ mod tests {
     }
 
     fn edge(id: &str, source: &str, target: &str) -> DagFixtureEdge {
-        DagFixtureEdge { id: id.into(), source: source.into(), target: target.into() }
+        DagFixtureEdge { id: id.into(), source: source.into(), target: target.into(), ..Default::default() }
     }
 
     #[test]

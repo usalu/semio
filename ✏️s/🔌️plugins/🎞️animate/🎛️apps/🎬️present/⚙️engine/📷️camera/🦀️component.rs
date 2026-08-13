@@ -7,7 +7,7 @@ pub mod camera {
     //! 📷️ Scene cameras: static, moving, 3D, and zoomed views.
 
     use crate::apps::present::engine::text::color::Color;
-    use math::geometry::{Affine, Point, Vec2};
+    use geometry::{Affine, Point, Vec2};
 
     /// 📸️ Base camera framing the scene.
     #[derive(Clone, Debug)]
@@ -152,7 +152,7 @@ pub mod matrix {
     use crate::apps::present::engine::geometry::geometry::rectangle;
     use crate::apps::present::engine::scene::sobject::{arrange, Group, Sobject};
     use crate::apps::present::engine::text::text::{MathText, Text};
-    use math::geometry::{Point, Vec2};
+    use geometry::{Point, Vec2};
 
     fn arrange_grid(group: &mut Group, rows: usize, cols: usize, cell_size: (f64, f64)) {
         if group.children.is_empty() || rows == 0 || cols == 0 {

@@ -27,7 +27,7 @@ pub mod node_graph_edit {
             for operation in &sub_operations {
                 match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                     "setFixture" => {
-                        if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<SequenceSnapshot>(json).ok()) {
+                        if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<crate::artifacts::sequence::SequenceFixture>(json).ok()) {
                             let _ = host.replace_snapshot(fixture);
                         }
                     }
@@ -103,7 +103,7 @@ mod tests {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::SetSelection(crate::apps::sequence::commands::selection::set_selection::SetSelection { step_ids: vec!["step-1".into()] }));
         dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: "[{\"operation\":\"deleteSelection\"}]".into() }));
-        assert!(!app.snapshot().expect("projection").steps.iter().any(|step| step.id == "step-1"));
+        assert!(!app.snapshot().expect("projection").to_fixture().steps.iter().any(|step| step.id == "step-1"));
     }
 }
 //#endregion 🧪️Tests

@@ -1,20 +1,20 @@
 //! 🔺️ Sparse diff builder for `DeleteStep` — resolves the step list at the payload's `path_ref`
-//! in `base`; idempotent no-op when the id is already absent.
-use crate::artifacts::imperative::diff::{ImperativeDiff, ImperativePathDelta, ImperativeStepsDelta};
+//! in `base`'s `flow` working scene, removes the id there, then whole-handle-replaces `flow`;
+//! idempotent no-op when the id is already absent.
+use crate::artifacts::imperative::diff::ImperativeDiff;
 use crate::artifacts::imperative::ImperativeSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::DeleteStep, base: &ImperativeSnapshot) -> ImperativeDiff {
-    let steps = crate::artifacts::imperative::mutations::resolve_steps(base, &payload.path_ref).unwrap_or(&[]);
+    let steps = crate::artifacts::imperative::mutations::resolve_steps(base, &payload.path_ref);
     if !steps.iter().any(|step| step.id == payload.id) {
         return ImperativeDiff::default();
     }
-    ImperativeDiff {
-        path: Some(ImperativePathDelta {
-            path_ref: payload.path_ref.clone(),
-            steps: ImperativeStepsDelta { removed: vec![payload.id.clone()], ..Default::default() },
-        }),
-        ..Default::default()
+    let mut path = crate::artifacts::imperative::imperative_working_scene(base).path;
+    if let Some(steps) = crate::artifacts::imperative::mutations::resolve_path_mut(&mut path, &payload.path_ref) {
+        steps.retain(|step| step.id != payload.id);
     }
+    crate::artifacts::imperative::mutations::prune_empty_slot(&mut path, &payload.path_ref);
+    crate::artifacts::imperative::diff_replace_flow(&path)
 }
 //#endregion 🔖️Diff

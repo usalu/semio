@@ -1075,7 +1075,7 @@ pub mod finite {
 
     use crate::polynomial::univariate::PolyU;
     use crate::number::ModInt;
-    use crate::random::Rng;
+    use geometry::random::Rng;
 
     // #region 🔖️PolyModPow
     pub fn poly_mod_pow(base: &PolyU<ModInt>, exp: u64, modulus: &PolyU<ModInt>) -> PolyU<ModInt> {
@@ -1328,7 +1328,7 @@ pub mod factor {
     use crate::polynomial::finite::factor_mod_p;
     use crate::polynomial::univariate::PolyU;
     use crate::number::{primes, Integer, IntegralDomain, ModInt, Natural, Rational};
-    use crate::random::Rng;
+    use geometry::random::Rng;
 
     // #region 🔖️Conversions
     fn to_modp(f: &PolyU<Integer>, p: u64) -> PolyU<ModInt> {

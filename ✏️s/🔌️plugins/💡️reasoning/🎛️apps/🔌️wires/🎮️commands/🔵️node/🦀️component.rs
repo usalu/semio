@@ -21,7 +21,7 @@ pub mod add_node {
     pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
         let document = doc.snapshot;
         let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
-        let id = format!("node-{}", fixture_nodes(&document.board_fixture).len() + 1);
+        let id = format!("node-{}", fixture_nodes(&crate::artifacts::wires::wires_working_board(document)).len() + 1);
         let node = dsl::to_dsl_value(&json!({
             "id": id,
             "nodeKind": kind,
@@ -33,7 +33,7 @@ pub mod add_node {
             "handles": []
         }))
         .expect("node serializes");
-        Ok(Emit { artifact_mutations: vec![WiresMutation::AddNode { node }], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::create_node(node)], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddNode
@@ -51,7 +51,7 @@ mod tests {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
         let projection = app.snapshot().expect("snapshot");
-        assert_eq!(fixture_nodes(&projection.board_fixture).len(), 1);
+        assert_eq!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&projection)).len(), 1);
         assert!(find_board_node(&projection, "node-1").is_some());
     }
 }

@@ -8,6 +8,15 @@ pub use crate::artifacts::dwg::schema::DwgArtifact;
 pub use crate::artifacts::dwg::schema::diff::DwgDiff;
 pub use crate::artifacts::dwg::schema::mutations::DwgMutation;
 
+/// 📐️ The relocated (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
+/// G2) hand-rolled DWG structural codec — see `standards::v_ac1024::subsets::any::io`'s own
+/// `DwgStructuralCodec` region doc for what this is (and, importantly, is NOT: it is unrelated to
+/// this file's own real R2004+ `DwgSnapshot` decode pipeline).
+pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::{
+    dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_geometry_to_path_segments, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
+    DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
+};
+
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_DWG_DOCUMENT_SCHEMA: &str = "stdio.dwg";
 

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RenameProduct {
     pub id: String,
-    pub new_title: LocalizedText,
+    pub new_title: Vec<LocalizedText>,
 }
 
 impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RenameProduct {
@@ -20,7 +20,7 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RenameProduct 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Rename product \"{}\" to \"{}\"", self.id, self.new_title.en)
+        format!("Rename product \"{}\" to \"{}\"", self.id, crate::artifacts::vdi3805::text_in(&self.new_title, "en"))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

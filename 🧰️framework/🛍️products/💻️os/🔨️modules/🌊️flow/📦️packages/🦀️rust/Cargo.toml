@@ -24,6 +24,7 @@ semio-framework-os-infinite = { path = "../../../♾️infinite/📦️packages/
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
+graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }

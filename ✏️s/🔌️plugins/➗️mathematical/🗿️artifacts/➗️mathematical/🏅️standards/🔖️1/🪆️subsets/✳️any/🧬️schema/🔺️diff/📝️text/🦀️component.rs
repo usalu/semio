@@ -2,7 +2,7 @@
 
 use crate::artifacts::mathematical::schema::diff::MathematicalDiff;
 use crate::artifacts::mathematical::schema::MathematicalArtifact;
-use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph, MathematicalSnapshot};
+use crate::artifacts::mathematical::{mathematical_children_from_state, MathematicalGeometry, MathematicalGraph, MathematicalSnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -17,15 +17,18 @@ pub use crate::artifacts::mathematical::schema::diff::*;
 impl MathematicalDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &MathematicalArtifact) -> MathematicalArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
         let mut next = artifact.clone();
-        if let Some(graph) = &self.graph {
-            next.graph = graph.clone();
+        if let Some(notation) = &self.notation {
+            next.notation = notation.clone();
         }
-        if let Some(geometry) = &self.geometry {
-            next.geometry = geometry.clone();
+        if let Some(results) = &self.results {
+            next.results = results.clone();
+        }
+        if let Some(computed) = &self.computed {
+            next.computed = computed.clone();
+        }
+        if let Some(equation) = &self.equation {
+            next.equation = equation.clone();
         }
         if let Some(value) = self.camera_x {
             next.camera_x = value;
@@ -45,35 +48,34 @@ impl MathematicalDiff {
 
 impl MutationDiff<MathematicalSnapshot> for MathematicalDiff {
     fn apply(&self, snapshot: &MathematicalSnapshot) -> MathematicalSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
         let mut next = snapshot.clone();
-        if let Some(graph) = &self.graph {
-            next.graph = graph.clone();
+        if let Some(notation) = &self.notation {
+            next.notation = notation.clone();
         }
-        if let Some(geometry) = &self.geometry {
-            next.geometry = geometry.clone();
+        if let Some(results) = &self.results {
+            next.results = results.clone();
+        }
+        if let Some(computed) = &self.computed {
+            next.computed = computed.clone();
+        }
+        if let Some(equation) = &self.equation {
+            next.equation = equation.clone();
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            self.artifact = other.artifact;
-            self.graph = None;
-            self.geometry = None;
-            self.camera_x = None;
-            self.camera_y = None;
-            self.camera_zoom = None;
-            self.locale = None;
-            return;
+        if other.notation.is_some() {
+            self.notation = other.notation;
         }
-        if other.graph.is_some() {
-            self.graph = other.graph;
+        if other.results.is_some() {
+            self.results = other.results;
         }
-        if other.geometry.is_some() {
-            self.geometry = other.geometry;
+        if other.computed.is_some() {
+            self.computed = other.computed;
+        }
+        if other.equation.is_some() {
+            self.equation = other.equation;
         }
         if other.camera_x.is_some() {
             self.camera_x = other.camera_x;
@@ -92,26 +94,16 @@ impl MutationDiff<MathematicalSnapshot> for MathematicalDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Builders
-/// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
-pub fn diff_set_snapshot(snapshot: &MathematicalSnapshot) -> MathematicalDiff {
-    MathematicalDiff {
-        artifact: Some(Box::new(MathematicalArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_graph(graph: MathematicalGraph) -> MathematicalDiff {
-    MathematicalDiff {
-        graph: Some(graph),
-        ..Default::default()
-    }
-}
-
-pub fn diff_set_geometry(geometry: MathematicalGeometry) -> MathematicalDiff {
-    MathematicalDiff {
-        geometry: Some(geometry),
-        ..Default::default()
-    }
+/// 🌉 Builds a whole-triple-replace `MathematicalDiff` from a literal `(graph, geometry)` pair —
+/// mints and caches all three composed children in one call ([`mathematical_children_from_state`]),
+/// then wraps them as the diff's `notation`/`results`/`computed` slots. Every one of this plugin's
+/// 14 mutation `diff` functions funnels its final result through this helper, since a graph/
+/// geometry-scoped mutation always regenerates all three co-derived children together (text/table/
+/// value are three projections of the SAME `(graph, geometry)` state, not independently-editable
+/// slots).
+pub fn diff_from_state(graph: MathematicalGraph, geometry: MathematicalGeometry) -> MathematicalDiff {
+    let (notation, results, computed) = mathematical_children_from_state(&graph, &geometry);
+    MathematicalDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() }
 }
 //#endregion 🔖️Builders
 
@@ -121,33 +113,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn graph_only_diff_touches_only_the_graph_slot() {
+    fn diff_from_state_round_trips_through_apply() {
+        // 🔎️ `notation`/`results`/`computed` are three co-derived projections of the SAME
+        // `(graph, geometry)` pair — a graph-scoped change regenerates all three handles, unlike the
+        // old per-slot ("graph slot only") isolation this test named before the migration.
         let base = MathematicalSnapshot::default();
-        let diff = MathematicalDiff {
-            graph: Some(MathematicalGraph {
-                algorithm: "components".into(),
-                ..MathematicalGraph::default()
-            }),
-            ..Default::default()
-        };
+        let mut graph = crate::artifacts::mathematical::mathematical_graph(&base);
+        graph.algorithm = "components".into();
+        let geometry = crate::artifacts::mathematical::mathematical_geometry(&base);
+        let diff = diff_from_state(graph, geometry.clone());
         let applied = diff.apply(&base);
-        assert_eq!(applied.graph.algorithm, "components");
-        assert_eq!(applied.geometry, base.geometry);
+        assert_eq!(crate::artifacts::mathematical::mathematical_graph(&applied).algorithm, "components");
+        assert_eq!(crate::artifacts::mathematical::mathematical_geometry(&applied), geometry);
     }
 
     #[test]
     fn absorb_prefers_the_incoming_slots_when_present() {
-        let mut first = MathematicalDiff {
-            graph: Some(MathematicalGraph::default()),
-            ..Default::default()
-        };
-        let second = MathematicalDiff {
-            geometry: Some(MathematicalGeometry { points: Vec::new() }),
-            ..Default::default()
-        };
+        let (notation_a, _, _) = mathematical_children_from_state(&MathematicalGraph::default(), &MathematicalGeometry::default());
+        let mut first = MathematicalDiff { notation: Some(notation_a), ..Default::default() };
+        let (_, results_b, _) = mathematical_children_from_state(&MathematicalGraph::default(), &MathematicalGeometry { points: Vec::new() });
+        let second = MathematicalDiff { results: Some(results_b.clone()), ..Default::default() };
         first.absorb(second);
-        assert!(first.graph.is_some());
-        assert_eq!(first.geometry, Some(MathematicalGeometry { points: Vec::new() }));
+        assert!(first.notation.is_some());
+        assert_eq!(first.results, Some(results_b));
     }
 }
 //#endregion 🧪️Tests

@@ -10,10 +10,10 @@
   },
   "exports": {
     ".": "./📦️index.ts",
-    "./🔣️manifest.schema.json": "../../🤖️generated/🔣️manifest.schema.json"
+    "./🔣️manifest.schema.json": "../../../🕸️graph/🤖️generated/🔣️manifest.schema.json"
   },
   "scripts": {
-    "generate": "nx run @semio-tech/framework-math:generate",
+    "generate": "nx run @semio-tech/framework-graph:generate",
     "test": "nx run @semio-tech/framework-math-js:test"
   },
   "nx": {

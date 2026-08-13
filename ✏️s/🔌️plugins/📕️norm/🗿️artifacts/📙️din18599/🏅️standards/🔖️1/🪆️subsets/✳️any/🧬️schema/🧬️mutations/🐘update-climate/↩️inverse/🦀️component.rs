@@ -7,6 +7,6 @@ use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &UpdateClimate, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
-    vec![Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: base.climate.clone() })]
+    vec![Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: crate::artifacts::din18599::din18599_climate(base) })]
 }
 //#endregion 🔖️Inverse

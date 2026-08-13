@@ -157,7 +157,7 @@ pub mod types {
     }
     // #endregion 🔖️GraphPortMode
 
-    pub use math::graph::NodeShape;
+    pub use graph::NodeShape;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum BoardElementStyleKind {
@@ -188,7 +188,7 @@ pub mod types {
         pub text: Option<String>,
         pub icon_kind: Option<String>,
         pub node_kind: String,
-        pub properties: math::graph::PropertyBag,
+        pub properties: graph::PropertyBag,
     }
 
     #[derive(Clone, Debug)]
@@ -322,7 +322,7 @@ pub mod types {
         pub edge_kind: String,
         pub source_tip: Option<String>,
         pub target_tip: Option<String>,
-        pub properties: math::graph::PropertyBag,
+        pub properties: graph::PropertyBag,
     }
 
     #[derive(Clone, Debug)]
@@ -337,7 +337,7 @@ pub mod types {
         pub locked: bool,
         pub style: Option<String>,
         pub wire_kind: String,
-        pub properties: math::graph::PropertyBag,
+        pub properties: graph::PropertyBag,
     }
 
     #[derive(Clone, Debug, PartialEq, Eq)]

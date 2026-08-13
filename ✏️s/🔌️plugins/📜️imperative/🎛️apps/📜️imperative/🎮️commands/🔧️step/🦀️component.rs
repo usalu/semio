@@ -13,6 +13,8 @@ use std::collections::BTreeMap;
 //#region 🔖️Helpers
 /// 🆔️ Allocates a fresh `step-N` id one past the highest suffix used anywhere in the document
 /// (including nested `control.*` bodies), deterministically from pre-state — no mutable counter.
+/// Reads through the `flow` working scene (`ImperativeSnapshot` no longer carries `path` inline —
+/// ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`).
 fn next_step_id(document: &ImperativeSnapshot) -> String {
     fn max_suffix(steps: &[Step]) -> u64 {
         steps.iter().fold(0, |acc, step| {
@@ -21,7 +23,8 @@ fn next_step_id(document: &ImperativeSnapshot) -> String {
             acc.max(own).max(nested)
         })
     }
-    format!("step-{}", max_suffix(&document.path.steps) + 1)
+    let path = crate::artifacts::imperative::imperative_working_scene(document).path;
+    format!("step-{}", max_suffix(&path.steps) + 1)
 }
 
 /// 📍️ Resolves `owner`/`slot` command fields into a [`PathRef`] so nested control-step bodies (e.g.
@@ -29,18 +32,20 @@ fn next_step_id(document: &ImperativeSnapshot) -> String {
 /// `owner` names a real top-level step, avoiding an unresolvable or unknown reference that would
 /// otherwise address nothing.
 fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ImperativeSnapshot) -> PathRef {
+    let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     match (owner, slot) {
-        (Some(owner), Some(slot)) if document.path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
+        (Some(owner), Some(slot)) if path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
         _ => PathRef::default(),
     }
 }
 
 /// 🔎️ Resolves the step list a `PathRef` addresses — the root path, or a nested `control.*` step's slot
 /// (an unmaterialized slot reads as empty).
-fn steps_at<'a>(document: &'a ImperativeSnapshot, path_ref: &PathRef) -> &'a [Step] {
+fn steps_at(document: &ImperativeSnapshot, path_ref: &PathRef) -> Vec<Step> {
+    let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     match (&path_ref.owner, &path_ref.slot) {
-        (Some(owner), Some(slot)) => document.path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map_or(&[], |path| path.steps.as_slice()),
-        _ => document.path.steps.as_slice(),
+        (Some(owner), Some(slot)) => path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map(|body| body.steps.clone()).unwrap_or_default(),
+        _ => path.steps,
     }
 }
 

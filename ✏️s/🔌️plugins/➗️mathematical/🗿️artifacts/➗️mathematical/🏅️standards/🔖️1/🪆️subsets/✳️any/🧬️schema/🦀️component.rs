@@ -1,19 +1,31 @@
 //! 🧬️ Mathematical artifact schema — every field with its state class.
 
-use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph};
+use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalGeometry, MathematicalGraph, MathematicalNotationChild, MathematicalResultsChild};
+use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full mathematical artifact across persistent and local-ui classes.
+/// 🧬️ Full mathematical artifact across persistent and local-ui classes. `notation`/`results`/
+/// `computed` mirror `MathematicalSnapshot`'s own composed-child slots (ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, `mathematical→C:text,table,value`); `equation`
+/// mirrors its plain (non-`#[child]`) persistent sibling added in wave M3a of
+/// 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.mathematical.mathematical")]
 pub struct MathematicalArtifact {
     #[state(persistent)]
-    pub graph: MathematicalGraph,
+    #[child(kind = "s.stdio.semio.text")]
+    pub notation: MathematicalNotationChild,
     #[state(persistent)]
-    pub geometry: MathematicalGeometry,
+    #[child(kind = "s.stdio.semio.table")]
+    pub results: MathematicalResultsChild,
+    #[state(persistent)]
+    #[child(kind = "s.stdio.semio.value")]
+    pub computed: MathematicalComputedChild,
+    #[state(persistent)]
+    pub equation: EquationSnapshot,
     #[state(local_ui)]
     pub camera_x: f64,
     #[state(local_ui)]
@@ -35,25 +47,21 @@ impl Default for MathematicalArtifact {
 impl MathematicalArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::artifacts::mathematical::MathematicalSnapshot {
-        crate::artifacts::mathematical::MathematicalSnapshot {
-            graph: self.graph.clone(),
-            geometry: self.geometry.clone(),
-        }
+        crate::artifacts::mathematical::MathematicalSnapshot { notation: self.notation.clone(), results: self.results.clone(), computed: self.computed.clone(), equation: self.equation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub fn from_snapshot(snapshot: crate::artifacts::mathematical::MathematicalSnapshot) -> Self {
-        Self {
-            graph: snapshot.graph,
-            geometry: snapshot.geometry,
-            ..Self::default_ui()
-        }
+        Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation, ..Self::default_ui() }
     }
 
     fn default_ui() -> Self {
+        let default_snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(MathematicalGraph::default(), MathematicalGeometry::default());
         Self {
-            graph: MathematicalGraph::default(),
-            geometry: MathematicalGeometry::default(),
+            notation: default_snapshot.notation,
+            results: default_snapshot.results,
+            computed: default_snapshot.computed,
+            equation: default_snapshot.equation,
             camera_x: 0.0,
             camera_y: 0.0,
             camera_zoom: 1.0,
@@ -63,8 +71,10 @@ impl MathematicalArtifact {
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::artifacts::mathematical::MathematicalSnapshot) {
-        self.graph = snapshot.graph;
-        self.geometry = snapshot.geometry;
+        self.notation = snapshot.notation;
+        self.results = snapshot.results;
+        self.computed = snapshot.computed;
+        self.equation = snapshot.equation;
     }
 }
 //#endregion 🔖️Conversions

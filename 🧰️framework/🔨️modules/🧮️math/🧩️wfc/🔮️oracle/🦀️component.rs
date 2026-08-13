@@ -205,7 +205,7 @@ pub(crate) mod testgen {
     /// 🧪️ A uniformly-random tiny compiled model: `pattern_count` patterns each with a random
     /// weight in `[1, 5]`, one relation whose compatibility pairs are each independently kept with
     /// probability `density`.
-    pub fn random_model(rng: &mut crate::random::Rng, pattern_count: usize, density: f64) -> (CompiledModel, RelationId) {
+    pub fn random_model(rng: &mut geometry::random::Rng, pattern_count: usize, density: f64) -> (CompiledModel, RelationId) {
         let mut b = ModelBuilder::new();
         let patterns: Vec<_> = (0..pattern_count).map(|_| b.add_pattern(1.0 + rng.next_range(0, 5) as f64)).collect();
         let r = b.add_relation("r");
@@ -222,7 +222,7 @@ pub(crate) mod testgen {
 
     /// 🧪️ A random small connected graph over `node_count` nodes (a random spanning tree plus a
     /// few extra random edges), with both directions registered under `relation`.
-    pub fn random_arcs(rng: &mut crate::random::Rng, node_count: usize, relation: RelationId) -> Vec<ArcSpec> {
+    pub fn random_arcs(rng: &mut geometry::random::Rng, node_count: usize, relation: RelationId) -> Vec<ArcSpec> {
         let mut arcs = Vec::new();
         for i in 1..node_count {
             let j = rng.next_range(0, i as u64) as usize;
@@ -332,7 +332,7 @@ mod tests {
 
         #[test]
         fn random_instances_every_solution_passes_check_assignment() {
-            let mut rng = crate::random::Rng::from_seed(2024);
+            let mut rng = geometry::random::Rng::from_seed(2024);
             for _ in 0..200 {
                 let pattern_count = 1 + rng.next_range(0, 4) as usize;
                 let node_count = 1 + rng.next_range(0, 8) as usize;

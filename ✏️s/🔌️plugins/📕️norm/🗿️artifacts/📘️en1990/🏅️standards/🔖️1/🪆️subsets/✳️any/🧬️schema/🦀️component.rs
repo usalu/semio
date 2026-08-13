@@ -1,17 +1,22 @@
 //! 🧬️ En1990 artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
-use crate::artifacts::en1990::En1990QkEntry;
+use crate::artifacts::en1990::En1990QkChild;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-/// 🧬️ Full En1990 artifact state across persistent and shared-ui classes.
+/// 🧬️ Full En1990 artifact state across persistent and shared-ui classes. `q_k` mirrors
+/// `En1990Snapshot`'s composed `s.stdio.semio.table` child slot (ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
+/// handle across verbatim, same as `➗️mathematical`'s `MathematicalArtifact`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Artifact {
     #[state(persistent)] pub g_k: f64,
-    #[state(persistent)] pub q_k: Vec<En1990QkEntry>,
+    #[state(persistent)]
+    #[child(kind = "s.stdio.semio.table")]
+    pub q_k: En1990QkChild,
     #[state(persistent)] pub resistance_kn: f64,
     #[state(persistent)] pub consequence_class: u8,
     #[state(persistent)] pub annex: crate::document::AnnexChoice,

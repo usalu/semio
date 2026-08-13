@@ -4,7 +4,7 @@
 use crate::apps::sequence::sequence_action;
 use crate::apps::sequence::terminology::SequenceLabels;
 use crate::apps::sequence::{control_slots, is_control_kind};
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::artifacts::sequence::SequenceFixture;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;
 
@@ -25,7 +25,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceSnapshot, labels: &SequenceLabels) -> UiNode {
+pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
     let actions = [("state.set", labels.action_set_state), ("log.print", labels.action_log_print), ("control.if", labels.action_if), ("control.while", labels.action_while), ("math.add", labels.action_add)];
     let mut items: Vec<UiTreeItemNode> = actions.iter().map(|(kind, label)| tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), *label, Some((*kind).into()), sequence_action("addStep", Some(json!({ "kind": kind }))))).collect();
     for owner in fixture.steps.iter().filter(|step| is_control_kind(&step.kind)) {

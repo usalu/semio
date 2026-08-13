@@ -9,10 +9,10 @@ use std::collections::BTreeSet;
 pub mod queryable {
     use super::*;
 
-    fn trinity_jack_manifest() -> &'static math::graph::manifest::GraphManifest {
+    fn trinity_jack_manifest() -> &'static graph::manifest::GraphManifest {
         use std::sync::OnceLock;
-        static MANIFEST: OnceLock<math::graph::manifest::GraphManifest> = OnceLock::new();
-        MANIFEST.get_or_init(|| math::graph::manifest::manifest_by_id("nakagin").expect("nakagin manifest").clone())
+        static MANIFEST: OnceLock<graph::manifest::GraphManifest> = OnceLock::new();
+        MANIFEST.get_or_init(|| graph::manifest::manifest_by_id("nakagin").expect("nakagin manifest").clone())
     }
 
     fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {
@@ -38,7 +38,7 @@ pub mod queryable {
     pub struct TrinityQueryableGraph<'a>(pub &'a Graph);
 
     impl QueryableGraph for TrinityQueryableGraph<'_> {
-        fn manifest(&self) -> Option<&math::graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
             Some(trinity_jack_manifest())
         }
 
@@ -77,7 +77,7 @@ pub mod queryable {
     pub struct OwnedTrinityQueryableGraph(pub Graph);
 
     impl QueryableGraph for OwnedTrinityQueryableGraph {
-        fn manifest(&self) -> Option<&math::graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
             Some(trinity_jack_manifest())
         }
 

@@ -4,7 +4,8 @@ use crate::artifacts::gismap::dsl::REUSE_MAP_EXAMPLE_TEXT;
 use crate::artifacts::gismap::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapImageChild, GisMapSnapshot, MapFeature};
-use semio_framework_plugin::{ArtifactSerializer, DwgDrawing, DwgGeometry, ErasedComposeSource, IoDirection, IoKey, IoPayload, io_dispatch};
+use semio_framework_plugin::{ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload, io_dispatch};
+use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
@@ -526,8 +527,10 @@ pub fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), S
 /// ✏️ Lowers one DWG entity's geometry to a `DrawNode::Path` with the appropriate `PathSegment`
 /// sequence (`Point`→single `MoveTo`, `Line`→`MoveTo`+`LineTo`, `LwPolyline`/`Polyline3d`→
 /// `MoveTo`+`LineTo`*+optional `Close`) — the semio/drawing shape every other entity-carrying
-/// codec in this wave produces, even though the DWG boundary itself stays the legacy `DwgDrawing`
-/// (frozen by `register_dwg_import_handler`'s `fn(&DwgDrawing)` signature until W6's OS media
+/// codec in this wave produces, even though the DWG boundary itself stays the hand-rolled
+/// `semio_s_plugin_stdio::artifacts::dwg::DwgDrawing` structural codec (ticket 26/08/12/DISSOLVE-
+/// KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS G2/G2b — relocated out of `semio_framework`,
+/// still fixed by `register_dwg_import_handler`'s `fn(&DwgDrawing)` signature until W6's OS media
 /// registry rewrite; see `stdio_gaps` in the wave report — the drawing subset's io tree carries no
 /// dwg leaf, only svg/dxf/pdf, so there is no `io_dispatch`-reachable dwg decode to call through to
 /// here regardless of the input boundary type).
@@ -614,13 +617,14 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
 #[cfg(test)]
 mod relocated_engine_tests {
     use super::*;
+    use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity};
 
     #[test]
     fn dwg_import_collects_point_and_line_vertices() {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
-        drawing.entities.push(semio_framework_os::DwgEntity { layer, color: semio_framework_os::DwgColor::ByLayer, geometry: DwgGeometry::Point { at: [1.0, 2.0, 0.0] } });
-        drawing.entities.push(semio_framework_os::DwgEntity { layer, color: semio_framework_os::DwgColor::ByLayer, geometry: DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [3.0, 4.0, 0.0] } });
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Point { at: [1.0, 2.0, 0.0] } });
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [3.0, 4.0, 0.0] } });
         let value = gis2d_document_json_from_dwg(&drawing).expect("import dwg");
         let positions = value.get("positions").and_then(|v| v.as_array()).expect("positions array");
         assert_eq!(positions.len(), 3);
@@ -638,9 +642,9 @@ mod relocated_engine_tests {
     fn dwg_import_lowers_a_closed_polyline_through_a_draw_node_and_carries_the_close_segment() {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
-        drawing.entities.push(semio_framework_os::DwgEntity {
+        drawing.entities.push(DwgEntity {
             layer,
-            color: semio_framework_os::DwgColor::ByLayer,
+            color: DwgColor::ByLayer,
             geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], bulges: vec![0.0, 0.0, 0.0] },
         });
         let scene = dwg_drawing_to_semio_drawing(&drawing);

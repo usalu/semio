@@ -97,9 +97,12 @@ use crate::document::{AnnexChoice, CheckReport, DesignSituation};
 use crate::artifacts::en1990::En1990QkEntry;
 use crate::artifacts::en1990::standards::v1::subsets::any::schema::{ActionSet, NaDe, NaEn, NationalAnnex, append_combination_set, check_reliability_index, check_seismic_situation};
 
-/// 🔁️ Convert a `En1990Snapshot`'s `q_k` entries into the plain `(category, value)` pairs `ActionSet` expects.
+/// 🔁️ Convert a `En1990Snapshot`'s `q_k` entries (read through the `en1990_qk` working-scene
+/// accessor — `q_k` is a composed `s.stdio.semio.table` child slot, ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) into the plain `(category, value)` pairs
+/// `ActionSet` expects.
 fn action_set_from_document(document: &En1990Snapshot) -> ActionSet {
-    ActionSet { g_k: document.g_k, q_k: document.q_k.iter().map(|entry: &En1990QkEntry| (entry.category.clone(), entry.value)).collect() }
+    ActionSet { g_k: document.g_k, q_k: crate::artifacts::en1990::en1990_qk(document).iter().map(|entry: &En1990QkEntry| (entry.category.clone(), entry.value)).collect() }
 }
 
 /// 📋️ `En1990Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.

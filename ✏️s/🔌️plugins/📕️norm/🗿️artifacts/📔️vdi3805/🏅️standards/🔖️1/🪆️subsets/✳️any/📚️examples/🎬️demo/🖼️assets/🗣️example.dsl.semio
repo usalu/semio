@@ -5,8 +5,8 @@ catalog=file=header-version="3805" manufacturer=DEMO created="2026-07-22" charse
 }
 extensions=fields={
 }
-products [identity:REC title:REC sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
-  {manufacturer-code=DEMO product-group=HV article-number=VLV-50-001} {de="Stellventil DN50" en="Control valve DN50"} 2 [ {family="100" fields=[ "100" DEMO HV VLV-50-001 "2" ] extensions=fields={
+products [identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
+  {manufacturer-code=DEMO product-group=HV article-number=VLV-50-001} [ {locale=de text="Stellventil DN50"} {locale=en text="Control valve DN50"} ] 2 [ {family="100" fields=[ "100" DEMO HV VLV-50-001 "2" ] extensions=fields={
   }
   } {family="200" fields=[ "200" dn "50" ] extensions=fields={
   }

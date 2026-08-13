@@ -6606,6 +6606,7 @@ dependencies = [
  "pollster",
  "rayon",
  "semio-framework",
+ "semio-framework-geometry",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "serde",
@@ -6636,6 +6637,26 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "semio-framework-geometry"
+version = "0.1.0"
+dependencies = [
+ "kurbo 0.13.1",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-graph"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-geometry",
+ "semio-framework-os-kernel",
+ "semio-framework-os-kernel-neural-engine",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -6670,9 +6691,9 @@ dependencies = [
 name = "semio-framework-math"
 version = "0.1.0"
 dependencies = [
- "kurbo 0.13.1",
+ "semio-framework-geometry",
+ "semio-framework-graph",
  "semio-framework-os-kernel",
- "semio-framework-os-kernel-neural-engine",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -6701,6 +6722,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-ui",
+ "semio-s-plugin-stdio",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -6723,6 +6745,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
+ "semio-framework-graph",
  "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -6756,6 +6779,8 @@ dependencies = [
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-compiler",
+ "semio-framework-geometry",
+ "semio-framework-graph",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-ui",
@@ -6954,7 +6979,6 @@ dependencies = [
  "image",
  "js-sys",
  "prost",
- "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-ui-styling",
@@ -6977,7 +7001,7 @@ dependencies = [
  "libc",
  "parley",
  "pollster",
- "semio-framework-math",
+ "semio-framework-geometry",
  "semio-framework-os-kernel",
  "semio-framework-ui-styling",
  "serde",
@@ -7066,8 +7090,8 @@ dependencies = [
  "kurbo 0.13.1",
  "pollster",
  "semio-framework",
+ "semio-framework-geometry",
  "semio-framework-hash",
- "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7091,7 +7115,7 @@ name = "semio-s-plugin-architect"
 version = "0.1.0"
 dependencies = [
  "blake3",
- "semio-framework-math",
+ "semio-framework-graph",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7120,6 +7144,7 @@ dependencies = [
  "base64 0.22.1",
  "semio-framework",
  "semio-framework-3d",
+ "semio-framework-graph",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7179,7 +7204,7 @@ dependencies = [
 name = "semio-s-plugin-dag"
 version = "0.1.0"
 dependencies = [
- "semio-framework-math",
+ "semio-framework-graph",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7254,7 +7279,7 @@ dependencies = [
 name = "semio-s-plugin-energy"
 version = "0.1.0"
 dependencies = [
- "semio-framework-math",
+ "semio-framework-geometry",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7567,6 +7592,8 @@ name = "semio-s-plugin-mathematical"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-geometry",
+ "semio-framework-graph",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7640,6 +7667,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-3d",
+ "semio-framework-geometry",
+ "semio-framework-graph",
  "semio-framework-os",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
@@ -7732,8 +7761,9 @@ dependencies = [
  "nalgebra 0.33.3",
  "parry3d",
  "semio-framework",
+ "semio-framework-geometry",
+ "semio-framework-graph",
  "semio-framework-hash",
- "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7770,6 +7800,7 @@ dependencies = [
 name = "semio-s-plugin-reasoning-mindmap"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7788,6 +7819,8 @@ dependencies = [
  "base64 0.22.1",
  "png 0.17.16",
  "semio-framework",
+ "semio-framework-geometry",
+ "semio-framework-graph",
  "semio-framework-math",
  "semio-framework-os",
  "semio-framework-os-kernel",
@@ -7804,7 +7837,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework",
- "semio-framework-math",
+ "semio-framework-graph",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
@@ -7906,6 +7939,7 @@ dependencies = [
 name = "semio-s-plugin-stdio"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7920,6 +7954,8 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework",
+ "semio-framework-geometry",
+ "semio-framework-graph",
  "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",

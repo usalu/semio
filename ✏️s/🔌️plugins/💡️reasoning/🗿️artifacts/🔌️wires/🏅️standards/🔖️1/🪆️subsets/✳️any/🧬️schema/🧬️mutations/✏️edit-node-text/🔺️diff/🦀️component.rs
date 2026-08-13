@@ -6,7 +6,7 @@ use dsl::DslValue;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::EditNodeText, base: &WiresSnapshot) -> WiresDiff {
-    let mut board = base.board_fixture.clone();
+    let mut board = crate::artifacts::wires::wires_working_board(base);
     set_node_field(&mut board, &payload.node_id, "text", DslValue::String(payload.new_text.clone()));
     diff_board_fixture(board)
 }

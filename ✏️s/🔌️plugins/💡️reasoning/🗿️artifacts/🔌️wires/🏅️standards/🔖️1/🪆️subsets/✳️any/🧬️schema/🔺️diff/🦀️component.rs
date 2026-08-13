@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the wires artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
+/// `content` is a single always-present-slot `Option` (never absent, only ever replaced — see
+/// `📓️migration-recipe.md` §8), matching `dag`'s/`flow`'s/writer's `document`/`content` diff shape.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.reasoning.wires")]
@@ -15,7 +17,11 @@ pub struct WiresDiff {
     #[state(persistent)]
     pub wires_fixture: Option<DslValue>,
     #[state(persistent)]
-    pub board_fixture: Option<DslValue>,
+    pub content: Option<crate::artifacts::wires::WiresContentChild>,
+    #[state(persistent)]
+    pub camera: Option<DslValue>,
+    #[state(persistent)]
+    pub meta: Option<DslValue>,
     #[state(shared_ui)]
     pub selected_ids: Option<WiresStringList>,
     #[state(preview)]

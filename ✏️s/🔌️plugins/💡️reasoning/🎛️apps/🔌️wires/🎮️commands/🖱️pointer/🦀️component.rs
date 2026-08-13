@@ -5,10 +5,8 @@ use crate::artifacts::wires::schema::{fixture_camera, node_position};
 use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use dsl::DslValue;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region 🔖️CanvasPointerDown
 pub mod canvas_pointer_down {
@@ -48,14 +46,11 @@ pub mod canvas_pointer_move {
         let config = cfg.snapshot;
         let Some(drag_node_id) = config.drag_node_id.clone() else { return Ok(Emit::default()) };
         let Some(node) = find_board_node(document, &drag_node_id) else { return Ok(Emit::default()) };
-        let zoom = fixture_camera(&document.board_fixture).2.max(1e-6);
-        let (cur_x, cur_y) = node_position(node);
+        let zoom = fixture_camera(&crate::artifacts::wires::wires_working_board(document)).2.max(1e-6);
+        let (cur_x, cur_y) = node_position(&node);
         let (dx, dy) = ((payload.x - config.drag_last_x) / zoom, (payload.y - config.drag_last_y) / zoom);
-        let mut patch = BTreeMap::new();
-        patch.insert("x".into(), dsl::to_dsl_value(&(cur_x + dx)).unwrap_or(DslValue::Null));
-        patch.insert("y".into(), dsl::to_dsl_value(&(cur_y + dy)).unwrap_or(DslValue::Null));
         Ok(Emit {
-            artifact_mutations: vec![WiresMutation::PatchNode { node_id: drag_node_id.clone(), patch }],
+            artifact_mutations: vec![crate::artifacts::wires::mutations::move_node(drag_node_id.clone(), cur_x + dx, cur_y + dy)],
             config_mutations: vec![WiresConfigMutation::SetDrag { node_id: Some(drag_node_id.clone()), last_x: payload.x, last_y: payload.y }],
             coalesce_key: Some(format!("drag:{drag_node_id}")),
             ..Default::default()

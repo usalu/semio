@@ -271,7 +271,7 @@ pub const PUZZLE5D_DEFAULT_MANIFEST_ID: &str = "puzzle5d-default";
 /// `kindCompatibility` rows — the single shared table both the 2D board and 3D world honor so
 /// brush/fill suggestions agree across projections.
 pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> bool {
-    let Some(manifest) = math::graph::manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
+    let Some(manifest) = graph::manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
         return false;
     };
     manifest.kind_compatibility.iter().any(|row| {

@@ -481,7 +481,7 @@ pub fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
 /// never re-duplicated here). Composing the returned element into a pane's `SemioModelSnapshot`
 /// child is the caller's job (a `create`/`change` mutation dispatched against that CHILD document).
 pub fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
-    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel().ok()?;
+    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
 }
@@ -489,14 +489,14 @@ pub fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts:
 /// @emoji 🧊️ Imports an OBJ payload into the shared kernel as a new `SemioModelElement` — see
 /// `import_step_object`'s doc comment for the returned shape's rationale.
 pub fn import_obj_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
-    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel().ok()?;
+    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = block_on(kernel.import_obj(text, 0.01)).ok()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-obj"), handle))
 }
 
 /// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `SemioModelElement`.
 pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
-    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel().ok()?;
+    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = block_on(kernel.import_stl(bytes, 0.01)).ok()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-stl"), handle))
 }
@@ -506,7 +506,7 @@ pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts
 /// DWG-derived import path since GLB carries no exact B-Rep to preserve.
 pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
-    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel().ok()?;
+    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle_id = mesh_to_obj_text_for_import(&mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok())?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-glb"), handle_id))
 }
@@ -629,11 +629,8 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::c
             continue;
         }
         let geometry = parse_geometry(model_value.get("geometry"));
-        let Ok(mut kernel) = cad_brep_kernel() else {
-            continue;
-        };
-        let objects = objects_from_fixture_model(&mut *kernel, objects_value, &geometry);
-        drop(kernel);
+        let mut kernel = cad_brep_kernel();
+        let objects = objects_from_fixture_model(&mut kernel, objects_value, &geometry);
         if objects.is_empty() {
             continue;
         }
@@ -663,26 +660,24 @@ pub fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::Mes
 /// — the identical OBJ-text bridge every other native-geometry import path in this file already
 /// uses. A layer with no entities (or none that triangulate) contributes no object — never a
 /// fabricated placeholder.
-pub fn cad_working_scene_from_dwg(drawing: &semio_framework::DwgDrawing) -> crate::artifacts::cad::CadWorkingScene {
+pub fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> crate::artifacts::cad::CadWorkingScene {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::cad_object_from_mesh;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, next_cad_id};
-    let Ok(mut kernel) = cad_brep_kernel() else {
-        return crate::artifacts::cad::CadWorkingScene::default();
-    };
+    let mut kernel = cad_brep_kernel();
     let objects = drawing
         .layers
         .iter()
         .enumerate()
         .filter_map(|(layer_index, layer)| {
-            let filtered = semio_framework::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
+            let filtered = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
             if filtered.entities.is_empty() {
                 return None;
             }
-            let mesh = semio_framework::dwg_drawing_to_mesh(&filtered);
+            let mesh = semio_s_plugin_stdio::artifacts::dwg::dwg_drawing_to_mesh(&filtered);
             if mesh.indices.is_empty() || mesh.positions.is_empty() {
                 return None;
             }
-            Some(cad_object_from_mesh(&mut *kernel, next_cad_id("object"), layer.name.clone(), "spatial.shape.imported", &mesh))
+            Some(cad_object_from_mesh(&mut kernel, next_cad_id("object"), layer.name.clone(), "spatial.shape.imported", &mesh))
         })
         .collect();
     crate::artifacts::cad::CadWorkingScene { objects, ..Default::default() }
@@ -696,7 +691,7 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_framework::DwgDrawing) -> crat
 /// pure function CAN produce. An empty drawing (no layer contributes real geometry) mints no
 /// child, matching `scene_from_spatial_payload`'s "no fabricated child" rule. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub fn cad_document_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<Value, String> {
+pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::artifacts::cad::{cad_model_child_handle, CadPaneId};
@@ -849,7 +844,7 @@ mod tests {
     #[test]
     fn repair_step_trailing_comma_before_close_paren_is_quote_aware() {
         assert_eq!(repair_step_trailing_comma_before_close_paren("(#1,)"), "(#1)");
-        assert_eq!(repair_step_trailing_comma_before_close_paren("(#1, #2,)"), "(#1)");
+        assert_eq!(repair_step_trailing_comma_before_close_paren("(#1, #2,)"), "(#1, #2)");
         assert_eq!(repair_step_trailing_comma_before_close_paren("()"), "()");
         assert_eq!(repair_step_trailing_comma_before_close_paren("('weird,)name', #1)"), "('weird,)name', #1)");
     }

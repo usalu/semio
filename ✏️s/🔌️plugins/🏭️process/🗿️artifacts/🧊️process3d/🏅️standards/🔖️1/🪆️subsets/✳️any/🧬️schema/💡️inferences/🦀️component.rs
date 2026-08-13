@@ -24,7 +24,7 @@ use crate::artifacts::process3d::{
 use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_3d::brep::kernel::Brep;
-use semio_framework_3d::brep::engine::{BrepEngineHost, BrepKernel, GeometryHandle};
+use semio_framework_3d::brep::engine::{BrepKernel, GeometryHandle};
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
@@ -118,8 +118,13 @@ fn hash_value<T: Serialize>(value: &T) -> u64 {
 /// exact kernel + replayed handle (not just the tessellated `processed_mesh`/`processed_volume`
 /// projections) to drive the real `SolidExporter`/`SolidImporter` trait objects — a crate-internal
 /// seam, never re-exported past this crate.
+/// 🌱 `kernel: Brep` is owned directly, never behind `BrepEngineHost`/`Mutex` (ticket
+/// 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave G4): every caller already
+/// constructs a fresh `ProcessKernelReplay::new()` per call (verified — no call site anywhere in this
+/// plugin holds one across calls), so the deleted host's cross-call registry was never load-bearing;
+/// it only ever added a lock nobody contended on.
 pub struct ProcessKernelReplay {
-    host: BrepEngineHost,
+    kernel: Brep,
     tables: ProcessKernelMemo,
     stock_signature: u64,
 }
@@ -131,14 +136,20 @@ struct ProcessKernelMemo {
 impl ProcessKernelReplay {
     pub fn new() -> Self {
         Self {
-            host: BrepEngineHost::new(64 * 1024 * 1024),
+            kernel: Brep::new(),
             tables: ProcessKernelMemo { memo: HashMap::new() },
             stock_signature: 0,
         }
     }
 
-    pub fn kernel(&self) -> &std::sync::Mutex<Brep> {
-        self.host.kernel()
+    /// 🔩 Immutable kernel access — `tessellate`/`volume`/`kind` take `&self`.
+    pub fn kernel(&self) -> &Brep {
+        &self.kernel
+    }
+
+    /// 🔩 Mutable kernel access — every CSG-producing `BrepKernel` method takes `&mut self`.
+    pub fn kernel_mut(&mut self) -> &mut Brep {
+        &mut self.kernel
     }
 }
 
@@ -206,23 +217,17 @@ pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingS
     };
 
     if current.is_none() {
-        let stock = {
-            let mut kernel = session.kernel().lock().ok()?;
-            solid_for_spec(&mut *kernel, &scene.stock.solid, &scene.stock.pose)
-        }?;
+        let stock = solid_for_spec(session.kernel_mut(), &scene.stock.solid, &scene.stock.pose)?;
         session.tables.memo.insert(prefix_signature(stock_signature, &[]), stock.clone());
         current = Some(stock);
     }
 
     let mut handle = current?;
     for (index, step) in enabled_steps.iter().enumerate().skip(start) {
-        let next = {
-            let mut kernel = session.kernel().lock().ok()?;
-            let tool = tool_solid_for_measure(&mut *kernel, &step.measure)?;
-            match step.measure {
-                ProcessMeasure::Attach { .. } => semio_framework_3d::brep::engine::block_on(kernel.fuse(&handle, &tool)).ok()?,
-                _ => semio_framework_3d::brep::engine::block_on(kernel.cut(&handle, &tool)).ok()?,
-            }
+        let tool = tool_solid_for_measure(session.kernel_mut(), &step.measure)?;
+        let next = match step.measure {
+            ProcessMeasure::Attach { .. } => semio_framework_3d::brep::engine::block_on(session.kernel_mut().fuse(&handle, &tool)).ok()?,
+            _ => semio_framework_3d::brep::engine::block_on(session.kernel_mut().cut(&handle, &tool)).ok()?,
         };
         handle = next;
         session.tables.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
@@ -238,11 +243,7 @@ pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingS
 pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_framework_plugin::MeshData> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
-    let mesh = {
-        let kernel = session.kernel().lock().ok()?;
-        semio_framework_3d::brep::engine::block_on(kernel.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE))
-    }
-    .ok()?;
+    let mesh = semio_framework_3d::brep::engine::block_on(session.kernel().tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
     Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
@@ -250,11 +251,7 @@ pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>
 pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
-    let volume = {
-        let kernel = session.kernel().lock().ok()?;
-        semio_framework_3d::brep::engine::block_on(kernel.volume(&handle))
-    };
-    volume.ok()
+    semio_framework_3d::brep::engine::block_on(session.kernel().volume(&handle)).ok()
 }
 //#endregion 🔖️KernelReplay
 
@@ -456,7 +453,7 @@ mod tests {
 
     fn session_volume(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> f64 {
         let handle = replay_process(session, scene, resolved_up_to).expect("replayed handle");
-        semio_framework_3d::brep::engine::block_on(session.kernel().lock().expect("kernel lock").volume(&handle)).expect("replayed volume")
+        semio_framework_3d::brep::engine::block_on(session.kernel().volume(&handle)).expect("replayed volume")
     }
 
     #[test]

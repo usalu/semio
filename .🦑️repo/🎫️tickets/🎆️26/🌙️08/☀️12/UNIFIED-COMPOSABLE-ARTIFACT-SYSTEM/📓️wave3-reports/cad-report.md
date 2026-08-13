@@ -1,6 +1,6 @@
 # W3 — `cad` composes stdio model/drawing
 
-**ucas-status: complete — 137/139 tests, 2 confirmed pre-existing/unrelated failures (see round 3 below), no open gaps**
+**ucas-status: complete — 139/139 tests, 0 failures (2 remaining failures from round 3's tracing were fixed directly after a dating-methodology correction, see below), no open gaps**
 
 Written by the orchestrator from on-disk evidence after the authoring agent was terminated by a session limit mid-verification.
 
@@ -125,12 +125,22 @@ Per the same discipline, the remaining 2 failures were re-investigated rather th
 - **`every_interaction_asset_on_disk_parses_as_interaction_spec`** (`🎬️interaction-spec/🦀️component.rs:652`) — fails with "expected at least 40 interaction assets, found 0". Root cause: the test builds its walk root from `env!("CARGO_MANIFEST_DIR")` (the crate's real, unmounted directory, `📦️packages/🦀️rust`) joined with `"../🏅️standards/🔖️1/🪆️subsets/✳️any/…"` — one `..` short of the real two-level relationship between the crate root and `🗿️artifacts/📐️cad/`. `git log -p` on this file shows the path was already broken this way as of commit `20252aa16d` (`🚩️496`, dated 2026-06-04) — **two months before this ticket opened**. Confirmed pre-existing, confirmed untouched by any wave-3 work.
 - **`repair_step_trailing_comma_before_close_paren_is_quote_aware`** (`🚪️io/🦀️component.rs:852`) — asserts `repair_step_trailing_comma_before_close_paren("(#1, #2,)") == "(#1)"`, i.e. the test itself expects the repair to silently drop `#2`. The function actually (and correctly) returns `"(#1, #2)"` — just strips the trailing comma before `)`. `git log -p` shows this assertion was already wrong as of commit `9149914f9b` (`🚩️501`, dated 2026-06-04), same pre-ticket window. Confirmed pre-existing, confirmed unrelated to composition/codec work.
 
+### Correction (orchestrator, 2026-08-13) — the "pre-existing, dated 2026-06-04" claim above was wrong; both fixed
+
+The two failures were originally classified as "confirmed pre-existing" on the strength of `git log -p` showing them last touched in commits whose auto-commit message read `🎆️26🌙️06☀️04` (2026-06-04). That date string turned out to be a **fixed, stale template embedded in every single auto-commit message in this repo, never reflecting the real date** (see `📌️important.md`'s new top-level warning — discovered independently while re-verifying `process`'s wave-4 report, which made the identical mistake). The real dates (`git log --date=iso`) for the two cited commits are **2026-08-12 23:24:26** and **2026-08-13 01:28:00** — both during this ticket's own active window (opened 2026-08-12 15:02:49), not two months prior.
+
+Both were re-investigated on their merits rather than by date, and both turned out to be trivial, safe, unambiguous bugs independent of provenance:
+- `every_interaction_asset_on_disk_parses_as_interaction_spec`: the test's `root` path was one `..` short of the real two-level relationship between `CARGO_MANIFEST_DIR` (`📦️packages/🦀️rust`) and `🗿️artifacts/📐️cad/`. Fixed: `../🏅️standards/...` → `../../🗿️artifacts/📐️cad/🏅️standards/...` (`🎬️interaction-spec/🦀️component.rs`).
+- `repair_step_trailing_comma_before_close_paren_is_quote_aware`: the test asserted the repair function should drop `#2` entirely (`"(#1, #2,)" → "(#1)"`), but the function's own job is only to strip the trailing comma before `)` — correct output is `"(#1, #2)"`. Fixed the test's hardcoded expectation (`🚪️io/🦀️component.rs`).
+
+Neither fix touches composition/codec behavior — both are self-contained test corrections. Verified: `cargo check -p semio-s-plugin-cad --all-targets` clean, `cargo nextest run -p semio-s-plugin-cad --no-fail-fast` → **139/139, 0 failed**.
+
 ### Final verified state
 
 ```
 CARGO_TARGET_DIR=.../🎯️target cargo check -p semio-s-plugin-cad --all-targets   → clean
 CARGO_TARGET_DIR=.../🎯️target cargo nextest run -p semio-s-plugin-cad --no-fail-fast
-→ 139 run: 137 passed, 2 failed (both confirmed pre-existing, see above), 1 skipped
+→ 139 run: 139 passed, 0 failed, 1 skipped
 ```
 
 **cad exemplar: ucas-status: complete.** No further gaps.

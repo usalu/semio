@@ -48,7 +48,7 @@ impl protocol::InferenceSpec<SequenceSnapshot> for SequenceInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.sequence.sequence.inference.topology", reads: &["steps", "edges"] }]
+        &[protocol::InferenceFieldSpec { id: "s.sequence.sequence.inference.topology", reads: &["content"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -81,7 +81,7 @@ pub fn sequence_artifact_inference_descriptor() -> schema::ArtifactInferenceDesc
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{SequenceEdge, SequenceStep, StepParams};
+    use crate::artifacts::sequence::{SequenceEdge, SequenceFixture, SequenceStep, StepParams};
     use protocol::Inference;
 
     //#region 🧸️Fixtures
@@ -90,11 +90,11 @@ mod tests {
     }
 
     fn sample_snapshot() -> SequenceSnapshot {
-        SequenceSnapshot {
+        SequenceSnapshot::from_fixture(SequenceFixture {
+            schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(),
             steps: vec![step("a"), step("b")],
             edges: vec![SequenceEdge { id: "e1".into(), from: "a".into(), to: "b".into() }],
-            ..SequenceSnapshot::default()
-        }
+        })
     }
     //#endregion 🧸️Fixtures
 

@@ -61,10 +61,12 @@ pub use super::resize_node::mutation::{resize_node, ResizeNode};
 
 /// ▶️ Applies `mutation` via its diff.
 pub fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) {
+    use store::MutationDiff;
     *snapshot = <DagMutation as protocol::Mutation<DagSnapshot>>::diff(mutation, snapshot).apply(snapshot);
 }
 
 pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
+    use store::Mutation;
     <DagMutation as protocol::Mutation<DagSnapshot>>::inverse(mutation, snapshot)
 }
 
@@ -74,14 +76,18 @@ pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> V
 /// (shows as a delete+create pair); `🎮️commands/🔧️nodes::rename_dag_node` uses the dedicated
 /// `rename-node` mutation directly for that gesture instead of this generic differ.
 pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<DagMutation> {
+    let before_nodes = before.nodes();
+    let after_nodes = after.nodes();
+    let before_edges = before.edges();
+    let after_edges = after.edges();
     let mut mutations = Vec::new();
-    for node in &before.nodes {
-        if !after.nodes.iter().any(|entry| entry.id == node.id) {
+    for node in &before_nodes {
+        if !after_nodes.iter().any(|entry| entry.id == node.id) {
             mutations.push(delete_node(node.id.clone()));
         }
     }
-    for node in &after.nodes {
-        match before.nodes.iter().find(|entry| entry.id == node.id) {
+    for node in &after_nodes {
+        match before_nodes.iter().find(|entry| entry.id == node.id) {
             None => mutations.push(create_node(node.clone())),
             Some(prior) => {
                 if prior.name != node.name {
@@ -111,13 +117,13 @@ pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<
             }
         }
     }
-    for edge in &before.edges {
-        if !after.edges.iter().any(|entry| entry.id == edge.id) {
+    for edge in &before_edges {
+        if !after_edges.iter().any(|entry| entry.id == edge.id) {
             mutations.push(disconnect_nodes(edge.id.clone()));
         }
     }
-    for edge in &after.edges {
-        match before.edges.iter().find(|entry| entry.id == edge.id) {
+    for edge in &after_edges {
+        match before_edges.iter().find(|entry| entry.id == edge.id) {
             None => mutations.push(connect_nodes(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.route_style, edge.properties.clone())),
             Some(prior) if prior.source != edge.source || prior.target != edge.target || prior.route_style != edge.route_style || prior.properties != edge.properties => {
                 mutations.push(disconnect_nodes(edge.id.clone()));
@@ -135,6 +141,7 @@ mod tests {
     use super::*;
     use crate::artifacts::dag::default_snapshot;
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::Mutation;
     use protocol::SemanticMutation;
     use vcs::apply_mutation;
 
@@ -157,38 +164,39 @@ mod tests {
         let snapshot = default_snapshot();
         let node = sample_node("node-99", 5.0, 6.0);
         let added = round_trip(&snapshot, &create_node(node));
-        assert!(added.nodes.iter().any(|node| node.id == "node-99"));
+        assert!(added.nodes().iter().any(|node| node.id == "node-99"));
         let moved = round_trip(&added, &move_node("node-99".into(), 120.0, 6.0));
-        assert_eq!(moved.nodes.iter().find(|node| node.id == "node-99").unwrap().x, 120.0);
+        assert_eq!(moved.nodes().iter().find(|node| node.id == "node-99").unwrap().x, 120.0);
         let resized = round_trip(&moved, &resize_node("node-99".into(), 200.0, 80.0));
-        assert_eq!(resized.nodes.iter().find(|node| node.id == "node-99").unwrap().width, 200.0);
+        assert_eq!(resized.nodes().iter().find(|node| node.id == "node-99").unwrap().width, 200.0);
         let removed = round_trip(&resized, &delete_node("node-99".into()));
-        assert!(!removed.nodes.iter().any(|node| node.id == "node-99"));
+        assert!(!removed.nodes().iter().any(|node| node.id == "node-99"));
     }
 
     #[test]
     fn rename_node_cascades_edge_endpoints() {
         let snapshot = default_snapshot();
-        let Some(id) = snapshot.nodes.first().map(|node| node.id.clone()) else { return };
+        let Some(id) = snapshot.nodes().first().map(|node| node.id.clone()) else { return };
         let renamed = round_trip(&snapshot, &rename_node(id.clone(), "renamed-node".into()));
-        assert!(renamed.nodes.iter().any(|node| node.id == "renamed-node"));
-        assert!(renamed.edges.iter().all(|edge| !edge.source.starts_with(&format!("{id}@")) && !edge.target.starts_with(&format!("{id}@"))));
+        assert!(renamed.nodes().iter().any(|node| node.id == "renamed-node"));
+        assert!(renamed.edges().iter().all(|edge| !edge.source.starts_with(&format!("{id}@")) && !edge.target.starts_with(&format!("{id}@"))));
     }
 
     #[test]
     fn delete_node_severs_and_reconnects_edges() {
         let snapshot = default_snapshot();
-        let Some(id) = snapshot.nodes.first().map(|node| node.id.clone()) else { return };
+        let Some(id) = snapshot.nodes().first().map(|node| node.id.clone()) else { return };
         round_trip(&snapshot, &delete_node(id));
     }
 
     #[test]
     fn reorder_nodes_round_trips() {
         let snapshot = default_snapshot();
-        if snapshot.nodes.len() < 2 {
+        let nodes = snapshot.nodes();
+        if nodes.len() < 2 {
             return;
         }
-        let mut order: Vec<String> = snapshot.nodes.iter().map(|node| node.id.clone()).collect();
+        let mut order: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
         order.reverse();
         round_trip(&snapshot, &reorder_nodes(order));
     }
@@ -203,41 +211,42 @@ mod tests {
     #[test]
     fn delete_node_inverse_law() {
         let base = default_snapshot();
-        let Some(id) = base.nodes.first().map(|node| node.id.clone()) else { return };
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &delete_node(id));
     }
 
     #[test]
     fn rename_node_inverse_law() {
         let base = default_snapshot();
-        let Some(id) = base.nodes.first().map(|node| node.id.clone()) else { return };
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &rename_node(id, "renamed-node".into()));
     }
 
     #[test]
     fn move_node_inverse_law() {
         let base = default_snapshot();
-        let Some(id) = base.nodes.first().map(|node| node.id.clone()) else { return };
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &move_node(id, 42.0, -8.0));
     }
 
     #[test]
     fn resize_node_inverse_law() {
         let base = default_snapshot();
-        let Some(id) = base.nodes.first().map(|node| node.id.clone()) else { return };
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &resize_node(id, 200.0, 90.0));
     }
 
     #[test]
     fn connect_disconnect_nodes_inverse_law() {
         let base = default_snapshot();
-        if base.nodes.len() < 2 {
+        let nodes = base.nodes();
+        if nodes.len() < 2 {
             return;
         }
-        let source = base.nodes[0].id.clone();
-        let target = base.nodes[1].id.clone();
+        let source = nodes[0].id.clone();
+        let target = nodes[1].id.clone();
         assert_mutation_inverse_law(&base, &connect_nodes("edge-99".into(), format!("{source}@out"), format!("{target}@in"), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()));
-        if let Some(edge_id) = base.edges.first().map(|edge| edge.id.clone()) {
+        if let Some(edge_id) = base.edges().first().map(|edge| edge.id.clone()) {
             assert_mutation_inverse_law(&base, &disconnect_nodes(edge_id));
         }
     }
@@ -245,10 +254,11 @@ mod tests {
     #[test]
     fn reorder_nodes_inverse_law() {
         let base = default_snapshot();
-        if base.nodes.len() < 2 {
+        let nodes = base.nodes();
+        if nodes.len() < 2 {
             return;
         }
-        let mut order: Vec<String> = base.nodes.iter().map(|node| node.id.clone()).collect();
+        let mut order: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
         order.reverse();
         assert_mutation_inverse_law(&base, &reorder_nodes(order));
     }
@@ -257,7 +267,7 @@ mod tests {
     fn move_node_diff_absorb_law() {
         use protocol::Mutation;
         let base = default_snapshot();
-        let Some(id) = base.nodes.first().map(|node| node.id.clone()) else { return };
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let d1 = move_node(id.clone(), 10.0, 10.0).diff(&base);
         let mid = protocol::MutationDiff::apply(&d1, &base);
         let d2 = move_node(id, 20.0, 30.0).diff(&mid);

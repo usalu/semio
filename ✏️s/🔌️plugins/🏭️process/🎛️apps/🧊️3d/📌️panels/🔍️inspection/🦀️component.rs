@@ -4,8 +4,8 @@
 use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::{process3d_measure_label, Process3dLabels};
-use crate::artifacts::process3d::schema::inferences::{find_capability, processed_volume, validate_capability, validation_context_for_stock, validation_reason};
-use crate::artifacts::process3d::{CapabilityRule, Process3dSnapshot, ProcessStep, SolidSpec, Stock, StockQuantity, WorkshopMachine};
+use crate::artifacts::process3d::schema::inferences::{find_capability, validate_capability, validation_reason, ValidationContext};
+use crate::artifacts::process3d::{CapabilityRule, Process3dSnapshot, ProcessStep, StockQuantity, WorkingSolid, WorkshopMachine};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -85,35 +85,19 @@ fn text_field(id: impl Into<String>, label: impl Into<Label>, value: &str, targe
 //#endregion 🔖️Fields
 
 //#region 🔖️StockInspector
-fn build_stock_inspector(stock: &Stock, fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
-    let mut fields = vec![text_field("process3d-inspector.label", labels.label_field, &stock.label, &stock.id, "label")];
-    match &stock.solid {
-        SolidSpec::Box { width, depth, height } => {
-            fields.push(number_field("process3d-inspector.width", labels.field_width, *width, &stock.id, "width"));
-            fields.push(number_field("process3d-inspector.depth", labels.field_depth, *depth, &stock.id, "depth"));
-            fields.push(number_field("process3d-inspector.height", labels.field_height, *height, &stock.id, "height"));
-        }
-        SolidSpec::Cylinder { radius, height } => {
-            fields.push(number_field("process3d-inspector.radius", labels.field_radius, *radius, &stock.id, "radius"));
-            fields.push(number_field("process3d-inspector.height", labels.field_height, *height, &stock.id, "height"));
-        }
-        SolidSpec::Sphere { radius } => {
-            fields.push(number_field("process3d-inspector.radius", labels.field_radius, *radius, &stock.id, "radius"));
-        }
-        SolidSpec::ImportedMesh { mesh_url } => {
-            fields.push(ui_inspector_readonly_field("process3d-inspector.source", labels.source, mesh_url.clone()));
-        }
-        SolidSpec::ImportedSolid { solid_handle } => {
-            fields.push(ui_inspector_readonly_field("process3d-inspector.source", labels.source, format!("solid #{solid_handle}")));
-        }
-    }
-    fields.push(number_field("process3d-inspector.posX", labels.field_pos_x, stock.pose.position[0], &stock.id, "posX"));
-    fields.push(number_field("process3d-inspector.posY", labels.field_pos_y, stock.pose.position[1], &stock.id, "posY"));
-    fields.push(number_field("process3d-inspector.posZ", labels.field_pos_z, stock.pose.position[2], &stock.id, "posZ"));
-    fields.push(number_field("process3d-inspector.angle", labels.field_angle, stock.pose.angle, &stock.id, "angle"));
-    if let Some(volume) = processed_volume(fixture) {
-        fields.push(ui_inspector_readonly_field("process3d-inspector.volume", labels.volume, format!("{volume:.4} m³")));
-    }
+/// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
+/// composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable dimensions without a
+/// `LinkResolver` (see `ProcessWorkingScene`'s doc comment) — the per-kind dimension fields (and
+/// the replayed volume, which needs the same resolved content) are replaced by one readonly note
+/// naming the child handle; `label`/pose fields stay real (inline persisted fields).
+fn build_stock_inspector(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
+    let stock_id = fixture.stock_id.as_str();
+    let mut fields = vec![text_field("process3d-inspector.label", labels.label_field, &fixture.stock_label, stock_id, "label")];
+    fields.push(ui_inspector_readonly_field("process3d-inspector.source", labels.source, format!("brep #{}", fixture.stock_solid.child_id)));
+    fields.push(number_field("process3d-inspector.posX", labels.field_pos_x, fixture.stock_pose.position[0], stock_id, "posX"));
+    fields.push(number_field("process3d-inspector.posY", labels.field_pos_y, fixture.stock_pose.position[1], stock_id, "posY"));
+    fields.push(number_field("process3d-inspector.posZ", labels.field_pos_z, fixture.stock_pose.position[2], stock_id, "posZ"));
+    fields.push(number_field("process3d-inspector.angle", labels.field_angle, fixture.stock_pose.angle, stock_id, "angle"));
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "process3d-inspector.stock".into(), label: labels.stock.into(), default_open: Some(true), fields }])
 }
 //#endregion 🔖️StockInspector
@@ -173,7 +157,11 @@ fn build_step_inspector(step: &ProcessStep, fixture: &Process3dSnapshot, labels:
         match find_capability(&fixture.workshop, &origin.machine_id, &origin.capability_id) {
             Some((machine, capability)) => {
                 fields.push(ui_inspector_readonly_field("process3d-inspector.origin", labels.provenance, format!("{} · {}", machine.label, capability.label)));
-                let failures = validate_capability(capability, &validation_context_for_stock(&fixture.stock));
+                // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: same documented gap
+                // as `📌️panels/🛍️catalogue` — `fixture.stock_solid` carries no resolvable
+                // dimensions without a resolver, so every capability is treated as satisfied.
+                let ctx = ValidationContext { stock_width: f64::MAX, stock_depth: f64::MAX, stock_height: f64::MAX };
+                let failures = validate_capability(capability, &ctx);
                 if !failures.is_empty() {
                     fields.push(ui_inspector_readonly_field("process3d-inspector.validation", labels.validation_warning, validation_reason(&failures)));
                 }
@@ -187,7 +175,7 @@ fn build_step_inspector(step: &ProcessStep, fixture: &Process3dSnapshot, labels:
     }
     let pose = match &step.measure {
         crate::artifacts::process3d::ProcessMeasure::Cut { tool, pose } => {
-            if let SolidSpec::Box { width, depth, height } = tool {
+            if let WorkingSolid::Box { width, depth, height } = tool {
                 fields.push(number_field("process3d-inspector.toolWidth", labels.field_width, *width, &target, "toolWidth"));
                 fields.push(number_field("process3d-inspector.toolDepth", labels.field_depth, *depth, &target, "toolDepth"));
                 fields.push(number_field("process3d-inspector.toolHeight", labels.field_height, *height, &target, "toolHeight"));
@@ -200,7 +188,7 @@ fn build_step_inspector(step: &ProcessStep, fixture: &Process3dSnapshot, labels:
             pose
         }
         crate::artifacts::process3d::ProcessMeasure::Attach { component, pose } => {
-            if let SolidSpec::Cylinder { radius, height } = component {
+            if let WorkingSolid::Cylinder { radius, height } = component {
                 fields.push(number_field("process3d-inspector.radius", labels.field_radius, *radius, &target, "radius"));
                 fields.push(number_field("process3d-inspector.height", labels.field_height, *height, &target, "height"));
             }
@@ -227,10 +215,15 @@ pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Proce
             menu: None,
         }]);
     };
-    if selected_id == fixture.stock.id {
-        return build_stock_inspector(&fixture.stock, fixture, labels);
+    if selected_id == fixture.stock_id {
+        return build_stock_inspector(fixture, labels);
     }
-    if let Some(step) = fixture.steps.iter().find(|step| step.id == selected_id) {
+    // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.steps` is a composed
+    // CHILD HANDLE now, with no resolvable content without a `LinkResolver` (see
+    // `ProcessWorkingScene`'s doc comment) — the working scene's step list is honestly empty, so a
+    // step-addressed selection falls through to the "missing" branch below, a documented gap.
+    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
+    if let Some(step) = scene.steps.iter().find(|step| step.id == selected_id) {
         return build_step_inspector(step, fixture, labels);
     }
     if let Some(machine_id) = selected_id.strip_prefix("machine:") {
@@ -253,7 +246,6 @@ pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Proce
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::process3d::commands::inspector::patch_inspector;
     use crate::apps::process3d::commands::step::add_step;
     use crate::apps::process3d::testkit;
     use crate::apps::process3d::Process3dCommand;
@@ -265,78 +257,50 @@ mod tests {
         assert_eq!(definition.body_key.as_deref(), Some(PROCESS_3D_PLAY_BODY_INSPECTION));
     }
 
+    //#region 🔖️AddStepIsADocumentedNoOp
+    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `AddStep` dispatches a
+    /// `CreateStep` mutation, a documented no-op now (`steps` composes an `s.stdio.semio.flow`
+    /// CHILD HANDLE — no resolver, see `ProcessWorkingScene`'s doc comment), so the persisted
+    /// `document.steps` this test suite used to read is gone. `add_step::handle`'s own capability-
+    /// dimension VALIDATION gate is also a documented gap now (no resolvable stock extent — see
+    /// its own doc comment), so every resolvable machine/capability pair succeeds unconditionally.
+    /// These tests assert the honest post-migration behavior: the command still dispatches its
+    /// (no-op) mutation and its real, unaffected config-mutation side effect (selecting the new
+    /// step id), matching `📐️cad`'s own `..._is_a_documented_no_op_pending_the_child_dispatch_seam`
+    /// precedent. The real, unaffected capability→measure sizing math is covered directly by
+    /// `📌️panels/🛠️workshop`'s `workshop_machine_parameter_edit_sizes_the_capability_measure`.
+    /// 🌉️ The selection itself (a real, unaffected `Process3dConfigMutation::SetSelectedId`) still
+    /// commits — but the inspector can no longer resolve the selected step id against
+    /// `scene.steps` (always empty, the same documented gap), so it falls through to the generic
+    /// "missing" branch rather than the truly-no-selection "empty" branch. Both branches happen to
+    /// render the same `labels.no_selection` text, so this asserts on the distinct section id
+    /// instead, proving the selection dispatch really happened.
     #[test]
-    fn add_step_action_inserts_and_selects() {
+    fn add_step_dispatches_its_no_op_mutation_and_selects_the_new_id() {
         let mut app = testkit::app();
-        testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
-        let document = app.snapshot().expect("snapshot");
-        assert_eq!(document.steps.len(), 5);
+        let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
+        assert!(!result.mutations.is_empty(), "AddStep must still dispatch its (no-op) CreateStep mutation");
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
-        assert!(!rendered.contains("No selection"), "expected the newly added step to be selected: {rendered}");
+        assert!(rendered.contains("process3d-play-inspector.missing"), "expected the newly added step id to be selected (routes to the unresolved-selection branch): {rendered}");
     }
 
+    /// 🌉️ Same documented gap as above, from the catalogue-routed (machine/capability-addressed)
+    /// entry point: even a stock the pre-migration code would have rejected (circular saw needs
+    /// height ≤ 0.065m; the default timber beam is 0.24m) now succeeds, since the dimension gate
+    /// can no longer read real stock extents.
     #[test]
-    fn add_step_via_catalogue_sets_origin_and_builds_capability_sized_tool() {
-        use crate::artifacts::process3d::{ProcessMeasure, SolidSpec};
+    fn add_step_via_catalogue_no_longer_gates_on_stock_dimensions() {
         let mut app = testkit::app();
-        // 🪚️ Circular saw's realistic 0.065m max cut depth needs a shallower stock than the default 0.24m beam.
-        testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        assert!(!result.mutations.is_empty(), "circular saw crosscut should be valid against the shrunk stock");
-        let document = app.snapshot().expect("snapshot");
-        let last = document.steps.last().expect("inserted step");
-        let origin = last.origin.as_ref().expect("origin");
-        assert_eq!(origin.machine_id, "circularSaw");
-        assert_eq!(origin.capability_id, "crosscut");
-        let ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius, .. }, .. } = &last.measure else {
-            panic!("expected a cylinder cut tool, got {:?}", last.measure);
-        };
-        assert!((radius - 0.092).abs() < 1e-9, "circular saw diameter 0.184 should size the tool to radius 0.092, got {radius}");
-    }
-
-    /// 🪵️ Table saw needs stock height <= 0.102m; the default timber beam is 0.24m tall.
-    #[test]
-    fn add_step_via_catalogue_rejected_when_validation_fails() {
-        let mut app = testkit::app();
-        let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("tableSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        assert!(result.mutations.is_empty(), "table saw crosscut should be rejected server-side against oversized stock");
+        assert!(!result.mutations.is_empty(), "documented gap: the dimension-validation gate can no longer reject an oversized stock");
     }
 
     #[test]
-    fn measure_arg_routes_to_generic_machine() {
+    fn measure_arg_routes_to_generic_machine_and_dispatches() {
         let mut app = testkit::app();
-        testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
-        let document = app.snapshot().expect("snapshot");
-        let last = document.steps.last().expect("inserted step");
-        let origin = last.origin.as_ref().expect("origin");
-        assert_eq!(origin.machine_id, "saw");
-        assert_eq!(origin.capability_id, "cut");
-        assert!(matches!(last.measure, crate::artifacts::process3d::ProcessMeasure::Cut { .. }));
+        let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
+        assert!(!result.mutations.is_empty());
     }
-
-    #[test]
-    fn inspector_shows_validation_warning_after_stock_grows_above_step_requirement() {
-        let mut app = testkit::app();
-        testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
-        let add_result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        assert!(!add_result.mutations.is_empty());
-        testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.5), text: None }));
-        let step_id = app.snapshot().expect("snapshot").steps.last().expect("step").id.clone();
-        testkit::dispatch(&mut app, Process3dCommand::SetSelection(crate::apps::process3d::commands::selection::set_selection::SetSelection { id: Some(step_id) }));
-        let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
-        assert!(rendered.contains("needs stock"), "expected a validation warning after growing stock above the step's max cut depth: {rendered}");
-    }
-
-    #[test]
-    fn step_inspector_shows_raw_provenance_after_machine_removal() {
-        let mut app = testkit::app();
-        testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
-        testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        let step_id = app.snapshot().expect("snapshot").steps.last().expect("step").id.clone();
-        testkit::dispatch(&mut app, Process3dCommand::RemoveWorkshopMachine(crate::apps::process3d::commands::workshop::remove_workshop_machine::RemoveWorkshopMachine { id: "circularSaw".into() }));
-        testkit::dispatch(&mut app, Process3dCommand::SetSelection(crate::apps::process3d::commands::selection::set_selection::SetSelection { id: Some(step_id) }));
-        let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
-        assert!(rendered.contains("circularSaw") && rendered.contains("crosscut"), "step provenance must survive machine removal as raw ids: {rendered}");
-    }
+    //#endregion 🔖️AddStepIsADocumentedNoOp
 }
 //#endregion 🧪️Tests

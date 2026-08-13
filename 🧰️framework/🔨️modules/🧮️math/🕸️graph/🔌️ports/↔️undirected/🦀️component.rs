@@ -1,8 +1,8 @@
-//! 🔀️ The undirected port (multi-edge) graph family — NetworkX `MultiGraph` parity facade over `crate::graph::Storage<Ported, Undirected>`.
+//! 🔀️ The undirected port (multi-edge) graph family — NetworkX `MultiGraph` parity facade over `graph_core::Storage<Ported, Undirected>`.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::graph::{pairwise, AttrView, AttrWeight, Directed, EdgeId, EdgeRef, EdgeSubgraphView, EdgeWeights, GraphView, HandleId, NodeId, Normal, Ported, PropertyBag, PropertyValue, Storage, SubgraphView, Undirected};
+use graph_core::{pairwise, AttrView, AttrWeight, Directed, EdgeId, EdgeRef, EdgeSubgraphView, EdgeWeights, GraphView, HandleId, NodeId, Normal, Ported, PropertyBag, PropertyValue, Storage, SubgraphView, Undirected};
 
 // #region 🔖️Construction
 /// 🕸️ NetworkX `MultiGraph` parity facade: an undirected multigraph wrapping `Storage<Ported, Undirected>`. Every node gets a lazily-allocated "default handle" (see `handle_of`) so callers work at plain `NodeId` level, matching NetworkX's handle-free `MultiGraph` API — the `Ported` port model is only an internal storage detail here. `Storage<Ported,_>::add_edge_with` always mints a fresh `EdgeId`, which directly plays the role of NetworkX's per-pair insertion "key" (`G.add_edge(u, v)` returns a key); this is a deliberate simplification since `EdgeId` is globally unique/monotone rather than scoped per node pair like NetworkX's keys.
@@ -270,7 +270,7 @@ impl PortUndirectedGraph {
         out
     }
 
-    /// 🧵️ Collapses parallel edges into one simple edge per node pair, summing each collapsed group's `"weight"` attribute (missing weight defaults to `1.0` per parallel edge, matching `EdgeWeights`'s convention). Returns the raw `Storage`, not a sibling facade type, to avoid a circular dependency on the not-yet-built `crate::graph::normal::undirected` crate — not a literal NetworkX method, but a common multigraph-to-simple-graph convenience.
+    /// 🧵️ Collapses parallel edges into one simple edge per node pair, summing each collapsed group's `"weight"` attribute (missing weight defaults to `1.0` per parallel edge, matching `EdgeWeights`'s convention). Returns the raw `Storage`, not a sibling facade type, to avoid a circular dependency on the not-yet-built `graph_core::normal::undirected` crate — not a literal NetworkX method, but a common multigraph-to-simple-graph convenience.
     pub fn to_simple(&self) -> Storage<Normal, Undirected> {
         let mut simple = Storage::<Normal, Undirected>::new();
         for node in self.storage.nodes() {

@@ -23,14 +23,15 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &WiresSnapshot, selected: &[String]) -> UiNode {
-    let selected_nodes: Vec<&dsl::DslValue> = selected.iter().filter_map(|id| fixture_nodes(&document.board_fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
+    let board = crate::artifacts::wires::wires_working_board(document);
+    let selected_nodes: Vec<&dsl::DslValue> = selected.iter().filter_map(|id| fixture_nodes(&board).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
     if selected_nodes.is_empty() {
         let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
         return ui_stack_vertical(vec![
             ui_text(Label::data(format!("Schema: {MINDMAP_WIRES_SCHEMA}"))),
             ui_text(Label::data(format!("Identities: {}", extension.as_ref().map_or(0, |ext| ext.mindmap.topics.len())))),
             ui_text(Label::data(format!("Relationships: {}", extension.as_ref().map_or(0, |ext| ext.relationships.len())))),
-            ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&document.board_fixture).len()))),
+            ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&board).len()))),
         ]);
     }
     let node = selected_nodes[0];

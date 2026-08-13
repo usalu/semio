@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 /// `remove_node::RemoveNode` deliberately does NOT use this helper: it only pulls the removed id out of
 /// the selection, never clears it outright.
 fn delete_selection_result(document: &DagSnapshot, node_ids: &[String]) -> Option<(Vec<DagMutation>, DagConfigMutation)> {
-    let removes = engine::remove_nodes_operations(document, node_ids);
+    let removes = crate::artifacts::dag::schema::remove_nodes_operations(document, node_ids);
     if removes.is_empty() {
         None
     } else {
@@ -99,7 +99,7 @@ pub mod node_graph_edit {
                     }
                 }
                 DagNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                    if let Ok(edge) = engine::connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
+                    if let Ok(edge) = crate::artifacts::dag::schema::connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
                         artifact_mutations.push(connect_nodes(edge.id, edge.source, edge.target, edge.route_style, edge.properties));
                     }
                 }
@@ -125,7 +125,7 @@ pub mod connect_media_ports {
 
     pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
-        match engine::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
+        match crate::artifacts::dag::schema::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
             Ok(edge) => Ok(Emit::mutations(vec![connect_nodes(edge.id, edge.source, edge.target, edge.route_style, edge.properties)])),
             Err(_) => Ok(Emit::default()),
         }
@@ -145,7 +145,7 @@ pub mod disconnect {
 
     pub fn handle(payload: &Disconnect, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
-        if document.edges.iter().any(|edge| edge.id == payload.edge_id) {
+        if document.edges().iter().any(|edge| edge.id == payload.edge_id) {
             Ok(Emit::mutations(vec![disconnect_nodes(payload.edge_id.clone())]))
         } else {
             Ok(Emit::default())
@@ -168,7 +168,7 @@ pub mod move_media_node {
 
     pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
         let document = doc.snapshot;
-        if document.nodes.iter().any(|node| node.id == payload.node_id) {
+        if document.nodes().iter().any(|node| node.id == payload.node_id) {
             Ok(Emit::amend(vec![move_node(payload.node_id.clone(), payload.x, payload.y)], format!("move-{}", payload.node_id)))
         } else {
             Ok(Emit::default())
@@ -196,7 +196,8 @@ pub mod reorganize {
                     // 🎯️ Reorganize only ever moves EXISTING nodes (same ids/edges) — the generic
                     // differ correctly narrows that down to a `move-node` per node whose position
                     // actually changed, never a whole-collection replace.
-                    let recomputed = DagSnapshot { nodes: fixture.nodes, ..document.clone() };
+                    let content = crate::artifacts::dag::dag_content_child_handle_and_cache(fixture.nodes, document.edges());
+                    let recomputed = DagSnapshot { schema: document.schema.clone(), content };
                     return Ok(Emit::mutations(dag_snapshot_mutations(document, &recomputed)));
                 }
             }
@@ -223,44 +224,45 @@ mod tests {
         let mut app = testkit::new_app();
         let (source_id, target_id) = {
             let projection = app.snapshot().expect("projection");
-            (projection.nodes[0].id.clone(), projection.nodes[1].id.clone())
+            let nodes = projection.nodes();
+            (nodes[0].id.clone(), nodes[1].id.clone())
         };
-        let edges_before = app.snapshot().expect("projection").edges.len();
+        let edges_before = app.snapshot().expect("projection").edges().len();
         app.dispatch_typed(
             DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }] }),
             &semio_framework_plugin::testkit::meta("local"),
         )
         .expect("batched connect");
-        assert!(app.snapshot().expect("projection").edges.len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
+        assert!(app.snapshot().expect("projection").edges().len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
 
         app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![source_id] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
-        let nodes_before = app.snapshot().expect("projection").nodes.len();
+        let nodes_before = app.snapshot().expect("projection").nodes().len();
         app.dispatch_typed(DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::DeleteSelection] }), &semio_framework_plugin::testkit::meta("local")).expect("batched delete");
-        assert_eq!(app.snapshot().expect("projection").nodes.len(), nodes_before - 1);
+        assert_eq!(app.snapshot().expect("projection").nodes().len(), nodes_before - 1);
     }
 
     #[test]
     fn move_media_node_drag_coalesces_into_one_edit() {
         let mut app = testkit::new_app();
-        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
         for position in [10.0, 20.0, 30.0] {
             app.dispatch_typed(DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node_id.clone(), x: position, y: position }), &semio_framework_plugin::testkit::meta("local")).expect("drag tick");
         }
         // A whole drag (three ticks, same coalesce key) is ONE undo step, not one-operation-per-tick.
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         let restored = app.snapshot().expect("projection");
-        let original = infinite_board_port_directed_dag::default_dag_document().nodes.iter().find(|node| node.id == node_id).map(|node| node.x).expect("original x");
-        assert_eq!(restored.nodes.iter().find(|node| node.id == node_id).unwrap().x, original, "undoing the coalesced drag restores the pre-drag position");
+        let original = crate::artifacts::dag::default_snapshot().nodes().iter().find(|node| node.id == node_id).map(|node| node.x).expect("original x");
+        assert_eq!(restored.nodes().iter().find(|node| node.id == node_id).unwrap().x, original, "undoing the coalesced drag restores the pre-drag position");
     }
 
     #[test]
     fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
         let mut app = testkit::new_app();
-        let edge_id = app.snapshot().expect("projection").edges.first().map(|edge| edge.id.clone());
+        let edge_id = app.snapshot().expect("projection").edges().first().map(|edge| edge.id.clone());
         if let Some(edge_id) = edge_id {
-            let edges_before = app.snapshot().expect("projection").edges.len();
+            let edges_before = app.snapshot().expect("projection").edges().len();
             app.dispatch_typed(DagCommand::Disconnect(disconnect::Disconnect { edge_id }), &semio_framework_plugin::testkit::meta("local")).expect("disconnect");
-            assert_eq!(app.snapshot().expect("projection").edges.len(), edges_before - 1);
+            assert_eq!(app.snapshot().expect("projection").edges().len(), edges_before - 1);
         }
         let result = app.dispatch_typed(DagCommand::Disconnect(disconnect::Disconnect { edge_id: "nonexistent".into() }), &semio_framework_plugin::testkit::meta("local")).expect("disconnect unknown");
         assert!(result.mutations.is_empty());
@@ -271,12 +273,13 @@ mod tests {
         let mut app = testkit::new_app();
         let (source_id, target_id) = {
             let projection = app.snapshot().expect("projection");
-            (projection.nodes[0].id.clone(), projection.nodes[1].id.clone())
+            let nodes = projection.nodes();
+            (nodes[0].id.clone(), nodes[1].id.clone())
         };
-        let edges_before = app.snapshot().expect("projection").edges.len();
+        let edges_before = app.snapshot().expect("projection").edges().len();
         app.dispatch_typed(DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: source_id, source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }), &semio_framework_plugin::testkit::meta("local"))
             .expect("connect");
-        assert!(app.snapshot().expect("projection").edges.len() >= edges_before);
+        assert!(app.snapshot().expect("projection").edges().len() >= edges_before);
     }
 }
 //#endregion 🧪️Tests

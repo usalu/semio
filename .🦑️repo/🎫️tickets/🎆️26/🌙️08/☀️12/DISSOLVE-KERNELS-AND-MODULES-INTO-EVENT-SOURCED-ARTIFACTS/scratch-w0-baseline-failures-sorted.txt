@@ -1,0 +1,24 @@
+=== EXACT pre-existing failures 2026-08-13 14:09:28 ===
+### semio-framework-math (15 failed) ###
+    cas::integrate::tests::integrate_simple_partial_fraction
+    cas::limits::tests::limit_at_infinity_of_rational_function
+    cas::ode::tests::bernoulli_ode
+    cas::ode::tests::linear_first_order_ode
+    cas::sums::tests::fourier_coefficients_of_a_polynomial_smoke_test
+    cas::sums::tests::sum_of_k_from_1_to_n_is_gauss_formula
+    cas::sums::tests::sum_of_k_squared_matches_known_hand_values
+    graph::dsl::tests::parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error
+    graph::dsl::wire::tests::dag_from_wire_literal_rejects_unexpected_char
+    polynomial::algebraic::tests::cbrt2_times_cbrt4_equals_2
+    polynomial::algebraic::tests::neg_and_inv_hand_cases
+    polynomial::algebraic::tests::root_of_selects_correct_irreducible_factor
+    polynomial::algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4
+    polynomial::finite::tests::is_irreducible_hand_cases
+    polynomial::univariate::tests::interpolate_reconstructs_quadratic
+
+### semio-s-plugin-stdio (5 failed) ###
+    artifacts::binary::standards::v_raw::subsets::any::schema::inferences::extent::component::tests::inference_default_law
+    artifacts::dwg::standards::v_ac1018::subsets::any::schema::component::tests::conformance_laws::fixture_honesty_law
+    artifacts::dxf::standards::v_r12::subsets::any::schema::inferences::bounds::component::tests::bounds_matches_hand_built_entity_extent
+    artifacts::ifc::standards::v2x3::subsets::any::io::component::tests::conformance_laws::fixture_honesty_law
+    artifacts::zip::standards::v2_0::subsets::any::schema::inferences::entries::component::tests::inference_default_law

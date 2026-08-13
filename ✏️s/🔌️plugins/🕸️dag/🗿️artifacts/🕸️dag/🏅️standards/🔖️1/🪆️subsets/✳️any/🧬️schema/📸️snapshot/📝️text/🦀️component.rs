@@ -1,9 +1,11 @@
 //! 📜️ DAG artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `store::ArtifactDsl for DagSnapshot` is implemented directly in the DAG kernel crate
-//! (`infinite_board_port_directed_dag`); see `crate::artifacts::dag::op`'s doc for why. This module only
-//! adds the thin artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical example-fixture
-//! constant and its round-trip law.
+//! `store::ArtifactDsl for DagSnapshot` is hand-rolled directly on this plugin's own `DagSnapshot`
+//! (`📸️snapshot/🦀️component.rs`'s `🔖️HandcraftedArtifactCodecs` region) — distinct from the
+//! FRAMEWORK's own separate `infinite_board_port_directed_dag::DagSnapshot` type/codec, which this
+//! plugin's `content` child bridges to via `🔖️FrameworkBridge`, not by sharing an impl. This module
+//! only adds the thin artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical
+//! example-fixture constant and its round-trip law.
 
 use crate::artifacts::dag::DagSnapshot;
 
@@ -38,20 +40,14 @@ mod tests {
     fn dump_example_dsl_when_requested() {
         if std::env::var("DUMP_DAG_EXAMPLE").is_ok() {
             use crate::artifacts::dag::snapshot::schema::DagSnapshot;
-            use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec};
-            let snapshot = DagSnapshot {
-                schema: infinite_board_port_directed_dag::DAG_DOCUMENT_SCHEMA.into(),
-                nodes: vec![
-                    DagNodeSpec { id: "slider-a".into(), name: "A".into(), ..Default::default() },
-                    DagNodeSpec { id: "slider-b".into(), name: "B".into(), x: 200.0, ..Default::default() },
-                ],
-                edges: vec![DagFixtureEdge {
-                    id: "edge-1".into(),
-                    source: "slider-a@out".into(),
-                    target: "slider-b@in".into(),
-                    ..Default::default()
-                }],
-            };
+            use crate::artifacts::dag::{dag_content_child_handle_and_cache, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
+            let nodes = vec![
+                DagNodeSpec { id: "slider-a".into(), name: "A".into(), ..Default::default() },
+                DagNodeSpec { id: "slider-b".into(), name: "B".into(), x: 200.0, ..Default::default() },
+            ];
+            let edges = vec![DagFixtureEdge { id: "edge-1".into(), source: "slider-a@out".into(), target: "slider-b@in".into(), ..Default::default() }];
+            let content = dag_content_child_handle_and_cache(nodes, edges);
+            let snapshot = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content };
             println!("{}", print_dsl(&snapshot));
         }
     }

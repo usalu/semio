@@ -252,7 +252,7 @@ pub trait Continuous {
     fn ln_pdf(&self, x: f64) -> f64;
     fn cdf(&self, x: f64) -> f64;
     fn quantile(&self, p: f64) -> Result<f64, ProbabilityError>;
-    fn sample(&self, rng: &mut crate::random::Rng) -> f64;
+    fn sample(&self, rng: &mut geometry::random::Rng) -> f64;
 }
 
 /// 🎯️ A discrete univariate distribution over `u64` support.
@@ -261,7 +261,7 @@ pub trait Discrete {
     fn ln_pmf(&self, k: u64) -> f64;
     fn cdf(&self, k: u64) -> f64;
     fn quantile(&self, p: f64) -> Result<u64, ProbabilityError>;
-    fn sample(&self, rng: &mut crate::random::Rng) -> u64;
+    fn sample(&self, rng: &mut geometry::random::Rng) -> u64;
 }
 // #endregion 🔖️Traits
 
@@ -306,7 +306,7 @@ fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0: f64)
 
 /// 🎲️ Marsaglia–Tsang (2000) gamma-variate sampler: squeeze method for `shape >= 1`, boosted by
 /// `U^(1/shape)` for `shape < 1` via the identity `Gamma(shape) = Gamma(shape+1) * U^(1/shape)`.
-fn gamma_sample(shape: f64, rng: &mut crate::random::Rng) -> f64 {
+fn gamma_sample(shape: f64, rng: &mut geometry::random::Rng) -> f64 {
     if shape < 1.0 {
         let u = rng.next_f64();
         return gamma_sample(shape + 1.0, rng) * u.powf(1.0 / shape);
@@ -382,7 +382,7 @@ impl Continuous for Normal {
     /// 🎲️ Marsaglia polar method: rejects points outside the unit disk, transforms the accepted
     /// point, and discards the second free deviate the transform produces (an `&self` method
     /// can't cache it across calls).
-    fn sample(&self, rng: &mut crate::random::Rng) -> f64 {
+    fn sample(&self, rng: &mut geometry::random::Rng) -> f64 {
         loop {
             let u = 2.0 * rng.next_f64() - 1.0;
             let v = 2.0 * rng.next_f64() - 1.0;
@@ -443,7 +443,7 @@ impl Continuous for Uniform {
         Ok(self.low + p * (self.high - self.low))
     }
 
-    fn sample(&self, rng: &mut crate::random::Rng) -> f64 {
+    fn sample(&self, rng: &mut geometry::random::Rng) -> f64 {
         self.low + rng.next_f64() * (self.high - self.low)
     }
 }
@@ -512,7 +512,7 @@ impl Continuous for ChiSquared {
     }
 
     /// 🎲️ `2 * gamma_sample(dof/2)`.
-    fn sample(&self, rng: &mut crate::random::Rng) -> f64 {
+    fn sample(&self, rng: &mut geometry::random::Rng) -> f64 {
         2.0 * gamma_sample(self.dof / 2.0, rng)
     }
 }
@@ -573,7 +573,7 @@ impl Continuous for StudentT {
     }
 
     /// 🎲️ `normal_sample / sqrt(chi2_sample(dof) / dof)`.
-    fn sample(&self, rng: &mut crate::random::Rng) -> f64 {
+    fn sample(&self, rng: &mut geometry::random::Rng) -> f64 {
         let z = Normal::STANDARD.sample(rng);
         let chi2 = 2.0 * gamma_sample(self.dof / 2.0, rng);
         z / (chi2 / self.dof).sqrt()
@@ -642,7 +642,7 @@ impl Continuous for FisherF {
     }
 
     /// 🎲️ `(chi2_sample(dof1)/dof1) / (chi2_sample(dof2)/dof2)`.
-    fn sample(&self, rng: &mut crate::random::Rng) -> f64 {
+    fn sample(&self, rng: &mut geometry::random::Rng) -> f64 {
         let c1 = 2.0 * gamma_sample(self.dof1 / 2.0, rng);
         let c2 = 2.0 * gamma_sample(self.dof2 / 2.0, rng);
         (c1 / self.dof1) / (c2 / self.dof2)
@@ -697,7 +697,7 @@ impl Discrete for Bernoulli {
         Ok(if p <= 1.0 - self.p { 0 } else { 1 })
     }
 
-    fn sample(&self, rng: &mut crate::random::Rng) -> u64 {
+    fn sample(&self, rng: &mut geometry::random::Rng) -> u64 {
         u64::from(rng.next_bool(self.p))
     }
 }
@@ -775,7 +775,7 @@ impl Discrete for Binomial {
     }
 
     /// 🎯️ `n` independent Bernoulli draws — O(n), no BTPE, not needed at this scale.
-    fn sample(&self, rng: &mut crate::random::Rng) -> u64 {
+    fn sample(&self, rng: &mut geometry::random::Rng) -> u64 {
         (0..self.n).filter(|_| rng.next_bool(self.p)).count() as u64
     }
 }
@@ -822,7 +822,7 @@ impl Multinomial {
 
     /// 🎲️ Sequential conditional binomial draws: category `i`'s count is `Binomial(remaining,
     /// p_i / (1 - sum of earlier p's))`, decrementing `remaining` after each draw.
-    pub fn sample(&self, rng: &mut crate::random::Rng) -> Vec<u64> {
+    pub fn sample(&self, rng: &mut geometry::random::Rng) -> Vec<u64> {
         let mut remaining = self.n;
         let mut remaining_prob = 1.0;
         let mut counts = Vec::with_capacity(self.probs.len());
@@ -950,7 +950,7 @@ mod tests {
     #[test]
     fn normal_sample_mean_and_variance_within_band() {
         let n = Normal::new(5.0, 3.0).unwrap();
-        let mut rng = crate::random::Rng::from_seed(42);
+        let mut rng = geometry::random::Rng::from_seed(42);
         let draws = 20_000;
         let samples: Vec<f64> = (0..draws).map(|_| n.sample(&mut rng)).collect();
         let mean: f64 = samples.iter().sum::<f64>() / draws as f64;
@@ -981,7 +981,7 @@ mod tests {
     #[test]
     fn uniform_sample_mean_and_variance_within_band() {
         let u = Uniform::new(0.0, 10.0).unwrap();
-        let mut rng = crate::random::Rng::from_seed(7);
+        let mut rng = geometry::random::Rng::from_seed(7);
         let draws = 20_000;
         let samples: Vec<f64> = (0..draws).map(|_| u.sample(&mut rng)).collect();
         let mean: f64 = samples.iter().sum::<f64>() / draws as f64;
@@ -1014,7 +1014,7 @@ mod tests {
     #[test]
     fn chi_squared_sample_mean_within_band() {
         let c = ChiSquared::new(6.0).unwrap();
-        let mut rng = crate::random::Rng::from_seed(11);
+        let mut rng = geometry::random::Rng::from_seed(11);
         let draws = 20_000;
         let samples: Vec<f64> = (0..draws).map(|_| c.sample(&mut rng)).collect();
         let mean: f64 = samples.iter().sum::<f64>() / draws as f64;
@@ -1050,7 +1050,7 @@ mod tests {
     #[test]
     fn student_t_sample_mean_within_band() {
         let t = StudentT::new(15.0).unwrap();
-        let mut rng = crate::random::Rng::from_seed(13);
+        let mut rng = geometry::random::Rng::from_seed(13);
         let draws = 20_000;
         let samples: Vec<f64> = (0..draws).map(|_| t.sample(&mut rng)).collect();
         let mean: f64 = samples.iter().sum::<f64>() / draws as f64;
@@ -1080,7 +1080,7 @@ mod tests {
     #[test]
     fn fisher_f_sample_is_nonnegative() {
         let f = FisherF::new(4.0, 8.0).unwrap();
-        let mut rng = crate::random::Rng::from_seed(17);
+        let mut rng = geometry::random::Rng::from_seed(17);
         for _ in 0..1000 {
             assert!(f.sample(&mut rng) >= 0.0);
         }
@@ -1102,7 +1102,7 @@ mod tests {
     #[test]
     fn bernoulli_sample_frequency_matches_p() {
         let b = Bernoulli::new(0.7).unwrap();
-        let mut rng = crate::random::Rng::from_seed(21);
+        let mut rng = geometry::random::Rng::from_seed(21);
         let draws = 20_000;
         let successes: u64 = (0..draws).map(|_| b.sample(&mut rng)).sum();
         let freq = successes as f64 / draws as f64;
@@ -1147,7 +1147,7 @@ mod tests {
     #[test]
     fn binomial_sample_mean_within_band() {
         let b = Binomial::new(50, 0.4).unwrap();
-        let mut rng = crate::random::Rng::from_seed(23);
+        let mut rng = geometry::random::Rng::from_seed(23);
         let draws = 20_000;
         let samples: Vec<u64> = (0..draws).map(|_| b.sample(&mut rng)).collect();
         let mean: f64 = samples.iter().sum::<u64>() as f64 / draws as f64;
@@ -1174,7 +1174,7 @@ mod tests {
     #[test]
     fn multinomial_sample_counts_sum_to_n() {
         let m = Multinomial::new(30, vec![0.2, 0.3, 0.5]).unwrap();
-        let mut rng = crate::random::Rng::from_seed(29);
+        let mut rng = geometry::random::Rng::from_seed(29);
         for _ in 0..100 {
             let counts = m.sample(&mut rng);
             assert_eq!(counts.len(), 3);
@@ -1185,7 +1185,7 @@ mod tests {
     #[test]
     fn multinomial_sample_category_means_within_band() {
         let m = Multinomial::new(100, vec![0.2, 0.3, 0.5]).unwrap();
-        let mut rng = crate::random::Rng::from_seed(31);
+        let mut rng = geometry::random::Rng::from_seed(31);
         let draws = 2000;
         let mut sums = [0u64; 3];
         for _ in 0..draws {

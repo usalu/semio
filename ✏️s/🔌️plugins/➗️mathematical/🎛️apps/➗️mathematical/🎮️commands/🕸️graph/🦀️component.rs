@@ -19,7 +19,7 @@ pub mod set_algorithm {
     }
 
     pub fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
-        let mut graph = doc.snapshot.graph.clone();
+        let mut graph = crate::artifacts::mathematical::mathematical_graph(doc.snapshot);
         graph.algorithm = payload.algorithm.clone();
         graph.algorithm_seed = payload.seed.clone();
         Ok(Emit::commit(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph })], "setAlgorithm"))
@@ -38,7 +38,7 @@ pub mod set_directed {
     }
 
     pub fn handle(payload: &SetDirected, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
-        let mut graph = doc.snapshot.graph.clone();
+        let mut graph = crate::artifacts::mathematical::mathematical_graph(doc.snapshot);
         graph.directed = payload.directed;
         Ok(Emit::mutations(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph })]))
     }
@@ -63,7 +63,7 @@ pub mod node_graph_edit {
 
     pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
         let edit_operations: Vec<serde_json::Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
-        let mut graph = doc.snapshot.graph.clone();
+        let mut graph = crate::artifacts::mathematical::mathematical_graph(doc.snapshot);
         let mut changed = false;
         for operation in edit_operations {
             match operation.get("operation").and_then(serde_json::Value::as_str).unwrap_or("") {
@@ -134,6 +134,7 @@ mod tests {
     use super::*;
     use crate::apps::mathematical::testkit::{dispatch, math_app, MathApp};
     use crate::apps::mathematical::MathematicalCommand;
+    use crate::artifacts::mathematical::mathematical_graph;
 
     fn node_graph_edit(operation: serde_json::Value) -> MathematicalCommand {
         MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: serde_json::to_string(&vec![operation]).unwrap() })
@@ -144,15 +145,15 @@ mod tests {
         let mut app = math_app();
         dispatch(&mut app, MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }));
         let projection = app.snapshot().expect("projection");
-        assert_eq!(projection.graph.algorithm, "bfs");
-        assert_eq!(projection.graph.algorithm_seed.as_deref(), Some("a"));
+        assert_eq!(mathematical_graph(&projection).algorithm, "bfs");
+        assert_eq!(mathematical_graph(&projection).algorithm_seed.as_deref(), Some("a"));
     }
 
     #[test]
     fn set_directed_toggles_the_graph() {
         let mut app = math_app();
         dispatch(&mut app, MathematicalCommand::SetDirected(set_directed::SetDirected { directed: false }));
-        assert!(!app.snapshot().expect("projection").graph.directed);
+        assert!(!mathematical_graph(&app.snapshot().expect("projection")).directed);
     }
 
     #[test]
@@ -166,37 +167,37 @@ mod tests {
     #[test]
     fn node_graph_edit_add_node_appends_a_node() {
         let mut app = math_app();
-        let before = app.snapshot().expect("projection").graph.nodes.len();
+        let before = mathematical_graph(&app.snapshot().expect("projection")).nodes.len();
         dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 1.0, "y": 2.0 })));
-        assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before + 1);
+        assert_eq!(mathematical_graph(&app.snapshot().expect("projection")).nodes.len(), before + 1);
     }
 
     #[test]
     fn node_graph_edit_move_updates_node_position() {
         let mut app = math_app();
-        let node_id = app.snapshot().expect("projection").graph.nodes[0].id.clone();
+        let node_id = mathematical_graph(&app.snapshot().expect("projection")).nodes[0].id.clone();
         dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "move", "nodeId": node_id, "x": 42.0, "y": 43.0 })));
-        let moved = app.snapshot().expect("projection").graph.nodes.iter().find(|node| node.id == node_id).cloned().expect("moved node");
+        let moved = mathematical_graph(&app.snapshot().expect("projection")).nodes.iter().find(|node| node.id == node_id).cloned().expect("moved node");
         assert_eq!((moved.x, moved.y), (42.0, 43.0));
     }
 
     #[test]
     fn node_graph_edit_connect_appends_an_edge() {
         let mut app = math_app();
-        let before = app.snapshot().expect("projection").graph.edges.len();
+        let before = mathematical_graph(&app.snapshot().expect("projection")).edges.len();
         dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "connect", "sourceNodeId": "a", "targetNodeId": "d" })));
-        let projection = app.snapshot().expect("projection");
-        assert_eq!(projection.graph.edges.len(), before + 1);
-        assert!(projection.graph.edges.iter().any(|edge| edge.source == "a" && edge.target == "d"));
+        let projection = mathematical_graph(&app.snapshot().expect("projection"));
+        assert_eq!(projection.edges.len(), before + 1);
+        assert!(projection.edges.iter().any(|edge| edge.source == "a" && edge.target == "d"));
     }
 
     #[test]
     fn node_graph_edit_delete_selection_removes_nodes_and_incident_edges() {
         let mut app = math_app();
         dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "deleteSelection", "nodeIds": ["a"] })));
-        let projection = app.snapshot().expect("projection");
-        assert!(!projection.graph.nodes.iter().any(|node| node.id == "a"));
-        assert!(!projection.graph.edges.iter().any(|edge| edge.source == "a" || edge.target == "a"));
+        let projection = mathematical_graph(&app.snapshot().expect("projection"));
+        assert!(!projection.nodes.iter().any(|node| node.id == "a"));
+        assert!(!projection.edges.iter().any(|edge| edge.source == "a" || edge.target == "a"));
     }
 
     #[test]
@@ -211,8 +212,8 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = math_app();
-        let before = app.snapshot().expect("projection").graph.nodes.len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 1.0, "y": 2.0 })), |app| app.snapshot().expect("projection").graph.nodes.len(), before, before + 1);
+        let before = mathematical_graph(&app.snapshot().expect("projection")).nodes.len();
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 1.0, "y": 2.0 })), |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len(), before, before + 1);
     }
 
     #[test]
@@ -222,15 +223,15 @@ mod tests {
             node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 9.0, "y": 9.0 })),
             MathematicalCommand::SetDirected(set_directed::SetDirected { directed: false }),
             |app| {
-                let projection = app.snapshot().expect("projection");
-                (projection.graph.nodes.len(), projection.graph.directed)
+                let projection = mathematical_graph(&app.snapshot().expect("projection"));
+                (projection.nodes.len(), projection.directed)
             },
         );
     }
 
     #[test]
     fn ingest_operations_is_idempotent_for_mathematical() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<crate::apps::mathematical::MathematicalPlayApp, _>(node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 3.0, "y": 4.0 })), |app| app.snapshot().expect("projection").graph.nodes.len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<crate::apps::mathematical::MathematicalPlayApp, _>(node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 3.0, "y": 4.0 })), |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len());
     }
 }
 //#endregion 🧪️Tests

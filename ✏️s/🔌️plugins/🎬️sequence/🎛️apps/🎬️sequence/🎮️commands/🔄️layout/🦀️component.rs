@@ -72,7 +72,7 @@ mod tests {
         use semio_framework_plugin::VcsArtifactApp;
 
         pub fn move_all_steps_to_origin(app: &mut VcsArtifactApp<crate::apps::sequence::SequencePlayApp>) {
-            let ids: Vec<String> = app.snapshot().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
+            let ids: Vec<String> = app.snapshot().expect("projection").to_fixture().steps.iter().map(|step| step.id.clone()).collect();
             for id in &ids {
                 dispatch(app, SequenceCommand::MoveStep(MoveStep { node_id: id.clone(), x: 0.0, y: 0.0 }));
             }
@@ -85,7 +85,7 @@ mod tests {
         dispatch(&mut app, SequenceCommand::SetOrientation(SetOrientation { value: "topBottom".into() }));
         move_all_steps_to_origin(&mut app);
         dispatch(&mut app, SequenceCommand::Reorganize(Reorganize {}));
-        let ys: Vec<f64> = app.snapshot().expect("projection").steps.iter().map(|step| step.y).collect();
+        let ys: Vec<f64> = app.snapshot().expect("projection").to_fixture().steps.iter().map(|step| step.y).collect();
         assert!(ys.iter().any(|y| *y != 0.0), "topBottom orientation should spread steps vertically, got {ys:?}");
     }
 
@@ -94,7 +94,7 @@ mod tests {
         let mut app = new_app();
         move_all_steps_to_origin(&mut app);
         dispatch(&mut app, SequenceCommand::Reorganize(Reorganize {}));
-        let xs: Vec<f64> = app.snapshot().expect("projection").steps.iter().map(|step| step.x).collect();
+        let xs: Vec<f64> = app.snapshot().expect("projection").to_fixture().steps.iter().map(|step| step.x).collect();
         assert!(xs.iter().any(|x| *x != 0.0), "reorganize should spread steps apart, got {xs:?}");
     }
 }

@@ -1,0 +1,368 @@
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:319:11
+    |
+319 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:325:11
+    |
+325 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:16
+    |
+492 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+492 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+492 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:492:47
+    |
+492 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+492 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+492 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:533:16
+    |
+533 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+533 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+533 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `print_edge_label` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:269:4
+    |
+269 | fn print_edge_label(label: &EdgeLabel, out: &mut String) {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2793:19
+     |
+2687 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+2688 | | where
+2689 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+2690 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+2793 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 8 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 4 suggestions)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 5.66s
+     Running unittests 📦️glue.rs (.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS/🎯️target/debug/deps/semio_framework_math-9769a86222a0c7e8)
+
+running 179 tests
+test cas::assume::tests::close_propagates_positive_to_real_nonnegative_nonzero ... ok
+test cas::assume::tests::close_propagates_even_to_integer_rational_real ... ok
+test cas::canon::tests::func_special_values_fold ... ok
+test cas::assume::tests::close_rejects_positive_and_negative - should panic ... ok
+test cas::canon::tests::i_power_cycles_with_period_four ... ok
+test cas::assume::tests::close_rejects_even_and_odd - should panic ... ok
+test cas::canon::tests::mul_by_zero_absorbs ... ok
+test cas::canon::tests::mul_zero_times_complex_infinity_is_undefined ... ok
+test cas::canon::tests::mul_nonzero_times_complex_infinity_is_complex_infinity ... ok
+test cas::assume::tests::bound_for_deduces_sign_from_assumption_store ... ok
+test cas::canon::tests::mul_folds_numeric_literals ... ok
+test cas::canon::tests::add_folds_numeric_literals ... ok
+test cas::canon::tests::pow_identities ... ok
+test cas::canon::tests::nested_pow_combines_exponents_for_integer_outer_exponent ... ok
+test cas::canon::tests::pow_negative_integer_exponent_gives_rational ... ok
+test cas::canon::tests::mul_combines_like_bases ... ok
+test cas::canon::tests::pow_integer_folds_exactly ... ok
+test cas::canon::tests::add_drops_zero ... ok
+test cas::canon::tests::add_collects_like_terms ... ok
+test cas::canon::tests::canonicalization_is_idempotent_on_a_small_corpus ... ok
+test cas::diff::tests::diff_of_constant_is_zero ... ok
+test cas::diff::tests::diff_of_other_symbol_is_zero ... ok
+test cas::diff::tests::diff_of_x_is_one ... ok
+test cas::diff::tests::chain_rule_sin_of_square ... ok
+test cas::diff::tests::general_power_logarithmic_differentiation ... ok
+test cas::diff::tests::exp_of_x_is_itself ... ok
+test cas::diff::tests::ln_derivative ... ok
+test cas::diff::tests::bessel_j_recurrence_derivative ... ok
+test cas::canon::tests::radical_of_prime_stays_symbolic ... ok
+test cas::canon::tests::radical_exact_perfect_power_folds_fully ... ok
+test cas::diff::tests::power_rule ... ok
+test cas::diff::tests::unknown_function_derivative_is_none ... ok
+test cas::diff::tests::product_rule ... ok
+test cas::canon::tests::radical_partial_extraction_matches_plan_example ... ok
+test cas::expr::tests::ord_is_consistent_and_total ... ok
+test cas::expr::tests::hash_is_deterministic ... ok
+test cas::expr::tests::structural_equality_ignores_sharing ... ok
+test cas::expr::tests::symbols_with_different_assumptions_are_distinct ... ok
+test cas::diff::tests::gradient_computes_all_partials ... ok
+test cas::fmt::tests::display_division ... ok
+test cas::fmt::tests::display_negative_term ... ok
+test cas::fmt::tests::latex_constant_pi ... ok
+test cas::fmt::tests::display_simple_polynomial ... ok
+test cas::fmt::tests::latex_fraction_and_power ... ok
+test cas::fnkind::tests::arity_hand_cases ... ok
+test cas::fnkind::tests::parity_hand_cases ... ok
+test cas::fnkind::tests::name_hand_cases ... ok
+test cas::integrate::tests::definite_integral_of_power ... ok
+test cas::integrate::tests::integrate_reciprocal_gives_ln ... ok
+test cas::integrate::tests::residue_at_simple_pole ... ok
+test cas::limits::tests::direct_substitution_when_defined ... ok
+test cas::integrate::tests::integrate_ln_by_parts ... ok
+test cas::integrate::tests::integrate_power_rule ... ok
+test cas::integrate::tests::integrate_by_parts_x_times_exp ... ok
+test cas::limits::tests::classic_sin_x_over_x_at_zero ... ok
+test cas::integrate::tests::integrate_u_substitution ... ok
+test cas::integrate::tests::integrate_polynomial_sum ... ok
+test cas::limits::tests::limit_at_infinity_of_rational_function ... FAILED
+test cas::integrate::tests::integrate_sin_and_cos ... ok
+test cas::limits::tests::polynomial_ratio_at_removable_singularity ... ok
+test cas::limits::tests::one_plus_one_over_n_to_the_n_via_lhopital_on_log_form ... ok
+test cas::matrix::tests::cayley_hamilton_holds_for_a_3x3_matrix ... ok
+test cas::matrix::tests::det_2x2_hand_case ... ok
+test cas::integrate::tests::integrate_irreducible_quadratic_denominator ... ok
+test cas::matrix::tests::rank_of_numeric_matrix ... ok
+test cas::matrix::tests::det_symbolic_2x2 ... ok
+test cas::matrix::tests::rref_of_numeric_matrix ... ok
+test cas::matrix::tests::inverse_times_original_is_identity ... ok
+test cas::matrix::tests::singular_matrix_has_no_inverse ... ok
+test cas::matrix::tests::solve_numeric_linear_system ... ok
+test cas::ode::tests::linear_constant_coefficient_complex_roots ... ok
+test cas::ode::tests::linear_constant_coefficient_repeated_root ... ok
+test cas::ode::tests::linear_first_order_ode ... FAILED
+test cas::ode::tests::bernoulli_ode ... FAILED
+test cas::ode::tests::separable_ode_y_prime_equals_x_over_y ... ok
+test cas::pattern::tests::free_of_constraint_rejects_expressions_containing_the_symbol ... ok
+test cas::pattern::tests::ac_match_finds_permuted_assignment ... ok
+test cas::pattern::tests::pow_exponent_mismatch_fails ... ok
+test cas::pattern::tests::rule_rewrites_matching_expression ... ok
+test cas::pattern::tests::seq_wildcard_absorbs_remaining_terms ... ok
+test cas::pattern::tests::ruleset_bottom_up_rewrites_nested_occurrence ... ok
+test cas::pattern::tests::structural_match_on_pow ... ok
+test cas::pattern::tests::wildcard_any_matches_anything ... ok
+test cas::pattern::tests::wildcard_number_rejects_symbols ... ok
+test cas::polybridge::tests::as_poly_roundtrips_through_from_poly ... ok
+test cas::polybridge::tests::as_ratfunc_auto_recovers_together_form ... ok
+test cas::polybridge::tests::as_poly_uni_extracts_univariate_polynomial ... ok
+test cas::polybridge::tests::as_poly_uni_fails_for_other_generators ... ok
+test cas::polybridge::tests::build_ratio_folds_constant_denominator ... ok
+test cas::polybridge::tests::detect_gens_finds_symbols_and_functions ... ok
+test cas::series::tests::leading_term_skips_zero_coefficients ... ok
+test cas::series::tests::series_to_expr_round_trips_a_polynomial ... ok
+test cas::series::tests::taylor_series_fails_at_a_pole ... ok
+test cas::matrix::tests::charpoly_and_eigenvalues_of_diagonal_matrix ... ok
+test cas::series::tests::taylor_series_of_exp_matches_known_coefficients ... ok
+test cas::series::tests::taylor_series_of_sin_around_zero_has_no_even_terms ... ok
+test cas::simplify::tests::collect_groups_like_powers ... ok
+test cas::simplify::tests::denest_sqrt_classic_example ... ok
+test cas::simplify::tests::cancel_removes_common_univariate_factor ... ok
+test cas::simplify::tests::expand_binomial_square ... ok
+test cas::integrate::tests::integrate_simple_partial_fraction ... FAILED
+test cas::simplify::tests::expand_distributes_over_function_argument_unchanged ... ok
+test cas::ode::tests::linear_constant_coefficient_second_order_distinct_real_roots ... ok
+test cas::simplify::tests::together_combines_fractions ... ok
+test cas::simplify::tests::simplify_picks_the_smallest_candidate ... ok
+test cas::rootof::tests::root_of_sign_matches_isolation_interval ... ok
+test cas::solve::tests::solve_exp_equation ... ok
+test cas::solve::tests::solve_2x2_linear_system ... ok
+test cas::solve::tests::solve_inequality_simple_quadratic ... ok
+test cas::solve::tests::solve_linear_equation ... ok
+test cas::polybridge::tests::factor_poly_u_recombines_to_the_original ... ok
+test cas::solve::tests::solve_quadratic_with_complex_roots ... ok
+test cas::solve::tests::solve_sin_equation_gives_parametric_family ... ok
+test cas::simplify::tests::apart_splits_simple_rational_function ... ok
+test cas::sums::tests::sum_geometric_series_hand_case ... ok
+test cas::simplify::tests::factor_recovers_linear_factors ... ok
+test cas::sums::tests::fourier_coefficients_of_a_polynomial_smoke_test ... FAILED
+test cas::solve::tests::solve_quadratic_with_real_roots ... ok
+test cas::transforms::tests::laplace_and_inverse_round_trip_for_exp ... ok
+test cas::transforms::tests::laplace_linearity ... ok
+test cas::transforms::tests::laplace_of_exp ... ok
+test cas::sums::tests::sum_of_k_from_1_to_n_is_gauss_formula ... FAILED
+test cas::transforms::tests::laplace_of_t_to_the_n ... ok
+test cas::sums::tests::sum_of_k_squared_matches_known_hand_values ... FAILED
+test cas::trig::tests::expand_log_of_product_and_power ... ok
+test cas::trig::tests::expand_trig_sin_of_sum ... ok
+test cas::trig::tests::logcombine_merges_positive_logs ... ok
+test cas::trig::tests::logcombine_skips_unknown_sign_arguments ... ok
+test cas::trig::tests::powsimp_combines_same_exponent_factors ... ok
+test cas::visit::tests::contains_symbol_detects_nested_occurrence ... ok
+test cas::trig::tests::trig_canon_pythagorean_with_extra_terms ... ok
+test cas::visit::tests::free_symbols_deduplicates_and_sorts ... ok
+test cas::trig::tests::trig_canon_rewrites_tan_to_sin_over_cos ... ok
+test cas::visit::tests::node_count_hand_case ... ok
+test cas::trig::tests::trig_canon_applies_pythagorean_identity ... ok
+test cas::visit::tests::subs_replaces_matching_subtree ... ok
+test polynomial::algebraic::tests::from_rational_is_exact ... ok
+test polynomial::algebraic::tests::neg_and_inv_hand_cases ... FAILED
+test cas::solve::tests::solve_high_degree_gives_rootof ... ok
+test polynomial::factor::tests::factor_irreducible_quadratic_stays_whole ... ok
+test polynomial::factor::tests::factor_nonmonic_quadratic ... ok
+test polynomial::algebraic::tests::root_of_selects_correct_irreducible_factor ... FAILED
+test polynomial::factor::tests::factor_repeated_linear_factor ... ok
+test polynomial::factor::tests::factor_x2_minus_1 ... ok
+test polynomial::factor::tests::rational_roots_of_quadratic ... ok
+test polynomial::factor::tests::rational_roots_with_zero_root ... ok
+test cas::rootof::tests::real_roots_of_quadratic_gives_two_rootofs ... ok
+test polynomial::finite::tests::equal_degree_factor_splits_product_of_two_linears ... ok
+test polynomial::finite::tests::factor_mod_p_reconstructs_via_multiplication ... ok
+test polynomial::finite::tests::distinct_degree_factor_separates_degrees ... ok
+test polynomial::finite::tests::is_irreducible_hand_cases ... FAILED
+test polynomial::finite::tests::poly_mod_pow_matches_repeated_squaring ... ok
+test polynomial::multivariate::tests::eval_hand_case ... ok
+test polynomial::multivariate::tests::monomial_ordering_grlex_uses_total_degree_first ... ok
+test polynomial::multivariate::tests::monomial_ordering_lex ... ok
+test polynomial::multivariate::tests::groebner_basis_of_line_intersection ... ok
+test polynomial::multivariate::tests::partial_derivative_hand_case ... ok
+test polynomial::multivariate::tests::ring_ops_hand_case ... ok
+test polynomial::multivariate::tests::try_div_and_lcm ... ok
+test polynomial::roots::tests::cauchy_bound_contains_all_roots ... ok
+test polynomial::roots::tests::isolate_roots_of_simple_quadratic ... ok
+test polynomial::factor::tests::factor_x4_minus_1 ... ok
+test polynomial::roots::tests::zero_polynomial_and_constant_have_no_roots ... ok
+test polynomial::univariate::tests::derivative_power_rule ... ok
+test polynomial::univariate::tests::div_rem_identity_holds ... ok
+test polynomial::univariate::tests::eval_horner_matches_direct_computation ... ok
+test polynomial::roots::tests::refine_root_converges_to_sqrt2 ... ok
+test polynomial::univariate::tests::factor_x2_minus_1_via_squarefree_and_roots ... ok
+test polynomial::univariate::tests::gcd_hand_case ... ok
+test polynomial::univariate::tests::interpolate_reconstructs_quadratic ... FAILED
+test polynomial::univariate::tests::rational_root_via_eval_hand_case ... ok
+test polynomial::univariate::tests::resultant_of_coprime_linear_factors_is_nonzero ... ok
+test polynomial::univariate::tests::resultant_of_shared_root_is_zero ... ok
+test polynomial::univariate::tests::ring_axioms_on_small_polynomials ... ok
+test polynomial::univariate::tests::squarefree_decomposition_of_repeated_factor ... ok
+test polynomial::roots::tests::isolate_roots_matches_known_integer_roots ... ok
+test polynomial::roots::tests::wilkinson_like_small_case_root_count ... ok
+test polynomial::algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4 ... FAILED
+test polynomial::algebraic::tests::cbrt2_times_cbrt4_equals_2 ... FAILED
+
+failures:
+
+---- cas::limits::tests::limit_at_infinity_of_rational_function stdout ----
+
+thread 'cas::limits::tests::limit_at_infinity_of_rational_function' (299016346) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🧮️cas/🦀️component.rs:4373:13:
+assertion `left == right` failed
+  left: Some((zoo + 1)/(zoo + 3))
+ right: Some(2)
+
+---- cas::ode::tests::linear_first_order_ode stdout ----
+
+thread 'cas::ode::tests::linear_first_order_ode' (299016362) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🧮️cas/🦀️component.rs:6070:57:
+called `Option::unwrap()` on a `None` value
+
+---- cas::ode::tests::bernoulli_ode stdout ----
+
+thread 'cas::ode::tests::bernoulli_ode' (299016358) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🧮️cas/🦀️component.rs:6081:13:
+assertion failed: sol.is_some()
+
+---- cas::integrate::tests::integrate_simple_partial_fraction stdout ----
+
+thread 'cas::integrate::tests::integrate_simple_partial_fraction' (299016340) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🧮️cas/🦀️component.rs:5614:13:
+assertion failed: diff_matches(&e, &x, &result)
+
+---- cas::sums::tests::fourier_coefficients_of_a_polynomial_smoke_test stdout ----
+
+thread 'cas::sums::tests::fourier_coefficients_of_a_polynomial_smoke_test' (299016404) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🧮️cas/🦀️component.rs:5805:13:
+assertion failed: result.is_some()
+
+---- cas::sums::tests::sum_of_k_from_1_to_n_is_gauss_formula stdout ----
+
+thread 'cas::sums::tests::sum_of_k_from_1_to_n_is_gauss_formula' (299016406) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🧮️cas/🦀️component.rs:5778:13:
+assertion `left == right` failed
+  left: 3*n/2 + n^2/2
+ right: n^2/2 + n/2
+
+---- cas::sums::tests::sum_of_k_squared_matches_known_hand_values stdout ----
+
+thread 'cas::sums::tests::sum_of_k_squared_matches_known_hand_values' (299016407) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🧮️cas/🦀️component.rs:5787:13:
+assertion `left == right` failed
+  left: 44
+ right: 14
+
+---- polynomial::algebraic::tests::neg_and_inv_hand_cases stdout ----
+
+thread 'polynomial::algebraic::tests::neg_and_inv_hand_cases' (299016427) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../📈️polynomial/🦀️component.rs:2341:13:
+assertion failed: (negated.to_f64() + 2f64.sqrt()).abs() < 1e-9
+
+---- polynomial::algebraic::tests::root_of_selects_correct_irreducible_factor stdout ----
+
+thread 'polynomial::algebraic::tests::root_of_selects_correct_irreducible_factor' (299016428) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../📈️polynomial/🦀️component.rs:2351:13:
+assertion failed: (root0.to_f64() + 2f64.sqrt()).abs() < 1e-6
+
+---- polynomial::finite::tests::is_irreducible_hand_cases stdout ----
+
+thread 'polynomial::finite::tests::is_irreducible_hand_cases' (299016440) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../📈️polynomial/🦀️component.rs:1275:13:
+assertion failed: is_irreducible(&f)
+
+---- polynomial::univariate::tests::interpolate_reconstructs_quadratic stdout ----
+
+thread 'polynomial::univariate::tests::interpolate_reconstructs_quadratic' (299016460) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../📈️polynomial/🦀️component.rs:606:13:
+assertion `left == right` failed
+  left: PolyU { coeffs: [Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [1] } }, denom: Natural { limbs: [1] } }, Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [7] } }, denom: Natural { limbs: [1] } }, Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [2] } }, denom: Natural { limbs: [1] } }] }
+ right: PolyU { coeffs: [Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [1] } }, denom: Natural { limbs: [1] } }, Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [3] } }, denom: Natural { limbs: [1] } }, Rational { numer: Integer { sign: Positive, magnitude: Natural { limbs: [2] } }, denom: Natural { limbs: [1] } }] }
+
+---- polynomial::algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4 stdout ----
+
+thread 'polynomial::algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4' (299016429) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../📈️polynomial/🦀️component.rs:2317:13:
+assertion failed: (val - (2f64.sqrt() + 3f64.sqrt())).abs() < 1e-6
+
+---- polynomial::algebraic::tests::cbrt2_times_cbrt4_equals_2 stdout ----
+
+thread 'polynomial::algebraic::tests::cbrt2_times_cbrt4_equals_2' (299016425) panicked at 🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../📈️polynomial/🦀️component.rs:2326:13:
+assertion failed: (product.to_f64() - 2.0).abs() < 1e-6
+
+
+failures:
+    cas::integrate::tests::integrate_simple_partial_fraction
+    cas::limits::tests::limit_at_infinity_of_rational_function
+    cas::ode::tests::bernoulli_ode
+    cas::ode::tests::linear_first_order_ode
+    cas::sums::tests::fourier_coefficients_of_a_polynomial_smoke_test
+    cas::sums::tests::sum_of_k_from_1_to_n_is_gauss_formula
+    cas::sums::tests::sum_of_k_squared_matches_known_hand_values
+    polynomial::algebraic::tests::cbrt2_times_cbrt4_equals_2
+    polynomial::algebraic::tests::neg_and_inv_hand_cases
+    polynomial::algebraic::tests::root_of_selects_correct_irreducible_factor
+    polynomial::algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4
+    polynomial::finite::tests::is_irreducible_hand_cases
+    polynomial::univariate::tests::interpolate_reconstructs_quadratic
+
+test result: FAILED. 166 passed; 13 failed; 0 ignored; 0 measured; 1404 filtered out; finished in 1.77s
+
+error: test failed, to rerun pass `-p semio-framework-math --lib`

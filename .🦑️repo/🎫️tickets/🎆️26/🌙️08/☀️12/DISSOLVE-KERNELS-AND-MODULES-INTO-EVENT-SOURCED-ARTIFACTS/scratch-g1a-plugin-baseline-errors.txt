@@ -1,0 +1,6 @@
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🧊️3d/🎬️scene/🦀️component.rs:3:9: error[E0433]: cannot find module or crate `semio_framework_math` in this scope: use of unresolved module or unlinked crate `semio_framework_math`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🧊️3d/🎬️scene/🦀️component.rs:842:28: error[E0689]: can't call method `abs` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🧊️3d/🎬️scene/🦀️component.rs:861:41: error[E0689]: can't call method `sqrt` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🧊️3d/🎬️scene/🦀️component.rs:864:41: error[E0689]: can't call method `sqrt` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../../🧊️3d/🎬️scene/🦀️component.rs:867:41: error[E0689]: can't call method `sqrt` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:594:45: error[E0432]: unresolved import `crate::wgpu::Vec3`: no `Vec3` in `wgpu`

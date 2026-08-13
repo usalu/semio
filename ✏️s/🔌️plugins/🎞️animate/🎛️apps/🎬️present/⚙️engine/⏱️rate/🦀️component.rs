@@ -6,7 +6,7 @@
 pub mod rate {
     //! 📈️ Rate functions mapping linear time α ∈ [0,1] to eased progress.
 
-    use math::geometry::clamp_f64;
+    use geometry::clamp_f64;
 
     /// 📐️ Easing function signature used by animations.
     pub type RateFunc = fn(f64) -> f64;
@@ -607,7 +607,7 @@ pub mod updater {
     mod tests {
         use super::*;
         use crate::apps::present::engine::scene::sobject::VSobject;
-        use math::geometry::BezPath;
+        use geometry::BezPath;
 
         #[test]
         fn value_tracker_mutates() {

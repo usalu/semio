@@ -202,7 +202,7 @@ impl ArtifactApp for ReasoningWiresPlayApp {
         let document = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::wires::terminology::WiresLabels>(&cfg.snapshot.locale);
         match body_key {
-            WIRES_PLAY_BODY_COMPOSITE => edit::windows::canvas::render(&document.board_fixture, &document.wires_fixture),
+            WIRES_PLAY_BODY_COMPOSITE => edit::windows::canvas::render(&crate::artifacts::wires::wires_working_board(document), &document.wires_fixture),
             WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, &cfg.snapshot.selected_ids, labels),
             WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels),
             WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, &cfg.snapshot.selected_ids),
@@ -408,8 +408,9 @@ mod tests {
     #[test]
     fn metabolism_board_fixture_uses_mindmap_schema() {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot();
-        assert_eq!(document.board_fixture.get("schema").and_then(|value| value.as_str()), Some(crate::artifacts::wires::MINDMAP_BOARD_SCHEMA));
-        assert_eq!(crate::artifacts::wires::schema::fixture_nodes(&document.board_fixture).len(), 7);
+        let board = crate::artifacts::wires::wires_working_board(&document);
+        assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(crate::artifacts::wires::MINDMAP_BOARD_SCHEMA));
+        assert_eq!(crate::artifacts::wires::schema::fixture_nodes(&board).len(), 7);
     }
 
     #[test]
@@ -421,12 +422,12 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::schema::fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).len(), 0, 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len(), 0, 1);
     }
 
     #[test]
     fn ingest_operations_is_idempotent() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::schema::fixture_nodes(&app.snapshot().expect("snapshot").board_fixture).len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len());
     }
 
     /// 🧪️ The definitional merge proof: A adds a node while B renames another node — disjoint edits
@@ -444,8 +445,8 @@ mod tests {
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
         let seed_node = |id: &str| dsl::to_dsl_value(&serde_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
         let mut base = crate::artifacts::wires::empty_wires_snapshot();
-        base = store::apply_mutation(&base, &WiresMutation::AddNode { node: seed_node("node-1") });
-        base = store::apply_mutation(&base, &WiresMutation::AddNode { node: seed_node("node-2") });
+        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-1")));
+        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-2")));
         let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
         let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
         instance_a.load_document_pack(&base_files).expect("load a");
@@ -469,7 +470,7 @@ mod tests {
         assert!(find_board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
         assert!(find_board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
         // B's move of node-2 survives on both.
-        let x_of = |document: &WiresSnapshot| find_board_node(document, "node-2").map(crate::artifacts::wires::schema::node_position).unwrap().0;
+        let x_of = |document: &WiresSnapshot| find_board_node(document, "node-2").map(|node| crate::artifacts::wires::schema::node_position(&node)).unwrap().0;
         assert_eq!(x_of(&projection_a), 50.0, "A converges on B's move");
         assert_eq!(x_of(&projection_b), 50.0, "B keeps its own move");
     }

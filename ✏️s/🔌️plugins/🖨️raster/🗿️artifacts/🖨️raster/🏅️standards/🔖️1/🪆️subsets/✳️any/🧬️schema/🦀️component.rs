@@ -472,12 +472,12 @@ mod tests {
 
     #[test]
     fn imports_dwg_polyline_into_raster_document() {
-        let mut drawing = semio_framework_os::DwgDrawing::default();
+        let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
-        drawing.entities.push(semio_framework_os::DwgEntity {
+        drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
             layer,
-            color: semio_framework_os::DwgColor::ByLayer,
-            geometry: semio_framework_os::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
+            color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
+            geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
         });
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [10.0, 10.0, 0.0];
@@ -495,7 +495,7 @@ mod tests {
 
     #[test]
     fn imports_empty_dwg_into_blank_raster_document() {
-        let drawing = semio_framework_os::DwgDrawing::default();
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let value = crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing).expect("empty dwg import");
         let document: RasterSnapshot = serde_json::from_value(value).expect("valid raster document");
         assert_eq!(document.layers.len(), 1);

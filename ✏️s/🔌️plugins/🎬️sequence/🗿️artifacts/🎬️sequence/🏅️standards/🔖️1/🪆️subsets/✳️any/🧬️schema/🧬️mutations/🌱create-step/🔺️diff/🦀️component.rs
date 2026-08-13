@@ -1,10 +1,15 @@
 //! 🔺️ Sparse diff builder for `CreateStep` — a real append-only insert (never a whole-snapshot
-//! capture).
-use crate::artifacts::sequence::diff::{SequenceDiff, SequenceStepsDelta};
-use crate::artifacts::sequence::SequenceSnapshot;
+//! capture). Reads the CURRENT scene off `base` via `sequence_working_scene`, applies the same
+//! append semantics against it, then mints a whole new content handle via `diff_replace_content`
+//! (the composed child is opaque — a parent's diff never embeds a child diff).
+use crate::artifacts::sequence::diff::SequenceDiff;
+use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateStep, _base: &SequenceSnapshot) -> SequenceDiff {
-    SequenceDiff { steps: Some(SequenceStepsDelta { added: vec![payload.step.clone()], ..Default::default() }), ..Default::default() }
+pub fn diff(payload: &super::mutation::CreateStep, base: &SequenceSnapshot) -> SequenceDiff {
+    let scene = sequence_working_scene(base);
+    let mut steps = scene.steps;
+    steps.push(payload.step.clone());
+    diff_replace_content(steps, scene.edges)
 }
 //#endregion 🔖️Diff

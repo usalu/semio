@@ -556,7 +556,7 @@ pub use derive_transformation::*;
 mod construct_query {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry;
     use math::graph::dsl::{QueryableEdge, QueryableGraph};
-    use math::graph::manifest::PropertyValue;
+    use graph::manifest::PropertyValue;
     use std::collections::BTreeSet;
 
     const KIND_VERTEX: &str = "Vertex";
@@ -583,7 +583,7 @@ mod construct_query {
     }
 
     impl QueryableGraph for CadTopologyGraph<'_> {
-        fn manifest(&self) -> Option<&math::graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
             None
         }
 
@@ -644,7 +644,7 @@ mod construct_query {
             let mut next_id = 0usize;
             let mut push = |kind: &str, source_node_id: String, target_node_id: String| {
                 next_id += 1;
-                out.push(QueryableEdge { id: format!("{kind}-{next_id}"), kind: kind.to_string(), source_node_id, target_node_id, source_port: None, target_port: None, properties: math::graph::manifest::PropertyBag::default() });
+                out.push(QueryableEdge { id: format!("{kind}-{next_id}"), kind: kind.to_string(), source_node_id, target_node_id, source_port: None, target_port: None, properties: graph::manifest::PropertyBag::default() });
             };
             for solid in &g.solids {
                 for shell_id in &solid.shell_ids {
@@ -792,7 +792,7 @@ mod scene_compute {
     use crate::artifacts::cad::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot};
     use semio_framework_3d::brep::kernel::mesh_data_from_mesh_transfer;
-    use semio_framework_3d::brep::engine::{block_on, BrepEngineHost, BrepKernel, GeometryHandle, MeshTransfer};
+    use semio_framework_3d::brep::engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use serde_json::Value;
@@ -838,25 +838,20 @@ mod scene_compute {
     pub const CAD_FOREST_REFERENCE_Y_OFFSET_RATIO: f64 = 0.2;
 
 
-    const CAD_BREP_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
-
-    /// @emoji 🖥️ Host-owned brep session (`EngineHost` + compute-scoped kernel registry).
-    pub fn cad_brep_host() -> &'static BrepEngineHost {
-        static HOST: OnceLock<BrepEngineHost> = OnceLock::new();
-        HOST.get_or_init(|| BrepEngineHost::new(CAD_BREP_CACHE_BUDGET_BYTES))
-    }
-
-    /// @emoji 🔩 Lock the cad brep kernel for synchronous `BrepKernel` calls.
-    pub fn cad_brep_kernel() -> Result<std::sync::MutexGuard<'static, semio_framework_3d::brep::kernel::Brep>, &'static str> {
-        cad_brep_host().kernel().lock().map_err(|_| "cad brep kernel lock poisoned")
+    /// 🌱 Fresh, doctrine-tier-(d) brep kernel: a `Brep::new()` local to the caller, never a
+    /// process-global session (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
+    /// wave G4 — this replaces the deleted `static HOST: OnceLock<BrepEngineHost>`, which was the
+    /// exact ambient-reach anti-pattern the ticket exists to remove even though it was write-once).
+    /// Every call site already builds, uses and drops its handles within the one call that owns
+    /// this kernel, so no cross-call registry was ever load-bearing.
+    pub fn cad_brep_kernel() -> semio_framework_3d::brep::kernel::Brep {
+        semio_framework_3d::brep::kernel::Brep::new()
     }
 
     /// @emoji 📐️ Tessellates a typology's primitive sized from authored geometry (or a universal
     /// fallback extent when no geometry was captured), instead of hardcoded per-typology constants.
     fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Option<&str>, centroid: Option<[f64; 3]>) -> MeshData {
-        let Ok(mut kernel) = cad_brep_kernel() else {
-            return mesh_from_kind(typology_mesh_kind(typology));
-        };
+        let mut kernel = cad_brep_kernel();
         if let Some(handle_id) = solid_handle {
             let handle = GeometryHandle(handle_id.into());
             if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
@@ -951,10 +946,8 @@ mod scene_compute {
         let Some(objects_value) = root.pointer(&format!("/models/{model_index}/model/objects")).and_then(|value| value.as_array()) else {
             return (Vec::new(), geometry);
         };
-        let Ok(mut kernel) = cad_brep_kernel() else {
-            return (Vec::new(), geometry);
-        };
-        let objects = objects_from_fixture_model(&mut *kernel, objects_value, &geometry);
+        let mut kernel = cad_brep_kernel();
+        let objects = objects_from_fixture_model(&mut kernel, objects_value, &geometry);
         (objects, geometry)
     }
 
@@ -1148,8 +1141,9 @@ mod scene_compute {
 
     pub fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
         let kind = primary_primitive_kind(object);
-        if let Ok(mut kernel) = cad_brep_kernel() {
-            let mesh = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| tessellate_object_mesh_from_fixture(&mut *kernel, object, geometry)).or_else(|| tessellate_object_mesh(&mut *kernel, object, kind));
+        {
+            let mut kernel = cad_brep_kernel();
+            let mesh = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| tessellate_object_mesh_from_fixture(&mut kernel, object, geometry)).or_else(|| tessellate_object_mesh(&mut kernel, object, kind));
             if let Some(mut mesh) = mesh {
                 if let Some(geometry) = geometry {
                     align_mesh_to_fixture_centroid(&mut mesh, geometry, &object.primitives);

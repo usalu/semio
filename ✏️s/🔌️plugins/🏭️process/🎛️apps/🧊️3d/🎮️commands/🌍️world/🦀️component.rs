@@ -7,7 +7,7 @@ use crate::apps::process3d::set_active_utility_effect;
 use crate::apps::process3d::axis_angle_from_up_to;
 use crate::artifacts::process3d::schema::inferences::capability_for_measure_kind;
 use crate::artifacts::process3d::schema::{insert_step_mutations, next_step_id};
-use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin};
+use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, WorkingSolid, StepOrigin};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -29,9 +29,9 @@ fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f6
     let position = [point[0] + normal[0] * offset, point[1] + normal[1] * offset, point[2] + normal[2] * offset];
     let pose = Pose { position, axis, angle };
     let (measure, label, machine_id, capability_id) = if distance < 0.0 {
-        (ProcessMeasure::Cut { tool: SolidSpec::Box { width, depth, height }, pose }, labels.push_cut, "saw", "cut")
+        (ProcessMeasure::Cut { tool: WorkingSolid::Box { width, depth, height }, pose }, labels.push_cut, "saw", "cut")
     } else {
-        (ProcessMeasure::Attach { component: SolidSpec::Box { width, depth, height }, pose }, labels.pull_attach, "attacher", "attach")
+        (ProcessMeasure::Attach { component: WorkingSolid::Box { width, depth, height }, pose }, labels.pull_attach, "attacher", "attach")
     };
     let origin = StepOrigin { machine_id: machine_id.to_string(), capability_id: capability_id.to_string() };
     Some(ProcessStep { id: next_step_id(), label: label.as_str().to_string(), enabled: true, origin: Some(origin), measure })

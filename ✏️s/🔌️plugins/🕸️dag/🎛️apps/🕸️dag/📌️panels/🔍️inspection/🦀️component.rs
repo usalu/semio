@@ -88,7 +88,8 @@ pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabel
             menu: None,
         }]);
     }
-    let nodes: Vec<&DagNodeSpec> = selected.iter().filter_map(|id| document.nodes.iter().find(|node| &node.id == id)).collect();
+    let owned_nodes = document.nodes();
+    let nodes: Vec<&DagNodeSpec> = selected.iter().filter_map(|id| owned_nodes.iter().find(|node| &node.id == id)).collect();
     if nodes.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "dag-play-inspector.missing".into(),
@@ -217,7 +218,7 @@ mod tests {
     #[test]
     fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
         let mut app = new_app();
-        let node_id = app.snapshot().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
         dispatch(&mut app, DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id.clone()] }));
         let json = render_body(&mut app, DAG_PLAY_BODY_INSPECTOR);
         assert!(json.contains(&node_id));

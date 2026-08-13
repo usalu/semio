@@ -1,5 +1,7 @@
 //! ⚖️ EN 1990 basis of structural design — document entities (constitutional: general).
 
+use std::cell::RefCell;
+use std::collections::HashMap;
 
 pub use crate::artifacts::en1990::schema::snapshot::En1990QkEntry;
 pub use crate::artifacts::en1990::schema::snapshot::En1990Snapshot;
@@ -10,6 +12,118 @@ pub use crate::artifacts::en1990::schema::diff::En1990Diff;
 
 //#region 🔖️Types
 //#endregion 🔖️Types
+
+//#region 🔖️Composition
+/// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2 (orchestrator-dispatched
+/// correction, `norm→C:table` on `en1990.q_k`): the inline `Vec<En1990QkEntry>` variable-action
+/// table is replaced by a fixed composed `s.stdio.semio.table` CHILD slot — `q_k` composes
+/// stdio's `table` subset instead of hand-rolling its own two-column shape. `#[child(...)]` drives
+/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Every one of the five
+/// existing `insert`/`remove`/`reorder`/`change-category`/`change-value` mutation triads keeps its
+/// exact public payload/wire shape — only the internal diff/inverse implementation is rewired to
+/// read/write the working-scene cache below and re-mint a fresh content-addressed child handle,
+/// mirroring `➗️mathematical`'s `MATH_SCRATCH`/`🕸️dag`'s/`🔀️process`'s equivalent patterns for the
+/// identical per-entry mutation-rich shape.
+
+//#region 🔖️ChildTypes
+pub type En1990QkChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+//#endregion 🔖️ChildTypes
+
+//#region 🔖️Converters
+/// 🌉 REAL bidirectional converter: `q_k` variable-action entries <-> `table` rows — two columns
+/// (`category: Str`, `value: Float`), one row per entry in list order (positionally aligned, no
+/// stable id on either side).
+pub fn en1990_qk_table_from_entries(entries: &[En1990QkEntry]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    SemioTableSnapshot {
+        schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
+        columns: vec![
+            SemioTableColumn { name: "category".into(), kind: SemioTableCellKind::Str },
+            SemioTableColumn { name: "value".into(), kind: SemioTableCellKind::Float },
+        ],
+        rows: entries.iter().map(|entry| SemioTableRow { cells: vec![SemioValue::Str { value: entry.category.clone() }, SemioValue::Float { lexeme: format!("{}", entry.value) }] }).collect(),
+    }
+}
+
+/// 🌉 Inverse of the converter above — real reconstruction, not a stub. A short/missing cell
+/// degrades honestly (empty category, `0.0` value) rather than panicking, since an
+/// externally-composed mismatch is possible in principle.
+pub fn en1990_qk_entries_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<En1990QkEntry> {
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    fn cell_str(row: &SemioTableRow, index: usize) -> String {
+        match row.cells.get(index) {
+            Some(SemioValue::Str { value }) => value.clone(),
+            _ => String::new(),
+        }
+    }
+    fn cell_f64(row: &SemioTableRow, index: usize) -> f64 {
+        match row.cells.get(index) {
+            Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
+            _ => 0.0,
+        }
+    }
+    table.rows.iter().map(|row| En1990QkEntry { category: cell_str(row, 0), value: cell_f64(row, 1) }).collect()
+}
+//#endregion 🔖️Converters
+
+//#region 🔖️WorkingScene
+/// 🌱 Ephemeral, session-side cache of the live `q_k` entries behind a composed-child handle —
+/// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
+/// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
+/// (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only — same standing gap
+/// every prior wave's report documents), so this is the only way a persisted content-addressed
+/// handle round-trips to the real entries within one process — mirrors `➗️mathematical`'s
+/// `MATH_SCRATCH`/`✒️writer`'s `WRITER_SCRATCH`.
+///
+/// ⚠️ Same documented staleness gap as every prior exemplar, called out honestly rather than
+/// hidden: a fresh process (a store-level undo/redo past this session's history, or a genuinely
+/// reloaded persisted `.en1990` document) sees a `q_k` handle whose cache entry was never
+/// populated — `en1990_qk` fails soft to an EMPTY table rather than panicking. For a compliance
+/// calculation this means a reloaded document's variable-action combinations read as empty until
+/// W1 lands a resolver; every check this artifact performs already routes through `en1990_qk`, so
+/// the gap is visibly empty, not silently wrong-but-plausible. Not a fix for the missing
+/// resolver — a bridge until one lands.
+thread_local! {
+    static EN1990_QK_SCRATCH: RefCell<HashMap<String, Vec<En1990QkEntry>>> = RefCell::new(HashMap::new());
+}
+
+fn en1990_qk_scene_id(entries: &[En1990QkEntry]) -> String {
+    use std::hash::{Hash, Hasher};
+    let content_json = serde_json::to_string(entries).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    content_json.hash(&mut hasher);
+    format!("en1990-qk-{:016x}", hasher.finish())
+}
+
+fn en1990_qk_target() -> store::os_io::ArtifactRef {
+    store::os_io::ArtifactRef {
+        artifact_id: "en1990-qk".into(),
+        dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() },
+    }
+}
+
+/// 🏗️ Mints the composed-child handle for a `q_k` entry list AND seeds the scratch cache in one
+/// call — the standard way every mutation-diff/fixture builder in this artifact creates `q_k`
+/// field values; never construct this handle without also caching, or `en1990_qk` will read back
+/// empty.
+pub fn en1990_qk_child_from_entries(entries: &[En1990QkEntry]) -> En1990QkChild {
+    let scene_id = en1990_qk_scene_id(entries);
+    EN1990_QK_SCRATCH.with(|cache| {
+        cache.borrow_mut().insert(scene_id.clone(), entries.to_vec());
+    });
+    store::ArtifactChild::new(scene_id, en1990_qk_target())
+}
+
+/// 🔎 The live `q_k` entries behind a snapshot's composed child — the single read call site every
+/// combination/compliance/inference/mutation-diff call path in this artifact now uses instead of
+/// the old `.q_k` field. Empty (never a panic) on a cache miss, per this region's own doc comment.
+pub fn en1990_qk(snapshot: &En1990Snapshot) -> Vec<En1990QkEntry> {
+    EN1990_QK_SCRATCH.with(|cache| cache.borrow().get(&snapshot.q_k.child_id).cloned()).unwrap_or_default()
+}
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Composition
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.

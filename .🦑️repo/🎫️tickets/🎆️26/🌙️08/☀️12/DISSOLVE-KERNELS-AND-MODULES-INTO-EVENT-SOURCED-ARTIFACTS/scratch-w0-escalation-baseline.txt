@@ -1,0 +1,30 @@
+=== W0 BASELINE (escalation) 2026-08-13 14:05:11 ===
+
+--- LOC census of the four dying modules ---
+🧰️framework/🔨️modules/🔺️mesh : 1 rust files, 1648 LOC
+🧰️framework/🔨️modules/🔺️mesh-engine : 1 rust files, 912 LOC
+🧰️framework/🔨️modules/🧊️3d : 44 rust files, 23014 LOC
+🧰️framework/🔨️modules/🧮️math : 83 rust files, 72439 LOC
+
+--- math subdir LOC ---
+  ➕️algebra : 3197
+  🌫️fuzzy : 2449
+  🎯️optimize : 1240
+  🎯️sampling : 9809
+  🎲️entropy : 9881
+  🎲️probability : 1205
+  🎲️random : 632
+  📈️polynomial : 2366
+  📊️statistics : 762
+  📋️tabular : 621
+  📐️geometry : 1024
+  📦️packages : 279
+  📶️signal : 585
+  🔗️causal : 2022
+  🔢️number : 3456
+  🔷️lie : 805
+  🕸️graph : 12541
+  🗺️spatial : 754
+  🤖️generated : 1558
+  🧩️wfc : 10930
+  🧮️cas : 6323

@@ -1,7 +1,21 @@
 //! 🧬️ DAG diff schema — sparse field delta over the artifact.
+//!
+//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes: Option<DagNodesDelta>` /
+//! `edges: Option<DagEdgesDelta>` / `set_nodes` / `set_edges` are all gone — the composed child is
+//! opaque (a parent's diff never embeds a child diff, per `📓️design-full-plan.md` §1's CHILD/LINK
+//! split), so every triad now diffs by minting a whole new `content` handle
+//! (`diff_replace_content`, see `🔺️diff/📝️text`) rather than building a structured delta. Single
+//! `Option<DagContentChild>` — the slot is never absent, only ever replaced, matching writer's
+//! `document`/flow's `content` field shape, not lowpoly's optional-slot `Option<Option<_>>`.
+//!
+//! `artifact: Option<Box<DagArtifact>>` (a whole-artifact-replace escape hatch) is also gone — it was
+//! already dead (never constructed anywhere; `DagPlayApp` never overrides `whole_document_operation`)
+//! and is exactly the forbidden whole-document-replace-via-diff shape `📌️important.md`'s vocabulary
+//! policy bans. `DagNodesDelta`/`DagEdgesDelta`/`DagNodePatchEntry`/`DagNodeExtraPatch*`/
+//! `DagEdgePatchEntry`/`DagNodeSpecList`/`DagFixtureEdgeList` are all dead with it — confirmed zero
+//! remaining references after this pass.
 
-use crate::artifacts::dag::{DagCamera, DagFixtureEdge, DagNodePatch, DagNodeSpec};
-use math::graph::manifest::PropertyBag;
+use crate::artifacts::dag::{DagCamera, DagContentChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,17 +26,9 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagDiff {
     #[state(persistent)]
-    pub artifact: Option<Box<crate::artifacts::dag::schema::DagArtifact>>,
-    #[state(persistent)]
     pub schema: Option<String>,
     #[state(persistent)]
-    pub nodes: Option<DagNodesDelta>,
-    #[state(persistent)]
-    pub edges: Option<DagEdgesDelta>,
-    #[state(persistent)]
-    pub set_nodes: Option<DagNodeSpecList>,
-    #[state(persistent)]
-    pub set_edges: Option<DagFixtureEdgeList>,
+    pub content: Option<DagContentChild>,
     #[state(shared_ui)]
     pub selected_node_ids: Option<DagStringList>,
     #[state(local_ui)]
@@ -37,73 +43,5 @@ pub struct DagDiff {
 #[serde(rename_all = "camelCase", default)]
 pub struct DagStringList {
     pub values: Vec<String>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct DagNodeSpecList {
-    pub values: Vec<DagNodeSpec>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct DagFixtureEdgeList {
-    pub values: Vec<DagFixtureEdge>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct DagNodesDelta {
-    pub added: Vec<DagNodeSpec>,
-    pub removed: Vec<String>,
-    pub patched: Vec<DagNodePatchEntry>,
-    /// 🩹️ Fields `infinite_board_port_directed_dag::DagNodePatch` (foreign, out of this plugin's
-    /// bounds) has no slot for — the node's own `id`, `icon`, `abbreviation`, `operatorKind` and
-    /// `properties` — applied in place so node order never shifts (unlike a removed+re-added entry).
-    pub extra_patched: Vec<DagNodeExtraPatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct DagEdgesDelta {
-    pub added: Vec<DagFixtureEdge>,
-    pub removed: Vec<String>,
-    pub patched: Vec<DagEdgePatchEntry>,
-    pub reordered: Option<Vec<String>>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DagNodePatchEntry {
-    pub id: String,
-    pub patch: DagNodePatch,
-}
-
-/// 🩹️ Sparse patch for the `DagNodeSpec` fields `DagNodePatch` doesn't carry. `operator_kind` is
-/// double-`Option`ed (`Some(None)` clears it, `None` leaves it untouched) since the field itself
-/// is already `Option<String>`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct DagNodeExtraPatch {
-    pub new_id: Option<String>,
-    pub icon: Option<String>,
-    pub abbreviation: Option<String>,
-    pub operator_kind: Option<Option<String>>,
-    pub properties: Option<PropertyBag>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DagNodeExtraPatchEntry {
-    pub id: String,
-    pub patch: DagNodeExtraPatch,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DagEdgePatchEntry {
-    pub id: String,
-    pub patch: infinite_board_port_directed_dag::DagEdgePatch,
 }
 //#endregion 🔖️DeltaHelpers

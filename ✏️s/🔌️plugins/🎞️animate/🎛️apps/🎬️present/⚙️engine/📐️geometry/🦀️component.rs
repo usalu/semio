@@ -8,7 +8,7 @@ pub mod geometry {
 
     use crate::apps::present::engine::text::color::Color;
     use crate::apps::present::engine::scene::sobject::{Group, Sobject, VSobject};
-    use math::geometry::{append_shape_to_path, Arc, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii, Vec2};
+    use geometry::{append_shape_to_path, Arc, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii, Vec2};
     use std::f64::consts::PI;
 
     fn styled_path(path: BezPath, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
@@ -466,7 +466,7 @@ pub mod three_d {
     use crate::apps::present::engine::geometry::geometry::{circle, line, polygon, rectangle};
     use crate::apps::present::engine::scene::sobject::{Bounds, Group, Sobject, Style, VSobject};
     use crate::apps::present::engine::rate::updater::Updater;
-    use math::geometry::{Affine, BezPath, Point};
+    use geometry::{Affine, BezPath, Point};
 
     /// 📦️ Base 3D Sobject with yaw/pitch and projection scale.
     #[derive(Clone)]
@@ -732,7 +732,7 @@ pub mod axes {
     use crate::apps::present::engine::geometry::geometry::{arrow, dot, line};
     use crate::apps::present::engine::scene::sobject::{Group, Sobject, VSobject};
     use crate::apps::present::engine::text::text::Text;
-    use math::geometry::{BezPath, Point};
+    use geometry::{BezPath, Point};
 
     /// 📈️ Cartesian axes with optional labels.
     pub struct Axes {

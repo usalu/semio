@@ -325,16 +325,15 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: None }));
     }
 
+    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `CreateStep` is a documented
+    /// no-op now (`steps` composes an `s.stdio.semio.flow` CHILD HANDLE — no resolver, see
+    /// `ProcessWorkingScene`'s doc comment), so per the sanctioned `MutationKind::inverse` contract
+    /// ("a mutation with nothing to undo returns `Vec::new()`"), there is nothing to invert.
     #[test]
-    fn inverse_of_create_step_is_delete_step() {
+    fn inverse_of_create_step_is_empty_since_it_is_a_documented_no_op() {
         let snapshot = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step: cut_step("a") });
-        let inverse = mutation.inverse(&snapshot);
-        assert_eq!(inverse.len(), 1);
-        match &inverse[0] {
-            Process3dMutation::DeleteStep(payload) => assert_eq!(payload.id, "a"),
-            _ => panic!("expected DeleteStep"),
-        }
+        assert!(mutation.inverse(&snapshot).is_empty());
     }
 
     #[test]

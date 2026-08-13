@@ -280,7 +280,7 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
             let sheet_no: u16 = fields.get(4).and_then(|s| s.parse().ok()).unwrap_or(2);
             products.push(CatalogueProduct {
                 identity,
-                title: LocalizedText::new("Produkt", "Product"),
+                title: crate::artifacts::vdi3805::bilingual("Produkt", "Product"),
                 sheet: SheetId(sheet_no),
                 records: Vec::new(),
                 configuration: Configuration { id: format!("cfg.{}", article_number), parameters: BTreeMap::new(), geometry_ref: None, function_refs: Vec::new() },

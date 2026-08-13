@@ -38,48 +38,40 @@ pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: Dsl
 }
 //#endregion 🔖️NodeFieldHelpers
 
-//#region 🔖️MutationLeaves
-use super::create_node;
-use super::delete_node;
-use super::move_node;
-use super::resize_node;
-use super::change_node_kind;
-use super::change_node_shape;
-use super::edit_node_text;
-use super::set_node_root;
-use super::connect_nodes;
-use super::disconnect_nodes;
-//#endregion 🔖️MutationLeaves
-
 //#region 🔖️Mutations
+/// 🩹 Every leaf module is addressed `super::<slug>::...` here rather than via a bare `use super::X;`
+/// single-ident import — a baseline bug this pass fixed (`E0252`, "the name `create_node` is defined
+/// multiple times"): a bare `use super::create_node;` collides with `🔖️Builders`' own
+/// `pub use create_node::mutation::create_node` (the builder FN of the same name) in the value
+/// namespace. Fully-qualifying every reference removes the need for the colliding import outright.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = WiresSnapshot, diff = WiresDiff, schema = "s.reasoning.wires")]
 pub enum WiresMutation {
-    CreateNode(create_node::mutation::CreateNode),
-    DeleteNode(delete_node::mutation::DeleteNode),
-    MoveNode(move_node::mutation::MoveNode),
-    ResizeNode(resize_node::mutation::ResizeNode),
-    ChangeNodeKind(change_node_kind::mutation::ChangeNodeKind),
-    ChangeNodeShape(change_node_shape::mutation::ChangeNodeShape),
-    EditNodeText(edit_node_text::mutation::EditNodeText),
-    SetNodeRoot(set_node_root::mutation::SetNodeRoot),
-    ConnectNodes(connect_nodes::mutation::ConnectNodes),
-    DisconnectNodes(disconnect_nodes::mutation::DisconnectNodes),
+    CreateNode(super::create_node::mutation::CreateNode),
+    DeleteNode(super::delete_node::mutation::DeleteNode),
+    MoveNode(super::move_node::mutation::MoveNode),
+    ResizeNode(super::resize_node::mutation::ResizeNode),
+    ChangeNodeKind(super::change_node_kind::mutation::ChangeNodeKind),
+    ChangeNodeShape(super::change_node_shape::mutation::ChangeNodeShape),
+    EditNodeText(super::edit_node_text::mutation::EditNodeText),
+    SetNodeRoot(super::set_node_root::mutation::SetNodeRoot),
+    ConnectNodes(super::connect_nodes::mutation::ConnectNodes),
+    DisconnectNodes(super::disconnect_nodes::mutation::DisconnectNodes),
 }
 //#endregion 🔖️Mutations
 
 //#region 🔖️Builders
-pub use change_node_kind::mutation::{change_node_kind, ChangeNodeKind};
-pub use change_node_shape::mutation::{change_node_shape, ChangeNodeShape};
-pub use connect_nodes::mutation::{connect_nodes, ConnectNodes};
-pub use create_node::mutation::{create_node, CreateNode};
-pub use delete_node::mutation::{delete_node, DeleteNode};
-pub use disconnect_nodes::mutation::{disconnect_nodes, DisconnectNodes};
-pub use edit_node_text::mutation::{edit_node_text, EditNodeText};
-pub use move_node::mutation::{move_node, MoveNode};
-pub use resize_node::mutation::{resize_node, ResizeNode};
-pub use set_node_root::mutation::{set_node_root, SetNodeRoot};
+pub use super::change_node_kind::mutation::{change_node_kind, ChangeNodeKind};
+pub use super::change_node_shape::mutation::{change_node_shape, ChangeNodeShape};
+pub use super::connect_nodes::mutation::{connect_nodes, ConnectNodes};
+pub use super::create_node::mutation::{create_node, CreateNode};
+pub use super::delete_node::mutation::{delete_node, DeleteNode};
+pub use super::disconnect_nodes::mutation::{disconnect_nodes, DisconnectNodes};
+pub use super::edit_node_text::mutation::{edit_node_text, EditNodeText};
+pub use super::move_node::mutation::{move_node, MoveNode};
+pub use super::resize_node::mutation::{resize_node, ResizeNode};
+pub use super::set_node_root::mutation::{set_node_root, SetNodeRoot};
 //#endregion 🔖️Builders
 
 //#region 🧪️Tests
@@ -111,9 +103,9 @@ mod tests {
     fn create_delete_node_round_trip() {
         let snapshot = empty_wires_snapshot();
         let with_node = round_trip(&snapshot, &create_node(node("node-1", "Alpha")));
-        assert_eq!(with_node.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
+        assert_eq!(crate::artifacts::wires::wires_working_board(&with_node).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
         let removed = round_trip(&with_node, &delete_node("node-1".into()));
-        assert!(removed.board_fixture.get("nodes").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
+        assert!(crate::artifacts::wires::wires_working_board(&removed).get("nodes").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
     }
 
     #[test]
@@ -129,35 +121,35 @@ mod tests {
     fn resize_node_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let resized = round_trip(&snapshot, &resize_node("node-1".into(), Some(48.0), None, None));
-        assert_eq!(find_board_node(&resized, "node-1").and_then(|node| node.get("radius")).and_then(|value| value.as_f64()), Some(48.0));
+        assert_eq!(find_board_node(&resized, "node-1").and_then(|node| node.get("radius").and_then(|value| value.as_f64())), Some(48.0));
     }
 
     #[test]
     fn change_node_kind_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let changed = round_trip(&snapshot, &change_node_kind("node-1".into(), "topic".into()));
-        assert_eq!(find_board_node(&changed, "node-1").and_then(|node| node.get("nodeKind")).and_then(|value| value.as_str()), Some("topic"));
+        assert_eq!(find_board_node(&changed, "node-1").and_then(|node| node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string)), Some("topic".to_string()));
     }
 
     #[test]
     fn change_node_shape_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let changed = round_trip(&snapshot, &change_node_shape("node-1".into(), "rectangle".into()));
-        assert_eq!(find_board_node(&changed, "node-1").and_then(|node| node.get("shape")).and_then(|value| value.as_str()), Some("rectangle"));
+        assert_eq!(find_board_node(&changed, "node-1").and_then(|node| node.get("shape").and_then(|value| value.as_str()).map(str::to_string)), Some("rectangle".to_string()));
     }
 
     #[test]
     fn edit_node_text_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let edited = round_trip(&snapshot, &edit_node_text("node-1".into(), "Renamed".into()));
-        assert_eq!(find_board_node(&edited, "node-1").and_then(|node| node.get("text")), Some(&DslValue::String("Renamed".into())));
+        assert_eq!(find_board_node(&edited, "node-1").and_then(|node| node.get("text").cloned()), Some(DslValue::String("Renamed".into())));
     }
 
     #[test]
     fn set_node_root_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let set = round_trip(&snapshot, &set_node_root("node-1".into(), true));
-        assert_eq!(find_board_node(&set, "node-1").and_then(|node| node.get("root")).and_then(|value| value.as_bool()), Some(true));
+        assert_eq!(find_board_node(&set, "node-1").and_then(|node| node.get("root").and_then(|value| value.as_bool())), Some(true));
     }
 
     #[test]
@@ -168,10 +160,10 @@ mod tests {
         let edge = dsl::to_dsl_value(&json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
         let relationship = dsl::to_dsl_value(&json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
         let with_edge = round_trip(&snapshot, &connect_nodes(edge, relationship));
-        assert_eq!(with_edge.board_fixture.get("edges").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
+        assert_eq!(crate::artifacts::wires::wires_working_board(&with_edge).get("edges").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
         assert_eq!(with_edge.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
         let removed = round_trip(&with_edge, &disconnect_nodes("edge-1".into()));
-        assert!(removed.board_fixture.get("edges").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
+        assert!(crate::artifacts::wires::wires_working_board(&removed).get("edges").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
         assert!(removed.wires_fixture.get("relationships").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
     }
 

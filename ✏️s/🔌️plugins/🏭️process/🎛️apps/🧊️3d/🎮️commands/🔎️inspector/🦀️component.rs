@@ -5,11 +5,8 @@ use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::mutations::change_stock_label::mutation::ChangeStockLabel;
 use crate::artifacts::process3d::mutations::move_stock::mutation::MoveStock;
 use crate::artifacts::process3d::mutations::rename_machine::mutation::RenameMachine;
-use crate::artifacts::process3d::mutations::rename_step::mutation::RenameStep;
 use crate::artifacts::process3d::mutations::replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
-use crate::artifacts::process3d::mutations::replace_step_measure::mutation::ReplaceStepMeasure;
-use crate::artifacts::process3d::mutations::replace_stock_solid::mutation::ReplaceStockSolid;
-use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, ProcessMeasure, SolidSpec, WorkshopMachine};
+use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, WorkshopMachine};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -26,96 +23,24 @@ fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
     true
 }
 
-fn apply_solid_patch(solid: &mut SolidSpec, field: &str, value: f64) -> bool {
-    let clamped = value.max(0.001);
-    match solid {
-        SolidSpec::Box { width, depth, height } => match field {
-            "width" => *width = clamped,
-            "depth" => *depth = clamped,
-            "height" => *height = clamped,
-            _ => return false,
-        },
-        SolidSpec::Cylinder { radius, height } => match field {
-            "radius" => *radius = clamped,
-            "height" => *height = clamped,
-            _ => return false,
-        },
-        SolidSpec::Sphere { radius } => match field {
-            "radius" => *radius = clamped,
-            _ => return false,
-        },
-        SolidSpec::ImportedMesh { .. } | SolidSpec::ImportedSolid { .. } => return false,
-    }
-    true
-}
-
-fn apply_stock_patch(stock: &mut crate::artifacts::process3d::Stock, field: &str, value: Option<&Value>) -> bool {
+/// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: dimension edits (`width`/`depth`/
+/// `height`/`radius`) need to read the stock's CURRENT `WorkingSolid` shape to patch a single field
+/// — but `fixture.stock_solid` is a composed `s.stdio.semio.brep` CHILD HANDLE now, with no
+/// resolvable content (no `LinkResolver` — see `ProcessWorkingScene`'s doc comment). This is a
+/// documented gap: only `label`/pose fields (real, inline persisted fields) remain patchable; a
+/// dimension-only patch returns `None` (no mutation) rather than guessing at unknown geometry.
+fn apply_stock_patch(stock_pose: &mut Pose, stock_label: &mut String, field: &str, value: Option<&Value>) -> bool {
     if field == "label" {
         return match value.and_then(Value::as_str) {
             Some(label) => {
-                stock.label = label.into();
+                *stock_label = label.into();
                 true
             }
             None => false,
         };
     }
     let Some(number) = value.and_then(Value::as_f64) else { return false };
-    apply_pose_patch(&mut stock.pose, field, number) || apply_solid_patch(&mut stock.solid, field, number)
-}
-
-/// 🔎️ Generic inspector edit dispatcher for a step's measure — dimension fields are scoped to the
-/// measure's own solid ("radius"/"depth" for drill, "toolWidth..." for cut, "radius"/"height" for attach)
-/// so field names never collide across measure kinds.
-fn apply_step_patch(step: &mut crate::artifacts::process3d::ProcessStep, field: &str, value: Option<&Value>) -> bool {
-    if field == "label" {
-        return match value.and_then(Value::as_str) {
-            Some(label) => {
-                step.label = label.into();
-                true
-            }
-            None => false,
-        };
-    }
-    let Some(number) = value.and_then(Value::as_f64) else { return false };
-    let clamped = number.max(0.001);
-    match &mut step.measure {
-        ProcessMeasure::Cut { tool, pose } => {
-            if apply_pose_patch(pose, field, number) {
-                return true;
-            }
-            let SolidSpec::Box { width, depth, height } = tool else { return false };
-            match field {
-                "toolWidth" => *width = clamped,
-                "toolDepth" => *depth = clamped,
-                "toolHeight" => *height = clamped,
-                _ => return false,
-            }
-            true
-        }
-        ProcessMeasure::Drill { radius, depth, pose } => {
-            if apply_pose_patch(pose, field, number) {
-                return true;
-            }
-            match field {
-                "radius" => *radius = clamped,
-                "depth" => *depth = clamped,
-                _ => return false,
-            }
-            true
-        }
-        ProcessMeasure::Attach { component, pose } => {
-            if apply_pose_patch(pose, field, number) {
-                return true;
-            }
-            let SolidSpec::Cylinder { radius, height } = component else { return false };
-            match field {
-                "radius" => *radius = clamped,
-                "height" => *height = clamped,
-                _ => return false,
-            }
-            true
-        }
-    }
+    apply_pose_patch(stock_pose, field, number)
 }
 
 /// 🔎️ Generic inspector edit dispatcher for a workshop machine's own label or a capability parameter
@@ -139,12 +64,14 @@ fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, valu
     true
 }
 
-/// 🩹️ Builds the `Process3dMutation` for one inspector field edit — clones the target (stock, step, or
-/// workshop machine), mutates the clone via `apply_stock_patch`/`apply_step_patch`/
-/// `apply_workshop_machine_patch`, then routes the touched field into its own semantic mutation:
-/// `label` → `RenameMachine`/`RenameStep`/`ChangeStockLabel`, a spatial stock field →
-/// `MoveStock`, a capability parameter → `ReplaceMachineCapabilities`, everything else (the step's
-/// measure geometry, the stock's solid dims) → `ReplaceStepMeasure`/`ReplaceStockSolid`.
+/// 🩹️ Builds the `Process3dMutation` for one inspector field edit — clones the target (stock or
+/// workshop machine), mutates the clone via `apply_stock_patch`/`apply_workshop_machine_patch`,
+/// then routes the touched field into its own semantic mutation: `label` →
+/// `RenameMachine`/`ChangeStockLabel`, a spatial stock field → `MoveStock`, a capability parameter →
+/// `ReplaceMachineCapabilities`. A step-addressed target (`step:<id>`) and a stock dimension-only
+/// patch are both a DOCUMENTED NO-OP (see `apply_stock_patch`'s doc comment and
+/// `RenameStep`/`ReplaceStepMeasure`'s own triads) — `fixture.steps`/`fixture.stock_solid` carry no
+/// resolvable content without a `LinkResolver` this ticket doesn't add.
 fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dMutation> {
     if let Some(machine_id) = target.strip_prefix("machine:") {
         let machine = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id)?;
@@ -158,28 +85,18 @@ fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str
             Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: machine_id.to_string(), new_capabilities: updated.capabilities })
         });
     }
-    if target == fixture.stock.id {
-        let mut stock = fixture.stock.clone();
-        if !apply_stock_patch(&mut stock, field, value) {
+    if target == fixture.stock_id {
+        let mut stock_pose = fixture.stock_pose.clone();
+        let mut stock_label = fixture.stock_label.clone();
+        if !apply_stock_patch(&mut stock_pose, &mut stock_label, field, value) {
             return None;
         }
         return Some(match field {
-            "label" => Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: stock.label }),
-            "posX" | "posY" | "posZ" | "angle" => Process3dMutation::MoveStock(MoveStock { new_pose: stock.pose }),
-            _ => Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: stock.solid }),
+            "label" => Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: stock_label }),
+            _ => Process3dMutation::MoveStock(MoveStock { new_pose: stock_pose }),
         });
     }
-    let step_id = target.strip_prefix("step:")?;
-    let step = fixture.steps.iter().find(|step| step.id == step_id)?;
-    let mut updated = step.clone();
-    if !apply_step_patch(&mut updated, field, value) {
-        return None;
-    }
-    Some(if field == "label" {
-        Process3dMutation::RenameStep(RenameStep { id: step_id.to_string(), new_label: updated.label })
-    } else {
-        Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: step_id.to_string(), new_measure: updated.measure })
-    })
+    None
 }
 //#endregion 🔖️InspectorPatch
 

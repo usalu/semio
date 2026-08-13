@@ -324,7 +324,7 @@ mod tests {
 
         #[test]
         fn random_and_or_matches_vec_bool_model() {
-            let mut rng = crate::random::Rng::from_seed(12345);
+            let mut rng = geometry::random::Rng::from_seed(12345);
             for _ in 0..200 {
                 let len = 1 + (rng.next_range(0, 200) as usize);
                 let mut model_a = vec![false; len];

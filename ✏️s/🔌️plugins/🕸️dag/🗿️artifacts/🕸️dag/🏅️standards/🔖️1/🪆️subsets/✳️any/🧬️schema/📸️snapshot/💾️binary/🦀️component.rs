@@ -1,7 +1,8 @@
 //! 📦️ DAG artifact — binary document surface + laws (constitutional: pack).
 //!
-//! `store::ArtifactPack for DagSnapshot` is implemented directly in the DAG kernel crate
-//! (`infinite_board_port_directed_dag`); see `crate::artifacts::dag::op`'s doc for why. This module only
+//! `store::ArtifactPack for DagSnapshot` is hand-rolled directly on this plugin's own `DagSnapshot`
+//! (`📸️snapshot/🦀️component.rs`'s `🔖️HandcraftedArtifactCodecs` region), distinct from the
+//! FRAMEWORK's own separate `infinite_board_port_directed_dag::DagSnapshot` codec. This module only
 //! adds the thin artifact-facing `encode`/`decode` wrappers plus the pack↔dsl equivalence law.
 
 use crate::artifacts::dag::DagSnapshot;
@@ -50,7 +51,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() };
+        let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::artifacts::dag::dag_content_child_handle_and_cache(Vec::new(), Vec::new()) };
         let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None));
         let node = crate::artifacts::dag::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::dag::mutations::create_node(node)], description: None }).expect("apply");

@@ -1,11 +1,15 @@
-//! 🔺️ Sparse diff builder for `ChangeNodeAbbreviation` — via `DagNodeExtraPatch` (see
-//! `🖼️change-node-icon/🔺️diff` for why).
-use crate::artifacts::dag::diff::{DagDiff, DagNodeExtraPatch, DagNodeExtraPatchEntry, DagNodesDelta};
-use crate::artifacts::dag::DagSnapshot;
+//! 🔺️ Sparse diff builder for `ChangeNodeAbbreviation`.
+use crate::artifacts::dag::diff::DagDiff;
+use crate::artifacts::dag::schema::diff::text::diff_replace_content;
+use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeNodeAbbreviation, _base: &DagSnapshot) -> DagDiff {
-    let patch = DagNodeExtraPatch { abbreviation: Some(payload.new_abbreviation.clone()), ..Default::default() };
-    DagDiff { nodes: Some(DagNodesDelta { extra_patched: vec![DagNodeExtraPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() }
+pub fn diff(payload: &super::mutation::ChangeNodeAbbreviation, base: &DagSnapshot) -> DagDiff {
+    let scene = dag_working_scene(base);
+    let mut nodes = scene.nodes;
+    if let Some(node) = nodes.iter_mut().find(|node| node.id == payload.id) {
+        node.abbreviation = payload.new_abbreviation.clone();
+    }
+    diff_replace_content(nodes, scene.edges)
 }
 //#endregion 🔖️Diff

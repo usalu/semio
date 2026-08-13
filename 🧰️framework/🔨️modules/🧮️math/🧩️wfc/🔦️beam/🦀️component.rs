@@ -24,7 +24,7 @@ use crate::wfc::prop_ac3;
 use crate::wfc::propagate::PropQueue;
 use crate::wfc::topology::Topology;
 use crate::wfc::trail::Trail;
-use crate::random::Rng;
+use geometry::random::Rng;
 
 // #region 🔖️Config
 #[derive(Clone, Copy, Debug)]

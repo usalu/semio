@@ -24,7 +24,8 @@ pub struct DagInference {
 
 impl protocol::Inference<DagSnapshot> for DagInference {
     fn infer(snapshot: &DagSnapshot) -> Self {
-        Self { topology: compute_dag_topology(&snapshot.nodes, &snapshot.edges) }
+        let scene = crate::artifacts::dag::dag_working_scene(snapshot);
+        Self { topology: compute_dag_topology(&scene.nodes, &scene.edges) }
     }
 }
 
@@ -46,7 +47,7 @@ impl protocol::InferenceSpec<DagSnapshot> for DagInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.dag.dag.inference.topology", reads: &["nodes", "edges"] }]
+        &[protocol::InferenceFieldSpec { id: "s.dag.dag.inference.topology", reads: &["content"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -85,7 +86,9 @@ mod tests {
     fn chain_snapshot() -> DagSnapshot {
         let a = DagNodeSpec { id: "a".into(), ..Default::default() };
         let b = DagNodeSpec { id: "b".into(), ..Default::default() };
-        DagSnapshot { schema: "dag.dag".into(), nodes: vec![a, b], edges: vec![DagFixtureEdge { id: "e1".into(), source: "a".into(), target: "b".into() }] }
+        let edges = vec![DagFixtureEdge { id: "e1".into(), source: "a".into(), target: "b".into(), ..Default::default() }];
+        let content = crate::artifacts::dag::dag_content_child_handle_and_cache(vec![a, b], edges);
+        DagSnapshot { schema: "dag.dag".into(), content }
     }
 
     #[test]
@@ -103,8 +106,9 @@ mod tests {
     fn topology_counts_every_node_exactly_once() {
         let snapshot = chain_snapshot();
         let inferred = DagInference::infer(&snapshot);
-        assert_eq!(inferred.topology.node_count as usize, snapshot.nodes.len());
-        assert_eq!(inferred.topology.topo_order.len(), snapshot.nodes.len());
+        let node_count = snapshot.nodes().len();
+        assert_eq!(inferred.topology.node_count as usize, node_count);
+        assert_eq!(inferred.topology.topo_order.len(), node_count);
         assert!(inferred.topology.cycle_free);
     }
 }

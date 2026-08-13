@@ -25,8 +25,8 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub fn render(document: &ImperativeSnapshot, selected: &[String], labels: &ImperativeLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("imperative-play-document");
-    let step_items: Vec<UiTreeItemNode> = document
-        .path
+    let path = crate::artifacts::imperative::imperative_working_scene(document).path;
+    let step_items: Vec<UiTreeItemNode> = path
         .steps
         .iter()
         .enumerate()

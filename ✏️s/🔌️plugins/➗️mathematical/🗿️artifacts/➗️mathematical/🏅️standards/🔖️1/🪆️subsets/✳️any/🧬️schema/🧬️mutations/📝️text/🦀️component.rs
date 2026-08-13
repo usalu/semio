@@ -6,10 +6,12 @@
 pub use crate::artifacts::mathematical::schema::mutations::MathematicalMutation;
 
 use crate::artifacts::mathematical::schema::mutations::{
-    change_graph_directed::mutation::ChangeGraphDirected, change_node_label::mutation::ChangeNodeLabel, connect_nodes::mutation::ConnectNodes, create_node::mutation::CreateNode,
-    delete_node::mutation::DeleteNode, delete_nodes::mutation::DeleteNodes, disconnect_nodes::mutation::DisconnectNodes, insert_point::mutation::InsertPoint, move_node::mutation::MoveNode,
-    move_point::mutation::MovePoint, remove_point::mutation::RemovePoint, replace_graph::mutation::ReplaceGraph, replace_points::mutation::ReplacePoints, update_graph_algorithm::mutation::UpdateGraphAlgorithm,
+    change_coefficient::mutation::ChangeCoefficient, change_graph_directed::mutation::ChangeGraphDirected, change_node_label::mutation::ChangeNodeLabel, connect_nodes::mutation::ConnectNodes,
+    create_node::mutation::CreateNode, delete_node::mutation::DeleteNode, delete_nodes::mutation::DeleteNodes, disconnect_nodes::mutation::DisconnectNodes, insert_point::mutation::InsertPoint,
+    move_node::mutation::MoveNode, move_point::mutation::MovePoint, remove_point::mutation::RemovePoint, replace_graph::mutation::ReplaceGraph, replace_points::mutation::ReplacePoints,
+    update_graph_algorithm::mutation::UpdateGraphAlgorithm,
 };
+use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::artifacts::mathematical::{MathematicalGraph, MathematicalPoint};
 
 //#region 📖️SemioGrammar
@@ -160,6 +162,7 @@ fn print_mathematical_mutation(mutation: &MathematicalMutation) -> String {
         MathematicalMutation::InsertPoint(p) => format!("insert-point index={} x={} y={}", enc_usize(p.index), enc_f64(p.x), enc_f64(p.y)),
         MathematicalMutation::RemovePoint(p) => format!("remove-point index={}", enc_usize(p.index)),
         MathematicalMutation::MovePoint(p) => format!("move-point index={} x={} y={}", enc_usize(p.index), enc_f64(p.x), enc_f64(p.y)),
+        MathematicalMutation::ChangeCoefficient(p) => format!("change-coefficient label={} numer={} denom={}", enc_usize(p.label.0 as usize), enc_str(&p.numer), enc_str(&p.denom)),
     }
 }
 
@@ -185,6 +188,9 @@ fn parse_mathematical_mutation(line: &str) -> Result<MathematicalMutation, Strin
         "insert-point" => Ok(MathematicalMutation::InsertPoint(InsertPoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
         "remove-point" => Ok(MathematicalMutation::RemovePoint(RemovePoint { index: dec_usize(&arg("index")?)? })),
         "move-point" => Ok(MathematicalMutation::MovePoint(MovePoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
+        "change-coefficient" => {
+            Ok(MathematicalMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(dec_usize(&arg("label")?)? as u64), numer: dec_str(&arg("numer")?)?, denom: dec_str(&arg("denom")?)? }))
+        }
         other => Err(format!("mathematical mutation: unknown keyword {other:?}")),
     }
 }
@@ -254,6 +260,7 @@ impl protocol::OpBinary for MathematicalMutation {
             MathematicalMutation::InsertPoint(_) => 11,
             MathematicalMutation::RemovePoint(_) => 12,
             MathematicalMutation::MovePoint(_) => 13,
+            MathematicalMutation::ChangeCoefficient(_) => 14,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -302,6 +309,11 @@ impl protocol::OpBinary for MathematicalMutation {
                 store::pack_rt::write_varint_u64(&mut out, p.index as u64);
                 out.extend_from_slice(&p.x.to_le_bytes());
                 out.extend_from_slice(&p.y.to_le_bytes());
+            }
+            MathematicalMutation::ChangeCoefficient(p) => {
+                store::pack_rt::write_varint_u64(&mut out, p.label.0);
+                write_str_bin(&mut out, &p.numer);
+                write_str_bin(&mut out, &p.denom);
             }
         }
         Ok(out)
@@ -371,6 +383,12 @@ impl protocol::OpBinary for MathematicalMutation {
                 let y = reader.read_f64_le().map_err(|e| malformed("y", reader.position(), e.to_string()))?;
                 Ok(MathematicalMutation::MovePoint(MovePoint { index, x, y }))
             }
+            14 => {
+                let label = reader.read_varint_u64().map_err(|e| malformed("label", reader.position(), e.to_string()))?;
+                let numer = read_str_bin(&mut reader).map_err(|e| malformed("numer", reader.position(), e))?;
+                let denom = read_str_bin(&mut reader).map_err(|e| malformed("denom", reader.position(), e))?;
+                Ok(MathematicalMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(label), numer, denom }))
+            }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }
@@ -396,6 +414,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<MathematicalMutation> {
         MathematicalMutation::InsertPoint(InsertPoint { index: 0, x: 3.0, y: 4.0 }),
         MathematicalMutation::RemovePoint(RemovePoint { index: 0 }),
         MathematicalMutation::MovePoint(MovePoint { index: 0, x: 7.0, y: 8.0 }),
+        MathematicalMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(3), numer: "5".into(), denom: "2".into() }),
     ]
 }
 //#endregion 🔖️DemoCases

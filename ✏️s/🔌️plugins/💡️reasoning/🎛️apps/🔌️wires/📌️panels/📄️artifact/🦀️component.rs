@@ -74,7 +74,7 @@ fn document_tree_selected_ids(board: &dsl::DslValue, selected: &[String]) -> Vec
 
 pub fn render(document: &WiresSnapshot, selected: &[String], labels: &WiresLabels) -> UiNode {
     let wires = &document.wires_fixture;
-    let board = &document.board_fixture;
+    let board = &crate::artifacts::wires::wires_working_board(document);
     let identity_items: Vec<UiTreeItemNode> = wires_identities(wires)
         .iter()
         .filter_map(|identity| {

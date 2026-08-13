@@ -58,7 +58,7 @@ pub struct CausalDag {
 
 impl CausalDag {
     /// 🧭️ Builds a DAG from index edges, validating acyclicity via
-    /// `crate::graph::algorithms::topo_sort`.
+    /// `graph_core::algorithms::topo_sort`.
     pub fn new(names: Vec<String>, edges: &[(usize, usize)]) -> Result<Self, CausalError> {
         let n = names.len();
         for &(a, b) in edges {
@@ -69,8 +69,8 @@ impl CausalDag {
                 return Err(CausalError::VariableNotFound(format!("index {b}")));
             }
         }
-        let adj = crate::graph::algorithms::adjacency(n, edges, true);
-        let topo = crate::graph::algorithms::topo_sort(&adj).map_err(|e| CausalError::NotADag(e.cycle))?;
+        let adj = graph_core::algorithms::adjacency(n, edges, true);
+        let topo = graph_core::algorithms::topo_sort(&adj).map_err(|e| CausalError::NotADag(e.cycle))?;
         let mut parents = vec![Vec::new(); n];
         let mut children = vec![Vec::new(); n];
         for &(a, b) in edges {
@@ -441,8 +441,8 @@ pub fn d_separated(dag: &CausalDag, x: &[usize], y: &[usize], z: &[usize]) -> bo
         }
     }
     let filtered_edges: Vec<(usize, usize)> = moral_edges.into_iter().filter(|&(a, b)| !z.contains(&a) && !z.contains(&b)).collect();
-    let adj = crate::graph::algorithms::adjacency(dag.n(), &filtered_edges, false);
-    let labels = crate::graph::algorithms::connected_components(&adj);
+    let adj = graph_core::algorithms::adjacency(dag.n(), &filtered_edges, false);
+    let labels = graph_core::algorithms::connected_components(&adj);
     x.iter().all(|&xi| y.iter().all(|&yi| z.contains(&xi) || z.contains(&yi) || labels[xi] != labels[yi]))
 }
 
@@ -986,7 +986,7 @@ impl LinearGaussianScm {
 
     /// 🎲️ Ancestral sampling in topological order.
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
-    pub fn simulate(&self, n_samples: usize, rng: &mut crate::random::Rng) -> Result<crate::tabular::Table, CausalError> {
+    pub fn simulate(&self, n_samples: usize, rng: &mut geometry::random::Rng) -> Result<crate::tabular::Table, CausalError> {
         let n = self.dag.n();
         let mut columns = vec![vec![0.0f64; n_samples]; n];
         for row in 0..n_samples {
@@ -1192,7 +1192,7 @@ impl DiscreteScm {
 
     /// 🎲️ Ancestral sampling in topological order.
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
-    pub fn simulate(&self, n_samples: usize, rng: &mut crate::random::Rng) -> Result<crate::tabular::Table, CausalError> {
+    pub fn simulate(&self, n_samples: usize, rng: &mut geometry::random::Rng) -> Result<crate::tabular::Table, CausalError> {
         let n = self.dag.n();
         let mut codes = vec![vec![0u32; n_samples]; n];
         for row in 0..n_samples {
@@ -1403,7 +1403,7 @@ pub struct EstimationOptions {
 }
 
 fn bootstrap_ci(data: &crate::tabular::Table, opts: &BootstrapOptions, point_fn: &dyn Fn(&crate::tabular::Table) -> Result<f64, CausalError>) -> (f64, f64) {
-    let mut rng = crate::random::Rng::from_seed(opts.seed);
+    let mut rng = geometry::random::Rng::from_seed(opts.seed);
     let n = data.n_rows();
     let mut estimates = Vec::with_capacity(opts.replicates);
     for _ in 0..opts.replicates {
@@ -1717,7 +1717,7 @@ mod tests {
     fn fisher_z_ci_test_via_causal_dag_columns() {
         let mut table = crate::tabular::Table::new();
         let n = 200;
-        let mut rng = crate::random::Rng::from_seed(7);
+        let mut rng = geometry::random::Rng::from_seed(7);
         let x: Vec<f64> = (0..n).map(|_| crate::probability::Normal::STANDARD.sample(&mut rng)).collect();
         let y: Vec<f64> = x.iter().map(|&xi| xi * 0.8 + crate::probability::Normal::STANDARD.sample(&mut rng) * 0.2).collect();
         let z: Vec<f64> = y.iter().map(|&yi| yi * 0.8 + crate::probability::Normal::STANDARD.sample(&mut rng) * 0.2).collect();
@@ -1745,7 +1745,7 @@ mod tests {
     #[test]
     fn local_bic_prefers_the_true_parent_set() {
         let scm = linear_chain_scm();
-        let mut rng = crate::random::Rng::from_seed(99);
+        let mut rng = geometry::random::Rng::from_seed(99);
         let mut data = scm.simulate(500, &mut rng).unwrap();
         // An exogenous, causally unrelated column — unlike `y` (a downstream descendant of `m`
         // in the chain, and thus itself strongly correlated with `m`), this one has no relationship
@@ -1883,7 +1883,7 @@ mod tests {
 
     // #region 🔖️EstimationTests
     fn confounded_dataset(true_ate: f64, n: usize, seed: u64) -> crate::tabular::Table {
-        let mut rng = crate::random::Rng::from_seed(seed);
+        let mut rng = geometry::random::Rng::from_seed(seed);
         let z: Vec<f64> = (0..n).map(|_| crate::probability::Normal::STANDARD.sample(&mut rng)).collect();
         let t: Vec<f64> = z.iter().map(|&zi| f64::from(u8::from(zi + crate::probability::Normal::STANDARD.sample(&mut rng) > 0.0))).collect();
         let y: Vec<f64> = z.iter().zip(&t).map(|(&zi, &ti)| 2.0 * zi + true_ate * ti + crate::probability::Normal::STANDARD.sample(&mut rng) * 0.5).collect();
@@ -1938,7 +1938,7 @@ mod tests {
         #[test]
         fn pc_stable_recovers_known_cpdag_from_simulated_chain() {
             let scm = linear_chain_scm();
-            let mut rng = crate::random::Rng::from_seed(2024);
+            let mut rng = geometry::random::Rng::from_seed(2024);
             let data = scm.simulate(2000, &mut rng).unwrap();
             let ci = FisherZ::for_table(&data, &[0, 1, 2]).unwrap();
             let result = pc_stable(&data, &ci, PcOptions { alpha: 0.01, max_cond_size: 2 }).unwrap();
@@ -1950,7 +1950,7 @@ mod tests {
         #[test]
         fn ges_recovers_known_cpdag_from_simulated_chain() {
             let scm = linear_chain_scm();
-            let mut rng = crate::random::Rng::from_seed(4242);
+            let mut rng = geometry::random::Rng::from_seed(4242);
             let data = scm.simulate(2000, &mut rng).unwrap();
             let found = ges(&data).unwrap();
             let truth = Cpdag::from_dag(&scm.dag);
@@ -1962,7 +1962,7 @@ mod tests {
         fn direct_lingam_recovers_causal_order_on_uniform_noise_sem() {
             // x -> y with uniform (non-Gaussian) noise.
             let n = 3000;
-            let mut rng = crate::random::Rng::from_seed(55);
+            let mut rng = geometry::random::Rng::from_seed(55);
             let x: Vec<f64> = (0..n).map(|_| crate::probability::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
             let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + crate::probability::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
             let table = crate::tabular::Table::from_f64_columns(vec!["x".into(), "y".into()], vec![x, y]).unwrap();
@@ -1974,7 +1974,7 @@ mod tests {
         #[test]
         fn linear_scm_simulate_then_fit_recovers_coefficients() {
             let scm = linear_chain_scm();
-            let mut rng = crate::random::Rng::from_seed(321);
+            let mut rng = geometry::random::Rng::from_seed(321);
             let data = scm.simulate(5000, &mut rng).unwrap();
             let refit = LinearGaussianScm::fit(&scm.dag, &data).unwrap();
             assert!((refit.weights.get(1, 0) - 2.0).abs() < 0.1);
@@ -1984,7 +1984,7 @@ mod tests {
         #[test]
         fn discrete_scm_fit_recovers_cpts_from_simulated_data() {
             let scm = sprinkler_scm();
-            let mut rng = crate::random::Rng::from_seed(17);
+            let mut rng = geometry::random::Rng::from_seed(17);
             let data = scm.simulate(20_000, &mut rng).unwrap();
             let refit = DiscreteScm::fit(&scm.dag, &data, 1.0).unwrap();
             let cloudy_fit = &refit.cpts[0];

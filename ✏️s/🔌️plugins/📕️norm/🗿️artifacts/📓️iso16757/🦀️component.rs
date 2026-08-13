@@ -40,12 +40,10 @@ pub struct DictionaryRef {
     pub version: String,
 }
 
-/// 🌐️ Locale-tagged text.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-pub struct LocalizedText {
-    pub locale: String,
-    pub text: String,
-}
+/// 🌐️ Locale-tagged text — re-exported from `crate::document`, the single canonical definition
+/// shared across every norm artifact (kills this type's former duplicate here and in `vdi3805`;
+/// see `crate::document`'s `🔖️LocalizedText` region for the full rationale).
+pub use crate::document::LocalizedText;
 
 /// 📝️ Preferred and alternative names.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

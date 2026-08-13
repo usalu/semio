@@ -1,0 +1,5 @@
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🎬️scene/🦀️component.rs:3:9: error[E0432]: unresolved import `semio_framework_geometry`: use of unresolved module or unlinked crate `semio_framework_geometry`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🎬️scene/🦀️component.rs:842:28: error[E0689]: can't call method `abs` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🎬️scene/🦀️component.rs:861:41: error[E0689]: can't call method `sqrt` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🎬️scene/🦀️component.rs:864:41: error[E0689]: can't call method `sqrt` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🎬️scene/🦀️component.rs:867:41: error[E0689]: can't call method `sqrt` on ambiguous numeric type `{float}`

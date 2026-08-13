@@ -59,7 +59,7 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let document = <crate::artifacts::wires::WiresSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert_eq!(fixture_nodes(&document.board_fixture).len(), 7);
+        assert_eq!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&document)).len(), 7);
     }
 
     #[test]
@@ -71,7 +71,7 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let document = <crate::artifacts::wires::WiresSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert!(fixture_nodes(&document.board_fixture).is_empty());
+        assert!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&document)).is_empty());
     }
 }
 //#endregion 🧪️Tests

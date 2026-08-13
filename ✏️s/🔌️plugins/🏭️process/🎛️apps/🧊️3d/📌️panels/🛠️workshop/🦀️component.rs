@@ -125,22 +125,33 @@ mod tests {
         assert!(!after.contains("Circular Saw"), "removed machine must disappear from the catalogue tree");
     }
 
+    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `AddStep` dispatches a
+    /// `CreateStep` mutation, which is a documented no-op now (`steps` composes an
+    /// `s.stdio.semio.flow` CHILD HANDLE — no resolver, see `ProcessWorkingScene`'s doc comment),
+    /// so the end-to-end "edit a machine parameter, then add a step, then read the sized tool back
+    /// off the document" path no longer has a real document to read from. The real, unaffected part
+    /// of this test — `measure_for_capability` sizing a cut tool from a capability's own edited
+    /// parameter — is asserted directly instead.
     #[test]
-    fn workshop_machine_parameter_edit_resizes_future_tool() {
-        use crate::apps::process3d::commands::inspector::patch_inspector;
-        use crate::apps::process3d::commands::step::add_step;
-        use crate::artifacts::process3d::{ProcessMeasure, SolidSpec};
-        let mut app = testkit::app();
-        testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }));
-        testkit::dispatch(&mut app, Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "machine:circularSaw".into(), field: "crosscut.bladeDiameter".into(), number: Some(0.4), text: None }));
-        let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-        assert!(!result.mutations.is_empty());
-        let document = app.snapshot().expect("snapshot");
-        let last = document.steps.last().expect("inserted step");
-        let ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius, .. }, .. } = &last.measure else {
-            panic!("expected a cylinder cut tool, got {:?}", last.measure);
+    fn workshop_machine_parameter_edit_sizes_the_capability_measure() {
+        use crate::artifacts::process3d::schema::inferences::measure_for_capability;
+        use crate::artifacts::process3d::{Capability, MeasureRecipe, ProcessMeasure, WorkingSolid};
+        let capability = Capability {
+            id: "crosscut".into(),
+            label: "Crosscut".into(),
+            icon_id: "scissors".into(),
+            recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+            parameters: vec![
+                crate::artifacts::process3d::CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.4 },
+                crate::artifacts::process3d::CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 },
+            ],
+            rules: Vec::new(),
         };
-        assert!((radius - 0.2).abs() < 1e-9, "edited blade diameter 0.4 should size the next tool to radius 0.2, got {radius}");
+        let measure = measure_for_capability(&capability, None);
+        let ProcessMeasure::Cut { tool: WorkingSolid::Cylinder { radius, .. }, .. } = measure else {
+            panic!("expected a cylinder cut tool, got {measure:?}");
+        };
+        assert!((radius - 0.2).abs() < 1e-9, "edited blade diameter 0.4 should size the tool to radius 0.2, got {radius}");
     }
 }
 //#endregion 🧪️Tests

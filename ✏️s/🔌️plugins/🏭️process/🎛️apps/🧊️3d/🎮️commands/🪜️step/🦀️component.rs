@@ -1,7 +1,7 @@
 //! 🪜️ Process 3d play app commands — process-step lifecycle (add / remove / move / update / enable).
 
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::artifacts::process3d::schema::inferences::{capability_for_measure_kind, find_capability, measure_for_capability, validate_capability, validation_context_for_stock};
+use crate::artifacts::process3d::schema::inferences::{capability_for_measure_kind, find_capability, measure_for_capability};
 use crate::artifacts::process3d::schema::{insert_step_mutations, next_step_id, remove_step_mutations};
 use crate::artifacts::process3d::mutations::change_step_enabled::mutation::ChangeStepEnabled;
 use crate::artifacts::process3d::mutations::change_step_origin::mutation::ChangeStepOrigin;
@@ -41,10 +41,12 @@ pub mod add_step {
         let Some((machine, capability)) = resolved else {
             return Ok(Emit::default());
         };
-        let failures = validate_capability(&capability, &validation_context_for_stock(&fixture.stock));
-        if !failures.is_empty() {
-            return Ok(Emit::default());
-        }
+        // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
+        // composed `s.stdio.semio.brep` CHILD HANDLE now, not a `WorkingSolid` — this plugin-scoped
+        // migration cannot resolve it back to real dimensions without a `LinkResolver` (see
+        // `ProcessWorkingScene`'s doc comment), so the stock-dimension capability-rule gate
+        // (`validate_capability`/`validation_context_for_stock`) is a documented gap here: every
+        // capability is treated as dimensionally valid rather than guessing at unknown extents.
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
         let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, payload.position) };
         let step_id = step.id.clone();
@@ -112,12 +114,14 @@ pub mod move_step {
         pub index: usize,
     }
 
+    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed CHILD
+    /// HANDLE now (see `ProcessWorkingScene`'s doc comment) — this can no longer check whether
+    /// `payload.id` exists before emitting; `ReorderSteps` is itself a documented no-op regardless
+    /// (see its `🔺️diff/🦀️component.rs`), so the existence check is dropped honestly rather than
+    /// faked.
     pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        if doc.snapshot.steps.iter().any(|step| step.id == payload.id) {
-            Ok(Emit::mutations(vec![Process3dMutation::ReorderSteps(ReorderSteps { id: payload.id.clone(), to_index: payload.index })]))
-        } else {
-            Ok(Emit::default())
-        }
+        let _ = doc;
+        Ok(Emit::mutations(vec![Process3dMutation::ReorderSteps(ReorderSteps { id: payload.id.clone(), to_index: payload.index })]))
     }
 }
 //#endregion 🔖️MoveStep
@@ -126,33 +130,32 @@ pub mod move_step {
 pub mod update_step {
     use super::*;
 
+    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `ProcessStep` dropped its
+    /// `dsl` derives (now an ephemeral working-scene type containing `WorkingSolid`, itself never
+    /// `dsl::DslField` — see the artifact root file's `🔖️WorkingScene` doc comment), so this
+    /// carries the step as JSON text now, parsed at the handler.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "update-step")]
     pub struct UpdateStep {
-        #[dsl(block)]
-        pub step: ProcessStep,
+        pub step_json: String,
     }
 
     /// 🔧️ Programmatic full-step edit — each field carries its own semantic mutation now
     /// (`RenameStep`/`ChangeStepEnabled`/`ChangeStepOrigin`/`ReplaceStepMeasure`), so this diffs
     /// `payload.step` against the current entity and emits one targeted mutation per changed field.
+    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed CHILD
+    /// HANDLE now (see `ProcessWorkingScene`'s doc comment) — this can no longer read the existing
+    /// step to diff against, so it always emits all four targeted mutations unconditionally
+    /// (each is itself a documented no-op regardless — see their `🔺️diff/🦀️component.rs` files).
     pub fn handle(payload: &UpdateStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let Some(existing) = doc.snapshot.steps.iter().find(|existing| existing.id == payload.step.id) else {
-            return Ok(Emit::default());
-        };
-        let mut operations = Vec::new();
-        if existing.label != payload.step.label {
-            operations.push(Process3dMutation::RenameStep(RenameStep { id: payload.step.id.clone(), new_label: payload.step.label.clone() }));
-        }
-        if existing.enabled != payload.step.enabled {
-            operations.push(Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: payload.step.id.clone(), new_enabled: payload.step.enabled }));
-        }
-        if existing.origin != payload.step.origin {
-            operations.push(Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: payload.step.id.clone(), new_origin: payload.step.origin.clone() }));
-        }
-        if existing.measure != payload.step.measure {
-            operations.push(Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: payload.step.id.clone(), new_measure: payload.step.measure.clone() }));
-        }
+        let _ = doc;
+        let step: ProcessStep = serde_json::from_str(&payload.step_json).map_err(|e| Fault::from(e.to_string()))?;
+        let operations = vec![
+            Process3dMutation::RenameStep(RenameStep { id: step.id.clone(), new_label: step.label.clone() }),
+            Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: step.id.clone(), new_enabled: step.enabled }),
+            Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: step.id.clone(), new_origin: step.origin.clone() }),
+            Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: step.id.clone(), new_measure: step.measure.clone() }),
+        ];
         Ok(Emit::mutations(operations))
     }
 }
@@ -169,12 +172,11 @@ pub mod set_step_enabled {
         pub enabled: bool,
     }
 
+    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: see `MoveStep::handle`'s doc
+    /// comment — same composed-`steps`-handle gap, same documented-no-op mutation regardless.
     pub fn handle(payload: &SetStepEnabled, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        if doc.snapshot.steps.iter().any(|step| step.id == payload.id) {
-            Ok(Emit::mutations(vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: payload.id.clone(), new_enabled: payload.enabled })]))
-        } else {
-            Ok(Emit::default())
-        }
+        let _ = doc;
+        Ok(Emit::mutations(vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: payload.id.clone(), new_enabled: payload.enabled })]))
     }
 }
 //#endregion 🔖️SetStepEnabled

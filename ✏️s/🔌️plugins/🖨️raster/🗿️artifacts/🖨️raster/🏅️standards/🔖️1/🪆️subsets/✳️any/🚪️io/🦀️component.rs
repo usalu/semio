@@ -19,6 +19,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.bmp", "stdio.d
 use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use base64::Engine;
 use semio_framework::{io::io_compose_via, io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
@@ -125,16 +126,16 @@ fn drawing_snapshot_from_raster(document: &RasterSnapshot) -> SemioDrawingSnapsh
 
 /// 🧬️ Converts a legacy `DwgDrawing`'s line-shaped entities into a real `DrawNode::Path` tree —
 /// typed geometry, not hand-formatted SVG `<path d="…">` strings.
-fn drawing_snapshot_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> SemioDrawingSnapshot {
+fn drawing_snapshot_from_dwg(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
     let width = (drawing.extmax[0] - drawing.extmin[0]).max(1.0);
     let height = (drawing.extmax[1] - drawing.extmin[1]).max(1.0);
     let to_point = |v: &[f64; 2]| SemioPoint2 { x: v[0] - drawing.extmin[0], y: height - (v[1] - drawing.extmin[1]) };
     let mut children = Vec::new();
     for entity in &drawing.entities {
         let (vertices, closed): (Vec<[f64; 2]>, bool) = match &entity.geometry {
-            semio_framework_os::DwgGeometry::LwPolyline { vertices, closed, .. } => (vertices.clone(), *closed),
-            semio_framework_os::DwgGeometry::Polyline3d { vertices, closed } => (vertices.iter().map(|v| [v[0], v[1]]).collect(), *closed),
-            semio_framework_os::DwgGeometry::Line { start, end } => (vec![[start[0], start[1]], [end[0], end[1]]], false),
+            DwgGeometry::LwPolyline { vertices, closed, .. } => (vertices.clone(), *closed),
+            DwgGeometry::Polyline3d { vertices, closed } => (vertices.iter().map(|v| [v[0], v[1]]).collect(), *closed),
+            DwgGeometry::Line { start, end } => (vec![[start[0], start[1]], [end[0], end[1]]], false),
             _ => continue,
         };
         if vertices.is_empty() {
@@ -237,7 +238,7 @@ pub fn raster_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), 
 /// renderer stays, but its raw PNG bytes are then canonicalized through the real
 /// `s.stdio.semio/v1/image` ↔ png round trip (`canonicalize_png_bytes`) instead of being trusted
 /// verbatim, which also recovers the real decoded width/height for the new pixel layer.
-pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
+pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let drawing_snapshot = drawing_snapshot_from_dwg(drawing);
     let svg = dispatch_drawing_to_svg(&drawing_snapshot)?;
     let fallback_width = drawing_snapshot.canvas.width.round().max(1.0) as u32;

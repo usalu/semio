@@ -374,13 +374,13 @@ impl protocol::OpBinary for Vdi3805Mutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
     use crate::artifacts::vdi3805::{
-        BoundingBox, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, EditionId, EditionProfileChoice, ExtensionBag, LocalizedText, ParametricGeometry,
+        BoundingBox, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, EditionId, EditionProfileChoice, ExtensionBag, ParametricGeometry,
         ProductIdentity, SecurityLimits, SheetId, VdiQuantityKind, VdiUnit, VdiValue,
     };
 
     let product = CatalogueProduct {
         identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-NEW".into() },
-        title: LocalizedText::new("Neu", "New"),
+        title: crate::artifacts::vdi3805::bilingual("Neu", "New"),
         sheet: SheetId(3),
         records: Vec::new(),
         configuration: Configuration { id: "cfg.new".into(), parameters: std::collections::BTreeMap::new(), geometry_ref: None, function_refs: Vec::new() },
@@ -400,7 +400,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
         Vdi3805Mutation::RemoveEditionProfile(RemoveEditionProfile { sheet: "8".into() }),
         Vdi3805Mutation::CreateProduct(CreateProduct { product: product.clone(), index: Some(0) }),
         Vdi3805Mutation::DeleteProduct(DeleteProduct { id: "VLV-50-001".into() }),
-        Vdi3805Mutation::RenameProduct(RenameProduct { id: "VLV-50-001".into(), new_title: LocalizedText::new("Umbenannt", "Renamed") }),
+        Vdi3805Mutation::RenameProduct(RenameProduct { id: "VLV-50-001".into(), new_title: crate::artifacts::vdi3805::bilingual("Umbenannt", "Renamed") }),
         Vdi3805Mutation::ReplaceProductConfiguration(ReplaceProductConfiguration { id: "VLV-50-001".into(), new_configuration: product.configuration.clone() }),
         Vdi3805Mutation::CreateGeometry(CreateGeometry { geometry: geometry.clone() }),
         Vdi3805Mutation::DeleteGeometry(DeleteGeometry { id: "geom.valve.50".into() }),

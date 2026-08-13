@@ -19,7 +19,11 @@ pub mod export_model {
     }
 
     pub fn handle(payload: &ExportModel, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        match export_process3d_model(doc.snapshot, &payload.format) {
+        // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: no `LinkResolver` — see
+        // `ProcessWorkingScene`'s doc comment; `doc.snapshot` alone cannot recover its composed
+        // children's content, so export degrades honestly to the empty working scene.
+        let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot);
+        match export_process3d_model(&scene, doc.snapshot.resolved_up_to, &payload.format) {
             Some(export) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
                 filename: export.filename,
                 mime_type: export.mime_type,

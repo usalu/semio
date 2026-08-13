@@ -95,6 +95,30 @@ impl fmt::Display for ClauseId {
 }
 // #endregion 🔖️Clause
 
+// #region 🔖️LocalizedText
+/// 🌐️ Locale-tagged text — the ONE canonical shape shared by every norm artifact (kills the
+/// `LocalizedText` duplication formerly hand-maintained separately in `vdi3805` and `iso16757`,
+/// see UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's `📓️design-full-plan.md` §4 norm line). Structurally
+/// isomorphic to stdio's `✳️text` subset's `SemioTextRun{language,content,..}` (that subset's own
+/// doc comment: "Absorbs the duplicated `LocalizedText` types that currently exist twice inside
+/// the norm plugin") — kept as a local plain value type here rather than a composed
+/// `store::ArtifactChild<SemioTextSnapshot>` because it is nested by the DOZENS as an ordinary
+/// leaf field inside `Names`/`Subject`/`CatalogueProduct` etc., not a top-level content slot; a
+/// composed child handle is for a single large content slot with its own working-scene cache
+/// (`📓️migration-recipe.md` §1/§3), not a value type reused pervasively as a struct field.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct LocalizedText {
+    pub locale: String,
+    pub text: String,
+}
+
+impl LocalizedText {
+    pub fn new(locale: impl Into<String>, text: impl Into<String>) -> Self {
+        Self { locale: locale.into(), text: text.into() }
+    }
+}
+// #endregion 🔖️LocalizedText
+
 // #region 🔖️Check
 /// ✅️ Outcome of a single norm compliance check.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -577,7 +601,7 @@ impl<F: NormFamily> NormHost<F> {
 /// op-text field. Mirrors vcs's own private `escape_text_field`/`unescape_text_field` convention
 /// exactly (same three escapes, same order) so escaping behaves identically repo-wide, even though vcs
 /// does not expose those helpers for reuse.
-fn escape_op_text_field(value: &str) -> String {
+pub(crate) fn escape_op_text_field(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
         match ch {
@@ -591,7 +615,7 @@ fn escape_op_text_field(value: &str) -> String {
 }
 
 /// ✂️ Inverts {@link escape_op_text_field}.
-fn unescape_op_text_field(value: &str) -> String {
+pub(crate) fn unescape_op_text_field(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars();
     while let Some(ch) = chars.next() {

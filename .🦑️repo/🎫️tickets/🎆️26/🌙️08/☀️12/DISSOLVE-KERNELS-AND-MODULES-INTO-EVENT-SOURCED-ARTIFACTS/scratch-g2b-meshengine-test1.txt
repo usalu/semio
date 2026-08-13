@@ -1,0 +1,27 @@
+    Finished `test` profile [unoptimized] target(s) in 0.27s
+     Running unittests 📦️glue.rs (.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS/🎯️target/debug/deps/semio_framework_mesh_engine-fc028af30da421a5)
+
+running 20 tests
+test tests::mesh_exporter_and_importer_use_short_format_kind_ids_not_media_format ... ok
+test tests::mesh_from_indexed_with_face_groups_stamps_per_triangle_face_ids ... ok
+test tests::mesh_from_indexed_with_face_groups_empty_groups_leaves_face_ids_empty ... ok
+test tests::mesh_from_obj_rejects_malformed_face_index ... ok
+test tests::box_has_triangles ... ok
+test tests::mesh_from_glb_rejects_bytes_without_valid_glb_container ... ok
+test tests::mesh_data_aabb_and_merge ... ok
+test tests::mesh_from_obj_rejects_malformed_v_and_vn_lines ... ok
+test tests::mesh_from_obj_triangulates_ngon_faces_and_skips_degenerate_faces ... ok
+test tests::mesh_from_obj_resolves_negative_relative_face_indices ... ok
+test tests::mesh_from_obj_zero_and_out_of_range_negative_indices_error ... ok
+test tests::mesh_from_stl_rejects_truncated_header_and_truncated_triangle_data ... ok
+test tests::obj_round_trip_preserves_positions_and_indices ... ok
+test tests::stl_round_trip_preserves_triangle_geometry ... ok
+test tests::stl_round_trip ... ok
+test tests::glb_round_trip_preserves_positions_and_indices ... ok
+test tests::glb_round_trip ... ok
+test tests::mesh_from_kind_maps_known_kinds_and_falls_back_to_box ... ok
+test tests::obj_round_trip ... ok
+test tests::glb_import_collects_triangle_primitives_after_guides ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

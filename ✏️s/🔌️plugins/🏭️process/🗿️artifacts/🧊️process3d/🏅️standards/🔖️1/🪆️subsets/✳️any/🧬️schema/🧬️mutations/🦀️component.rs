@@ -246,7 +246,7 @@ mod tests {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let after = round_trip(&base, &Process3dMutation::RenameMachine(RenameMachine { id: "machine-1".into(), new_label: "Big Saw".into() }));
-        assert_eq!(after.workshop.machines[0].label, "Big Saw");
+        assert_eq!(after.workshop.machines.iter().find(|machine| machine.id == "machine-1").expect("machine-1 present").label, "Big Saw");
     }
 
     #[test]
@@ -254,7 +254,7 @@ mod tests {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let after = round_trip(&base, &Process3dMutation::ChangeMachineIcon(ChangeMachineIcon { id: "machine-1".into(), new_icon_id: "drill".into() }));
-        assert_eq!(after.workshop.machines[0].icon_id, "drill");
+        assert_eq!(after.workshop.machines.iter().find(|machine| machine.id == "machine-1").expect("machine-1 present").icon_id, "drill");
     }
 
     #[test]
@@ -262,7 +262,7 @@ mod tests {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let after = round_trip(&base, &Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: "machine-1".into(), new_capabilities: vec![] }));
-        assert!(after.workshop.machines[0].capabilities.is_empty());
+        assert!(after.workshop.machines.iter().find(|machine| machine.id == "machine-1").expect("machine-1 present").capabilities.is_empty());
     }
 
     #[test]

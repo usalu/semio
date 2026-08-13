@@ -25,7 +25,7 @@ use crate::apps::sequence::panels::{catalogue as catalogue_panel, document as do
 use crate::apps::sequence::terminology::sequence_play_labels;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::op::sequence_snapshot_mutations;
-use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceSnapshot, SequenceStep, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, DslValue, Emit,
     Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
@@ -38,7 +38,7 @@ use imperative_engine::{
     compile_to_text as imperative_compile_to_text, contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry,
     register_native_imperative_module, sync_imperative_module_contributions, Executor, Path, RunResult, Step,
 };
-use math::graph::manifest::PropertyBag;
+use graph::manifest::PropertyBag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value as NeuralValue};
 use std::collections::{BTreeMap, HashMap};
 
@@ -87,7 +87,7 @@ pub fn sequence_io() -> semio_framework::AppIo {
 /// `ArtifactApp::import_media` call): derives the next id purely from the fixture's own existing
 /// `step-N`/`edge-N` ids, exactly like `SequenceHost::from_snapshot`'s own initial-serial derivation.
 pub fn next_available_step_id(fixture: &SequenceSnapshot) -> String {
-    format!("step-{}", max_serial_in_snapshot(fixture).max(100) + 1)
+    format!("step-{}", max_serial_in_snapshot(&fixture.to_fixture()).max(100) + 1)
 }
 //#endregion 🔖️Io
 
@@ -245,7 +245,7 @@ fn parse_serial_suffix(prefix: &str, id: &str) -> Option<u64> {
     id.strip_prefix(prefix)?.parse().ok()
 }
 
-fn max_serial_in_snapshot(fixture: &SequenceSnapshot) -> u64 {
+fn max_serial_in_snapshot(fixture: &SequenceFixture) -> u64 {
     let mut max = 0u64;
     for step in &fixture.steps {
         if let Some(serial) = parse_serial_suffix("step-", &step.id) {
@@ -364,7 +364,12 @@ fn ensure_imperative_modules_for_tests() {
 }
 
 pub struct SequenceHost {
-    pub snapshot: SequenceSnapshot,
+    /// 🌊️ The plain pre-migration document shape (`{schema, steps, edges}`) — this plugin's own
+    /// working representation, matching `SequenceFixture`'s doc comment. `SequenceHost` edits this
+    /// in place exactly as it edited `SequenceSnapshot.steps`/`.edges` directly before the
+    /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` migration (`sequence→C:flow`) — only the
+    /// boundary conversions (`from_snapshot`/`replace_snapshot`/`to_json`/`load_json`) changed.
+    pub snapshot: SequenceFixture,
     /// 🎥️ The canvas camera — session-only host state (never a `SequenceSnapshot` document field; see
     /// `crate::apps::sequence::config::SequenceConfig::camera`). Persists across `rebuild_dag()` calls
     /// within this `SequenceHost` instance (each document mutation rebuilds `dag` from scratch, so
@@ -382,7 +387,15 @@ impl Default for SequenceHost {
 }
 
 impl SequenceHost {
-    pub fn from_snapshot(fixture: SequenceSnapshot) -> Self {
+    /// 🌊️ Builds a live host from a persisted composed-child snapshot — reads the real steps/edges
+    /// off the working-scene cache via `to_fixture()` (see `SequenceFixture`'s doc comment).
+    pub fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
+        Self::from_fixture(snapshot.to_fixture())
+    }
+
+    /// 🌊️ Builds a live host directly from a plain fixture (the WASM bridge's `loadFixtureJson`/
+    /// `SequenceHost::load_json` entry point).
+    pub fn from_fixture(fixture: SequenceFixture) -> Self {
         #[cfg(test)]
         ensure_imperative_modules_for_tests();
         let next_serial = max_serial_in_snapshot(&fixture).max(100);
@@ -397,7 +410,7 @@ impl SequenceHost {
         host
     }
 
-    pub fn replace_snapshot(&mut self, fixture: SequenceSnapshot) -> Result<(), SequenceCoreError> {
+    pub fn replace_snapshot(&mut self, fixture: SequenceFixture) -> Result<(), SequenceCoreError> {
         if fixture.schema != "sequence.sequence" {
             return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
         }
@@ -408,11 +421,11 @@ impl SequenceHost {
     }
 
     pub fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
-        let fixture: SequenceSnapshot = serde_json::from_str(json)?;
+        let fixture: SequenceFixture = serde_json::from_str(json)?;
         if fixture.schema != "sequence.sequence" {
             return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
         }
-        Ok(Self::from_snapshot(fixture))
+        Ok(Self::from_fixture(fixture))
     }
 
     pub fn to_json(&self) -> Result<String, SequenceCoreError> {
@@ -795,7 +808,7 @@ pub fn host_from_snapshot(fixture: &SequenceSnapshot) -> SequenceHost {
 pub fn ops_from_host_mutation(fixture: &SequenceSnapshot, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceMutation> {
     let mut host = host_from_snapshot(fixture);
     mutate(&mut host);
-    sequence_snapshot_mutations(fixture, &host.snapshot)
+    sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)
 }
 //#endregion 🔖️HostHelpers
 
@@ -866,7 +879,7 @@ impl ArtifactApp for SequencePlayApp {
     /// far right of the flow — an object payload becomes that step's params verbatim, a bare
     /// scalar/array is wrapped under a single `"value"` key. Never mutates anything directly (matches
     /// every other `import_media` override): the caller (a headless runner or the UI) applies the
-    /// returned `StepsAdd` through the ordinary, undoable document store.
+    /// returned `create-step` mutation through the ordinary, undoable document store.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, SequenceSnapshot>) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "steps:in" {
             return Err(MediaError::NotImplemented);
@@ -879,9 +892,10 @@ impl ArtifactApp for SequencePlayApp {
         let params: StepParams = serde_json::from_value(params_value).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let fixture = doc.snapshot;
         let id = next_available_step_id(fixture);
-        let x = fixture.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if fixture.steps.is_empty() { 0.0 } else { 280.0 };
+        let live = fixture.to_fixture();
+        let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
         let step = crate::artifacts::sequence::SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
-        Ok(Emit::mutations(vec![SequenceMutation::StepsAdd { index: fixture.steps.len(), item: step }]))
+        Ok(Emit::mutations(vec![crate::artifacts::sequence::mutations::create_step(step)]))
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -903,15 +917,16 @@ impl ArtifactApp for SequencePlayApp {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
         let fixture = doc.snapshot;
+        let live = fixture.to_fixture();
         let config = cfg.snapshot;
         let labels = sequence_play_labels(config);
         match body_key {
             SEQUENCE_PLAY_BODY_MAIN => main::render(fixture, config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(fixture, config),
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(fixture),
-            SEQUENCE_PLAY_BODY_DOCUMENT => document_panel::render(fixture, &config.selected_step_ids, labels),
-            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, labels),
-            SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(fixture, &config.selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_DOCUMENT => document_panel::render(&live, &config.selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels),
+            SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &config.selected_step_ids, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -1058,13 +1073,13 @@ mod tests {
 
     #[test]
     fn default_snapshot_has_steps() {
-        assert_eq!(crate::artifacts::sequence::default_snapshot().steps.len(), 2);
+        assert_eq!(crate::artifacts::sequence::default_snapshot().to_fixture().steps.len(), 2);
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("projection").steps.len(), 2, 3);
+        assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("projection").to_fixture().steps.len(), 2, 3);
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
@@ -1140,13 +1155,13 @@ mod tests {
     #[test]
     fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
         let mut app = new_app_with_registry_wired();
-        let before = app.snapshot().expect("projection").steps.len();
+        let before = app.snapshot().expect("projection").to_fixture().steps.len();
         let media = Media {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() },
         };
         app.import_media("steps:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import steps:in");
-        let after = app.snapshot().expect("projection");
+        let after = app.snapshot().expect("projection").to_fixture();
         assert_eq!(after.steps.len(), before + 1);
         let imported = after.steps.last().expect("imported step");
         assert_eq!(imported.kind, "computation.import");
@@ -1161,7 +1176,7 @@ mod tests {
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() },
         };
         app.import_media("steps:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import steps:in");
-        let after = app.snapshot().expect("projection");
+        let after = app.snapshot().expect("projection").to_fixture();
         let imported = after.steps.last().expect("imported step");
         assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
     }
@@ -1358,7 +1373,7 @@ mod tests {
         let first = host.add_step("math.add", 40.0, 40.0);
         host.dag.set_selection(std::slice::from_ref(&first));
         let json = host.to_json().expect("fixture json");
-        let round_trip: SequenceSnapshot = serde_json::from_str(&json).expect("parse");
+        let round_trip: SequenceFixture = serde_json::from_str(&json).expect("parse");
         host.replace_snapshot(round_trip).expect("replace");
         let second = host.add_step("math.add", 80.0, 80.0);
         assert_ne!(first, second);
@@ -1372,7 +1387,7 @@ mod tests {
         let mut host = SequenceHost::default();
         let first = host.add_step_dropped("math.add", 10.0, 10.0, None);
         let json = host.to_json().expect("fixture json");
-        let round_trip: SequenceSnapshot = serde_json::from_str(&json).expect("parse");
+        let round_trip: SequenceFixture = serde_json::from_str(&json).expect("parse");
         host.replace_snapshot(round_trip).expect("replace");
         let second = host.add_step_dropped("math.add", 20.0, 20.0, None);
         assert_ne!(first, second);
@@ -1658,7 +1673,7 @@ mod tests {
     fn next_available_step_id_is_free_and_deterministic() {
         let fixture = default_snapshot();
         let id = next_available_step_id(&fixture);
-        assert!(!fixture.steps.iter().any(|step| step.id == id));
+        assert!(!fixture.to_fixture().steps.iter().any(|step| step.id == id));
         assert_eq!(id, next_available_step_id(&fixture), "pure function of the fixture, not a mutating counter");
     }
     //#endregion 🔖️HostTests

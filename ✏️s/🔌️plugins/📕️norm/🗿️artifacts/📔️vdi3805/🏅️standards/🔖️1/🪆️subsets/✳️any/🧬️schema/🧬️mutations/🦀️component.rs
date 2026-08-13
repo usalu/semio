@@ -26,7 +26,7 @@ use std::collections::BTreeMap;
 /// mutation (`create`/`rename`/`replace-configuration`) can update the persisted `index` field
 /// directly from the payload instead of rebuilding the whole index from the whole catalog.
 pub fn catalog_index_entry_for(product: &CatalogueProduct) -> CatalogIndexEntry {
-    CatalogIndexEntry { product_id: product.identity.article_number.clone(), sheet: product.sheet, tags: vec![product.title.de.clone(), product.title.en.clone()], dn: extract_dn(&product.configuration.parameters) }
+    CatalogIndexEntry { product_id: product.identity.article_number.clone(), sheet: product.sheet, tags: product.title.iter().map(|t| t.text.clone()).collect(), dn: extract_dn(&product.configuration.parameters) }
 }
 
 /// 🔢️ Extracts a `CatalogIndexEntry.dn` value from a configuration's parameter bag, mirroring
@@ -214,7 +214,7 @@ mod tests {
         let base = Vdi3805Snapshot::default();
         let product = CatalogueProduct {
             identity: crate::artifacts::vdi3805::ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-NEW".into() },
-            title: crate::artifacts::vdi3805::LocalizedText::new("Neu", "New"),
+            title: crate::artifacts::vdi3805::bilingual("Neu", "New"),
             sheet: crate::artifacts::vdi3805::SheetId(3),
             records: Vec::new(),
             configuration: crate::artifacts::vdi3805::Configuration { id: "cfg.new".into(), parameters: BTreeMap::new(), geometry_ref: None, function_refs: Vec::new() },
@@ -230,9 +230,12 @@ mod tests {
         let undo = create.inverse(&base);
         assert_eq!(undo, vec![Vdi3805Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: "VLV-NEW".into() })]);
 
-        let rename = Vdi3805Mutation::RenameProduct(rename_product::mutation::RenameProduct { id: "VLV-NEW".into(), new_title: crate::artifacts::vdi3805::LocalizedText::new("Umbenannt", "Renamed") });
+        let rename = Vdi3805Mutation::RenameProduct(rename_product::mutation::RenameProduct { id: "VLV-NEW".into(), new_title: crate::artifacts::vdi3805::bilingual("Umbenannt", "Renamed") });
         let after_rename = round_trip(&after_create, &rename);
-        assert_eq!(after_rename.catalog.products.iter().find(|p| p.identity.article_number == "VLV-NEW").unwrap().title.en, "Renamed");
+        assert_eq!(
+            crate::artifacts::vdi3805::text_in(&after_rename.catalog.products.iter().find(|p| p.identity.article_number == "VLV-NEW").unwrap().title, "en"),
+            "Renamed"
+        );
         assert_eq!(after_rename.index.entries.iter().find(|e| e.product_id == "VLV-NEW").unwrap().tags, vec!["Umbenannt".to_string(), "Renamed".to_string()]);
 
         let mut new_parameters = BTreeMap::new();

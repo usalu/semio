@@ -7,8 +7,8 @@ use dsl::DslValue;
 use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
-use math::graph::manifest::PropertyValue;
-use math::graph::manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
+use ::graph::manifest::PropertyValue;
+use ::graph::manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
 
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use crate::infinite::board::ports::directed::{
@@ -1146,12 +1146,12 @@ fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left:
 // #region 🔖️Acyclicity
 /// 🚫️ Returns true when adding `source -> target` would create a cycle.
 pub fn would_create_cycle(existing: &[(String, String)], source: &str, target: &str) -> bool {
-    math::graph::algorithms::would_create_cycle_ids(existing, source, target)
+    ::graph::algorithms::would_create_cycle_ids(existing, source, target)
 }
 // #endregion 🔖️Acyclicity
 
 // #region 🔖️Layout
-use math::graph::drawing::tidy_tree::buchheim_positions;
+use ::graph::drawing::tidy_tree::buchheim_positions;
 use serde_json::Value;
 
 /// 🧭️ Tree layout flow direction for layered DAG positions.
@@ -6739,7 +6739,7 @@ mod tests {
     #[test]
     fn io_node_rect_port_angles_on_edges() {
         use canvas::Point;
-        use graph::handle_position_on_rectangle;
+        use super::graph::handle_position_on_rectangle;
         let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into(), ..Default::default() }, IoPortSpec { id: "b".into(), label: "b".into(), ..Default::default() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
         let width = computation_node_width("node", &inputs, &outputs);
@@ -6758,7 +6758,7 @@ mod tests {
     #[test]
     fn computation_port_handle_caps_bulge_outward() {
         use canvas::Point;
-        use graph::{handle_exterior_cap_fill_path, handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
+        use super::graph::{handle_exterior_cap_fill_path, handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
         let inputs = vec![IoPortSpec { id: "0".into(), label: "0".into(), ..Default::default() }, IoPortSpec { id: "1".into(), label: "1".into(), ..Default::default() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "dictionary".into(), ..Default::default() }];
         let width = computation_node_width("Merge", &inputs, &outputs);

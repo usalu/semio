@@ -26,7 +26,7 @@ pub struct WiresInference {
 
 impl protocol::Inference<WiresSnapshot> for WiresInference {
     fn infer(snapshot: &WiresSnapshot) -> Self {
-        Self { topology: compute_wires_topology(&snapshot.board_fixture) }
+        Self { topology: compute_wires_topology(&crate::artifacts::wires::wires_working_board(snapshot)) }
     }
 }
 
@@ -49,7 +49,7 @@ impl protocol::InferenceSpec<WiresSnapshot> for WiresInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.reasoning.wires.inference.topology", reads: &["board_fixture"] }]
+        &[protocol::InferenceFieldSpec { id: "s.reasoning.wires.inference.topology", reads: &["content"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -59,12 +59,29 @@ impl protocol::InferenceSpec<WiresSnapshot> for WiresInference {
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): each fn here takes the whole document
 /// snapshot (not just a `DslValue`), so it's derived compute over the artifact rather than a generic
 /// document helper — those instead live in `🧬️schema/🦀️component.rs`'s `🔖️DocumentHelpers` region.
-pub fn find_board_node<'a>(document: &'a WiresSnapshot, node_id: &str) -> Option<&'a DslValue> {
-    document.board_fixture.get("nodes").and_then(|value| value.as_array()).into_iter().flatten().find(|node| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(node, "id") == Some(node_id))
+///
+/// `find_board_node`/`find_board_edge` return OWNED `DslValue` (not `&'a DslValue` tied to
+/// `document`'s lifetime) since UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the real node/edge data no longer
+/// lives inside `WiresSnapshot` itself, it's read through [`crate::artifacts::wires::wires_working_board`]
+/// (the working-scene accessor), which materializes a fresh `DslValue` every call.
+pub fn find_board_node(document: &WiresSnapshot, node_id: &str) -> Option<DslValue> {
+    crate::artifacts::wires::wires_working_board(document)
+        .get("nodes")
+        .and_then(|value| value.as_array())
+        .into_iter()
+        .flatten()
+        .find(|node| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(node, "id") == Some(node_id))
+        .cloned()
 }
 
-pub fn find_board_edge<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
-    document.board_fixture.get("edges").and_then(|value| value.as_array()).into_iter().flatten().find(|edge| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(edge, "id") == Some(edge_id))
+pub fn find_board_edge(document: &WiresSnapshot, edge_id: &str) -> Option<DslValue> {
+    crate::artifacts::wires::wires_working_board(document)
+        .get("edges")
+        .and_then(|value| value.as_array())
+        .into_iter()
+        .flatten()
+        .find(|edge| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(edge, "id") == Some(edge_id))
+        .cloned()
 }
 
 pub fn find_relationship<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
@@ -106,13 +123,9 @@ mod tests {
 
     fn chain_snapshot() -> WiresSnapshot {
         let mut snapshot = empty_wires_snapshot();
-        snapshot.board_fixture = DslValue::object([
-            ("schema".into(), DslValue::String("reasoning.mindmap.fixture".into())),
-            ("camera".into(), DslValue::object([("x".into(), DslValue::Number(0.0)), ("y".into(), DslValue::Number(0.0)), ("zoom".into(), DslValue::Number(1.0))])),
-            ("nodes".into(), DslValue::Array(vec![DslValue::object([("id".into(), DslValue::String("a".into()))]), DslValue::object([("id".into(), DslValue::String("b".into()))])])),
-            ("edges".into(), DslValue::Array(vec![DslValue::object([("id".into(), DslValue::String("e1".into())), ("source".into(), DslValue::String("a".into())), ("target".into(), DslValue::String("b".into()))])])),
-            ("wires".into(), DslValue::Array(vec![])),
-        ]);
+        let nodes = vec![DslValue::object([("id".into(), DslValue::String("a".into()))]), DslValue::object([("id".into(), DslValue::String("b".into()))])];
+        let edges = vec![DslValue::object([("id".into(), DslValue::String("e1".into())), ("source".into(), DslValue::String("a".into())), ("target".into(), DslValue::String("b".into()))])];
+        snapshot.content = crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges);
         snapshot
     }
 

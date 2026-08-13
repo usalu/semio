@@ -8,7 +8,7 @@ pub mod animation {
 
     use crate::apps::present::engine::rate::rate::{map_child_alpha, RateFunc};
     use crate::apps::present::engine::scene::sobject::{Sobject, VSobject};
-    use math::geometry::{cubic_point_at, Affine, CubicBez, Point, Vec2};
+    use geometry::{cubic_point_at, Affine, CubicBez, Point, Vec2};
     use std::collections::HashMap;
     use std::time::Duration;
 
@@ -1030,7 +1030,7 @@ pub mod animations_catalog {
     use crate::apps::present::engine::animation::animation::{eased_alpha_for, with_vsobject, Animation};
     use crate::apps::present::engine::rate::rate::RateFunc;
     use crate::apps::present::engine::scene::sobject::Sobject;
-    use math::geometry::{Affine, Point, Vec2};
+    use geometry::{Affine, Point, Vec2};
     use std::collections::HashMap;
 
     fn scale_about_center(base: Affine, center: Point, factor: f64) -> Affine {

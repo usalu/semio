@@ -5,7 +5,8 @@ use crate::artifacts::mathematical::{MathematicalMutation, MathematicalSnapshot}
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeNodeLabel, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
-    match base.graph.nodes.iter().find(|node| node.id == payload.id) {
+    let graph = crate::artifacts::mathematical::mathematical_graph(base);
+    match graph.nodes.iter().find(|node| node.id == payload.id) {
         Some(node) => vec![MathematicalMutation::ChangeNodeLabel(ChangeNodeLabel { id: payload.id.clone(), new_label: node.label.clone() })],
         None => Vec::new(),
     }

@@ -13,53 +13,19 @@ use crate::artifacts::process3d::Process3dSnapshot;
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::ArtifactDsl`).
 pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
-/// 🗄️ The drilled-plate example fixture, handcrafted inline (same DSL surface as the timber demo asset).
-pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = r#"semio process.process3d.dsl v1
-resolved-up-to=2
-workshop {
-  machines=[ id=saw label="Generic Saw" icon-id=scissors capabilities=[ id=cut label=Cut icon-id=scissors parameters=[ id=kerf label=Kerf value=0.05m id=length label=Length value=0.5m id=depth label=Depth value=0.5m ]
-  rules {
-  }
-  blade-cut kerf=kerf length=length depth=depth ] id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ id=drill label=Drill icon-id=circle-dot parameters=[ id=radius label=Radius value=0.05m id=depth label=Depth value=0.3m ]
-  rules {
-  }
-  bore-drill radius=radius depth=depth ] id=attacher label="Generic Attacher" icon-id=plus capabilities=[ id=attach label=Attach icon-id=plus parameters=[ id=radius label=Radius value=0.03m id=length label=Length value=0.2m ]
-  rules {
-  }
-  cylinder-attach radius=radius length=length ] ]
-}
-stock {
-  id=plate label=Plate
-  pose {
-    position=@0,0,0 axis=^0,0,0 angle=0rad
-  }
-  box width=1m depth=1m height=0.05m
-}
-steps=[ id=d1 label=Drill enabled=true
-origin {
-  machine-id=circularSaw capability-id=crosscut
-}
-drill radius=0.02m depth=0.3m
-pose {
-  position=@0,0,0 axis=^0,0,0 angle=0rad
-}
-id=d2 label=Drill enabled=true
-origin {
-  machine-id=circularSaw capability-id=crosscut
-}
-drill radius=0.02m depth=0.3m
-pose {
-  position=@0,0,0 axis=^0,0,0 angle=0rad
-}
-id=d3 label=Drill enabled=true
-origin {
-  machine-id=circularSaw capability-id=crosscut
-}
-drill radius=0.02m depth=0.3m
-pose {
-  position=@0,0,0 axis=^0,0,0 angle=0rad
-}
-]"#;
+/// 🗄️ The drilled-plate example fixture — regenerated (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
+/// wave 4's fixture-regeneration technique: real `process_working_scene_to_snapshot` + `print_dsl()`
+/// output, never hand-transcribed) for the hand-rolled hex/bracket text codec's current shape.
+pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = "semio process.process3d.dsl v1
+workshop=7b226d616368696e6573223a5b7b226964223a22736177222c226c6162656c223a2247656e6572696320536177222c2269636f6e4964223a2273636973736f7273222c226361706162696c6974696573223a5b7b226964223a22637574222c226c6162656c223a22437574222c2269636f6e4964223a2273636973736f7273222c22726563697065223a7b22726563697065223a22626c616465437574222c226b657266223a226b657266222c226c656e677468223a226c656e677468222c226465707468223a226465707468227d2c22706172616d6574657273223a5b7b226964223a226b657266222c226c6162656c223a224b657266222c2276616c7565223a302e30357d2c7b226964223a226c656e677468222c226c6162656c223a224c656e677468222c2276616c7565223a302e357d2c7b226964223a226465707468222c226c6162656c223a224465707468222c2276616c7565223a302e357d5d2c2272756c6573223a5b5d7d5d7d2c7b226964223a226472696c6c222c226c6162656c223a2247656e65726963204472696c6c222c2269636f6e4964223a22636972636c652d646f74222c226361706162696c6974696573223a5b7b226964223a226472696c6c222c226c6162656c223a224472696c6c222c2269636f6e4964223a22636972636c652d646f74222c22726563697065223a7b22726563697065223a22626f72654472696c6c222c22726164697573223a22726164697573222c226465707468223a226465707468227d2c22706172616d6574657273223a5b7b226964223a22726164697573222c226c6162656c223a22526164697573222c2276616c7565223a302e30357d2c7b226964223a226465707468222c226c6162656c223a224465707468222c2276616c7565223a302e337d5d2c2272756c6573223a5b5d7d5d7d2c7b226964223a226174746163686572222c226c6162656c223a2247656e65726963204174746163686572222c2269636f6e4964223a22706c7573222c226361706162696c6974696573223a5b7b226964223a22617474616368222c226c6162656c223a22417474616368222c2269636f6e4964223a22706c7573222c22726563697065223a7b22726563697065223a2263796c696e646572417474616368222c22726164697573223a22726164697573222c226c656e677468223a226c656e677468227d2c22706172616d6574657273223a5b7b226964223a22726164697573222c226c6162656c223a22526164697573222c2276616c7565223a302e30337d2c7b226964223a226c656e677468222c226c6162656c223a224c656e677468222c2276616c7565223a302e327d5d2c2272756c6573223a5b5d7d5d7d5d7d
+stockId=706c617465
+stockLabel=506c617465
+stockPose=7b22706f736974696f6e223a5b302e302c302e302c302e305d2c2261786973223a5b302e302c302e302c312e305d2c22616e676c65223a302e307d
+stockSolid=[73746f636b2d627265702d36396364393036383537363934646333,70726f636573732d73746f636b2d6272657021732e737464696f2e73656d696f4076312f62726570]
+steps=[73746570732d666c6f772d65643466396264663562653539656139,70726f636573732d73746570732d666c6f7721732e737464696f2e73656d696f4076312f666c6f77]
+toolSolids=[]
+resolvedUpTo=32";
+
 
 /// 📖️ Parses `.process3d` DSL text into a `Process3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Process3dSnapshot, store::TextError> {

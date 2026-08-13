@@ -3,15 +3,16 @@
 //! `Vec::new()`.
 use crate::artifacts::dag::schema::split_endpoint;
 use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::DeleteNode, base: &DagSnapshot) -> Vec<DagMutation> {
-    let Some(node) = base.nodes.iter().find(|node| node.id == payload.id) else {
+    let scene = dag_working_scene(base);
+    let Some(node) = scene.nodes.iter().find(|node| node.id == payload.id) else {
         return Vec::new();
     };
     let mut mutations = vec![crate::artifacts::dag::mutations::create_node::mutation::create_node(node.clone())];
-    for edge in base.edges.iter().filter(|edge| split_endpoint(&edge.source).0 == payload.id || split_endpoint(&edge.target).0 == payload.id) {
+    for edge in scene.edges.iter().filter(|edge| split_endpoint(&edge.source).0 == payload.id || split_endpoint(&edge.target).0 == payload.id) {
         mutations.push(crate::artifacts::dag::mutations::connect_nodes::mutation::connect_nodes(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.route_style, edge.properties.clone()));
     }
     mutations

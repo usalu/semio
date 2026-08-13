@@ -37,7 +37,7 @@ mod tests {
         let mut app = math_app();
         let geometry = MathematicalGeometry { points: vec![MathematicalPoint { x: 1.0, y: 2.0 }] };
         dispatch(&mut app, MathematicalCommand::SetPoints(set_points::SetPoints { geometry: geometry.clone() }));
-        assert_eq!(app.snapshot().expect("projection").geometry, geometry);
+        assert_eq!(crate::artifacts::mathematical::mathematical_geometry(&app.snapshot().expect("projection")), geometry);
     }
 }
 //#endregion 🧪️Tests

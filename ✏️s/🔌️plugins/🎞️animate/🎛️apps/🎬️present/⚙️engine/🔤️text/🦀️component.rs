@@ -212,7 +212,7 @@ pub mod text {
     use crate::apps::present::engine::text::color::Color;
     use crate::apps::present::engine::scene::sobject::{Sobject, VSobject};
     use ecow::EcoString;
-    use math::geometry::{append_shape_to_path, BezPath, Point, Rect};
+    use geometry::{append_shape_to_path, BezPath, Point, Rect};
     use std::path::PathBuf;
     use std::sync::OnceLock;
     use typst::foundations::{Bytes, Datetime};

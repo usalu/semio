@@ -333,7 +333,7 @@ mod tests {
 
         #[test]
         fn trsf_inverse_round_trips_random_points() {
-            let mut rng = semio_framework_math::random::Rng::from_seed(7);
+            let mut rng = semio_framework_geometry::random::Rng::from_seed(7);
             for _ in 0..200 {
                 let axis = Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5);
                 let angle = rng.next_f64() * std::f64::consts::TAU;

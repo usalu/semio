@@ -35,7 +35,8 @@ pub fn render(document: &ImperativeSnapshot, selected: &[String], labels: &Imper
             menu: None,
         }]);
     }
-    let steps: Vec<&Step> = selected.iter().filter_map(|id| document.path.steps.iter().find(|step| &step.id == id)).collect();
+    let path = crate::artifacts::imperative::imperative_working_scene(document).path;
+    let steps: Vec<&Step> = selected.iter().filter_map(|id| path.steps.iter().find(|step| &step.id == id)).collect();
     if steps.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "imperative-play-inspector.missing".into(),

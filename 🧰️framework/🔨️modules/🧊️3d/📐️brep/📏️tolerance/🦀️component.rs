@@ -218,7 +218,7 @@ mod tests {
 
         #[test]
         fn interval_arithmetic_always_contains_scalar_result() {
-            let mut rng = semio_framework_math::random::Rng::from_seed(3);
+            let mut rng = semio_framework_geometry::random::Rng::from_seed(3);
             for _ in 0..500 {
                 let a = rng.next_f64() * 20.0 - 10.0;
                 let b = rng.next_f64() * 20.0 - 10.0;

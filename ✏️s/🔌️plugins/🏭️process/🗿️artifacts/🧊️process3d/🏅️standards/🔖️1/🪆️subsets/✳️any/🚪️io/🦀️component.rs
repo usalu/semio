@@ -181,7 +181,7 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
     };
     let mut session = crate::artifacts::process3d::schema::inferences::ProcessKernelReplay::new();
     let handle = crate::artifacts::process3d::schema::inferences::replay_process(&mut session, scene, resolved_up_to)?;
-    let bytes = exporter.export(&*session.kernel().lock().ok()?, &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
+    let bytes = exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
     let format_kind = exporter.format_kind();
     let descriptor = semio_framework::format_descriptor(format_kind);
     let binary = descriptor.as_ref().map(|d| d.is_binary).unwrap_or(true);
@@ -225,7 +225,7 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
         return None;
     };
     let mut session = crate::artifacts::process3d::schema::inferences::ProcessKernelReplay::new();
-    let handle = importer.import(&mut *session.kernel().lock().ok()?, &bytes, PROCESS3D_TESSELLATION_TOLERANCE).ok()?.into_iter().next()?;
+    let handle = importer.import(session.kernel_mut(), &bytes, PROCESS3D_TESSELLATION_TOLERANCE).ok()?.into_iter().next()?;
     let stock = Stock { id: "stock".into(), label: label.into(), solid: WorkingSolid::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
     Some(crate::artifacts::process3d::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default(), None))
 }

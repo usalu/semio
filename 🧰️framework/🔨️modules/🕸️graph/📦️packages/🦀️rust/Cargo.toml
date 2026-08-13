@@ -1,0 +1,26 @@
+[package]
+name = "semio-framework-graph"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Graph vocabulary, index-based algorithms, drawing layouts and the compile-time graph manifest registry — the framework-internal graph surface every framework crate may name without reaching a plugin"
+build = "build.rs"
+
+[package.metadata.semio]
+role = "framework"
+id = "graph"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_graph"
+path = "📦️glue.rs"
+
+[dependencies]
+geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+neural_engine = { path = "../../../../🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

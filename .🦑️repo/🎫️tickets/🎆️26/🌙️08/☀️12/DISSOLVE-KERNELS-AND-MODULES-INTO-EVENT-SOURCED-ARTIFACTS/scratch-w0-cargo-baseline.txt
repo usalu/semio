@@ -1,0 +1,23 @@
+=== W0 cargo baselines 2026-08-13 14:06:31 ===
+### semio-framework-3d ###
+test brep::predicates::tests::quick::in_circle2d_filtered_agrees_with_exact_on_random_configurations ... ok
+test brep::kernel::tests::sphere_torus_cut_produces_preview_mesh ... ok
+
+test result: ok. 413 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.39s
+
+
+### semio-framework-math ###
+    polynomial::univariate::tests::interpolate_reconstructs_quadratic
+
+test result: FAILED. 1738 passed; 15 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.60s
+
+error: test failed, to rerun pass `-p semio-framework-math --lib`
+
+### semio-s-plugin-stdio ###
+    artifacts::zip::standards::v2_0::subsets::any::schema::inferences::entries::component::tests::inference_default_law
+
+test result: FAILED. 2414 passed; 5 failed; 4 ignored; 0 measured; 0 filtered out; finished in 15.16s
+
+error: test failed, to rerun pass `-p semio-s-plugin-stdio --lib`
+
+=== DONE 2026-08-13 14:08:43 ===

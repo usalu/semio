@@ -58,7 +58,8 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
 }
 
 pub fn render(document: &ImperativeSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> UiNode {
-    let mut rows_json = table_rows(&document.path.steps);
+    let path = crate::artifacts::imperative::imperative_working_scene(document).path;
+    let mut rows_json = table_rows(&path.steps);
     if !run_output_json.is_empty() {
         if let Ok(mut rows) = serde_json::from_str::<Vec<TableRow>>(&rows_json) {
             rows.extend(run_output_rows(run_output_json, rows.len()));

@@ -31,7 +31,7 @@ use std::rc::Rc;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen_futures::future_to_promise;
 #[cfg(target_arch = "wasm32")]
-use math::geometry::geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
+use geometry::geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]

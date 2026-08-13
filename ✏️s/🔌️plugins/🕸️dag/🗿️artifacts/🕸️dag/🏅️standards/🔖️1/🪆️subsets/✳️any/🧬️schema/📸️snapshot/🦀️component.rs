@@ -1,13 +1,31 @@
 //! 🧬️ DAG snapshot schema — persistent fields only.
+//!
+//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` are gone from this STRUCT —
+//! replaced by a single composed `content: DagContentChild` slot (`s.stdio.semio.graph`). The old
+//! `DagSnapshotDsl`/`DagNodeSpecDsl`/`DagNodeKindDsl` mirror existed only to give the derive engine a
+//! `Box`-wrapped path through `DagNodeSpec.kind`; since that field is now opaque (hidden inside the
+//! composed child, never exposed on this struct), the mirror and its derive are both gone — this is a
+//! hand-rolled `ArtifactDsl`/`ArtifactPack`.
+//!
+//! ⚠️ **The WIRE FORMAT still carries the real `nodes`/`edges` data** (JSON-blob-encoded), not just
+//! the opaque handle — matching flow's own `<flow::FlowFixture as ArtifactDsl>::parse_dsl(text).map(
+//! Self::from_fixture)` precedent exactly. Reasoning: no `LinkResolver`/child-dispatch seam exists
+//! yet (see `🔖️WorkingScene` in the artifact root), so the working-scene cache is only populated
+//! in-process, by whatever call SET the `content` field (a mutation diff, `from_fixture`, …). A
+//! codec that persisted only the bare handle would produce an UNRECOVERABLE snapshot the instant a
+//! fresh process parses it (confirmed by a real test failure during this migration: `default_snapshot
+//! ()` came back with an empty scene on every fresh run, silently vacuous-passing several inverse-law
+//! tests). `parse_dsl`/`decode_pack` therefore mint+cache a FRESH content-addressed handle from the
+//! decoded nodes/edges every time (deterministic — same data always re-derives the same handle, so
+//! peers replaying the same bytes converge); `print_dsl`/`encode_pack` read the CURRENT cached scene
+//! back out via `dag_working_scene`.
 
-use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
-use infinite_board_port_directed_dag::directed_dag::{DagMedia, DagNodeKind, DagPreviewContent, IoPortSpec};
-use math::graph::manifest::PropertyBag;
+use crate::artifacts::dag::{DagContentChild, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted DAG document snapshot (nodes + edges).
+/// 📸️ Persisted DAG document snapshot — schema tag plus the composed `graph` content child.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag")]
@@ -15,11 +33,8 @@ pub struct DagSnapshot {
     #[state(persistent)]
     pub schema: String,
     #[state(persistent)]
-    #[serde(default)]
-    pub nodes: Vec<DagNodeSpec>,
-    #[state(persistent)]
-    #[serde(default)]
-    pub edges: Vec<DagFixtureEdge>,
+    #[child(kind = "s.stdio.semio.graph")]
+    pub content: DagContentChild,
 }
 
 impl Default for DagSnapshot {
@@ -35,190 +50,102 @@ pub fn default_snapshot() -> DagSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️DslMirror
-// 🧬️ `DagNodeKind` is `#[serde(flatten)]`-merged onto `DagNodeSpec` at the JSON level, and its own
-// `Preview` variant carries a nested tagged enum (`DagPreviewContent`). The crate::os_dsl:: derive engine
-// represents "exactly one nested tagged value" via `#[dsl(statements)] Box<T>` (`RequiredStatements`),
-// which needs a `Box` wrapper the REAL `DagNodeKind`/`DagNodeSpec` fields deliberately don't carry
-// (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
-// `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
-// outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeMutationDsl`
-// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagSnapshotDsl`/`DagMutationDsl` are
-// LOCAL structural twins that box only where the derive requires it; the real domain types keep their
-// original unboxed shape and never leave this crate — conversion happens right at this boundary.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-pub(crate) enum DagNodeKindDsl {
-    Computation {
-        #[dsl(table)]
-        inputs: Vec<IoPortSpec>,
-        #[dsl(table)]
-        outputs: Vec<IoPortSpec>,
-        variadic_inputs: bool,
-        variadic_outputs: bool,
-    },
-    Slider {
-        min: f64,
-        max: f64,
-        step: f64,
-        value: f64,
-        output: IoPortSpec,
-    },
-    Select {
-        options: Vec<String>,
-        selected: usize,
-        output: IoPortSpec,
-    },
-    Screen {
-        media: Option<DagMedia>,
-        input: IoPortSpec,
-    },
-    Note {
-        text: String,
-        output: IoPortSpec,
-    },
-    Image {
-        src: String,
-        output: IoPortSpec,
-    },
-    Preview {
-        #[dsl(statements)]
-        content: Box<DagPreviewContent>,
-        expanded: Vec<String>,
-        input: IoPortSpec,
-    },
-    Action {
-        label: String,
-        input: IoPortSpec,
-    },
-    Export {
-        label: String,
-        format: String,
-        input: IoPortSpec,
-    },
-    Cluster {
-        #[dsl(table)]
-        inputs: Vec<IoPortSpec>,
-        #[dsl(table)]
-        outputs: Vec<IoPortSpec>,
-    },
-    AppInstance {
-        instance_id: String,
-        plugin_id: String,
-        app_id: String,
-        icon: String,
-        #[dsl(table)]
-        inputs: Vec<IoPortSpec>,
-        #[dsl(table)]
-        outputs: Vec<IoPortSpec>,
-    },
+//#region 🔖️CodecPrimitives
+/// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
+/// style stdio's own `✳️graph`/`✳️text` facets already establish, duplicated locally (not imported
+/// across crates) to keep this facet independently compilable.
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
+    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-pub(crate) fn dag_node_kind_to_dsl(kind: &DagNodeKind) -> DagNodeKindDsl {
-    match kind {
-        DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => DagNodeKindDsl::Computation { inputs: inputs.clone(), outputs: outputs.clone(), variadic_inputs: *variadic_inputs, variadic_outputs: *variadic_outputs },
-        DagNodeKind::Slider { min, max, step, value, output } => DagNodeKindDsl::Slider { min: *min, max: *max, step: *step, value: *value, output: output.clone() },
-        DagNodeKind::Select { options, selected, output } => DagNodeKindDsl::Select { options: options.clone(), selected: *selected, output: output.clone() },
-        DagNodeKind::Screen { media, input } => DagNodeKindDsl::Screen { media: media.clone(), input: input.clone() },
-        DagNodeKind::Note { text, output } => DagNodeKindDsl::Note { text: text.clone(), output: output.clone() },
-        DagNodeKind::Image { src, output } => DagNodeKindDsl::Image { src: src.clone(), output: output.clone() },
-        DagNodeKind::Preview { content, expanded, input } => DagNodeKindDsl::Preview { content: Box::new(content.clone()), expanded: expanded.iter().cloned().collect(), input: input.clone() },
-        DagNodeKind::Action { label, input } => DagNodeKindDsl::Action { label: label.clone(), input: input.clone() },
-        DagNodeKind::Export { label, format, input } => DagNodeKindDsl::Export { label: label.clone(), format: format.clone(), input: input.clone() },
-        DagNodeKind::Cluster { inputs, outputs } => DagNodeKindDsl::Cluster { inputs: inputs.clone(), outputs: outputs.clone() },
-        DagNodeKind::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs } => {
-            DagNodeKindDsl::AppInstance { instance_id: instance_id.clone(), plugin_id: plugin_id.clone(), app_id: app_id.clone(), icon: icon.clone(), inputs: inputs.clone(), outputs: outputs.clone() }
+fn print_dag_snapshot_body(s: &DagSnapshot) -> String {
+    let scene = crate::artifacts::dag::dag_working_scene(s);
+    let nodes_json = serde_json::to_string(&scene.nodes).unwrap_or_default();
+    let edges_json = serde_json::to_string(&scene.edges).unwrap_or_default();
+    format!("schema={}\nnodes={}\nedges={}", enc_str(&s.schema), enc_str(&nodes_json), enc_str(&edges_json))
+}
+fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
+    let mut schema = None;
+    let mut nodes: Option<Vec<DagNodeSpec>> = None;
+    let mut edges: Option<Vec<DagFixtureEdge>> = None;
+    for line in body.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("schema=") {
+            schema = Some(dec_str(rest)?);
+        } else if let Some(rest) = line.strip_prefix("nodes=") {
+            nodes = Some(serde_json::from_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
+        } else if let Some(rest) = line.strip_prefix("edges=") {
+            edges = Some(serde_json::from_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
+        } else {
+            return Err(format!("dag snapshot: unknown line {line:?}"));
         }
     }
+    let schema = schema.ok_or_else(|| "dag snapshot: missing schema line".to_string())?;
+    let nodes = nodes.ok_or_else(|| "dag snapshot: missing nodes line".to_string())?;
+    let edges = edges.ok_or_else(|| "dag snapshot: missing edges line".to_string())?;
+    let content = crate::artifacts::dag::dag_content_child_handle_and_cache(nodes, edges);
+    Ok(DagSnapshot { schema, content })
+}
+//#endregion 🔖️CodecPrimitives
+
+//#region 🔖️BinaryPrimitives
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-pub(crate) fn dag_node_kind_from_dsl(kind: DagNodeKindDsl) -> DagNodeKind {
-    match kind {
-        DagNodeKindDsl::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs },
-        DagNodeKindDsl::Slider { min, max, step, value, output } => DagNodeKind::Slider { min, max, step, value, output },
-        DagNodeKindDsl::Select { options, selected, output } => DagNodeKind::Select { options, selected, output },
-        DagNodeKindDsl::Screen { media, input } => DagNodeKind::Screen { media, input },
-        DagNodeKindDsl::Note { text, output } => DagNodeKind::Note { text, output },
-        DagNodeKindDsl::Image { src, output } => DagNodeKind::Image { src, output },
-        DagNodeKindDsl::Preview { content, expanded, input } => DagNodeKind::Preview { content: *content, expanded: expanded.into_iter().collect(), input },
-        DagNodeKindDsl::Action { label, input } => DagNodeKind::Action { label, input },
-        DagNodeKindDsl::Export { label, format, input } => DagNodeKind::Export { label, format, input },
-        DagNodeKindDsl::Cluster { inputs, outputs } => DagNodeKind::Cluster { inputs, outputs },
-        DagNodeKindDsl::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs } => DagNodeKind::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs },
+fn encode_dag_snapshot_binary(s: &DagSnapshot) -> Vec<u8> {
+    const PACK_BINARY_FORMAT: u8 = 1;
+    let scene = crate::artifacts::dag::dag_working_scene(s);
+    let mut out = Vec::new();
+    out.push(PACK_BINARY_FORMAT);
+    write_str_lp(&mut out, &s.schema);
+    write_str_lp(&mut out, &serde_json::to_string(&scene.nodes).unwrap_or_default());
+    write_str_lp(&mut out, &serde_json::to_string(&scene.edges).unwrap_or_default());
+    out
+}
+fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
+    const PACK_BINARY_FORMAT: u8 = 1;
+    let mut reader = store::ByteReader::new(bytes);
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    if format != PACK_BINARY_FORMAT {
+        return Err(format!("unsupported pack format {format}"));
     }
+    let schema = read_str_lp(&mut reader)?;
+    let nodes: Vec<DagNodeSpec> = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let edges: Vec<DagFixtureEdge> = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let content = crate::artifacts::dag::dag_content_child_handle_and_cache(nodes, edges);
+    Ok(DagSnapshot { schema, content })
 }
+//#endregion 🔖️BinaryPrimitives
 
-/// 🧬️ Mirror of {@link DagNodeSpec} — every field identical except `kind`, boxed only here (see the
-/// region's opening doc comment).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-pub(crate) struct DagNodeSpecDsl {
-    id: String,
-    name: String,
-    abbreviation: String,
-    icon: String,
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
-    operator_kind: Option<String>,
-    properties: PropertyBag,
-    #[dsl(statements)]
-    kind: Box<DagNodeKindDsl>,
-}
-
-pub(crate) fn dag_node_spec_to_dsl(node: &DagNodeSpec) -> DagNodeSpecDsl {
-    DagNodeSpecDsl {
-        id: node.id.clone(),
-        name: node.name.clone(),
-        abbreviation: node.abbreviation.clone(),
-        icon: node.icon.clone(),
-        x: node.x,
-        y: node.y,
-        width: node.width,
-        height: node.height,
-        operator_kind: node.operator_kind.clone(),
-        properties: node.properties.clone(),
-        kind: Box::new(dag_node_kind_to_dsl(&node.kind)),
-    }
-}
-
-pub(crate) fn dag_node_spec_from_dsl(mirror: DagNodeSpecDsl) -> DagNodeSpec {
-    DagNodeSpec {
-        id: mirror.id,
-        name: mirror.name,
-        abbreviation: mirror.abbreviation,
-        icon: mirror.icon,
-        x: mirror.x,
-        y: mirror.y,
-        width: mirror.width,
-        height: mirror.height,
-        operator_kind: mirror.operator_kind,
-        properties: mirror.properties,
-        kind: dag_node_kind_from_dsl(*mirror.kind),
-    }
-}
-
-/// 🧬️ Mirror of {@link DagSnapshot} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
-/// `DagNodeSpec` itself can't implement `dsl::DslField` (its `kind` field isn't boxed).
-#[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
-#[dsl(extension = "dag")]
-#[dsl(layout = "lines")]
-pub(crate) struct DagSnapshotDsl {
-    schema: String,
-    nodes: Vec<DagNodeSpecDsl>,
-    #[dsl(table)]
-    edges: Vec<DagFixtureEdge>,
-}
-
-pub(crate) fn dag_snapshot_to_dsl(snapshot: &DagSnapshot) -> DagSnapshotDsl {
-    DagSnapshotDsl { schema: snapshot.schema.clone(), nodes: snapshot.nodes.iter().map(dag_node_spec_to_dsl).collect(), edges: snapshot.edges.clone() }
-}
-
-pub(crate) fn dag_snapshot_from_dsl(mirror: DagSnapshotDsl) -> DagSnapshot {
-    DagSnapshot { schema: mirror.schema, nodes: mirror.nodes.into_iter().map(dag_node_spec_from_dsl).collect(), edges: mirror.edges }
-}
-
-
-impl store::ArtifactDsl for DagSnapshotDsl {
+//#region 🔖️HandcraftedArtifactCodecs
+impl store::ArtifactDsl for DagSnapshot {
     const EXTENSION: &'static str = "dag";
     fn envelope_id() -> &'static str {
         "dag.dag"
@@ -228,91 +155,53 @@ impl store::ArtifactDsl for DagSnapshotDsl {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::ArtifactPack for DagSnapshotDsl {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
-
-impl store::ArtifactDsl for DagSnapshot {
-    const EXTENSION: &'static str = "dag";
-    fn envelope_id() -> &'static str {
-        "dag.dag"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let parsed = <DagSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
-        let mut snapshot = dag_snapshot_from_dsl(parsed);
+        let mut snapshot = parse_dag_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
         snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
         Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        <DagSnapshotDsl as store::ArtifactDsl>::print_dsl(&dag_snapshot_to_dsl(self))
+        let body = print_dag_snapshot_body(self);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for DagSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <DagSnapshotDsl as store::ArtifactPack>::encode_pack_with(&dag_snapshot_to_dsl(self), options)
+        let _ = options;
+        let raw = encode_dag_snapshot_binary(self);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <DagSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
-        let mut snapshot = dag_snapshot_from_dsl(parsed);
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        }
+        let _ = options;
+        let mut snapshot = decode_dag_snapshot_binary(&inner).map_err(store::PackError::Schema)?;
         snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
         Ok(snapshot)
     }
 }
+//#endregion 🔖️HandcraftedArtifactCodecs
 
-//#region 🔖️ArtifactCodecs
+//#region 🔖️FrameworkBridge
+/// 🌉 `infinite_board_port_directed_dag::DagSnapshot` is the FRAMEWORK's own separate persisted
+/// projection (backs `DagFixture`/`DagHost`), unrelated to and unaware of this plugin's composed
+/// child — the bridge goes through the working-scene converter, never through `nodes`/`edges` fields
+/// (this struct no longer has any).
 impl From<DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
     fn from(value: DagSnapshot) -> Self {
-        Self { schema: value.schema, nodes: value.nodes, edges: value.edges }
+        let scene = crate::artifacts::dag::dag_working_scene(&value);
+        Self { schema: value.schema, nodes: scene.nodes, edges: scene.edges }
     }
 }
 
 impl From<infinite_board_port_directed_dag::DagSnapshot> for DagSnapshot {
     fn from(value: infinite_board_port_directed_dag::DagSnapshot) -> Self {
-        Self { schema: value.schema, nodes: value.nodes, edges: value.edges }
+        let content = crate::artifacts::dag::dag_content_child_handle_and_cache(value.nodes, value.edges);
+        Self { schema: value.schema, content }
     }
 }
 
@@ -322,4 +211,16 @@ impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
     }
 }
 
-//#endregion 🔖️ArtifactCodecs
+/// 🧾️ Node/edge accessors matching the OLD field-access call-site shape (`document.nodes`), now
+/// reading through the working-scene cache. Kept as methods on `DagSnapshot` itself (rather than
+/// forcing every call site to import `dag_working_scene`) to minimize the app-layer rewrite's blast
+/// radius — see `crate::artifacts::dag::dag_working_scene` for the underlying cache.
+impl DagSnapshot {
+    pub fn nodes(&self) -> Vec<DagNodeSpec> {
+        crate::artifacts::dag::dag_working_scene(self).nodes
+    }
+    pub fn edges(&self) -> Vec<DagFixtureEdge> {
+        crate::artifacts::dag::dag_working_scene(self).edges
+    }
+}
+//#endregion 🔖️FrameworkBridge

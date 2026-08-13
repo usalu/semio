@@ -24,16 +24,17 @@ pub struct ImperativeInference {
 
 impl protocol::Inference<ImperativeSnapshot> for ImperativeInference {
     fn infer(snapshot: &ImperativeSnapshot) -> Self {
-        Self { topology: compute_imperative_topology(&snapshot.path) }
+        let path = crate::artifacts::imperative::imperative_working_scene(snapshot).path;
+        Self { topology: compute_imperative_topology(&path) }
     }
 }
 
 /// 🌱 Hand-fixed to agree with `infer(&ImperativeSnapshot::default())` rather than a naive
 /// `#[derive(Default)]`, the same "match `infer` of the real default, don't derive structurally"
 /// trick as `AddInference`'s hand-written `Default` in `📡️spr/🎮️command/🦀️component.rs` — here it
-/// happens to coincide with the structural zero, since `ImperativeSnapshot::default()`'s `path` is
-/// already empty, but the explicit `infer`-based impl keeps every inference family in this fan-out
-/// consistent regardless of which artifacts' defaults are trivial.
+/// happens to coincide with the structural zero, since `ImperativeSnapshot::default()`'s working-
+/// scene `path` is already empty, but the explicit `infer`-based impl keeps every inference family
+/// in this fan-out consistent regardless of which artifacts' defaults are trivial.
 impl Default for ImperativeInference {
     fn default() -> Self {
         <Self as protocol::Inference<ImperativeSnapshot>>::infer(&ImperativeSnapshot::default())
@@ -48,7 +49,7 @@ impl protocol::InferenceSpec<ImperativeSnapshot> for ImperativeInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.imperative.imperative.inference.topology", reads: &["path"] }]
+        &[protocol::InferenceFieldSpec { id: "s.imperative.imperative.inference.topology", reads: &["flow"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -87,14 +88,13 @@ mod tests {
     use std::collections::BTreeMap;
 
     fn chain_snapshot() -> ImperativeSnapshot {
-        let mut snapshot = ImperativeSnapshot::default();
-        snapshot.path = Path {
+        let path = Path {
             steps: vec![
                 Step { id: "a".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() },
                 Step { id: "b".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() },
             ],
         };
-        snapshot
+        crate::artifacts::imperative::imperative_snapshot_with_content("imperative.document", &path, &BTreeMap::new())
     }
 
     #[test]

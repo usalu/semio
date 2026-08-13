@@ -1,6 +1,6 @@
 //! 🌐️ Generic 3D scene math, orbit camera, mesh instances, screen picking, and draw descriptors.
 
-pub use semio_framework_math::algebra::{Mat4, Vec3};
+pub use semio_framework_geometry::{Mat4, Vec3};
 
 //#region Camera
 #[derive(Clone, Debug)]

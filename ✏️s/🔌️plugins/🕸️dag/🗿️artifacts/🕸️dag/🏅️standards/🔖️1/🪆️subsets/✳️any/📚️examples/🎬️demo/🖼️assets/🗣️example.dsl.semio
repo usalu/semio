@@ -1,20 +1,4 @@
 semio dag.dag.dsl v1
-schema=dag.fixture nodes=[ id=slider-a name=A abbreviation="" icon="" x=0 y=0 width=72 height=14 properties={
-}
-computation variadic-inputs=false variadic-outputs=false
-inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
-}
-outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
-}
-id=slider-b name=B abbreviation="" icon="" x=200 y=0 width=72 height=14 properties={
-}
-computation variadic-inputs=false variadic-outputs=false
-inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
-}
-outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
-}
-]
-edges [id:TEXT source:TEXT target:TEXT route-style:ENUM properties:MAP] {
-  edge-1 "slider-a@out" "slider-b@in" bezier {
-  }
-}
+schema=6461672e646167
+nodes=5b7b226964223a22736c696465722d61222c226e616d65223a2241222c22616262726576696174696f6e223a22222c2269636f6e223a22222c2278223a302e302c2279223a302e302c227769647468223a37322e302c22686569676874223a31342e302c2270726f70657274696573223a7b7d2c226b696e64223a22636f6d7075746174696f6e222c22696e70757473223a5b5d2c226f757470757473223a5b5d2c2276617269616469635f696e70757473223a66616c73652c2276617269616469635f6f757470757473223a66616c73657d2c7b226964223a22736c696465722d62222c226e616d65223a2242222c22616262726576696174696f6e223a22222c2269636f6e223a22222c2278223a3230302e302c2279223a302e302c227769647468223a37322e302c22686569676874223a31342e302c2270726f70657274696573223a7b7d2c226b696e64223a22636f6d7075746174696f6e222c22696e70757473223a5b5d2c226f757470757473223a5b5d2c2276617269616469635f696e70757473223a66616c73652c2276617269616469635f6f757470757473223a66616c73657d5d
+edges=5b7b226964223a22656467652d31222c22736f75726365223a22736c696465722d61406f7574222c22746172676574223a22736c696465722d6240696e222c22726f7574655374796c65223a2262657a696572222c2270726f70657274696573223a7b7d7d5d

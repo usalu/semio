@@ -23,15 +23,14 @@ pub mod set_artifact {
     }
 
     pub fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, MathematicalSnapshot>, _cfg: &ConfigView<'_, MathematicalConfig>) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
-        let projection = doc.snapshot;
         let Ok(graph) = crate::artifacts::mathematical::dsl::math_graph_from_dsl(payload.graph.clone()) else {
             return Ok(Emit::default());
         };
         let mut operations = Vec::new();
-        if graph != projection.graph {
+        if graph != crate::artifacts::mathematical::mathematical_graph(doc.snapshot) {
             operations.push(MathematicalMutation::ReplaceGraph(ReplaceGraph { graph }));
         }
-        if payload.geometry != projection.geometry {
+        if payload.geometry != crate::artifacts::mathematical::mathematical_geometry(doc.snapshot) {
             operations.push(MathematicalMutation::ReplacePoints(ReplacePoints { points: payload.geometry.points.clone() }));
         }
         Ok(Emit::mutations(operations))
@@ -53,8 +52,8 @@ mod tests {
         let geometry = MathematicalGeometry { points: vec![crate::artifacts::mathematical::MathematicalPoint { x: 1.0, y: 2.0 }] };
         dispatch(&mut app, MathematicalCommand::SetArtifact(set_artifact::SetArtifact { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph { algorithm: "components".into(), ..Default::default() }), geometry: geometry.clone() }));
         let projection = app.snapshot().expect("projection");
-        assert_eq!(projection.graph.algorithm, "components");
-        assert_eq!(projection.geometry, geometry);
+        assert_eq!(crate::artifacts::mathematical::mathematical_graph(&projection).algorithm, "components");
+        assert_eq!(crate::artifacts::mathematical::mathematical_geometry(&projection), geometry);
     }
 }
 //#endregion 🧪️Tests

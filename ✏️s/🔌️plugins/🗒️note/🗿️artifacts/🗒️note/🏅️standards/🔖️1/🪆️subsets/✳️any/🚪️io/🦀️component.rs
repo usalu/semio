@@ -2,7 +2,7 @@
 //! this plugin's `.setup()` (see the artifact root's `declaration()`), not per-leaf register().
 
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
-use semio_framework::{DwgDrawing, DwgGeometry};
+use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_framework_plugin::{io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io as semio_drawing_composer;
@@ -398,7 +398,7 @@ pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String
 mod media_tests {
     use super::*;
     use crate::artifacts::note::{NoteImageAsset, NoteTableCell};
-    use semio_framework::{DwgColor, DwgEntity, DwgLayer};
+    use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity, DwgLayer};
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[test]

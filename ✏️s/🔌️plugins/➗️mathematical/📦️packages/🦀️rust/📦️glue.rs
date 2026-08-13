@@ -13,12 +13,29 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as schema;
+extern crate semio_framework_math as math;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
+
+// 🚚 Wave M3a (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS): `cas`/
+// `polynomial` migrated verbatim from `🧮️math`'s crate root (files physically relocated under
+// `🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/`, the facet's
+// Rust-only compute internals a named inference's `compute()` delegates into — mirrors stdio's
+// `📐️step` io facet's `🪜️ladder`/`📐️part21`/`🧱️brep` precedent for deep Rust-only helper dirs under a
+// facet). Mounted DIRECTLY at crate root, exactly as `🧮️math`'s own glue.rs mounted them — every
+// `crate::cas::…`/`crate::polynomial::…` self-reference inside those two files (including references
+// to non-`pub` inner modules, e.g. `crate::cas::canon`) is untouched, and privacy is structural in
+// Rust: a re-export/alias layer (`pub use … as cas`) does NOT leak private inner items back out, so
+// only a direct mount preserves them. `crate::number`/`crate::algebra` (which stay in `🧮️math` for
+// now) became `math::number`/`math::algebra` against the `semio_framework_math` dependency above.
+#[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌿️cas-internals/🦀️component.rs"]
+pub mod cas;
+#[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📈️polynomial-internals/🦀️component.rs"]
+pub mod polynomial;
 
 //#region 🗿️Artifacts
 #[path = "."]
@@ -67,6 +84,26 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                 }
+                                // 🚚 Wave M3a: first real `impl InferredField<P>` in this codebase — see its own
+                                // doc header for why (every other named inference documents using the plain
+                                // whole-snapshot pattern instead).
+                                #[path = "."]
+                                pub mod roots {
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌱roots/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                }
+                                // 🚚 Wave M3a (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS):
+                                // `🌿️cas-internals/`'s and `📈️polynomial-internals/`'s Rust-only compute code lives
+                                // PHYSICALLY right here, under this facet — but is MOUNTED at crate root as `pub mod cas`/
+                                // `pub mod polynomial` (see the top of this file), not nested under this module. Every
+                                // `crate::cas::…`/`crate::polynomial::…` self-reference inside those two files is
+                                // untouched from the original `🧮️math` crate, and privacy is structural in Rust: a
+                                // `mod canon { … }` (non-`pub`) nested here would need `pub use component::*` to leak
+                                // it back out, which does NOT re-export private items — `crate::cas::canon` would 404.
+                                // Direct crate-root mounting is the only way to preserve every private inner `mod`
+                                // unedited, so these two crates deliberately do NOT also appear as a submodule of
+                                // `inferences` — see `🌿️cas-internals/🦀️component.rs`'s doc header for the full story.
                             }
                             #[path = "."]
                             pub mod diff {
@@ -212,6 +249,18 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️move-point/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️move-point/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                }
+                                // 🚚 Wave M3a (26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS):
+                                // first mutation over `equation`, proving the `EquationNodeLabel`-addressed edit
+                                // pattern end-to-end.
+                                #[path = "."]
+                                pub mod change_coefficient {
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-coefficient/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-coefficient/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-coefficient/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
                                 }
                             }

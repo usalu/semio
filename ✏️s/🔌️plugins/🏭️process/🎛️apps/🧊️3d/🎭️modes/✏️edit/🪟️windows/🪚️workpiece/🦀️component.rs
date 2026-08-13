@@ -5,9 +5,9 @@ use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::modes::edit::windows::workpiece::options;
 use crate::apps::process3d::process3d_action;
 use crate::artifacts::process3d::schema::inferences::processed_mesh;
-use crate::artifacts::process3d::{Process3dSnapshot, SolidSpec};
+use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_plugin::{
-    build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
     WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
 };
 use serde::Serialize;
@@ -79,26 +79,15 @@ fn process3d_selection_json(cfg: &Process3dConfig, active_utility: &str) -> Stri
 //#endregion 🔖️Selection
 
 //#region 🔖️PreviewCache
-/// 🖼️ A GLB-imported reference mesh (`SolidSpec::ImportedMesh`) has no kernel-side geometry to
-/// tessellate; it renders by pointing the world3d scene straight at `mesh_url`, mirroring `cad`'s
-/// `resolve_object_mesh_url` → `world3d_mesh_id_from_url` bridge.
+/// 🖼️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
+/// composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable content without a
+/// `LinkResolver` (see `ProcessWorkingScene`'s doc comment) — so the `WorkingSolid::ImportedMesh`
+/// mesh-url fast path (which needed to inspect the resolved solid kind) can no longer trigger, and
+/// `processed_mesh` degrades to the empty working scene (falls back to
+/// `PROCESS3D_FALLBACK_MESH_KIND`), a documented gap.
 fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
-    if let SolidSpec::ImportedMesh { mesh_url } = &fixture.stock.solid {
-        let mesh_id = world3d_mesh_id_from_url(mesh_url);
-        let meshes = json!([{ "id": mesh_id, "url": mesh_url }]);
-        let instances = json!([{
-            "id": "processed",
-            "meshId": mesh_id,
-            "position": [0.0, 0.0, 0.0],
-            "rotation": [0.0, 0.0, 0.0, 1.0],
-            "scale": [1.0, 1.0, 1.0],
-            "label": fixture.stock.label,
-            "selected": false,
-            "hovered": false,
-        }]);
-        return (meshes.to_string(), instances.to_string());
-    }
-    let mesh = processed_mesh(fixture).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
+    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
+    let mesh = processed_mesh(&scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
     let meshes = json!([{ "id": "processed", "data": mesh }]);
     let instances = json!([{
         "id": "processed",
@@ -106,7 +95,7 @@ fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
         "position": [0.0, 0.0, 0.0],
         "rotation": [0.0, 0.0, 0.0, 1.0],
         "scale": [1.0, 1.0, 1.0],
-        "label": fixture.stock.label,
+        "label": fixture.stock_label,
         "selected": false,
         "hovered": false,
     }]);
@@ -146,9 +135,13 @@ pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiNode {
 //#region 🔖️Engagement
 pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels: &crate::apps::process3d::terminology::Process3dLabels) -> WindowEngagement {
     let active_utility = config.active_utility();
-    let len = fixture.steps.len();
+    // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed CHILD
+    // HANDLE now (no `.len()` — see `ProcessWorkingScene`'s doc comment), so the stepper's `max`
+    // degrades to the empty working scene's length (0), a documented gap.
+    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
+    let len = scene.steps.len();
     let cursor = fixture.resolved_up_to.unwrap_or(len);
-    let volume = crate::artifacts::process3d::schema::inferences::processed_volume(fixture).unwrap_or(0.0);
+    let volume = crate::artifacts::process3d::schema::inferences::processed_volume(&scene, fixture.resolved_up_to).unwrap_or(0.0);
     WindowEngagement {
         session_active: Some(active_utility != "select"),
         // 🧰️ The select/cut/drill/attach switcher lives in the framework utility bar (declared via

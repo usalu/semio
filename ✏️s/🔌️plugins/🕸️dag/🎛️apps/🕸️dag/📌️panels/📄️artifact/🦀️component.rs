@@ -21,7 +21,8 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
-    let node_items: Vec<UiTreeItemNode> = document
+    let scene = crate::artifacts::dag::dag_working_scene(document);
+    let node_items: Vec<UiTreeItemNode> = scene
         .nodes
         .iter()
         .map(|node| {
@@ -33,7 +34,7 @@ pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabel
             )
         })
         .collect();
-    let edge_items: Vec<UiTreeItemNode> = document.edges.iter().map(|edge| tree_item_desc(format!("dag-play-document.edge.{}", edge.id), semio_framework_plugin::Label::data(format!("{} → {}", edge.source, edge.target)), Some(edge.id.clone()))).collect();
+    let edge_items: Vec<UiTreeItemNode> = scene.edges.iter().map(|edge| tree_item_desc(format!("dag-play-document.edge.{}", edge.id), semio_framework_plugin::Label::data(format!("{} → {}", edge.source, edge.target)), Some(edge.id.clone()))).collect();
     let mut sections = vec![
         UiTreeSectionNode {
             id: "dag-play-document.nodes".into(),

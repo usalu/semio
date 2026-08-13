@@ -58,9 +58,9 @@ mod tests {
     fn disconnect_then_reconnect_round_trips_the_edge() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::DisconnectSteps(DisconnectSteps { from_id: "step-1".into(), to_id: "step-2".into() }));
-        assert!(app.snapshot().expect("projection").edges.is_empty());
+        assert!(app.snapshot().expect("projection").to_fixture().edges.is_empty());
         dispatch(&mut app, SequenceCommand::ConnectSteps(ConnectSteps { source_node_id: "step-1".into(), target_node_id: "step-2".into() }));
-        assert_eq!(app.snapshot().expect("projection").edges.len(), 1);
+        assert_eq!(app.snapshot().expect("projection").to_fixture().edges.len(), 1);
     }
 }
 //#endregion 🧪️Tests

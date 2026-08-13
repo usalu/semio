@@ -5,6 +5,8 @@
 extern crate semio_framework_os_kernel as dsl_core;
 extern crate semio_framework_os_kernel as dsl_schema;
 extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_geometry as geometry;
+extern crate semio_framework_graph as graph_core;
 pub use dsl_core::os_dsl;
 #[path = "../../➕️algebra/🦀️component.rs"]
 pub mod algebra;
@@ -21,9 +23,6 @@ pub mod entropy;
 #[path = "../../🌫️fuzzy/🦀️component.rs"]
 pub mod fuzzy;
 
-#[path = "../../📐️geometry/🦀️component.rs"]
-pub mod geometry;
-
 #[path = "../../🔷️lie/🦀️component.rs"]
 pub mod lie;
 
@@ -38,9 +37,6 @@ pub mod polynomial;
 
 #[path = "../../🎲️probability/🦀️component.rs"]
 pub mod probability;
-
-#[path = "../../🎲️random/🦀️component.rs"]
-pub mod random;
 
 #[path = "../../🎯️sampling/🦀️component.rs"]
 pub mod sampling;
@@ -59,21 +55,11 @@ pub mod tabular;
 
 #[path = "."]
 pub mod graph {
-    #[path = "../../🕸️graph/🦀️component.rs"]
-    mod component;
-    pub use component::*;
-
-    #[path = "../../🕸️graph/🛂️manifest/🦀️component.rs"]
-    pub mod manifest;
-
     #[path = "../../🕸️graph/🚶️traversal/🦀️component.rs"]
     pub mod traversal;
 
     #[path = "../../🕸️graph/🔧️operators/🦀️component.rs"]
     pub mod operators;
-
-    #[path = "../../🕸️graph/🖊️drawing/🦀️component.rs"]
-    pub mod drawing;
 
     #[path = "../../🕸️graph/🗣️dsl/🦀️component.rs"]
     pub mod dsl;

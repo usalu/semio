@@ -2611,7 +2611,11 @@ pub mod media_export_raster {
     //#endregion 🔖️MediaRegistryRegistryStubs
     use base64::Engine;
     use png::{BitDepth, ColorType, Encoder};
-    use semio_framework::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
+    /// 🌉️ ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS G2b: the DWG
+    /// structural codec relocated out of `semio_framework` (G2) into stdio's `🖊️dwg` ac1024 subset;
+    /// `semio-framework-os` may depend on `semio-s-plugin-stdio` (verified: not in stdio's own
+    /// dependency closure), the direction this ticket's other framework-product crates already use.
+    use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
     use serde_json::Value;
     use std::collections::HashMap;
     use std::sync::{Mutex, OnceLock};
@@ -2649,7 +2653,7 @@ pub mod media_export_raster {
         let layer = drawing.ensure_layer("0");
         let height = tree.size().height() as f64;
         collect_svg_children(tree.root().children(), &mut drawing, layer, height);
-        semio_framework::dwg_to_bytes(&drawing)
+        semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)
     }
 
     fn collect_svg_children(nodes: &[usvg::Node], drawing: &mut DwgDrawing, layer: usize, height: f64) {
@@ -2782,7 +2786,7 @@ pub mod media_export_raster {
     /// @emoji 📥️ Registers a DWG import handler for one 2D resource kind, rasterizing DWG geometry into flat SVG first.
     pub fn register_dwg_import_handler(artifact_kind: &'static str, from_dwg: fn(&DwgDrawing) -> Result<Value, String>) {
         register_os_media_import_handler_kind(artifact_kind, "dwg", move |bytes| {
-            let drawing = semio_framework::dwg_from_bytes(bytes)?;
+            let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(bytes)?;
             from_dwg(&drawing)
         });
     }
@@ -2814,8 +2818,8 @@ pub mod media_export_raster {
     /// @emoji 📥️ Registers a DWG import handler for one mesh resource kind.
     pub fn register_mesh_dwg_import_handler(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>) {
         register_os_media_import_handler_kind(artifact_kind, "dwg", move |bytes| {
-            let drawing = semio_framework::dwg_from_bytes(bytes)?;
-            let mesh = semio_framework::dwg_drawing_to_mesh(&drawing);
+            let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(bytes)?;
+            let mesh = semio_s_plugin_stdio::artifacts::dwg::dwg_drawing_to_mesh(&drawing);
             document_from_mesh(&mesh)
         });
     }
@@ -2824,8 +2828,8 @@ pub mod media_export_raster {
     pub fn register_mesh_dwg_export_handler(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>) {
         register_os_media_export_handler_kind(artifact_kind, "dwg", move |doc| {
             let mesh = mesh_from_document(doc)?;
-            let drawing = semio_framework::mesh_to_dwg_drawing(&mesh);
-            let bytes = semio_framework::dwg_to_bytes(&drawing)?;
+            let drawing = semio_s_plugin_stdio::artifacts::dwg::mesh_to_dwg_drawing(&mesh);
+            let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)?;
             Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
         });
     }
@@ -3596,7 +3600,7 @@ pub use crate::workflow_kernel::{
         fn svg_to_dwg_round_trip_produces_a_polyline() {
             let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect x="1" y="1" width="4" height="4"/></svg>"#;
             let bytes = crate::media_export_raster::svg_to_dwg_bytes(svg).expect("svg to dwg");
-            let drawing = semio_framework::dwg_from_bytes(&bytes).expect("dwg from bytes");
+            let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(&bytes).expect("dwg from bytes");
             assert!(!drawing.entities.is_empty());
         }
 
@@ -3606,7 +3610,7 @@ pub use crate::workflow_kernel::{
             crate::media_export_raster::register_mesh_dwg_export_handler("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
             let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__dwg_test", "dwg")).expect("dwg handler registered")(&serde_json::json!({})).expect("export dwg");
             let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
-            let drawing = semio_framework::dwg_from_bytes(&bytes).expect("dwg from bytes");
+            let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(&bytes).expect("dwg from bytes");
             assert!(!drawing.entities.is_empty());
         }
 

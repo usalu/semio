@@ -24,7 +24,7 @@ pub mod add_step {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let id = host.add_step(&payload.kind, payload.x, payload.y);
-        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
     }
 }
 
@@ -45,7 +45,7 @@ pub mod add_step_to_slot {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let id = host.add_step_in_slot(&payload.kind, payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }));
-        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
     }
 }
 
@@ -65,7 +65,7 @@ pub mod add_step_dropped {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let id = host.add_step_dropped(&payload.kind, payload.x, payload.y, payload.picked_step_id.as_deref());
-        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(fixture, &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: crate::artifacts::sequence::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot), config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: vec![id] }], ..Default::default() })
     }
 }
 //#endregion 🔖️AddStep
@@ -132,7 +132,7 @@ pub mod move_step {
 
     pub fn handle(payload: &MoveStep, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
-        if !fixture.steps.iter().any(|step| step.id == payload.node_id) {
+        if !fixture.to_fixture().steps.iter().any(|step| step.id == payload.node_id) {
             return Ok(Emit::default());
         }
         Ok(Emit::mutations(ops_from_host_mutation(fixture, |host| {
@@ -179,7 +179,7 @@ pub mod set_step_collapsed {
 
     pub fn handle(payload: &SetStepCollapsed, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let fixture = doc.snapshot;
-        let collapsed = fixture.steps.iter().find(|step| step.id == payload.id).is_none_or(|step| !step.collapsed);
+        let collapsed = fixture.to_fixture().steps.iter().find(|step| step.id == payload.id).is_none_or(|step| !step.collapsed);
         Ok(Emit::mutations(ops_from_host_mutation(fixture, |host| {
             host.set_step_collapsed(&payload.id, collapsed);
         })))
@@ -200,15 +200,15 @@ mod tests {
     fn add_step_command_appends_step() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::AddStep(AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }));
-        assert!(app.snapshot().expect("projection").steps.len() > 2);
+        assert!(app.snapshot().expect("projection").to_fixture().steps.len() > 2);
     }
 
     #[test]
     fn remove_step_command_deletes_step() {
         let mut app = new_app();
-        let step_id = app.snapshot().expect("projection").steps[0].id.clone();
+        let step_id = app.snapshot().expect("projection").to_fixture().steps[0].id.clone();
         dispatch(&mut app, SequenceCommand::RemoveStep(RemoveStep { id: step_id.clone() }));
-        assert!(app.snapshot().expect("projection").steps.iter().all(|step| step.id != step_id));
+        assert!(app.snapshot().expect("projection").to_fixture().steps.iter().all(|step| step.id != step_id));
     }
 }
 //#endregion 🧪️Tests

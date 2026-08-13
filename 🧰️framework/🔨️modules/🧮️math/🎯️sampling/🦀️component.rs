@@ -1039,7 +1039,7 @@ pub struct StreamKey {
 }
 
 fn mix64(x: u64) -> u64 {
-    crate::random::SplitMix64::new(x).next_u64()
+    geometry::random::SplitMix64::new(x).next_u64()
 }
 
 fn stream_seed(key: StreamKey) -> u64 {
@@ -1188,13 +1188,13 @@ impl RandomSource for CounterRng {
     }
 }
 
-/// 🎲️ [`RandomSource`] adapter over [`crate::random::Rng`] (xoshiro256**), for callers who
+/// 🎲️ [`RandomSource`] adapter over [`geometry::random::Rng`] (xoshiro256**), for callers who
 /// want that generator's statistical profile instead of the default counter-based stream.
-pub struct XoshiroSource(crate::random::Rng);
+pub struct XoshiroSource(geometry::random::Rng);
 
 impl XoshiroSource {
     pub fn from_seed(seed: u64) -> Self {
-        Self(crate::random::Rng::from_seed(seed))
+        Self(geometry::random::Rng::from_seed(seed))
     }
 }
 
@@ -1217,7 +1217,7 @@ impl RandomSource for XoshiroSource {
         if snapshot.kind != RngKind::Xoshiro {
             return Err(SamplingError::Corrupted { reason: "rng snapshot kind mismatch: expected xoshiro" });
         }
-        self.0 = crate::random::Rng::from_state(snapshot.words);
+        self.0 = geometry::random::Rng::from_state(snapshot.words);
         Ok(())
     }
 }
@@ -3914,8 +3914,8 @@ fn candidate_from(dist: &Distribution<'_>, index: usize) -> Candidate {
 }
 
 /// 🎯️ Walker's alias method, reimplemented locally (rather than reusing
-/// [`crate::random::AliasTable`]) because that type's `sample` is hard-wired to the
-/// concrete `crate::random::Rng` and cannot accept our `dyn RandomSource` trait object.
+/// [`geometry::random::AliasTable`]) because that type's `sample` is hard-wired to the
+/// concrete `geometry::random::Rng` and cannot accept our `dyn RandomSource` trait object.
 struct AliasTable {
     prob: Vec<f32>,
     alias: Vec<u32>,
@@ -7590,7 +7590,7 @@ mod tests {
     #[test]
     fn xoshiro_source_matches_underlying_rng_sequence() {
         let mut source = XoshiroSource::from_seed(4242);
-        let mut reference = crate::random::Rng::from_seed(4242);
+        let mut reference = geometry::random::Rng::from_seed(4242);
         for _ in 0..16 {
             assert_eq!(source.next_u64(), reference.next_u64());
         }

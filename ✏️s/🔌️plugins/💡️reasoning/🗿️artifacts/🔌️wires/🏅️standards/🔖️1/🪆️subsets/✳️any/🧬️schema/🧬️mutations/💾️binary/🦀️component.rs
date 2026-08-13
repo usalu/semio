@@ -51,7 +51,7 @@ mod tests {
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None));
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
-        assert_eq!(store.snapshot().expect("snapshot").board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
+        assert_eq!(crate::artifacts::wires::wires_working_board(&store.snapshot().expect("snapshot")).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 
     #[test]

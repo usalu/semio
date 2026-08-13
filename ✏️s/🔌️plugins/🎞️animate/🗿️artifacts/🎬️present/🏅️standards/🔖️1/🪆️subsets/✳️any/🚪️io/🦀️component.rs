@@ -235,14 +235,14 @@ pub fn animate_present_document_json_to_svg(value: &serde_json::Value) -> Result
 /// 📥️ Builds a degenerate-but-valid one-slide deck from a rasterized DWG drawing, for the DWG import
 /// path. `stdio_gap`: this plugin's write scope explicitly forbids inventing a converter inside
 /// animate — there is no bridge anywhere in stdio/framework from the legacy
-/// `semio_framework::DwgDrawing` (11 geometry variants: Line/Point/Circle/Arc/Ellipse/LwPolyline/
+/// `semio_s_plugin_stdio::artifacts::dwg::DwgDrawing` (11 geometry variants: Line/Point/Circle/Arc/Ellipse/LwPolyline/
 /// Spline/Text/Face3d/Polyline3d/PolyfaceMesh) to semio's `SemioDrawingSnapshot`/`DrawNode` tree.
 /// Hand-rolling that conversion here would duplicate `semio_framework_os::dwg_drawing_to_svg`'s
-/// existing, correct, shared geometry logic for a legacy struct W6 deletes outright — reported in
+/// existing, correct, shared geometry logic for a hand-rolled struct — reported in
 /// `w5a--report.md`'s stdio_gaps rather than invented. The framework helpers stay (shared,
 /// non-duplicative utilities, not local ad-hoc codec code); the SVG they produce is still round-
 /// tripped through stdio's real SVG codec before rasterization, same as the title-card path.
-pub fn animate_present_document_json_from_dwg(drawing: &semio_framework::DwgDrawing) -> Result<serde_json::Value, String> {
+pub fn animate_present_document_json_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<serde_json::Value, String> {
     use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
     let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
@@ -276,12 +276,12 @@ mod tests {
 
     #[test]
     fn from_dwg_builds_single_slide_deck_from_entity() {
-        let drawing = semio_framework::DwgDrawing {
-            layers: vec![semio_framework::DwgLayer::default()],
-            entities: vec![semio_framework::DwgEntity {
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing {
+            layers: vec![semio_s_plugin_stdio::artifacts::dwg::DwgLayer::default()],
+            entities: vec![semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
                 layer: 0,
-                color: semio_framework::DwgColor::ByLayer,
-                geometry: semio_framework::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
+                color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
+                geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
             }],
             extmin: [0.0, 0.0, 0.0],
             extmax: [10.0, 10.0, 0.0],
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn from_dwg_never_errors_on_empty_drawing() {
-        let drawing = semio_framework::DwgDrawing::default();
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = animate_present_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
         let deck: crate::artifacts::present::PresentSnapshot = serde_json::from_value(document).expect("deck");
         assert_eq!(deck.tiles.len(), 1);

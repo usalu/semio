@@ -17,7 +17,7 @@ use crate::wfc::propagate::PropQueue;
 use crate::wfc::sample::{self, ValueSampler};
 use crate::wfc::topology::Topology;
 use crate::wfc::trail::Trail;
-use crate::random::Rng;
+use geometry::random::Rng;
 
 // #region 🔖️Config
 /// 🌳️ Whether a failed attempt restarts from scratch or resumes chronological backtracking.

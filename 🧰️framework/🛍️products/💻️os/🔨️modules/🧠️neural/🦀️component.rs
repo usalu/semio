@@ -1,7 +1,7 @@
 //! 🔗️ Neural tree adapter over compiled DAG wire rows.
 
 use math::graph::dsl::{WireEdge, WireNode};
-use math::graph::manifest::{PropertyBag, PropertyValue};
+use graph::manifest::{PropertyBag, PropertyValue};
 use neural_engine::{Atom, Dictionary, Neuron, Synapse, Tree, Value};
 use serde_json::Value as JsonValue;
 

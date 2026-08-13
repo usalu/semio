@@ -8,7 +8,7 @@ use super::mutation::CreateNode;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateNode, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
-    if base.graph.nodes.iter().any(|node| node.id == payload.id) {
+    if crate::artifacts::mathematical::mathematical_graph(base).nodes.iter().any(|node| node.id == payload.id) {
         return Vec::new();
     }
     vec![MathematicalMutation::DeleteNode(delete_node::mutation::DeleteNode { id: payload.id.clone() })]

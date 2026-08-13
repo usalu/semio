@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🌱 `create-step` payload — full initial payload (position/kind/params/slot all fixed at
-/// creation; `slot`/`kind` never change again per `SequenceStepPatch`'s doc comment).
+/// creation; `slot`/`kind` never change again — `edit-step-params`/`move-step`/
+/// `change-step-collapsed` only ever touch `params`/`x`/`y`/`collapsed`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "create-step")]
