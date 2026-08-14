@@ -55,7 +55,7 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument};
 
     fn svg_snapshot(attrs: Vec<XmlAttr>) -> SvgSnapshot {
-        SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs, children: Vec::new() }), doctype: None, declaration: None }, source: None }
+        SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs, children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
     }
 
     #[test]
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn empty_document_yields_zero_dimensions() {
-        assert_eq!(compute_svg_dimensions(&SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: None, doctype: None, declaration: None }, source: None }), SvgDimensions::default());
+        assert_eq!(compute_svg_dimensions(&SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new() } }), SvgDimensions::default());
     }
 }
 //#endregion 🧪️Tests

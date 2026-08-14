@@ -5,8 +5,8 @@
 //! ARTIFACTS G2) hand-rolled DWG codec's own `paths_to_dwg_drawing`, `Text` nodes become
 //! `DwgGeometry::Text` entities directly (this codec's own type — the sibling import leaf's
 //! `dwg_geometry_to_path_segments` deliberately has no `Text` arm, since text isn't a path).
-//! Encodes through `dwg_to_bytes` — the SAME semio-authored, round-trippable AC1015-flavored byte
-//! format the sibling import leaf's `dwg_from_bytes` reads back, NOT a real AutoCAD/R2004+ file.
+//! Populates the shared logical DWG snapshot directly; native bytes are materialized only by the
+//! DWG serializer.
 //!
 //! Honest lossy points (documented, never fabricated): `Image` nodes and per-node `style` have no
 //! DWG entity/attribute equivalent and are dropped (matches the dxf↔drawing bridge's own
@@ -14,7 +14,8 @@
 //! geometry (flattened by walk order only, not by matrix) — same simplification the dxf↔drawing
 //! bridge's own entity walk makes.
 
-use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA, dwg_to_bytes, paths_to_dwg_drawing};
+use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot, paths_to_dwg_drawing};
+use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
@@ -89,8 +90,10 @@ impl ArtifactSerializer for SemioDrawingToDwg {
             }
         }
 
-        let bytes = dwg_to_bytes(&drawing).map_err(store::PackError::Schema)?;
-        Ok(DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version: DWG_CODEC_VERSION.into(), bytes, ..DwgSnapshot::default() })
+        let mut snapshot = DwgSnapshot::default();
+        snapshot.version = DWG_CODEC_VERSION.into();
+        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing);
+        Ok(snapshot)
     }
 }
 //#endregion 🔖️Serializer
@@ -126,7 +129,7 @@ mod tests {
     fn real_round_trip_through_relocated_dwg_codec() {
         let drawing = sample_drawing();
         let dwg = SemioDrawingToDwg::serialize(&drawing).expect("serialize");
-        assert_eq!(&dwg.bytes[0..6], DWG_CODEC_VERSION.as_bytes());
+        assert_eq!(dwg.version, DWG_CODEC_VERSION);
         let round_tripped = SemioDrawingFromDwg::deserialize(&dwg).expect("deserialize");
         assert_eq!(round_tripped.layers.len(), 1);
         match &round_tripped.layers[0].root {

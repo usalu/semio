@@ -1,6 +1,15 @@
 syntax = "proto3";
 package semio.s_stdio_pptx.mutation;
 message PptxMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  string mutation = 1;
+  optional semio.s_stdio_pptx.snapshot.PptxSnapshot snapshot = 2;
+  optional uint64 index = 3;
+  optional uint64 from = 4;
+  optional uint64 to = 5;
+  optional uint64 slide_index = 6;
+  optional uint64 shape_index = 7;
+  optional semio.s_stdio_pptx.snapshot.PptxSlide slide = 8;
+  optional semio.s_stdio_pptx.snapshot.PptxShape shape = 9;
+  repeated semio.s_stdio_pptx.snapshot.PptxParagraph text_frame = 10;
+  optional semio.s_stdio_pptx.snapshot.PptxTransform position = 11;
 }

@@ -1,0 +1,29 @@
+*** Begin Patch
+*** Update File: XML_SNAPSHOT_COMPONENT
+@@
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
++pub struct XmlLexicalDocument { pub tokens: Vec<XmlLexicalToken> }
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub enum XmlLexicalToken {
++    Declaration(String), Doctype(String), Comment(String), ProcessingInstruction(String),
++    StartTag(String), EndTag(String), Text(String), CData(String),
++}
+@@
+ pub struct XmlSnapshot {
+     pub schema: String,
+     pub doc: XmlDocument,
++    pub lexical: Option<XmlLexicalDocument>,
+ }
+@@
+-        self.clone()
++        let mut projection = self.clone(); projection.lexical = None; projection
+@@
+-        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: xml_document_from_text(text)? })
++        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: xml_document_from_text(text)?, lexical: Some(xml_lexical_document_from_text(text)?) })
+@@
+-        Ok(xml_document_to_text(&self.doc).into_bytes())
++        if let Some(lexical) = &self.lexical { let text = xml_lexical_document_to_text(lexical); if xml_document_from_text(&text)? == self.doc { return Ok(text.into_bytes()); } }
++        Ok(xml_document_to_text(&self.doc).into_bytes())
+*** End Patch
+
+Recovery note: apply the concrete repository patch recorded in the agent transcript for the full tokenizer/state codecs; this header is the stable intent marker created before touching shared XML.

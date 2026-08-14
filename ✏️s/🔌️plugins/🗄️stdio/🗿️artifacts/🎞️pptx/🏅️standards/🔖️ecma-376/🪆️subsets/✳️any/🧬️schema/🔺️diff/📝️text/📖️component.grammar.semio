@@ -18,9 +18,10 @@ comment none
 #
 # `[0]`/`[1,x]` is `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4);
 # `PptxRunDiff.font_size: Option<Option<u32>>` nests that shape twice (`opt-opt-int` below).
-document = opc-tok? presentation-tok?
+document = opc-tok? presentation-tok? xml-parts-tok?
 opc-tok = "opc" "=" opc-diff
 presentation-tok = "presentation" "=" presentation-diff
+xml-parts-tok = "xmlParts" "=" hex
 
 # ── `PptxOpcDiff` -- `[opt(content_types),opt(parts),opt(relationships)]` (`enc_opc_diff`,
 # `../🦀️component.rs`:1647-1654) -- byte-for-byte the same shape docx's own `DocxOpcDiff` grammar

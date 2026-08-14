@@ -26,8 +26,8 @@ use std::collections::{HashMap, HashSet};
 
 use crate::artifacts::zip::schema::snapshot::{ZipCompressionMethod, ZipEntry, ZipExtraField};
 use crate::artifacts::zip::ZipSnapshot;
-use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -73,20 +73,48 @@ pub struct ZipEntryDiff {
 
 /// ▶️ Applies a per-field entry patch in place.
 fn apply_entry_diff(entry: &mut ZipEntry, diff: &ZipEntryDiff) {
-    if let Some(v) = &diff.name { entry.name = v.clone(); }
-    if let Some(v) = &diff.data { entry.data = v.clone(); }
-    if let Some(v) = diff.method { entry.method = v; }
-    if let Some(v) = diff.dos_date { entry.dos_date = v; }
-    if let Some(v) = diff.dos_time { entry.dos_time = v; }
-    if let Some(v) = &diff.unix_mtime { entry.unix_mtime = *v; }
-    if let Some(v) = diff.flags { entry.flags = v; }
-    if let Some(v) = diff.version_made_by { entry.version_made_by = v; }
-    if let Some(v) = diff.version_needed { entry.version_needed = v; }
-    if let Some(v) = diff.internal_attrs { entry.internal_attrs = v; }
-    if let Some(v) = diff.external_attrs { entry.external_attrs = v; }
-    if let Some(v) = &diff.local_extra { entry.local_extra = v.clone(); }
-    if let Some(v) = &diff.central_extra { entry.central_extra = v.clone(); }
-    if let Some(v) = &diff.comment { entry.comment = v.clone(); }
+    if let Some(v) = &diff.name {
+        entry.name = v.clone();
+    }
+    if let Some(v) = &diff.data {
+        entry.data = v.clone();
+    }
+    if let Some(v) = diff.method {
+        entry.method = v;
+    }
+    if let Some(v) = diff.dos_date {
+        entry.dos_date = v;
+    }
+    if let Some(v) = diff.dos_time {
+        entry.dos_time = v;
+    }
+    if let Some(v) = &diff.unix_mtime {
+        entry.unix_mtime = *v;
+    }
+    if let Some(v) = diff.flags {
+        entry.flags = v;
+    }
+    if let Some(v) = diff.version_made_by {
+        entry.version_made_by = v;
+    }
+    if let Some(v) = diff.version_needed {
+        entry.version_needed = v;
+    }
+    if let Some(v) = diff.internal_attrs {
+        entry.internal_attrs = v;
+    }
+    if let Some(v) = diff.external_attrs {
+        entry.external_attrs = v;
+    }
+    if let Some(v) = &diff.local_extra {
+        entry.local_extra = v.clone();
+    }
+    if let Some(v) = &diff.central_extra {
+        entry.central_extra = v.clone();
+    }
+    if let Some(v) = &diff.comment {
+        entry.comment = v.clone();
+    }
 }
 
 /// 🧭️ Field-by-field state delta between two entries sharing the same identity slot.
@@ -116,20 +144,48 @@ fn entry_diff_is_empty(d: &ZipEntryDiff) -> bool {
 /// ➕️ LWW field-by-field absorb of one entry patch into another (`other` was authored after
 /// `self` against the state `self` already produced — later field values win).
 fn absorb_entry_diff(base: &mut ZipEntryDiff, other: ZipEntryDiff) {
-    if other.name.is_some() { base.name = other.name; }
-    if other.data.is_some() { base.data = other.data; }
-    if other.method.is_some() { base.method = other.method; }
-    if other.dos_date.is_some() { base.dos_date = other.dos_date; }
-    if other.dos_time.is_some() { base.dos_time = other.dos_time; }
-    if other.unix_mtime.is_some() { base.unix_mtime = other.unix_mtime; }
-    if other.flags.is_some() { base.flags = other.flags; }
-    if other.version_made_by.is_some() { base.version_made_by = other.version_made_by; }
-    if other.version_needed.is_some() { base.version_needed = other.version_needed; }
-    if other.internal_attrs.is_some() { base.internal_attrs = other.internal_attrs; }
-    if other.external_attrs.is_some() { base.external_attrs = other.external_attrs; }
-    if other.local_extra.is_some() { base.local_extra = other.local_extra; }
-    if other.central_extra.is_some() { base.central_extra = other.central_extra; }
-    if other.comment.is_some() { base.comment = other.comment; }
+    if other.name.is_some() {
+        base.name = other.name;
+    }
+    if other.data.is_some() {
+        base.data = other.data;
+    }
+    if other.method.is_some() {
+        base.method = other.method;
+    }
+    if other.dos_date.is_some() {
+        base.dos_date = other.dos_date;
+    }
+    if other.dos_time.is_some() {
+        base.dos_time = other.dos_time;
+    }
+    if other.unix_mtime.is_some() {
+        base.unix_mtime = other.unix_mtime;
+    }
+    if other.flags.is_some() {
+        base.flags = other.flags;
+    }
+    if other.version_made_by.is_some() {
+        base.version_made_by = other.version_made_by;
+    }
+    if other.version_needed.is_some() {
+        base.version_needed = other.version_needed;
+    }
+    if other.internal_attrs.is_some() {
+        base.internal_attrs = other.internal_attrs;
+    }
+    if other.external_attrs.is_some() {
+        base.external_attrs = other.external_attrs;
+    }
+    if other.local_extra.is_some() {
+        base.local_extra = other.local_extra;
+    }
+    if other.central_extra.is_some() {
+        base.central_extra = other.central_extra;
+    }
+    if other.comment.is_some() {
+        base.comment = other.comment;
+    }
 }
 //#endregion 🔖️EntryDiff
 
@@ -214,11 +270,7 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
                 entries.insert(at, a.entry.clone());
             }
         }
-        ZipSnapshot {
-            schema: base.schema.clone(),
-            entries,
-            comment: self.comment.clone().unwrap_or_else(|| base.comment.clone()),
-        }
+        ZipSnapshot { schema: base.schema.clone(), entries, comment: self.comment.clone().unwrap_or_else(|| base.comment.clone()), physical: if self.entries.is_none() && self.comment.is_none() { base.physical.clone() } else { None } }
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
@@ -253,9 +305,7 @@ fn absorb_entries(d1: Option<ZipEntriesDiff>, d2: Option<ZipEntriesDiff>) -> Opt
     };
 
     // φ: base name -> mid name, from d1's own renames.
-    let rename_map: HashMap<String, String> = d1.modified.iter()
-        .filter_map(|m| m.diff.name.as_ref().map(|n| (m.name.clone(), n.clone())))
-        .collect();
+    let rename_map: HashMap<String, String> = d1.modified.iter().filter_map(|m| m.diff.name.as_ref().map(|n| (m.name.clone(), n.clone()))).collect();
     let reverse_rename: HashMap<&str, &str> = rename_map.iter().map(|(k, v)| (v.as_str(), k.as_str())).collect();
     let added_names: HashSet<String> = d1.added.iter().map(|a| a.entry.name.clone()).collect();
 
@@ -277,9 +327,14 @@ fn absorb_entries(d1: Option<ZipEntriesDiff>, d2: Option<ZipEntriesDiff>) -> Opt
     }
 
     let mut merged_modified: Vec<ZipEntryModified> = d1.modified;
-    let mut merged_added: Vec<ZipEntryAdded> = d1.added.into_iter()
+    let mut merged_added: Vec<ZipEntryAdded> = d1
+        .added
+        .into_iter()
         .filter(|a| !annihilated.contains(&a.entry.name))
-        .map(|mut a| { a.index = a.index.saturating_sub(removed_shift_count); a })
+        .map(|mut a| {
+            a.index = a.index.saturating_sub(removed_shift_count);
+            a
+        })
         .collect();
 
     for dm in &d2.modified {
@@ -306,7 +361,11 @@ fn absorb_entries(d1: Option<ZipEntriesDiff>, d2: Option<ZipEntriesDiff>) -> Opt
     merged_added.extend(d2.added);
 
     let merged = ZipEntriesDiff { removed: merged_removed, modified: merged_modified, added: merged_added };
-    if merged.is_empty() { None } else { Some(merged) }
+    if merged.is_empty() {
+        None
+    } else {
+        Some(merged)
+    }
 }
 
 impl DiffAlgebra<ZipSnapshot> for ZipDiff {
@@ -329,10 +388,7 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
             let base_names: HashSet<&str> = base.entries.iter().map(|e| e.name.as_str()).collect();
             let other_names: HashSet<&str> = other.entries.iter().map(|e| e.name.as_str()).collect();
 
-            let removed: Vec<String> = base.entries.iter()
-                .filter(|e| !other_names.contains(e.name.as_str()))
-                .map(|e| e.name.clone())
-                .collect();
+            let removed: Vec<String> = base.entries.iter().filter(|e| !other_names.contains(e.name.as_str())).map(|e| e.name.clone()).collect();
 
             let mut modified = Vec::new();
             for be in &base.entries {
@@ -344,13 +400,14 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
                 }
             }
 
-            let added: Vec<ZipEntryAdded> = other.entries.iter().enumerate()
-                .filter(|(_, e)| !base_names.contains(e.name.as_str()))
-                .map(|(index, e)| ZipEntryAdded { index, entry: e.clone() })
-                .collect();
+            let added: Vec<ZipEntryAdded> = other.entries.iter().enumerate().filter(|(_, e)| !base_names.contains(e.name.as_str())).map(|(index, e)| ZipEntryAdded { index, entry: e.clone() }).collect();
 
             let d = ZipEntriesDiff { removed, modified, added };
-            if d.is_empty() { None } else { Some(d) }
+            if d.is_empty() {
+                None
+            } else {
+                Some(d)
+            }
         };
         ZipDiff { comment, entries }
     }
@@ -431,10 +488,18 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 fn hex_decode_string(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_u16(s: &str) -> Result<u16, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_u32(s: &str) -> Result<u32, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_i64(s: &str) -> Result<i64, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
+fn parse_u16(s: &str) -> Result<u16, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_u32(s: &str) -> Result<u32, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_i64(s: &str) -> Result<i64, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
+}
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
@@ -558,27 +623,57 @@ fn dec_entry(s: &str) -> Result<ZipEntry, String> {
 /// INNER `Option<i64>` uses the shared `encode_option`/`decode_option` primitive.
 fn enc_entry_diff(d: &ZipEntryDiff) -> String {
     let mut parts = Vec::new();
-    if let Some(v) = &d.name { parts.push(format!("N:{}", hex_encode(v.as_bytes()))); }
-    if let Some(v) = &d.data { parts.push(format!("D:{}", hex_encode(v))); }
-    if let Some(v) = d.method { parts.push(format!("M:{}", enc_method(v))); }
-    if let Some(v) = d.dos_date { parts.push(format!("A:{v}")); }
-    if let Some(v) = d.dos_time { parts.push(format!("T:{v}")); }
-    if let Some(v) = d.unix_mtime { parts.push(format!("U:{}", encode_option(&v, |x| x.to_string()))); }
-    if let Some(v) = d.flags { parts.push(format!("F:{v}")); }
-    if let Some(v) = d.version_made_by { parts.push(format!("B:{v}")); }
-    if let Some(v) = d.version_needed { parts.push(format!("V:{v}")); }
-    if let Some(v) = d.internal_attrs { parts.push(format!("I:{v}")); }
-    if let Some(v) = d.external_attrs { parts.push(format!("E:{v}")); }
-    if let Some(v) = &d.local_extra { parts.push(format!("L:{}", enc_extra_list(v))); }
-    if let Some(v) = &d.central_extra { parts.push(format!("C:{}", enc_extra_list(v))); }
-    if let Some(v) = &d.comment { parts.push(format!("O:{}", hex_encode(v.as_bytes()))); }
+    if let Some(v) = &d.name {
+        parts.push(format!("N:{}", hex_encode(v.as_bytes())));
+    }
+    if let Some(v) = &d.data {
+        parts.push(format!("D:{}", hex_encode(v)));
+    }
+    if let Some(v) = d.method {
+        parts.push(format!("M:{}", enc_method(v)));
+    }
+    if let Some(v) = d.dos_date {
+        parts.push(format!("A:{v}"));
+    }
+    if let Some(v) = d.dos_time {
+        parts.push(format!("T:{v}"));
+    }
+    if let Some(v) = d.unix_mtime {
+        parts.push(format!("U:{}", encode_option(&v, |x| x.to_string())));
+    }
+    if let Some(v) = d.flags {
+        parts.push(format!("F:{v}"));
+    }
+    if let Some(v) = d.version_made_by {
+        parts.push(format!("B:{v}"));
+    }
+    if let Some(v) = d.version_needed {
+        parts.push(format!("V:{v}"));
+    }
+    if let Some(v) = d.internal_attrs {
+        parts.push(format!("I:{v}"));
+    }
+    if let Some(v) = d.external_attrs {
+        parts.push(format!("E:{v}"));
+    }
+    if let Some(v) = &d.local_extra {
+        parts.push(format!("L:{}", enc_extra_list(v)));
+    }
+    if let Some(v) = &d.central_extra {
+        parts.push(format!("C:{}", enc_extra_list(v)));
+    }
+    if let Some(v) = &d.comment {
+        parts.push(format!("O:{}", hex_encode(v.as_bytes())));
+    }
     format!("[{}]", parts.join(","))
 }
 fn dec_entry_diff(s: &str) -> Result<ZipEntryDiff, String> {
     let inner = strip_brackets(s)?;
     let mut d = ZipEntryDiff::default();
     for entry in split_top_level(inner, ',') {
-        if entry.is_empty() { continue; }
+        if entry.is_empty() {
+            continue;
+        }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("entry diff: bad entry {entry:?}"))?;
         match tag {
             "N" => d.name = Some(hex_decode_string(val)?),
@@ -614,14 +709,22 @@ fn dec_entries_diff(body: &str) -> Result<ZipEntriesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("entries: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(hex_decode_string).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (name_hex, diff_s) = entry.split_once(':').ok_or_else(|| format!("entries modified: bad entry {entry:?}"))?;
-        Ok(ZipEntryModified { name: hex_decode_string(name_hex)?, diff: dec_entry_diff(diff_s)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx_s, entry_s) = entry.split_once(':').ok_or_else(|| format!("entries added: bad entry {entry:?}"))?;
-        Ok(ZipEntryAdded { index: parse_usize(idx_s)?, entry: dec_entry(entry_s)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (name_hex, diff_s) = entry.split_once(':').ok_or_else(|| format!("entries modified: bad entry {entry:?}"))?;
+            Ok(ZipEntryModified { name: hex_decode_string(name_hex)?, diff: dec_entry_diff(diff_s)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx_s, entry_s) = entry.split_once(':').ok_or_else(|| format!("entries added: bad entry {entry:?}"))?;
+            Ok(ZipEntryAdded { index: parse_usize(idx_s)?, entry: dec_entry(entry_s)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(ZipEntriesDiff { removed, modified, added })
 }
 //#endregion 🔖️DiffValueCodecs
@@ -629,8 +732,12 @@ fn dec_entries_diff(body: &str) -> Result<ZipEntriesDiff, String> {
 //#region 🔖️TopLevel
 fn print_zip_diff(d: &ZipDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.comment { tokens.push(format!("comment={}", hex_encode(v.as_bytes()))); }
-    if let Some(v) = &d.entries { tokens.push(enc_entries_diff(v)); }
+    if let Some(v) = &d.comment {
+        tokens.push(format!("comment={}", hex_encode(v.as_bytes())));
+    }
+    if let Some(v) = &d.entries {
+        tokens.push(enc_entries_diff(v));
+    }
     tokens.join(" ")
 }
 fn parse_zip_diff(line: &str) -> Result<ZipDiff, String> {
@@ -639,9 +746,13 @@ fn parse_zip_diff(line: &str) -> Result<ZipDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("comment=") { d.comment = Some(hex_decode_string(rest)?); }
-        else if let Some(rest) = token.strip_prefix("entries{") { d.entries = Some(dec_entries_diff(rest.strip_suffix('}').ok_or_else(|| "entries: missing closing brace".to_string())?)?); }
-        else { return Err(format!("zip diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("comment=") {
+            d.comment = Some(hex_decode_string(rest)?);
+        } else if let Some(rest) = token.strip_prefix("entries{") {
+            d.entries = Some(dec_entries_diff(rest.strip_suffix('}').ok_or_else(|| "entries: missing closing brace".to_string())?)?);
+        } else {
+            return Err(format!("zip diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -676,16 +787,8 @@ impl protocol::DiffCodec for ZipDiff {
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let has_comment = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_comment", offset: 1, detail: e.to_string() })?;
         let has_entries = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_entries", offset: 2, detail: e.to_string() })?;
-        let comment = if has_comment != 0 {
-            Some(read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff comment", offset: reader.position() as u64, detail: e })?)
-        } else {
-            None
-        };
-        let entries = if has_entries != 0 {
-            Some(dec_entries_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff entries", offset: reader.position() as u64, detail: e })?)
-        } else {
-            None
-        };
+        let comment = if has_comment != 0 { Some(read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff comment", offset: reader.position() as u64, detail: e })?) } else { None };
+        let entries = if has_entries != 0 { Some(dec_entries_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff entries", offset: reader.position() as u64, detail: e })?) } else { None };
         Ok(ZipDiff { comment, entries })
     }
 }
@@ -822,27 +925,65 @@ const EDF_COMMENT: u16 = 1 << 13;
 
 fn enc_entry_diff_bin(d: &ZipEntryDiff, out: &mut Vec<u8>) {
     let mut mask = 0u16;
-    if d.name.is_some() { mask |= EDF_NAME; }
-    if d.data.is_some() { mask |= EDF_DATA; }
-    if d.method.is_some() { mask |= EDF_METHOD; }
-    if d.dos_date.is_some() { mask |= EDF_DOS_DATE; }
-    if d.dos_time.is_some() { mask |= EDF_DOS_TIME; }
-    if d.unix_mtime.is_some() { mask |= EDF_UNIX_MTIME; }
-    if d.flags.is_some() { mask |= EDF_FLAGS; }
-    if d.version_made_by.is_some() { mask |= EDF_VERSION_MADE_BY; }
-    if d.version_needed.is_some() { mask |= EDF_VERSION_NEEDED; }
-    if d.internal_attrs.is_some() { mask |= EDF_INTERNAL_ATTRS; }
-    if d.external_attrs.is_some() { mask |= EDF_EXTERNAL_ATTRS; }
-    if d.local_extra.is_some() { mask |= EDF_LOCAL_EXTRA; }
-    if d.central_extra.is_some() { mask |= EDF_CENTRAL_EXTRA; }
-    if d.comment.is_some() { mask |= EDF_COMMENT; }
+    if d.name.is_some() {
+        mask |= EDF_NAME;
+    }
+    if d.data.is_some() {
+        mask |= EDF_DATA;
+    }
+    if d.method.is_some() {
+        mask |= EDF_METHOD;
+    }
+    if d.dos_date.is_some() {
+        mask |= EDF_DOS_DATE;
+    }
+    if d.dos_time.is_some() {
+        mask |= EDF_DOS_TIME;
+    }
+    if d.unix_mtime.is_some() {
+        mask |= EDF_UNIX_MTIME;
+    }
+    if d.flags.is_some() {
+        mask |= EDF_FLAGS;
+    }
+    if d.version_made_by.is_some() {
+        mask |= EDF_VERSION_MADE_BY;
+    }
+    if d.version_needed.is_some() {
+        mask |= EDF_VERSION_NEEDED;
+    }
+    if d.internal_attrs.is_some() {
+        mask |= EDF_INTERNAL_ATTRS;
+    }
+    if d.external_attrs.is_some() {
+        mask |= EDF_EXTERNAL_ATTRS;
+    }
+    if d.local_extra.is_some() {
+        mask |= EDF_LOCAL_EXTRA;
+    }
+    if d.central_extra.is_some() {
+        mask |= EDF_CENTRAL_EXTRA;
+    }
+    if d.comment.is_some() {
+        mask |= EDF_COMMENT;
+    }
     out.extend_from_slice(&mask.to_le_bytes());
 
-    if let Some(v) = &d.name { write_str_lp(out, v); }
-    if let Some(v) = &d.data { write_bytes_lp(out, v); }
-    if let Some(v) = d.method { out.push(method_tag(v)); }
-    if let Some(v) = d.dos_date { store::pack_rt::write_varint_u64(out, v as u64); }
-    if let Some(v) = d.dos_time { store::pack_rt::write_varint_u64(out, v as u64); }
+    if let Some(v) = &d.name {
+        write_str_lp(out, v);
+    }
+    if let Some(v) = &d.data {
+        write_bytes_lp(out, v);
+    }
+    if let Some(v) = d.method {
+        out.push(method_tag(v));
+    }
+    if let Some(v) = d.dos_date {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
+    if let Some(v) = d.dos_time {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
     if let Some(v) = d.unix_mtime {
         match v {
             None => out.push(0),
@@ -852,23 +993,49 @@ fn enc_entry_diff_bin(d: &ZipEntryDiff, out: &mut Vec<u8>) {
             }
         }
     }
-    if let Some(v) = d.flags { store::pack_rt::write_varint_u64(out, v as u64); }
-    if let Some(v) = d.version_made_by { store::pack_rt::write_varint_u64(out, v as u64); }
-    if let Some(v) = d.version_needed { store::pack_rt::write_varint_u64(out, v as u64); }
-    if let Some(v) = d.internal_attrs { store::pack_rt::write_varint_u64(out, v as u64); }
-    if let Some(v) = d.external_attrs { store::pack_rt::write_varint_u64(out, v as u64); }
-    if let Some(v) = &d.local_extra { enc_extra_list_bin(v, out); }
-    if let Some(v) = &d.central_extra { enc_extra_list_bin(v, out); }
-    if let Some(v) = &d.comment { write_str_lp(out, v); }
+    if let Some(v) = d.flags {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
+    if let Some(v) = d.version_made_by {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
+    if let Some(v) = d.version_needed {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
+    if let Some(v) = d.internal_attrs {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
+    if let Some(v) = d.external_attrs {
+        store::pack_rt::write_varint_u64(out, v as u64);
+    }
+    if let Some(v) = &d.local_extra {
+        enc_extra_list_bin(v, out);
+    }
+    if let Some(v) = &d.central_extra {
+        enc_extra_list_bin(v, out);
+    }
+    if let Some(v) = &d.comment {
+        write_str_lp(out, v);
+    }
 }
 fn dec_entry_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ZipEntryDiff, String> {
     let mask = reader.read_u16_le().map_err(|e| e.to_string())?;
     let mut d = ZipEntryDiff::default();
-    if mask & EDF_NAME != 0 { d.name = Some(read_str_lp(reader)?); }
-    if mask & EDF_DATA != 0 { d.data = Some(read_bytes_lp(reader)?); }
-    if mask & EDF_METHOD != 0 { d.method = Some(method_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?); }
-    if mask & EDF_DOS_DATE != 0 { d.dos_date = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-    if mask & EDF_DOS_TIME != 0 { d.dos_time = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
+    if mask & EDF_NAME != 0 {
+        d.name = Some(read_str_lp(reader)?);
+    }
+    if mask & EDF_DATA != 0 {
+        d.data = Some(read_bytes_lp(reader)?);
+    }
+    if mask & EDF_METHOD != 0 {
+        d.method = Some(method_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?);
+    }
+    if mask & EDF_DOS_DATE != 0 {
+        d.dos_date = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
+    if mask & EDF_DOS_TIME != 0 {
+        d.dos_time = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
     if mask & EDF_UNIX_MTIME != 0 {
         let inner = match reader.read_u8().map_err(|e| e.to_string())? {
             0 => None,
@@ -877,14 +1044,30 @@ fn dec_entry_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ZipEntryDiff
         };
         d.unix_mtime = Some(inner);
     }
-    if mask & EDF_FLAGS != 0 { d.flags = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-    if mask & EDF_VERSION_MADE_BY != 0 { d.version_made_by = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-    if mask & EDF_VERSION_NEEDED != 0 { d.version_needed = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-    if mask & EDF_INTERNAL_ATTRS != 0 { d.internal_attrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16); }
-    if mask & EDF_EXTERNAL_ATTRS != 0 { d.external_attrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32); }
-    if mask & EDF_LOCAL_EXTRA != 0 { d.local_extra = Some(dec_extra_list_bin(reader)?); }
-    if mask & EDF_CENTRAL_EXTRA != 0 { d.central_extra = Some(dec_extra_list_bin(reader)?); }
-    if mask & EDF_COMMENT != 0 { d.comment = Some(read_str_lp(reader)?); }
+    if mask & EDF_FLAGS != 0 {
+        d.flags = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
+    if mask & EDF_VERSION_MADE_BY != 0 {
+        d.version_made_by = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
+    if mask & EDF_VERSION_NEEDED != 0 {
+        d.version_needed = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
+    if mask & EDF_INTERNAL_ATTRS != 0 {
+        d.internal_attrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+    }
+    if mask & EDF_EXTERNAL_ATTRS != 0 {
+        d.external_attrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
+    }
+    if mask & EDF_LOCAL_EXTRA != 0 {
+        d.local_extra = Some(dec_extra_list_bin(reader)?);
+    }
+    if mask & EDF_CENTRAL_EXTRA != 0 {
+        d.central_extra = Some(dec_extra_list_bin(reader)?);
+    }
+    if mask & EDF_COMMENT != 0 {
+        d.comment = Some(read_str_lp(reader)?);
+    }
     Ok(d)
 }
 //#endregion 🔖️EntryDiffBinaryCodec
@@ -962,11 +1145,7 @@ pub(crate) fn demo_diff_cases() -> Vec<ZipDiff> {
         }
     }
 
-    let a = ZipSnapshot {
-        schema: "stdio.zip".into(),
-        entries: vec![entry("gone.txt", b"will be removed"), entry("stay.txt", b"before")],
-        comment: "archive before".into(),
-    };
+    let a = ZipSnapshot { schema: "stdio.zip".into(), entries: vec![entry("gone.txt", b"will be removed"), entry("stay.txt", b"before")], comment: "archive before".into(), physical: None };
     let b = ZipSnapshot {
         schema: "stdio.zip".into(),
         entries: vec![
@@ -989,6 +1168,7 @@ pub(crate) fn demo_diff_cases() -> Vec<ZipDiff> {
             entry("new.bin", b"brand new"),
         ],
         comment: "archive after".into(),
+        physical: None,
     };
 
     vec![ZipDiff::default(), ZipDiff::between(&a, &b), ZipDiff::between(&b, &a)]

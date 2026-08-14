@@ -1,8 +1,6 @@
-type PptxEntry {
-  name: String!
-  data: [Int!]!
-}
 type PptxArtifact {
   schema: String! @state(class: ARTIFACT)
-  entries: [PptxEntry!]! @state(class: ARTIFACT)
+  opc: PptxOpcPackage! @state(class: ARTIFACT)
+  xmlParts: [PptxXmlPart!]! @state(class: ARTIFACT)
+  presentation: PptxPresentation! @state(class: ARTIFACT)
 }

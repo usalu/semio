@@ -9,15 +9,6 @@
     "pages": { "type": "array", "x-semio-state": "artifact" },
     "info": { "type": "object", "x-semio-state": "artifact" },
     "objects": { "type": "array", "x-semio-state": "artifact" },
-    "trailer": { "type": "array", "x-semio-state": "artifact" },
-    "source": {
-      "type": "object",
-      "x-semio-state": "artifact",
-      "properties": {
-        "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-        "semanticBlake3": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
-      },
-      "required": ["bytes", "semanticBlake3"]
-    }
+    "trailer": { "type": "array", "x-semio-state": "artifact" }
   }
 }

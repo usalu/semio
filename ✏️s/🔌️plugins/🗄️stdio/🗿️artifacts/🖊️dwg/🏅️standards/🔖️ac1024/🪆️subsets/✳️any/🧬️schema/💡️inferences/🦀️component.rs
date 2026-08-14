@@ -42,7 +42,7 @@ impl protocol::Inference<DwgSnapshot> for DwgInference {
 }
 
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
-/// `DwgSnapshot::default()`'s `bytes`/`sections` ever stop being empty.
+/// `DwgSnapshot::default()`'s `source`/`sections` ever stop being empty.
 impl Default for DwgInference {
     fn default() -> Self {
         <Self as protocol::Inference<DwgSnapshot>>::infer(&DwgSnapshot::default())
@@ -59,7 +59,7 @@ impl protocol::InferenceSpec<DwgSnapshot> for DwgInference {
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec {
             id: "s.stdio.dwg.inference.structure",
-            reads: &["bytes", "sections", "codepage", "version"],
+            reads: &["source", "sections", "codepage", "version"],
         }]
     }
 }
@@ -68,7 +68,7 @@ impl protocol::InferenceSpec<DwgSnapshot> for DwgInference {
 //#region 🔖️ArtifactInferrer
 /// 💡️ No `InferredField`s here — `structure` is a whole-snapshot fold over `sections`/`pages`
 /// (summing page/decoded/error counts and declared sizes) plus a few O(1) field reads
-/// (`bytes.len()`, `codepage`, `version`); no honest per-entity incremental decomposition exists
+/// (decoded logical content size, `codepage`, `version`); no honest per-entity incremental decomposition exists
 /// (a merkle dep-chain over this flat section/page list costs more than the fold it would
 /// cache) — the default `infer_cached` passthrough is exact.
 impl ArtifactInferrer for crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgBuilder {

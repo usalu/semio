@@ -1,8 +1,14 @@
-type PptxEntry {
-  name: String!
-  data: [Int!]!
-}
+# 🧬️ Logical PresentationML mutation command.
 type PptxMutation {
-  schema: String! @state(class: ARTIFACT)
-  entries: [PptxEntry!]! @state(class: ARTIFACT)
+  mutation: String!
+  snapshot: PptxSnapshot
+  index: Int
+  from: Int
+  to: Int
+  slideIndex: Int
+  shapeIndex: Int
+  slide: PptxSlide
+  shape: PptxShape
+  textFrame: [PptxParagraph!]
+  position: PptxTransform
 }

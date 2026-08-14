@@ -21,6 +21,7 @@ export interface Mp4Track {
   codec: Mp4Codec;
   width: number;
   height: number;
+  chunkSampleCounts: number[];
   samples: Mp4Sample[];
 }
 export interface Mp4Box {

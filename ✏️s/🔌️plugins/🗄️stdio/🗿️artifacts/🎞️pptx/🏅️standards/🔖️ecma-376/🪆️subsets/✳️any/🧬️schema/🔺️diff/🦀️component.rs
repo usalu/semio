@@ -16,8 +16,9 @@
 //! flagged in `glue_followup` for hoisting to `zip::opc` once xlsx/bcf need the identical shape
 //! too (docx already flagged the same hoist).
 
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
+use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPhysicalState, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
 use crate::artifacts::pptx::PptxSnapshot;
+use crate::artifacts::xml::schema::snapshot::{XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -44,7 +45,9 @@ pub struct IndexedTripleDiff<D, T> {
 }
 
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -75,7 +78,9 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self { Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() } }
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -101,7 +106,7 @@ pub struct PptxSlideDiff {
 
 /// 🌳 Per-shape diff, shaped like `PptxShape` (`TextBox`/`Picture`/`Placeholder` each get real
 /// field diffs; `Replace` covers a shape-KIND change, incl. anything involving `Other`, whose
-/// raw `xml` string is never sub-diffed).
+/// logical XML node is never sub-diffed).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PptxShapeDiff {
@@ -229,6 +234,12 @@ pub struct PptxDiff {
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub presentation: Option<PptxPresentationDiff>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub xml_parts: Option<Vec<PptxXmlPart>>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub physical: Option<Option<PptxPhysicalState>>,
 }
 //#endregion 🔖️Diff
 
@@ -250,7 +261,11 @@ where
     }
     let removed: Vec<usize> = (other.len()..base.len()).collect();
     let added: Vec<IndexAdded<T>> = (min_len..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
-    if modified.is_empty() && removed.is_empty() && added.is_empty() { None } else { Some(IndexedTripleDiff { removed, modified, added }) }
+    if modified.is_empty() && removed.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(IndexedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
@@ -338,12 +353,7 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// `absorb_item` recursively absorbs two per-field diffs of the SAME item; `apply_item` patches a
 /// `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
-fn absorb_indexed<T, D>(
-    d1: IndexedTripleDiff<D, T>,
-    d2: IndexedTripleDiff<D, T>,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&T, &D) -> T,
-) -> IndexedTripleDiff<D, T>
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -448,7 +458,11 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(NamedTripleDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added })
+    }
 }
 
 fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
@@ -491,13 +505,7 @@ where
 /// 🧮️ Name-keyed absorb -- identity is the KEY (not position), so no index transport is needed:
 /// a `d2`-removal of a `d1`-added key annihilates the add; a `d2`-modify of a `d1`-added key
 /// patches into the carried payload; everything else composes directly on the shared key space.
-fn absorb_named<K, T, D>(
-    d1: NamedTripleDiff<K, D, T>,
-    d2: NamedTripleDiff<K, D, T>,
-    key_of: impl Fn(&T) -> K,
-    absorb_item: impl Fn(D, D) -> D,
-    apply_item: impl Fn(&mut T, &D),
-) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -568,21 +576,11 @@ fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) {
 }
 
 fn inverse_run(base: &PptxRun, diff: &PptxRunDiff) -> PptxRunDiff {
-    PptxRunDiff {
-        text: diff.text.as_ref().map(|_| base.text.clone()),
-        bold: diff.bold.map(|_| base.bold),
-        italic: diff.italic.map(|_| base.italic),
-        font_size: diff.font_size.map(|_| base.font_size),
-    }
+    PptxRunDiff { text: diff.text.as_ref().map(|_| base.text.clone()), bold: diff.bold.map(|_| base.bold), italic: diff.italic.map(|_| base.italic), font_size: diff.font_size.map(|_| base.font_size) }
 }
 
 fn absorb_run_diff(a: PptxRunDiff, b: PptxRunDiff) -> PptxRunDiff {
-    PptxRunDiff {
-        text: b.text.or(a.text),
-        bold: b.bold.or(a.bold),
-        italic: b.italic.or(a.italic),
-        font_size: b.font_size.or(a.font_size),
-    }
+    PptxRunDiff { text: b.text.or(a.text), bold: b.bold.or(a.bold), italic: b.italic.or(a.italic), font_size: b.font_size.or(a.font_size) }
 }
 
 fn run_with_diff_applied(run: &PptxRun, diff: &PptxRunDiff) -> PptxRun {
@@ -593,7 +591,11 @@ fn run_with_diff_applied(run: &PptxRun, diff: &PptxRunDiff) -> PptxRun {
 
 fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<PptxParagraphDiff> {
     let runs = between_indexed(&old.runs, &new.runs, diff_run);
-    if runs.is_none() { None } else { Some(PptxParagraphDiff { runs }) }
+    if runs.is_none() {
+        None
+    } else {
+        Some(PptxParagraphDiff { runs })
+    }
 }
 
 fn apply_paragraph(p: &mut PptxParagraph, diff: &PptxParagraphDiff) {
@@ -629,18 +631,30 @@ fn diff_shape(old: &PptxShape, new: &PptxShape) -> Option<PptxShapeDiff> {
         (PptxShape::TextBox { text_frame: otf, position: op }, PptxShape::TextBox { text_frame: ntf, position: np }) => {
             let text_frame = between_indexed(otf, ntf, diff_paragraph);
             let position = (op != np).then_some(*np);
-            if text_frame.is_none() && position.is_none() { None } else { Some(PptxShapeDiff::TextBox(PptxTextBoxDiff { text_frame, position })) }
+            if text_frame.is_none() && position.is_none() {
+                None
+            } else {
+                Some(PptxShapeDiff::TextBox(PptxTextBoxDiff { text_frame, position }))
+            }
         }
         (PptxShape::Picture { blip_rel_id: oid, position: op }, PptxShape::Picture { blip_rel_id: nid, position: np }) => {
             let blip_rel_id = (oid != nid).then(|| nid.clone());
             let position = (op != np).then_some(*np);
-            if blip_rel_id.is_none() && position.is_none() { None } else { Some(PptxShapeDiff::Picture(PptxPictureDiff { blip_rel_id, position })) }
+            if blip_rel_id.is_none() && position.is_none() {
+                None
+            } else {
+                Some(PptxShapeDiff::Picture(PptxPictureDiff { blip_rel_id, position }))
+            }
         }
         (PptxShape::Placeholder { kind: ok, text_frame: otf, position: op }, PptxShape::Placeholder { kind: nk, text_frame: ntf, position: np }) => {
             let kind = (ok != nk).then(|| nk.clone());
             let text_frame = between_indexed(otf, ntf, diff_paragraph);
             let position = (op != np).then_some(*np);
-            if kind.is_none() && text_frame.is_none() && position.is_none() { None } else { Some(PptxShapeDiff::Placeholder(PptxPlaceholderDiff { kind, text_frame, position })) }
+            if kind.is_none() && text_frame.is_none() && position.is_none() {
+                None
+            } else {
+                Some(PptxShapeDiff::Placeholder(PptxPlaceholderDiff { kind, text_frame, position }))
+            }
         }
         _ => Some(PptxShapeDiff::Replace { shape: new.clone() }),
     }
@@ -696,17 +710,11 @@ fn inverse_shape(base: &PptxShape, diff: &PptxShapeDiff) -> PptxShapeDiff {
         PptxShapeDiff::Replace { .. } => PptxShapeDiff::Replace { shape: base.clone() },
         PptxShapeDiff::TextBox(td) => {
             let PptxShape::TextBox { text_frame, position } = base else { return PptxShapeDiff::Replace { shape: base.clone() } };
-            PptxShapeDiff::TextBox(PptxTextBoxDiff {
-                text_frame: td.text_frame.as_ref().map(|tfd| inverse_indexed(text_frame, tfd, inverse_paragraph)),
-                position: td.position.as_ref().map(|_| *position),
-            })
+            PptxShapeDiff::TextBox(PptxTextBoxDiff { text_frame: td.text_frame.as_ref().map(|tfd| inverse_indexed(text_frame, tfd, inverse_paragraph)), position: td.position.as_ref().map(|_| *position) })
         }
         PptxShapeDiff::Picture(pd) => {
             let PptxShape::Picture { blip_rel_id, position } = base else { return PptxShapeDiff::Replace { shape: base.clone() } };
-            PptxShapeDiff::Picture(PptxPictureDiff {
-                blip_rel_id: pd.blip_rel_id.as_ref().map(|_| blip_rel_id.clone()),
-                position: pd.position.as_ref().map(|_| *position),
-            })
+            PptxShapeDiff::Picture(PptxPictureDiff { blip_rel_id: pd.blip_rel_id.as_ref().map(|_| blip_rel_id.clone()), position: pd.position.as_ref().map(|_| *position) })
         }
         PptxShapeDiff::Placeholder(phd) => {
             let PptxShape::Placeholder { kind, text_frame, position } = base else { return PptxShapeDiff::Replace { shape: base.clone() } };
@@ -769,7 +777,11 @@ fn absorb_placeholder_diff(mut a: PptxPlaceholderDiff, b: PptxPlaceholderDiff) -
 
 fn diff_slide(old: &PptxSlide, new: &PptxSlide) -> Option<PptxSlideDiff> {
     let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
-    if shapes.is_none() { None } else { Some(PptxSlideDiff { shapes }) }
+    if shapes.is_none() {
+        None
+    } else {
+        Some(PptxSlideDiff { shapes })
+    }
 }
 
 fn apply_slide(slide: &mut PptxSlide, diff: &PptxSlideDiff) {
@@ -799,7 +811,11 @@ fn absorb_slide_diff(mut a: PptxSlideDiff, b: PptxSlideDiff) -> PptxSlideDiff {
 
 fn diff_presentation(base: &PptxPresentation, other: &PptxPresentation) -> Option<PptxPresentationDiff> {
     let slides = between_indexed(&base.slides, &other.slides, diff_slide);
-    if slides.is_none() { None } else { Some(PptxPresentationDiff { slides }) }
+    if slides.is_none() {
+        None
+    } else {
+        Some(PptxPresentationDiff { slides })
+    }
 }
 
 fn apply_presentation_diff(presentation: &mut PptxPresentation, diff: &PptxPresentationDiff) {
@@ -845,17 +861,18 @@ fn absorb_ct_entries(a: PptxOpcCtEntriesDiff, b: PptxOpcCtEntriesDiff) -> PptxOp
 fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<PptxOpcContentTypesDiff> {
     let defaults = diff_ct_entries(&old.defaults, &new.defaults);
     let overrides = diff_ct_entries(&old.overrides, &new.overrides);
-    if defaults.is_none() && overrides.is_none() { None } else { Some(PptxOpcContentTypesDiff { defaults, overrides }) }
+    if defaults.is_none() && overrides.is_none() {
+        None
+    } else {
+        Some(PptxOpcContentTypesDiff { defaults, overrides })
+    }
 }
 
 fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<PptxOpcPartDiff> {
     if old == new {
         return None;
     }
-    Some(PptxOpcPartDiff {
-        content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()),
-        bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()),
-    })
+    Some(PptxOpcPartDiff { content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
 }
 
 fn apply_part(part: &mut OpcPart, diff: &PptxOpcPartDiff) {
@@ -874,10 +891,7 @@ fn part_with_diff_applied(part: &OpcPart, diff: &PptxOpcPartDiff) -> OpcPart {
 }
 
 fn inverse_part(base: &OpcPart, diff: &PptxOpcPartDiff) -> PptxOpcPartDiff {
-    PptxOpcPartDiff {
-        content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()),
-        bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()),
-    }
+    PptxOpcPartDiff { content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 
 fn absorb_part_diff(mut a: PptxOpcPartDiff, b: PptxOpcPartDiff) -> PptxOpcPartDiff {
@@ -898,11 +912,7 @@ fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<PptxOpcRelDi
     if old == new {
         return None;
     }
-    Some(PptxOpcRelDiff {
-        rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()),
-        target: (old.target != new.target).then(|| new.target.clone()),
-        target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode),
-    })
+    Some(PptxOpcRelDiff { rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()), target: (old.target != new.target).then(|| new.target.clone()), target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode) })
 }
 
 fn apply_rel(rel: &mut OpcRelationship, diff: &PptxOpcRelDiff) {
@@ -918,11 +928,7 @@ fn apply_rel(rel: &mut OpcRelationship, diff: &PptxOpcRelDiff) {
 }
 
 fn inverse_rel(base: &OpcRelationship, diff: &PptxOpcRelDiff) -> PptxOpcRelDiff {
-    PptxOpcRelDiff {
-        rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()),
-        target: diff.target.as_ref().map(|_| base.target.clone()),
-        target_mode: diff.target_mode.map(|_| base.target_mode),
-    }
+    PptxOpcRelDiff { rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()), target: diff.target.as_ref().map(|_| base.target.clone()), target_mode: diff.target_mode.map(|_| base.target_mode) }
 }
 
 fn absorb_rel_diff(mut a: PptxOpcRelDiff, b: PptxOpcRelDiff) -> PptxOpcRelDiff {
@@ -979,7 +985,11 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
             added.push((owner.clone(), list.clone()));
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() { None } else { Some(PptxOpcRelationshipsDiff { removed, modified, added }) }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        None
+    } else {
+        Some(PptxOpcRelationshipsDiff { removed, modified, added })
+    }
 }
 
 fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) {
@@ -1014,20 +1024,18 @@ fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &Pp
 }
 
 fn absorb_relationships(d1: PptxOpcRelationshipsDiff, d2: PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
-    absorb_named(
-        d1,
-        d2,
-        |(owner, _)| owner.clone(),
-        absorb_rel_list_diff,
-        |(_, list), diff| *list = rel_list_with_diff_applied(list, diff),
-    )
+    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff))
 }
 
 fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<PptxOpcDiff> {
     let content_types = diff_content_types(&base.content_types, &other.content_types);
     let parts = diff_parts(&base.parts, &other.parts);
     let relationships = diff_relationships(&base.relationships, &other.relationships);
-    if content_types.is_none() && parts.is_none() && relationships.is_none() { None } else { Some(PptxOpcDiff { content_types, parts, relationships }) }
+    if content_types.is_none() && parts.is_none() && relationships.is_none() {
+        None
+    } else {
+        Some(PptxOpcDiff { content_types, parts, relationships })
+    }
 }
 
 fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) {
@@ -1049,10 +1057,10 @@ fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) {
 
 fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff {
     PptxOpcDiff {
-        content_types: diff.content_types.as_ref().map(|d| PptxOpcContentTypesDiff {
-            defaults: d.defaults.as_ref().map(|dd| inverse_ct_entries(&base.content_types.defaults, dd)),
-            overrides: d.overrides.as_ref().map(|dd| inverse_ct_entries(&base.content_types.overrides, dd)),
-        }),
+        content_types: diff
+            .content_types
+            .as_ref()
+            .map(|d| PptxOpcContentTypesDiff { defaults: d.defaults.as_ref().map(|dd| inverse_ct_entries(&base.content_types.defaults, dd)), overrides: d.overrides.as_ref().map(|dd| inverse_ct_entries(&base.content_types.overrides, dd)) }),
         parts: diff.parts.as_ref().map(|d| inverse_named(&base.parts, d, |p| p.path.clone(), inverse_part)),
         relationships: diff.relationships.as_ref().map(|d| inverse_relationships(&base.relationships, d)),
     }
@@ -1100,6 +1108,10 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
         if let Some(d) = &self.presentation {
             apply_presentation_diff(&mut next.presentation, d);
         }
+        if let Some(xml_parts) = &self.xml_parts {
+            next.xml_parts = xml_parts.clone();
+        }
+        if let Some(physical) = &self.physical { next.physical = physical.clone(); }
         next
     }
 
@@ -1114,6 +1126,10 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
             (x, None) => x,
             (Some(a), Some(b)) => Some(absorb_presentation_diff(a, b)),
         };
+        if other.xml_parts.is_some() {
+            self.xml_parts = other.xml_parts;
+        }
+        if other.physical.is_some() { self.physical = other.physical; }
     }
 }
 //#endregion 🔖️Apply
@@ -1124,15 +1140,17 @@ impl DiffAlgebra<PptxSnapshot> for PptxDiff {
         PptxDiff {
             opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)),
             presentation: self.presentation.as_ref().map(|d| inverse_presentation_diff(&base.presentation, d)),
+            xml_parts: self.xml_parts.as_ref().map(|_| base.xml_parts.clone()),
+            physical: self.physical.as_ref().map(|_| base.physical.clone()),
         }
     }
 
     fn between(base: &PptxSnapshot, other: &PptxSnapshot) -> Self {
-        PptxDiff { opc: diff_opc(&base.opc, &other.opc), presentation: diff_presentation(&base.presentation, &other.presentation) }
+        PptxDiff { opc: diff_opc(&base.opc, &other.opc), presentation: diff_presentation(&base.presentation, &other.presentation), xml_parts: (base.xml_parts != other.xml_parts).then(|| other.xml_parts.clone()), physical: (base.physical != other.physical).then(|| other.physical.clone()) }
     }
 
     fn is_empty(&self) -> bool {
-        self.opc.is_none() && self.presentation.is_none()
+        self.opc.is_none() && self.presentation.is_none() && self.xml_parts.is_none() && self.physical.is_none()
     }
 }
 //#endregion 🔖️DiffAlgebra
@@ -1147,13 +1165,13 @@ pub fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
 /// 🧩 Builds the diff for inserting `slide` at `index` (FINAL state).
 pub fn diff_insert_slide(index: usize, slide: PptxSlide) -> PptxDiff {
     let slides = PptxSlidesDiff { added: vec![IndexAdded { index, item: slide }], ..Default::default() };
-    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }) }
+    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None, physical: None }
 }
 
 /// 🧩 Builds the diff for removing the slide at `index` (BASE-state index).
 pub fn diff_remove_slide(index: usize) -> PptxDiff {
     let slides = PptxSlidesDiff { removed: vec![index], ..Default::default() };
-    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }) }
+    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None, physical: None }
 }
 
 /// 🧩 Builds the diff for moving the slide at BASE-state index `from` to FINAL-state index `to`
@@ -1166,12 +1184,12 @@ pub fn diff_move_slide(presentation: &PptxPresentation, from: usize, to: usize) 
         return PptxDiff::default();
     }
     let slides = PptxSlidesDiff { removed: vec![from], added: vec![IndexAdded { index: to, item: slide.clone() }], modified: vec![] };
-    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }) }
+    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None, physical: None }
 }
 
 fn wrap_slide_diff(slide_index: usize, slide_diff: PptxSlideDiff) -> PptxDiff {
     let slides = PptxSlidesDiff { modified: vec![IndexModified { index: slide_index, diff: slide_diff }], ..Default::default() };
-    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }) }
+    PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None, physical: None }
 }
 
 /// 🧩 Builds the diff for inserting `shape` at `shape_index` (FINAL state) on the slide at
@@ -1255,17 +1273,35 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
+pub(crate) fn enc_xml_parts(parts: &[PptxXmlPart]) -> String {
+    hex_encode(&serde_json::to_vec(parts).expect("serializable logical pptx xml parts"))
+}
+pub(crate) fn dec_xml_parts(s: &str) -> Result<Vec<PptxXmlPart>, String> {
+    serde_json::from_slice(&hex_decode(s)?).map_err(|error| error.to_string())
+}
 pub(crate) fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
-    match s { "1" => Ok(true), "0" => Ok(false), other => Err(format!("bool: bad token {other:?}")) }
+fn parse_usize(s: &str) -> Result<usize, String> {
+    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) fn bool_str(b: bool) -> &'static str { if b { "1" } else { "0" } }
+pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+    match s {
+        "1" => Ok(true),
+        "0" => Ok(false),
+        other => Err(format!("bool: bad token {other:?}")),
+    }
+}
+pub(crate) fn bool_str(b: bool) -> &'static str {
+    if b {
+        "1"
+    } else {
+        "0"
+    }
+}
 
 pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
@@ -1327,14 +1363,22 @@ pub(crate) fn dec_indexed<D, T>(body: &str, dec_diff: impl Fn(&str) -> Result<D,
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed modified: bad entry {entry:?}"))?;
-        Ok(IndexModified { index: parse_usize(idx)?, diff: dec_diff(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed added: bad entry {entry:?}"))?;
-        Ok(IndexAdded { index: parse_usize(idx)?, item: dec_item(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed modified: bad entry {entry:?}"))?;
+            Ok(IndexModified { index: parse_usize(idx)?, diff: dec_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed added: bad entry {entry:?}"))?;
+            Ok(IndexAdded { index: parse_usize(idx)?, item: dec_item(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(IndexedTripleDiff { removed, modified, added })
 }
 
@@ -1352,10 +1396,14 @@ pub(crate) fn dec_named<D, T>(body: &str, dec_diff: impl Fn(&str) -> Result<D, S
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| {
-        let (key, rest) = entry.split_once(':').ok_or_else(|| format!("named modified: bad entry {entry:?}"))?;
-        Ok(NamedModified { key: dec_str(key)?, diff: dec_diff(rest)? })
-    }).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (key, rest) = entry.split_once(':').ok_or_else(|| format!("named modified: bad entry {entry:?}"))?;
+            Ok(NamedModified { key: dec_str(key)?, diff: dec_diff(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_item).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
@@ -1377,12 +1425,7 @@ pub(crate) fn enc_run(r: &PptxRun) -> String {
 pub(crate) fn dec_run(s: &str) -> Result<PptxRun, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [text, bold, italic, font_size] = parts.as_slice() else { return Err(format!("run: expected 4 fields, got {}", parts.len())) };
-    Ok(PptxRun {
-        text: dec_str(text)?,
-        bold: dec_bool(bold)?,
-        italic: dec_bool(italic)?,
-        font_size: decode_option(font_size, |v| v.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string()))?,
-    })
+    Ok(PptxRun { text: dec_str(text)?, bold: dec_bool(bold)?, italic: dec_bool(italic)?, font_size: decode_option(font_size, |v| v.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string()))? })
 }
 /// 🌱 `PptxParagraph` has exactly one field (`runs: Vec<PptxRun>`) — its positional tuple collapses
 /// to that field's own list encoding, no extra wrapping bracket.
@@ -1399,7 +1442,7 @@ pub(crate) fn enc_shape(s: &PptxShape) -> String {
         PptxShape::TextBox { text_frame, position } => format!("B[{},{}]", enc_list(text_frame, enc_paragraph), enc_transform(position)),
         PptxShape::Picture { blip_rel_id, position } => format!("P[{},{}]", enc_str(blip_rel_id), enc_transform(position)),
         PptxShape::Placeholder { kind, text_frame, position } => format!("H[{},{},{}]", enc_str(kind), enc_list(text_frame, enc_paragraph), enc_transform(position)),
-        PptxShape::Other { xml } => format!("O[{}]", enc_str(xml)),
+        PptxShape::Other { node } => format!("O[{}]", hex_encode(&serde_json::to_vec(node).expect("serializable logical xml node"))),
     }
 }
 pub(crate) fn dec_shape(s: &str) -> Result<PptxShape, String> {
@@ -1421,7 +1464,7 @@ pub(crate) fn dec_shape(s: &str) -> Result<PptxShape, String> {
             let [kind, text_frame, position] = parts.as_slice() else { return Err(format!("shape placeholder: expected 3 fields, got {}", parts.len())) };
             Ok(PptxShape::Placeholder { kind: dec_str(kind)?, text_frame: dec_list(text_frame, dec_paragraph)?, position: dec_transform(position)? })
         }
-        "O" => Ok(PptxShape::Other { xml: dec_str(inner)? }),
+        "O" => Ok(PptxShape::Other { node: serde_json::from_slice::<XmlNode>(&hex_decode(inner)?).map_err(|error| error.to_string())? }),
         other => Err(format!("shape: unknown tag {other:?}")),
     }
 }
@@ -1481,12 +1524,7 @@ pub(crate) fn enc_shape_diff(d: &PptxShapeDiff) -> String {
     match d {
         PptxShapeDiff::TextBox(td) => format!("B[{},{}]", encode_option(&td.text_frame, enc_paragraphs_diff), encode_option(&td.position, enc_transform)),
         PptxShapeDiff::Picture(pd) => format!("P[{},{}]", encode_option(&pd.blip_rel_id, |v| enc_str(v)), encode_option(&pd.position, enc_transform)),
-        PptxShapeDiff::Placeholder(phd) => format!(
-            "H[{},{},{}]",
-            encode_option(&phd.kind, |v| enc_str(v)),
-            encode_option(&phd.text_frame, enc_paragraphs_diff),
-            encode_option(&phd.position, enc_transform),
-        ),
+        PptxShapeDiff::Placeholder(phd) => format!("H[{},{},{}]", encode_option(&phd.kind, |v| enc_str(v)), encode_option(&phd.text_frame, enc_paragraphs_diff), encode_option(&phd.position, enc_transform),),
         PptxShapeDiff::Replace { shape } => format!("R[{}]", enc_shape(shape)),
     }
 }
@@ -1507,11 +1545,7 @@ pub(crate) fn dec_shape_diff(s: &str) -> Result<PptxShapeDiff, String> {
         "H" => {
             let parts = split_top_level(inner, ',');
             let [kind, text_frame, position] = parts.as_slice() else { return Err(format!("shape diff placeholder: expected 3 fields, got {}", parts.len())) };
-            Ok(PptxShapeDiff::Placeholder(PptxPlaceholderDiff {
-                kind: decode_option(kind, dec_str)?,
-                text_frame: decode_option(text_frame, dec_paragraphs_diff)?,
-                position: decode_option(position, dec_transform)?,
-            }))
+            Ok(PptxShapeDiff::Placeholder(PptxPlaceholderDiff { kind: decode_option(kind, dec_str)?, text_frame: decode_option(text_frame, dec_paragraphs_diff)?, position: decode_option(position, dec_transform)? }))
         }
         "R" => Ok(PptxShapeDiff::Replace { shape: dec_shape(inner)? }),
         other => Err(format!("shape diff: unknown tag {other:?}")),
@@ -1565,10 +1599,17 @@ pub(crate) fn dec_part(s: &str) -> Result<OpcPart, String> {
     Ok(OpcPart { path: dec_str(path)?, content_type: dec_str(content_type)?, bytes: hex_decode(bytes)? })
 }
 pub(crate) fn enc_target_mode(m: &OpcTargetMode) -> String {
-    match m { OpcTargetMode::Internal => "0".to_string(), OpcTargetMode::External => "1".to_string() }
+    match m {
+        OpcTargetMode::Internal => "0".to_string(),
+        OpcTargetMode::External => "1".to_string(),
+    }
 }
 pub(crate) fn dec_target_mode(s: &str) -> Result<OpcTargetMode, String> {
-    match s { "0" => Ok(OpcTargetMode::Internal), "1" => Ok(OpcTargetMode::External), other => Err(format!("target mode: bad token {other:?}")) }
+    match s {
+        "0" => Ok(OpcTargetMode::Internal),
+        "1" => Ok(OpcTargetMode::External),
+        other => Err(format!("target mode: bad token {other:?}")),
+    }
 }
 pub(crate) fn enc_rel(r: &OpcRelationship) -> String {
     format!("[{},{},{},{}]", enc_str(&r.id), enc_str(&r.rel_type), enc_str(&r.target), enc_target_mode(&r.target_mode))
@@ -1600,12 +1641,7 @@ pub(crate) fn dec_part_diff(s: &str) -> Result<PptxOpcPartDiff, String> {
     Ok(PptxOpcPartDiff { content_type: decode_option(content_type, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
 }
 pub(crate) fn enc_rel_diff(d: &PptxOpcRelDiff) -> String {
-    format!(
-        "[{},{},{}]",
-        encode_option(&d.rel_type, |v| enc_str(v)),
-        encode_option(&d.target, |v| enc_str(v)),
-        encode_option(&d.target_mode, enc_target_mode),
-    )
+    format!("[{},{},{}]", encode_option(&d.rel_type, |v| enc_str(v)), encode_option(&d.target, |v| enc_str(v)), encode_option(&d.target_mode, enc_target_mode),)
 }
 pub(crate) fn dec_rel_diff(s: &str) -> Result<PptxOpcRelDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -1645,21 +1681,12 @@ fn dec_relationships_diff(s: &str) -> Result<PptxOpcRelationshipsDiff, String> {
     dec_named(s, dec_rel_list_diff, dec_owner_rels)
 }
 fn enc_opc_diff(d: &PptxOpcDiff) -> String {
-    format!(
-        "[{},{},{}]",
-        encode_option(&d.content_types, enc_content_types_diff),
-        encode_option(&d.parts, enc_parts_diff),
-        encode_option(&d.relationships, enc_relationships_diff),
-    )
+    format!("[{},{},{}]", encode_option(&d.content_types, enc_content_types_diff), encode_option(&d.parts, enc_parts_diff), encode_option(&d.relationships, enc_relationships_diff),)
 }
 fn dec_opc_diff(s: &str) -> Result<PptxOpcDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [content_types, parts_f, relationships] = parts.as_slice() else { return Err(format!("opc diff: expected 3 fields, got {}", parts.len())) };
-    Ok(PptxOpcDiff {
-        content_types: decode_option(content_types, dec_content_types_diff)?,
-        parts: decode_option(parts_f, dec_parts_diff)?,
-        relationships: decode_option(relationships, dec_relationships_diff)?,
-    })
+    Ok(PptxOpcDiff { content_types: decode_option(content_types, dec_content_types_diff)?, parts: decode_option(parts_f, dec_parts_diff)?, relationships: decode_option(relationships, dec_relationships_diff)? })
 }
 //#endregion 🔖️OpcDiffValueCodecs
 
@@ -1684,6 +1711,12 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+}
+pub(crate) fn enc_xml_parts_bin(parts: &[PptxXmlPart], out: &mut Vec<u8>) {
+    write_bytes_lp(out, &serde_json::to_vec(parts).expect("serializable logical pptx xml parts"));
+}
+pub(crate) fn dec_xml_parts_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PptxXmlPart>, String> {
+    serde_json::from_slice(&read_bytes_lp(reader)?).map_err(|error| error.to_string())
 }
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
@@ -1787,9 +1820,9 @@ pub(crate) fn enc_shape_bin(s: &PptxShape, out: &mut Vec<u8>) {
             enc_paragraph_list_bin(text_frame, out);
             enc_transform_bin(position, out);
         }
-        PptxShape::Other { xml } => {
+        PptxShape::Other { node } => {
             out.push(3);
-            write_str_lp(out, xml);
+            write_bytes_lp(out, &serde_json::to_vec(node).expect("serializable logical xml node"));
         }
     }
 }
@@ -1799,7 +1832,7 @@ pub(crate) fn dec_shape_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSh
         0 => Ok(PptxShape::TextBox { text_frame: dec_paragraph_list_bin(reader)?, position: dec_transform_bin(reader)? }),
         1 => Ok(PptxShape::Picture { blip_rel_id: read_str_lp(reader)?, position: dec_transform_bin(reader)? }),
         2 => Ok(PptxShape::Placeholder { kind: read_str_lp(reader)?, text_frame: dec_paragraph_list_bin(reader)?, position: dec_transform_bin(reader)? }),
-        3 => Ok(PptxShape::Other { xml: read_str_lp(reader)? }),
+        3 => Ok(PptxShape::Other { node: serde_json::from_slice(&read_bytes_lp(reader)?).map_err(|error| error.to_string())? }),
         other => Err(format!("shape binary: unknown tag {other}")),
     }
 }
@@ -1899,11 +1932,7 @@ fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&
         enc_t(&a.item, out);
     }
 }
-fn dec_indexed_triple_bin<D, T>(
-    reader: &mut store::ByteReader<'_>,
-    dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
-    dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<IndexedTripleDiff<D, T>, String> {
+fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
@@ -1928,13 +1957,7 @@ fn dec_indexed_triple_bin<D, T>(
 
 /// 🏷️ Binary twin of `enc_named`/`dec_named` -- three varint-counted sections (removed keys /
 /// modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
-fn enc_named_triple_bin<K, D, T>(
-    diff: &NamedTripleDiff<K, D, T>,
-    enc_k: impl Fn(&K, &mut Vec<u8>),
-    enc_d: impl Fn(&D, &mut Vec<u8>),
-    enc_t: impl Fn(&T, &mut Vec<u8>),
-    out: &mut Vec<u8>,
-) {
+fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for k in &diff.removed {
         enc_k(k, out);
@@ -2011,8 +2034,12 @@ fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxRunDiff, S
     };
     Ok(PptxRunDiff { text, bold, italic, font_size })
 }
-fn enc_runs_diff_bin(d: &PptxRunsDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out) }
-fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxRunsDiff, String> { dec_indexed_triple_bin(reader, dec_run_diff_bin, dec_run_bin) }
+fn enc_runs_diff_bin(d: &PptxRunsDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out)
+}
+fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxRunsDiff, String> {
+    dec_indexed_triple_bin(reader, dec_run_diff_bin, dec_run_bin)
+}
 
 fn enc_paragraph_diff_bin(d: &PptxParagraphDiff, out: &mut Vec<u8>) {
     out.push(if d.runs.is_some() { 1 } else { 0 });
@@ -2024,8 +2051,12 @@ fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxPara
     let runs = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader)?) } else { None };
     Ok(PptxParagraphDiff { runs })
 }
-fn enc_paragraphs_diff_bin(d: &PptxParagraphsDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_paragraph_diff_bin, enc_paragraph_bin, out) }
-fn dec_paragraphs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxParagraphsDiff, String> { dec_indexed_triple_bin(reader, dec_paragraph_diff_bin, dec_paragraph_bin) }
+fn enc_paragraphs_diff_bin(d: &PptxParagraphsDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_paragraph_diff_bin, enc_paragraph_bin, out)
+}
+fn dec_paragraphs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxParagraphsDiff, String> {
+    dec_indexed_triple_bin(reader, dec_paragraph_diff_bin, dec_paragraph_bin)
+}
 
 /// 🌳️ `PptxShapeDiff` -- `0`=TextBox, `1`=Picture, `2`=Placeholder, `3`=Replace, same tag
 /// numbering `enc_shape_bin` uses for the full-item form (never mixed in the same binary stream).
@@ -2097,8 +2128,12 @@ fn dec_shape_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxShapeDif
         other => Err(format!("shape diff binary: unknown tag {other}")),
     }
 }
-fn enc_shapes_diff_bin(d: &PptxShapesDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_shape_diff_bin, enc_shape_bin, out) }
-fn dec_shapes_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxShapesDiff, String> { dec_indexed_triple_bin(reader, dec_shape_diff_bin, dec_shape_bin) }
+fn enc_shapes_diff_bin(d: &PptxShapesDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_shape_diff_bin, enc_shape_bin, out)
+}
+fn dec_shapes_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxShapesDiff, String> {
+    dec_indexed_triple_bin(reader, dec_shape_diff_bin, dec_shape_bin)
+}
 
 fn enc_slide_diff_bin(d: &PptxSlideDiff, out: &mut Vec<u8>) {
     out.push(if d.shapes.is_some() { 1 } else { 0 });
@@ -2110,8 +2145,12 @@ fn dec_slide_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSlideDif
     let shapes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_shapes_diff_bin(reader)?) } else { None };
     Ok(PptxSlideDiff { shapes })
 }
-fn enc_slides_diff_bin(d: &PptxSlidesDiff, out: &mut Vec<u8>) { enc_indexed_triple_bin(d, enc_slide_diff_bin, enc_slide_bin, out) }
-fn dec_slides_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSlidesDiff, String> { dec_indexed_triple_bin(reader, dec_slide_diff_bin, dec_slide_bin) }
+fn enc_slides_diff_bin(d: &PptxSlidesDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_slide_diff_bin, enc_slide_bin, out)
+}
+fn dec_slides_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSlidesDiff, String> {
+    dec_indexed_triple_bin(reader, dec_slide_diff_bin, dec_slide_bin)
+}
 
 fn enc_presentation_diff_bin(d: &PptxPresentationDiff, out: &mut Vec<u8>) {
     out.push(if d.slides.is_some() { 1 } else { 0 });
@@ -2226,8 +2265,18 @@ fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxOpcDiff, S
 //#region 🔖️TopLevel
 fn print_pptx_diff(d: &PptxDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.opc { tokens.push(format!("opc={}", enc_opc_diff(v))); }
-    if let Some(v) = &d.presentation { tokens.push(format!("presentation={}", enc_presentation_diff(v))); }
+    if let Some(v) = &d.opc {
+        tokens.push(format!("opc={}", enc_opc_diff(v)));
+    }
+    if let Some(v) = &d.presentation {
+        tokens.push(format!("presentation={}", enc_presentation_diff(v)));
+    }
+    if let Some(v) = &d.xml_parts {
+        tokens.push(format!("xmlParts={}", enc_xml_parts(v)));
+    }
+    if let Some(v) = &d.physical {
+        tokens.push(format!("physical={}", hex_encode(&serde_json::to_vec(v).expect("serializable pptx physical diff"))));
+    }
     tokens.join(" ")
 }
 fn parse_pptx_diff(line: &str) -> Result<PptxDiff, String> {
@@ -2236,9 +2285,17 @@ fn parse_pptx_diff(line: &str) -> Result<PptxDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("opc=") { d.opc = Some(dec_opc_diff(rest)?); }
-        else if let Some(rest) = token.strip_prefix("presentation=") { d.presentation = Some(dec_presentation_diff(rest)?); }
-        else { return Err(format!("pptx diff: unknown token {token:?}")); }
+        if let Some(rest) = token.strip_prefix("opc=") {
+            d.opc = Some(dec_opc_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("presentation=") {
+            d.presentation = Some(dec_presentation_diff(rest)?);
+        } else if let Some(rest) = token.strip_prefix("xmlParts=") {
+            d.xml_parts = Some(dec_xml_parts(rest)?);
+        } else if let Some(rest) = token.strip_prefix("physical=") {
+            d.physical = Some(serde_json::from_slice(&hex_decode(rest)?).map_err(|error| error.to_string())?);
+        } else {
+            return Err(format!("pptx diff: unknown token {token:?}"));
+        }
     }
     Ok(d)
 }
@@ -2259,14 +2316,28 @@ impl protocol::DiffCodec for PptxDiff {
     /// (see `🔖️BinaryCodecs` above).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
-        if self.opc.is_some() { flags |= 0b01; }
-        if self.presentation.is_some() { flags |= 0b10; }
+        if self.opc.is_some() {
+            flags |= 0b01;
+        }
+        if self.presentation.is_some() {
+            flags |= 0b10;
+        }
+        if self.xml_parts.is_some() {
+            flags |= 0b100;
+        }
+        if self.physical.is_some() { flags |= 0b1000; }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(opc) = &self.opc {
             enc_opc_diff_bin(opc, &mut out);
         }
         if let Some(presentation) = &self.presentation {
             enc_presentation_diff_bin(presentation, &mut out);
+        }
+        if let Some(xml_parts) = &self.xml_parts {
+            enc_xml_parts_bin(xml_parts, &mut out);
+        }
+        if let Some(physical) = &self.physical {
+            write_bytes_lp(&mut out, &serde_json::to_vec(physical).expect("serializable pptx physical diff"));
         }
         Ok(out)
     }
@@ -2277,7 +2348,16 @@ impl protocol::DiffCodec for PptxDiff {
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", reader.position(), e))?) } else { None };
         let presentation = if flags & 0b10 != 0 { Some(dec_presentation_diff_bin(&mut reader).map_err(|e| malformed("diff presentation", reader.position(), e))?) } else { None };
-        Ok(PptxDiff { opc, presentation })
+        let xml_parts = if flags & 0b100 != 0 {
+            let offset = reader.position();
+            Some(dec_xml_parts_bin(&mut reader).map_err(|e| malformed("diff xml parts", offset, e))?)
+        } else {
+            None
+        };
+        let physical = if flags & 0b1000 != 0 {
+            Some(serde_json::from_slice(&read_bytes_lp(&mut reader).map_err(|e| malformed("diff physical", reader.position(), e))?).map_err(|e| malformed("diff physical", reader.position(), e.to_string()))?)
+        } else { None };
+        Ok(PptxDiff { opc, presentation, xml_parts, physical })
     }
 }
 //#endregion 🔖️TopLevel
@@ -2296,25 +2376,20 @@ pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
     opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", b"<p:presentation/>".to_vec());
     opc.set_part("ppt/toRemove.xml", "application/xml", b"gone".to_vec());
     opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
-    opc.relationships.insert(
-        "ppt/toRemove.xml".into(),
-        vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
-    );
+    opc.relationships.insert("ppt/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
 
     PptxSnapshot::from_parts(
         opc,
+        Vec::new(),
         PptxPresentation {
             slides: vec![
                 PptxSlide {
                     shapes: vec![
-                        PptxShape::TextBox {
-                            text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }],
-                            position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 },
-                        },
+                        PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }], position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 } },
                         PptxShape::Picture { blip_rel_id: "rIdOld".into(), position: PptxTransform::default() },
                     ],
                 },
-                PptxSlide { shapes: vec![PptxShape::Other { xml: "<p:graphicFrame/>".into() }] },
+                PptxSlide { shapes: vec![PptxShape::Other { node: XmlNode::Element { name: "p:graphicFrame".into(), attrs: Vec::new(), children: Vec::new() } }] },
             ],
         },
     )
@@ -2332,13 +2407,11 @@ pub(crate) fn demo_snapshot_b() -> PptxSnapshot {
 
     PptxSnapshot::from_parts(
         opc,
+        Vec::new(),
         PptxPresentation {
             slides: vec![PptxSlide {
                 shapes: vec![
-                    PptxShape::TextBox {
-                        text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "new".into(), bold: true, italic: true, font_size: None }] }],
-                        position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 },
-                    },
+                    PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "new".into(), bold: true, italic: true, font_size: None }] }], position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 } },
                     PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("ph")], position: PptxTransform::default() },
                 ],
             }],
@@ -2359,7 +2432,7 @@ pub(crate) fn demo_diff_cases() -> Vec<PptxDiff> {
 #[cfg(test)]
 mod handcrafted_diff_codec_tests {
     use super::*;
-    use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+    use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
     use protocol::DiffCodec;
 
     fn elem_snapshot(slides: Vec<PptxSlide>) -> PptxSnapshot {
@@ -2367,7 +2440,7 @@ mod handcrafted_diff_codec_tests {
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", b"<p:presentation/>".to_vec());
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
-        PptxSnapshot::from_parts(opc, PptxPresentation { slides })
+        PptxSnapshot::from_parts(opc, Vec::new(), PptxPresentation { slides })
     }
 
     /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `PptxDiff` grammar — exercises the
@@ -2379,19 +2452,13 @@ mod handcrafted_diff_codec_tests {
     fn diff_codec_text_binary_roundtrip_law() {
         let a = elem_snapshot(vec![PptxSlide {
             shapes: vec![
-                PptxShape::TextBox {
-                    text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }],
-                    position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 },
-                },
+                PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }], position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 } },
                 PptxShape::Picture { blip_rel_id: "rIdOld".into(), position: PptxTransform::default() },
             ],
         }]);
         let mut b_opc_snapshot = elem_snapshot(vec![PptxSlide {
             shapes: vec![
-                PptxShape::TextBox {
-                    text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "new".into(), bold: true, italic: true, font_size: None }] }],
-                    position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 },
-                },
+                PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "new".into(), bold: true, italic: true, font_size: None }] }], position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 } },
                 PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("ph")], position: PptxTransform::default() },
             ],
         }]);
@@ -2402,13 +2469,7 @@ mod handcrafted_diff_codec_tests {
 
         let c = elem_snapshot(vec![]);
 
-        let cases = vec![
-            PptxDiff::default(),
-            PptxDiff::between(&a, &b),
-            PptxDiff::between(&b, &a),
-            PptxDiff::between(&a, &c),
-            PptxDiff::between(&c, &a),
-        ];
+        let cases = vec![PptxDiff::default(), PptxDiff::between(&a, &b), PptxDiff::between(&b, &a), PptxDiff::between(&a, &c), PptxDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
@@ -2419,6 +2480,28 @@ mod handcrafted_diff_codec_tests {
             let decoded = PptxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
+    }
+
+    #[test]
+    fn logical_xml_parts_diff_apply_inverse_absorb_between_and_codecs() {
+        let base = elem_snapshot(Vec::new());
+        let mut sourced = base.clone();
+        sourced.xml_parts = vec![PptxXmlPart { path: "docProps/core.xml".into(), content_type: "application/vnd.openxmlformats-package.core-properties+xml".into(), document: XmlDocument::default() }];
+        let diff = PptxDiff::between(&base, &sourced);
+        assert_eq!(diff.xml_parts, Some(sourced.xml_parts.clone()));
+        assert_eq!(diff.apply(&base), sourced);
+
+        let printed = diff.print_diff();
+        assert_eq!(PptxDiff::parse_diff(&printed).expect("parse logical XML parts diff"), diff);
+        let encoded = diff.encode_diff().expect("encode logical XML parts diff");
+        assert_eq!(PptxDiff::decode_diff(&encoded).expect("decode logical XML parts diff"), diff);
+
+        let inverse = diff.inverse(&base);
+        assert_eq!(inverse.apply(&sourced), base);
+        let mut absorbed = diff.clone();
+        absorbed.absorb(inverse);
+        assert_eq!(absorbed.apply(&base), base);
+        assert!(PptxDiff::between(&sourced, &sourced).is_empty());
     }
 }
 //#endregion 🧪️Tests

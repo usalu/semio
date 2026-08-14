@@ -33,9 +33,7 @@ pub enum ZipMutation {
         snapshot: ZipSnapshot,
     },
     /// 💬️ Sets the archive-level (EOCD) comment.
-    SetArchiveComment {
-        comment: String,
-    },
+    SetArchiveComment { comment: String },
     /// ➕️ Inserts a fully-specified entry at `index` (final position, clamped to `len`).
     AddEntry {
         index: usize,
@@ -43,14 +41,9 @@ pub enum ZipMutation {
         entry: ZipEntry,
     },
     /// ➖️ Removes the entry named `name` (no-op if absent).
-    RemoveEntry {
-        name: String,
-    },
+    RemoveEntry { name: String },
     /// 🏷️ Renames entry `name` to `new_name`.
-    RenameEntry {
-        name: String,
-        new_name: String,
-    },
+    RenameEntry { name: String, new_name: String },
     /// 📦️ Replaces an entry's decompressed payload.
     SetEntryData {
         name: String,
@@ -58,45 +51,19 @@ pub enum ZipMutation {
         data: Vec<u8>,
     },
     /// 🗜️ Changes an entry's compression method.
-    SetEntryMethod {
-        name: String,
-        method: ZipCompressionMethod,
-    },
+    SetEntryMethod { name: String, method: ZipCompressionMethod },
     /// 🕰️ Sets an entry's DOS date/time and (tri-state) Info-ZIP UTC mtime.
-    SetEntryTimestamps {
-        name: String,
-        dos_date: u16,
-        dos_time: u16,
-        unix_mtime: Option<i64>,
-    },
+    SetEntryTimestamps { name: String, dos_date: u16, dos_time: u16, unix_mtime: Option<i64> },
     /// 🚩️ Sets an entry's general-purpose bit flags.
-    SetEntryFlags {
-        name: String,
-        flags: u16,
-    },
+    SetEntryFlags { name: String, flags: u16 },
     /// 🔢️ Sets an entry's version-made-by / version-needed fields.
-    SetEntryVersions {
-        name: String,
-        version_made_by: u16,
-        version_needed: u16,
-    },
+    SetEntryVersions { name: String, version_made_by: u16, version_needed: u16 },
     /// 🔐️ Sets an entry's internal/external attribute fields.
-    SetEntryAttributes {
-        name: String,
-        internal_attrs: u16,
-        external_attrs: u32,
-    },
+    SetEntryAttributes { name: String, internal_attrs: u16, external_attrs: u32 },
     /// 🧩️ Replaces an entry's local/central extra-field records (whole-value weak-list replace).
-    SetEntryExtra {
-        name: String,
-        local_extra: Vec<ZipExtraField>,
-        central_extra: Vec<ZipExtraField>,
-    },
+    SetEntryExtra { name: String, local_extra: Vec<ZipExtraField>, central_extra: Vec<ZipExtraField> },
     /// 💬️ Sets an entry's per-member comment.
-    SetEntryComment {
-        name: String,
-        comment: String,
-    },
+    SetEntryComment { name: String, comment: String },
 }
 //#endregion 🔖️Mutations
 
@@ -118,13 +85,19 @@ pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) ->
         }
         ZipMutation::RemoveEntry { name } => snapshot.entries.retain(|e| &e.name != name),
         ZipMutation::RenameEntry { name, new_name } => {
-            if let Some(e) = find_mut(snapshot, name) { e.name = new_name.clone(); }
+            if let Some(e) = find_mut(snapshot, name) {
+                e.name = new_name.clone();
+            }
         }
         ZipMutation::SetEntryData { name, data } => {
-            if let Some(e) = find_mut(snapshot, name) { e.data = data.clone(); }
+            if let Some(e) = find_mut(snapshot, name) {
+                e.data = data.clone();
+            }
         }
         ZipMutation::SetEntryMethod { name, method } => {
-            if let Some(e) = find_mut(snapshot, name) { e.method = *method; }
+            if let Some(e) = find_mut(snapshot, name) {
+                e.method = *method;
+            }
         }
         ZipMutation::SetEntryTimestamps { name, dos_date, dos_time, unix_mtime } => {
             if let Some(e) = find_mut(snapshot, name) {
@@ -134,7 +107,9 @@ pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) ->
             }
         }
         ZipMutation::SetEntryFlags { name, flags } => {
-            if let Some(e) = find_mut(snapshot, name) { e.flags = *flags; }
+            if let Some(e) = find_mut(snapshot, name) {
+                e.flags = *flags;
+            }
         }
         ZipMutation::SetEntryVersions { name, version_made_by, version_needed } => {
             if let Some(e) = find_mut(snapshot, name) {
@@ -155,7 +130,9 @@ pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) ->
             }
         }
         ZipMutation::SetEntryComment { name, comment } => {
-            if let Some(e) = find_mut(snapshot, name) { e.comment = comment.clone(); }
+            if let Some(e) = find_mut(snapshot, name) {
+                e.comment = comment.clone();
+            }
         }
     }
 
@@ -177,19 +154,11 @@ impl Mutation<ZipSnapshot> for ZipMutation {
             ZipMutation::RenameEntry { name, new_name } => diff::diff_rename_entry(name, new_name),
             ZipMutation::SetEntryData { name, data } => diff::diff_set_entry_data(name, data.clone()),
             ZipMutation::SetEntryMethod { name, method } => diff::diff_set_entry_method(name, *method),
-            ZipMutation::SetEntryTimestamps { name, dos_date, dos_time, unix_mtime } => {
-                diff::diff_set_entry_timestamps(name, *dos_date, *dos_time, *unix_mtime)
-            }
+            ZipMutation::SetEntryTimestamps { name, dos_date, dos_time, unix_mtime } => diff::diff_set_entry_timestamps(name, *dos_date, *dos_time, *unix_mtime),
             ZipMutation::SetEntryFlags { name, flags } => diff::diff_set_entry_flags(name, *flags),
-            ZipMutation::SetEntryVersions { name, version_made_by, version_needed } => {
-                diff::diff_set_entry_versions(name, *version_made_by, *version_needed)
-            }
-            ZipMutation::SetEntryAttributes { name, internal_attrs, external_attrs } => {
-                diff::diff_set_entry_attributes(name, *internal_attrs, *external_attrs)
-            }
-            ZipMutation::SetEntryExtra { name, local_extra, central_extra } => {
-                diff::diff_set_entry_extra(name, local_extra.clone(), central_extra.clone())
-            }
+            ZipMutation::SetEntryVersions { name, version_made_by, version_needed } => diff::diff_set_entry_versions(name, *version_made_by, *version_needed),
+            ZipMutation::SetEntryAttributes { name, internal_attrs, external_attrs } => diff::diff_set_entry_attributes(name, *internal_attrs, *external_attrs),
+            ZipMutation::SetEntryExtra { name, local_extra, central_extra } => diff::diff_set_entry_extra(name, local_extra.clone(), central_extra.clone()),
             ZipMutation::SetEntryComment { name, comment } => diff::diff_set_entry_comment(name, comment),
         }
     }
@@ -311,11 +280,7 @@ pub(crate) fn entry(name: &str, data: &[u8]) -> ZipEntry {
 
 #[cfg(test)]
 pub(crate) fn base_snapshot() -> ZipSnapshot {
-    ZipSnapshot {
-        schema: "stdio.zip".into(),
-        entries: vec![entry("a.txt", b"aaa"), entry("b.txt", b"bbb"), entry("c.txt", b"ccc")],
-        comment: "archive".into(),
-    }
+    ZipSnapshot { schema: "stdio.zip".into(), entries: vec![entry("a.txt", b"aaa"), entry("b.txt", b"bbb"), entry("c.txt", b"ccc")], comment: "archive".into(), physical: None }
 }
 
 #[cfg(test)]
@@ -346,8 +311,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<ZipMutation> {
 mod tests {
     use super::*;
     use crate::artifacts::zip::schema::diff::ZipEntriesDiff;
-    use protocol::MutationDiff;
     use protocol::command::DiffAlgebra;
+    use protocol::MutationDiff;
     use protocol::{DiffCodec, OpBinary, OpText};
 
     //#region 🔖️mutation_diff_law
@@ -508,10 +473,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../🗿️artifacts/🎒️zip/📚️examples/🎬️demo/🖼️assets/🎒️example.zip"
-        ));
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🎒️zip/📚️examples/🎬️demo/🖼️assets/🎒️example.zip"));
         let bytes = match bytes {
             Ok(b) => b,
             // The fixture path is relative to this crate's manifest dir under the workspace
@@ -576,6 +538,7 @@ mod tests {
                 },
             ],
             comment: "archive before".into(),
+            physical: None,
         }
     }
 
@@ -623,6 +586,7 @@ mod tests {
                 },
             ],
             comment: "archive after".into(),
+            physical: None,
         }
     }
 
@@ -705,11 +669,7 @@ mod tests {
     fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        let cases = vec![
-            ZipDiff::default(),
-            ZipDiff::between(&a, &b),
-            ZipDiff::between(&b, &a),
-        ];
+        let cases = vec![ZipDiff::default(), ZipDiff::between(&a, &b), ZipDiff::between(&b, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

@@ -61,7 +61,7 @@ pub mod derived_construction {
         /// ➕ The recommended entry point: always produces a document with `IFC2X3`/`CoordinationView`
         /// header and a real project+units pair.
         pub fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document() } }
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None } }
         }
 
         /// 🧱️ Adds a product instance of `type_name` (must be one of the geometry-bearing product
@@ -341,6 +341,7 @@ pub mod derived_analysis {
             Ifc2x3Snapshot {
                 schema: "stdio.ifc.2x3".into(),
                 document: Part21Document { header: header("CoordinationView"), instances: vec![placement, project, wall, units] },
+                edm_preamble: None,
             }
         }
 

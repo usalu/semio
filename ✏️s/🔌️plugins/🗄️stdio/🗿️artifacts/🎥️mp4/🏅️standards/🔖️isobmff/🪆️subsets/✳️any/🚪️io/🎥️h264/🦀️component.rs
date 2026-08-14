@@ -188,6 +188,13 @@ pub fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
 /// wants them as separate lists, so the adaptation only changes the output container shape, not
 /// the parse logic). <https://www.iso.org/standard/74428.html> (ISO/IEC 14496-15)
 pub fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264Error> {
+    let (sps, pps, nal_length_size, _) = parse_avcc_extended(avcc)?;
+    Ok((sps, pps, nal_length_size))
+}
+
+pub fn parse_avcc_extended(
+    avcc: &[u8],
+) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>), H264Error> {
     let mut pos = 4usize;
     let length_size_byte = *avcc.get(pos).ok_or(H264Error::Truncated)?;
     pos += 1;
@@ -210,7 +217,24 @@ pub fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264E
         pps_list.push(avcc.get(pos..pos + len).ok_or(H264Error::Truncated)?.to_vec());
         pos += len;
     }
-    Ok((sps_list, pps_list, nal_length_size))
+    let extension = if avcc.len().saturating_sub(pos) >= 4 {
+        let chroma_format = avcc[pos] & 0x03;
+        let bit_depth_luma_minus8 = avcc[pos + 1] & 0x07;
+        let bit_depth_chroma_minus8 = avcc[pos + 2] & 0x07;
+        let count = avcc[pos + 3];
+        pos += 4;
+        let mut sps_ext = Vec::with_capacity(count as usize);
+        for _ in 0..count {
+            let length = u16::from_be_bytes(avcc.get(pos..pos + 2).ok_or(H264Error::Truncated)?.try_into().unwrap()) as usize;
+            pos += 2;
+            sps_ext.push(avcc.get(pos..pos + length).ok_or(H264Error::Truncated)?.to_vec());
+            pos += length;
+        }
+        Some(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension { chroma_format, bit_depth_luma_minus8, bit_depth_chroma_minus8, sps_ext })
+    } else {
+        None
+    };
+    Ok((sps_list, pps_list, nal_length_size, extension))
 }
 
 /// ✍️ Builds an `avcC` box from separate SPS/PPS lists (adapted from remodel's `build_avcc`,
@@ -220,6 +244,15 @@ pub fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264E
 /// clause 7.3.2.1.1's `profile_idc`/`constraint flags`/`level_idc`) so a round-tripped file
 /// reports the same AVC profile it was decoded from, instead of a fixed placeholder.
 pub fn build_avcc(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8) -> Vec<u8> {
+    build_avcc_extended(sps_list, pps_list, nal_length_size, None)
+}
+
+pub fn build_avcc_extended(
+    sps_list: &[Vec<u8>],
+    pps_list: &[Vec<u8>],
+    nal_length_size: u8,
+    extension: Option<&crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>,
+) -> Vec<u8> {
     let (profile, compat, level) = sps_list.first().and_then(|s| s.get(1..4)).map_or((66, 0, 30), |b| (b[0], b[1], b[2]));
     let mut out = vec![1, profile, compat, level, 0xFC | (nal_length_size.saturating_sub(1) & 0x03), 0xE0 | (sps_list.len() as u8 & 0x1F)];
     for nal in sps_list {
@@ -230,6 +263,16 @@ pub fn build_avcc(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u
     for nal in pps_list {
         out.extend_from_slice(&(nal.len() as u16).to_be_bytes());
         out.extend_from_slice(nal);
+    }
+    if let Some(extension) = extension {
+        out.push(0xfc | (extension.chroma_format & 0x03));
+        out.push(0xf8 | (extension.bit_depth_luma_minus8 & 0x07));
+        out.push(0xf8 | (extension.bit_depth_chroma_minus8 & 0x07));
+        out.push(extension.sps_ext.len() as u8);
+        for nal in &extension.sps_ext {
+            out.extend_from_slice(&(nal.len() as u16).to_be_bytes());
+            out.extend_from_slice(nal);
+        }
     }
     crate::artifacts::mp4::standards::isobmff::subsets::any::io::boxes::write_box(b"avcC", &out)
 }

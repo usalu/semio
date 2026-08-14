@@ -77,6 +77,13 @@ mod tests {
     use super::*;
     use crate::artifacts::svg::schema::{empty_svg_snapshot, demo_svg_snapshot};
     use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
+
+    const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
+
+    fn exact_fixture_bytes() -> Vec<u8> {
+        std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/artifacts.svg")).expect("read temp/artifacts.svg")
+    }
 
     #[test]
     fn empty_snapshot_matches_schema() {
@@ -94,6 +101,37 @@ mod tests {
         let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
+
+    //#region 🔖️LosslessNativeRouting
+    #[test]
+    fn exact_native_analyzer_text_and_pack_roundtrip() {
+        let original = exact_fixture_bytes();
+        let text = std::str::from_utf8(&original).expect("fixture UTF-8");
+        let text_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]);
+        assert!(text_analysis.diagnostics.is_empty(), "text diagnostics: {:?}", text_analysis.diagnostics);
+        let text_snapshot = text_analysis.parts.snapshot.expect("text snapshot");
+        assert_eq!(text_snapshot.export_utf8().expect("text analyzer export"), original);
+
+        let pack = store::ArtifactPack::encode_pack(&text_snapshot);
+        let pack_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]);
+        assert!(pack_analysis.diagnostics.is_empty(), "pack diagnostics: {:?}", pack_analysis.diagnostics);
+        assert_eq!(pack_analysis.parts.snapshot.expect("pack snapshot").export_utf8().expect("pack analyzer export"), original);
+    }
+
+    #[test]
+    fn exact_native_composer_text_and_pack_roundtrip() {
+        let original = exact_fixture_bytes();
+        let text = std::str::from_utf8(&original).expect("fixture UTF-8");
+        let text_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Text(text) }];
+        let text_composition = SvgComposerComposition::compose(&text_sources).expect("compose raw SVG text");
+        assert_eq!(text_composition.snapshot.export_utf8().expect("text composition export"), original);
+
+        let pack = store::ArtifactPack::encode_pack(&text_composition.snapshot);
+        let pack_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Binary(&pack) }];
+        let pack_composition = SvgComposerComposition::compose(&pack_sources).expect("compose SVG pack");
+        assert_eq!(pack_composition.snapshot.export_utf8().expect("pack composition export"), original);
+    }
+    //#endregion 🔖️LosslessNativeRouting
 
     //#region 🔖️ConformanceLaws
     /// 🧪️ P2-FG3: per-artifact conformance laws (`📖️grammar-recipe.md` §4's checklist item) --

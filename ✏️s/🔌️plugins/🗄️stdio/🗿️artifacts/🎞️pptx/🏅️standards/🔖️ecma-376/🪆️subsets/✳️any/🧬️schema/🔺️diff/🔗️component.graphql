@@ -1,5 +1,6 @@
-# 🧬️ PptxDiff
+# 🧬️ Logical PPTX sparse diff roots.
 type PptxDiff {
-  schema: String
-  bytes: String
+  opc: PptxOpcPackage
+  xmlParts: [PptxXmlPart!]
+  presentation: PptxPresentation
 }

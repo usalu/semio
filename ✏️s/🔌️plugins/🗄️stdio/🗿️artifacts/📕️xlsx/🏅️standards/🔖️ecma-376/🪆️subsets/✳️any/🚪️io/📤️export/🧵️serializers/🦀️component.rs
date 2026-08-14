@@ -36,6 +36,7 @@ fn sst_to_xml(shared: &[String]) -> XmlDocument {
         }),
         doctype: None,
         declaration: None,
+        prolog: Vec::new(),
     }
 }
 //#endregion 🔖️SharedStringsXml
@@ -63,6 +64,7 @@ fn workbook_to_xml(workbook: &XlsxWorkbook, rids: &[String]) -> XmlDocument {
         }),
         doctype: None,
         declaration: None,
+        prolog: Vec::new(),
     }
 }
 //#endregion 🔖️WorkbookXml
@@ -156,6 +158,7 @@ fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
         }),
         doctype: None,
         declaration: None,
+        prolog: Vec::new(),
     }
 }
 //#endregion 🔖️WorksheetXml

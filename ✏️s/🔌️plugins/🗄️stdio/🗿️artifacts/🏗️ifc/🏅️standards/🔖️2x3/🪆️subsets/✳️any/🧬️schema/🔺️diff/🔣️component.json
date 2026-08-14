@@ -2,10 +2,13 @@
   "$id": "https://semio.tech/schema/s.stdio.ifc.2x3.diff/diff.json",
   "title": "Ifc2x3Diff",
   "type": "object",
+  "$defs": { "Ifc2x3EdmPreamble": {"type":"object","properties":{"producer":{"type":"string"},"module":{"type":"string"},"creationDate":{"type":"string"},"host":{"type":"string"},"database":{"type":"string"},"databaseVersion":{"type":"string"},"databaseCreationDate":{"type":"string"},"schema":{"type":"string"},"model":{"type":"string"},"modelCreationDate":{"type":"string"},"headerModel":{"type":"string"},"headerModelCreationDate":{"type":"string"},"user":{"type":"string"},"group":{"type":"string"},"license":{"type":"string"},"options":{"type":"string"}},"required":["producer","module","creationDate","host","database","databaseVersion","databaseCreationDate","schema","model","modelCreationDate","headerModel","headerModelCreationDate","user","group","license","options"]} },
   "properties": {
     "schema": { "type": "string", "x-semio-state": "artifact" },
     "header": { "type": "string", "x-semio-state": "artifact" },
     "removedInstances": { "type": "array", "items": { "type": "integer" }, "x-semio-state": "artifact" },
-    "upsertedInstances": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" }
+    "upsertedInstances": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
+    "edmPreamble": { "anyOf": [{ "$ref": "#/$defs/Ifc2x3EdmPreamble" }, { "type": "null" }], "x-semio-state": "artifact" },
+    "instanceOrder": { "type": "array", "items": { "type": "integer" }, "x-semio-state": "artifact" }
   }
 }

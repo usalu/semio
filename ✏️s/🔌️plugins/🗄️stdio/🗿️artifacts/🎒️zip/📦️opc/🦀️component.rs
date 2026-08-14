@@ -10,9 +10,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::artifacts::xml::schema::snapshot::{
-    xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode,
-};
+use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::schema::snapshot::{ZipCompressionMethod, ZipEntry};
 use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
@@ -130,11 +128,7 @@ impl OpcContentTypes {
         for (part, ct) in &self.overrides {
             children.push(xml_elem("Override", vec![xml_attr("PartName", part), xml_attr("ContentType", ct)], vec![]));
         }
-        XmlDocument {
-            root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)),
-            doctype: None,
-            declaration: None,
-        }
+        XmlDocument { prolog: Vec::new(), root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)), doctype: None, declaration: None }
     }
 
     fn from_xml(doc: &XmlDocument) -> Result<Self, OpcError> {
@@ -150,17 +144,13 @@ impl OpcContentTypes {
             let XmlNode::Element { name, attrs, .. } = child else { continue };
             match name.as_str() {
                 "Default" => {
-                    let ext = find_attr(attrs, "Extension")
-                        .ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing Extension".into()))?;
-                    let ct = find_attr(attrs, "ContentType")
-                        .ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing ContentType".into()))?;
+                    let ext = find_attr(attrs, "Extension").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing Extension".into()))?;
+                    let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing ContentType".into()))?;
                     out.defaults.push((ext.to_ascii_lowercase(), ct.to_string()));
                 }
                 "Override" => {
-                    let part = find_attr(attrs, "PartName")
-                        .ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing PartName".into()))?;
-                    let ct = find_attr(attrs, "ContentType")
-                        .ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing ContentType".into()))?;
+                    let part = find_attr(attrs, "PartName").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing PartName".into()))?;
+                    let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing ContentType".into()))?;
                     out.overrides.push((part.to_string(), ct.to_string()));
                 }
                 _ => {}
@@ -259,11 +249,7 @@ fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
             xml_elem("Relationship", attrs, vec![])
         })
         .collect();
-    XmlDocument {
-        root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)),
-        doctype: None,
-        declaration: None,
-    }
+    XmlDocument { prolog: Vec::new(), root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)), doctype: None, declaration: None }
 }
 
 fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelationship>, OpcError> {
@@ -343,12 +329,7 @@ impl OpcPackage {
 
     /// ✍️ Appends one internal relationship under `owner` (`""` = package root).
     pub fn add_relationship(&mut self, owner: &str, id: &str, rel_type: &str, target: &str) {
-        self.relationships.entry(owner.to_string()).or_default().push(OpcRelationship {
-            id: id.into(),
-            rel_type: rel_type.into(),
-            target: target.into(),
-            target_mode: OpcTargetMode::Internal,
-        });
+        self.relationships.entry(owner.to_string()).or_default().push(OpcRelationship { id: id.into(), rel_type: rel_type.into(), target: target.into(), target_mode: OpcTargetMode::Internal });
     }
 
     /// 🔎️ Follows a single relationship of `rel_type` owned by `owner`, resolving its target to
@@ -366,8 +347,7 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
     let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
-    let ct_text = String::from_utf8(ct_entry.data.clone())
-        .map_err(|_| OpcError::MalformedContentTypes("not valid utf-8".into()))?;
+    let ct_text = String::from_utf8(ct_entry.data.clone()).map_err(|_| OpcError::MalformedContentTypes("not valid utf-8".into()))?;
     let ct_doc = xml_document_from_text(&ct_text).map_err(|e| OpcError::Xml { part: CONTENT_TYPES_PART.into(), detail: e })?;
     let content_types = OpcContentTypes::from_xml(&ct_doc)?;
 
@@ -379,19 +359,14 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
             continue;
         }
         if entry.name.ends_with(".rels") {
-            let text = String::from_utf8(entry.data.clone())
-                .map_err(|_| OpcError::MalformedRelationships { part: entry.name.clone(), detail: "not valid utf-8".into() })?;
+            let text = String::from_utf8(entry.data.clone()).map_err(|_| OpcError::MalformedRelationships { part: entry.name.clone(), detail: "not valid utf-8".into() })?;
             let doc = xml_document_from_text(&text).map_err(|e| OpcError::Xml { part: entry.name.clone(), detail: e })?;
             let rels = relationships_from_xml(&doc, &entry.name)?;
-            let owner = owner_for_rels_path(&entry.name)
-                .ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {}", entry.name)))?;
+            let owner = owner_for_rels_path(&entry.name).ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {}", entry.name)))?;
             relationships.insert(owner, rels);
             continue;
         }
-        let content_type = content_types
-            .resolve(&entry.name)
-            .ok_or_else(|| OpcError::Malformed(format!("part {} has no resolvable content type", entry.name)))?
-            .to_string();
+        let content_type = content_types.resolve(&entry.name).ok_or_else(|| OpcError::Malformed(format!("part {} has no resolvable content type", entry.name)))?.to_string();
         parts.push(OpcPart { path: entry.name.clone(), content_type, bytes: entry.data.clone() });
     }
 
@@ -426,7 +401,7 @@ pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
         entries.push(ZipEntry { name: part.path.clone(), data: part.bytes.clone(), method: ZipCompressionMethod::Deflate, ..Default::default() });
     }
 
-    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
+    let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new(), physical: None };
     crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).map_err(|e| OpcError::Zip(e.to_string()))
 }
 
@@ -459,10 +434,7 @@ mod tests {
         let bytes = encode_opc(&pkg).expect("encode");
         let decoded = decode_opc(&bytes).expect("decode");
         assert_eq!(decoded.part_bytes("word/document.xml"), Some(b"<w:document/>".as_slice()));
-        assert_eq!(
-            decoded.content_types.resolve("word/document.xml"),
-            Some("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml")
-        );
+        assert_eq!(decoded.content_types.resolve("word/document.xml"), Some("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"));
         let root_rels = decoded.relationships_for("");
         assert_eq!(root_rels.len(), 1);
         assert_eq!(root_rels[0].target, "word/document.xml");
@@ -501,11 +473,7 @@ mod tests {
 
     #[test]
     fn decode_rejects_missing_content_types() {
-        let snap = ZipSnapshot {
-            schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-            entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }],
-            comment: String::new(),
-        };
+        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }], comment: String::new(), physical: None };
         let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).unwrap();
         let err = decode_opc(&bytes).expect_err("must reject a zip with no [Content_Types].xml");
         assert_eq!(err, OpcError::MissingContentTypes);
@@ -522,6 +490,7 @@ mod tests {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
             entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec(), ..Default::default() }],
             comment: String::new(),
+            physical: None,
         })
         .unwrap();
         assert!(!sniff_opc_bytes(&plain_zip), "a plain zip with no [Content_Types].xml must not sniff as OPC");

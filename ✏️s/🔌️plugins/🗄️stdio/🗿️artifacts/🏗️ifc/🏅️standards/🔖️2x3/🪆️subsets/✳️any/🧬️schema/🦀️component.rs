@@ -3,7 +3,7 @@
 //! distinct schema id `s.stdio.ifc.2x3` so the two standards' descriptors never collide in the
 //! flat `::schema::register_artifact_schema_descriptor` registry.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +19,9 @@ pub struct Ifc2x3Artifact {
     #[state(artifact)]
     #[serde(default)]
     pub document: crate::artifacts::step::engine::part21::Part21Document,
+    #[state(artifact)]
+    #[serde(default)]
+    pub edm_preamble: Option<Ifc2x3EdmPreamble>,
 }
 //#endregion 🔖️Artifact
 
@@ -31,16 +34,17 @@ impl Default for Ifc2x3Artifact {
 
 impl Ifc2x3Artifact {
     pub fn to_snapshot(&self) -> Ifc2x3Snapshot {
-        Ifc2x3Snapshot { schema: self.schema.clone(), document: self.document.clone() }
+        Ifc2x3Snapshot { schema: self.schema.clone(), document: self.document.clone(), edm_preamble: self.edm_preamble.clone() }
     }
 
     pub fn from_snapshot(snapshot: Ifc2x3Snapshot) -> Self {
-        Self { schema: snapshot.schema, document: snapshot.document }
+        Self { schema: snapshot.schema, document: snapshot.document, edm_preamble: snapshot.edm_preamble }
     }
 
     pub fn set_snapshot(&mut self, snapshot: Ifc2x3Snapshot) {
         self.schema = snapshot.schema;
         self.document = snapshot.document;
+        self.edm_preamble = snapshot.edm_preamble;
     }
 }
 //#endregion 🔖️Conversions
@@ -263,9 +267,7 @@ pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// `empty_ifc2x3_snapshot()` stub, so every recognizer/walk law actually exercises real content).
 pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-    Ifc2x3Snapshot {
-        schema: crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
-        document: Part21Document {
+    let document = Part21Document {
             header: Part21Header {
                 file_description: vec![Part21Value::List(vec![]), Part21Value::Str("2;1".into())],
                 file_name: vec![
@@ -283,8 +285,13 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
                 Part21Instance { id: 1, entities: vec![("IFCPROJECT".into(), vec![Part21Value::Str("gid-project".into()), Part21Value::Ref(2), Part21Value::Str("Demo Project".into())])] },
                 Part21Instance { id: 2, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Int(0)])] },
             ],
-        },
-    }
+        };
+    let snapshot = Ifc2x3Snapshot {
+        schema: crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
+        document,
+        edm_preamble: None,
+    };
+    snapshot
 }
 //#endregion 🔖️DocumentHelpers
 

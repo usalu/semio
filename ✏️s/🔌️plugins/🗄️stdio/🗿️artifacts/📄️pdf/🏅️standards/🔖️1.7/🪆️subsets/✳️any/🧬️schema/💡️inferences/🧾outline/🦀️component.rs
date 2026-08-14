@@ -37,11 +37,14 @@ mod tests {
         let snapshot = PdfSnapshot {
             schema: "stdio.pdf.1.7".into(),
             declared_version: "1.7".into(),
-            pages: vec![PdfPage::new(612.0, 792.0), { let mut p = PdfPage::new(612.0, 792.0); p.text = "hello world".into(); p }],
+            pages: vec![PdfPage::new(612.0, 792.0), {
+                let mut p = PdfPage::new(612.0, 792.0);
+                p.text = "hello world".into();
+                p
+            }],
             info: PdfInfo { title: Some("My Document".into()), ..Default::default() },
             objects: vec![],
             trailer: vec![],
-            source: None,
         };
         let outline = Pdf17Outline::compute(&snapshot);
         assert_eq!(outline.page_count, 2);

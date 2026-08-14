@@ -1,6 +1,9 @@
 syntax = "proto3";
 package semio.s_stdio_svg.snapshot;
+
+import "s_stdio_xml/snapshot.proto";
+
 message SvgSnapshot {
   string schema = 1;
-  string value_wire = 2;
+  semio.s_stdio_xml.snapshot.XmlDocument doc = 2;
 }

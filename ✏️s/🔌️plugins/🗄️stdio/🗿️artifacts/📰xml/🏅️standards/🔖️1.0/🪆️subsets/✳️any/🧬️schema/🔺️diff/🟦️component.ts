@@ -3,6 +3,7 @@ import type { XmlDeclaration, XmlNode } from '../📸️snapshot/🟦️componen
 /** 🔺️ Diff for `stdio.xml`. `declaration`/`doctype` are tri-state (`null` = cleared, absent =
  * unchanged, present = set). */
 export interface XmlDiff {
+  prolog?: XmlNode[];
   declaration?: XmlDeclaration | null;
   doctype?: string | null;
   root?: XmlNodeDiff;

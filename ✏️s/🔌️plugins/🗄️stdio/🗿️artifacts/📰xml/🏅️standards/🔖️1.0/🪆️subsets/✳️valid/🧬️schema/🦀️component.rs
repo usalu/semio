@@ -226,6 +226,7 @@ pub mod derived_analysis {
                 doc: XmlDocument {
                     declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone }),
                     doctype: doctype.map(|s| s.to_string()),
+                    prolog: Vec::new(),
                     root: Some(XmlNode::Element { name: root_name.into(), attrs: Vec::new(), children: Vec::new() }),
                 },
                 ..XmlSnapshot::default()

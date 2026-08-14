@@ -1,8 +1,11 @@
 syntax = "proto3";
 package semio.s_stdio_ifc_2x3.diff;
+message Ifc2x3EdmPreamble { string producer = 1; string module = 2; string creation_date = 3; string host = 4; string database = 5; string database_version = 6; string database_creation_date = 7; string schema = 8; string model = 9; string model_creation_date = 10; string header_model = 11; string header_model_creation_date = 12; string user = 13; string group = 14; string license = 15; string options = 16; }
 message Ifc2x3Diff {
   string schema = 1;
   bytes header = 2;
   repeated uint64 removed_instances = 3;
   repeated bytes upserted_instances = 4;
+  optional Ifc2x3EdmPreamble edm_preamble = 5;
+  repeated uint64 instance_order = 6;
 }

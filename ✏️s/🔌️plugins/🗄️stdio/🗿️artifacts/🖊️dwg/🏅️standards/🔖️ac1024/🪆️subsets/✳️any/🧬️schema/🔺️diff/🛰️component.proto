@@ -1,6 +1,12 @@
 syntax = "proto3";
 package semio.s_stdio_dwg.diff;
+message DwgLogicalGeometry { string kind = 1; repeated double values = 2; repeated sint32 indices = 3; string text = 4; bool closed = 5; }
+message DwgLogicalLayer { string name = 1; uint32 color = 2; }
+message DwgLogicalEntity { uint64 layer = 1; sint32 color = 2; DwgLogicalGeometry geometry = 3; }
+message DwgLogicalDrawing { repeated DwgLogicalLayer layers = 1; repeated DwgLogicalEntity entities = 2; repeated double extmin = 3; repeated double extmax = 4; }
 message DwgDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional string version = 1;
+  optional uint32 maintenance_version = 2;
+  optional uint32 codepage = 3;
+  optional DwgLogicalDrawing drawing = 4;
 }

@@ -7,24 +7,21 @@
 //! `inverse()` is handcrafted per variant.
 
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
-    self, PdfDiff, PdfPathSegment,
-    decode_option, dec_artifact_source, dec_box, dec_dict_entry, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str,
-    encode_option, enc_artifact_source, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str,
-    split_top_level, strip_brackets,
+    self, dec_box, dec_dict_entry, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str, decode_option, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str,
+    encode_option, split_top_level, strip_brackets, PdfDiff, PdfPathSegment,
 };
 /// 🧪️ P2-FG3: real recursive binary primitives backing the upgraded `OpBinary` impl below --
 /// reuses the diff facet's own `pub(crate)` binary codecs (`../🔺️diff/🦀️component.rs`) rather
 /// than duplicating them a second time in this file, same intra-artifact reuse pattern this
 /// module's `OpText` already uses for the text-form primitives.
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
-    dec_box_bin, dec_objref_bin, dec_path_bin, dec_pdf_info_bin, dec_pdf_object_bin, dec_pdf_page_bin, dec_pdf_snapshot_bin,
-    enc_box_bin, enc_objref_bin, enc_path_bin, enc_pdf_info_bin, enc_pdf_object_bin, enc_pdf_page_bin, enc_pdf_snapshot_bin,
+    dec_box_bin, dec_objref_bin, dec_path_bin, dec_pdf_info_bin, dec_pdf_object_bin, dec_pdf_page_bin, dec_pdf_snapshot_bin, enc_box_bin, enc_objref_bin, enc_path_bin, enc_pdf_info_bin, enc_pdf_object_bin, enc_pdf_page_bin, enc_pdf_snapshot_bin,
     read_str_lp, write_str_lp,
 };
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
-use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -133,7 +130,9 @@ fn upsert_dict_entry(entries: &mut Vec<PdfDictEntry>, key: &str, value: PdfObjec
 }
 
 fn remove_dict_entry(entries: &mut Vec<PdfDictEntry>, key: &str) {
-    if let Some(pos) = entries.iter().position(|e| e.key == key) { entries.remove(pos); }
+    if let Some(pos) = entries.iter().position(|e| e.key == key) {
+        entries.remove(pos);
+    }
 }
 //#endregion 🔖️PathNavigationMut
 
@@ -151,17 +150,25 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
             snapshot.pages.insert(at, page.clone());
         }
         PdfMutation::RemovePage { index } => {
-            if *index < snapshot.pages.len() { snapshot.pages.remove(*index); }
+            if *index < snapshot.pages.len() {
+                snapshot.pages.remove(*index);
+            }
         }
         PdfMutation::SetPageMediaBox { index, media_box } => {
-            if let Some(page) = snapshot.pages.get_mut(*index) { page.media_box = *media_box; }
+            if let Some(page) = snapshot.pages.get_mut(*index) {
+                page.media_box = *media_box;
+            }
         }
         PdfMutation::SetPageCropBox { index, crop_box } => {
-            if let Some(page) = snapshot.pages.get_mut(*index) { page.crop_box = *crop_box; }
+            if let Some(page) = snapshot.pages.get_mut(*index) {
+                page.crop_box = *crop_box;
+            }
         }
         PdfMutation::AppendPageContent { index, text } => {
             if let Some(page) = snapshot.pages.get_mut(*index) {
-                if !page.text.is_empty() { page.text.push('\n'); }
+                if !page.text.is_empty() {
+                    page.text.push('\n');
+                }
                 page.text.push_str(text);
             }
         }
@@ -174,12 +181,10 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
         PdfMutation::RemoveObject { id } => {
             snapshot.objects.retain(|o| o.id != *id);
         }
-        PdfMutation::SetObjectValue { id, value } => {
-            match snapshot.objects.iter_mut().find(|o| o.id == *id) {
-                Some(o) => o.value = value.clone(),
-                None => snapshot.objects.push(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject { id: *id, value: value.clone() }),
-            }
-        }
+        PdfMutation::SetObjectValue { id, value } => match snapshot.objects.iter_mut().find(|o| o.id == *id) {
+            Some(o) => o.value = value.clone(),
+            None => snapshot.objects.push(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject { id: *id, value: value.clone() }),
+        },
         PdfMutation::SetDictEntry { id, path, key, value } => {
             if let Some(obj) = snapshot.objects.iter_mut().find(|o| o.id == *id) {
                 if let Some(container) = resolve_value_mut(&mut obj.value, path) {
@@ -260,18 +265,14 @@ impl Mutation<PdfSnapshot> for PdfMutation {
                 Some(o) => vec![PdfMutation::SetObjectValue { id: *id, value: o.value.clone() }],
                 None => vec![PdfMutation::RemoveObject { id: *id }],
             },
-            PdfMutation::SetDictEntry { id, path, key, .. } => {
-                match original_dict_value(base, *id, path, key) {
-                    Some(orig) => vec![PdfMutation::SetDictEntry { id: *id, path: path.clone(), key: key.clone(), value: orig }],
-                    None => vec![PdfMutation::RemoveDictEntry { id: *id, path: path.clone(), key: key.clone() }],
-                }
-            }
-            PdfMutation::RemoveDictEntry { id, path, key } => {
-                match original_dict_value(base, *id, path, key) {
-                    Some(orig) => vec![PdfMutation::SetDictEntry { id: *id, path: path.clone(), key: key.clone(), value: orig }],
-                    None => vec![PdfMutation::NoMutation],
-                }
-            }
+            PdfMutation::SetDictEntry { id, path, key, .. } => match original_dict_value(base, *id, path, key) {
+                Some(orig) => vec![PdfMutation::SetDictEntry { id: *id, path: path.clone(), key: key.clone(), value: orig }],
+                None => vec![PdfMutation::RemoveDictEntry { id: *id, path: path.clone(), key: key.clone() }],
+            },
+            PdfMutation::RemoveDictEntry { id, path, key } => match original_dict_value(base, *id, path, key) {
+                Some(orig) => vec![PdfMutation::SetDictEntry { id: *id, path: path.clone(), key: key.clone(), value: orig }],
+                None => vec![PdfMutation::NoMutation],
+            },
             PdfMutation::SetTrailerEntry { key, .. } => match base.trailer.iter().find(|e| e.key == *key) {
                 Some(e) => vec![PdfMutation::SetTrailerEntry { key: key.clone(), value: e.value.clone() }],
                 None => vec![PdfMutation::RemoveTrailerEntry { key: key.clone() }],
@@ -347,20 +348,19 @@ fn dec_indirect_object(s: &str) -> Result<PdfIndirectObject, String> {
 }
 fn enc_pdf_snapshot(s: &PdfSnapshot) -> String {
     format!(
-        "[{},{},[{}],{},[{}],[{}],{}]",
+        "[{},{},[{}],{},[{}],[{}]]",
         enc_str(&s.schema),
         enc_str(&s.declared_version),
         s.pages.iter().map(enc_pdf_page).collect::<Vec<_>>().join(","),
         enc_pdf_info(&s.info),
         s.objects.iter().map(enc_indirect_object).collect::<Vec<_>>().join(","),
         s.trailer.iter().map(enc_dict_entry).collect::<Vec<_>>().join(","),
-        encode_option(&s.source, enc_artifact_source),
     )
 }
 fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, declared_version, pages, info, objects, trailer, source] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 7 fields, got {}", parts.len()));
+    let [schema, declared_version, pages, info, objects, trailer] = parts.as_slice() else {
+        return Err(format!("snapshot: expected 6 fields, got {}", parts.len()));
     };
     Ok(PdfSnapshot {
         schema: dec_str(schema)?,
@@ -369,7 +369,6 @@ fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
         info: dec_pdf_info(info)?,
         objects: split_top_level(strip_brackets(objects)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_indirect_object).collect::<Result<Vec<_>, String>>()?,
         trailer: split_top_level(strip_brackets(trailer)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_dict_entry).collect::<Result<Vec<_>, String>>()?,
-        source: decode_option(source, dec_artifact_source)?,
     })
 }
 
@@ -397,13 +396,7 @@ fn parse_pdf_mutation(line: &str) -> Result<PdfMutation, String> {
         return Ok(PdfMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("pdf mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("pdf mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("pdf mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -517,9 +510,12 @@ impl protocol::OpBinary for PdfMutation {
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        if format != store::pack_rt::OP_BINARY_FORMAT {
+            return Err(malformed("op format", 0, format!("expected {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
+        }
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
-        match tag {
+        let mutation = match tag {
             0 => Ok(PdfMutation::NoMutation),
             1 => Ok(PdfMutation::SetSnapshot { snapshot: dec_pdf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? }),
             2 => {
@@ -536,6 +532,9 @@ impl protocol::OpBinary for PdfMutation {
             5 => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let has = reader.read_u8().map_err(|e| malformed("op crop_box presence", reader.position(), e.to_string()))?;
+                if has > 1 {
+                    return Err(malformed("op crop_box presence", reader.position() - 1, format!("expected 0 or 1, got {has}")));
+                }
                 let crop_box = if has != 0 { Some(dec_box_bin(&mut reader).map_err(|e| malformed("op crop_box", reader.position(), e))?) } else { None };
                 Ok(PdfMutation::SetPageCropBox { index, crop_box })
             }
@@ -576,7 +575,11 @@ impl protocol::OpBinary for PdfMutation {
             }
             14 => Ok(PdfMutation::RemoveTrailerEntry { key: read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))? }),
             other => Err(malformed("op tag", 1, format!("unknown PdfMutation tag {other}"))),
+        }?;
+        if reader.remaining() != 0 {
+            return Err(malformed("op trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
         }
+        Ok(mutation)
     }
 }
 //#endregion OpCodecs
@@ -585,14 +588,16 @@ impl protocol::OpBinary for PdfMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::MutationDiff;
     use protocol::command::DiffAlgebra;
+    use protocol::MutationDiff;
 
     fn sample_page(seed: u8) -> PdfPage {
         PdfPage { media_box: [0.0, 0.0, 612.0, 792.0], crop_box: None, rotate: 0, text: format!("page-{seed}") }
     }
 
-    fn oref(num: u32, gen: u16) -> ObjRef { ObjRef { num, gen } }
+    fn oref(num: u32, gen: u16) -> ObjRef {
+        ObjRef { num, gen }
+    }
 
     fn base_snapshot() -> PdfSnapshot {
         PdfSnapshot {
@@ -605,7 +610,6 @@ mod tests {
                 PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(3) }], data: vec![1, 2, 3], raw_filter: None } },
             ],
             trailer: vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(oref(1, 0)) }, PdfDictEntry { key: "Size".into(), value: PdfObject::Int(3) }],
-            source: None,
         }
     }
 
@@ -680,12 +684,7 @@ mod tests {
     #[test]
     fn set_dict_entry_nested_path_round_trips() {
         let mut base = base_snapshot();
-        base.objects.push(PdfIndirectObject {
-            id: oref(4, 0),
-            value: PdfObject::Dict(vec![
-                PdfDictEntry { key: "Kids".into(), value: PdfObject::Array(vec![PdfObject::Dict(vec![PdfDictEntry { key: "Rotate".into(), value: PdfObject::Int(0) }])]) },
-            ]),
-        });
+        base.objects.push(PdfIndirectObject { id: oref(4, 0), value: PdfObject::Dict(vec![PdfDictEntry { key: "Kids".into(), value: PdfObject::Array(vec![PdfObject::Dict(vec![PdfDictEntry { key: "Rotate".into(), value: PdfObject::Int(0) }])]) }]) });
         let path = vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 0 }];
         round_trips(&base, PdfMutation::SetDictEntry { id: oref(4, 0), path: path.clone(), key: "Rotate".into(), value: PdfObject::Int(90) });
         round_trips(&base, PdfMutation::RemoveDictEntry { id: oref(4, 0), path, key: "Rotate".into() });
@@ -751,7 +750,7 @@ mod tests {
             PdfMutation::AppendPageContent { index: 0, text: "more text\nsecond line".into() },
             PdfMutation::SetInfo { info: PdfInfo { author: Some("Ueli".into()), producer: Some("semio".into()), ..Default::default() } },
             PdfMutation::InsertObject { id: oref(3, 0), value: PdfObject::Int(42) },
-            PdfMutation::InsertObject { id: oref(4, 0), value: PdfObject::Array(vec![PdfObject::Real(1.5), PdfObject::Str(vec![0, 255, 128]), PdfObject::Ref(oref(1, 0))]) },
+            PdfMutation::InsertObject { id: oref(4, 0), value: PdfObject::Array(vec![PdfObject::Real(1.5.into()), PdfObject::Str(vec![0, 255, 128]), PdfObject::Ref(oref(1, 0))]) },
             PdfMutation::RemoveObject { id: oref(2, 0) },
             PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Name("Pages".into()) },
             PdfMutation::SetObjectValue { id: oref(2, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], raw_filter: Some("FlateDecode".into()) } },

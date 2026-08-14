@@ -133,16 +133,81 @@ the degraded-server state that produced the earlier 404 noise.
 It is explicitly **not** the action bridge: cad's bridge is present, its suite is 137/137 including the
 framework harness, and the example reaches the selector.
 
-**Prime suspect is this ticket's own D2 change** — the 12 IO registrations for kinds the demonstrator
-did not own were moved to 📐️cad and 🌍️gis. If a solid/mesh codec registration was dropped or landed
-under the wrong kind in that move, a document would load while its geometry could not be decoded,
-which is exactly this symptom (chrome and camera fine, nothing to draw). That hypothesis is
-**unverified** — the machine hit load average 190 from concurrent sessions and stopped serving
-reliably before it could be tested.
+**Root cause found — an empty `Vec` vanishes from the wire while TypeScript promises an array.**
 
-Next step when the machine is usable: compare the pre-move registration list against what 📐️cad now
-registers, and confirm whether `3d.cad`'s solid/mesh importers are reachable from the demonstrator
-bundle's registry at boot.
+Two earlier suspicions were both eliminated first: it is not the D2 IO move (cad's example is a
+built-in document, so drawing it needs no file IO at all), and it is not the peer's
+`world3d_scene_extended` signature change (cad's call site was already updated at 11:14, before the
+11:44 build).
+
+The real defect is in the manifest SSOT. `AppDefinition`'s `Vec` fields carried
+`#[serde(default, skip_serializing_if = "Vec::is_empty")]`, so **an app that declares no commands
+emits no `commands` key at all** — while the generated TypeScript declares
+`commands: Array<CommandDefinition>` as *required*. `appOwnsCommand` then evaluates
+`app.commands.some(…)` on `undefined`, which is precisely the observed
+`TypeError: Cannot read properties of undefined (reading 'some')`. The console named the trigger:
+`setContributions command failed demonstrator unknown cad action 'setContributions'` — the
+demonstrator pushing a host command at cad, an app with an empty `commands` vec.
+
+The codebase's own convention exposes the inconsistency: every skipped `Option` field carries
+`#[cfg_attr(feature = "typegen", ts(optional))]` (`default_layout`, `introduction`), but **none of the
+skipped `Vec` fields do** — so the emitted JSON and the generated type disagree for eleven fields
+(`utilities`, `tools`, `commands`, `interactions`, `named_layouts`, `terminologies`,
+`terminology_breadcrumbs`, `tutorials`, `dialogs`, `media_inputs`, `media_outputs`, `artifact_kinds`).
+
+**Fixed at the schema, not at the call sites:** the `skip_serializing_if` was removed so the wire
+always carries the arrays the existing generated type already promises. No typegen regeneration is
+needed (removing the skip does not change the TS type), and `#[serde(default)]` is retained so absent
+input still deserializes. The alternative — marking them `ts(optional)` and adding null guards in JS —
+was rejected: it pushes the obligation onto every consumer in perpetuity and invites the same class
+back, which is how `appBreadcrumb` took down the whole shell earlier in this ticket.
+
+**The whole class was fixed, not just `AppDefinition`.** The mismatch proved systematic rather than
+incidental: across the manifest SSOT, **0 of 31** `Vec`-skipping fields carried `ts(optional)`, while
+**61** `Option`-skipping fields did — the discipline had been applied to `Option` and never to `Vec`.
+All 31 now emit their arrays (verified: exactly 31 lines changed, the only untouched serde attributes
+being the unrelated `transparent` and the `NonEmptyVec` `try_from`/`into` converter). `semio-framework`
+compiles clean and `git status` on `🤖️generated/🟦️manifest.ts` is empty, confirming the wire moved to
+match the type rather than the type being loosened.
+
+Worth noting for whoever picks this up: this same class has now bitten three times in one ticket —
+`appBreadcrumb` (killed the entire shell), `appOwnsCommand` (this one), and the two `render failed`
+sites. A policy rule that flags a `skip_serializing_if` without a matching `ts(optional)` would make
+it structurally impossible; that is the durable follow-up.
+
+**A second sub-class, found because the fix broke a test.** `introduction_gesture_…` asserted that a
+defaulted `button` and an empty `modifiers` were OMITTED. Checking the generated type before touching
+the test showed the opposite: `button: IntroductionPointerButton` and
+`modifiers: Array<IntroductionKeyModifier>` are both **required** there — so the test had been pinning
+the defect. These fields skip via *default-valued* predicates (`is_left`/`is_right`/
+`introduction_orbit_modifiers_is_default`) rather than `Vec::is_empty`, so the first sweep missed them.
+Those skips are gone too: defaults are still *inferred on the way in*, but always *written on the way
+out*, and the test now asserts that.
+
+New law: `empty_collections_serialize_as_arrays_rather_than_vanishing_from_the_manifest` pins all
+eleven `AppDefinition` collections as `[]`, the round trip, and the `#[serde(default)]` tolerance for
+absent keys — provable without a browser or a working stdio.
+
+Verification of the serde change:
+
+```
+semio-framework        --lib  106 passed / 0 failed
+semio-framework-os-kernel --lib  862 passed / 1 failed  (the documented pre-existing fixture sweep)
+semio-framework-plugin --lib  167 passed / 1 failed  (NOT caused by this change — see below)
+```
+
+`view_action_emitting_ops_is_rejected` fails because the kind-discipline check resolves a verb through
+`registry.get_command`, which reads only `app_commands`/`mode_commands`, while the fixture declares
+`badView` via `.view_action(..)` — so no kind resolves and nothing is rejected. That is the
+action-versus-command vocabulary migration a sibling session is mid-way through (the same migration
+that added a `CommandDefinition` import to sourcing's app file); this change is serialization-only and
+touches no in-memory registry path, and `🔌️plugin/🦀️component.rs` has not been modified since 12:02,
+before the manifest edits began. Left for its owner.
+
+**Status: fix applied and compiling, NOT yet proven to restore CAD's geometry.** Proving it needs a
+demonstrator rebuild, which is blocked by a peer mid-refactor adding a `source` field across stdio's
+snapshot types (`Mp4Snapshot`/`SvgSnapshot`/`PdfSnapshot`, five initializers still lagging, last
+touched 12:45). Left alone deliberately.
 
 ## Flagged for the user — a 4,400-line unmounted ghost
 

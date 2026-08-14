@@ -10,13 +10,19 @@ type PdfDictEntry {
   value: PdfObject!
 }
 
+type PdfDecimal {
+  negative: Boolean!
+  coefficient: String!
+  scale: Int!
+}
+
 """ISO 32000-1 §7.3 COS object grammar, including streams. Exactly the kind-specific field(s)
 matching `kind` are populated. `str` is a byte string (not necessarily UTF-8)."""
 type PdfObject {
   kind: PdfObjectKind!
   boolValue: Boolean
   intValue: Int
-  realValue: Float
+  realValue: PdfDecimal
   strValue: [Int!]
   nameValue: String
   arrayValue: [PdfObject!]
@@ -61,11 +67,6 @@ type PdfInfo {
   producer: String
 }
 
-type ArtifactSource {
-  bytes: [Int!]!
-  semanticBlake3: [Int!]!
-}
-
 type PdfSnapshot {
   schema: String! @state(class: ARTIFACT)
   declaredVersion: String! @state(class: ARTIFACT)
@@ -73,5 +74,4 @@ type PdfSnapshot {
   info: PdfInfo! @state(class: ARTIFACT)
   objects: [PdfIndirectObject!]! @state(class: ARTIFACT)
   trailer: [PdfDictEntry!]! @state(class: ARTIFACT)
-  source: ArtifactSource @state(class: ARTIFACT)
 }

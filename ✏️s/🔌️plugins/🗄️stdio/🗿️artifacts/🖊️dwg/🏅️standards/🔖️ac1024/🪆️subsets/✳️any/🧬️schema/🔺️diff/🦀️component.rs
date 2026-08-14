@@ -1,7 +1,7 @@
 //! 🔺️ DwgDiff — handcrafted sparse diff for `ac1024`. Ticket
 //! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION F5: replaces the old
 //! `DwgDiff{snapshot: Option<DwgSnapshot>}` full-replace template with a real per-field patch —
-//! `version`/`maintenance_version`/`codepage` header scalars, raw `bytes`, and a name-keyed
+//! `version`/`maintenance_version`/`codepage` header scalars and a name-keyed
 //! triple (`removed`/`modified`/`added`) over `sections`. Section identity (`name`) is immutable
 //! (DWG section names are the format's own fixed labels, never user-renamed), so — unlike zip's
 //! entries — no rename-transport map is needed in `absorb`, simplifying it relative to the
@@ -15,7 +15,7 @@
 use std::collections::HashSet;
 
 use crate::artifacts::dwg::schema::snapshot::{derive_decode_status, derive_section_names};
-use crate::artifacts::dwg::schema::snapshot::{DwgSection, DwgSectionPage};
+use crate::artifacts::dwg::schema::snapshot::{DwgLogicalDrawing, DwgPhysicalLayout, DwgSection, DwgSectionPage};
 use crate::artifacts::dwg::DwgSnapshot;
 use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
@@ -110,10 +110,7 @@ impl DwgSectionsDiff {
 /// fields anywhere in this diff's field tree (every nullable field here is a single-layer
 /// `Option<T>` — "the new value", never tri-state "removed vs unchanged"), and zero data-carrying
 /// enums reachable from it (`DwgDecodeStatus` is unit-variant-only and DOESN'T even appear here —
-/// it's derived, see module doc — so it's moot either way). `bytes: Option<Vec<u8>>` does NOT get
-/// the compact base64 grammar (`#[dsl(base64)]` is a documented no-op through one `Option` layer
-/// per the recon report's derive-quirk note) — falls back to a verbose bracketed decimal list,
-/// harmless for this ticket's small test fixtures.
+/// it's derived, see module doc — so it's moot either way).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg.diff")]
@@ -129,10 +126,13 @@ pub struct DwgDiff {
     pub codepage: Option<u16>,
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub bytes: Option<Vec<u8>>,
+    pub drawing: Option<DwgLogicalDrawing>,
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sections: Option<DwgSectionsDiff>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub physical: Option<DwgPhysicalLayout>,
 }
 
 impl MutationDiff<DwgSnapshot> for DwgDiff {
@@ -166,10 +166,11 @@ impl MutationDiff<DwgSnapshot> for DwgDiff {
             version: self.version.clone().unwrap_or_else(|| base.version.clone()),
             maintenance_version: self.maintenance_version.unwrap_or(base.maintenance_version),
             codepage: self.codepage.unwrap_or(base.codepage),
-            bytes: self.bytes.clone().unwrap_or_else(|| base.bytes.clone()),
+            drawing: self.drawing.clone().unwrap_or_else(|| base.drawing.clone()),
             section_names,
             sections,
             decode_status,
+            physical: self.physical.clone().unwrap_or_else(|| base.physical.clone()),
         }
     }
 
@@ -184,7 +185,8 @@ impl MutationDiff<DwgSnapshot> for DwgDiff {
         if other.version.is_some() { self.version = other.version; }
         if other.maintenance_version.is_some() { self.maintenance_version = other.maintenance_version; }
         if other.codepage.is_some() { self.codepage = other.codepage; }
-        if other.bytes.is_some() { self.bytes = other.bytes; }
+        if other.drawing.is_some() { self.drawing = other.drawing; }
+        if other.physical.is_some() { self.physical = other.physical; }
         self.sections = absorb_sections(self.sections.take(), other.sections);
     }
 }
@@ -265,7 +267,7 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
         let version = (base.version != other.version).then(|| other.version.clone());
         let maintenance_version = (base.maintenance_version != other.maintenance_version).then_some(other.maintenance_version);
         let codepage = (base.codepage != other.codepage).then_some(other.codepage);
-        let bytes = (base.bytes != other.bytes).then(|| other.bytes.clone());
+        let drawing = (base.drawing != other.drawing).then(|| other.drawing.clone());
         let sections = if base.sections == other.sections {
             None
         } else {
@@ -295,15 +297,17 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
             let d = DwgSectionsDiff { removed, modified, added };
             if d.is_empty() { None } else { Some(d) }
         };
-        DwgDiff { version, maintenance_version, codepage, bytes, sections }
+        let physical = (base.physical != other.physical).then(|| other.physical.clone());
+        DwgDiff { version, maintenance_version, codepage, drawing, sections, physical }
     }
 
     fn is_empty(&self) -> bool {
         self.version.is_none()
             && self.maintenance_version.is_none()
             && self.codepage.is_none()
-            && self.bytes.is_none()
+            && self.drawing.is_none()
             && self.sections.as_ref().map_or(true, DwgSectionsDiff::is_empty)
+            && self.physical.is_none()
     }
 }
 //#endregion 🔖️Diff
@@ -315,33 +319,16 @@ pub fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
     DwgDiff::between(base, next)
 }
 
-/// 🧩 Patches `bytes` at the plain-preamble offsets (`0..6` for `version` when it is exactly 6
-/// bytes, `0x12` for `maintenance_version`, `0x13..0x15` LE for `codepage`), growing `bytes` with
-/// zero padding first if it's too short to reach `0x15`. Keeps the scalar mirror fields and the
-/// byte-level ground truth in sync, the same invariant `encode_dwg` already enforces for
-/// `version`.
-pub fn patch_version_info_bytes(bytes: &[u8], version: &str, maintenance_version: u8, codepage: u16) -> Vec<u8> {
-    let mut out = bytes.to_vec();
-    if out.len() < 0x15 {
-        out.resize(0x15, 0);
-    }
-    if version.as_bytes().len() == 6 {
-        out[0..6].copy_from_slice(version.as_bytes());
-    }
-    out[0x12] = maintenance_version;
-    out[0x13..0x15].copy_from_slice(&codepage.to_le_bytes());
-    out
-}
-
 pub fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
-    let new_bytes = patch_version_info_bytes(&base.bytes, version, maintenance_version, codepage);
-    DwgDiff {
-        version: (base.version != version).then(|| version.to_string()),
-        maintenance_version: (base.maintenance_version != maintenance_version).then_some(maintenance_version),
-        codepage: (base.codepage != codepage).then_some(codepage),
-        bytes: (base.bytes != new_bytes).then_some(new_bytes),
-        sections: None,
-    }
+    let mut next = base.clone();
+    crate::artifacts::dwg::schema::snapshot::synchronize_version_info(
+        &mut next,
+        version,
+        maintenance_version,
+        codepage,
+    )
+    .expect("SetVersionInfo requires a valid DWG version sentinel");
+    DwgDiff::between(base, &next)
 }
 
 pub fn diff_insert_section(index: usize, section: DwgSection) -> DwgDiff {
@@ -368,14 +355,14 @@ pub fn diff_set_section_data(name: &str, compressed: bool, declared_size: u64, p
 /// `BinaryDiff::demo_diff_cases`, `💾️binary/…/🔺️diff/🦀️component.rs`).
 #[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
-    let page = |n: i32, addr: u64, size: u32, decoded: &[u8]| DwgSectionPage { page_number: n, file_address: addr, compressed_size: size, decoded: decoded.to_vec(), error: None };
+    let page = |n: i32, start: u64, size: u32, decoded: &[u8]| DwgSectionPage { page_number: n, start_offset: start, decompressed_size: size, decoded: decoded.to_vec(), error: None };
     vec![
         DwgDiff::default(),
         DwgDiff {
             version: Some("AC1032".into()),
             maintenance_version: Some(9),
             codepage: Some(65001),
-            bytes: Some(vec![0xAA, 0xBB, 0xCC]),
+            drawing: Some(DwgLogicalDrawing::default()),
             sections: Some(DwgSectionsDiff {
                 removed: vec!["gone".into()],
                 modified: vec![DwgSectionModified {
@@ -393,10 +380,19 @@ pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
                         ]),
                     },
                 }],
-                added: vec![DwgSectionAdded { index: 2, section: DwgSection { name: "new".into(), compressed: true, declared_size: 5, pages: vec![page(2, 0x30, 5, b"brand new")] } }],
+                added: vec![DwgSectionAdded { index: 2, section: DwgSection { name: "new".into(), compressed: true, declared_size: 5, pages: vec![page(2, 0x30, 5, b"brand new")], ..Default::default() } }],
             }),
+            physical: None,
         },
-        diff_set_version_info(&DwgSnapshot::default(), "AC1024", 2, 30),
+        diff_set_version_info(
+            &crate::artifacts::dwg::schema::snapshot::decode_dwg(
+                b"AC1024\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
+            )
+            .expect("decode demo source"),
+            "AC1024",
+            2,
+            30,
+        ),
     ]
 }
 //#endregion 🔖️DemoCases

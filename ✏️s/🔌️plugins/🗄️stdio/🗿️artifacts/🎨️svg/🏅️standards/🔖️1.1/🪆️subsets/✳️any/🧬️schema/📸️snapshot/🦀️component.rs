@@ -1,7 +1,9 @@
 //! 🧬️ SvgSnapshot schema — persistent fields + real codecs.
 
 use crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA;
-use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use crate::artifacts::xml::schema::snapshot::{
+    xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode,
+};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,14 +17,11 @@ pub struct SvgSnapshot {
     #[state(artifact)]
     #[serde(default)]
     pub doc: XmlDocument,
-    #[state(artifact)]
-    #[serde(default)]
-    pub source: Option<crate::ArtifactSource>,
 }
 
 impl Default for SvgSnapshot {
     fn default() -> Self {
-        let mut snapshot = Self {
+        Self {
             schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
                 root: Some(XmlNode::Element {
@@ -32,12 +31,9 @@ impl Default for SvgSnapshot {
                 }),
                 doctype: None,
                 declaration: None,
+                prolog: Vec::new(),
             },
-            source: None,
-        };
-        let bytes = write_svg_xml(&snapshot.doc).into_bytes();
-        snapshot.source = Some(crate::ArtifactSource::capture(&bytes, &snapshot.semantic_projection()).expect("svg default source capture"));
-        snapshot
+        }
     }
 }
 //#endregion 🔖️Snapshot
@@ -60,29 +56,22 @@ pub fn write_svg_xml(doc: &XmlDocument) -> String {
 }
 
 impl SvgSnapshot {
-    /// 🧠️ Returns the deterministic semantic state without native lexical provenance.
+    /// 🧠️ Returns the lossless logical SVG state used by diff and mutation laws.
     pub fn semantic_projection(&self) -> Self {
-        let mut projection = self.clone();
-        projection.source = None;
-        projection
+        self.clone()
     }
 
-    /// 📥️ Parses SVG UTF-8 and captures the exact imported native bytes.
+    /// 📥️ Parses SVG UTF-8 into its lossless logical XML model.
     pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| format!("svg source is not UTF-8: {error}"))?;
-        let mut snapshot = Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)?, source: None };
-        snapshot.source = Some(crate::ArtifactSource::capture(bytes, &snapshot.semantic_projection())?);
-        Ok(snapshot)
+        Ok(Self {
+            schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
+            doc: parse_svg_xml(text)?,
+        })
     }
 
-    /// 📤️ Replays matching native bytes and otherwise emits the deliberate XML normal form.
+    /// 📤️ Deterministically materializes SVG from the logical XML model.
     pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
-        let projection = self.semantic_projection();
-        if let Some(source) = &self.source {
-            if source.matches(&projection)? {
-                return Ok(source.bytes.clone());
-            }
-        }
         Ok(write_svg_xml(&self.doc).into_bytes())
     }
 }
@@ -1155,7 +1144,7 @@ pub fn svg_document_to_typed(doc: &XmlDocument) -> Result<SvgElement, String> {
 }
 
 pub fn typed_to_svg_document(root: &SvgElement, doctype: Option<String>) -> XmlDocument {
-    XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None }
+    XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None, prolog: Vec::new() }
 }
 //#endregion 🔖️TypedElementModel
 
@@ -1221,14 +1210,14 @@ impl store::ArtifactDsl for SvgSnapshot {
     fn envelope_id() -> &'static str { "stdio.svg" }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        Self::import_utf8(body.as_bytes()).map_err(|e| store::TextError::new(format!("svg parse: {e}"), dsl::TextSpan::at(1, 1)))
+        match store::semio_format::split_text_preamble(text) {
+            Ok((_, body)) => crate::artifacts::svg::schema::mutations::dec_svg_snapshot(body.trim())
+                .map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("svg parse: {e}"), dsl::TextSpan::at(1, 1))),
+        }
     }
     fn print_dsl(&self) -> String {
-        let body = String::from_utf8(self.export_utf8().expect("svg semantic fingerprint")).expect("svg source is UTF-8");
+        let body = crate::artifacts::svg::schema::mutations::enc_svg_snapshot(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -1249,7 +1238,8 @@ impl store::ArtifactDsl for SvgSnapshot {
 impl store::ArtifactPack for SvgSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = self.export_utf8().map_err(store::PackError::Schema)?;
+        let mut raw = vec![1];
+        crate::artifacts::svg::schema::mutations::enc_svg_snapshot_bin(self, &mut raw);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -1268,7 +1258,10 @@ impl store::ArtifactPack for SvgSnapshot {
             )));
         }
         let _ = options;
-        Self::import_utf8(&inner).map_err(store::PackError::Schema)
+        let mut reader = store::ByteReader::new(&inner);
+        let version = reader.read_u8().map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if version != 1 { return Err(store::PackError::Schema(format!("unsupported svg snapshot state version {version}"))); }
+        crate::artifacts::svg::schema::mutations::dec_svg_snapshot_bin(&mut reader).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

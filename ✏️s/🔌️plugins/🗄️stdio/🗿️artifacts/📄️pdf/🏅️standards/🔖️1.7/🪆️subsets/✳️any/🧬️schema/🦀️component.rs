@@ -1,9 +1,8 @@
 //! 🧬️ PdfArtifact schema (1.7) — full artifact state.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfDictEntry, PdfInfo, PdfIndirectObject, PdfPage, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfDictEntry, PdfIndirectObject, PdfInfo, PdfPage, PdfSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use crate::ArtifactSource;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
@@ -26,37 +25,20 @@ pub struct PdfArtifact {
     #[state(artifact)]
     #[serde(default)]
     pub trailer: Vec<PdfDictEntry>,
-    #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub source: Option<ArtifactSource>,
 }
 
 impl Default for PdfArtifact {
-    fn default() -> Self { Self::from_snapshot(PdfSnapshot::default()) }
+    fn default() -> Self {
+        Self::from_snapshot(PdfSnapshot::default())
+    }
 }
 
 impl PdfArtifact {
     pub fn to_snapshot(&self) -> PdfSnapshot {
-        PdfSnapshot {
-            schema: self.schema.clone(),
-            declared_version: self.declared_version.clone(),
-            pages: self.pages.clone(),
-            info: self.info.clone(),
-            objects: self.objects.clone(),
-            trailer: self.trailer.clone(),
-            source: self.source.clone(),
-        }
+        PdfSnapshot { schema: self.schema.clone(), declared_version: self.declared_version.clone(), pages: self.pages.clone(), info: self.info.clone(), objects: self.objects.clone(), trailer: self.trailer.clone() }
     }
     pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            declared_version: snapshot.declared_version,
-            pages: snapshot.pages,
-            info: snapshot.info,
-            objects: snapshot.objects,
-            trailer: snapshot.trailer,
-            source: snapshot.source,
-        }
+        Self { schema: snapshot.schema, declared_version: snapshot.declared_version, pages: snapshot.pages, info: snapshot.info, objects: snapshot.objects, trailer: snapshot.trailer }
     }
     pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
         self.schema = snapshot.schema;
@@ -65,7 +47,6 @@ impl PdfArtifact {
         self.info = snapshot.info;
         self.objects = snapshot.objects;
         self.trailer = snapshot.trailer;
-        self.source = snapshot.source;
     }
 }
 
@@ -104,10 +85,10 @@ pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{PdfMutation, apply_pdf_mutation};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.pdf.1.7` snapshot.
@@ -156,7 +137,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -166,8 +151,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.pdf.1.7` parts.
@@ -199,10 +184,7 @@ pub mod derived_analysis {
                         Err(_) => text,
                     };
                     let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(10).collect();
-                    let magic: Vec<u8> = (0..hex.len().min(10)).step_by(2)
-                        .filter_map(|i| hex.get(i..i + 2))
-                        .filter_map(|h| u8::from_str_radix(h, 16).ok())
-                        .collect();
+                    let magic: Vec<u8> = (0..hex.len().min(10)).step_by(2).filter_map(|i| hex.get(i..i + 2)).filter_map(|h| u8::from_str_radix(h, 16).ok()).collect();
                     match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(&magic) {
                         Some(_) => IoConfidence::Medium,
                         None => IoConfidence::Low,

@@ -33,8 +33,7 @@ pub enum DwgMutation {
         #[dsl(block)]
         snapshot: DwgSnapshot,
     },
-    /// 🗓️🌐 Sets the version/maintenance/codepage header fields, patching `bytes` at the matching
-    /// plain-preamble offsets to keep the typed mirrors and the byte-level ground truth in sync.
+    /// 🗓️🌐 Sets logical version, maintenance-version, and codepage metadata.
     SetVersionInfo {
         version: String,
         maintenance_version: u8,
@@ -71,10 +70,13 @@ pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) ->
         DwgMutation::NoMutation => {}
         DwgMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
         DwgMutation::SetVersionInfo { version, maintenance_version, codepage } => {
-            snapshot.bytes = diff::patch_version_info_bytes(&snapshot.bytes, version, *maintenance_version, *codepage);
-            snapshot.version = version.clone();
-            snapshot.maintenance_version = *maintenance_version;
-            snapshot.codepage = *codepage;
+            crate::artifacts::dwg::schema::snapshot::synchronize_version_info(
+                snapshot,
+                version,
+                *maintenance_version,
+                *codepage,
+            )
+            .expect("SetVersionInfo requires a valid DWG version sentinel");
         }
         DwgMutation::InsertSection { index, section } => {
             let at = (*index).min(snapshot.sections.len());
@@ -198,25 +200,23 @@ pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
         name: name.into(),
         compressed,
         declared_size,
-        pages: vec![DwgSectionPage { page_number, file_address, compressed_size, decoded: decoded.to_vec(), error: None }],
+        pages: vec![DwgSectionPage { page_number, start_offset: file_address, decompressed_size: compressed_size, decoded: decoded.to_vec(), error: None }],
+        ..Default::default()
     };
-    let base = DwgSnapshot {
-        schema: "stdio.dwg".into(),
-        version: "AC1024".into(),
-        maintenance_version: 2,
-        codepage: 30,
-        bytes: b"AC1024\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".to_vec(),
-        section_names: vec!["AcDb:Header".into(), "AcDb:Classes".into()],
-        sections: vec![demo_section("AcDb:Header", true, 100, 0, 0x200, 50, b"header-bytes"), demo_section("AcDb:Classes", true, 200, 1, 0x300, 80, b"classes-bytes")],
-        decode_status: crate::artifacts::dwg::schema::snapshot::DwgDecodeStatus::SectionsDecompressed,
-    };
+    let mut base = crate::artifacts::dwg::schema::snapshot::decode_dwg(
+        b"AC1024\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x1e\x00\x00",
+    )
+    .expect("decode demo source");
+    base.sections = vec![demo_section("AcDb:Header", true, 100, 0, 0x200, 50, b"header-bytes"), demo_section("AcDb:Classes", true, 200, 1, 0x300, 80, b"classes-bytes")];
+    base.section_names = derive_section_names(&base.sections);
+    base.decode_status = derive_decode_status(&base.sections);
     vec![
         DwgMutation::NoMutation,
         DwgMutation::SetSnapshot { snapshot: base },
         DwgMutation::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 },
         DwgMutation::InsertSection { index: 1, section: demo_section("AcDb:Template", true, 10, 9, 0x900, 10, b"new") },
         DwgMutation::RemoveSection { name: "AcDb:Classes".into() },
-        DwgMutation::SetSectionData { name: "AcDb:Header".into(), compressed: false, declared_size: 999, pages: vec![DwgSectionPage { page_number: 0, file_address: 0x999, compressed_size: 5, decoded: b"patched".to_vec(), error: None }] },
+        DwgMutation::SetSectionData { name: "AcDb:Header".into(), compressed: false, declared_size: 999, pages: vec![DwgSectionPage { page_number: 0, start_offset: 0x999, decompressed_size: 5, decoded: b"patched".to_vec(), error: None }] },
     ]
 }
 //#endregion 🔖️DemoCases
@@ -232,11 +232,19 @@ mod tests {
 
     //#region Fixtures
     fn page(n: i32, addr: u64, size: u32, decoded: &[u8]) -> DwgSectionPage {
-        DwgSectionPage { page_number: n, file_address: addr, compressed_size: size, decoded: decoded.to_vec(), error: None }
+        DwgSectionPage { page_number: n, start_offset: addr, decompressed_size: size, decoded: decoded.to_vec(), error: None }
     }
 
     fn section(name: &str, compressed: bool, declared_size: u64, pages: Vec<DwgSectionPage>) -> DwgSection {
-        DwgSection { name: name.into(), compressed, declared_size, pages }
+        DwgSection { name: name.into(), compressed, declared_size, pages, ..Default::default() }
+    }
+
+    fn snapshot_with_sections(bytes: &[u8], sections: Vec<DwgSection>) -> DwgSnapshot {
+        let mut snapshot = crate::artifacts::dwg::schema::snapshot::decode_dwg(bytes).expect("decode synthetic source");
+        snapshot.section_names = derive_section_names(&sections);
+        snapshot.decode_status = derive_decode_status(&sections);
+        snapshot.sections = sections;
+        snapshot
     }
 
     /// 🧪️ 22 bytes: 6-byte version sentinel + 16 trailing bytes, long enough to reach the 0x15
@@ -250,16 +258,7 @@ mod tests {
             section("AcDb:Classes", true, 200, vec![page(1, 0x300, 80, b"classes-bytes")]),
             section("AcDb:Handles", false, 40, vec![page(2, 0x400, 40, b"handles-bytes")]),
         ];
-        DwgSnapshot {
-            schema: "stdio.dwg".into(),
-            version: "AC1024".into(),
-            maintenance_version: 2,
-            codepage: 30,
-            bytes,
-            section_names: derive_section_names(&sections),
-            decode_status: derive_decode_status(&sections),
-            sections,
-        }
+        snapshot_with_sections(&bytes, sections)
     }
     //#endregion Fixtures
 
@@ -422,8 +421,8 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    /// 🧪️ The real fixture regression test: decode -> encode must be byte-identical (`bytes` is
-    /// always the lossless ground truth) on the actual 145KB `architectural.dwg` file.
+    /// 🧪️ The real fixture regression test: logical decode -> deterministic composition must be
+    /// byte-identical on the actual 145KB `architectural.dwg` file.
     #[test]
     fn codec_retention_law() {
         let bytes = crate::artifacts::dwg::examples::architectural::FIXTURE_BYTES;
@@ -438,7 +437,7 @@ mod tests {
 
     //#region 🔖️field_sweep
     /// 🌪️ `sweep_a`/`sweep_b` differ in EVERY mutable field: `version`/`maintenance_version`/
-    /// `codepage`/`bytes` all change, and `sections` has one removed, one modified in every field,
+    /// `codepage` all change, and `sections` has one removed, one modified in every field,
     /// and one added.
     fn sweep_a() -> DwgSnapshot {
         let mut bytes = b"AC1024\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00".to_vec();
@@ -448,16 +447,7 @@ mod tests {
             section("gone", true, 10, vec![page(0, 0x10, 5, b"gone-bytes")]),
             section("stay", true, 20, vec![page(1, 0x20, 5, b"before")]),
         ];
-        DwgSnapshot {
-            schema: "stdio.dwg".into(),
-            version: "AC1024".into(),
-            maintenance_version: 1,
-            codepage: 10,
-            bytes,
-            section_names: derive_section_names(&sections),
-            decode_status: derive_decode_status(&sections),
-            sections,
-        }
+        snapshot_with_sections(&bytes, sections)
     }
 
     fn sweep_b() -> DwgSnapshot {
@@ -471,16 +461,7 @@ mod tests {
             section("stay", false, 999, vec![page(9, 0x900, 50, b"after")]),
             section("new", true, 5, vec![page(2, 0x30, 5, b"brand new")]),
         ];
-        DwgSnapshot {
-            schema: "stdio.dwg".into(),
-            version: "AC1032".into(),
-            maintenance_version: 9,
-            codepage: 30,
-            bytes,
-            section_names: derive_section_names(&sections),
-            decode_status: derive_decode_status(&sections),
-            sections,
-        }
+        snapshot_with_sections(&bytes, sections)
     }
 
     #[test]
@@ -498,7 +479,6 @@ mod tests {
         assert!(forward.version.is_some(), "version must be diffed");
         assert!(forward.maintenance_version.is_some(), "maintenance_version must be diffed");
         assert!(forward.codepage.is_some(), "codepage must be diffed");
-        assert!(forward.bytes.is_some(), "bytes must be diffed");
         let sd: &DwgSectionsDiff = forward.sections.as_ref().expect("sections diff must be present");
         assert_eq!(sd.removed, vec!["gone".to_string()], "the removed section must be tracked");
         assert_eq!(sd.added.len(), 1, "exactly one section must be added");

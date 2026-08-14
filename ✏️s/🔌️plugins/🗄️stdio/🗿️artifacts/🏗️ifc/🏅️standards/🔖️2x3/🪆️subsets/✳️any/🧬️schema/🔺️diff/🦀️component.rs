@@ -5,8 +5,8 @@
 //! `4`'s `IfcDiff` is a `snapshot: Option<IfcSnapshot>` full-replace stub with no
 //! `impl DiffAlgebra`; this standard's own diff is genuinely field-sparse instead.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
-use crate::artifacts::step::engine::part21::{Part21Header, Part21Instance, Part21Value};
+use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
+use crate::artifacts::step::engine::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
 use protocol::MutationDiff;
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated) — reached via the still-public `os_spr::command` path
@@ -35,6 +35,12 @@ pub struct Ifc2x3Diff {
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub upserted_instances: Vec<Part21Instance>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edm_preamble: Option<Option<Ifc2x3EdmPreamble>>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instance_order: Option<Vec<u64>>,
 }
 
 impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
@@ -44,10 +50,23 @@ impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
             document.header = header.clone();
         }
         let removed: HashSet<u64> = self.removed_instances.iter().copied().collect();
-        let upserted_ids: HashSet<u64> = self.upserted_instances.iter().map(|i| i.id).collect();
-        document.instances.retain(|i| !removed.contains(&i.id) && !upserted_ids.contains(&i.id));
-        document.instances.extend(self.upserted_instances.iter().cloned());
-        Ifc2x3Snapshot { schema: self.schema.clone().unwrap_or_else(|| base.schema.clone()), document }
+        document.instances.retain(|i| !removed.contains(&i.id));
+        for instance in &self.upserted_instances {
+            if let Some(existing) = document.instances.iter_mut().find(|candidate| candidate.id == instance.id) {
+                *existing = instance.clone();
+            } else {
+                document.instances.push(instance.clone());
+            }
+        }
+        if let Some(order) = &self.instance_order {
+            let positions = order.iter().enumerate().map(|(position, id)| (*id, position)).collect::<std::collections::HashMap<_, _>>();
+            document.instances.sort_by_key(|instance| positions.get(&instance.id).copied().unwrap_or(usize::MAX));
+        }
+        Ifc2x3Snapshot {
+            schema: self.schema.clone().unwrap_or_else(|| base.schema.clone()),
+            document,
+            edm_preamble: self.edm_preamble.clone().unwrap_or_else(|| base.edm_preamble.clone()),
+        }
     }
 
     /// ➕️ Structural, base-free (id-keyed collections need no position transport, unlike an
@@ -74,6 +93,12 @@ impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
                 self.upserted_instances.push(inst);
             }
         }
+        if other.edm_preamble.is_some() {
+            self.edm_preamble = other.edm_preamble;
+        }
+        if other.instance_order.is_some() {
+            self.instance_order = other.instance_order;
+        }
     }
 }
 
@@ -99,11 +124,20 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
             .cloned()
             .collect();
         upserted_instances.sort_by_key(|i| i.id);
-        Ifc2x3Diff { schema, header, removed_instances, upserted_instances }
+        let edm_preamble = (base.edm_preamble != other.edm_preamble).then(|| other.edm_preamble.clone());
+        let base_order = base.document.instances.iter().map(|instance| instance.id).collect::<Vec<_>>();
+        let other_order = other.document.instances.iter().map(|instance| instance.id).collect::<Vec<_>>();
+        let instance_order = (base_order != other_order).then_some(other_order);
+        Ifc2x3Diff { schema, header, removed_instances, upserted_instances, edm_preamble, instance_order }
     }
 
     fn is_empty(&self) -> bool {
-        self.schema.is_none() && self.header.is_none() && self.removed_instances.is_empty() && self.upserted_instances.is_empty()
+        self.schema.is_none()
+            && self.header.is_none()
+            && self.removed_instances.is_empty()
+            && self.upserted_instances.is_empty()
+            && self.edm_preamble.is_none()
+            && self.instance_order.is_none()
     }
 }
 
@@ -136,7 +170,13 @@ pub fn diff_set_header(header: &Part21Header) -> Ifc2x3Diff {
 /// than duplicating a second time (same intra-artifact-reuse split `4`'s own files use).
 //#region 🔖️TextPrimitives
 pub(crate) fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(HEX[(byte >> 4) as usize] as char);
+        encoded.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    encoded
 }
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
@@ -149,6 +189,24 @@ pub(crate) fn enc_str(s: &str) -> String {
 }
 pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+pub(crate) fn enc_edm_preamble(preamble: &Ifc2x3EdmPreamble) -> String {
+    format!("[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]", enc_str(&preamble.producer), enc_str(&preamble.module), enc_str(&preamble.creation_date), enc_str(&preamble.host), enc_str(&preamble.database), enc_str(&preamble.database_version), enc_str(&preamble.database_creation_date), enc_str(&preamble.schema), enc_str(&preamble.model), enc_str(&preamble.model_creation_date), enc_str(&preamble.header_model), enc_str(&preamble.header_model_creation_date), enc_str(&preamble.user), enc_str(&preamble.group), enc_str(&preamble.license), enc_str(&preamble.options))
+}
+pub(crate) fn dec_edm_preamble(s: &str) -> Result<Ifc2x3EdmPreamble, String> {
+    let fields = split_top_level(strip_brackets(s)?, ',');
+    let [producer, module, creation_date, host, database, database_version, database_creation_date, schema, model, model_creation_date, header_model, header_model_creation_date, user, group, license, options] = fields.as_slice() else { return Err(format!("EDM preamble: expected 16 fields, got {}", fields.len())); };
+    Ok(Ifc2x3EdmPreamble { producer: dec_str(producer)?, module: dec_str(module)?, creation_date: dec_str(creation_date)?, host: dec_str(host)?, database: dec_str(database)?, database_version: dec_str(database_version)?, database_creation_date: dec_str(database_creation_date)?, schema: dec_str(schema)?, model: dec_str(model)?, model_creation_date: dec_str(model_creation_date)?, header_model: dec_str(header_model)?, header_model_creation_date: dec_str(header_model_creation_date)?, user: dec_str(user)?, group: dec_str(group)?, license: dec_str(license)?, options: dec_str(options)? })
+}
+fn enc_optional_edm_preamble(preamble: &Option<Ifc2x3EdmPreamble>) -> String {
+    preamble.as_ref().map(|value| format!("[1,{}]", enc_edm_preamble(value))).unwrap_or_else(|| "[0]".into())
+}
+fn dec_optional_edm_preamble(s: &str) -> Result<Option<Ifc2x3EdmPreamble>, String> {
+    match split_top_level(strip_brackets(s)?, ',').as_slice() {
+        ["0"] => Ok(None),
+        ["1", value] => Ok(Some(dec_edm_preamble(value)?)),
+        _ => Err(format!("optional EDM preamble: invalid payload {s:?}")),
+    }
 }
 fn parse_u64(s: &str) -> Result<u64, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -191,6 +249,14 @@ pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
 pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+}
+pub(crate) fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u8>) {
+    for value in [&preamble.producer, &preamble.module, &preamble.creation_date, &preamble.host, &preamble.database, &preamble.database_version, &preamble.database_creation_date, &preamble.schema, &preamble.model, &preamble.model_creation_date, &preamble.header_model, &preamble.header_model_creation_date, &preamble.user, &preamble.group, &preamble.license, &preamble.options] {
+        write_str_bin(out, value);
+    }
+}
+pub(crate) fn dec_edm_preamble_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3EdmPreamble, String> {
+    Ok(Ifc2x3EdmPreamble { producer: read_str_bin(reader)?, module: read_str_bin(reader)?, creation_date: read_str_bin(reader)?, host: read_str_bin(reader)?, database: read_str_bin(reader)?, database_version: read_str_bin(reader)?, database_creation_date: read_str_bin(reader)?, schema: read_str_bin(reader)?, model: read_str_bin(reader)?, model_creation_date: read_str_bin(reader)?, header_model: read_str_bin(reader)?, header_model_creation_date: read_str_bin(reader)?, user: read_str_bin(reader)?, group: read_str_bin(reader)?, license: read_str_bin(reader)?, options: read_str_bin(reader)? })
 }
 /// ➡️ Zigzag-encodes `value` into `store::pack_rt::write_varint_u64`'s unsigned domain — own local
 /// copy (`store::pack_rt` only ships the unsigned writer; the read side's zigzag decode is already
@@ -237,7 +303,7 @@ pub(crate) fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
     let inner = strip_brackets(rest)?;
     match tag {
         "I" => Ok(Part21Value::Int(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
-        "R" => Ok(Part21Value::Real(inner.parse().map_err(|e: std::num::ParseFloatError| e.to_string())?)),
+        "R" => Ok(Part21Value::Real(Part21Decimal::parse(inner)?)),
         "S" => Ok(Part21Value::Str(dec_str(inner)?)),
         "E" => Ok(Part21Value::Enum(dec_str(inner)?)),
         "F" => Ok(Part21Value::Ref(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
@@ -279,7 +345,16 @@ pub(crate) fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
         }
         Part21Value::Real(r) => {
             out.push(3);
-            out.extend_from_slice(&r.to_le_bytes());
+            out.push(r.negative as u8);
+            write_str_bin(out, &r.coefficient);
+            store::pack_rt::write_varint_u64(out, r.scale as u64);
+            match r.exponent {
+                None => out.push(0),
+                Some(exponent) => {
+                    out.push(1);
+                    write_varint_i64(out, exponent as i64);
+                }
+            }
         }
         Part21Value::Str(s) => {
             out.push(4);
@@ -310,7 +385,17 @@ pub(crate) fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result
         0 => Ok(Part21Value::Unset),
         1 => Ok(Part21Value::Derived),
         2 => Ok(Part21Value::Int(reader.read_varint_i64().map_err(|e| e.to_string())?)),
-        3 => Ok(Part21Value::Real(reader.read_f64_le().map_err(|e| e.to_string())?)),
+        3 => {
+            let negative = reader.read_u8().map_err(|e| e.to_string())? != 0;
+            let coefficient = read_str_bin(reader)?;
+            let scale = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+            let exponent = match reader.read_u8().map_err(|e| e.to_string())? {
+                0 => None,
+                1 => Some(reader.read_varint_i64().map_err(|e| e.to_string())? as i32),
+                tag => return Err(format!("Part21Decimal exponent presence: unknown tag {tag}")),
+            };
+            Ok(Part21Value::Real(Part21Decimal { negative, coefficient, scale, exponent }))
+        }
         4 => Ok(Part21Value::Str(read_str_bin(reader)?)),
         5 => Ok(Part21Value::Enum(read_str_bin(reader)?)),
         6 => Ok(Part21Value::Ref(reader.read_varint_u64().map_err(|e| e.to_string())?)),
@@ -441,6 +526,12 @@ fn print_ifc2x3_diff(d: &Ifc2x3Diff) -> String {
     if !d.upserted_instances.is_empty() {
         tokens.push(format!("upserted={}", enc_instance_list(&d.upserted_instances)));
     }
+    if let Some(preamble) = &d.edm_preamble {
+        tokens.push(format!("edm-preamble={}", enc_optional_edm_preamble(preamble)));
+    }
+    if let Some(order) = &d.instance_order {
+        tokens.push(format!("instance-order=[{}]", order.iter().map(u64::to_string).collect::<Vec<_>>().join(",")));
+    }
     tokens.join(" ")
 }
 fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
@@ -455,6 +546,8 @@ fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
             d.removed_instances = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
         }
         else if let Some(rest) = token.strip_prefix("upserted=") { d.upserted_instances = dec_instance_list(rest)?; }
+        else if let Some(rest) = token.strip_prefix("edm-preamble=") { d.edm_preamble = Some(dec_optional_edm_preamble(rest)?); }
+        else if let Some(rest) = token.strip_prefix("instance-order=") { d.instance_order = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|value| !value.is_empty()).map(parse_u64).collect::<Result<Vec<_>, _>>()?); }
         else { return Err(format!("ifc2x3 diff: unknown token {token:?}")); }
     }
     Ok(d)
@@ -480,7 +573,9 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         let flags: u8 = (self.schema.is_some() as u8)
             | ((self.header.is_some() as u8) << 1)
             | ((!self.removed_instances.is_empty() as u8) << 2)
-            | ((!self.upserted_instances.is_empty() as u8) << 3);
+            | ((!self.upserted_instances.is_empty() as u8) << 3)
+            | ((self.edm_preamble.is_some() as u8) << 4)
+            | ((self.instance_order.is_some() as u8) << 5);
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(s) = &self.schema { write_str_bin(&mut out, s); }
         if let Some(h) = &self.header { enc_part21_header_bin(h, &mut out); }
@@ -493,12 +588,26 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         if !self.upserted_instances.is_empty() {
             enc_instance_list_bin(&self.upserted_instances, &mut out);
         }
+        if let Some(preamble) = &self.edm_preamble {
+            match preamble {
+                None => out.push(0),
+                Some(value) => {
+                    out.push(1);
+                    enc_edm_preamble_bin(value, &mut out);
+                }
+            }
+        }
+        if let Some(order) = &self.instance_order {
+            store::pack_rt::write_varint_u64(&mut out, order.len() as u64);
+            for id in order { store::pack_rt::write_varint_u64(&mut out, *id); }
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        if format != store::pack_rt::OP_BINARY_FORMAT { return Err(malformed("diff format", 0, format!("unsupported format {format}"))); }
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let schema = if flags & 1 != 0 { Some(read_str_bin(&mut reader).map_err(|e| malformed("diff schema", reader.position(), e))?) } else { None };
         let header = if flags & 2 != 0 { Some(dec_part21_header_bin(&mut reader).map_err(|e| malformed("diff header", reader.position(), e))?) } else { None };
@@ -517,7 +626,23 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         } else {
             Vec::new()
         };
-        Ok(Ifc2x3Diff { schema, header, removed_instances, upserted_instances })
+        let edm_preamble = if flags & 16 != 0 {
+            Some(match reader.read_u8().map_err(|e| malformed("diff EDM preamble presence", reader.position(), e.to_string()))? {
+                0 => None,
+                1 => Some(dec_edm_preamble_bin(&mut reader).map_err(|e| malformed("diff EDM preamble", reader.position(), e))?),
+                tag => return Err(malformed("diff EDM preamble presence", reader.position(), format!("unknown tag {tag}"))),
+            })
+        } else {
+            None
+        };
+        let instance_order = if flags & 32 != 0 {
+            let count = reader.read_varint_u64().map_err(|error| malformed("diff instance order", reader.position(), error.to_string()))?;
+            let mut order = Vec::with_capacity(count as usize);
+            for _ in 0..count { order.push(reader.read_varint_u64().map_err(|error| malformed("diff instance order", reader.position(), error.to_string()))?); }
+            Some(order)
+        } else { None };
+        if reader.remaining() != 0 { return Err(malformed("diff trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining()))); }
+        Ok(Ifc2x3Diff { schema, header, removed_instances, upserted_instances, edm_preamble, instance_order })
     }
 }
 //#endregion 🔖️TopLevel
@@ -537,7 +662,7 @@ pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
     if let Some(first) = b.document.instances.first_mut() {
         first.entities = vec![(
             "IFCQUANTITYAREA".into(),
-            vec![Part21Value::Real(10.5), Part21Value::Enum("EDGE".into())],
+            vec![Part21Value::Real(10.5.into()), Part21Value::Enum("EDGE".into())],
         ), (
             "IFCPHYSICALSIMPLEQUANTITY".into(),
             vec![Part21Value::Unset],
@@ -545,7 +670,7 @@ pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
     }
     b.document.instances.push(Part21Instance {
         id: 300,
-        entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]), Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0)])])],
+        entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]), Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0.into())])])],
     });
     vec![Ifc2x3Diff::default(), Ifc2x3Diff::between(&a, &b), Ifc2x3Diff::between(&b, &a)]
 }
@@ -562,9 +687,11 @@ mod tests {
     }
 
     fn snap(schema: &str, header: Part21Header, instances: Vec<Part21Instance>) -> Ifc2x3Snapshot {
+        let document = crate::artifacts::step::engine::part21::Part21Document { header, instances };
         Ifc2x3Snapshot {
             schema: schema.into(),
-            document: crate::artifacts::step::engine::part21::Part21Document { header, instances },
+            document,
+            edm_preamble: None,
         }
     }
 
@@ -642,7 +769,7 @@ mod tests {
         let complex_inst = Part21Instance {
             id: 9,
             entities: vec![
-                ("IFCQUANTITYAREA".into(), vec![Part21Value::Real(10.5), Part21Value::Int(-3), Part21Value::Enum("EDGE".into())]),
+                ("IFCQUANTITYAREA".into(), vec![Part21Value::Real(10.5.into()), Part21Value::Int(-3), Part21Value::Enum("EDGE".into())]),
                 ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset]),
             ],
         };
@@ -658,8 +785,10 @@ mod tests {
                 removed_instances: vec![1, 2],
                 upserted_instances: vec![
                     complex_inst.clone(),
-                    Part21Instance { id: 300, entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0)])])] },
+                    Part21Instance { id: 300, entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0.into())])])] },
                 ],
+                edm_preamble: None,
+                instance_order: None,
             },
             Ifc2x3Diff { removed_instances: vec![7], ..Default::default() },
             Ifc2x3Diff { upserted_instances: vec![complex_inst], ..Default::default() },

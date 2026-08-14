@@ -7,10 +7,12 @@ use crate::artifacts::pptx::{PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 /// Register deserializer hooks.
 pub fn register() {}
 
-/// 🎒️ Parse ZIP container bytes into a PptxSnapshot.
+/// 🎒️ Parses native archive bytes carried by BinarySnapshot into a presentation.
+///
+/// This taxonomy leaf materializes native ZIP bytes only while decoding them into the logical
+/// PresentationML snapshot.
 pub fn deserialize(from: &BinarySnapshot) -> Result<PptxSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&from.bytes)
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let mut snap = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_PPTX_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

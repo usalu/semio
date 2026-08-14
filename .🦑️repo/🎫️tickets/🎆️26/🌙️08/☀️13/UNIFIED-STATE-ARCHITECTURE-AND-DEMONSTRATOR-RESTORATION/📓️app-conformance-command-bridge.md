@@ -73,10 +73,31 @@ All Cargo-backed app checks below use `CARGO_TARGET_DIR=.🦑️repo/🎫️tick
 | --- | --- | --- |
 | `@semio-tech/framework-os-dev:test-quick` | Pass | 12/12 tests. |
 | `@semio-tech/vcs-plugin:test-quick` | Pass | 51/51 tests, 0 skipped, exit 0. |
-| `@semio-tech/puzzle-plugin:test-quick` | Pending independent rerun | Its compile passed the repaired Puzzle 5d window ownership and advanced to Space in the aggregate run, but Nx reported the aggregate failed; no independent final pass is claimed. |
-| `@semio-tech/space-plugin:test-quick` | Blocked outside app lane | App production and migrated tests compile past the removed flat catalog. `cargo test --no-run` then fails in shared `framework/ui/wgpu/draw.rs:1903` with two lifetime errors around `draw_raster_layers` → `draw_silhouette_mask`. The shared WGPU/state owner has the broader native drift set. |
-| Remaining affected batch: Animate, Cad, Dag, Draw, FEM, GIS, Lowpoly, Note, Playbook, Raster, Sequence, Shooting, Trinity | Pending shared WGPU green | Launching them now would repeat the same shared dependency failure; rerun on the warmed ticket target once its owner reports green. |
+| `@semio-tech/puzzle-plugin:test-quick` | Pass | 452/452 tests after nested window action ownership and both 21-argument world-scene call repairs. |
+| `@semio-tech/space-plugin:test-quick` | Pass | 90/90 tests after nested Home/Studio action ownership, `artifact-ref` fixtures, and stdio descriptor registration. |
+| `@semio-tech/draw-plugin:test-quick` | Pass | 94/94 tests. |
+| `@semio-tech/note-plugin:test-quick` | Pass | 93/93 tests. |
+| `@semio-tech/lowpoly-plugin:test-quick` | Pass | 125/125 tests after nested action ownership and structural DSL fixture repair. |
+| `@semio-tech/animate-plugin:test-quick` | Pass | 228/228 tests. |
+| `@semio-tech/shooting-plugin:test-quick` | Pass | 105/105 tests. |
+| `@semio-tech/trinity-plugin:test-quick` | Pass | 196/196 tests. |
+| `@semio-tech/playbook-plugin:test-quick` | Pass | 73/73 tests. |
+| `@semio-tech/dag-plugin:test-quick` | Pass, exact total pending | Passed in the joint DAG/Lowpoly rerun after exact node/edge inverse ordering repair; an individual summary capture remains required. |
+| `@semio-tech/sequence-plugin:test-quick` | Shared-blocked | Initial 125/127 exposed the same exact-order inverse defect; repaired source has not reached its tests because current shared stdio compilation fails first. |
+| `@semio-tech/raster-plugin:test-quick` | Exact rerun pending | Aggregate output was truncated; no exact total is claimed. |
+| `@semio-tech/cad-plugin:test-quick` | Exact rerun pending | Earlier result was invalidated by a killed Cargo child corrupting the isolated incremental target. |
+| `@semio-tech/gis-plugin:test-quick` | Exact rerun pending | Current 21-argument terrain call is repaired; earlier nextest preparation exceeded the then-active budget. |
+| `@semio-tech/fem-plugin:test-quick` | Exact rerun pending | Earlier cold build exceeded the then-active build budget. |
 
-Neither the current Space check nor the pending affected suites are represented as passing. The two source audits are green: both `\bdefinition\.actions\b` and the broader `\.definition\.actions\b`/obsolete `AppDefinition { actions: ... }` searches return no matches in plugin and shared-plugin Rust sources.
+The two source audits are green: both `\bdefinition\.actions\b` and the broader `\.definition\.actions\b`/obsolete `AppDefinition { actions: ... }` searches return no matches in plugin and shared-plugin Rust sources.
 
 A companion app-source audit also returns no matches for removed `CommandRef`/`CommandScope` vocabulary or direct kernel `semio_framework::CommandInvocation` imports in `✏️s/🔌️plugins`; the intentional manifest invocation protocol remains explicitly aliased only in the shared plugin bridge.
+
+## External shared stdio blocker during final app gate
+
+The serial final Sequence validation rebuilt the ticket-local target and reached `semio-s-plugin-stdio`, exposing two successive current-source schema drifts before any Sequence test could run:
+
+- DWG AC1018 `DwgArtifact::to_snapshot` still initialized removed `sections` and `decode_status` fields. This app-conformance lane removed those obsolete fields without an adapter and extended the existing DWG test module to assert exact artifact/snapshot preservation across every current field.
+- The next warmed run exposed 43 further errors in concurrent shared stdio/schema work: unresolved XML lexical APIs, missing `XmlDocument.prolog`, stale XML/DWG/PDF/SVG `source` access, SVG lexical/prolog shape drift, ZIP `physical` construction and `ZipPhysicalLayout: DslField`, plus one missing `#[artifact_schema]` declaration.
+
+These 43 errors are owned by the active external stdio/schema lane. They block Sequence, DAG, Raster, CAD, GIS, and FEM from compiling their shared dependency and therefore are not recorded as app-suite failures. Full compiler evidence is retained in `🧪️sequence-final.log`; the final app gate resumes only after the shared stdio check is green.

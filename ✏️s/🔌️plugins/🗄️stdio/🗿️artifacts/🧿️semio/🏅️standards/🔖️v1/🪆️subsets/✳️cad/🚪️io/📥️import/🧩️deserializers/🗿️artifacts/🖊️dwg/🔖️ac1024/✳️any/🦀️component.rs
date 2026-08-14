@@ -44,7 +44,7 @@ mod tests {
     fn sample_dwg() -> DwgSnapshot {
         let mut bytes = vec![b'A', b'C', b'1', b'0', b'3', b'2'];
         bytes.resize(0x15, 0);
-        DwgSnapshot { version: "AC1032".into(), maintenance_version: 0, codepage: 30, bytes, ..DwgSnapshot::default() }
+        crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::decode_dwg(&bytes).expect("decode sample")
     }
 
     #[test]

@@ -4,16 +4,18 @@
 //! `crate::artifacts::zip::opc` layer. `ppt/slideMasters`/`ppt/slideLayouts`/`ppt/theme` are
 //! unmodeled boilerplate every real reader still needs to open the package validly: they are
 //! synthesized once (fixed minimal-but-schema-shaped constants) when building a package from
-//! scratch, and left verbatim (untouched) whenever they already exist in a decoded package.
+//! scratch, while decoded packages preserve their logical XML documents.
 
-use crate::artifacts::pptx::{schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform}, PptxSnapshot};
+use super::super::super::{
+    attr, PptxError, A_NS, MINIMAL_SLIDE_LAYOUT_XML, MINIMAL_SLIDE_MASTER_XML, MINIMAL_THEME_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, P_NS, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, REL_TYPE_THEME, R_NS,
+    SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_CONTENT_TYPE, THEME_PART,
+};
+use crate::artifacts::pptx::{
+    schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform},
+    PptxSnapshot,
+};
 use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
-use super::super::super::{
-    attr, node_from_text, PptxError, MINIMAL_SLIDE_LAYOUT_XML, MINIMAL_SLIDE_MASTER_XML, MINIMAL_THEME_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART,
-    REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, REL_TYPE_THEME, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART,
-    THEME_CONTENT_TYPE, THEME_PART, A_NS, P_NS, R_NS,
-};
 
 //#region 🔖️TextXml
 fn run_to_xml(run: &PptxRun) -> XmlNode {
@@ -125,7 +127,7 @@ fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
                 },
             ],
         },
-        PptxShape::Other { xml } => node_from_text(xml),
+        PptxShape::Other { node } => node.clone(),
     }
 }
 //#endregion 🔖️ShapeXml
@@ -150,6 +152,7 @@ fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
     }
 
     XmlDocument {
+        prolog: Vec::new(),
         root: Some(XmlNode::Element {
             name: "p:sld".into(),
             attrs: vec![attr("xmlns:a", A_NS), attr("xmlns:p", P_NS)],
@@ -165,15 +168,12 @@ fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
 fn presentation_to_xml(master_rid: &str, sld_id_entries: &[(u32, String)]) -> XmlDocument {
     let sld_ids = sld_id_entries.iter().map(|(id, rid)| XmlNode::Element { name: "p:sldId".into(), attrs: vec![attr("id", &id.to_string()), attr("r:id", rid)], children: vec![] }).collect();
     XmlDocument {
+        prolog: Vec::new(),
         root: Some(XmlNode::Element {
             name: "p:presentation".into(),
             attrs: vec![attr("xmlns:a", A_NS), attr("xmlns:p", P_NS), attr("xmlns:r", R_NS)],
             children: vec![
-                XmlNode::Element {
-                    name: "p:sldMasterIdLst".into(),
-                    attrs: vec![],
-                    children: vec![XmlNode::Element { name: "p:sldMasterId".into(), attrs: vec![attr("id", "2147483648"), attr("r:id", master_rid)], children: vec![] }],
-                },
+                XmlNode::Element { name: "p:sldMasterIdLst".into(), attrs: vec![], children: vec![XmlNode::Element { name: "p:sldMasterId".into(), attrs: vec![attr("id", "2147483648"), attr("r:id", master_rid)], children: vec![] }] },
                 XmlNode::Element { name: "p:sldIdLst".into(), attrs: vec![], children: sld_ids },
             ],
         }),
@@ -218,12 +218,12 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
         opc.set_part(THEME_PART, THEME_CONTENT_TYPE, MINIMAL_THEME_XML.as_bytes().to_vec());
     }
 
-    let master_rel = opc
-        .relationships_for(PRESENTATION_PART)
-        .iter()
-        .find(|r| r.rel_type == REL_TYPE_SLIDE_MASTER)
-        .cloned()
-        .unwrap_or(OpcRelationship { id: "rId1".into(), rel_type: REL_TYPE_SLIDE_MASTER.into(), target: "slideMasters/slideMaster1.xml".into(), target_mode: OpcTargetMode::Internal });
+    let master_rel = opc.relationships_for(PRESENTATION_PART).iter().find(|r| r.rel_type == REL_TYPE_SLIDE_MASTER).cloned().unwrap_or(OpcRelationship {
+        id: "rId1".into(),
+        rel_type: REL_TYPE_SLIDE_MASTER.into(),
+        target: "slideMasters/slideMaster1.xml".into(),
+        target_mode: OpcTargetMode::Internal,
+    });
     let master_rid = master_rel.id.clone();
     let mut pres_rels = vec![master_rel];
 
@@ -235,10 +235,7 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
         let rid = format!("rId{}", i + 2); // rId1 reserved for the slide-master relationship
         pres_rels.push(OpcRelationship { id: rid.clone(), rel_type: REL_TYPE_SLIDE.into(), target: format!("slides/slide{}.xml", i + 1), target_mode: OpcTargetMode::Internal });
         sld_id_entries.push((256 + i as u32, rid));
-        opc.relationships.insert(
-            path,
-            vec![OpcRelationship { id: "rId1".into(), rel_type: REL_TYPE_SLIDE_LAYOUT.into(), target: "../slideLayouts/slideLayout1.xml".into(), target_mode: OpcTargetMode::Internal }],
-        );
+        opc.relationships.insert(path, vec![OpcRelationship { id: "rId1".into(), rel_type: REL_TYPE_SLIDE_LAYOUT.into(), target: "../slideLayouts/slideLayout1.xml".into(), target_mode: OpcTargetMode::Internal }]);
     }
     opc.relationships.insert(PRESENTATION_PART.to_string(), pres_rels);
 
@@ -254,13 +251,21 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
 /// `[Content_Types].xml`, root `_rels/.rels`, `ppt/presentation.xml` + its relationships, every
 /// slide, and a synthesized slideMaster/slideLayout/theme chain real readers expect to exist.
 pub fn build_minimal_pptx(presentation: PptxPresentation) -> PptxSnapshot {
-    let mut opc = OpcPackage::empty();
-    regenerate_presentation_parts(&mut opc, &presentation);
-    PptxSnapshot::from_parts(opc, presentation)
+    let draft = PptxSnapshot::from_parts(OpcPackage::empty(), Vec::new(), presentation);
+    let bytes = encode_pptx(&draft).expect("minimal logical pptx materialization");
+    crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
 }
 
 pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
+    if let Some(physical) = &snap.physical {
+        if physical.semantic_blake3 == snap.semantic_blake3() {
+            return Ok(crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&physical.archive)?);
+        }
+    }
     let mut opc = snap.opc.clone();
+    for part in &snap.xml_parts {
+        opc.set_part(&part.path, &part.content_type, xml_document_to_text(&part.document).into_bytes());
+    }
     regenerate_presentation_parts(&mut opc, &snap.presentation);
     Ok(crate::artifacts::zip::opc::encode_opc(&opc)?)
 }

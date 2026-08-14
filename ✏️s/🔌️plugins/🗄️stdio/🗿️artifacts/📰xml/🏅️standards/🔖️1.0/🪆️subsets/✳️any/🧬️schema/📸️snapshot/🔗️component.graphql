@@ -38,6 +38,7 @@ type XmlDocument {
   root: XmlNode
   doctype: String
   declaration: XmlDeclaration
+  prolog: [XmlNode!]!
 }
 
 """ 📸️ Persisted `stdio.xml` snapshot. """

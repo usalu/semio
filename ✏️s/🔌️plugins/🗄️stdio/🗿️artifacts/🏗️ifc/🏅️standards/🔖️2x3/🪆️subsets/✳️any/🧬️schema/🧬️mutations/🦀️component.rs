@@ -3,13 +3,14 @@
 //! `Ifc2x3Diff`'s own id-keyed shape.
 
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
-    dec_part21_header, dec_part21_header_bin, dec_part21_instance, dec_part21_instance_bin, dec_str, diff_remove_instance,
-    diff_set_header, diff_set_snapshot, diff_upsert_instance, enc_part21_header, enc_part21_header_bin, enc_part21_instance,
-    enc_part21_instance_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
+    dec_edm_preamble, dec_edm_preamble_bin, dec_part21_header, dec_part21_header_bin, dec_part21_instance, dec_part21_instance_bin, dec_str,
+    enc_part21_header, enc_part21_header_bin, enc_part21_instance, enc_edm_preamble, enc_edm_preamble_bin, enc_part21_instance_bin, enc_str,
+    read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
 };
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
 use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-use protocol::Mutation;
+use protocol::{Mutation, MutationDiff};
+use protocol::os_spr::command::DiffAlgebra;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -30,22 +31,9 @@ pub enum Ifc2x3Mutation {
 /// ▶️ Applies `mutation` to `snapshot`, returning the diff (computed against the PRE-mutation
 /// state, per `Mutation::diff`'s contract).
 pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> Ifc2x3Diff {
-    let __diff = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
-    match mutation {
-        Ifc2x3Mutation::NoMutation => {}
-        Ifc2x3Mutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
-        Ifc2x3Mutation::UpsertInstance { instance } => {
-            snapshot.document.instances.retain(|i| i.id != instance.id);
-            snapshot.document.instances.push(instance.clone());
-        }
-        Ifc2x3Mutation::RemoveInstance { id } => {
-            snapshot.document.instances.retain(|i| i.id != *id);
-        }
-        Ifc2x3Mutation::SetHeader { header } => {
-            snapshot.document.header = header.clone();
-        }
-    }
-    __diff
+    let diff = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
+    *snapshot = diff.apply(snapshot);
+    diff
 }
 //#endregion 🔖️Apply
 
@@ -54,28 +42,27 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
     type Diff = Ifc2x3Diff;
 
     fn diff(&self, base: &Ifc2x3Snapshot) -> Self::Diff {
+        let mut next = base.clone();
         match self {
-            Ifc2x3Mutation::NoMutation => Ifc2x3Diff::default(),
-            Ifc2x3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            Ifc2x3Mutation::UpsertInstance { instance } => diff_upsert_instance(instance),
-            Ifc2x3Mutation::RemoveInstance { id } => diff_remove_instance(*id),
-            Ifc2x3Mutation::SetHeader { header } => diff_set_header(header),
+            Ifc2x3Mutation::NoMutation => return Ifc2x3Diff::default(),
+            Ifc2x3Mutation::SetSnapshot { snapshot } => {
+                crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
+                return Ifc2x3Diff::between(base, snapshot);
+            }
+            Ifc2x3Mutation::UpsertInstance { instance } => match next.document.instances.iter_mut().find(|candidate| candidate.id == instance.id) {
+                Some(existing) => *existing = instance.clone(),
+                None => next.document.instances.push(instance.clone()),
+            },
+            Ifc2x3Mutation::RemoveInstance { id } => next.document.instances.retain(|instance| instance.id != *id),
+            Ifc2x3Mutation::SetHeader { header } => next.document.header = header.clone(),
         }
+        Ifc2x3Diff::between(base, &next)
     }
 
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Self> {
         match self {
             Ifc2x3Mutation::NoMutation => vec![Ifc2x3Mutation::NoMutation],
-            Ifc2x3Mutation::SetSnapshot { .. } => vec![Ifc2x3Mutation::SetSnapshot { snapshot: base.clone() }],
-            Ifc2x3Mutation::UpsertInstance { instance } => match base.document.instance(instance.id) {
-                Some(old) => vec![Ifc2x3Mutation::UpsertInstance { instance: old.clone() }],
-                None => vec![Ifc2x3Mutation::RemoveInstance { id: instance.id }],
-            },
-            Ifc2x3Mutation::RemoveInstance { id } => match base.document.instance(*id) {
-                Some(old) => vec![Ifc2x3Mutation::UpsertInstance { instance: old.clone() }],
-                None => vec![Ifc2x3Mutation::NoMutation],
-            },
-            Ifc2x3Mutation::SetHeader { .. } => vec![Ifc2x3Mutation::SetHeader { header: base.document.header.clone() }],
+            _ => vec![Ifc2x3Mutation::SetSnapshot { snapshot: base.clone() }],
         }
     }
 }
@@ -96,16 +83,22 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
 /// arg=value ...` (space-separated), one match arm per variant.
 fn enc_ifc2x3_snapshot(s: &Ifc2x3Snapshot) -> String {
     let instances = s.document.instances.iter().map(enc_part21_instance).collect::<Vec<_>>().join(",");
-    format!("[{},{},[{}]]", enc_str(&s.schema), enc_part21_header(&s.document.header), instances)
+    let preamble = s.edm_preamble.as_ref().map(|value| format!("[1,{}]", enc_edm_preamble(value))).unwrap_or_else(|| "[0]".into());
+    format!("[{},{},[{}],{}]", enc_str(&s.schema), enc_part21_header(&s.document.header), instances, preamble)
 }
 fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
     // 🩹 `split_top_level` respects `[`/`]` depth, so a single depth-0 split of the whole inner
     // string already yields exactly 3 fields (`header`'s and `instances`'s own internal commas
     // sit at depth ≥1, matching `4`'s own `dec_ifc_snapshot` shape exactly).
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, header, instances] = parts.as_slice() else { return Err(format!("ifc2x3 snapshot: expected 3 fields, got {}", parts.len())) };
+    let [schema, header, instances, preamble] = parts.as_slice() else { return Err(format!("ifc2x3 snapshot: expected 4 fields, got {}", parts.len())) };
     let instances = split_top_level(strip_brackets(instances)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_instance).collect::<Result<Vec<_>, String>>()?;
-    Ok(Ifc2x3Snapshot { schema: dec_str(schema)?, document: Part21Document { header: dec_part21_header(header)?, instances } })
+    let edm_preamble = match split_top_level(strip_brackets(preamble)?, ',').as_slice() {
+        ["0"] => None,
+        ["1", value] => Some(dec_edm_preamble(value)?),
+        _ => return Err(format!("ifc2x3 snapshot: invalid EDM preamble {preamble:?}")),
+    };
+    Ok(Ifc2x3Snapshot { schema: dec_str(schema)?, document: Part21Document { header: dec_part21_header(header)?, instances }, edm_preamble })
 }
 
 fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
@@ -154,6 +147,13 @@ fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
     for inst in &s.document.instances {
         enc_part21_instance_bin(inst, out);
     }
+    match &s.edm_preamble {
+        None => out.push(0),
+        Some(value) => {
+            out.push(1);
+            enc_edm_preamble_bin(value, out);
+        }
+    }
 }
 fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3Snapshot, String> {
     let schema = read_str_bin(reader)?;
@@ -163,7 +163,12 @@ fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3S
     for _ in 0..count {
         instances.push(dec_part21_instance_bin(reader)?);
     }
-    Ok(Ifc2x3Snapshot { schema, document: Part21Document { header, instances } })
+    let edm_preamble = match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => None,
+        1 => Some(dec_edm_preamble_bin(reader)?),
+        tag => return Err(format!("ifc2x3 snapshot: invalid EDM preamble presence {tag}")),
+    };
+    Ok(Ifc2x3Snapshot { schema, document: Part21Document { header, instances }, edm_preamble })
 }
 //#endregion 🔖️OpBinaryCodec
 
@@ -197,28 +202,31 @@ impl protocol::OpBinary for Ifc2x3Mutation {
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        if format != store::pack_rt::OP_BINARY_FORMAT { return Err(malformed("op format", 0, format!("unsupported format {format}"))); }
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
-        match tag {
-            0 => Ok(Ifc2x3Mutation::NoMutation),
+        let mutation = match tag {
+            0 => Ifc2x3Mutation::NoMutation,
             1 => {
                 let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(Ifc2x3Mutation::SetSnapshot { snapshot })
+                Ifc2x3Mutation::SetSnapshot { snapshot }
             }
             2 => {
                 let instance = dec_part21_instance_bin(&mut reader).map_err(|e| malformed("op instance", reader.position(), e))?;
-                Ok(Ifc2x3Mutation::UpsertInstance { instance })
+                Ifc2x3Mutation::UpsertInstance { instance }
             }
             3 => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
-                Ok(Ifc2x3Mutation::RemoveInstance { id })
+                Ifc2x3Mutation::RemoveInstance { id }
             }
             4 => {
                 let header = dec_part21_header_bin(&mut reader).map_err(|e| malformed("op header", reader.position(), e))?;
-                Ok(Ifc2x3Mutation::SetHeader { header })
+                Ifc2x3Mutation::SetHeader { header }
             }
-            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
-        }
+            other => return Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        };
+        if reader.remaining() != 0 { return Err(malformed("op trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining()))); }
+        Ok(mutation)
     }
 }
 //#endregion OpCodecs
@@ -240,12 +248,12 @@ pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
                         Part21Value::Unset,
                         Part21Value::Derived,
                         Part21Value::Int(-7),
-                        Part21Value::Real(3.25),
+                        Part21Value::Real(3.25.into()),
                         Part21Value::Str("hi".into()),
                         Part21Value::Enum("EDGE".into()),
                         Part21Value::Ref(42),
                         Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]),
-                        Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0)]),
+                        Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0.into())]),
                     ]),
                     ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset]),
                 ],
@@ -261,9 +269,38 @@ pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::os_spr::command::DiffAlgebra;
+    use protocol::{DiffCodec, MutationDiff, OpBinary, OpText};
+    use std::sync::OnceLock;
 
     fn inst(id: u64, name: &str) -> Part21Instance {
         Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
+    }
+
+    fn exact_fixture_bytes() -> &'static [u8] {
+        static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
+        BYTES.get_or_init(|| {
+            std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc"))
+                .expect("read temp/wellness-center-sama.ifc")
+        })
+    }
+
+    fn exact_fixture() -> Ifc2x3Snapshot {
+        static SNAPSHOT: OnceLock<Ifc2x3Snapshot> = OnceLock::new();
+        SNAPSHOT
+            .get_or_init(|| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(exact_fixture_bytes()).expect("import IFC2X3 fixture"))
+            .clone()
+    }
+
+    fn assert_exact(label: &str, actual: &[u8]) {
+        let expected = exact_fixture_bytes();
+        let first_difference = actual.iter().zip(expected).position(|(left, right)| left != right);
+        assert!(
+            actual == expected,
+            "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}",
+            expected.len(),
+            actual.len(),
+        );
     }
 
     #[test]
@@ -274,7 +311,7 @@ mod tests {
         apply_ifc2x3_mutation(&mut snap, &mutation);
         assert_eq!(snap.document.instances.len(), 1);
         let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base);
-        assert_eq!(inv, vec![Ifc2x3Mutation::RemoveInstance { id: 1 }]);
+        assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot { snapshot: base }]);
     }
 
     #[test]
@@ -286,7 +323,7 @@ mod tests {
         apply_ifc2x3_mutation(&mut snap, &mutation);
         assert!(snap.document.instances.is_empty());
         let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base);
-        assert_eq!(inv, vec![Ifc2x3Mutation::UpsertInstance { instance: inst(2, "IFCDOOR") }]);
+        assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot { snapshot: base }]);
     }
 
     #[test]
@@ -319,5 +356,103 @@ mod tests {
         }
     }
     //#endregion 🔖️op_text_binary_roundtrip_law
+
+    //#region 🔖️LosslessLogicalModel
+    #[test]
+    fn exact_native_direct_pack_and_dsl_roundtrips() {
+        let imported = exact_fixture();
+        let direct = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&imported).expect("direct export");
+        assert_exact("direct export", &direct);
+        assert_eq!(crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&imported).expect("repeat export"), direct);
+
+        let packed = store::ArtifactPack::encode_pack(&imported);
+        let unpacked = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(&packed).expect("pack decode");
+        assert!(unpacked == imported, "pack must retain the complete logical IFC model");
+        assert_exact("pack export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&unpacked).expect("pack export"));
+
+        let printed = store::ArtifactDsl::print_dsl(&imported);
+        let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("DSL parse");
+        assert!(parsed == imported, "DSL must retain the complete logical IFC model");
+        assert_exact("DSL export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&parsed).expect("DSL export"));
+    }
+
+    #[test]
+    fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
+        let imported = exact_fixture();
+        let self_diff = <Ifc2x3Diff as DiffAlgebra<Ifc2x3Snapshot>>::between(&imported, &imported);
+        assert!(self_diff.is_empty());
+        assert_exact("self diff export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&MutationDiff::apply(&self_diff, &imported)).expect("self diff export"));
+
+        let mut no_op = imported.clone();
+        apply_ifc2x3_mutation(&mut no_op, &Ifc2x3Mutation::NoMutation);
+        assert_exact("no-op export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&no_op).expect("no-op export"));
+
+        let mut changed_header = imported.document.header.clone();
+        changed_header.file_name = vec![Part21Value::Str("semio-roundtrip-changed.ifc".into())];
+        let mutation = Ifc2x3Mutation::SetHeader { header: changed_header };
+        let d1 = Mutation::diff(&mutation, &imported);
+        let changed = MutationDiff::apply(&d1, &imported);
+        let changed_bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&changed).expect("supported dirty export");
+        assert!(changed_bytes != exact_fixture_bytes(), "effective IFC mutation must change deterministic output");
+        let reparsed = crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&changed_bytes).expect("re-import supported dirty export");
+        assert_eq!(reparsed.document.header, changed.document.header);
+
+        let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse mutation");
+        let d2 = Mutation::diff(&inverse_mutation, &changed);
+        let restored = MutationDiff::apply(&d2, &changed);
+        assert!(restored == imported, "inverse mutation must restore imported snapshot and provenance");
+        assert_exact("inverse export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&restored).expect("inverse export"));
+
+        let mut absorbed = d1;
+        MutationDiff::absorb(&mut absorbed, d2);
+        let absorbed_result = MutationDiff::apply(&absorbed, &imported);
+        assert!(absorbed_result == imported, "absorbed mutation pair must restore imported snapshot");
+        assert_exact("absorbed export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&absorbed_result).expect("absorbed export"));
+    }
+
+    #[test]
+    fn exact_native_set_snapshot_codecs_retain_complete_logical_model() {
+        let imported = exact_fixture();
+        let projection = Ifc2x3Snapshot::default();
+        let diff = Ifc2x3Diff::between(&projection, &imported);
+        let text_diff = Ifc2x3Diff::parse_diff(&diff.print_diff()).expect("diff text decode");
+        let binary_diff = Ifc2x3Diff::decode_diff(&diff.encode_diff().expect("diff binary encode")).expect("diff binary decode");
+        assert_eq!(text_diff, diff);
+        assert_eq!(binary_diff, diff);
+        let rebuilt = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&MutationDiff::apply(&binary_diff, &projection)).expect("logical diff export");
+        assert_eq!(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&rebuilt).expect("logical diff re-import"), imported);
+        let mutation = Ifc2x3Mutation::SetSnapshot { snapshot: imported.clone() };
+        let text_op = Ifc2x3Mutation::parse_op(&mutation.print_op()).expect("op text decode");
+        let binary_op = Ifc2x3Mutation::decode_op(&mutation.encode_op().expect("op binary encode")).expect("op binary decode");
+        assert!(text_op == mutation, "set-snapshot text codec must retain the logical IFC model");
+        assert!(binary_op == mutation, "set-snapshot binary codec must retain the logical IFC model");
+        let applied = MutationDiff::apply(&Mutation::diff(&binary_op, &projection), &projection);
+        assert!(applied == imported, "set-snapshot mutation must restore imported snapshot");
+        assert_exact("set-snapshot export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot export"));
+    }
+
+    #[test]
+    fn exact_native_rejects_semantic_bypass_and_restores_interior_order() {
+        let imported = exact_fixture();
+        let mut bypass = imported.clone();
+        bypass.document.instances[1].entities[0].0 = "IFCILLEGALBYPASS".into();
+        assert!(crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&bypass).is_err());
+
+        let target = imported.document.instances[1].clone();
+        let mut replacement = target.clone();
+        replacement.entities[0].0 = "IFCCHANGEDENTITY".into();
+        let mutation = Ifc2x3Mutation::UpsertInstance { instance: replacement };
+        let changed = MutationDiff::apply(&Mutation::diff(&mutation, &imported), &imported);
+        assert_eq!(changed.document.instances[1].id, target.id, "upsert moved an interior entity");
+        let inverse = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse");
+        let restored = MutationDiff::apply(&Mutation::diff(&inverse, &changed), &changed);
+        assert_eq!(restored, imported);
+        assert_exact("interior upsert inverse", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&restored).expect("inverse export"));
+
+        let mut op = Ifc2x3Mutation::NoMutation.encode_op().expect("encode op");
+        op.push(0);
+        assert!(Ifc2x3Mutation::decode_op(&op).is_err(), "trailing op bytes accepted");
+    }
+    //#endregion 🔖️LosslessLogicalModel
 }
 //#endregion 🧪️Tests

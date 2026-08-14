@@ -4,10 +4,9 @@ version 1
 schema stdio.pdf.1.7
 start header
 
-# P2-FG3: `stdio.pdf.1.7` pack payload is the REAL raw PDF file bytes (`store::ArtifactPack::
-# encode_pack_with` -> real `encode_pdf(self)`, ../../../../../⚙️engine/🦀️component.rs, wrapped
-# verbatim by the SEMIO binary envelope -- this file models the bytes as if the walk already
-# starts AT the payload, past the envelope, per M3's own guidance).
+# `stdio.pdf.1.7` pack payload is the structural snapshot model: length-prefixed schema/version,
+# pages, info, indirect-object graph, and trailer. The shared
+# SEMIO envelope is unwrapped before this protocol is walked.
 #
 # Per this ticket's own binding instruction (mirroring M2's ZIP/PDF-1.7 exclusion, `📖️grammar-
 # recipe.md` §6): model the container framing the real decoder actually reads directly -- the
@@ -34,8 +33,7 @@ start header
 # real byte past the header magic falls into, until the backward-scan anchor below.
 framing record
 
-header fixed 5
-field magic fixed 5
+chain payload bytes
 
 # Real Rust `decode_pdf` locates its xref/trailer anchor via `find_last_subslice(data,
 # b"startxref")` (⚙️engine/component.rs:1242) -- a genuine BACKWARD scan from EOF, because (same
@@ -59,6 +57,3 @@ field magic fixed 5
 # Once this file declares a `backward` block, `walk_protocol`'s final `pos == bytes.len()` check
 # is (correctly, per M2's own documented exception) skipped -- see `protocol_walk_law`, which
 # asserts a bounded `consumed`, not `== len`.
-backward xref_trailer_region magic 0x7374617274787265 {
-  tail bytes
-}

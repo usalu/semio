@@ -7,7 +7,7 @@ export interface IndexedDiff<T, D> { removed: number[]; modified: IndexedModifie
 export interface Mp4SampleDiff { data?: number[]; duration?: number; ctsOffset?: number; sync?: boolean; }
 export interface Mp4TrackDiff {
   trackId?: number; timescale?: number; codec?: import("../📸️snapshot/🟦️component").Mp4Codec;
-  width?: number; height?: number; samples?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Sample, Mp4SampleDiff>;
+  width?: number; height?: number; chunkSampleCounts?: number[]; samples?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Sample, Mp4SampleDiff>;
 }
 export interface Mp4Diff {
   ftyp?: import("../📸️snapshot/🟦️component").Mp4Ftyp;

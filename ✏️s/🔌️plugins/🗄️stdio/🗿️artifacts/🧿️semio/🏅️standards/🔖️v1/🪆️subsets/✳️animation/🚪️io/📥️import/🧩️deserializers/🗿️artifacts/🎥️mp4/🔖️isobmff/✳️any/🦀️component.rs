@@ -66,12 +66,15 @@ mod tests {
         Mp4Snapshot {
             schema: "stdio.mp4".into(),
             ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec![] },
+            movie: Default::default(),
             tracks: vec![Mp4Track {
                 track_id: 1,
                 timescale: 30,
                 codec: Mp4Codec::Other { fourcc: "avc1".into(), raw: vec![] },
                 width: 640,
                 height: 480,
+                metadata: Default::default(),
+                chunk_sample_counts: vec![2],
                 samples: vec![
                     Mp4Sample { data: vec![1], duration: 30, cts_offset: 0, sync: true },
                     Mp4Sample { data: vec![2], duration: 30, cts_offset: 0, sync: false },

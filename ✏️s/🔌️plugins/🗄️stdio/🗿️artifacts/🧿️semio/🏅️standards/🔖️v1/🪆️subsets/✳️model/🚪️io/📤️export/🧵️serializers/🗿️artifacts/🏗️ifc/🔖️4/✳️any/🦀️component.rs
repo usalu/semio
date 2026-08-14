@@ -135,18 +135,18 @@ fn build_placement(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, tra
         id: loc_id,
         entities: vec![(
             "IFCCARTESIANPOINT".into(),
-            vec![Part21Value::List(vec![Part21Value::Real(transform.translation.x), Part21Value::Real(transform.translation.y), Part21Value::Real(transform.translation.z)])],
+            vec![Part21Value::List(vec![Part21Value::Real(transform.translation.x.into()), Part21Value::Real(transform.translation.y.into()), Part21Value::Real(transform.translation.z.into())])],
         )],
     });
     let axis_id = alloc.next();
     instances.push(Part21Instance {
         id: axis_id,
-        entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][2]), Part21Value::Real(r[1][2]), Part21Value::Real(r[2][2])])])],
+        entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][2].into()), Part21Value::Real(r[1][2].into()), Part21Value::Real(r[2][2].into())])])],
     });
     let refdir_id = alloc.next();
     instances.push(Part21Instance {
         id: refdir_id,
-        entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][0]), Part21Value::Real(r[1][0]), Part21Value::Real(r[2][0])])])],
+        entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][0].into()), Part21Value::Real(r[1][0].into()), Part21Value::Real(r[2][0].into())])])],
     });
     let placement3d_id = alloc.next();
     instances.push(Part21Instance {
@@ -236,7 +236,7 @@ fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, elements: &[u
 fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
     match v {
         PsetValue::Text { value } => Part21Value::Typed("IFCTEXT".into(), vec![Part21Value::Str(value.clone())]),
-        PsetValue::Number { value } => Part21Value::Typed("IFCREAL".into(), vec![Part21Value::Real(*value)]),
+        PsetValue::Number { value } => Part21Value::Typed("IFCREAL".into(), vec![Part21Value::Real((*value).into())]),
         PsetValue::Boolean { value } => Part21Value::Typed("IFCBOOLEAN".into(), vec![Part21Value::Enum(if *value { "T" } else { "F" }.into())]),
     }
 }

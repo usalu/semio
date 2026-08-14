@@ -1,6 +1,20 @@
 syntax = "proto3";
 package semio.s_stdio_pptx.snapshot;
-message PptxSnapshot {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+message NameValue { string name = 1; string value = 2; }
+message OpcContentTypes { repeated NameValue defaults = 1; repeated NameValue overrides = 2; }
+message OpcPart { string path = 1; string content_type = 2; bytes bytes = 3; }
+message OpcRelationship { string id = 1; string rel_type = 2; string target = 3; string target_mode = 4; }
+message OpcRelationshipOwner { string owner = 1; repeated OpcRelationship relationships = 2; }
+message OpcPackage { OpcContentTypes content_types = 1; repeated OpcPart parts = 2; repeated OpcRelationshipOwner relationships = 3; }
+message XmlAttr { string name = 1; string value = 2; }
+message XmlNode { string kind = 1; string name = 2; repeated XmlAttr attrs = 3; repeated XmlNode children = 4; string text = 5; string target = 6; string data = 7; }
+message XmlDeclaration { string version = 1; optional string encoding = 2; optional bool standalone = 3; }
+message XmlDocument { optional XmlDeclaration declaration = 1; repeated XmlNode prolog = 2; optional XmlNode root = 3; }
+message PptxXmlPart { string path = 1; string content_type = 2; XmlDocument document = 3; }
+message PptxTransform { sint64 x = 1; sint64 y = 2; sint64 cx = 3; sint64 cy = 4; }
+message PptxRun { string text = 1; bool bold = 2; bool italic = 3; optional uint32 font_size = 4; }
+message PptxParagraph { repeated PptxRun runs = 1; }
+message PptxShape { string shape_kind = 1; repeated PptxParagraph text_frame = 2; optional PptxTransform position = 3; string blip_rel_id = 4; string kind = 5; optional XmlNode node = 6; }
+message PptxSlide { repeated PptxShape shapes = 1; }
+message PptxPresentation { repeated PptxSlide slides = 1; }
+message PptxSnapshot { string schema = 1; OpcPackage opc = 2; repeated PptxXmlPart xml_parts = 3; PptxPresentation presentation = 4; }

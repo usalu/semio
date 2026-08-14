@@ -141,7 +141,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
         };
         Ok(SvgSnapshot {
             schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(),
-            doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None },
+            doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new() },
         })
     }
 }

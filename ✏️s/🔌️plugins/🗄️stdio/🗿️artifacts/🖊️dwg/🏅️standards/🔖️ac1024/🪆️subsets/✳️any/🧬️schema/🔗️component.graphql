@@ -1,2 +1,5 @@
-# schema facet
- type Placeholder { width: Int! }
+type DwgLogicalGeometry { kind: String!, values: [Float!]!, indices: [Int!]!, text: String!, closed: Boolean! }
+type DwgLogicalLayer { name: String!, color: Int! }
+type DwgLogicalEntity { layer: Int!, color: Int!, geometry: DwgLogicalGeometry! }
+type DwgLogicalDrawing { layers: [DwgLogicalLayer!]!, entities: [DwgLogicalEntity!]!, extmin: [Float!]!, extmax: [Float!]! }
+type DwgArtifact { schema: String!, version: String!, maintenanceVersion: Int!, codepage: Int!, drawing: DwgLogicalDrawing!, sectionNames: [String!]!, decodeStatus: String! }

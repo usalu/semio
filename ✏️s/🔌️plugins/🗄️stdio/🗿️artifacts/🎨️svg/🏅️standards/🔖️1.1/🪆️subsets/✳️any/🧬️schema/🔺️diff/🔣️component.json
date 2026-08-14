@@ -3,6 +3,7 @@
   "title": "SvgDiff",
   "type": "object",
   "properties": {
+    "prolog": { "type": "array", "items": { "$ref": "#/$defs/XmlNode" } },
     "declaration": { "$ref": "#/$defs/NullableXmlDeclaration" },
     "doctype": { "$ref": "#/$defs/NullableString" },
     "root": { "$ref": "#/$defs/SvgNodeDiff" }

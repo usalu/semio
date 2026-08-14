@@ -23,6 +23,28 @@ pub const IFC2X3_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ifc.2x3";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
+/// 🏭️ Logical fields carried by an EXPRESS Data Manager Part-21 production header.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Ifc2x3EdmPreamble {
+    pub producer: String,
+    pub module: String,
+    pub creation_date: String,
+    pub host: String,
+    pub database: String,
+    pub database_version: String,
+    pub database_creation_date: String,
+    pub schema: String,
+    pub model: String,
+    pub model_creation_date: String,
+    pub header_model: String,
+    pub header_model_creation_date: String,
+    pub user: String,
+    pub group: String,
+    pub license: String,
+    pub options: String,
+}
+
 /// 📸️ Persisted `stdio.ifc.2x3` snapshot — the full, lossless generic Part-21 graph, own type.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
@@ -33,11 +55,14 @@ pub struct Ifc2x3Snapshot {
     #[state(artifact)]
     #[serde(default)]
     pub document: Part21Document,
+    #[state(artifact)]
+    #[serde(default)]
+    pub edm_preamble: Option<Ifc2x3EdmPreamble>,
 }
 
 impl Default for Ifc2x3Snapshot {
     fn default() -> Self {
-        Self { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document: Part21Document::default() }
+        Self { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document: Part21Document::default(), edm_preamble: None }
     }
 }
 //#endregion 🔖️Snapshot
@@ -57,8 +82,8 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(self).unwrap_or_default();
-        let body = String::from_utf8(bytes).unwrap_or_default();
+        let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(self).expect("Ifc2x3Snapshot::print_dsl requires a valid logical model");
+        let body = String::from_utf8(bytes).expect("IFC2X3 writer emits UTF-8");
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,

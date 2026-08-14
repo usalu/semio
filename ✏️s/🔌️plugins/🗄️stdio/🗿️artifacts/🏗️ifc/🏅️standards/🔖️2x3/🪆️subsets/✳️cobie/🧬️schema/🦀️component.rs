@@ -37,7 +37,7 @@ pub mod derived_construction {
 
     impl Ifc2x3CobieBuilderConstruction {
         pub fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document() }, next_id: 100 }
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, next_id: 100 }
         }
 
         /// 🏷️ Adds a named `IFCSPACE` (COBie's `Space` sheet row).
@@ -249,6 +249,7 @@ pub mod derived_analysis {
             Ifc2x3Snapshot {
                 schema: "stdio.ifc.2x3".into(),
                 document: Part21Document { header: header("FMHandOverView"), instances: vec![space, building, storey, door_type, rel] },
+                edm_preamble: None,
             }
         }
 

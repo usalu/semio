@@ -77,3 +77,24 @@ All 5 facet mirrors (rust/ts/graphql/json-schema/proto) at 4 levels (artifact/sn
 **Ticket**: `w3-mp4avi-gen-facets.py`, `w3-mp4avi-mp4-scoped-test.txt`, `w3-mp4avi-avi-scoped-test.txt`, `w3-mp4avi-fullcrate-test-blocked-foreign.txt`, `w3-mp4avi-foreign-error-symbols.txt`, this report.
 
 No glue.rs, catalog.json, script.ts, or taxonomy.json edits. No `ticket_close` called (per instructions — subagents never close shared tickets).
+
+## 7. MP4 exact structural round-trip upgrade (2026-08-14)
+
+The earlier documented-normal-form limitation above is superseded for MP4. `Mp4Snapshot` now
+persists an ordered `Mp4PhysicalState` box tree rather than a whole-file source image. Every box
+retains its 32-bit, 64-bit, or size-to-end header spelling, fourcc, optional UUID user type, and
+child order. `ftyp`, container preludes, full-box version/flags, and known leaf payloads are
+decomposed into typed scalar fields. Opaque bytes are limited to `mdat`, codec sample entries, and
+genuinely unknown leaves.
+
+`decode_mp4` captures this physical tree and a semantic-projection BLAKE3. The normal physical box
+writer reconstructs headers and payloads field-by-field when the projection is unchanged; there
+is no native archive/file blob and no unchanged-source byte replay. A semantic mutation invalidates
+that projection and goes through canonical authoring, while its inverse restores the original
+semantic state and therefore the exact structural encoding. Snapshot DSL/pack serialize the model,
+and artifact/diff/mutation state carries `physical` (including set-snapshot and JSON diff/op codecs).
+
+The exact fixture assertion now checks the real root order `ftyp -> moov -> free -> mdat`, direct
+byte equality, semantic anti-bypass, and mutation+inverse reconstruction. Static `rustfmt --emit
+stdout` parse checks completed successfully for the five MP4 Rust implementation files. Per the
+lane constraint, no Cargo or Nx command was run for this upgrade.

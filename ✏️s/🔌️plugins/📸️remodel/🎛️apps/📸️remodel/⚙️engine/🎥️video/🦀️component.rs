@@ -2944,6 +2944,7 @@ pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
         ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "mp41".into()] },
         tracks: vec![track],
         unknown_boxes: Vec::new(),
+        physical: None,
     };
     mp4_engine::encode_mp4(&snapshot)
 }
@@ -2968,6 +2969,7 @@ pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fp
         ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into(), "mp41".into()] },
         tracks: vec![track],
         unknown_boxes: Vec::new(),
+        physical: None,
     };
     mp4_engine::encode_mp4(&snapshot)
 }
@@ -3302,7 +3304,7 @@ mod tests {
 
     #[test]
     fn mp4_probe_reports_no_video_track_when_none_present() {
-        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, tracks: vec![], unknown_boxes: vec![] };
+        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, tracks: vec![], unknown_boxes: vec![], physical: None };
         let bytes = mp4_engine::encode_mp4(&snapshot);
         assert!(matches!(probe_mp4(&bytes), Err(VideoError::NoVideoTrack)));
     }
@@ -3412,7 +3414,7 @@ mod tests {
             height: 4,
             samples: vec![Mp4Sample { data: vec![0; 10], duration: 100, cts_offset: 0, sync: true }],
         };
-        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, tracks: vec![track], unknown_boxes: vec![] };
+        let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, tracks: vec![track], unknown_boxes: vec![], physical: None };
         let bytes = mp4_engine::encode_mp4(&snapshot);
         let info = probe_mp4(&bytes).expect("hvc1 still probes for provenance");
         assert_eq!(info.codec, VideoCodec::Hevc);

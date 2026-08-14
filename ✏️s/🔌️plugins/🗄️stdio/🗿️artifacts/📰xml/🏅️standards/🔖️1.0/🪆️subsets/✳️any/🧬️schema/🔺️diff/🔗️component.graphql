@@ -3,6 +3,7 @@ from the payload when unchanged; represented here as plain nullable fields since
 native tri-state -- the wire encoding (JSON, via the sibling `.json`/`.ts` facets) is authoritative
 for the absent/null/set distinction. """
 type XmlDiff {
+  prolog: [XmlNode!]
   declaration: XmlDeclaration
   doctype: String
   root: XmlNodeDiff

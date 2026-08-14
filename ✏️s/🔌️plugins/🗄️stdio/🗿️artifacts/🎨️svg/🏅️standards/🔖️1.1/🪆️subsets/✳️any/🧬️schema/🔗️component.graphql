@@ -1,2 +1,5 @@
-# schema facet
- type Placeholder { doc: String! }
+""" 🧬️ Full logical SVG artifact state. """
+type SvgArtifact {
+  schema: String!
+  doc: XmlDocument!
+}

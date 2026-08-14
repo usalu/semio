@@ -12,7 +12,7 @@
 - Added native/WASM-shared WGPU stencil clipping with a stencil-capable depth target, one union-mask write, one content render, merged chip/control glass regions, common geometry for picking, and no gap fill or hit target.
 - Documented TUI's opaque-cell capability fallback; print remains unchanged.
 - Extended existing deterministic React/WGPU stories and Playwright specs, repaired the WGPU Storybook host prop drift, made the root runner execute the configured suite, and registered the gate through Nx, the launch seed, and CI.
-- Removed the 8.9 GB ticket-local Cargo target and 5.2 MB Storybook output from the workspace, then added narrowly scoped root ignore rules for emoji-prefixed Cargo and Storybook build roots without masking the legitimate `🎯️targets/` source taxonomy.
+- Removed the 8.9 GB ticket-local Cargo target, 5.2 MB Storybook output, 1.7 GB dev renderer bundle, and 97 GB of other idle ticket-local Cargo caches from the workspace. Renderer output now targets the existing ignored repo cache; narrowly scoped fallback rules prevent recurrence without masking the legitimate `🎯️targets/` source taxonomy.
 
 ## Verified
 
@@ -35,7 +35,7 @@
 - WASM compilation and native/WASM GPU pixel-readback validation were not completed. The implementation shares one platform-neutral source path, but runtime stencil behavior is therefore not claimed as visually verified.
 - The live aggregate demonstrator reports existing unrelated command-channel errors from PluginRuntime and ShellHost; no silhouette compositor error was observed.
 - Repo MCP was not registered in this session. `repo://goals`, `ticket_open`, `ticket_reopen`, and `ticket_close` could not be invoked, so this on-disk ticket remains open for MCP closure.
-- Three Cargo metadata snapshots had already been added to the shared index by another workflow. Their working files are deleted (`AD` status); repository policy prevents this task from modifying the shared index, so the next authorized staging operation must record those deletions.
+- Previously staged Cargo metadata has been removed from the compiled-addition set. The remaining tracked metadata changes are staged deletions; no compiled addition remains in the shared index.
 
 ## Evidence Index
 

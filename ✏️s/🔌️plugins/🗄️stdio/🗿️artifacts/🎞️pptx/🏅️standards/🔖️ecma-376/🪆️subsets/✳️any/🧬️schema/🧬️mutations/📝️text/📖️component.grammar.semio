@@ -45,7 +45,7 @@ target-mode = "0" | "1"
 # ── `PptxSnapshot` -- `[schema,opc,slides]` (`enc_snapshot`, `../🦀️component.rs`:213-214) --
 # `presentation` collapses to its own single field (`slides: Vec<PptxSlide>`), same convention
 # `enc_paragraph`/`enc_slide` use below. ───────────────────────────────────────────────────────
-pptx-snapshot = "[" hex "," opc-package "," slides-list "]"
+pptx-snapshot = "[" hex "," opc-package "," hex "," slides-list "]"
 slides-list = "[" slide-item* "]"
 slide-item = slide ","?
 

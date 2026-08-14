@@ -236,6 +236,7 @@ pub fn demo_xml_snapshot() -> XmlSnapshot {
         doc: XmlDocument {
             declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
             doctype: Some("<!DOCTYPE catalog>".into()),
+            prolog: Vec::new(),
             root: Some(root),
         },
     }
@@ -290,6 +291,7 @@ mod tests {
             doc: XmlDocument {
                 declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone: None }),
                 doctype: None,
+                prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "root".into(),
                     attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }],
@@ -316,6 +318,7 @@ mod tests {
             doc: XmlDocument {
                 declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
                 doctype: Some("<!DOCTYPE html>".into()),
+                prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "root".into(),
                     attrs: vec![
@@ -343,6 +346,7 @@ mod tests {
             doc: XmlDocument {
                 declaration: None,
                 doctype: None,
+                prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "rootRenamed".into(),
                     attrs: vec![
@@ -431,6 +435,7 @@ mod tests {
             doc: XmlDocument {
                 declaration: None,
                 doctype: None,
+                prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "root".into(),
                     attrs: Vec::new(),

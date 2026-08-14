@@ -2,13 +2,14 @@
   "$id": "https://semio.tech/schema/s.stdio.svg/snapshot.svg",
   "title": "SvgSnapshot",
   "type": "object",
+  "required": ["schema", "doc"],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "value": {
-      "type": "string",
+    "doc": {
+      "type": "object",
       "x-semio-state": "artifact"
     }
   }

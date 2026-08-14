@@ -2,9 +2,7 @@
 //! `DwgGeometry::PolyfaceMesh` entity per `SemioMesh` (one real DWG layer, named after the mesh's
 //! own `id`, per `DwgDrawing::ensure_layer`), then encodes the whole `DwgDrawing` through the
 //! relocated (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS G2) hand-
-//! rolled DWG structural codec's own `dwg_to_bytes` — the SAME semio-authored, round-trippable
-//! AC1015-flavored byte format the sibling import leaf's `dwg_from_bytes` reads back, NOT a real
-//! AutoCAD/R2004+ file (this codec never claims that; see the codec's own module doc).
+//! rolled DWG logical model. Native bytes are materialized only by the DWG serializer.
 //!
 //! 🔖 Documented lossiness (mirrors the import leaf's list): non-`Triangles` topology is a hard
 //! `Err` (`DwgGeometry::PolyfaceMesh` has no fan/strip semantics to preserve, matching the OBJ/
@@ -12,7 +10,8 @@
 //! polyface-mesh field to round-trip through and are dropped (DWG entities carry vertex
 //! positions + face indices only).
 
-use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA, dwg_to_bytes};
+use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
+use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
@@ -20,8 +19,7 @@ use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
 
-/// 📐 The semio-authored codec's own file magic (`dwg_to_bytes`'s first 6 bytes) — see the
-/// codec's own module doc for why this is NOT `"AC1024"` despite living under this standard tier.
+/// 📐 The logical drawing bridge's version identifier.
 const DWG_CODEC_VERSION: &str = "AC1015";
 
 //#region 🔖️Serializer
@@ -69,8 +67,10 @@ impl ArtifactSerializer for SemioMeshToDwg {
             drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices, faces } });
         }
 
-        let bytes = dwg_to_bytes(&drawing).map_err(store::PackError::Schema)?;
-        Ok(DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version: DWG_CODEC_VERSION.into(), bytes, ..DwgSnapshot::default() })
+        let mut snapshot = DwgSnapshot::default();
+        snapshot.version = DWG_CODEC_VERSION.into();
+        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing);
+        Ok(snapshot)
     }
 }
 //#endregion 🔖️Serializer
@@ -109,7 +109,7 @@ mod tests {
     fn serialize_then_deserialize_round_trips_triangle_and_vertex_counts() {
         let original = sample_semio_mesh();
         let dwg = SemioMeshToDwg::serialize(&original).expect("serialize");
-        assert_eq!(&dwg.bytes[0..6], DWG_CODEC_VERSION.as_bytes());
+        assert_eq!(dwg.version, DWG_CODEC_VERSION);
         let round_tripped = SemioMeshFromDwg::deserialize(&dwg).expect("deserialize");
         assert_eq!(round_tripped.meshes.len(), 1);
         assert_eq!(round_tripped.meshes[0].id, "box");

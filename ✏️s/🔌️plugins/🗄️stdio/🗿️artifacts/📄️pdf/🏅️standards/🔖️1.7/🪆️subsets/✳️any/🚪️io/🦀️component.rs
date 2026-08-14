@@ -19,16 +19,15 @@ use std::collections::HashMap;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{PdfDiff, PdfPathSegment};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::PdfMutation;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{
-    ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot,
-    STDIO_PDF17_DOCUMENT_SCHEMA,
+    ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA,
 };
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -57,10 +56,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "PdfComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = PdfAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "PdfComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PdfComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -90,12 +86,18 @@ impl std::fmt::Display for PdfEngineError {
 impl std::error::Error for PdfEngineError {}
 
 type PResult<T> = Result<T, PdfEngineError>;
-fn malformed<T>(msg: impl Into<String>) -> PResult<T> { Err(PdfEngineError::Malformed(msg.into())) }
+fn malformed<T>(msg: impl Into<String>) -> PResult<T> {
+    Err(PdfEngineError::Malformed(msg.into()))
+}
 //#endregion 🔖️Error
 
 //#region 🔖️Lexer
-fn is_ws(b: u8) -> bool { matches!(b, b' ' | b'\t' | b'\r' | b'\n' | 0x0C | 0x00) }
-fn is_delim(b: u8) -> bool { matches!(b, b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%') }
+fn is_ws(b: u8) -> bool {
+    matches!(b, b' ' | b'\t' | b'\r' | b'\n' | 0x0C | 0x00)
+}
+fn is_delim(b: u8) -> bool {
+    matches!(b, b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%')
+}
 
 /// 🔍 Cursor-based recursive-descent lexer/parser over the PDF COS object grammar
 /// (ISO 32000-1 §7.2-7.3). Used both for top-level `N G obj ... endobj` parsing and for values
@@ -106,19 +108,31 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(data: &'a [u8]) -> Self { Self { data, pos: 0 } }
-    pub fn at(&self, offset: usize) -> Self { Self { data: self.data, pos: offset } }
-    fn peek(&self) -> Option<u8> { self.data.get(self.pos).copied() }
-    fn peek_at(&self, n: usize) -> Option<u8> { self.data.get(self.pos + n).copied() }
+    pub fn new(data: &'a [u8]) -> Self {
+        Self { data, pos: 0 }
+    }
+    pub fn at(&self, offset: usize) -> Self {
+        Self { data: self.data, pos: offset }
+    }
+    fn peek(&self) -> Option<u8> {
+        self.data.get(self.pos).copied()
+    }
+    fn peek_at(&self, n: usize) -> Option<u8> {
+        self.data.get(self.pos + n).copied()
+    }
 
     pub fn skip_ws(&mut self) {
         loop {
             match self.peek() {
-                Some(b) if is_ws(b) => { self.pos += 1; }
+                Some(b) if is_ws(b) => {
+                    self.pos += 1;
+                }
                 Some(b'%') => {
                     while let Some(c) = self.peek() {
                         self.pos += 1;
-                        if c == b'\n' || c == b'\r' { break; }
+                        if c == b'\n' || c == b'\r' {
+                            break;
+                        }
                     }
                 }
                 _ => break,
@@ -129,7 +143,9 @@ impl<'a> Lexer<'a> {
     fn read_regular_run(&mut self) -> &'a [u8] {
         let start = self.pos;
         while let Some(b) = self.peek() {
-            if is_ws(b) || is_delim(b) { break; }
+            if is_ws(b) || is_delim(b) {
+                break;
+            }
             self.pos += 1;
         }
         &self.data[start..self.pos]
@@ -150,26 +166,35 @@ impl<'a> Lexer<'a> {
 
     fn parse_number(&mut self) -> PResult<PdfObject> {
         let start = self.pos;
-        if matches!(self.peek(), Some(b'+') | Some(b'-')) { self.pos += 1; }
+        if matches!(self.peek(), Some(b'+') | Some(b'-')) {
+            self.pos += 1;
+        }
         let mut is_real = false;
         let mut saw_digit = false;
         while let Some(b) = self.peek() {
             match b {
-                b'0'..=b'9' => { saw_digit = true; self.pos += 1; }
-                b'.' => { is_real = true; self.pos += 1; }
-                b'+' | b'-' => { self.pos += 1; } // lenient: some generators emit malformed extra signs
+                b'0'..=b'9' => {
+                    saw_digit = true;
+                    self.pos += 1;
+                }
+                b'.' => {
+                    is_real = true;
+                    self.pos += 1;
+                }
+                b'+' | b'-' => {
+                    self.pos += 1;
+                } // lenient: some generators emit malformed extra signs
                 _ => break,
             }
         }
-        if !saw_digit { return malformed("expected number"); }
+        if !saw_digit {
+            return malformed("expected number");
+        }
         let text = std::str::from_utf8(&self.data[start..self.pos]).unwrap_or("0");
         if is_real {
-            Ok(PdfObject::Real(text.parse::<f64>().unwrap_or(0.0)))
+            PdfDecimal::parse(text).map(PdfObject::Real).map_err(PdfEngineError::Malformed)
         } else {
-            match text.parse::<i64>() {
-                Ok(i) => Ok(PdfObject::Int(i)),
-                Err(_) => Ok(PdfObject::Real(text.parse::<f64>().unwrap_or(0.0))),
-            }
+            text.parse::<i64>().map(PdfObject::Int).map_err(|error| PdfEngineError::Malformed(format!("invalid PDF integer {text:?}: {error}")))
         }
     }
 
@@ -177,7 +202,9 @@ impl<'a> Lexer<'a> {
         self.pos += 1; // consume '/'
         let mut out = String::new();
         while let Some(b) = self.peek() {
-            if is_ws(b) || is_delim(b) { break; }
+            if is_ws(b) || is_delim(b) {
+                break;
+            }
             if b == b'#' && self.peek_at(1).is_some() && self.peek_at(2).is_some() {
                 let h = &self.data[self.pos + 1..self.pos + 3];
                 if let Ok(s) = std::str::from_utf8(h) {
@@ -201,46 +228,80 @@ impl<'a> Lexer<'a> {
         while let Some(b) = self.peek() {
             self.pos += 1;
             match b {
-                b'(' => { depth += 1; out.push(b); }
-                b')' => {
-                    depth -= 1;
-                    if depth == 0 { return Ok(PdfObject::Str(out)); }
+                b'(' => {
+                    depth += 1;
                     out.push(b);
                 }
-                b'\\' => {
-                    match self.peek() {
-                        Some(b'n') => { out.push(b'\n'); self.pos += 1; }
-                        Some(b'r') => { out.push(b'\r'); self.pos += 1; }
-                        Some(b't') => { out.push(b'\t'); self.pos += 1; }
-                        Some(b'b') => { out.push(0x08); self.pos += 1; }
-                        Some(b'f') => { out.push(0x0C); self.pos += 1; }
-                        Some(b'(') => { out.push(b'('); self.pos += 1; }
-                        Some(b')') => { out.push(b')'); self.pos += 1; }
-                        Some(b'\\') => { out.push(b'\\'); self.pos += 1; }
-                        Some(b'\r') => {
-                            self.pos += 1;
-                            if self.peek() == Some(b'\n') { self.pos += 1; }
-                        }
-                        Some(b'\n') => { self.pos += 1; }
-                        Some(d) if d.is_ascii_digit() => {
-                            let mut v: u32 = 0;
-                            let mut n = 0;
-                            while n < 3 {
-                                match self.peek() {
-                                    Some(dd) if (b'0'..=b'7').contains(&dd) => {
-                                        v = v * 8 + (dd - b'0') as u32;
-                                        self.pos += 1;
-                                        n += 1;
-                                    }
-                                    _ => break,
-                                }
-                            }
-                            out.push((v & 0xFF) as u8);
-                        }
-                        Some(other) => { out.push(other); self.pos += 1; }
-                        None => {}
+                b')' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Ok(PdfObject::Str(out));
                     }
+                    out.push(b);
                 }
+                b'\\' => match self.peek() {
+                    Some(b'n') => {
+                        out.push(b'\n');
+                        self.pos += 1;
+                    }
+                    Some(b'r') => {
+                        out.push(b'\r');
+                        self.pos += 1;
+                    }
+                    Some(b't') => {
+                        out.push(b'\t');
+                        self.pos += 1;
+                    }
+                    Some(b'b') => {
+                        out.push(0x08);
+                        self.pos += 1;
+                    }
+                    Some(b'f') => {
+                        out.push(0x0C);
+                        self.pos += 1;
+                    }
+                    Some(b'(') => {
+                        out.push(b'(');
+                        self.pos += 1;
+                    }
+                    Some(b')') => {
+                        out.push(b')');
+                        self.pos += 1;
+                    }
+                    Some(b'\\') => {
+                        out.push(b'\\');
+                        self.pos += 1;
+                    }
+                    Some(b'\r') => {
+                        self.pos += 1;
+                        if self.peek() == Some(b'\n') {
+                            self.pos += 1;
+                        }
+                    }
+                    Some(b'\n') => {
+                        self.pos += 1;
+                    }
+                    Some(d) if d.is_ascii_digit() => {
+                        let mut v: u32 = 0;
+                        let mut n = 0;
+                        while n < 3 {
+                            match self.peek() {
+                                Some(dd) if (b'0'..=b'7').contains(&dd) => {
+                                    v = v * 8 + (dd - b'0') as u32;
+                                    self.pos += 1;
+                                    n += 1;
+                                }
+                                _ => break,
+                            }
+                        }
+                        out.push((v & 0xFF) as u8);
+                    }
+                    Some(other) => {
+                        out.push(other);
+                        self.pos += 1;
+                    }
+                    None => {}
+                },
                 other => out.push(other),
             }
         }
@@ -252,14 +313,26 @@ impl<'a> Lexer<'a> {
         let mut nibbles = Vec::new();
         loop {
             match self.peek() {
-                Some(b'>') => { self.pos += 1; break; }
-                Some(b) if b.is_ascii_hexdigit() => { nibbles.push(hex_val(b)); self.pos += 1; }
-                Some(b) if is_ws(b) => { self.pos += 1; }
+                Some(b'>') => {
+                    self.pos += 1;
+                    break;
+                }
+                Some(b) if b.is_ascii_hexdigit() => {
+                    nibbles.push(hex_val(b));
+                    self.pos += 1;
+                }
+                Some(b) if is_ws(b) => {
+                    self.pos += 1;
+                }
                 None => return malformed("unterminated hex string"),
-                Some(_) => { self.pos += 1; }
+                Some(_) => {
+                    self.pos += 1;
+                }
             }
         }
-        if nibbles.len() % 2 == 1 { nibbles.push(0); }
+        if nibbles.len() % 2 == 1 {
+            nibbles.push(0);
+        }
         Ok(PdfObject::Str(nibbles.chunks(2).map(|c| (c[0] << 4) | c[1]).collect()))
     }
 
@@ -268,8 +341,13 @@ impl<'a> Lexer<'a> {
         let mut items = Vec::new();
         loop {
             self.skip_ws();
-            if self.peek() == Some(b']') { self.pos += 1; break; }
-            if self.peek().is_none() { return malformed("unterminated array"); }
+            if self.peek() == Some(b']') {
+                self.pos += 1;
+                break;
+            }
+            if self.peek().is_none() {
+                return malformed("unterminated array");
+            }
             items.push(self.parse_object()?);
         }
         Ok(PdfObject::Array(items))
@@ -280,9 +358,17 @@ impl<'a> Lexer<'a> {
         let mut entries = Vec::new();
         loop {
             self.skip_ws();
-            if self.starts_with(b">>") { self.pos += 2; break; }
-            if self.peek() != Some(b'/') { return malformed("expected dict key"); }
-            let key = match self.parse_name()? { PdfObject::Name(n) => n, _ => unreachable!() };
+            if self.starts_with(b">>") {
+                self.pos += 2;
+                break;
+            }
+            if self.peek() != Some(b'/') {
+                return malformed("expected dict key");
+            }
+            let key = match self.parse_name()? {
+                PdfObject::Name(n) => n,
+                _ => unreachable!(),
+            };
             self.skip_ws();
             let value = self.parse_object()?;
             entries.push(PdfDictEntry { key, value });
@@ -292,8 +378,12 @@ impl<'a> Lexer<'a> {
             self.skip_ws();
             if self.consume_keyword(b"stream") {
                 // 📏 spec: CRLF or LF (not bare CR) must follow the `stream` keyword.
-                if self.peek() == Some(b'\r') { self.pos += 1; }
-                if self.peek() == Some(b'\n') { self.pos += 1; }
+                if self.peek() == Some(b'\r') {
+                    self.pos += 1;
+                }
+                if self.peek() == Some(b'\n') {
+                    self.pos += 1;
+                }
                 let data_start = self.pos;
                 let declared_len = entries.iter().find(|e| e.key == "Length").and_then(|e| match &e.value {
                     PdfObject::Int(i) if *i >= 0 => Some(*i as usize),
@@ -351,11 +441,20 @@ impl<'a> Lexer<'a> {
                 Ok(first)
             }
             Some(_) => {
-                if self.consume_keyword(b"true") { return Ok(PdfObject::Bool(true)); }
-                if self.consume_keyword(b"false") { return Ok(PdfObject::Bool(false)); }
-                if self.consume_keyword(b"null") { return Ok(PdfObject::Null); }
+                if self.consume_keyword(b"true") {
+                    return Ok(PdfObject::Bool(true));
+                }
+                if self.consume_keyword(b"false") {
+                    return Ok(PdfObject::Bool(false));
+                }
+                if self.consume_keyword(b"null") {
+                    return Ok(PdfObject::Null);
+                }
                 let run = self.read_regular_run();
-                if run.is_empty() { self.pos += 1; return Ok(PdfObject::Null); }
+                if run.is_empty() {
+                    self.pos += 1;
+                    return Ok(PdfObject::Null);
+                }
                 Ok(PdfObject::Null)
             }
         }
@@ -363,11 +462,18 @@ impl<'a> Lexer<'a> {
 }
 
 fn hex_val(b: u8) -> u8 {
-    match b { b'0'..=b'9' => b - b'0', b'a'..=b'f' => b - b'a' + 10, b'A'..=b'F' => b - b'A' + 10, _ => 0 }
+    match b {
+        b'0'..=b'9' => b - b'0',
+        b'a'..=b'f' => b - b'a' + 10,
+        b'A'..=b'F' => b - b'A' + 10,
+        _ => 0,
+    }
 }
 
 fn find_subslice(data: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
-    if from > data.len() { return None; }
+    if from > data.len() {
+        return None;
+    }
     data[from..].windows(needle.len()).position(|w| w == needle).map(|p| p + from)
 }
 //#endregion 🔖️Lexer
@@ -378,11 +484,19 @@ fn find_subslice(data: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
 fn parse_indirect_at(data: &[u8], offset: usize) -> PResult<(ObjRef, PdfObject)> {
     let mut lex = Lexer::new(data).at(offset);
     lex.skip_ws();
-    let num = match lex.parse_number()? { PdfObject::Int(i) if i >= 0 => i as u32, _ => return malformed("bad object number") };
+    let num = match lex.parse_number()? {
+        PdfObject::Int(i) if i >= 0 => i as u32,
+        _ => return malformed("bad object number"),
+    };
     lex.skip_ws();
-    let gen = match lex.parse_number()? { PdfObject::Int(i) if i >= 0 => i as u16, _ => return malformed("bad generation number") };
+    let gen = match lex.parse_number()? {
+        PdfObject::Int(i) if i >= 0 => i as u16,
+        _ => return malformed("bad generation number"),
+    };
     lex.skip_ws();
-    if !lex.consume_keyword(b"obj") { return malformed("expected 'obj' keyword"); }
+    if !lex.consume_keyword(b"obj") {
+        return malformed("expected 'obj' keyword");
+    }
     let value = lex.parse_object()?;
     lex.skip_ws();
     let _ = lex.consume_keyword(b"endobj");
@@ -429,11 +543,19 @@ fn brute_force_scan(data: &[u8]) -> HashMap<u32, (ObjRef, usize)> {
 pub fn ascii_hex_decode(s: &[u8]) -> Vec<u8> {
     let mut nibbles = Vec::new();
     for &b in s {
-        if b == b'>' { break; }
-        if is_ws(b) { continue; }
-        if b.is_ascii_hexdigit() { nibbles.push(hex_val(b)); }
+        if b == b'>' {
+            break;
+        }
+        if is_ws(b) {
+            continue;
+        }
+        if b.is_ascii_hexdigit() {
+            nibbles.push(hex_val(b));
+        }
     }
-    if nibbles.len() % 2 == 1 { nibbles.push(0); }
+    if nibbles.len() % 2 == 1 {
+        nibbles.push(0);
+    }
     nibbles.chunks(2).map(|c| (c[0] << 4) | c[1]).collect()
 }
 
@@ -447,24 +569,39 @@ pub fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
     while i < s.len() {
         let b = s[i];
         i += 1;
-        if is_ws(b) { continue; }
-        if b == b'~' { break; }
-        if b == b'z' && glen == 0 { out.extend_from_slice(&[0, 0, 0, 0]); continue; }
-        if !(b'!'..=b'u').contains(&b) { return malformed("bad ascii85 byte"); }
+        if is_ws(b) {
+            continue;
+        }
+        if b == b'~' {
+            break;
+        }
+        if b == b'z' && glen == 0 {
+            out.extend_from_slice(&[0, 0, 0, 0]);
+            continue;
+        }
+        if !(b'!'..=b'u').contains(&b) {
+            return malformed("bad ascii85 byte");
+        }
         group[glen] = b - b'!';
         glen += 1;
         if glen == 5 {
             let mut v: u32 = 0;
-            for g in group { v = v.wrapping_mul(85).wrapping_add(g as u32); }
+            for g in group {
+                v = v.wrapping_mul(85).wrapping_add(g as u32);
+            }
             out.extend_from_slice(&v.to_be_bytes());
             glen = 0;
         }
     }
     if glen > 0 {
         let n = glen;
-        for j in glen..5 { group[j] = 84; }
+        for j in glen..5 {
+            group[j] = 84;
+        }
         let mut v: u32 = 0;
-        for g in group { v = v.wrapping_mul(85).wrapping_add(g as u32); }
+        for g in group {
+            v = v.wrapping_mul(85).wrapping_add(g as u32);
+        }
         out.extend_from_slice(&v.to_be_bytes()[..n - 1]);
     }
     Ok(out)
@@ -477,14 +614,20 @@ pub fn run_length_decode(s: &[u8]) -> Vec<u8> {
     while i < s.len() {
         let len = s[i];
         i += 1;
-        if len == 128 { break; }
+        if len == 128 {
+            break;
+        }
         if len < 128 {
             let n = len as usize + 1;
-            if i + n > s.len() { break; }
+            if i + n > s.len() {
+                break;
+            }
             out.extend_from_slice(&s[i..i + n]);
             i += n;
         } else {
-            if i >= s.len() { break; }
+            if i >= s.len() {
+                break;
+            }
             let b = s[i];
             i += 1;
             out.extend(std::iter::repeat(b).take(257 - len as usize));
@@ -499,7 +642,13 @@ fn paeth(a: u8, b: u8, c: u8) -> u8 {
     let pa = (p - a).abs();
     let pb = (p - b).abs();
     let pc = (p - c).abs();
-    if pa <= pb && pa <= pc { a as u8 } else if pb <= pc { b as u8 } else { c as u8 }
+    if pa <= pb && pa <= pc {
+        a as u8
+    } else if pb <= pc {
+        b as u8
+    } else {
+        c as u8
+    }
 }
 
 /// 🧮 PNG predictor decode (Predictor >= 10, ISO 32000-1 §7.4.4.4 / PNG spec §6): each row is
@@ -508,12 +657,16 @@ fn paeth(a: u8, b: u8, c: u8) -> u8 {
 pub fn png_predictor_decode(raw: &[u8], columns: usize, colors: usize, bpc: usize) -> PResult<Vec<u8>> {
     let bpp = ((colors * bpc + 7) / 8).max(1);
     let row_bytes = (columns * colors * bpc + 7) / 8;
-    if row_bytes == 0 { return malformed("predictor: zero row width"); }
+    if row_bytes == 0 {
+        return malformed("predictor: zero row width");
+    }
     let mut out = Vec::with_capacity(raw.len());
     let mut prev = vec![0u8; row_bytes];
     let mut pos = 0;
     while pos < raw.len() {
-        if pos + 1 + row_bytes > raw.len() { break; } // lenient: tolerate a short trailing row
+        if pos + 1 + row_bytes > raw.len() {
+            break;
+        } // lenient: tolerate a short trailing row
         let ft = raw[pos];
         pos += 1;
         let filt = &raw[pos..pos + row_bytes];
@@ -543,7 +696,9 @@ pub fn png_predictor_decode(raw: &[u8], columns: usize, colors: usize, bpc: usiz
 pub fn tiff_predictor2_decode(raw: &[u8], columns: usize, colors: usize) -> Vec<u8> {
     let mut out = raw.to_vec();
     let row_bytes = columns * colors;
-    if row_bytes == 0 { return out; }
+    if row_bytes == 0 {
+        return out;
+    }
     for row in out.chunks_mut(row_bytes) {
         for x in colors..row.len() {
             row[x] = row[x].wrapping_add(row[x - colors]);
@@ -556,9 +711,7 @@ pub fn tiff_predictor2_decode(raw: &[u8], columns: usize, colors: usize) -> Vec<
 /// stream dict, applying spec defaults (Predictor 1 = none, Colors 1, BPC 8, Columns 1).
 fn decode_parms(dict: &[PdfDictEntry]) -> (i64, usize, usize, usize) {
     let parms = dict.iter().find(|e| e.key == "DecodeParms" || e.key == "DP").map(|e| &e.value);
-    let get = |key: &str, default: i64| -> i64 {
-        parms.and_then(|p| p.dict_get(key)).and_then(|v| v.as_i64()).unwrap_or(default)
-    };
+    let get = |key: &str, default: i64| -> i64 { parms.and_then(|p| p.dict_get(key)).and_then(|v| v.as_i64()).unwrap_or(default) };
     (get("Predictor", 1), get("Colors", 1).max(1) as usize, get("BitsPerComponent", 8).max(1) as usize, get("Columns", 1).max(1) as usize)
 }
 
@@ -576,8 +729,7 @@ pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Opt
     for filter in &filters {
         match filter.as_str() {
             "FlateDecode" | "Fl" => {
-                data = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&data)
-                    .map_err(|e| PdfEngineError::Malformed(format!("FlateDecode: {e}")))?;
+                data = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&data).map_err(|e| PdfEngineError::Malformed(format!("FlateDecode: {e}")))?;
                 let (predictor, colors, bpc, columns) = decode_parms(dict);
                 if predictor >= 10 {
                     data = png_predictor_decode(&data, columns, colors, bpc)?;
@@ -619,9 +771,14 @@ fn dict_ref_i64(entries: &[PdfDictEntry], key: &str) -> Option<i64> {
 fn decode_xref_row(row: &[u8], w: [usize; 3]) -> (u8, u64, u64) {
     let mut pos = 0usize;
     let mut read = |width: usize, default: u64| -> u64 {
-        if width == 0 { return default; }
+        if width == 0 {
+            return default;
+        }
         let mut v: u64 = 0;
-        for _ in 0..width { v = (v << 8) | *row.get(pos).unwrap_or(&0) as u64; pos += 1; }
+        for _ in 0..width {
+            v = (v << 8) | *row.get(pos).unwrap_or(&0) as u64;
+            pos += 1;
+        }
         v
     };
     let f0 = read(w[0], 1);
@@ -635,15 +792,27 @@ fn decode_xref_row(row: &[u8], w: [usize; 3]) -> (u8, u64, u64) {
 fn parse_classic_xref(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
     let mut lex = Lexer::new(data).at(offset);
     lex.skip_ws();
-    if !lex.consume_keyword(b"xref") { return malformed("expected 'xref' keyword"); }
+    if !lex.consume_keyword(b"xref") {
+        return malformed("expected 'xref' keyword");
+    }
     let mut entries = HashMap::new();
     loop {
         lex.skip_ws();
-        if lex.starts_with(b"trailer") { break; }
-        if !matches!(lex.peek(), Some(b'0'..=b'9')) { break; }
-        let start = match lex.parse_number()? { PdfObject::Int(i) => i as u32, _ => return malformed("bad xref subsection start") };
+        if lex.starts_with(b"trailer") {
+            break;
+        }
+        if !matches!(lex.peek(), Some(b'0'..=b'9')) {
+            break;
+        }
+        let start = match lex.parse_number()? {
+            PdfObject::Int(i) => i as u32,
+            _ => return malformed("bad xref subsection start"),
+        };
         lex.skip_ws();
-        let count = match lex.parse_number()? { PdfObject::Int(i) => i as u32, _ => return malformed("bad xref subsection count") };
+        let count = match lex.parse_number()? {
+            PdfObject::Int(i) => i as u32,
+            _ => return malformed("bad xref subsection count"),
+        };
         for i in 0..count {
             lex.skip_ws();
             let off_tok = lex.read_regular_run();
@@ -660,9 +829,14 @@ fn parse_classic_xref(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefE
         }
     }
     lex.skip_ws();
-    if !lex.consume_keyword(b"trailer") { return malformed("expected 'trailer' keyword"); }
+    if !lex.consume_keyword(b"trailer") {
+        return malformed("expected 'trailer' keyword");
+    }
     lex.skip_ws();
-    let trailer = match lex.parse_object()? { PdfObject::Dict(d) => d, _ => return malformed("trailer is not a dict") };
+    let trailer = match lex.parse_object()? {
+        PdfObject::Dict(d) => d,
+        _ => return malformed("trailer is not a dict"),
+    };
     Ok((entries, trailer))
 }
 
@@ -674,13 +848,11 @@ fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEn
         _ => return malformed("xref stream object is not a stream"),
     };
     let (decoded, raw_filter) = decode_stream(&dict, &raw)?;
-    if raw_filter.is_some() { return malformed("xref stream uses an undecodable filter"); }
+    if raw_filter.is_some() {
+        return malformed("xref stream uses an undecodable filter");
+    }
     let w = match dict.iter().find(|e| e.key == "W").map(|e| &e.value) {
-        Some(PdfObject::Array(a)) if a.len() >= 3 => [
-            a[0].as_i64().unwrap_or(0).max(0) as usize,
-            a[1].as_i64().unwrap_or(0).max(0) as usize,
-            a[2].as_i64().unwrap_or(0).max(0) as usize,
-        ],
+        Some(PdfObject::Array(a)) if a.len() >= 3 => [a[0].as_i64().unwrap_or(0).max(0) as usize, a[1].as_i64().unwrap_or(0).max(0) as usize, a[2].as_i64().unwrap_or(0).max(0) as usize],
         _ => return malformed("xref stream missing /W"),
     };
     let size = dict_ref_i64(&dict, "Size").unwrap_or(0);
@@ -693,16 +865,24 @@ fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEn
     let mut pos = 0usize;
     let mut pair = index.chunks(2);
     while let Some(chunk) = pair.next() {
-        if chunk.len() < 2 { break; }
+        if chunk.len() < 2 {
+            break;
+        }
         let (start, count) = (chunk[0] as u32, chunk[1] as u32);
         for i in 0..count {
-            if pos + row_bytes > decoded.len() { break; }
+            if pos + row_bytes > decoded.len() {
+                break;
+            }
             let (ty, f1, f2) = decode_xref_row(&decoded[pos..pos + row_bytes], w);
             pos += row_bytes;
             let num = start + i;
             match ty {
-                1 => { entries.entry(num).or_insert(XrefEntry::Normal { offset: f1 as usize, gen: f2 as u16 }); }
-                2 => { entries.entry(num).or_insert(XrefEntry::Compressed { stream_num: f1 as u32, index: f2 as u32 }); }
+                1 => {
+                    entries.entry(num).or_insert(XrefEntry::Normal { offset: f1 as usize, gen: f2 as u16 });
+                }
+                2 => {
+                    entries.entry(num).or_insert(XrefEntry::Compressed { stream_num: f1 as u32, index: f2 as u32 });
+                }
                 _ => {} // 0 = free
             }
         }
@@ -720,20 +900,32 @@ fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
     let mut cursor = Some(start_offset);
     let mut any_structured = false;
     while let Some(off) = cursor {
-        if !visited.insert(off) || off >= data.len() { break; }
+        if !visited.insert(off) || off >= data.len() {
+            break;
+        }
         let parsed = {
             let mut l = Lexer::new(data).at(off);
             l.skip_ws();
-            if l.starts_with(b"xref") { parse_classic_xref(data, off) } else { parse_xref_stream(data, off) }
+            if l.starts_with(b"xref") {
+                parse_classic_xref(data, off)
+            } else {
+                parse_xref_stream(data, off)
+            }
         };
         let Ok((sect_entries, sect_trailer)) = parsed else { break };
         any_structured = true;
-        for (k, v) in sect_entries { entries.entry(k).or_insert(v); }
-        if trailer.is_empty() { trailer = sect_trailer.clone(); }
+        for (k, v) in sect_entries {
+            entries.entry(k).or_insert(v);
+        }
+        if trailer.is_empty() {
+            trailer = sect_trailer.clone();
+        }
         // Hybrid: classic table's trailer may point at a companion xref STREAM via /XRefStm.
         if let Some(stm_off) = dict_ref_i64(&sect_trailer, "XRefStm") {
             if let Ok((stm_entries, _)) = parse_xref_stream(data, stm_off as usize) {
-                for (k, v) in stm_entries { entries.entry(k).or_insert(v); }
+                for (k, v) in stm_entries {
+                    entries.entry(k).or_insert(v);
+                }
             }
         }
         cursor = dict_ref_i64(&sect_trailer, "Prev").map(|p| p as usize);
@@ -779,7 +971,9 @@ impl<'a> Resolver<'a> {
     }
 
     fn resolve(&mut self, num: u32) -> Option<PdfObject> {
-        if let Some(v) = self.cache.get(&num) { return Some(v.clone()); }
+        if let Some(v) = self.cache.get(&num) {
+            return Some(v.clone());
+        }
         let entry = *self.xref.get(&num)?;
         let value = match entry {
             XrefEntry::Normal { offset, .. } => parse_indirect_at(self.data, offset).ok()?.1,
@@ -796,16 +990,24 @@ impl<'a> Resolver<'a> {
             let (_, obj) = parse_indirect_at(self.data, offset).ok()?;
             let PdfObject::Stream { dict, data, .. } = &obj else { return None };
             let (decoded, raw_filter) = decode_stream(dict, data).ok()?;
-            if raw_filter.is_some() { return None; }
+            if raw_filter.is_some() {
+                return None;
+            }
             let n = dict_ref_i64(dict, "N").unwrap_or(0) as usize;
             let first = dict_ref_i64(dict, "First").unwrap_or(0) as usize;
             let mut lex = Lexer::new(&decoded);
             let mut pairs = Vec::with_capacity(n);
             for _ in 0..n {
                 lex.skip_ws();
-                let on = match lex.parse_number() { Ok(PdfObject::Int(i)) => i as u32, _ => break };
+                let on = match lex.parse_number() {
+                    Ok(PdfObject::Int(i)) => i as u32,
+                    _ => break,
+                };
                 lex.skip_ws();
-                let oo = match lex.parse_number() { Ok(PdfObject::Int(i)) => i as usize, _ => break };
+                let oo = match lex.parse_number() {
+                    Ok(PdfObject::Int(i)) => i as usize,
+                    _ => break,
+                };
                 pairs.push((on, first + oo));
             }
             self.objstm_cache.insert(stream_num, pairs);
@@ -825,7 +1027,10 @@ impl<'a> Resolver<'a> {
         let mut out = Vec::with_capacity(nums.len());
         for num in nums {
             if let Some(value) = self.resolve(num) {
-                let gen = match self.xref.get(&num) { Some(XrefEntry::Normal { gen, .. }) => *gen, _ => 0 };
+                let gen = match self.xref.get(&num) {
+                    Some(XrefEntry::Normal { gen, .. }) => *gen,
+                    _ => 0,
+                };
                 out.push(PdfIndirectObject { id: ObjRef { num, gen }, value });
             }
         }
@@ -840,17 +1045,39 @@ impl<'a> Resolver<'a> {
 /// mapping to bullet per spec) for codes 0x20-0xFF. ASCII range is identical to Unicode; this is
 /// the common default `/Encoding` for non-symbolic TrueType/Type1 fonts.
 fn win_ansi(code: u8) -> Option<char> {
-    if (0x20..=0x7E).contains(&code) { return Some(code as char); }
+    if (0x20..=0x7E).contains(&code) {
+        return Some(code as char);
+    }
     let c = match code {
-        0x80 => '\u{20AC}', 0x82 => '\u{201A}', 0x83 => '\u{0192}', 0x84 => '\u{201E}',
-        0x85 => '\u{2026}', 0x86 => '\u{2020}', 0x87 => '\u{2021}', 0x88 => '\u{02C6}',
-        0x89 => '\u{2030}', 0x8A => '\u{0160}', 0x8B => '\u{2039}', 0x8C => '\u{0152}',
-        0x8E => '\u{017D}', 0x91 => '\u{2018}', 0x92 => '\u{2019}', 0x93 => '\u{201C}',
-        0x94 => '\u{201D}', 0x95 => '\u{2022}', 0x96 => '\u{2013}', 0x97 => '\u{2014}',
-        0x98 => '\u{02DC}', 0x99 => '\u{2122}', 0x9A => '\u{0161}', 0x9B => '\u{203A}',
-        0x9C => '\u{0153}', 0x9E => '\u{017E}', 0x9F => '\u{0178}',
+        0x80 => '\u{20AC}',
+        0x82 => '\u{201A}',
+        0x83 => '\u{0192}',
+        0x84 => '\u{201E}',
+        0x85 => '\u{2026}',
+        0x86 => '\u{2020}',
+        0x87 => '\u{2021}',
+        0x88 => '\u{02C6}',
+        0x89 => '\u{2030}',
+        0x8A => '\u{0160}',
+        0x8B => '\u{2039}',
+        0x8C => '\u{0152}',
+        0x8E => '\u{017D}',
+        0x91 => '\u{2018}',
+        0x92 => '\u{2019}',
+        0x93 => '\u{201C}',
+        0x94 => '\u{201D}',
+        0x95 => '\u{2022}',
+        0x96 => '\u{2013}',
+        0x97 => '\u{2014}',
+        0x98 => '\u{02DC}',
+        0x99 => '\u{2122}',
+        0x9A => '\u{0161}',
+        0x9B => '\u{203A}',
+        0x9C => '\u{0153}',
+        0x9E => '\u{017E}',
+        0x9F => '\u{0178}',
         0x81 | 0x8D | 0x8F | 0x90 | 0x9D => '\u{2022}', // undefined in WinAnsi -> bullet, per spec
-        0xA0..=0xFF => code as char, // Latin-1 supplement range matches Unicode directly
+        0xA0..=0xFF => code as char,                    // Latin-1 supplement range matches Unicode directly
         _ => return None,
     };
     Some(c)
@@ -864,55 +1091,167 @@ fn agl_lookup(name: &str) -> Option<&'static str> {
     if let Some(rest) = name.strip_prefix("uni") {
         if rest.len() == 4 && rest.chars().all(|c| c.is_ascii_hexdigit()) {
             if let Ok(v) = u32::from_str_radix(rest, 16) {
-                if let Some(c) = char::from_u32(v) { return Some(Box::leak(c.to_string().into_boxed_str())); }
+                if let Some(c) = char::from_u32(v) {
+                    return Some(Box::leak(c.to_string().into_boxed_str()));
+                }
             }
         }
     }
     if let Some(rest) = name.strip_prefix('u') {
         if (4..=6).contains(&rest.len()) && rest.chars().all(|c| c.is_ascii_hexdigit()) {
             if let Ok(v) = u32::from_str_radix(rest, 16) {
-                if let Some(c) = char::from_u32(v) { return Some(Box::leak(c.to_string().into_boxed_str())); }
+                if let Some(c) = char::from_u32(v) {
+                    return Some(Box::leak(c.to_string().into_boxed_str()));
+                }
             }
         }
     }
     Some(match name {
-        "space" => " ", "exclam" => "!", "quotedbl" => "\"", "numbersign" => "#",
-        "dollar" => "$", "percent" => "%", "ampersand" => "&", "quotesingle" => "'",
-        "parenleft" => "(", "parenright" => ")", "asterisk" => "*", "plus" => "+",
-        "comma" => ",", "hyphen" => "-", "period" => ".", "slash" => "/",
-        "zero" => "0", "one" => "1", "two" => "2", "three" => "3", "four" => "4",
-        "five" => "5", "six" => "6", "seven" => "7", "eight" => "8", "nine" => "9",
-        "colon" => ":", "semicolon" => ";", "less" => "<", "equal" => "=", "greater" => ">",
-        "question" => "?", "at" => "@",
-        "A" => "A", "B" => "B", "C" => "C", "D" => "D", "E" => "E", "F" => "F", "G" => "G",
-        "H" => "H", "I" => "I", "J" => "J", "K" => "K", "L" => "L", "M" => "M", "N" => "N",
-        "O" => "O", "P" => "P", "Q" => "Q", "R" => "R", "S" => "S", "T" => "T", "U" => "U",
-        "V" => "V", "W" => "W", "X" => "X", "Y" => "Y", "Z" => "Z",
-        "bracketleft" => "[", "backslash" => "\\", "bracketright" => "]",
-        "asciicircum" => "^", "underscore" => "_", "grave" => "`",
-        "a" => "a", "b" => "b", "c" => "c", "d" => "d", "e" => "e", "f" => "f", "g" => "g",
-        "h" => "h", "i" => "i", "j" => "j", "k" => "k", "l" => "l", "m" => "m", "n" => "n",
-        "o" => "o", "p" => "p", "q" => "q", "r" => "r", "s" => "s", "t" => "t", "u" => "u",
-        "v" => "v", "w" => "w", "x" => "x", "y" => "y", "z" => "z",
-        "braceleft" => "{", "bar" => "|", "braceright" => "}", "asciitilde" => "~",
-        "adieresis" => "\u{00E4}", "Adieresis" => "\u{00C4}",
-        "odieresis" => "\u{00F6}", "Odieresis" => "\u{00D6}",
-        "udieresis" => "\u{00FC}", "Udieresis" => "\u{00DC}",
+        "space" => " ",
+        "exclam" => "!",
+        "quotedbl" => "\"",
+        "numbersign" => "#",
+        "dollar" => "$",
+        "percent" => "%",
+        "ampersand" => "&",
+        "quotesingle" => "'",
+        "parenleft" => "(",
+        "parenright" => ")",
+        "asterisk" => "*",
+        "plus" => "+",
+        "comma" => ",",
+        "hyphen" => "-",
+        "period" => ".",
+        "slash" => "/",
+        "zero" => "0",
+        "one" => "1",
+        "two" => "2",
+        "three" => "3",
+        "four" => "4",
+        "five" => "5",
+        "six" => "6",
+        "seven" => "7",
+        "eight" => "8",
+        "nine" => "9",
+        "colon" => ":",
+        "semicolon" => ";",
+        "less" => "<",
+        "equal" => "=",
+        "greater" => ">",
+        "question" => "?",
+        "at" => "@",
+        "A" => "A",
+        "B" => "B",
+        "C" => "C",
+        "D" => "D",
+        "E" => "E",
+        "F" => "F",
+        "G" => "G",
+        "H" => "H",
+        "I" => "I",
+        "J" => "J",
+        "K" => "K",
+        "L" => "L",
+        "M" => "M",
+        "N" => "N",
+        "O" => "O",
+        "P" => "P",
+        "Q" => "Q",
+        "R" => "R",
+        "S" => "S",
+        "T" => "T",
+        "U" => "U",
+        "V" => "V",
+        "W" => "W",
+        "X" => "X",
+        "Y" => "Y",
+        "Z" => "Z",
+        "bracketleft" => "[",
+        "backslash" => "\\",
+        "bracketright" => "]",
+        "asciicircum" => "^",
+        "underscore" => "_",
+        "grave" => "`",
+        "a" => "a",
+        "b" => "b",
+        "c" => "c",
+        "d" => "d",
+        "e" => "e",
+        "f" => "f",
+        "g" => "g",
+        "h" => "h",
+        "i" => "i",
+        "j" => "j",
+        "k" => "k",
+        "l" => "l",
+        "m" => "m",
+        "n" => "n",
+        "o" => "o",
+        "p" => "p",
+        "q" => "q",
+        "r" => "r",
+        "s" => "s",
+        "t" => "t",
+        "u" => "u",
+        "v" => "v",
+        "w" => "w",
+        "x" => "x",
+        "y" => "y",
+        "z" => "z",
+        "braceleft" => "{",
+        "bar" => "|",
+        "braceright" => "}",
+        "asciitilde" => "~",
+        "adieresis" => "\u{00E4}",
+        "Adieresis" => "\u{00C4}",
+        "odieresis" => "\u{00F6}",
+        "Odieresis" => "\u{00D6}",
+        "udieresis" => "\u{00FC}",
+        "Udieresis" => "\u{00DC}",
         "germandbls" => "\u{00DF}",
-        "agrave" => "\u{00E0}", "Agrave" => "\u{00C0}", "eacute" => "\u{00E9}", "Eacute" => "\u{00C9}",
-        "egrave" => "\u{00E8}", "Egrave" => "\u{00C8}", "ccedilla" => "\u{00E7}", "Ccedilla" => "\u{00C7}",
-        "ntilde" => "\u{00F1}", "Ntilde" => "\u{00D1}", "oslash" => "\u{00F8}", "Oslash" => "\u{00D8}",
-        "aring" => "\u{00E5}", "Aring" => "\u{00C5}", "ae" => "\u{00E6}", "AE" => "\u{00C6}",
-        "oe" => "\u{0153}", "OE" => "\u{0152}",
-        "quoteleft" => "\u{2018}", "quoteright" => "\u{2019}",
-        "quotedblleft" => "\u{201C}", "quotedblright" => "\u{201D}",
-        "endash" => "\u{2013}", "emdash" => "\u{2014}", "ellipsis" => "\u{2026}",
-        "bullet" => "\u{2022}", "dagger" => "\u{2020}", "daggerdbl" => "\u{2021}",
-        "degree" => "\u{00B0}", "section" => "\u{00A7}", "paragraph" => "\u{00B6}",
-        "copyright" => "\u{00A9}", "registered" => "\u{00AE}", "trademark" => "\u{2122}",
-        "plusminus" => "\u{00B1}", "mu" => "\u{00B5}",
-        "guillemotleft" => "\u{00AB}", "guillemotright" => "\u{00BB}",
-        "fi" => "fi", "fl" => "fl", "ff" => "ff", "ffi" => "ffi", "ffl" => "ffl",
+        "agrave" => "\u{00E0}",
+        "Agrave" => "\u{00C0}",
+        "eacute" => "\u{00E9}",
+        "Eacute" => "\u{00C9}",
+        "egrave" => "\u{00E8}",
+        "Egrave" => "\u{00C8}",
+        "ccedilla" => "\u{00E7}",
+        "Ccedilla" => "\u{00C7}",
+        "ntilde" => "\u{00F1}",
+        "Ntilde" => "\u{00D1}",
+        "oslash" => "\u{00F8}",
+        "Oslash" => "\u{00D8}",
+        "aring" => "\u{00E5}",
+        "Aring" => "\u{00C5}",
+        "ae" => "\u{00E6}",
+        "AE" => "\u{00C6}",
+        "oe" => "\u{0153}",
+        "OE" => "\u{0152}",
+        "quoteleft" => "\u{2018}",
+        "quoteright" => "\u{2019}",
+        "quotedblleft" => "\u{201C}",
+        "quotedblright" => "\u{201D}",
+        "endash" => "\u{2013}",
+        "emdash" => "\u{2014}",
+        "ellipsis" => "\u{2026}",
+        "bullet" => "\u{2022}",
+        "dagger" => "\u{2020}",
+        "daggerdbl" => "\u{2021}",
+        "degree" => "\u{00B0}",
+        "section" => "\u{00A7}",
+        "paragraph" => "\u{00B6}",
+        "copyright" => "\u{00A9}",
+        "registered" => "\u{00AE}",
+        "trademark" => "\u{2122}",
+        "plusminus" => "\u{00B1}",
+        "mu" => "\u{00B5}",
+        "guillemotleft" => "\u{00AB}",
+        "guillemotright" => "\u{00BB}",
+        "fi" => "fi",
+        "fl" => "fl",
+        "ff" => "ff",
+        "ffi" => "ffi",
+        "ffl" => "ffl",
         _ => return None,
     })
 }
@@ -921,7 +1260,9 @@ fn agl_lookup(name: &str) -> Option<&'static str> {
 /// including underscore-joined names like `"f_i"` (seen in the bachelor-thesis fixture) by
 /// resolving each part -- never partially fabricates: any unresolved part fails the whole name.
 fn glyph_name_to_unicode(name: &str) -> Option<String> {
-    if let Some(direct) = agl_lookup(name) { return Some(direct.to_string()); }
+    if let Some(direct) = agl_lookup(name) {
+        return Some(direct.to_string());
+    }
     if name.contains('_') {
         let mut out = String::new();
         for part in name.split('_') {
@@ -945,15 +1286,22 @@ impl FontDecoder {
         let mut out = String::new();
         let w = self.byte_width.max(1);
         for chunk in bytes.chunks(w) {
-            if chunk.len() < w { break; }
+            if chunk.len() < w {
+                break;
+            }
             let mut code: u32 = 0;
-            for b in chunk { code = (code << 8) | *b as u32; }
+            for b in chunk {
+                code = (code << 8) | *b as u32;
+            }
             if let Some(s) = self.chars.get(&code) {
                 out.push_str(s);
                 continue;
             }
             if let Some((lo, _hi, dst)) = self.ranges.iter().find(|(lo, hi, _)| code >= *lo && code <= *hi) {
-                if let Some(c) = char::from_u32(dst + (code - lo)) { out.push(c); continue; }
+                if let Some(c) = char::from_u32(dst + (code - lo)) {
+                    out.push(c);
+                    continue;
+                }
             }
             out.push('\u{FFFD}');
         }
@@ -969,7 +1317,9 @@ fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
     if let Some(csr) = extract_block(&s, "begincodespacerange", "endcodespacerange") {
         if let Some(first_hex) = csr.split_whitespace().next() {
             let hexlen = first_hex.trim_matches(|c| c == '<' || c == '>').len();
-            if hexlen > 0 { fd.byte_width = (hexlen + 1) / 2; }
+            if hexlen > 0 {
+                fd.byte_width = (hexlen + 1) / 2;
+            }
         }
     }
     for block in extract_all_blocks(&s, "beginbfchar", "endbfchar") {
@@ -977,7 +1327,9 @@ fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
         let mut i = 0;
         while i + 1 < toks.len() {
             if let Some(src) = hex_tok(toks[i]) {
-                if let Some(u) = hex_to_unicode_string(toks[i + 1]) { fd.chars.insert(src, u); }
+                if let Some(u) = hex_to_unicode_string(toks[i + 1]) {
+                    fd.chars.insert(src, u);
+                }
             }
             i += 2;
         }
@@ -990,11 +1342,17 @@ fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
             let hi = hex_tok(toks.get(i + 1).copied().unwrap_or(""));
             match (lo, hi, toks.get(i + 2)) {
                 (Some(lo), Some(hi), Some(dst)) if dst.starts_with('<') => {
-                    if let Some(dst_v) = hex_tok(dst) { fd.ranges.push((lo, hi, dst_v)); }
+                    if let Some(dst_v) = hex_tok(dst) {
+                        fd.ranges.push((lo, hi, dst_v));
+                    }
                     i += 3;
                 }
-                (Some(_lo), Some(_hi), Some(_arr_start)) => { i += 1; } // array form: skip conservatively
-                _ => { i += 1; }
+                (Some(_lo), Some(_hi), Some(_arr_start)) => {
+                    i += 1;
+                } // array form: skip conservatively
+                _ => {
+                    i += 1;
+                }
             }
         }
     }
@@ -1019,7 +1377,9 @@ fn extract_all_blocks<'a>(s: &'a str, start: &str, end: &str) -> Vec<&'a str> {
 }
 fn hex_tok(tok: &str) -> Option<u32> {
     let inner = tok.trim_start_matches('<').trim_end_matches('>');
-    if inner.is_empty() { return None; }
+    if inner.is_empty() {
+        return None;
+    }
     u32::from_str_radix(inner, 16).ok()
 }
 fn hex_to_unicode_string(hex: &str) -> Option<String> {
@@ -1029,7 +1389,9 @@ fn hex_to_unicode_string(hex: &str) -> Option<String> {
     for pair in bytes.chunks(2) {
         if pair.len() == 2 {
             let cu = ((pair[0] as u32) << 8) | pair[1] as u32;
-            if let Some(c) = char::from_u32(cu) { out.push(c); }
+            if let Some(c) = char::from_u32(cu) {
+                out.push(c);
+            }
         }
     }
     Some(out)
@@ -1053,21 +1415,24 @@ fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Opt
         }
     }
     let mut fd = FontDecoder { byte_width: if is_type0 { 2 } else { 1 }, chars: HashMap::new(), ranges: Vec::new() };
-    for code in 0x20u32..=0x7E { fd.chars.insert(code, (code as u8 as char).to_string()); }
+    for code in 0x20u32..=0x7E {
+        fd.chars.insert(code, (code as u8 as char).to_string());
+    }
     let encoding = font_dict.dict_get("Encoding").map(|v| match v {
         PdfObject::Ref(r) => resolve(r.num).unwrap_or(PdfObject::Null),
         other => other.clone(),
     });
     let (base_name, differences) = match &encoding {
         Some(PdfObject::Name(n)) => (Some(n.clone()), None),
-        Some(d @ PdfObject::Dict(_)) => (
-            d.dict_get("BaseEncoding").and_then(|v| v.as_name()).map(|s| s.to_string()),
-            d.dict_get("Differences").and_then(|v| v.as_array()).map(|a| a.to_vec()),
-        ),
+        Some(d @ PdfObject::Dict(_)) => (d.dict_get("BaseEncoding").and_then(|v| v.as_name()).map(|s| s.to_string()), d.dict_get("Differences").and_then(|v| v.as_array()).map(|a| a.to_vec())),
         _ => (None, None),
     };
     if base_name.as_deref() == Some("WinAnsiEncoding") || (base_name.is_none() && differences.is_none()) {
-        for code in 0u32..=0xFF { if let Some(c) = win_ansi(code as u8) { fd.chars.insert(code, c.to_string()); } }
+        for code in 0u32..=0xFF {
+            if let Some(c) = win_ansi(code as u8) {
+                fd.chars.insert(code, c.to_string());
+            }
+        }
     }
     if let Some(diffs) = differences {
         let mut cur = 0u32;
@@ -1075,7 +1440,11 @@ fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Opt
             match item {
                 PdfObject::Int(i) => cur = i as u32,
                 PdfObject::Name(name) => {
-                    if let Some(u) = glyph_name_to_unicode(&name) { fd.chars.insert(cur, u); } else { fd.chars.remove(&cur); }
+                    if let Some(u) = glyph_name_to_unicode(&name) {
+                        fd.chars.insert(cur, u);
+                    } else {
+                        fd.chars.remove(&cur);
+                    }
                     cur += 1;
                 }
                 _ => {}
@@ -1088,7 +1457,12 @@ fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Opt
 
 //#region 🔖️ContentStream
 #[derive(Clone, Debug)]
-enum ContentOperand { Num(f64), Str(Vec<u8>), Name(String), Array(Vec<ContentOperand>) }
+enum ContentOperand {
+    Num(f64),
+    Str(Vec<u8>),
+    Name(String),
+    Array(Vec<ContentOperand>),
+}
 
 /// 🖋️ Extracts shown text from a content stream: `Tj`/`'`/`"`/`TJ` inside `BT..ET`, resolving
 /// font encoding per the currently-selected `Tf` resource (requirement #6). Never fabricates —
@@ -1103,9 +1477,15 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
 
     let font_dict_for = |name: &str, resources: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>| -> Option<PdfObject> {
         let fonts_raw = resources.dict_get("Font")?;
-        let fonts = match fonts_raw { PdfObject::Ref(r) => resolve(r.num)?, other => other.clone() };
+        let fonts = match fonts_raw {
+            PdfObject::Ref(r) => resolve(r.num)?,
+            other => other.clone(),
+        };
         let entry = fonts.dict_get(name)?.clone();
-        match entry { PdfObject::Ref(r) => resolve(r.num), other => Some(other) }
+        match entry {
+            PdfObject::Ref(r) => resolve(r.num),
+            other => Some(other),
+        }
     };
 
     loop {
@@ -1113,45 +1493,88 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
         let Some(b) = lex.data.get(lex.pos).copied() else { break };
         match b {
             b'/' => {
-                if let Ok(PdfObject::Name(n)) = lex.parse_name() { operands.push(ContentOperand::Name(n)); }
+                if let Ok(PdfObject::Name(n)) = lex.parse_name() {
+                    operands.push(ContentOperand::Name(n));
+                }
             }
-            b'(' => { if let Ok(PdfObject::Str(s)) = lex.parse_literal_string() { operands.push(ContentOperand::Str(s)); } }
-            b'<' if lex.peek_at(1) != Some(b'<') => { if let Ok(PdfObject::Str(s)) = lex.parse_hex_string() { operands.push(ContentOperand::Str(s)); } }
-            b'<' => { let _ = lex.parse_dict_or_stream(false); } // marked-content property list; skip
+            b'(' => {
+                if let Ok(PdfObject::Str(s)) = lex.parse_literal_string() {
+                    operands.push(ContentOperand::Str(s));
+                }
+            }
+            b'<' if lex.peek_at(1) != Some(b'<') => {
+                if let Ok(PdfObject::Str(s)) = lex.parse_hex_string() {
+                    operands.push(ContentOperand::Str(s));
+                }
+            }
+            b'<' => {
+                let _ = lex.parse_dict_or_stream(false);
+            } // marked-content property list; skip
             b'[' => {
                 lex.pos += 1;
                 let mut arr = Vec::new();
                 loop {
                     lex.skip_ws();
                     match lex.data.get(lex.pos).copied() {
-                        Some(b']') => { lex.pos += 1; break; }
-                        Some(b'(') => { if let Ok(PdfObject::Str(s)) = lex.parse_literal_string() { arr.push(ContentOperand::Str(s)); } }
-                        Some(b'<') => { if let Ok(PdfObject::Str(s)) = lex.parse_hex_string() { arr.push(ContentOperand::Str(s)); } }
-                        Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => {
-                            if let Ok(PdfObject::Int(i)) = lex.parse_number() { arr.push(ContentOperand::Num(i as f64)); }
-                            else { let _ = lex.parse_number(); }
+                        Some(b']') => {
+                            lex.pos += 1;
+                            break;
                         }
-                        Some(_) => { lex.pos += 1; }
+                        Some(b'(') => {
+                            if let Ok(PdfObject::Str(s)) = lex.parse_literal_string() {
+                                arr.push(ContentOperand::Str(s));
+                            }
+                        }
+                        Some(b'<') => {
+                            if let Ok(PdfObject::Str(s)) = lex.parse_hex_string() {
+                                arr.push(ContentOperand::Str(s));
+                            }
+                        }
+                        Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => {
+                            match lex.parse_number() {
+                                Ok(PdfObject::Int(i)) => arr.push(ContentOperand::Num(i as f64)),
+                                Ok(PdfObject::Real(real)) => {
+                                    if let Some(value) = real.to_f64() {
+                                        arr.push(ContentOperand::Num(value));
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                        Some(_) => {
+                            lex.pos += 1;
+                        }
                         None => break,
                     }
                 }
                 operands.push(ContentOperand::Array(arr));
             }
-            c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => {
-                match lex.parse_number() {
-                    Ok(PdfObject::Int(i)) => operands.push(ContentOperand::Num(i as f64)),
-                    Ok(PdfObject::Real(r)) => operands.push(ContentOperand::Num(r)),
-                    _ => {}
+            c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
+                Ok(PdfObject::Int(i)) => operands.push(ContentOperand::Num(i as f64)),
+                Ok(PdfObject::Real(r)) => {
+                    if let Some(value) = r.to_f64() {
+                        operands.push(ContentOperand::Num(value));
+                    }
                 }
+                _ => {}
+            },
+            b'%' => {
+                lex.skip_ws();
             }
-            b'%' => { lex.skip_ws(); }
             _ => {
                 let op = lex.read_regular_run();
-                if op.is_empty() { lex.pos += 1; continue; }
+                if op.is_empty() {
+                    lex.pos += 1;
+                    continue;
+                }
                 let op = String::from_utf8_lossy(op).into_owned();
                 match op.as_str() {
-                    "BT" => { in_text = true; }
-                    "ET" => { in_text = false; }
+                    "BT" => {
+                        in_text = true;
+                    }
+                    "ET" => {
+                        in_text = false;
+                    }
                     "Tf" => {
                         if let Some(ContentOperand::Name(n)) = operands.first() {
                             current_font = Some(n.clone());
@@ -1164,7 +1587,11 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
                     }
                     "Tj" if in_text => {
                         if let Some(ContentOperand::Str(s)) = operands.last() {
-                            if let Some(name) = &current_font { if let Some(fd) = font_cache.get(name) { out.push_str(&fd.decode(s)); } }
+                            if let Some(name) = &current_font {
+                                if let Some(fd) = font_cache.get(name) {
+                                    out.push_str(&fd.decode(s));
+                                }
+                            }
                         }
                     }
                     // 🆕️ `T*` moves to the start of the next line (PDF32000-1 §9.4.2, equivalent
@@ -1172,18 +1599,31 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
                     // from `'`/`"` (which fold the same move into the text-showing op itself).
                     // `encode_pdf` emits exactly this `T*`-then-`Tj` shape for multi-line text.
                     "T*" if in_text => {
-                        if !out.is_empty() { out.push('\n'); }
+                        if !out.is_empty() {
+                            out.push('\n');
+                        }
                     }
                     "'" | "\"" if in_text => {
                         if let Some(ContentOperand::Str(s)) = operands.last() {
-                            if let Some(name) = &current_font { if let Some(fd) = font_cache.get(name) { if !out.is_empty() { out.push('\n'); } out.push_str(&fd.decode(s)); } }
+                            if let Some(name) = &current_font {
+                                if let Some(fd) = font_cache.get(name) {
+                                    if !out.is_empty() {
+                                        out.push('\n');
+                                    }
+                                    out.push_str(&fd.decode(s));
+                                }
+                            }
                         }
                     }
                     "TJ" if in_text => {
                         if let Some(ContentOperand::Array(items)) = operands.last() {
                             for item in items {
                                 if let ContentOperand::Str(s) = item {
-                                    if let Some(name) = &current_font { if let Some(fd) = font_cache.get(name) { out.push_str(&fd.decode(s)); } }
+                                    if let Some(name) = &current_font {
+                                        if let Some(fd) = font_cache.get(name) {
+                                            out.push_str(&fd.decode(s));
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1209,33 +1649,40 @@ struct Inherited {
 
 fn as_box(v: &PdfObject) -> Option<[f64; 4]> {
     let a = v.as_array()?;
-    if a.len() < 4 { return None; }
+    if a.len() < 4 {
+        return None;
+    }
     Some([a[0].as_f64()?, a[1].as_f64()?, a[2].as_f64()?, a[3].as_f64()?])
 }
 
 /// 🌳️ Walks `/Root -> /Pages -> /Kids`, applying inherited `/Resources`/`/MediaBox`/`/CropBox`/
 /// `/Rotate` down to `/Page` leaves (requirement #5), extracting each leaf's text (requirement
 /// #6). Cycle-guarded — malformed files sometimes have self-referential kids.
-fn walk_page_tree(
-    node_ref: ObjRef,
-    resolve: &mut dyn FnMut(u32) -> Option<PdfObject>,
-    inherited: &Inherited,
-    visited: &mut std::collections::HashSet<u32>,
-    out: &mut Vec<PdfPage>,
-) {
-    if !visited.insert(node_ref.num) { return; }
+fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>, inherited: &Inherited, visited: &mut std::collections::HashSet<u32>, out: &mut Vec<PdfPage>) {
+    if !visited.insert(node_ref.num) {
+        return;
+    }
     let Some(node) = resolve(node_ref.num) else { return };
     let mut here = inherited.clone();
     if let Some(r) = node.dict_get("Resources") {
         // 🔗️ `/Resources` is very commonly an indirect reference to a shared dict (as in the
         // bachelor-thesis fixture) -- must resolve it here, not just clone the `Ref` object,
         // or every downstream `dict_get("Font")` silently sees a non-dict and finds nothing.
-        let resolved = match r { PdfObject::Ref(rf) => resolve(rf.num).unwrap_or_else(|| r.clone()), other => other.clone() };
+        let resolved = match r {
+            PdfObject::Ref(rf) => resolve(rf.num).unwrap_or_else(|| r.clone()),
+            other => other.clone(),
+        };
         here.resources = Some(resolved);
     }
-    if let Some(mb) = node.dict_get("MediaBox").and_then(as_box) { here.media_box = Some(mb); }
-    if let Some(cb) = node.dict_get("CropBox").and_then(as_box) { here.crop_box = Some(cb); }
-    if let Some(rot) = node.dict_get("Rotate").and_then(|v| v.as_i64()) { here.rotate = rot as i32; }
+    if let Some(mb) = node.dict_get("MediaBox").and_then(as_box) {
+        here.media_box = Some(mb);
+    }
+    if let Some(cb) = node.dict_get("CropBox").and_then(as_box) {
+        here.crop_box = Some(cb);
+    }
+    if let Some(rot) = node.dict_get("Rotate").and_then(|v| v.as_i64()) {
+        here.rotate = rot as i32;
+    }
 
     let is_pages = node.dict_get("Type").and_then(|v| v.as_name()) == Some("Pages");
     let kids = node.dict_get("Kids").and_then(|v| v.as_array());
@@ -1263,7 +1710,9 @@ fn walk_page_tree(
         for r in refs {
             if let Some(PdfObject::Stream { dict, data, .. }) = resolve(r.num) {
                 if let Ok((decoded, None)) = decode_stream(&dict, &data) {
-                    if !combined.is_empty() { combined.push(b' '); }
+                    if !combined.is_empty() {
+                        combined.push(b' ');
+                    }
                     combined.extend_from_slice(&decoded);
                 }
             }
@@ -1318,7 +1767,11 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
         }
     }
 
-    let info = xref.trailer.iter().find(|e| e.key == "Info").and_then(|e| e.value.as_ref())
+    let info = xref
+        .trailer
+        .iter()
+        .find(|e| e.key == "Info")
+        .and_then(|e| e.value.as_ref())
         .and_then(|r| resolve(r.num))
         .map(|d| PdfInfo {
             title: d.dict_get("Title").and_then(pdf_string_to_text),
@@ -1333,17 +1786,7 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
     let objects = resolver.resolve_all();
     let trailer = xref.trailer.clone();
 
-    let mut snapshot = PdfSnapshot {
-        schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(),
-        declared_version,
-        pages,
-        info,
-        objects,
-        trailer,
-        source: None,
-    };
-    snapshot.source = Some(crate::ArtifactSource::capture(data, &snapshot.semantic_projection()).map_err(PdfEngineError::Malformed)?);
-    Ok(snapshot)
+    Ok(PdfSnapshot { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version, pages, info, objects, trailer })
 }
 
 fn pdf_string_to_text(v: &PdfObject) -> Option<String> {
@@ -1356,7 +1799,9 @@ fn pdf_string_to_text(v: &PdfObject) -> Option<String> {
 }
 
 fn find_last_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
-    if needle.len() > data.len() { return None; }
+    if needle.len() > data.len() {
+        return None;
+    }
     (0..=data.len() - needle.len()).rev().find(|&i| &data[i..i + needle.len()] == needle)
 }
 //#endregion 🔖️Decode
@@ -1380,12 +1825,15 @@ fn hex_string_utf16(s: &str) -> String {
 
 fn pdf_text_string(s: &str) -> String {
     if s.is_ascii() {
-        let escaped: String = s.chars().flat_map(|c| match c {
-            '(' => vec!['\\', '('],
-            ')' => vec!['\\', ')'],
-            '\\' => vec!['\\', '\\'],
-            other => vec![other],
-        }).collect();
+        let escaped: String = s
+            .chars()
+            .flat_map(|c| match c {
+                '(' => vec!['\\', '('],
+                ')' => vec!['\\', ')'],
+                '\\' => vec!['\\', '\\'],
+                other => vec![other],
+            })
+            .collect();
         format!("({escaped})")
     } else {
         let mut hex = String::from("<FEFF");
@@ -1398,10 +1846,14 @@ fn pdf_text_string(s: &str) -> String {
 }
 
 fn build_content_ops(text: &str) -> String {
-    if text.is_empty() { return String::new(); }
+    if text.is_empty() {
+        return String::new();
+    }
     let mut ops = String::from("BT\n/F1 12 Tf\n14 TL\n72 740 Td\n");
     for (i, line) in text.split('\n').enumerate() {
-        if i > 0 { ops.push_str("T*\n"); }
+        if i > 0 {
+            ops.push_str("T*\n");
+        }
         ops.push_str(&hex_string_utf16(line));
         ops.push_str(" Tj\n");
     }
@@ -1409,47 +1861,156 @@ fn build_content_ops(text: &str) -> String {
     ops
 }
 
-/// 📤️ Writer (requirement #7): a fresh, MINIMAL, valid multi-page PDF from `pages`+`info` —
-/// classic xref + trailer only (no xref streams on output, even though we read them). The
-/// original `objects` graph is deliberately NOT re-emitted (see the snapshot's doc comment for
-/// why the round trip is asserted structurally, not byte-for-byte).
-pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
-    if let Some(source) = &snap.source {
-        return if source.matches(&snap.semantic_projection()).map_err(PdfEngineError::Malformed)? {
-            Ok(source.bytes.clone())
+fn write_pdf_name(out: &mut Vec<u8>, name: &str) {
+    out.push(b'/');
+    for character in name.chars() {
+        let value = character as u32;
+        if value <= u8::MAX as u32 {
+            let byte = value as u8;
+            if (33..=126).contains(&byte) && !is_delim(byte) && byte != b'#' {
+                out.push(byte);
+            } else {
+                out.extend_from_slice(format!("#{byte:02X}").as_bytes());
+            }
         } else {
-            Err(PdfEngineError::Unsupported(
-                "dirty imported PDF cannot be exported until its semantic changes have a lossless writer".into(),
-            ))
-        };
+            for byte in character.to_string().as_bytes() {
+                out.extend_from_slice(format!("#{byte:02X}").as_bytes());
+            }
+        }
+    }
+}
+
+fn write_pdf_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry], stream_length: Option<usize>) {
+    out.extend_from_slice(b"<<");
+    let mut wrote_length = false;
+    for entry in entries {
+        out.push(b' ');
+        write_pdf_name(out, &entry.key);
+        out.push(b' ');
+        if entry.key == "Length" {
+            wrote_length = true;
+            match (&entry.value, stream_length) {
+                (PdfObject::Int(_), Some(length)) => out.extend_from_slice(length.to_string().as_bytes()),
+                _ => write_pdf_object(out, &entry.value),
+            }
+        } else {
+            write_pdf_object(out, &entry.value);
+        }
+    }
+    if let Some(length) = stream_length.filter(|_| !wrote_length) {
+        out.extend_from_slice(format!(" /Length {length}").as_bytes());
+    }
+    out.extend_from_slice(b" >>");
+}
+
+fn write_pdf_object(out: &mut Vec<u8>, object: &PdfObject) {
+    match object {
+        PdfObject::Null => out.extend_from_slice(b"null"),
+        PdfObject::Bool(value) => out.extend_from_slice(if *value { b"true" } else { b"false" }),
+        PdfObject::Int(value) => out.extend_from_slice(value.to_string().as_bytes()),
+        PdfObject::Real(value) => out.extend_from_slice(value.to_string().as_bytes()),
+        PdfObject::Str(bytes) => {
+            out.push(b'<');
+            for byte in bytes {
+                out.extend_from_slice(format!("{byte:02X}").as_bytes());
+            }
+            out.push(b'>');
+        }
+        PdfObject::Name(name) => write_pdf_name(out, name),
+        PdfObject::Array(items) => {
+            out.push(b'[');
+            for (index, item) in items.iter().enumerate() {
+                if index > 0 {
+                    out.push(b' ');
+                }
+                write_pdf_object(out, item);
+            }
+            out.push(b']');
+        }
+        PdfObject::Dict(entries) => write_pdf_dict(out, entries, None),
+        PdfObject::Ref(reference) => out.extend_from_slice(format!("{} {} R", reference.num, reference.gen).as_bytes()),
+        PdfObject::Stream { dict, data, .. } => {
+            write_pdf_dict(out, dict, Some(data.len()));
+            out.extend_from_slice(b"\nstream\n");
+            out.extend_from_slice(data);
+            out.extend_from_slice(b"\nendstream");
+        }
+    }
+}
+
+fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
+    let version = if snap.declared_version.is_empty() { "1.7" } else { snap.declared_version.as_str() };
+    if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
+        return malformed("declared PDF version is not numeric");
+    }
+    let mut objects = snap.objects.iter().collect::<Vec<_>>();
+    objects.sort_by_key(|object| object.id);
+    let max_num = objects.iter().map(|object| object.id.num).max().unwrap_or(0);
+    let size = max_num.saturating_add(1);
+    let mut body = format!("%PDF-{version}\n%").into_bytes();
+    body.extend_from_slice(&[0xE2, 0xE3, 0xCF, 0xD3, b'\n']);
+    let mut offsets = vec![None; size as usize];
+    for object in objects {
+        let offset = body.len();
+        body.extend_from_slice(format!("{} {} obj\n", object.id.num, object.id.gen).as_bytes());
+        write_pdf_object(&mut body, &object.value);
+        body.extend_from_slice(b"\nendobj\n");
+        offsets[object.id.num as usize] = Some((offset, object.id.gen));
+    }
+    let xref_offset = body.len();
+    body.extend_from_slice(format!("xref\n0 {size}\n0000000000 65535 f \n").as_bytes());
+    for entry in offsets.iter().skip(1) {
+        match entry {
+            Some((offset, generation)) => body.extend_from_slice(format!("{offset:010} {generation:05} n \n").as_bytes()),
+            None => body.extend_from_slice(b"0000000000 00000 f \n"),
+        }
+    }
+    body.extend_from_slice(b"trailer\n<<");
+    for entry in snap.trailer.iter().filter(|entry| !matches!(entry.key.as_str(), "Size" | "Prev" | "XRefStm" | "Length" | "Filter" | "DecodeParms" | "W" | "Index" | "Type")) {
+        body.push(b' ');
+        write_pdf_name(&mut body, &entry.key);
+        body.push(b' ');
+        write_pdf_object(&mut body, &entry.value);
+    }
+    body.extend_from_slice(format!(" /Size {size} >>\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes());
+    Ok(body)
+}
+
+/// 📤️ Deterministically writes the logical COS object graph or an authored page model.
+pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
+    if !snap.objects.is_empty() {
+        return encode_logical_pdf(snap);
     }
     let mut next_num = 1u32;
-    let mut alloc = || { let n = next_num; next_num += 1; n };
+    let mut alloc = || {
+        let n = next_num;
+        next_num += 1;
+        n
+    };
     let catalog_num = alloc();
     let pages_num = alloc();
     let needs_font = snap.pages.iter().any(|p| !p.text.is_empty());
     let (font_num, cmap_num) = if needs_font { (Some(alloc()), Some(alloc())) } else { (None, None) };
     let mut page_nums = Vec::new();
     let mut content_nums = Vec::new();
-    for _ in &snap.pages { page_nums.push(alloc()); content_nums.push(alloc()); }
-    let has_info = snap.info.title.is_some() || snap.info.author.is_some() || snap.info.subject.is_some()
-        || snap.info.keywords.is_some() || snap.info.creator.is_some() || snap.info.producer.is_some();
+    for _ in &snap.pages {
+        page_nums.push(alloc());
+        content_nums.push(alloc());
+    }
+    let has_info = snap.info.title.is_some() || snap.info.author.is_some() || snap.info.subject.is_some() || snap.info.keywords.is_some() || snap.info.creator.is_some() || snap.info.producer.is_some();
     let info_num = if has_info { Some(alloc()) } else { None };
 
     let mut objects: Vec<(u32, Vec<u8>)> = Vec::new();
 
     if let (Some(fnum), Some(cnum)) = (font_num, cmap_num) {
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes())
-            .map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         cbytes.extend_from_slice(&compressed);
         cbytes.extend_from_slice(b"\nendstream\nendobj\n");
         objects.push((cnum, cbytes));
 
-        let fbytes = format!(
-            "{fnum} 0 obj\n<< /Type /Font /Subtype /Type0 /BaseFont /SemioSans-Identity /Encoding /Identity-H /DescendantFonts [] /ToUnicode {cnum} 0 R >>\nendobj\n"
-        ).into_bytes();
+        let fbytes = format!("{fnum} 0 obj\n<< /Type /Font /Subtype /Type0 /BaseFont /SemioSans-Identity /Encoding /Identity-H /DescendantFonts [] /ToUnicode {cnum} 0 R >>\nendobj\n").into_bytes();
         objects.push((fnum, fbytes));
     }
 
@@ -1458,8 +2019,7 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
         let pnum = page_nums[i];
         let cnum = content_nums[i];
         let ops = build_content_ops(&page.text);
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(ops.as_bytes())
-            .map_err(|e| PdfEngineError::Malformed(format!("content compress: {e}")))?;
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(ops.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("content compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         cbytes.extend_from_slice(&compressed);
@@ -1468,10 +2028,18 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
 
         let [x0, y0, x1, y1] = page.media_box;
         let mut pd = format!("{pnum} 0 obj\n<< /Type /Page /Parent {pages_num} 0 R /MediaBox [{x0} {y0} {x1} {y1}]");
-        if let Some(cb) = page.crop_box { pd += &format!(" /CropBox [{} {} {} {}]", cb[0], cb[1], cb[2], cb[3]); }
-        if page.rotate != 0 { pd += &format!(" /Rotate {}", page.rotate); }
+        if let Some(cb) = page.crop_box {
+            pd += &format!(" /CropBox [{} {} {} {}]", cb[0], cb[1], cb[2], cb[3]);
+        }
+        if page.rotate != 0 {
+            pd += &format!(" /Rotate {}", page.rotate);
+        }
         pd += &format!(" /Contents {cnum} 0 R");
-        if let Some(fnum) = font_num { pd += &format!(" /Resources << /Font << /F1 {fnum} 0 R >> >>"); } else { pd += " /Resources << >>"; }
+        if let Some(fnum) = font_num {
+            pd += &format!(" /Resources << /Font << /F1 {fnum} 0 R >> >>");
+        } else {
+            pd += " /Resources << >>";
+        }
         pd += " >>\nendobj\n";
         objects.push((pnum, pd.into_bytes()));
         kids += &format!("{pnum} 0 R ");
@@ -1482,12 +2050,24 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
 
     if let Some(inum) = info_num {
         let mut id = format!("{inum} 0 obj\n<<");
-        if let Some(v) = &snap.info.title { id += &format!(" /Title {}", pdf_text_string(v)); }
-        if let Some(v) = &snap.info.author { id += &format!(" /Author {}", pdf_text_string(v)); }
-        if let Some(v) = &snap.info.subject { id += &format!(" /Subject {}", pdf_text_string(v)); }
-        if let Some(v) = &snap.info.keywords { id += &format!(" /Keywords {}", pdf_text_string(v)); }
-        if let Some(v) = &snap.info.creator { id += &format!(" /Creator {}", pdf_text_string(v)); }
-        if let Some(v) = &snap.info.producer { id += &format!(" /Producer {}", pdf_text_string(v)); }
+        if let Some(v) = &snap.info.title {
+            id += &format!(" /Title {}", pdf_text_string(v));
+        }
+        if let Some(v) = &snap.info.author {
+            id += &format!(" /Author {}", pdf_text_string(v));
+        }
+        if let Some(v) = &snap.info.subject {
+            id += &format!(" /Subject {}", pdf_text_string(v));
+        }
+        if let Some(v) = &snap.info.keywords {
+            id += &format!(" /Keywords {}", pdf_text_string(v));
+        }
+        if let Some(v) = &snap.info.creator {
+            id += &format!(" /Creator {}", pdf_text_string(v));
+        }
+        if let Some(v) = &snap.info.producer {
+            id += &format!(" /Producer {}", pdf_text_string(v));
+        }
         id += " >>\nendobj\n";
         objects.push((inum, id.into_bytes()));
     }
@@ -1507,7 +2087,9 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
         body.extend_from_slice(format!("{:010} 00000 n \n", offsets[n as usize]).as_bytes());
     }
     let mut trailer = format!("trailer\n<< /Size {next_num} /Root {catalog_num} 0 R");
-    if let Some(inum) = info_num { trailer += &format!(" /Info {inum} 0 R"); }
+    if let Some(inum) = info_num {
+        trailer += &format!(" /Info {inum} 0 R");
+    }
     trailer += &format!(" >>\nstartxref\n{xref_offset}\n%%EOF\n");
     body.extend_from_slice(trailer.as_bytes());
     Ok(body)
@@ -1518,10 +2100,16 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
 /// 🔍️ Real magic + version probe (requirement #9): `%PDF-` header, version digits parsed and
 /// reported (not discarded).
 pub fn sniff_pdf(bytes: &[u8]) -> Option<String> {
-    if bytes.len() < 8 || &bytes[0..5] != b"%PDF-" { return None; }
+    if bytes.len() < 8 || &bytes[0..5] != b"%PDF-" {
+        return None;
+    }
     let end = bytes.iter().skip(5).take(8).position(|&b| b == b'\n' || b == b'\r' || is_ws(b)).map(|p| p + 5).unwrap_or(bytes.len().min(13));
     let version = String::from_utf8_lossy(&bytes[5..end]).trim().to_string();
-    if version.chars().all(|c| c.is_ascii_digit() || c == '.') && !version.is_empty() { Some(version) } else { None }
+    if version.chars().all(|c| c.is_ascii_digit() || c == '.') && !version.is_empty() {
+        Some(version)
+    } else {
+        None
+    }
 }
 //#endregion 🔖️Sniff
 
@@ -1585,10 +2173,12 @@ mod tests {
     mod conformance_laws {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::{diff, mutations, snapshot};
-        use protocol::{DiffCodec, OpBinary, OpText};
         use protocol::command::DiffAlgebra;
+        use protocol::{DiffCodec, OpBinary, OpText};
 
-        fn oref(num: u32, gen: u16) -> ObjRef { ObjRef { num, gen } }
+        fn oref(num: u32, gen: u16) -> ObjRef {
+            ObjRef { num, gen }
+        }
 
         /// 🧹 Every `PdfMutation` variant (tags 0-14), incl. object-graph/path-addressing
         /// variants that exercise `pdf-object`'s full recursive grammar (Array/Dict/Ref/Stream).
@@ -1603,7 +2193,7 @@ mod tests {
                 PdfMutation::SetPageCropBox { index: 0, crop_box: None },
                 PdfMutation::AppendPageContent { index: 0, text: "more\nlines".into() },
                 PdfMutation::SetInfo { info: PdfInfo { title: Some("Demo".into()), author: Some("Semio".into()), ..Default::default() } },
-                PdfMutation::InsertObject { id: oref(3, 0), value: PdfObject::Array(vec![PdfObject::Int(-5), PdfObject::Real(1.5), PdfObject::Str(vec![0, 255]), PdfObject::Ref(oref(1, 0))]) },
+                PdfMutation::InsertObject { id: oref(3, 0), value: PdfObject::Array(vec![PdfObject::Int(-5), PdfObject::Real(1.5.into()), PdfObject::Str(vec![0, 255]), PdfObject::Ref(oref(1, 0))]) },
                 PdfMutation::RemoveObject { id: oref(2, 0) },
                 PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], raw_filter: Some("FlateDecode".into()) } },
                 PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 0 }], key: "Rotate".into(), value: PdfObject::Int(90) },
@@ -1621,9 +2211,7 @@ mod tests {
             b.declared_version = "1.4".into();
             b.info = PdfInfo { title: Some("Changed".into()), ..Default::default() };
             b.pages[0].text = "changed".into();
-            b.objects = vec![
-                PdfIndirectObject { id: oref(1, 0), value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }]) },
-            ];
+            b.objects = vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }]) }];
             b.trailer = vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(oref(1, 0)) }];
             let mut c = b.clone();
             c.objects = vec![
@@ -1637,19 +2225,11 @@ mod tests {
         /// parse under the real dialect.
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -1766,7 +2346,6 @@ mod tests {
             info: PdfInfo { title: Some("Test Doc".into()), author: Some("Ueli".into()), ..Default::default() },
             objects: Vec::new(),
             trailer: Vec::new(),
-            source: None,
         }
     }
 
@@ -1863,11 +2442,11 @@ mod tests {
         let w = [1usize, 2usize, 1usize];
         let row_bytes = w[0] + w[1] + w[2];
         let rows: Vec<(u8, u64, u64)> = vec![
-            (0, 0, 65535),          // obj 0: free
-            (1, o1 as u64, 0),      // obj 1
-            (1, o2 as u64, 0),      // obj 2
-            (1, o3 as u64, 0),      // obj 3
-            (1, 0, 0),              // obj 4 (self, offset filled below)
+            (0, 0, 65535),     // obj 0: free
+            (1, o1 as u64, 0), // obj 1
+            (1, o2 as u64, 0), // obj 2
+            (1, o3 as u64, 0), // obj 3
+            (1, 0, 0),         // obj 4 (self, offset filled below)
         ];
         let mut raw_rows = Vec::new();
         for (t, f1, f2) in &rows {
@@ -1886,10 +2465,7 @@ mod tests {
         }
         let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&predicted).unwrap();
         let o4 = body.len();
-        let xref_dict = format!(
-            "4 0 obj\n<< /Type /XRef /Size 5 /W [1 2 1] /Root 1 0 R /Filter /FlateDecode /DecodeParms << /Predictor 12 /Columns {row_bytes} /Colors 1 /BitsPerComponent 8 >> /Length {} >>\nstream\n",
-            compressed.len()
-        );
+        let xref_dict = format!("4 0 obj\n<< /Type /XRef /Size 5 /W [1 2 1] /Root 1 0 R /Filter /FlateDecode /DecodeParms << /Predictor 12 /Columns {row_bytes} /Colors 1 /BitsPerComponent 8 >> /Length {} >>\nstream\n", compressed.len());
         body.extend_from_slice(xref_dict.as_bytes());
         body.extend_from_slice(&compressed);
         body.extend_from_slice(b"\nendstream\nendobj\n");
@@ -1934,10 +2510,7 @@ mod tests {
         // directly, exercised through `parse_xref_stream`'s row decode in the test above. Here we
         // additionally verify the ObjStm header/body parse in isolation.
         let _ = xref;
-        let (decoded_dict, filt) = decode_stream(
-            &[PdfDictEntry { key: "Filter".into(), value: PdfObject::Name("FlateDecode".into()) }],
-            &compressed,
-        ).unwrap();
+        let (decoded_dict, filt) = decode_stream(&[PdfDictEntry { key: "Filter".into(), value: PdfObject::Name("FlateDecode".into()) }], &compressed).unwrap();
         assert!(filt.is_none());
         assert_eq!(decoded_dict, objstm_body);
         let mut lex = Lexer::new(&decoded_dict);
@@ -1954,13 +2527,13 @@ mod tests {
         // plus a WinAnsiEncoding-direct umlaut, both resolved via AGL (never fabricated).
         let font = PdfObject::Dict(vec![
             PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("TrueType".into()) },
-            PdfDictEntry { key: "Encoding".into(), value: PdfObject::Dict(vec![
-                PdfDictEntry { key: "BaseEncoding".into(), value: PdfObject::Name("WinAnsiEncoding".into()) },
-                PdfDictEntry { key: "Differences".into(), value: PdfObject::Array(vec![
-                    PdfObject::Int(31), PdfObject::Name("f_i".into()),
-                    PdfObject::Int(200), PdfObject::Name("nonexistentGlyphXyz".into()),
-                ]) },
-            ]) },
+            PdfDictEntry {
+                key: "Encoding".into(),
+                value: PdfObject::Dict(vec![
+                    PdfDictEntry { key: "BaseEncoding".into(), value: PdfObject::Name("WinAnsiEncoding".into()) },
+                    PdfDictEntry { key: "Differences".into(), value: PdfObject::Array(vec![PdfObject::Int(31), PdfObject::Name("f_i".into()), PdfObject::Int(200), PdfObject::Name("nonexistentGlyphXyz".into())]) },
+                ]),
+            },
         ]);
         let mut resolve = |_num: u32| -> Option<PdfObject> { None };
         let fd = build_font_decoder(&font, &mut resolve);
@@ -1993,7 +2566,9 @@ mod tests {
         body.extend_from_slice(b"3 0 obj\n<< /Type /Page /Parent 2 0 R /Rotate 180 /Resources << >> >>\nendobj\n");
         let xref = body.len();
         body.extend_from_slice(b"xref\n0 4\n0000000000 65535 f \n");
-        for off in [o1, o2, o3] { body.extend_from_slice(format!("{:010} 00000 n \n", off).as_bytes()); }
+        for off in [o1, o2, o3] {
+            body.extend_from_slice(format!("{:010} 00000 n \n", off).as_bytes());
+        }
         body.extend_from_slice(format!("trailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
 
         let decoded = decode_pdf(&body).unwrap();
@@ -2007,31 +2582,32 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfRawAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::PdfAComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::PdfXComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfRawAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::e::schema::PdfEComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::PdfHComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::PdfUaComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::PdfVtComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::PdfHComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::PdfXComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| {
-            vec![
-                composer_entry_of::<PdfRawAnyComposer>(),
-                composer_entry_of::<PdfAComposer>(),
-                composer_entry_of::<PdfXComposer>(),
-                composer_entry_of::<PdfEComposer>(),
-                composer_entry_of::<PdfUaComposer>(),
-                composer_entry_of::<PdfVtComposer>(),
-                composer_entry_of::<PdfHComposer>(),
-            ]
-        })
-        .as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<PdfRawAnyComposer>(),
+                    composer_entry_of::<PdfAComposer>(),
+                    composer_entry_of::<PdfXComposer>(),
+                    composer_entry_of::<PdfEComposer>(),
+                    composer_entry_of::<PdfUaComposer>(),
+                    composer_entry_of::<PdfVtComposer>(),
+                    composer_entry_of::<PdfHComposer>(),
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

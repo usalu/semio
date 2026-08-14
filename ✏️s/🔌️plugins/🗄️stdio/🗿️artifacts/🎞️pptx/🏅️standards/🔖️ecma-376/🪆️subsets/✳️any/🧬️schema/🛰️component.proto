@@ -2,5 +2,7 @@ syntax = "proto3";
 package semio.s_stdio_pptx.artifact;
 message PptxArtifact {
   string schema = 1;
-  string bytes_wire = 2;
+  semio.s_stdio_pptx.snapshot.OpcPackage opc = 2;
+  repeated semio.s_stdio_pptx.snapshot.PptxXmlPart xml_parts = 3;
+  semio.s_stdio_pptx.snapshot.PptxPresentation presentation = 4;
 }

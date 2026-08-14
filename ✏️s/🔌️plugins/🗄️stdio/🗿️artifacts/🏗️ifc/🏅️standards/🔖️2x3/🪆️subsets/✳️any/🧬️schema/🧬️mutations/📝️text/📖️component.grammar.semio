@@ -43,5 +43,8 @@ part21-instance = "[" INT "," "[" entity-list "]" "]"
 instance-list = "[" instance-csv "]"
 instance-csv = {part21-instance {"," part21-instance}*}?
 
-# `enc_ifc2x3_snapshot` (only reachable via `SetSnapshot`'s payload): `[schema,header,[instances]]`.
-ifc2x3-snapshot = "[" hex "," part21-header "," instance-list "]"
+# `enc_ifc2x3_snapshot` (only reachable via `SetSnapshot`'s payload):
+# `[schema,header,[instances],edmPreamble]`.
+ifc2x3-snapshot = "[" hex "," part21-header "," instance-list "," optional-edm-preamble "," hex "]"
+optional-edm-preamble = "[" "0" "]" | "[" "1" "," edm-preamble "]"
+edm-preamble = "[" hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "]"

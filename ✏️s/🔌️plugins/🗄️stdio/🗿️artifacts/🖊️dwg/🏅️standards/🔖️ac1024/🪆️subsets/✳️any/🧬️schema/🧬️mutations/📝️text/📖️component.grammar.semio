@@ -33,12 +33,13 @@ decode-status-value = "sentinel-only" | "sections-located" | "sections-decompres
 no-mutation = "no-mutation"
 
 set-snapshot = "set-snapshot" "snapshot" "{" snapshot-fields "}"
-snapshot-fields = schema-field version-field maintenance-version-field codepage-field bytes-field decode-status-field section-names-field sections-field
+snapshot-fields = schema-field version-field maintenance-version-field codepage-field decode-status-field source-field section-names-field sections-field
 schema-field = "schema" "=" text-value
 version-field = "version" "=" text-value
 maintenance-version-field = "maintenance-version" "=" INT
 codepage-field = "codepage" "=" INT
-bytes-field = "bytes" "=" TEXT
+source-field = "source" "=" artifact-source
+artifact-source = "bytes" "=" TEXT "semantic-blake3" "=" TEXT
 decode-status-field = "decode-status" "=" decode-status-value
 section-names-field = "section-names" "=" "[" text-value* "]"
 sections-field = "sections" "=" "[" section-item* "]"

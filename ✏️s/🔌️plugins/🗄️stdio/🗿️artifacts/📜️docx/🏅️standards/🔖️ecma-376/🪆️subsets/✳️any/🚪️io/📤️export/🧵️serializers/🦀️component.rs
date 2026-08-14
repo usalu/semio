@@ -101,6 +101,7 @@ pub fn document_to_xml(doc: &DocxDocument) -> XmlDocument {
         root: Some(elem("w:document", vec![attr("xmlns:w", W_NS)], vec![elem("w:body", vec![], body_children)])),
         doctype: None,
         declaration: None,
+        prolog: Vec::new(),
     }
 }
 //#endregion 🔖️DocumentMapping
@@ -123,6 +124,7 @@ fn styles_to_xml(styles: &[DocxStyle]) -> XmlDocument {
         root: Some(elem("w:styles", vec![attr("xmlns:w", STYLES_NS)], children)),
         doctype: None,
         declaration: None,
+        prolog: Vec::new(),
     }
 }
 //#endregion 🔖️StylesMapping

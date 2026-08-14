@@ -11,7 +11,8 @@ message Mp4TrackDiff {
   optional uint32 track_id = 1; optional uint32 timescale = 2;
   optional semio.stdio_mp4.snapshot.Mp4Codec codec = 3;
   optional uint32 width = 4; optional uint32 height = 5;
-  optional Mp4SamplesDiff samples = 6;
+  repeated uint32 chunk_sample_counts = 6;
+  optional Mp4SamplesDiff samples = 7;
 }
 message IndexedModifiedTrack { uint32 index = 1; Mp4TrackDiff diff = 2; }
 message IndexedAddedTrack { uint32 index = 1; semio.stdio_mp4.snapshot.Mp4Track item = 2; }

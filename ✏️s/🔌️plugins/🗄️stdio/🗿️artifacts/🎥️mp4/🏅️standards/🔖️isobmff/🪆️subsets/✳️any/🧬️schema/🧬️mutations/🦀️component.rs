@@ -2,7 +2,7 @@
 //! variant's `diff()` is handcrafted (constructs the sparse `Mp4Diff` directly — apply-and-capture
 //! is banned); `inverse()` is handcrafted per variant, index-aware.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box, Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box, Mp4Codec, Mp4Ftyp, Mp4Movie, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata};
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::diff::{IndexedAdded, IndexedDiff, IndexedModified, Mp4Diff, Mp4SampleDiff, Mp4TrackDiff};
 use protocol::Mutation;
 #[cfg(test)]
@@ -29,11 +29,11 @@ pub enum Mp4Mutation {
 }
 
 fn track_diff_for(track_index: usize, inner: Mp4TrackDiff) -> Mp4Diff {
-    Mp4Diff { source: None, ftyp: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: track_index, diff: inner }], added: vec![] }), unknown_boxes: None }
+    Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: track_index, diff: inner }], added: vec![] }), unknown_boxes: None }
 }
 
-fn sample_diff_for(track_index: usize, samples: IndexedDiff<Mp4Sample, Mp4SampleDiff>) -> Mp4Diff {
-    track_diff_for(track_index, Mp4TrackDiff { samples: Some(samples), ..Mp4TrackDiff::default() })
+fn sample_diff_for(track_index: usize, samples: IndexedDiff<Mp4Sample, Mp4SampleDiff>, chunk_sample_counts: Option<Vec<u32>>) -> Mp4Diff {
+    track_diff_for(track_index, Mp4TrackDiff { samples: Some(samples), chunk_sample_counts, ..Mp4TrackDiff::default() })
 }
 
 impl Mutation<Mp4Snapshot> for Mp4Mutation {
@@ -43,26 +43,30 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
         match self {
             Mp4Mutation::NoMutation => Mp4Diff::default(),
             Mp4Mutation::SetSnapshot { snapshot } => <Mp4Diff as protocol::command::DiffAlgebra<Mp4Snapshot>>::between(base, snapshot),
-            Mp4Mutation::SetFtyp { ftyp } => Mp4Diff { source: None, ftyp: Some(ftyp.clone()), tracks: None, unknown_boxes: None },
+            Mp4Mutation::SetFtyp { ftyp } => Mp4Diff { ftyp: Some(ftyp.clone()), movie: None, tracks: None, unknown_boxes: None },
             Mp4Mutation::InsertTrack { index, track } => {
-                Mp4Diff { source: None, ftyp: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: track.clone() }] }), unknown_boxes: None }
+                Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: track.clone() }] }), unknown_boxes: None }
             }
             Mp4Mutation::RemoveTrack { index } => {
-                Mp4Diff { source: None, ftyp: None, tracks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), unknown_boxes: None }
+                Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), unknown_boxes: None }
             }
             Mp4Mutation::SetTrackDimensions { track_index, width, height } => track_diff_for(*track_index, Mp4TrackDiff { width: Some(*width), height: Some(*height), ..Mp4TrackDiff::default() }),
             Mp4Mutation::SetTrackCodec { track_index, codec } => track_diff_for(*track_index, Mp4TrackDiff { codec: Some(codec.clone()), ..Mp4TrackDiff::default() }),
             Mp4Mutation::InsertSample { track_index, index, sample } => {
-                sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: sample.clone() }] })
+                let count = base.tracks.get(*track_index).map_or(1, |track| track.samples.len() as u32 + 1);
+                sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: sample.clone() }] }, Some(vec![count]))
             }
-            Mp4Mutation::RemoveSample { track_index, index } => sample_diff_for(*track_index, IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }),
+            Mp4Mutation::RemoveSample { track_index, index } => {
+                let count = base.tracks.get(*track_index).map_or(0, |track| track.samples.len().saturating_sub(1) as u32);
+                sample_diff_for(*track_index, IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }, Some(vec![count]))
+            }
             Mp4Mutation::SetSampleSync { track_index, index, sync } => {
-                sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: Mp4SampleDiff { data: None, duration: None, cts_offset: None, sync: Some(*sync) } }], added: vec![] })
+                sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: Mp4SampleDiff { data: None, duration: None, cts_offset: None, sync: Some(*sync) } }], added: vec![] }, None)
             }
             Mp4Mutation::AddUnknownBox { index, item } => {
-                Mp4Diff { source: None, ftyp: None, tracks: None, unknown_boxes: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }) }
+                Mp4Diff { ftyp: None, movie: None, tracks: None, unknown_boxes: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }) }
             }
-            Mp4Mutation::RemoveUnknownBox { index } => Mp4Diff { source: None, ftyp: None, tracks: None, unknown_boxes: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }) },
+            Mp4Mutation::RemoveUnknownBox { index } => Mp4Diff { ftyp: None, movie: None, tracks: None, unknown_boxes: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }) },
         }
     }
 
@@ -84,11 +88,7 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
                 Some(track) => vec![Mp4Mutation::SetTrackCodec { track_index: *track_index, codec: track.codec.clone() }],
                 None => vec![Mp4Mutation::NoMutation],
             },
-            Mp4Mutation::InsertSample { track_index, index, .. } => vec![Mp4Mutation::RemoveSample { track_index: *track_index, index: *index }],
-            Mp4Mutation::RemoveSample { track_index, index } => match base.tracks.get(*track_index).and_then(|t| t.samples.get(*index)) {
-                Some(sample) => vec![Mp4Mutation::InsertSample { track_index: *track_index, index: *index, sample: sample.clone() }],
-                None => vec![Mp4Mutation::NoMutation],
-            },
+            Mp4Mutation::InsertSample { .. } | Mp4Mutation::RemoveSample { .. } => vec![Mp4Mutation::SetSnapshot { snapshot: base.clone() }],
             Mp4Mutation::SetSampleSync { track_index, index, .. } => match base.tracks.get(*track_index).and_then(|t| t.samples.get(*index)) {
                 Some(sample) => vec![Mp4Mutation::SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync }],
                 None => vec![Mp4Mutation::NoMutation],
@@ -146,16 +146,18 @@ mod tests {
         Mp4Snapshot {
             schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
             ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] },
+            movie: Mp4Movie::default(),
             tracks: vec![Mp4Track {
                 track_id: 1,
                 timescale: 1000,
-                codec: Mp4Codec::Avc { sps: vec![vec![0x67]], pps: vec![vec![0x68]], nal_length_size: 4 },
+                codec: Mp4Codec::Avc { sps: vec![vec![0x67]], pps: vec![vec![0x68]], nal_length_size: 4, extension: None },
                 width: 64,
                 height: 64,
+                metadata: Mp4TrackMetadata::default(),
+                chunk_sample_counts: vec![1],
                 samples: vec![Mp4Sample { data: vec![1, 2, 3], duration: 33, cts_offset: 0, sync: true }],
             }],
             unknown_boxes: vec![Mp4Box { fourcc: "free".into(), data: vec![0, 0] }],
-            source: None,
         }
     }
 
@@ -165,7 +167,7 @@ mod tests {
         let base = base_snapshot();
         let variants = vec![
             Mp4Mutation::SetFtyp { ftyp: Mp4Ftyp { major_brand: "mp42".into(), minor_version: 1, compatible_brands: vec![] } },
-            Mp4Mutation::InsertTrack { index: 1, track: Mp4Track { track_id: 2, timescale: 500, codec: Mp4Codec::Other { fourcc: "mjpg".into(), raw: vec![] }, width: 32, height: 32, samples: vec![] } },
+            Mp4Mutation::InsertTrack { index: 1, track: Mp4Track { track_id: 2, timescale: 500, codec: Mp4Codec::Other { fourcc: "mjpg".into(), raw: vec![] }, width: 32, height: 32, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] } },
             Mp4Mutation::SetTrackDimensions { track_index: 0, width: 128, height: 128 },
             Mp4Mutation::SetTrackCodec { track_index: 0, codec: Mp4Codec::Other { fourcc: "hvc1".into(), raw: vec![9] } },
             Mp4Mutation::InsertSample { track_index: 0, index: 1, sample: Mp4Sample { data: vec![9, 9], duration: 33, cts_offset: 0, sync: false } },
@@ -192,7 +194,7 @@ mod tests {
     #[test]
     fn remove_track_then_insert_track_round_trips() {
         let mut base = base_snapshot();
-        base.tracks.push(Mp4Track { track_id: 2, timescale: 1000, codec: Mp4Codec::Other { fourcc: "mjpg".into(), raw: vec![] }, width: 10, height: 10, samples: vec![] });
+        base.tracks.push(Mp4Track { track_id: 2, timescale: 1000, codec: Mp4Codec::Other { fourcc: "mjpg".into(), raw: vec![] }, width: 10, height: 10, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] });
         let m = Mp4Mutation::RemoveTrack { index: 0 };
         let mut snap = base.clone();
         let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);

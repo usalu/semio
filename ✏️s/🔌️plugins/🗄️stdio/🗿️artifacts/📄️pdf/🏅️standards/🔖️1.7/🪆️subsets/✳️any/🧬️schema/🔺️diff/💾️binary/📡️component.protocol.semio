@@ -7,8 +7,8 @@ start record
 # P2-FG3: REAL binary diff frame, replacing F6's `print_diff().into_bytes()` text-as-binary
 # shortcut (../../🦀️component.rs's old `DiffCodec::encode_diff` -- per the P2-W0 census, 100% of
 # stdio's `DiffCodec` impls were still on this shortcut before this pilot ladder). `format u8` +
-# `flags u8` (bit0=`declared_version`, bit1=`info`, bit2=`pages`, bit3=`objects`, bit4=`trailer`
-# present -- `PdfDiff` has FIVE independently-optional top-level fields, so this is a bitmask
+# `flags u8` (bit0=`declared_version`, bit1=`info`, bit2=`pages`, bit3=`objects`, bit4=`trailer`,
+# `PdfDiff` has five independently-optional top-level fields, so this is a bitmask
 # rather than one `has_value` bool, same shape xml's own upgraded diff frame uses for its own
 # 3-field diff) as two REAL fixed fields, individually protocol-walked.
 #

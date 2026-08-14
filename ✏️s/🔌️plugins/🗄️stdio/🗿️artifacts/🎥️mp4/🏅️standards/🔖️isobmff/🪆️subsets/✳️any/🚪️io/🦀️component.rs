@@ -86,7 +86,10 @@ pub use derived_composition::*;
 // samples/timing/codec-config to the source — a "documented normal form", not literal
 // byte-identity of the whole file.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box as SnapMp4Box, Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track, STDIO_MP4_DOCUMENT_SCHEMA};
+use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{
+    Mp4Bitrate, Mp4Box as SnapMp4Box, Mp4Codec, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track,
+    Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA,
+};
 
 #[path = "📦️boxes/🦀️component.rs"]
 pub mod boxes;
@@ -224,6 +227,19 @@ fn resolve_samples(stsc: &[(u32, u32, u32)], chunk_offsets: &[u64], sizes: &Samp
     Ok(out)
 }
 
+fn logical_chunk_sample_counts(stsc: &[(u32, u32, u32)], chunk_count: usize, sample_count: usize) -> Result<Vec<u32>, String> {
+    let mut remaining = sample_count;
+    let mut counts = Vec::with_capacity(chunk_count);
+    for index in 0..chunk_count {
+        let declared = samples_per_chunk_for(stsc, index as u32 + 1)? as usize;
+        let count = declared.min(remaining);
+        counts.push(count as u32);
+        remaining -= count;
+    }
+    if remaining != 0 { return Err("stsc/stco do not cover every sample".into()); }
+    Ok(counts)
+}
+
 fn expand_run_length_u32(entries: &[(u32, u32)]) -> Vec<u32> {
     entries.iter().flat_map(|&(count, value)| std::iter::repeat_n(value, count as usize)).collect()
 }
@@ -255,34 +271,163 @@ fn run_length_encode_i64(values: &[i64]) -> Vec<(u32, i64)> {
 //#endregion 🔖️Stbl
 
 //#region 🔖️Tkhd
-/// 📥️ `tkhd` → `track_id` only (this schema doesn't retain the rest — matrix/volume/timestamps —
-/// see this module's doc comment on codec_retention_law scope).
-fn parse_tkhd_track_id(payload: &[u8]) -> Result<u32, String> {
+fn read_time(reader: &mut ByteReader<'_>, version: u8) -> Result<u64, String> {
+    if version == 1 { reader.u64_be().map_err(|error| error.to_string()) } else { reader.u32_be().map(u64::from).map_err(|error| error.to_string()) }
+}
+
+fn parse_tkhd(payload: &[u8]) -> Result<(u32, Mp4TrackMetadata), String> {
+    let mut r = ByteReader::new(payload);
+    let version = r.u8().map_err(|e| e.to_string())?;
+    let flags_bytes = r.take(3).map_err(|e| e.to_string())?;
+    let flags = u32::from_be_bytes([0, flags_bytes[0], flags_bytes[1], flags_bytes[2]]);
+    let creation_time = read_time(&mut r, version)?;
+    let modification_time = read_time(&mut r, version)?;
+    let track_id = r.u32_be().map_err(|e| e.to_string())?;
+    r.skip(4).map_err(|e| e.to_string())?;
+    let duration = read_time(&mut r, version)?;
+    r.skip(8).map_err(|e| e.to_string())?;
+    let layer = r.u16_be().map_err(|e| e.to_string())? as i16;
+    let alternate_group = r.u16_be().map_err(|e| e.to_string())? as i16;
+    let volume = r.u16_be().map_err(|e| e.to_string())? as i16;
+    r.skip(2).map_err(|e| e.to_string())?;
+    let mut matrix = [0i32; 9];
+    for value in &mut matrix { *value = r.i32_be().map_err(|e| e.to_string())?; }
+    Ok((track_id, Mp4TrackMetadata { flags, creation_time, modification_time, duration, layer, alternate_group, volume, matrix, ..Mp4TrackMetadata::default() }))
+}
+
+fn parse_mdhd(payload: &[u8], metadata: &mut Mp4TrackMetadata) -> Result<u32, String> {
     let mut r = ByteReader::new(payload);
     let version = r.u8().map_err(|e| e.to_string())?;
     r.skip(3).map_err(|e| e.to_string())?;
-    if version == 1 { r.skip(16).map_err(|e| e.to_string())?; } else { r.skip(8).map_err(|e| e.to_string())?; }
-    r.u32_be().map_err(|e| e.to_string())
+    metadata.media_creation_time = read_time(&mut r, version)?;
+    metadata.media_modification_time = read_time(&mut r, version)?;
+    let timescale = r.u32_be().map_err(|e| e.to_string())?;
+    metadata.media_duration = read_time(&mut r, version)?;
+    let packed_language = r.u16_be().map_err(|e| e.to_string())?;
+    metadata.language = [10, 5, 0].into_iter().map(|shift| char::from(((packed_language >> shift) & 0x1f) as u8 + 0x60)).collect();
+    metadata.quality = r.u16_be().map_err(|e| e.to_string())?;
+    Ok(timescale)
 }
 
-/// 📥️ `mdhd` (moved from remodel's `parse_mdhd`) → `timescale` only.
-fn parse_mdhd_timescale(payload: &[u8]) -> Result<u32, String> {
+fn parse_visual_sample_entry(payload: &[u8]) -> Result<(u16, u16, Mp4VisualSampleEntry, &[u8]), String> {
     let mut r = ByteReader::new(payload);
-    let version = r.u8().map_err(|e| e.to_string())?;
-    r.skip(3).map_err(|e| e.to_string())?;
-    if version == 1 { r.skip(16).map_err(|e| e.to_string())?; } else { r.skip(8).map_err(|e| e.to_string())?; }
-    r.u32_be().map_err(|e| e.to_string())
-}
-
-/// 📥️ `VisualSampleEntry` fixed fields (moved from remodel's `parse_visual_sample_entry`) →
-/// `(width, height, trailing_child_boxes)`.
-fn parse_visual_sample_entry(payload: &[u8]) -> Result<(u16, u16, &[u8]), String> {
-    let mut r = ByteReader::new(payload);
-    r.skip(6 + 2 + 2 + 2 + 12).map_err(|e| e.to_string())?;
+    r.skip(6).map_err(|e| e.to_string())?;
+    let data_reference_index = r.u16_be().map_err(|e| e.to_string())?;
+    let version = r.u16_be().map_err(|e| e.to_string())?;
+    let revision_level = r.u16_be().map_err(|e| e.to_string())?;
+    let vendor = r.u32_be().map_err(|e| e.to_string())?;
+    let temporal_quality = r.u32_be().map_err(|e| e.to_string())?;
+    let spatial_quality = r.u32_be().map_err(|e| e.to_string())?;
     let width = r.u16_be().map_err(|e| e.to_string())?;
     let height = r.u16_be().map_err(|e| e.to_string())?;
-    r.skip(4 + 4 + 4 + 2 + 32 + 2 + 2).map_err(|e| e.to_string())?;
-    Ok((width, height, &payload[r.pos()..]))
+    let horizontal_resolution = r.u32_be().map_err(|e| e.to_string())?;
+    let vertical_resolution = r.u32_be().map_err(|e| e.to_string())?;
+    r.skip(4).map_err(|e| e.to_string())?;
+    let frame_count = r.u16_be().map_err(|e| e.to_string())?;
+    let compressor = r.take(32).map_err(|e| e.to_string())?;
+    let compressor_length = usize::from(compressor[0]).min(31);
+    let compressor_name = String::from_utf8_lossy(&compressor[1..1 + compressor_length]).into_owned();
+    let depth = r.u16_be().map_err(|e| e.to_string())?;
+    let color_table_id = r.u16_be().map_err(|e| e.to_string())? as i16;
+    let visual = Mp4VisualSampleEntry {
+        data_reference_index,
+        version,
+        revision_level,
+        vendor,
+        temporal_quality,
+        spatial_quality,
+        horizontal_resolution,
+        vertical_resolution,
+        frame_count,
+        compressor_name,
+        depth,
+        color_table_id,
+    };
+    Ok((width, height, visual, &payload[r.pos()..]))
+}
+
+fn parse_mvhd(payload: &[u8]) -> Result<Mp4Movie, String> {
+    let mut r = ByteReader::new(payload);
+    let version = r.u8().map_err(|e| e.to_string())?;
+    r.skip(3).map_err(|e| e.to_string())?;
+    let creation_time = read_time(&mut r, version)?;
+    let modification_time = read_time(&mut r, version)?;
+    let timescale = r.u32_be().map_err(|e| e.to_string())?;
+    let duration = read_time(&mut r, version)?;
+    let rate = r.i32_be().map_err(|e| e.to_string())?;
+    let volume = r.u16_be().map_err(|e| e.to_string())? as i16;
+    r.skip(10).map_err(|e| e.to_string())?;
+    let mut matrix = [0i32; 9];
+    for value in &mut matrix { *value = r.i32_be().map_err(|e| e.to_string())?; }
+    r.skip(24).map_err(|e| e.to_string())?;
+    let next_track_id = r.u32_be().map_err(|e| e.to_string())?;
+    Ok(Mp4Movie { creation_time, modification_time, timescale, duration, rate, volume, matrix, next_track_id, title: None, encoder: None })
+}
+
+fn parse_edit_list(trak: &[u8]) -> Result<Vec<Mp4Edit>, String> {
+    let Some(edts) = find_box(trak, b"edts").map_err(|e| e.to_string())? else { return Ok(Vec::new()); };
+    let Some(elst) = find_box(edts, b"elst").map_err(|e| e.to_string())? else { return Ok(Vec::new()); };
+    let mut r = ByteReader::new(elst);
+    let version = r.u8().map_err(|e| e.to_string())?;
+    r.skip(3).map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
+    let mut edits = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        let segment_duration = read_time(&mut r, version)?;
+        let media_time = if version == 1 { r.u64_be().map_err(|e| e.to_string())? as i64 } else { i64::from(r.i32_be().map_err(|e| e.to_string())?) };
+        edits.push(Mp4Edit {
+            segment_duration,
+            media_time,
+            media_rate_integer: r.u16_be().map_err(|e| e.to_string())? as i16,
+            media_rate_fraction: r.u16_be().map_err(|e| e.to_string())? as i16,
+        });
+    }
+    Ok(edits)
+}
+
+fn parse_codec_extensions(children: &[u8], metadata: &mut Mp4TrackMetadata) -> Result<(), String> {
+    if let Some(payload) = find_box(children, b"colr").map_err(|e| e.to_string())? {
+        let mut r = ByteReader::new(payload);
+        let color_type = r.fourcc().map_err(|e| e.to_string())?.as_str().into_owned();
+        let primaries = r.u16_be().map_err(|e| e.to_string())?;
+        let transfer = r.u16_be().map_err(|e| e.to_string())?;
+        let matrix = r.u16_be().map_err(|e| e.to_string())?;
+        let full_range = if r.remaining() > 0 { Some(r.u8().map_err(|e| e.to_string())? & 0x80 != 0) } else { None };
+        metadata.color = Some(Mp4Color { color_type, primaries, transfer, matrix, full_range });
+    }
+    if let Some(payload) = find_box(children, b"pasp").map_err(|e| e.to_string())? {
+        let mut r = ByteReader::new(payload);
+        metadata.pixel_aspect_ratio = Some(Mp4PixelAspectRatio {
+            horizontal_spacing: r.u32_be().map_err(|e| e.to_string())?,
+            vertical_spacing: r.u32_be().map_err(|e| e.to_string())?,
+        });
+    }
+    if let Some(payload) = find_box(children, b"btrt").map_err(|e| e.to_string())? {
+        let mut r = ByteReader::new(payload);
+        metadata.bitrate = Some(Mp4Bitrate {
+            buffer_size: r.u32_be().map_err(|e| e.to_string())?,
+            maximum: r.u32_be().map_err(|e| e.to_string())?,
+            average: r.u32_be().map_err(|e| e.to_string())?,
+        });
+    }
+    Ok(())
+}
+
+fn parse_metadata_item(ilst: &[u8], fourcc: &[u8; 4]) -> Result<Option<String>, String> {
+    let Some(item) = find_box(ilst, fourcc).map_err(|e| e.to_string())? else { return Ok(None); };
+    let Some(data) = find_box(item, b"data").map_err(|e| e.to_string())? else { return Ok(None); };
+    if data.len() < 8 { return Err("MP4 metadata data box is truncated".into()); }
+    Ok(Some(String::from_utf8_lossy(&data[8..]).into_owned()))
+}
+
+fn parse_movie_metadata(moov: &[u8], movie: &mut Mp4Movie) -> Result<(), String> {
+    let Some(udta) = find_box(moov, b"udta").map_err(|e| e.to_string())? else { return Ok(()); };
+    let Some(meta) = find_box(udta, b"meta").map_err(|e| e.to_string())? else { return Ok(()); };
+    if meta.len() < 4 { return Err("MP4 meta box is truncated".into()); }
+    let Some(ilst) = find_box(&meta[4..], b"ilst").map_err(|e| e.to_string())? else { return Ok(()); };
+    movie.title = parse_metadata_item(ilst, &[0xa9, b'n', b'a', b'm'])?;
+    movie.encoder = parse_metadata_item(ilst, &[0xa9, b't', b'o', b'o'])?;
+    Ok(())
 }
 //#endregion 🔖️Tkhd
 
@@ -304,6 +449,9 @@ pub fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
     }
     let ftyp = Mp4Ftyp { major_brand, minor_version, compatible_brands };
 
+    let moov = require_box(bytes, b"moov", "mp4 stream missing moov box").map_err(|e| e.to_string())?;
+    let mut movie = parse_mvhd(require_box(moov, b"mvhd", "moov missing mvhd").map_err(|e| e.to_string())?)?;
+    parse_movie_metadata(moov, &mut movie)?;
     let mut tracks = Vec::new();
     let mut unknown_boxes = Vec::new();
     for item in iter_boxes(bytes) {
@@ -322,20 +470,26 @@ pub fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
             _ => unknown_boxes.push(SnapMp4Box { fourcc: b.kind.as_str().into_owned(), data: b.payload.to_vec() }),
         }
     }
-    let mut snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp, tracks, unknown_boxes, source: None };
-    snapshot.source = Some(crate::ArtifactSource::capture(bytes, &snapshot.projection())?);
-    Ok(snapshot)
+    Ok(Mp4Snapshot {
+        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+        ftyp,
+        movie,
+        tracks,
+        unknown_boxes,
+    })
 }
 
 /// 📥️ Decodes one `trak`; `Ok(None)` for a non-video-handler track (caller retains it raw).
 fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Option<Mp4Track>, String> {
     let tkhd = require_box(trak, b"tkhd", "trak missing tkhd").map_err(|e| e.to_string())?;
-    let track_id = parse_tkhd_track_id(tkhd)?;
+    let (track_id, mut metadata) = parse_tkhd(tkhd)?;
+    metadata.edits = parse_edit_list(trak)?;
     let mdia = require_box(trak, b"mdia", "trak missing mdia").map_err(|e| e.to_string())?;
     let hdlr = require_box(mdia, b"hdlr", "mdia missing hdlr").map_err(|e| e.to_string())?;
     if hdlr.len() < 12 || &hdlr[8..12] != b"vide" { return Ok(None); }
+    if hdlr.len() > 24 { metadata.handler_name = String::from_utf8_lossy(&hdlr[24..]).trim_end_matches('\0').to_string(); }
     let mdhd = require_box(mdia, b"mdhd", "mdia missing mdhd").map_err(|e| e.to_string())?;
-    let timescale = parse_mdhd_timescale(mdhd)?;
+    let timescale = parse_mdhd(mdhd, &mut metadata)?;
     let minf = require_box(mdia, b"minf", "mdia missing minf").map_err(|e| e.to_string())?;
     let stbl = require_box(minf, b"stbl", "minf missing stbl").map_err(|e| e.to_string())?;
     let stsd = require_box(stbl, b"stsd", "stbl missing stsd").map_err(|e| e.to_string())?;
@@ -346,11 +500,13 @@ fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Option<Mp4Track>, Strin
     if entry_count == 0 { return Err("stsd has no sample entries".into()); }
     let rest = &stsd[sr.pos()..];
     let first = iter_boxes(rest).next().ok_or("stsd missing sample entry box")?.map_err(|e| e.to_string())?;
-    let (width, height, children) = parse_visual_sample_entry(first.payload)?;
+    let (width, height, visual, children) = parse_visual_sample_entry(first.payload)?;
+    metadata.visual = visual;
+    parse_codec_extensions(children, &mut metadata)?;
     let codec = if first.kind.0 == *b"avc1" || first.kind.0 == *b"avc3" {
         let avcc = require_box(children, b"avcC", "avc sample entry missing avcC").map_err(|e| e.to_string())?;
-        let (sps, pps, nal_length_size) = h264::parse_avcc(avcc).map_err(|e| e.to_string())?;
-        Mp4Codec::Avc { sps, pps, nal_length_size }
+        let (sps, pps, nal_length_size, extension) = h264::parse_avcc_extended(avcc).map_err(|e| e.to_string())?;
+        Mp4Codec::Avc { sps, pps, nal_length_size, extension }
     } else {
         Mp4Codec::Other { fourcc: first.kind.as_str().into_owned(), raw: write_box(&first.kind.0, first.payload) }
     };
@@ -388,7 +544,8 @@ fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Option<Mp4Track>, Strin
         samples.push(Mp4Sample { data, duration: durations[i], cts_offset: cts_offsets[i] as i32, sync: is_sync });
     }
 
-    Ok(Some(Mp4Track { track_id, timescale, codec, width: u32::from(width), height: u32::from(height), samples }))
+    let chunk_sample_counts = logical_chunk_sample_counts(&stsc_entries, chunk_offsets.len(), sample_count)?;
+    Ok(Some(Mp4Track { track_id, timescale, codec, width: u32::from(width), height: u32::from(height), metadata, chunk_sample_counts, samples }))
 }
 //#endregion 🔖️Decode
 
@@ -396,40 +553,72 @@ fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Option<Mp4Track>, Strin
 /// 🐛 The 8 bytes of `reserved`+`data_reference_index` are followed by `pre_defined(2)` +
 /// `reserved(2)` + `pre_defined[3](12)` = 16 bytes before `width`/`height` — matches
 /// `parse_visual_sample_entry`'s read-side `skip(6+2+2+2+12)`.
-fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16, extra: &[u8]) -> Vec<u8> {
-    let mut payload = vec![0u8; 8];
-    payload.extend_from_slice(&[0u8; 16]);
+fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16, visual: &Mp4VisualSampleEntry, extra: &[u8]) -> Vec<u8> {
+    let mut payload = vec![0u8; 6];
+    payload.extend_from_slice(&visual.data_reference_index.to_be_bytes());
+    payload.extend_from_slice(&visual.version.to_be_bytes());
+    payload.extend_from_slice(&visual.revision_level.to_be_bytes());
+    payload.extend_from_slice(&visual.vendor.to_be_bytes());
+    payload.extend_from_slice(&visual.temporal_quality.to_be_bytes());
+    payload.extend_from_slice(&visual.spatial_quality.to_be_bytes());
     payload.extend_from_slice(&width.to_be_bytes());
     payload.extend_from_slice(&height.to_be_bytes());
-    payload.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-    payload.extend_from_slice(&0x0048_0000u32.to_be_bytes());
+    payload.extend_from_slice(&visual.horizontal_resolution.to_be_bytes());
+    payload.extend_from_slice(&visual.vertical_resolution.to_be_bytes());
     payload.extend_from_slice(&[0u8; 4]);
-    payload.extend_from_slice(&[0, 1]);
-    payload.extend_from_slice(&[0u8; 32]);
-    payload.extend_from_slice(&[0, 0x18]);
-    payload.extend_from_slice(&[0xFF, 0xFF]);
+    payload.extend_from_slice(&visual.frame_count.to_be_bytes());
+    let compressor = visual.compressor_name.as_bytes();
+    let compressor_length = compressor.len().min(31);
+    payload.push(compressor_length as u8);
+    payload.extend_from_slice(&compressor[..compressor_length]);
+    payload.resize(payload.len() + 31 - compressor_length, 0);
+    payload.extend_from_slice(&visual.depth.to_be_bytes());
+    payload.extend_from_slice(&visual.color_table_id.to_be_bytes());
     payload.extend_from_slice(extra);
     write_box(codec_fourcc, &payload)
 }
 
-fn build_stbl(track: &Mp4Track, mdat_data_offset: u32) -> Vec<u8> {
-    let n = track.samples.len() as u32;
+fn build_codec_extensions(track: &Mp4Track) -> Vec<u8> {
+    let mut result = Vec::new();
+    if let Some(color) = &track.metadata.color {
+        let mut payload = [b' '; 4].to_vec();
+        for (index, byte) in color.color_type.as_bytes().iter().take(4).enumerate() { payload[index] = *byte; }
+        payload.extend_from_slice(&color.primaries.to_be_bytes());
+        payload.extend_from_slice(&color.transfer.to_be_bytes());
+        payload.extend_from_slice(&color.matrix.to_be_bytes());
+        if let Some(full_range) = color.full_range { payload.push(if full_range { 0x80 } else { 0 }); }
+        result.extend(write_box(b"colr", &payload));
+    }
+    if let Some(aspect) = &track.metadata.pixel_aspect_ratio {
+        result.extend(write_box(b"pasp", &[aspect.horizontal_spacing.to_be_bytes(), aspect.vertical_spacing.to_be_bytes()].concat()));
+    }
+    if let Some(bitrate) = &track.metadata.bitrate {
+        result.extend(write_box(b"btrt", &[bitrate.buffer_size.to_be_bytes(), bitrate.maximum.to_be_bytes(), bitrate.average.to_be_bytes()].concat()));
+    }
+    result
+}
+
+fn build_stbl(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     let (codec_fourcc, extra): ([u8; 4], Vec<u8>) = match &track.codec {
-        Mp4Codec::Avc { sps, pps, nal_length_size } => ([b'a', b'v', b'c', b'1'], h264::build_avcc(sps, pps, *nal_length_size)),
+        Mp4Codec::Avc { sps, pps, nal_length_size, extension } => {
+            let mut extra = h264::build_avcc_extended(sps, pps, *nal_length_size, extension.as_ref());
+            extra.extend(build_codec_extensions(track));
+            ([b'a', b'v', b'c', b'1'], extra)
+        }
         Mp4Codec::Other { raw, .. } => {
             // 🧩 `raw` is the FULL original sample-entry box (header + payload, see decode_trak) —
             // stsd just wraps it verbatim, byte-preserving this branch exactly.
             let mut payload = vec![0u8; 4];
             payload.extend_from_slice(&1u32.to_be_bytes());
             payload.extend_from_slice(raw);
-            return [write_box(b"stsd", &payload), build_stts(track), build_ctts(track), build_stsc(n), build_stsz(track), build_stco(mdat_data_offset), build_stss(track)].concat();
+            return [write_box(b"stsd", &payload), build_stts(track), build_stss(track), build_ctts(track), build_stsc(track), build_stsz(track), build_stco(chunk_offsets)].concat();
         }
     };
     let mut stsd_payload = vec![0u8; 4];
     stsd_payload.extend_from_slice(&1u32.to_be_bytes());
-    stsd_payload.extend(mp4_visual_sample_entry(&codec_fourcc, track.width as u16, track.height as u16, &extra));
+    stsd_payload.extend(mp4_visual_sample_entry(&codec_fourcc, track.width as u16, track.height as u16, &track.metadata.visual, &extra));
     let stsd = write_box(b"stsd", &stsd_payload);
-    [stsd, build_stts(track), build_ctts(track), build_stsc(n), build_stsz(track), build_stco(mdat_data_offset), build_stss(track)].concat()
+    [stsd, build_stts(track), build_stss(track), build_ctts(track), build_stsc(track), build_stsz(track), build_stco(chunk_offsets)].concat()
 }
 
 fn build_stts(track: &Mp4Track) -> Vec<u8> {
@@ -460,12 +649,28 @@ fn build_ctts(track: &Mp4Track) -> Vec<u8> {
 
 /// ✍️ One chunk per track (all samples together) — adapted from remodel's `mp4_stsc`, which
 /// makes the same single-chunk simplification for its own fixture muxer.
-fn build_stsc(sample_count: u32) -> Vec<u8> {
+fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
+    if track.chunk_sample_counts.is_empty() {
+        return vec![track.samples.len() as u32];
+    }
+    assert_eq!(track.chunk_sample_counts.iter().map(|count| *count as usize).sum::<usize>(), track.samples.len(), "MP4 chunk sample counts must cover every sample");
+    track.chunk_sample_counts.clone()
+}
+
+fn build_stsc(track: &Mp4Track) -> Vec<u8> {
+    let counts = normalized_chunk_sample_counts(track);
+    let mut entries = Vec::new();
+    for (index, count) in counts.into_iter().enumerate() {
+        if entries.last().is_some_and(|entry: &(u32, u32)| entry.1 == count) { continue; }
+        entries.push((index as u32 + 1, count));
+    }
     let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    payload.extend_from_slice(&sample_count.max(1).to_be_bytes());
-    payload.extend_from_slice(&1u32.to_be_bytes());
+    payload.extend_from_slice(&(entries.len() as u32).to_be_bytes());
+    for (first_chunk, sample_count) in entries {
+        payload.extend_from_slice(&first_chunk.to_be_bytes());
+        payload.extend_from_slice(&sample_count.to_be_bytes());
+        payload.extend_from_slice(&1u32.to_be_bytes());
+    }
     write_box(b"stsc", &payload)
 }
 
@@ -484,10 +689,10 @@ fn build_stsz(track: &Mp4Track) -> Vec<u8> {
     write_box(b"stsz", &payload)
 }
 
-fn build_stco(offset: u32) -> Vec<u8> {
+fn build_stco(offsets: &[u32]) -> Vec<u8> {
     let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&1u32.to_be_bytes());
-    payload.extend_from_slice(&offset.to_be_bytes());
+    payload.extend_from_slice(&(offsets.len() as u32).to_be_bytes());
+    for offset in offsets { payload.extend_from_slice(&offset.to_be_bytes()); }
     write_box(b"stco", &payload)
 }
 
@@ -500,10 +705,11 @@ fn build_stss(track: &Mp4Track) -> Vec<u8> {
     write_box(b"stss", &payload)
 }
 
-fn build_hdlr() -> Vec<u8> {
+fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
     let mut payload = vec![0u8; 8];
     payload.extend_from_slice(b"vide");
     payload.extend_from_slice(&[0u8; 12]);
+    payload.extend_from_slice(track.metadata.handler_name.as_bytes());
     payload.push(0);
     write_box(b"hdlr", &payload)
 }
@@ -520,75 +726,126 @@ fn build_dinf() -> Vec<u8> {
     write_box(b"dinf", &write_box(b"dref", &dref_payload))
 }
 
-fn build_mdhd(timescale: u32, duration: u32) -> Vec<u8> {
+fn packed_language(language: &str) -> u16 {
+    let mut chars = language.bytes().chain(std::iter::repeat(b'`')).take(3).map(|byte| u16::from(byte.saturating_sub(0x60)) & 0x1f);
+    (chars.next().unwrap_or(0) << 10) | (chars.next().unwrap_or(0) << 5) | chars.next().unwrap_or(0)
+}
+
+fn build_mdhd(track: &Mp4Track) -> Vec<u8> {
     let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&[0u8; 8]);
-    payload.extend_from_slice(&timescale.to_be_bytes());
-    payload.extend_from_slice(&duration.to_be_bytes());
-    payload.extend_from_slice(&[0x55, 0xC4]);
-    payload.extend_from_slice(&[0u8; 2]);
+    payload.extend_from_slice(&(track.metadata.media_creation_time as u32).to_be_bytes());
+    payload.extend_from_slice(&(track.metadata.media_modification_time as u32).to_be_bytes());
+    payload.extend_from_slice(&track.timescale.to_be_bytes());
+    payload.extend_from_slice(&(track.metadata.media_duration as u32).to_be_bytes());
+    payload.extend_from_slice(&packed_language(&track.metadata.language).to_be_bytes());
+    payload.extend_from_slice(&track.metadata.quality.to_be_bytes());
     write_box(b"mdhd", &payload)
 }
 
-fn build_tkhd(track_id: u32, duration: u32, width: u32, height: u32) -> Vec<u8> {
-    let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&[0u8; 8]);
-    payload.extend_from_slice(&track_id.to_be_bytes());
+fn build_tkhd(track: &Mp4Track) -> Vec<u8> {
+    let mut payload = vec![0, (track.metadata.flags >> 16) as u8, (track.metadata.flags >> 8) as u8, track.metadata.flags as u8];
+    payload.extend_from_slice(&(track.metadata.creation_time as u32).to_be_bytes());
+    payload.extend_from_slice(&(track.metadata.modification_time as u32).to_be_bytes());
+    payload.extend_from_slice(&track.track_id.to_be_bytes());
     payload.extend_from_slice(&[0u8; 4]);
-    payload.extend_from_slice(&duration.to_be_bytes());
+    payload.extend_from_slice(&(track.metadata.duration as u32).to_be_bytes());
     payload.extend_from_slice(&[0u8; 8]);
+    payload.extend_from_slice(&track.metadata.layer.to_be_bytes());
+    payload.extend_from_slice(&track.metadata.alternate_group.to_be_bytes());
+    payload.extend_from_slice(&track.metadata.volume.to_be_bytes());
     payload.extend_from_slice(&[0u8; 2]);
-    payload.extend_from_slice(&[0u8; 2]);
-    payload.extend_from_slice(&[0u8; 2]);
-    payload.extend_from_slice(&[0u8; 2]);
-    for v in [0x0001_0000i32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
+    for v in track.metadata.matrix {
         payload.extend_from_slice(&v.to_be_bytes());
     }
-    payload.extend_from_slice(&(width << 16).to_be_bytes());
-    payload.extend_from_slice(&(height << 16).to_be_bytes());
+    payload.extend_from_slice(&(track.width << 16).to_be_bytes());
+    payload.extend_from_slice(&(track.height << 16).to_be_bytes());
     write_box(b"tkhd", &payload)
 }
 
-fn build_trak(track: &Mp4Track, mdat_data_offset: u32) -> Vec<u8> {
-    let duration: u32 = track.samples.iter().map(|s| s.duration).sum();
-    let tkhd = build_tkhd(track.track_id, duration, track.width, track.height);
-    let stbl = write_box(b"stbl", &build_stbl(track, mdat_data_offset));
-    let minf = write_box(b"minf", &[build_vmhd(), build_dinf(), stbl].concat());
-    let mdia = write_box(b"mdia", &[build_mdhd(track.timescale, duration), build_hdlr(), minf].concat());
-    write_box(b"trak", &[tkhd, mdia].concat())
+fn build_edts(track: &Mp4Track) -> Vec<u8> {
+    if track.metadata.edits.is_empty() { return Vec::new(); }
+    let mut payload = vec![0u8; 4];
+    payload.extend_from_slice(&(track.metadata.edits.len() as u32).to_be_bytes());
+    for edit in &track.metadata.edits {
+        payload.extend_from_slice(&(edit.segment_duration as u32).to_be_bytes());
+        payload.extend_from_slice(&(edit.media_time as i32).to_be_bytes());
+        payload.extend_from_slice(&edit.media_rate_integer.to_be_bytes());
+        payload.extend_from_slice(&edit.media_rate_fraction.to_be_bytes());
+    }
+    write_box(b"edts", &write_box(b"elst", &payload))
 }
 
-fn build_mvhd(tracks: &[Mp4Track]) -> Vec<u8> {
-    let timescale = tracks.first().map_or(1000, |t| t.timescale);
-    let next_track_id = tracks.iter().map(|t| t.track_id).max().unwrap_or(0) + 1;
+fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
+    let tkhd = build_tkhd(track);
+    let stbl = write_box(b"stbl", &build_stbl(track, chunk_offsets));
+    let minf = write_box(b"minf", &[build_vmhd(), build_dinf(), stbl].concat());
+    let mdia = write_box(b"mdia", &[build_mdhd(track), build_hdlr(track), minf].concat());
+    write_box(b"trak", &[tkhd, build_edts(track), mdia].concat())
+}
+
+fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
     let mut payload = vec![0u8; 4];
-    payload.extend_from_slice(&[0u8; 8]);
-    payload.extend_from_slice(&timescale.to_be_bytes());
-    payload.extend_from_slice(&0u32.to_be_bytes());
-    payload.extend_from_slice(&0x0001_0000u32.to_be_bytes());
-    payload.extend_from_slice(&0x0100u16.to_be_bytes());
+    payload.extend_from_slice(&(movie.creation_time as u32).to_be_bytes());
+    payload.extend_from_slice(&(movie.modification_time as u32).to_be_bytes());
+    payload.extend_from_slice(&movie.timescale.to_be_bytes());
+    payload.extend_from_slice(&(movie.duration as u32).to_be_bytes());
+    payload.extend_from_slice(&movie.rate.to_be_bytes());
+    payload.extend_from_slice(&movie.volume.to_be_bytes());
     payload.extend_from_slice(&[0u8; 2]);
     payload.extend_from_slice(&[0u8; 8]);
-    for v in [0x0001_0000i32, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000] {
+    for v in movie.matrix {
         payload.extend_from_slice(&v.to_be_bytes());
     }
     payload.extend_from_slice(&[0u8; 24]);
-    payload.extend_from_slice(&next_track_id.to_be_bytes());
+    payload.extend_from_slice(&movie.next_track_id.to_be_bytes());
     write_box(b"mvhd", &payload)
+}
+
+fn build_metadata_item(fourcc: &[u8; 4], value: &str) -> Vec<u8> {
+    let mut data = vec![0, 0, 0, 1, 0, 0, 0, 0];
+    data.extend_from_slice(value.as_bytes());
+    write_box(fourcc, &write_box(b"data", &data))
+}
+
+fn build_udta(movie: &Mp4Movie) -> Vec<u8> {
+    if movie.title.is_none() && movie.encoder.is_none() { return Vec::new(); }
+    let mut ilst = Vec::new();
+    if let Some(title) = &movie.title { ilst.extend(build_metadata_item(&[0xa9, b'n', b'a', b'm'], title)); }
+    if let Some(encoder) = &movie.encoder { ilst.extend(build_metadata_item(&[0xa9, b't', b'o', b'o'], encoder)); }
+    let mut handler = vec![0u8; 8];
+    handler.extend_from_slice(b"mdir");
+    handler.extend_from_slice(b"appl");
+    handler.extend_from_slice(&[0u8; 8]);
+    handler.push(0);
+    let meta_payload = [vec![0u8; 4], write_box(b"hdlr", &handler), write_box(b"ilst", &ilst)].concat();
+    write_box(b"udta", &write_box(b"meta", &meta_payload))
+}
+
+fn build_moov(snapshot: &Mp4Snapshot, mdat_data_offset: u32) -> Vec<u8> {
+    let mut offset = mdat_data_offset;
+    let mut traks = Vec::new();
+    for track in &snapshot.tracks {
+        let mut sample_index = 0usize;
+        let mut chunk_offsets = Vec::new();
+        for count in normalized_chunk_sample_counts(track) {
+            chunk_offsets.push(offset);
+            for sample in &track.samples[sample_index..sample_index + count as usize] {
+                offset = offset.checked_add(sample.data.len() as u32).expect("MP4 media offset overflow");
+            }
+            sample_index += count as usize;
+        }
+        traks.extend(build_trak(track, &chunk_offsets));
+    }
+    let retained_traks: Vec<u8> = snapshot.unknown_boxes.iter().filter(|item| item.fourcc == "trak").flat_map(|item| write_box(b"trak", &item.data)).collect();
+    write_box(b"moov", &[build_mvhd(&snapshot.movie), traks, retained_traks, build_udta(&snapshot.movie)].concat())
 }
 
 /// ✍️ Real ISO-BMFF encode from `Mp4Snapshot` (see this module's doc comment for the exact
 /// codec_retention_law scope: `ftyp`/`unknown_boxes`/sample payload bytes are byte-exact; `moov`
-/// internals are a fresh, spec-valid rebuild). Layout mirrors the real fixture's own
-/// (`ftyp`, unknown top-level boxes, `mdat`, `moov`) — `mdat`'s absolute offset is therefore
-/// known up-front (no two-pass placeholder needed, unlike remodel's `mp4_mux`, which places
-/// `moov` first and so must measure it before it can know `mdat`'s offset).
+/// internals are a fresh, spec-valid rebuild). The deterministic layout is `ftyp`, `moov`,
+/// retained top-level extensions, `mdat`; a first pass measures `moov`, and the second writes
+/// the resulting logical chunk offsets.
 pub fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
-    if let Some(source) = &snapshot.source {
-        if source.matches(&snapshot.projection()).unwrap_or(false) {
-            return source.bytes.clone();
-        }
-    }
     let mut major_brand_bytes = [b' '; 4];
     for (i, b) in snapshot.ftyp.major_brand.as_bytes().iter().take(4).enumerate() { major_brand_bytes[i] = *b; }
     let mut ftyp_payload = Vec::new();
@@ -613,21 +870,13 @@ pub fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
         }
     }).collect();
 
-    let mdat_data_offset = (ftyp.len() + unknown.len() + 8) as u32;
     let all_sample_bytes: Vec<u8> = snapshot.tracks.iter().flat_map(|t| t.samples.iter().flat_map(|s| s.data.clone())).collect();
     let mdat = write_box(b"mdat", &all_sample_bytes);
+    let measured_moov = build_moov(snapshot, 0);
+    let mdat_data_offset = u32::try_from(ftyp.len() + measured_moov.len() + unknown.len() + 8).expect("MP4 media offset exceeds stco range");
+    let moov = build_moov(snapshot, mdat_data_offset);
 
-    let mut offset = mdat_data_offset;
-    let mut traks = Vec::new();
-    for track in &snapshot.tracks {
-        traks.extend(build_trak(track, offset));
-        offset += track.samples.iter().map(|s| s.data.len() as u32).sum::<u32>();
-    }
-    let retained_traks: Vec<u8> = snapshot.unknown_boxes.iter().filter(|b| b.fourcc == "trak").flat_map(|b| write_box(b"trak", &b.data)).collect();
-    let moov_payload = [build_mvhd(&snapshot.tracks), traks, retained_traks].concat();
-    let moov = write_box(b"moov", &moov_payload);
-
-    [ftyp, unknown, mdat, moov].concat()
+    [ftyp, moov, unknown, mdat].concat()
 }
 //#endregion 🔖️Encode
 
@@ -635,17 +884,22 @@ pub fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
 mod codec_tests {
     use super::*;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box as SnapBox, Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+    use protocol::command::DiffAlgebra;
+    use protocol::MutationDiff;
 
     fn synthetic_snapshot() -> Mp4Snapshot {
         Mp4Snapshot {
             schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
             ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into(), "mp41".into()] },
+            movie: Mp4Movie::default(),
             tracks: vec![Mp4Track {
                 track_id: 1,
                 timescale: 90000,
-                codec: Mp4Codec::Avc { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4 },
+                codec: Mp4Codec::Avc { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4, extension: None },
                 width: 64,
                 height: 64,
+                metadata: Mp4TrackMetadata::default(),
+                chunk_sample_counts: vec![3],
                 samples: vec![
                     Mp4Sample { data: vec![0, 0, 0, 6, 0x65, 1, 2, 3, 4, 5], duration: 3000, cts_offset: 0, sync: true },
                     Mp4Sample { data: vec![0, 0, 0, 4, 0x61, 6, 7, 8], duration: 3000, cts_offset: 3000, sync: false },
@@ -653,7 +907,6 @@ mod codec_tests {
                 ],
             }],
             unknown_boxes: vec![SnapBox { fourcc: "free".into(), data: vec![0, 0, 0, 0] }],
-            source: None,
         }
     }
 
@@ -670,7 +923,7 @@ mod codec_tests {
         let snap = synthetic_snapshot();
         let bytes = encode_mp4(&snap);
         let back = decode_mp4(&bytes).expect("decode");
-        assert_eq!(back.projection(), snap, "decode(encode(snapshot)) must reproduce the semantic projection exactly");
+        assert_eq!(back, snap, "decode(encode(snapshot)) must reproduce the snapshot exactly");
     }
 
     #[test]
@@ -680,7 +933,7 @@ mod codec_tests {
         snap.tracks[0].codec = Mp4Codec::Other { fourcc: "mjpg".into(), raw: mp4_visual_sample_entry(b"mjpg", width, height, &[]) };
         let bytes = encode_mp4(&snap);
         let back = decode_mp4(&bytes).expect("decode");
-        assert_eq!(back.projection(), snap);
+        assert_eq!(back, snap);
     }
 
     //#region codec_retention_law — the REAL 43KB fixture
@@ -701,7 +954,7 @@ mod codec_tests {
         assert_eq!(track.height, 140);
         assert_eq!(track.samples.len(), 1441, "ffprobe nb_frames=1441");
         match &track.codec {
-            Mp4Codec::Avc { nal_length_size, sps, pps } => {
+            Mp4Codec::Avc { nal_length_size, sps, pps, .. } => {
                 assert_eq!(*nal_length_size, 4, "ffprobe nal_length_size=4");
                 assert!(!sps.is_empty() && !pps.is_empty(), "avcC must carry real SPS/PPS (extradata_size=46)");
             }
@@ -751,7 +1004,17 @@ mod codec_tests {
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
         let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
         assert_eq!(encode_mp4(&snapshot), bytes);
-        assert!(snapshot.source.as_ref().expect("captured source").matches(&snapshot.projection()).expect("match projection"));
+
+        let mut changed = snapshot.clone();
+        changed.tracks[0].width += 1;
+        let changed_bytes = encode_mp4(&changed);
+        assert_ne!(changed_bytes, bytes, "semantic mutation must materialize changed logical state");
+
+        let diff = crate::artifacts::mp4::standards::isobmff::subsets::any::schema::diff::Mp4Diff::between(&snapshot, &changed);
+        let after = diff.apply(&snapshot);
+        let restored = diff.inverse(&snapshot).apply(&after);
+        assert_eq!(restored, snapshot, "mutation inverse must reconstruct the logical snapshot");
+        assert_eq!(encode_mp4(&restored), bytes, "restored logical state must materialize the imported MP4 exactly");
     }
     //#endregion codec_retention_law
 }

@@ -71,7 +71,14 @@ impl ArtifactSerializer for SemioDocumentToPdf {
             }
             pages.push(make_page(&current));
         }
-        Ok(PdfSnapshot { schema: crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() })
+        Ok(PdfSnapshot {
+            schema: crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(),
+            declared_version: "1.7".into(),
+            pages,
+            info: PdfInfo::default(),
+            objects: Vec::new(),
+            trailer: Vec::new(),
+        })
     }
 }
 //#endregion 🔖️Serializer

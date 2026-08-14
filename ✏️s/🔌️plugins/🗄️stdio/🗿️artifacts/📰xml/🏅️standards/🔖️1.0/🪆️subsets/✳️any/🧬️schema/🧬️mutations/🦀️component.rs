@@ -6,7 +6,7 @@ use crate::artifacts::xml::schema::diff::{
     XmlElementDiff, XmlNodeDiff,
 };
 use crate::artifacts::xml::schema::diff::{
-    decode_option, dec_declaration, dec_str, dec_xml_node, encode_option, enc_declaration, enc_str, enc_xml_node,
+    decode_option, dec_declaration, dec_prolog, dec_str, dec_xml_node, encode_option, enc_declaration, enc_prolog, enc_str, enc_xml_node,
     split_top_level, strip_brackets,
 };
 use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlNode};
@@ -117,9 +117,9 @@ impl Mutation<XmlSnapshot> for XmlMutation {
             XmlMutation::NoMutation => XmlDiff::default(),
             XmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             XmlMutation::SetDeclaration { declaration } => {
-                XmlDiff { declaration: Some(declaration.clone()), doctype: None, root: None }
+                XmlDiff { prolog: None, declaration: Some(declaration.clone()), doctype: None, root: None }
             }
-            XmlMutation::SetDoctype { doctype } => XmlDiff { declaration: None, doctype: Some(doctype.clone()), root: None },
+            XmlMutation::SetDoctype { doctype } => XmlDiff { prolog: None, declaration: None, doctype: Some(doctype.clone()), root: None },
             XmlMutation::InsertElement { path, index, node } => diff_at_path(
                 &path.0,
                 XmlNodeDiff::Element(XmlElementDiff {
@@ -243,24 +243,26 @@ fn dec_node_path(s: &str) -> Result<XmlNodePath, String> {
         .collect::<Result<Vec<usize>, String>>()
         .map(XmlNodePath)
 }
-fn enc_xml_snapshot(s: &XmlSnapshot) -> String {
+pub(crate) fn enc_xml_snapshot(s: &XmlSnapshot) -> String {
     format!(
-        "[{},{},{},{}]",
+        "[{},{},{},{},{}]",
         enc_str(&s.schema),
         encode_option(&s.doc.root, enc_xml_node),
         encode_option(&s.doc.doctype, |v| enc_str(v)),
         encode_option(&s.doc.declaration, enc_declaration),
+        enc_prolog(&s.doc.prolog),
     )
 }
-fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
+pub(crate) fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, root, doctype, declaration] = parts.as_slice() else { return Err(format!("xml snapshot: expected 4 fields, got {}", parts.len())) };
+    let [schema, root, doctype, declaration, prolog] = parts.as_slice() else { return Err(format!("xml snapshot: expected 5 fields, got {}", parts.len())) };
     Ok(XmlSnapshot {
         schema: dec_str(schema)?,
         doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
             root: decode_option(root, dec_xml_node)?,
             doctype: decode_option(doctype, dec_str)?,
             declaration: decode_option(declaration, dec_declaration)?,
+            prolog: dec_prolog(prolog)?,
         },
     })
 }
@@ -319,7 +321,10 @@ impl protocol::OpText for XmlMutation {
 /// `store::ByteReader` plus `XmlDiff`'s own `write_str_lp`/`read_str_lp`/`enc_xml_node_bin`/
 /// `dec_xml_node_bin`/`enc_declaration_bin`/`dec_declaration_bin` (`../🔺️diff/🦀️component.rs`,
 /// `pub(crate)` to this artifact).
-use crate::artifacts::xml::schema::diff::{dec_declaration_bin, dec_xml_node_bin, enc_declaration_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
+use crate::artifacts::xml::schema::diff::{
+    dec_declaration_bin, dec_prolog_bin, dec_xml_node_bin, enc_declaration_bin, enc_prolog_bin, enc_xml_node_bin,
+    read_str_lp, write_str_lp,
+};
 
 fn enc_node_path_bin(p: &XmlNodePath, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.0.len() as u64);
@@ -335,7 +340,7 @@ fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodePath, 
     }
     Ok(XmlNodePath(path))
 }
-fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
+pub(crate) fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     out.push(if s.doc.root.is_some() { 1 } else { 0 });
     if let Some(root) = &s.doc.root {
@@ -349,13 +354,15 @@ fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
     if let Some(declaration) = &s.doc.declaration {
         enc_declaration_bin(declaration, out);
     }
+    enc_prolog_bin(&s.doc.prolog, out);
 }
-fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
+pub(crate) fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
     let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
-    Ok(XmlSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration } })
+    let prolog = dec_prolog_bin(reader)?;
+    Ok(XmlSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration, prolog } })
 }
 //#endregion 🔖️OpBinaryCodec
 

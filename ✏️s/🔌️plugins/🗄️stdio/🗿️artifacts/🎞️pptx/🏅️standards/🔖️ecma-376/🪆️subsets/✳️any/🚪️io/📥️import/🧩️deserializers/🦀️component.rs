@@ -7,13 +7,15 @@
 //! per ticket 26/08/11's W0 finding, the shape tree used to be flattened away entirely (every
 //! `p:txBody`'s paragraphs concatenated, shape boundaries discarded). Shapes nested inside a
 //! `p:grpSp` group, `p:graphicFrame` (charts/tables/SmartArt), `p:cxnSp` connectors, and anything
-//! unrecognized fall back to `PptxShape::Other{xml}` -- the exact serialized child node, verbatim
-//! -- so nothing real on disk is silently dropped.
+//! unrecognized fall back to `PptxShape::Other{node}` as logical XML.
 
-use crate::artifacts::pptx::{schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide}, PptxSnapshot};
+use super::super::super::{attr_val, element_children, find_child, resolve_office_document_relationship, PptxError};
+use crate::artifacts::pptx::{
+    schema::snapshot::{PptxParagraph, PptxPhysicalState, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxXmlPart},
+    PptxSnapshot,
+};
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc;
-use super::super::super::{attr_val, element_children, find_child, node_to_text, resolve_office_document_relationship, PptxError};
 
 //#region 🔖️TextXml
 fn run_from_xml(node: &XmlNode) -> Option<PptxRun> {
@@ -91,18 +93,15 @@ fn position_from_xml(shape_children: &[XmlNode]) -> crate::artifacts::pptx::sche
 
 /// 🧭️ Classifies one `p:spTree` DIRECT child into a typed `PptxShape` (`p:sp`/`p:pic` get real
 /// per-kind typing; everything else -- `p:graphicFrame`, `p:grpSp`, `p:cxnSp`, unrecognized --
-/// falls back to `Other{xml}`, the exact serialized node, verbatim).
+/// falls back to `Other{node}`, preserving its logical XML tree).
 fn shape_from_xml_node(node: &XmlNode) -> PptxShape {
-    let XmlNode::Element { name, children, .. } = node else { return PptxShape::Other { xml: node_to_text(node) } };
+    let XmlNode::Element { name, children, .. } = node else { return PptxShape::Other { node: node.clone() } };
     match name.as_str() {
         "p:sp" => {
-            let ph_type = find_child(children, "p:nvSpPr")
-                .and_then(|nv| find_child(element_children(nv), "p:nvPr"))
-                .and_then(|nvpr| find_child(element_children(nvpr), "p:ph"))
-                .map(|ph| match ph {
-                    XmlNode::Element { attrs, .. } => attr_val(attrs, "type").unwrap_or("body").to_string(),
-                    _ => "body".to_string(),
-                });
+            let ph_type = find_child(children, "p:nvSpPr").and_then(|nv| find_child(element_children(nv), "p:nvPr")).and_then(|nvpr| find_child(element_children(nvpr), "p:ph")).map(|ph| match ph {
+                XmlNode::Element { attrs, .. } => attr_val(attrs, "type").unwrap_or("body").to_string(),
+                _ => "body".to_string(),
+            });
             let position = position_from_xml(children);
             let text_frame = find_child(children, "p:txBody").map(text_frame_from_xml).unwrap_or_default();
             match ph_type {
@@ -113,13 +112,16 @@ fn shape_from_xml_node(node: &XmlNode) -> PptxShape {
         "p:pic" => {
             let blip_rel_id = find_child(children, "p:blipFill")
                 .and_then(|fill| find_child(element_children(fill), "a:blip"))
-                .and_then(|blip| match blip { XmlNode::Element { attrs, .. } => attr_val(attrs, "r:embed"), _ => None })
+                .and_then(|blip| match blip {
+                    XmlNode::Element { attrs, .. } => attr_val(attrs, "r:embed"),
+                    _ => None,
+                })
                 .unwrap_or_default()
                 .to_string();
             let position = position_from_xml(children);
             PptxShape::Picture { blip_rel_id, position }
         }
-        _ => PptxShape::Other { xml: node_to_text(node) },
+        _ => PptxShape::Other { node: node.clone() },
     }
 }
 //#endregion 🔖️ShapeXml
@@ -132,11 +134,7 @@ fn collect_shapes(root: &XmlNode) -> Vec<PptxShape> {
     let XmlNode::Element { children, .. } = root else { return Vec::new() };
     let Some(c_sld) = find_child(children, "p:cSld") else { return Vec::new() };
     let Some(sp_tree) = find_child(element_children(c_sld), "p:spTree") else { return Vec::new() };
-    element_children(sp_tree)
-        .iter()
-        .filter(|c| !matches!(c, XmlNode::Element { name, .. } if name == "p:nvGrpSpPr" || name == "p:grpSpPr"))
-        .map(shape_from_xml_node)
-        .collect()
+    element_children(sp_tree).iter().filter(|c| !matches!(c, XmlNode::Element { name, .. } if name == "p:nvGrpSpPr" || name == "p:grpSpPr")).map(shape_from_xml_node).collect()
 }
 //#endregion 🔖️SlideXml
 
@@ -148,7 +146,10 @@ fn presentation_slide_rids_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec
     if name != "p:presentation" {
         return Err(bad(format!("expected <p:presentation>, got <{name}>")));
     }
-    let sld_id_lst = children.iter().find_map(|c| match c { XmlNode::Element { name, children, .. } if name == "p:sldIdLst" => Some(children), _ => None });
+    let sld_id_lst = children.iter().find_map(|c| match c {
+        XmlNode::Element { name, children, .. } if name == "p:sldIdLst" => Some(children),
+        _ => None,
+    });
     let mut out = Vec::new();
     if let Some(children) = sld_id_lst {
         for c in children {
@@ -166,7 +167,8 @@ fn presentation_slide_rids_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec
 
 //#region 🔖️Codec
 pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
-    let opc = opc::decode_opc(data)?;
+    let archive = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data)?;
+    let mut opc = opc::decode_opc(data)?;
     let presentation_path = resolve_office_document_relationship(&opc).ok_or(PptxError::MissingPresentationRelationship)?;
     let bytes = opc.part_bytes(&presentation_path).ok_or_else(|| PptxError::MissingPart(presentation_path.clone()))?;
     let text = String::from_utf8(bytes.to_vec()).map_err(|_| PptxError::Xml { part: presentation_path.clone(), detail: "not valid utf-8".into() })?;
@@ -175,12 +177,11 @@ pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
 
     let pres_rels = opc.relationships_for(&presentation_path);
     let mut slides = Vec::with_capacity(slide_rids.len());
+    let mut slide_paths = Vec::with_capacity(slide_rids.len());
     for rid in &slide_rids {
-        let rel = pres_rels
-            .iter()
-            .find(|r| &r.id == rid)
-            .ok_or_else(|| PptxError::Malformed(format!("presentation references unknown relationship id {rid}")))?;
+        let rel = pres_rels.iter().find(|r| &r.id == rid).ok_or_else(|| PptxError::Malformed(format!("presentation references unknown relationship id {rid}")))?;
         let path = opc::resolve_relationship_target(&presentation_path, &rel.target);
+        slide_paths.push(path.clone());
         let bytes = opc.part_bytes(&path).ok_or_else(|| PptxError::MissingPart(path.clone()))?;
         let text = String::from_utf8(bytes.to_vec()).map_err(|_| PptxError::Xml { part: path.clone(), detail: "not valid utf-8".into() })?;
         let slide_xml = xml_document_from_text(&text).map_err(|e| PptxError::Xml { part: path.clone(), detail: e })?;
@@ -188,7 +189,25 @@ pub fn decode_pptx(data: &[u8]) -> Result<PptxSnapshot, PptxError> {
         slides.push(PptxSlide { shapes });
     }
 
-    Ok(PptxSnapshot::from_parts(opc, PptxPresentation { slides }))
+    let mut xml_parts = Vec::new();
+    let mut binary_parts = Vec::new();
+    for part in std::mem::take(&mut opc.parts) {
+        if part.path == presentation_path || slide_paths.contains(&part.path) {
+            continue;
+        }
+        let is_xml = part.path.ends_with(".xml") || part.content_type.ends_with("+xml") || part.content_type.ends_with("/xml");
+        if is_xml {
+            let text = String::from_utf8(part.bytes).map_err(|_| PptxError::Xml { part: part.path.clone(), detail: "not valid utf-8".into() })?;
+            let document = xml_document_from_text(&text).map_err(|detail| PptxError::Xml { part: part.path.clone(), detail })?;
+            xml_parts.push(PptxXmlPart { path: part.path, content_type: part.content_type, document });
+        } else {
+            binary_parts.push(part);
+        }
+    }
+    opc.parts = binary_parts;
+    let mut snapshot = PptxSnapshot::from_parts(opc, xml_parts, PptxPresentation { slides });
+    snapshot.physical = Some(PptxPhysicalState { archive, semantic_blake3: snapshot.semantic_blake3() });
+    Ok(snapshot)
 }
 //#endregion 🔖️Codec
 

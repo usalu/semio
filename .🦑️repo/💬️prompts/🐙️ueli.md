@@ -373,6 +373,35 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+
+
+---
+
+Achieve the following end to end:
+
+- A running hub with
+  - users that can create and share spaces.
+  - spaces are persisted in db.
+  - space share presence inside an app with the same artifact peer to peer between all active users.
+  - 
+
+---
+
+Collaboration in spaces is 
+
+---
+
+All well known artifacts must cleanly roundtrip through import and export.
+Use these files to test the snapshot, diff, mutation, io system etc.
+Only stop once the export is identical to the import.
+temp/📄️bachelor-thesis.pdf
+temp/architectural_example.dwg
+temp/artifacts.svg
+temp/bauen-mit-bestand.mp4
+temp/domai-specific-programmaning-language-for-architects.pptx
+
+---
+
 hover and selection must be first class citizens (with folders mechanisms, etc) in apps and not be part of e.g. commands.
 Make sure that the mechanism is fullblown, automatically has support for declarative transitive hover, the different selection modes, and it cleanly integrates into app config, is broadcasted over presence, etc
 
@@ -2136,31 +2165,6 @@ This MUST NOT happen.
 ## ui
 
 ###
-
----
-
-Achieve the following end to end:
-
-- A running hub with
-  - users that can create and share spaces.
-  - spaces are persisted in db.
-  - space share presence inside an app with the same artifact peer to peer between all active users.
-  - 
-
----
-
-Collaboration in spaces is 
-
----
-
-All well known artifacts must cleanly roundtrip through import and export.
-Use these files to test the snapshot, diff, mutation, io system etc.
-Only stop once the export is identical to the import.
-temp/📄️bachelor-thesis.pdf
-temp/architectural_example.dwg
-temp/artifacts.svg
-temp/bauen-mit-bestand.mp4
-temp/domai-specific-programmaning-language-for-architects.pptx
 
 ---
 

@@ -1,11 +1,11 @@
 //! 🧾 `outline` — one named inference: this PresentationML deck's own slide/shape/word
 //! structure. `slideCount` is `presentation.slides.len()` verbatim; `shapeCount` is the total
-//! shape count across every slide's `p:spTree` (including `Other` raw-retained shapes);
+//! shape count across every slide's `p:spTree` (including logical `Other` XML nodes);
 //! `wordCount` is a whitespace-split word count over every `TextBox`/`Placeholder` run's `text`
 //! (`Picture`/`Other` shapes carry no modeled text).
 
-use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::pptx::schema::snapshot::PptxShape;
+use crate::artifacts::pptx::PptxSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
@@ -52,13 +52,10 @@ mod tests {
             schema: "stdio.pptx".into(),
             opc: Default::default(),
             presentation: crate::artifacts::pptx::schema::snapshot::PptxPresentation {
-                slides: vec![PptxSlide {
-                    shapes: vec![
-                        PptxShape::TextBox { text_frame: vec![PptxParagraph::text("hello world")], position: Default::default() },
-                        PptxShape::Picture { blip_rel_id: "rId1".into(), position: Default::default() },
-                    ],
-                }],
+                slides: vec![PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("hello world")], position: Default::default() }, PptxShape::Picture { blip_rel_id: "rId1".into(), position: Default::default() }] }],
             },
+            xml_parts: Vec::new(),
+            physical: None,
         };
         let outline = PptxOutline::compute(&snapshot);
         assert_eq!(outline.slide_count, 1);

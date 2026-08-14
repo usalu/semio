@@ -6,10 +6,10 @@ use crate::artifacts::svg::schema::diff::{
     SvgDiff, SvgElementDiff, SvgNodeDiff,
 };
 use crate::artifacts::svg::schema::diff::{
-    decode_option, dec_artifact_source, dec_declaration, dec_str, dec_xml_node, encode_option, enc_artifact_source, enc_declaration, enc_str, enc_xml_node,
+    decode_option, dec_declaration, dec_prolog, dec_str, dec_xml_node, encode_option, enc_declaration, enc_prolog, enc_str, enc_xml_node,
     split_top_level, strip_brackets,
 };
-use crate::artifacts::svg::schema::diff::{dec_artifact_source_bin, dec_declaration_bin, dec_xml_node_bin, enc_artifact_source_bin, enc_declaration_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
+use crate::artifacts::svg::schema::diff::{dec_declaration_bin, dec_prolog_bin, dec_xml_node_bin, enc_declaration_bin, enc_prolog_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
 use crate::artifacts::svg::schema::snapshot::{
     element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string,
     NodePath, TransformOp, ViewBox,
@@ -147,8 +147,8 @@ impl Mutation<SvgSnapshot> for SvgMutation {
         match self {
             SvgMutation::NoMutation => SvgDiff::default(),
             SvgMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            SvgMutation::SetDeclaration { declaration } => SvgDiff { source: None, declaration: Some(declaration.clone()), doctype: None, root: None },
-            SvgMutation::SetDoctype { doctype } => SvgDiff { source: None, declaration: None, doctype: Some(doctype.clone()), root: None },
+            SvgMutation::SetDeclaration { declaration } => SvgDiff { prolog: None, declaration: Some(declaration.clone()), doctype: None, root: None },
+            SvgMutation::SetDoctype { doctype } => SvgDiff { prolog: None, declaration: None, doctype: Some(doctype.clone()), root: None },
             SvgMutation::InsertElement { parent, index, node } => diff_at_path(
                 parent,
                 SvgNodeDiff::Element(SvgElementDiff {
@@ -304,27 +304,27 @@ fn enc_transform_list(list: &[TransformOp]) -> String {
 fn dec_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_transform_op).collect()
 }
-fn enc_svg_snapshot(s: &SvgSnapshot) -> String {
+pub(crate) fn enc_svg_snapshot(s: &SvgSnapshot) -> String {
     format!(
         "[{},{},{},{},{}]",
         enc_str(&s.schema),
         encode_option(&s.doc.root, enc_xml_node),
         encode_option(&s.doc.doctype, |v| enc_str(v)),
         encode_option(&s.doc.declaration, enc_declaration),
-        encode_option(&s.source, enc_artifact_source),
+        enc_prolog(&s.doc.prolog),
     )
 }
-fn dec_svg_snapshot(s: &str) -> Result<SvgSnapshot, String> {
+pub(crate) fn dec_svg_snapshot(s: &str) -> Result<SvgSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, root, doctype, declaration, source] = parts.as_slice() else { return Err(format!("svg snapshot: expected 5 fields, got {}", parts.len())) };
+    let [schema, root, doctype, declaration, prolog] = parts.as_slice() else { return Err(format!("svg snapshot: expected 5 fields, got {}", parts.len())) };
     Ok(SvgSnapshot {
         schema: dec_str(schema)?,
         doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
             root: decode_option(root, dec_xml_node)?,
             doctype: decode_option(doctype, dec_str)?,
             declaration: decode_option(declaration, dec_declaration)?,
+            prolog: dec_prolog(prolog)?,
         },
-        source: decode_option(source, dec_artifact_source)?,
     })
 }
 
@@ -516,7 +516,7 @@ fn dec_transform_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Tran
     }
     Ok(list)
 }
-fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
+pub(crate) fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     out.push(if s.doc.root.is_some() { 1 } else { 0 });
     if let Some(root) = &s.doc.root {
@@ -530,18 +530,15 @@ fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
     if let Some(declaration) = &s.doc.declaration {
         enc_declaration_bin(declaration, out);
     }
-    out.push(if s.source.is_some() { 1 } else { 0 });
-    if let Some(source) = &s.source {
-        enc_artifact_source_bin(source, out);
-    }
+    enc_prolog_bin(&s.doc.prolog, out);
 }
-fn dec_svg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
+pub(crate) fn dec_svg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
     let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
-    let source = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_artifact_source_bin(reader)?) } else { None };
-    Ok(SvgSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration }, source })
+    let prolog = dec_prolog_bin(reader)?;
+    Ok(SvgSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration, prolog } })
 }
 //#endregion 🔖️OpBinaryCodec
 
@@ -874,6 +871,7 @@ mod tests {
             doc: XmlDocument {
                 declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
                 doctype: Some("<!DOCTYPE svg>".into()),
+                prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "svg".into(),
                     attrs: vec![
@@ -892,7 +890,6 @@ mod tests {
                     ],
                 }),
             },
-            source: None,
         }
     }
 
@@ -902,6 +899,7 @@ mod tests {
             doc: XmlDocument {
                 declaration: None,
                 doctype: None,
+                prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "svgRenamed".into(),
                     attrs: vec![
@@ -922,9 +920,7 @@ mod tests {
                     ],
                 }),
             },
-            source: None,
         };
-        snapshot.source = Some(crate::ArtifactSource::capture(b"svg-sweep-b", &snapshot.semantic_projection()).expect("capture sweep source"));
         snapshot
     }
     //#endregion 🔖️Fixtures
@@ -1020,6 +1016,7 @@ mod tests {
             doc: XmlDocument {
                 declaration: None,
                 doctype: None,
+                prolog: Vec::new(),
                 root: Some(XmlNode::Element {
                     name: "svg".into(),
                     attrs: Vec::new(),
@@ -1029,7 +1026,6 @@ mod tests {
                     ],
                 }),
             },
-            source: None,
         }
     }
 
@@ -1194,7 +1190,7 @@ mod tests {
         // tri-state scalars exercise `Some(None)`.
         assert_eq!(diff_ab.declaration, Some(None));
         assert_eq!(diff_ab.doctype, Some(None));
-        assert!(diff_ab.source.is_some());
+        assert!(diff_ab.prolog.is_some());
         assert!(diff_ab.root.is_some());
 
         let SvgNodeDiffT::Element(root_diff) = diff_ab.root.as_ref().unwrap() else { panic!("expected element diff") };
@@ -1252,6 +1248,11 @@ mod tests {
         let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("dsl parse");
         assert_eq!(parsed, imported);
         assert_eq!(parsed.export_utf8().expect("dsl export"), original);
+
+        let xml = crate::artifacts::svg::standards::v1_1::subsets::any::io::export::serializers::artifacts::xml::v1_0::any::serialize(&imported).expect("svg to xml");
+        assert_eq!(xml.export_utf8().expect("xml export"), original);
+        let restored = crate::artifacts::svg::standards::v1_1::subsets::any::io::import::deserializers::artifacts::xml::v1_0::any::deserialize(&xml).expect("xml to svg");
+        assert_eq!(restored.export_utf8().expect("xml bridge export"), original);
     }
 
     #[test]
@@ -1273,7 +1274,7 @@ mod tests {
         let changed = MutationDiff::apply(&d1, &imported);
         let changed_bytes = changed.export_utf8().expect("changed export");
         assert_ne!(changed_bytes, original);
-        parse_svg_xml(std::str::from_utf8(&changed_bytes).expect("changed UTF-8")).expect("changed SVG parses");
+        crate::artifacts::svg::schema::snapshot::parse_svg_xml(std::str::from_utf8(&changed_bytes).expect("changed UTF-8")).expect("changed SVG parses");
 
         let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse mutation");
         let d2 = Mutation::diff(&inverse_mutation, &changed);
@@ -1289,10 +1290,12 @@ mod tests {
     }
 
     #[test]
-    fn exact_native_source_survives_diff_and_set_snapshot_codecs() {
+    fn exact_native_logical_state_survives_diff_and_set_snapshot_codecs() {
         let original = exact_fixture_bytes();
         let imported = exact_fixture();
+        assert!(imported.doc.prolog.iter().any(|node| matches!(node, XmlNode::Comment { .. })));
         let projection = imported.semantic_projection();
+        assert_eq!(projection, imported);
 
         let diff = <SvgDiff as DiffAlgebra<SvgSnapshot>>::between(&projection, &imported);
         let text_diff = SvgDiff::parse_diff(&diff.print_diff()).expect("diff text decode");

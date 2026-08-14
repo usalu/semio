@@ -2,24 +2,20 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, index-aware.
 
 use crate::artifacts::pptx::schema::diff::{
-    diff_insert_shape, diff_insert_slide, diff_move_slide, diff_remove_shape, diff_remove_slide,
-    diff_set_shape_position, diff_set_shape_text, diff_set_snapshot, PptxDiff,
+    dec_ct_entry, dec_list, dec_owner_rels, dec_paragraph, dec_part, dec_shape, dec_slide, dec_str, dec_transform, dec_xml_parts, enc_ct_entry, enc_list, enc_owner_rels, enc_paragraph, enc_part, enc_shape, enc_slide, enc_str, enc_transform,
+    enc_xml_parts, split_top_level, strip_brackets,
 };
 use crate::artifacts::pptx::schema::diff::{
-    dec_ct_entry, dec_list, dec_owner_rels, dec_paragraph, dec_part, dec_shape, dec_slide, dec_str, dec_transform,
-    enc_ct_entry, enc_list, enc_owner_rels, enc_paragraph, enc_part, enc_shape, enc_slide, enc_str, enc_transform,
-    split_top_level, strip_brackets,
+    dec_paragraph_bin, dec_part_bin, dec_rel_bin, dec_shape_bin, dec_slide_bin, dec_transform_bin, dec_xml_parts_bin, enc_paragraph_bin, enc_part_bin, enc_rel_bin, enc_shape_bin, enc_slide_bin, enc_transform_bin, enc_xml_parts_bin, read_str_lp,
+    write_str_lp,
 };
-use crate::artifacts::pptx::schema::diff::{
-    dec_paragraph_bin, dec_part_bin, dec_rel_bin, dec_shape_bin, dec_slide_bin, dec_transform_bin, enc_paragraph_bin, enc_part_bin,
-    enc_rel_bin, enc_shape_bin, enc_slide_bin, enc_transform_bin, read_str_lp, write_str_lp,
-};
+use crate::artifacts::pptx::schema::diff::{diff_insert_shape, diff_insert_slide, diff_move_slide, diff_remove_shape, diff_remove_slide, diff_set_shape_position, diff_set_shape_text, diff_set_snapshot, PptxDiff};
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::OpcPackage;
-use protocol::{Mutation, OpText};
 #[cfg(test)]
 use protocol::OpBinary;
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -120,12 +116,8 @@ impl Mutation<PptxSnapshot> for PptxMutation {
             PptxMutation::MoveSlide { from, to } => diff_move_slide(&base.presentation, *from, *to),
             PptxMutation::InsertShape { slide_index, shape_index, shape } => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
             PptxMutation::RemoveShape { slide_index, shape_index } => diff_remove_shape(*slide_index, *shape_index),
-            PptxMutation::SetShapeText { slide_index, shape_index, text_frame } => {
-                diff_set_shape_text(&base.presentation, *slide_index, *shape_index, text_frame.clone())
-            }
-            PptxMutation::SetShapePosition { slide_index, shape_index, position } => {
-                diff_set_shape_position(&base.presentation, *slide_index, *shape_index, *position)
-            }
+            PptxMutation::SetShapeText { slide_index, shape_index, text_frame } => diff_set_shape_text(&base.presentation, *slide_index, *shape_index, text_frame.clone()),
+            PptxMutation::SetShapePosition { slide_index, shape_index, position } => diff_set_shape_position(&base.presentation, *slide_index, *shape_index, *position),
         }
     }
 
@@ -193,13 +185,7 @@ fn enc_opc_package(p: &OpcPackage) -> String {
     let mut owners: Vec<&String> = p.relationships.keys().collect();
     owners.sort();
     let rels = owners.iter().map(|owner| enc_owner_rels(&(owner.to_string(), p.relationships[*owner].clone()))).collect::<Vec<_>>();
-    format!(
-        "[{},{},{},{}]",
-        enc_list(&p.parts, enc_part),
-        enc_list(&p.content_types.defaults, enc_ct_entry),
-        enc_list(&p.content_types.overrides, enc_ct_entry),
-        format!("[{}]", rels.join(",")),
-    )
+    format!("[{},{},{},{}]", enc_list(&p.parts, enc_part), enc_list(&p.content_types.defaults, enc_ct_entry), enc_list(&p.content_types.overrides, enc_ct_entry), format!("[{}]", rels.join(",")),)
 }
 fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
     let parts_top = split_top_level(strip_brackets(s)?, ',');
@@ -213,19 +199,15 @@ fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
     }
     Ok(package)
 }
-/// 🌳 Full `PptxSnapshot`: `[schema,opc,slides]` -- `presentation` collapses to its own single
+/// 🌳 Full `PptxSnapshot`: `[schema,opc,xml-parts,slides]` -- `presentation` collapses to its own single
 /// field (`slides: Vec<PptxSlide>`), same convention `enc_slide`/`enc_paragraph` use.
 fn enc_snapshot(s: &PptxSnapshot) -> String {
-    format!("[{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_list(&s.presentation.slides, enc_slide))
+    format!("[{},{},{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_xml_parts(&s.xml_parts), enc_list(&s.presentation.slides, enc_slide), enc_str(&serde_json::to_string(&s.physical).expect("serializable pptx physical state")))
 }
 fn dec_snapshot(s: &str) -> Result<PptxSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, opc, slides] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
-    Ok(PptxSnapshot {
-        schema: dec_str(schema)?,
-        opc: dec_opc_package(opc)?,
-        presentation: PptxPresentation { slides: dec_list(slides, dec_slide)? },
-    })
+    let [schema, opc, xml_parts, slides, physical] = parts.as_slice() else { return Err(format!("snapshot: expected 5 fields, got {}", parts.len())) };
+    Ok(PptxSnapshot { schema: dec_str(schema)?, opc: dec_opc_package(opc)?, xml_parts: dec_xml_parts(xml_parts)?, presentation: PptxPresentation { slides: dec_list(slides, dec_slide)? }, physical: serde_json::from_str(&dec_str(physical)?).map_err(|error| error.to_string())? })
 }
 //#endregion 🔖️SnapshotCodec
 
@@ -253,13 +235,7 @@ fn parse_pptx_mutation(line: &str) -> Result<PptxMutation, String> {
         return Ok(PptxMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(|tok| tok.split_once('=').ok_or_else(|| format!("pptx mutation: bad arg token {tok:?}")))
-        .collect::<Result<Vec<_>, String>>()?
-        .into_iter()
-        .collect();
+    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("pptx mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("pptx mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
@@ -269,11 +245,7 @@ fn parse_pptx_mutation(line: &str) -> Result<PptxMutation, String> {
         "move-slide" => Ok(PptxMutation::MoveSlide { from: usize_arg("from")?, to: usize_arg("to")? }),
         "insert-shape" => Ok(PptxMutation::InsertShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, shape: dec_shape(arg("shape")?)? }),
         "remove-shape" => Ok(PptxMutation::RemoveShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")? }),
-        "set-shape-text" => Ok(PptxMutation::SetShapeText {
-            slide_index: usize_arg("slide-index")?,
-            shape_index: usize_arg("shape-index")?,
-            text_frame: dec_list(arg("text-frame")?, dec_paragraph)?,
-        }),
+        "set-shape-text" => Ok(PptxMutation::SetShapeText { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, text_frame: dec_list(arg("text-frame")?, dec_paragraph)? }),
         "set-shape-position" => Ok(PptxMutation::SetShapePosition { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, position: dec_transform(arg("position")?)? }),
         other => Err(format!("pptx mutation: unknown keyword {other:?}")),
     }
@@ -361,24 +333,28 @@ fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage,
     package.relationships = relationships;
     Ok(package)
 }
-/// 🌳 Full `PptxSnapshot`: `[schema,opc,slides]`, mirroring `enc_snapshot`'s text form above.
+/// 🌳 Full `PptxSnapshot`: `[schema,opc,xml-parts,slides]`, mirroring `enc_snapshot`'s text form above.
 fn enc_snapshot_bin(s: &PptxSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     enc_opc_package_bin(&s.opc, out);
+    enc_xml_parts_bin(&s.xml_parts, out);
     store::pack_rt::write_varint_u64(out, s.presentation.slides.len() as u64);
     for slide in &s.presentation.slides {
         enc_slide_bin(slide, out);
     }
+    write_bytes_lp(out, &serde_json::to_vec(&s.physical).expect("serializable pptx physical state"));
 }
 fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PptxSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let opc = dec_opc_package_bin(reader)?;
+    let xml_parts = dec_xml_parts_bin(reader)?;
     let slide_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut slides = Vec::with_capacity(slide_count as usize);
     for _ in 0..slide_count {
         slides.push(dec_slide_bin(reader)?);
     }
-    Ok(PptxSnapshot { schema, opc, presentation: PptxPresentation { slides } })
+    let physical = serde_json::from_slice(&read_bytes_lp(reader)?).map_err(|error| error.to_string())?;
+    Ok(PptxSnapshot { schema, opc, xml_parts, presentation: PptxPresentation { slides }, physical })
 }
 fn enc_text_frame_bin(ps: &[PptxParagraph], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, ps.len() as u64);
@@ -539,10 +515,15 @@ pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
 mod tests {
     use super::*;
     use crate::artifacts::pptx::schema::diff::{PptxOpcPartDiff, PptxShapeDiff};
-    use crate::artifacts::pptx::schema::snapshot::{PptxPresentation, PptxRun};
-    use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+    use crate::artifacts::pptx::schema::snapshot::{PptxPresentation, PptxRun, PptxXmlPart};
+    use crate::artifacts::xml::schema::snapshot::{XmlDocument, XmlNode};
+    use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
+
+    fn other(name: &str) -> PptxShape {
+        PptxShape::Other { node: XmlNode::Element { name: name.into(), attrs: Vec::new(), children: Vec::new() } }
+    }
 
     fn fixture() -> PptxSnapshot {
         crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
@@ -671,7 +652,7 @@ mod tests {
     ///   `shapes.modified`, exercising `kind`/`text_frame`/`position` all three in one diff.
     /// - top level: `sweep_a` has 3 slides, `sweep_b` has 2 -- `a -> b` shows `slides.removed`
     ///   (the dropped `Other`-shaped slide2) + `slides.modified` (both slide0 and slide1); `b ->
-    ///   a` shows `slides.added` (slide2, whole, carrying its `Other` shape verbatim).
+    ///   a` shows `slides.added` (slide2, whole, carrying its logical `Other` XML node).
     ///
     /// `opc` content_types/parts/relationships each get one removed, one modified, one added,
     /// same convention as docx's own sweep fixtures (name-keyed collections have no such trap).
@@ -685,30 +666,22 @@ mod tests {
         opc.set_part("ppt/toRemove.xml", "application/xml", b"gone".to_vec());
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
         opc.add_relationship("", "rId9", "http://example/toRemove", "ppt/toRemove.xml");
-        opc.relationships.insert(
-            "ppt/presentation.xml".into(),
-            vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "slides/old.xml".into(), target_mode: OpcTargetMode::Internal }],
-        );
-        opc.relationships.insert(
-            "ppt/toRemove.xml".into(),
-            vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }],
-        );
+        opc.relationships.insert("ppt/presentation.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "slides/old.xml".into(), target_mode: OpcTargetMode::Internal }]);
+        opc.relationships.insert("ppt/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
 
         PptxSnapshot::from_parts(
             opc,
+            vec![PptxXmlPart { path: "docProps/core.xml".into(), content_type: "application/xml".into(), document: XmlDocument::default() }],
             PptxPresentation {
                 slides: vec![
                     PptxSlide {
                         shapes: vec![
-                            PptxShape::TextBox {
-                                text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }],
-                                position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 },
-                            },
+                            PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "old".into(), bold: false, italic: false, font_size: Some(10) }] }], position: PptxTransform { x: 1, y: 1, cx: 1, cy: 1 } },
                             PptxShape::Picture { blip_rel_id: "rIdToDrop".into(), position: PptxTransform::default() },
                         ],
                     },
                     PptxSlide { shapes: vec![PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("stay old")], position: PptxTransform::default() }] },
-                    PptxSlide { shapes: vec![PptxShape::Other { xml: "<p:graphicFrame/>".into() }] },
+                    PptxSlide { shapes: vec![other("p:graphicFrame")] },
                 ],
             },
         )
@@ -724,22 +697,17 @@ mod tests {
         opc.set_part("ppt/added.xml", "application/xml", b"fresh".to_vec());
         opc.content_types.set_override("ppt/toModify.xml", "application/xml-modified");
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
-        opc.relationships.insert(
-            "ppt/presentation.xml".into(),
-            vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "slides/new.xml".into(), target_mode: OpcTargetMode::Internal }],
-        );
+        opc.relationships.insert("ppt/presentation.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "slides/new.xml".into(), target_mode: OpcTargetMode::Internal }]);
         opc.relationships.insert("ppt/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
 
         PptxSnapshot::from_parts(
             opc,
+            vec![PptxXmlPart { path: "docProps/app.xml".into(), content_type: "application/xml".into(), document: XmlDocument::default() }],
             PptxPresentation {
                 slides: vec![
                     PptxSlide {
                         shapes: vec![PptxShape::TextBox {
-                            text_frame: vec![
-                                PptxParagraph { runs: vec![PptxRun { text: "new".into(), bold: true, italic: true, font_size: None }] },
-                                PptxParagraph::text("second para"),
-                            ],
+                            text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "new".into(), bold: true, italic: true, font_size: None }] }, PptxParagraph::text("second para")],
                             position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 },
                         }],
                     },
@@ -953,15 +921,21 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     #[test]
     fn codec_retention_law() {
-        let snap = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
+        let authored = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![PptxSlide {
                 shapes: vec![
-                    PptxShape::Placeholder { kind: "ctrTitle".into(), text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "Hello".into(), bold: true, italic: true, font_size: Some(44) }] }], position: PptxTransform { x: 100, y: 200, cx: 300, cy: 400 } },
+                    PptxShape::Placeholder {
+                        kind: "ctrTitle".into(),
+                        text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "Hello".into(), bold: true, italic: true, font_size: Some(44) }] }],
+                        position: PptxTransform { x: 100, y: 200, cx: 300, cy: 400 },
+                    },
                     PptxShape::Picture { blip_rel_id: "rId2".into(), position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } },
-                    PptxShape::Other { xml: "<p:graphicFrame><a:graphic/></p:graphicFrame>".into() },
+                    other("p:graphicFrame"),
                 ],
             }],
         });
+        let native = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(&authored).expect("encode authored");
+        let snap = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&native).expect("decode authored");
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <PptxSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
@@ -989,6 +963,7 @@ mod tests {
 
         // opc: content_types (both defaults+overrides), parts, relationships all populated.
         let opc_diff = diff_ab.opc.as_ref().expect("opc diff present");
+        assert_eq!(diff_ab.xml_parts, Some(b.xml_parts.clone()), "logical XML parts not exercised");
         let ct = opc_diff.content_types.as_ref().expect("content_types diff present");
         let defaults = ct.defaults.as_ref().expect("defaults diff present");
         assert!(!defaults.added.is_empty(), "content_types.defaults: added not exercised");
@@ -1045,8 +1020,8 @@ mod tests {
         // (`Some(Some(10))`, restoring the value `a` had).
         let slides_ba = diff_ba.presentation.as_ref().unwrap().slides.as_ref().expect("slides diff (b->a) present");
         assert!(!slides_ba.added.is_empty(), "slides (b->a): added (top) not exercised");
-        let PptxShape::Other { xml } = &slides_ba.added[0].item.shapes[0] else { panic!("expected added Other shape") };
-        assert!(!xml.is_empty());
+        let PptxShape::Other { node } = &slides_ba.added[0].item.shapes[0] else { panic!("expected added Other shape") };
+        assert!(matches!(node, XmlNode::Element { .. }));
 
         let slide0_diff_ba = &slides_ba.modified.iter().find(|m| m.index == 0).expect("slide0 modified (b->a)").diff;
         let shapes_diff_ba = slide0_diff_ba.shapes.as_ref().expect("shapes diff (b->a) present");
@@ -1071,13 +1046,13 @@ mod tests {
         let mutations = vec![
             PptxMutation::NoMutation,
             PptxMutation::SetSnapshot { snapshot: base.clone() },
-            PptxMutation::InsertSlide { index: 1, slide: PptxSlide { shapes: vec![PptxShape::Other { xml: "<p:graphicFrame/>".into() }] } },
+            PptxMutation::InsertSlide { index: 1, slide: PptxSlide { shapes: vec![other("p:graphicFrame")] } },
             PptxMutation::RemoveSlide { index: 0 },
             PptxMutation::MoveSlide { from: 0, to: 1 },
             PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::TextBox { text_frame: vec![PptxParagraph::text("x")], position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } } },
             PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::Picture { blip_rel_id: "rId7".into(), position: PptxTransform::default() } },
             PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("ph")], position: PptxTransform::default() } },
-            PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::Other { xml: "<p:cxnSp/>".into() } },
+            PptxMutation::InsertShape { slide_index: 0, shape_index: 1, shape: other("p:cxnSp") },
             PptxMutation::RemoveShape { slide_index: 0, shape_index: 0 },
             PptxMutation::SetShapeText { slide_index: 0, shape_index: 0, text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "bold".into(), bold: true, italic: false, font_size: Some(24) }] }, PptxParagraph::text("second")] },
             PptxMutation::SetShapePosition { slide_index: 0, shape_index: 0, position: PptxTransform { x: 5, y: 6, cx: 7, cy: 8 } },

@@ -27,7 +27,7 @@ pub struct DwgStructure {
 }
 
 /// 🩹 Hand-rolled: matches `compute_dwg_structure(&DwgSnapshot::default())` exactly
-/// (`DwgSnapshot::default()`'s `bytes`/`sections` are empty, `codepage` is `0`, `version` is
+/// (`DwgSnapshot::default()`'s `source`/`sections` are empty, `codepage` is `0`, `version` is
 /// `String::new()` — verified directly against `📸️snapshot/🦀️component.rs`'s own `Default` impl,
 /// not assumed).
 impl Default for DwgStructure {
@@ -67,7 +67,7 @@ pub fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {
     }
 
     DwgStructure {
-        byte_count: snapshot.bytes.len() as u32,
+        byte_count: snapshot.sections.iter().flat_map(|section| &section.pages).map(|page| page.decoded.len() as u64).sum::<u64>().min(u32::MAX as u64) as u32,
         section_count: snapshot.sections.len() as u32,
         page_count,
         decoded_page_count,
@@ -92,7 +92,7 @@ mod tests {
             version: "AC1024".into(),
             maintenance_version: 3,
             codepage: 30,
-            bytes: vec![0u8; 256],
+            drawing: Default::default(),
             section_names: vec!["AcDb:Header".into(), "AcDb:Classes".into()],
             sections: vec![
                 DwgSection {
@@ -100,21 +100,24 @@ mod tests {
                     compressed: true,
                     declared_size: 100,
                     pages: vec![
-                        DwgSectionPage { page_number: 0, file_address: 0x100, compressed_size: 40, decoded: vec![1, 2, 3], error: None },
-                        DwgSectionPage { page_number: 1, file_address: 0x140, compressed_size: 30, decoded: Vec::new(), error: Some("bad crc".into()) },
+                        DwgSectionPage { page_number: 0, start_offset: 0x100, decompressed_size: 40, decoded: vec![1, 2, 3], error: None },
+                        DwgSectionPage { page_number: 1, start_offset: 0x140, decompressed_size: 30, decoded: Vec::new(), error: Some("bad crc".into()) },
                     ],
+                    ..Default::default()
                 },
                 DwgSection {
                     name: "AcDb:Classes".into(),
                     compressed: false,
                     declared_size: 50,
-                    pages: vec![DwgSectionPage { page_number: 0, file_address: 0x200, compressed_size: 50, decoded: vec![9], error: None }],
+                    pages: vec![DwgSectionPage { page_number: 0, start_offset: 0x200, decompressed_size: 50, decoded: vec![9], error: None }],
+                    ..Default::default()
                 },
             ],
             decode_status: crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgDecodeStatus::SectionsLocated,
+            physical: Default::default(),
         };
         let structure = compute_dwg_structure(&snapshot);
-        assert_eq!(structure.byte_count, 256);
+        assert_eq!(structure.byte_count, 4);
         assert_eq!(structure.section_count, 2);
         assert_eq!(structure.page_count, 3);
         assert_eq!(structure.decoded_page_count, 2);
@@ -131,15 +134,17 @@ mod tests {
             version: "AC1024".into(),
             maintenance_version: 0,
             codepage: 30,
-            bytes: vec![1, 2, 3],
+            drawing: Default::default(),
             section_names: vec!["AcDb:Header".into()],
             sections: vec![DwgSection {
                 name: "AcDb:Header".into(),
                 compressed: true,
                 declared_size: 10,
-                pages: vec![DwgSectionPage { page_number: 0, file_address: 0, compressed_size: 5, decoded: vec![1], error: None }],
+                pages: vec![DwgSectionPage { page_number: 0, start_offset: 0, decompressed_size: 5, decoded: vec![1], error: None }],
+                ..Default::default()
             }],
             decode_status: crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgDecodeStatus::SectionsDecompressed,
+            physical: Default::default(),
         };
         assert_eq!(compute_dwg_structure(&snapshot), compute_dwg_structure(&snapshot));
     }

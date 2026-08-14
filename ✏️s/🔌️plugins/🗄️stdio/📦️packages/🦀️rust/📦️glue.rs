@@ -17,63 +17,13 @@ extern crate semio_framework_plugin;
 // them byte-for-byte.
 extern crate semio_framework_graph as graph_core;
 
-//#region LosslessSource
-/// 🧬️ Persisted native source image paired with the semantic state fingerprint captured at import.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, schema::ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.artifact-source.v1")]
-pub struct ArtifactSource {
-    #[state(artifact)]
-    #[serde(default)]
-    pub bytes: Vec<u8>,
-    #[state(artifact)]
-    #[serde(default)]
-    pub semantic_blake3: Vec<u8>,
-}
-
-impl ArtifactSource {
-    /// 📥️ Captures exact native bytes and the deterministic semantic projection present at import.
-    pub fn capture<T: serde::Serialize>(bytes: &[u8], projection: &T) -> Result<Self, String> {
-        Ok(Self {
-            bytes: bytes.to_vec(),
-            semantic_blake3: semantic_fingerprint(projection)?,
-        })
-    }
-
-    /// 🔍️ Reports whether the current semantic projection still denotes the captured source image.
-    pub fn matches<T: serde::Serialize>(&self, projection: &T) -> Result<bool, String> {
-        Ok(self.semantic_blake3 == semantic_fingerprint(projection)?)
-    }
-}
-
+//#region SemanticFingerprint
 /// 🪪️ Computes the stable BLAKE3 identity of a serializable semantic projection.
 pub fn semantic_fingerprint<T: serde::Serialize>(projection: &T) -> Result<Vec<u8>, String> {
     let encoded = serde_json::to_vec(projection).map_err(|error| format!("semantic projection serialization failed: {error}"))?;
     Ok(blake3::hash(&encoded).as_bytes().to_vec())
 }
-
-#[cfg(test)]
-mod lossless_source_tests {
-    use super::ArtifactSource;
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    struct Projection {
-        title: String,
-        count: u64,
-    }
-
-    #[test]
-    fn source_capture_matches_only_the_imported_semantics_and_survives_serde() {
-        let projection = Projection { title: "artifact".into(), count: 3 };
-        let source = ArtifactSource::capture(&[0, 1, 2, 255], &projection).expect("capture");
-        assert!(source.matches(&projection).expect("match"));
-        assert!(!source.matches(&Projection { count: 4, ..projection }).expect("mismatch"));
-        let encoded = serde_json::to_vec(&source).expect("serialize");
-        assert_eq!(serde_json::from_slice::<ArtifactSource>(&encoded).expect("deserialize"), source);
-    }
-}
-//#endregion LosslessSource
+//#endregion SemanticFingerprint
 
 //#region Plugin
 #[path = "../../🦀️component.rs"]

@@ -121,7 +121,7 @@ fn transform_from_mat4(m: &Mat4) -> SemioTransform {
 fn pset_value_from_part21(v: &Part21Value) -> Option<PsetValue> {
     match v {
         Part21Value::Str(s) => Some(PsetValue::Text { value: s.clone() }),
-        Part21Value::Real(r) => Some(PsetValue::Number { value: *r }),
+        Part21Value::Real(r) => Some(PsetValue::Number { value: r.to_f64()? }),
         Part21Value::Int(i) => Some(PsetValue::Number { value: *i as f64 }),
         Part21Value::Enum(s) => match s.as_str() {
             "T" | "TRUE" | ".T." => Some(PsetValue::Boolean { value: true }),

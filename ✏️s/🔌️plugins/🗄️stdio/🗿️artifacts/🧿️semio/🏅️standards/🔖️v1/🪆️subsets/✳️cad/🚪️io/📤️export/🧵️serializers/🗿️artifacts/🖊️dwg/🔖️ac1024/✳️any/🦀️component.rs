@@ -1,12 +1,6 @@
-//! 📤️ `s.stdio.semio/v1/cad` → `dwg` (ac1024) — honest unsupported direction, mirroring the
-//! import leaf. `encode_dwg` (dwg's own real codec) only ever RE-EMITS `DwgSnapshot.bytes`
-//! verbatim (it is not a synthesizer — see that engine's own `encode_dwg` body: it validates the
-//! existing byte header and returns `snap.bytes.clone()`, never constructs new DWG binary
-//! structure). There is therefore no real, honest way to synthesize a NEW `.dwg` file from CAD
-//! entities without reimplementing the DWG binary writer from scratch — explicitly out of scope
-//! ("zero codec reimplementation"). Per the recipe's "error out" allowance for a genuine
-//! impedance mismatch, this leaf always returns a real, documented `PackError` rather than
-//! fabricating placeholder bytes.
+//! 📤️ `s.stdio.semio/v1/cad` → `dwg` (ac1024). The bridge remains unsupported until the CAD
+//! topology model has a complete mapping to the logical DWG entity model; it never retains or
+//! fabricates source bytes.
 
 use crate::artifacts::dwg::DwgSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
@@ -26,11 +20,7 @@ impl ArtifactSerializer for SemioCadToDwg {
 
     fn serialize(_from: &Self::From) -> Result<Self::Into, store::PackError> {
         Err(store::PackError::Schema(
-            "semio/cad→dwg: unsupported — the ac1024 codec's encode_dwg only re-emits pre-existing \
-             DWG bytes verbatim (no entity-level DWG binary writer exists at this codec's D1/D2 decode \
-             depth); synthesizing a new .dwg file from CAD entities would require reimplementing the \
-             DWG binary format from scratch, out of this bridge's scope (documented unsupported \
-             direction, not a fabricated result)."
+            "semio/cad→dwg: unsupported until every CAD topology value has a defined logical DWG entity mapping"
                 .into(),
         ))
     }

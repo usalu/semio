@@ -7,16 +7,20 @@
 # breach across all 32 stdio standards, per this ticket's own STATUS.md census) — replaces the old
 # ABNF placeholder this file used to contain. One line of space-separated `name=value` tokens, only
 # the CHANGED top-level fields present, in declared field order (`schema`/`header`/`removed`/
-# `upserted`) — every literal below copied verbatim from `print_ifc2x3_diff`'s real body.
+# `upserted`/`edm-preamble`) — every literal below copied from `print_ifc2x3_diff`.
 dialect grammar
 grammar stdio.ifc.2x3.diff
 start document
 
-document = schema-tok? header-tok? removed-tok? upserted-tok?
+document = schema-tok? header-tok? removed-tok? upserted-tok? edm-preamble-tok? instance-order-tok?
 schema-tok = "schema" "=" hex
 header-tok = "header" "=" part21-header
 removed-tok = "removed" "=" "[" u64-list "]"
 upserted-tok = "upserted" "=" instance-list
+edm-preamble-tok = "edm-preamble" "=" optional-edm-preamble
+instance-order-tok = "instance-order" "=" "[" u64-list "]"
+optional-edm-preamble = "[" "0" "]" | "[" "1" "," edm-preamble "]"
+edm-preamble = "[" hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "]"
 u64-list = {INT {"," INT}*}?
 
 # `Part21Value`'s tag scheme (`enc_part21_value`/`dec_part21_value`): `U`/`D` Unset/Derived are BARE

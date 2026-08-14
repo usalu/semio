@@ -30,7 +30,7 @@ fn s(text: &str) -> Part21Value {
     Part21Value::Str(text.to_string())
 }
 fn xyz(p: SemioPoint3) -> Part21Value {
-    Part21Value::List(vec![Part21Value::Real(p.x), Part21Value::Real(p.y), Part21Value::Real(p.z)])
+    Part21Value::List(vec![Part21Value::Real(p.x.into()), Part21Value::Real(p.y.into()), Part21Value::Real(p.z.into())])
 }
 fn bool_enum(b: bool) -> Part21Value {
     Part21Value::Enum(if b { "T".to_string() } else { "F".to_string() })
@@ -74,16 +74,16 @@ fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
         BrepCurve::Line { origin, direction } => {
             let point_id = point_to_part21(b, *origin);
             let dir_id = direction_to_part21(b, *direction);
-            let vector_id = b.alloc("VECTOR", vec![s(""), Part21Value::Ref(dir_id), Part21Value::Real(1.0)]);
+            let vector_id = b.alloc("VECTOR", vec![s(""), Part21Value::Ref(dir_id), Part21Value::Real(1.0.into())]);
             b.alloc("LINE", vec![s(""), Part21Value::Ref(point_id), Part21Value::Ref(vector_id)])
         }
         BrepCurve::Circle { center, axis, radius } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("CIRCLE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real(*radius)])
+            b.alloc("CIRCLE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
         }
         BrepCurve::Ellipse { center, axis, radius_major, radius_minor } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("ELLIPSE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real(*radius_major), Part21Value::Real(*radius_minor)])
+            b.alloc("ELLIPSE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius_major).into()), Part21Value::Real((*radius_minor).into())])
         }
         BrepCurve::Nurbs { control_points, weights, degree, knots } => {
             let cp_ids: Vec<Part21Value> = control_points.iter().map(|p| Part21Value::Ref(point_to_part21(b, *p))).collect();
@@ -96,13 +96,13 @@ fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
                 Part21Value::Enum("F".into()),
                 Part21Value::Enum("F".into()),
                 Part21Value::List(mults.iter().map(|m| Part21Value::Int(*m)).collect()),
-                Part21Value::List(uniq_knots.iter().map(|k| Part21Value::Real(*k)).collect()),
+                Part21Value::List(uniq_knots.iter().map(|k| Part21Value::Real((*k).into())).collect()),
                 Part21Value::Enum("UNSPECIFIED".into()),
             ];
             let id = b.alloc("B_SPLINE_CURVE_WITH_KNOTS", base_args);
             let uniform = weights.iter().all(|w| (w - 1.0).abs() < 1e-12);
             if !uniform {
-                let weight_args = vec![Part21Value::List(weights.iter().map(|w| Part21Value::Real(*w)).collect())];
+                let weight_args = vec![Part21Value::List(weights.iter().map(|w| Part21Value::Real((*w).into())).collect())];
                 b.instances.last_mut().expect("just allocated above").entities.push(("RATIONAL_B_SPLINE_CURVE".to_string(), weight_args));
             }
             id
@@ -118,19 +118,19 @@ fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
         }
         BrepSurface::Cylinder { origin, axis, radius } => {
             let pos_id = axis_placement_to_part21(b, *origin, *axis);
-            b.alloc("CYLINDRICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real(*radius)])
+            b.alloc("CYLINDRICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
         }
         BrepSurface::Cone { origin, axis, radius, half_angle } => {
             let pos_id = axis_placement_to_part21(b, *origin, *axis);
-            b.alloc("CONICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real(*radius), Part21Value::Real(*half_angle)])
+            b.alloc("CONICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into()), Part21Value::Real((*half_angle).into())])
         }
         BrepSurface::Sphere { center, radius } => {
             let pos_id = axis_placement_to_part21(b, *center, SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 });
-            b.alloc("SPHERICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real(*radius)])
+            b.alloc("SPHERICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
         }
         BrepSurface::Torus { center, axis, major_radius, minor_radius } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("TOROIDAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real(*major_radius), Part21Value::Real(*minor_radius)])
+            b.alloc("TOROIDAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*major_radius).into()), Part21Value::Real((*minor_radius).into())])
         }
         BrepSurface::Nurbs { control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v } => {
             let (u, v) = (*u_count as usize, *v_count as usize);
@@ -155,8 +155,8 @@ fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
                 Part21Value::Enum("F".into()),
                 Part21Value::List(u_mults.iter().map(|m| Part21Value::Int(*m)).collect()),
                 Part21Value::List(v_mults.iter().map(|m| Part21Value::Int(*m)).collect()),
-                Part21Value::List(u_uniq.iter().map(|k| Part21Value::Real(*k)).collect()),
-                Part21Value::List(v_uniq.iter().map(|k| Part21Value::Real(*k)).collect()),
+                Part21Value::List(u_uniq.iter().map(|k| Part21Value::Real((*k).into())).collect()),
+                Part21Value::List(v_uniq.iter().map(|k| Part21Value::Real((*k).into())).collect()),
                 Part21Value::Enum("UNSPECIFIED".into()),
             ];
             let id = b.alloc("B_SPLINE_SURFACE_WITH_KNOTS", base_args);
@@ -166,7 +166,7 @@ fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
                 for ui in 0..u {
                     let mut wrow = Vec::with_capacity(v);
                     for vi in 0..v {
-                        wrow.push(Part21Value::Real(weights[ui * v + vi]));
+                        wrow.push(Part21Value::Real(weights[ui * v + vi].into()));
                     }
                     wrows.push(Part21Value::List(wrow));
                 }

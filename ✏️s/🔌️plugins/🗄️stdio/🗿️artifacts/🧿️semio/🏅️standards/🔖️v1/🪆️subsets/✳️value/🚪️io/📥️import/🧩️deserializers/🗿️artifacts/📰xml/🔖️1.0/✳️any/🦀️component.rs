@@ -3,7 +3,7 @@
 //! mapping itself is a real, reversible convention (used consistently by both directions):
 //!
 //! The whole `XmlDocument` becomes ONE `"document"`-tagged `SemioValue::Map`:
-//! `{kind:"document", declaration: <decl-map|Null>, doctype: <Str|Null>, root: <node|Null>}`.
+//! `{kind:"document", declaration: <decl-map|Null>, doctype: <Str|Null>, prolog: <nodes>, root: <node|Null>}`.
 //! Each `XmlNode` becomes a `kind`-tagged map: `element` carries `tag`/`attrs`/`children`; `text`/
 //! `cdata`/`comment` carry `text`; `pi` carries `target`/`data`. This is a lossless, information-
 //! preserving encoding of the STRUCTURE — every `XmlNode` variant, every attribute, sibling order,
@@ -79,6 +79,7 @@ pub fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
             entry("kind", str_value("document")),
             entry("declaration", doc.declaration.as_ref().map(semio_value_of_declaration).unwrap_or(SemioValue::Null)),
             entry("doctype", doc.doctype.as_deref().map(str_value).unwrap_or(SemioValue::Null)),
+            entry("prolog", SemioValue::List { items: doc.prolog.iter().map(semio_value_of_node).collect() }),
             entry("root", doc.root.as_ref().map(semio_value_of_node).unwrap_or(SemioValue::Null)),
         ],
     }
@@ -101,6 +102,7 @@ mod tests {
             }),
             doctype: None,
             declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+            prolog: vec![XmlNode::Comment { text: "generated".into() }],
         };
         let value = semio_value_from_xml_document(&doc);
         match &value {

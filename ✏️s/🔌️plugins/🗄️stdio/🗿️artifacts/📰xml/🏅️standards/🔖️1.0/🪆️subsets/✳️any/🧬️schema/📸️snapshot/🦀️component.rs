@@ -70,6 +70,9 @@ pub struct XmlDocument {
     /// has no such sub-structure worth decoding.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub declaration: Option<XmlDeclaration>,
+    /// 🧭 Logical comments and processing instructions preceding the root element.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub prolog: Vec<XmlNode>,
 }
 
 /// 🏳️ Typed XML declaration (`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`).
@@ -84,6 +87,7 @@ pub struct XmlDeclaration {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub standalone: Option<bool>,
 }
+
 //#endregion 🔖️XmlModel
 
 //#region 🔖️Snapshot
@@ -105,6 +109,27 @@ impl Default for XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument::default(),
         }
+    }
+}
+
+impl XmlSnapshot {
+    /// 🪞️ Returns the lossless logical state used by diff and mutation laws.
+    pub fn semantic_projection(&self) -> Self {
+        self.clone()
+    }
+
+    /// 📥️ Parses XML into its lossless logical model.
+    pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
+        let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
+        Ok(Self {
+            schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
+            doc: xml_document_from_text(text)?,
+        })
+    }
+
+    /// 📤️ Deterministically materializes XML from the logical model.
+    pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
+        Ok(xml_document_to_text(&self.doc).into_bytes())
     }
 }
 //#endregion 🔖️Snapshot
@@ -130,6 +155,19 @@ fn xml_escape_attr(s: &str) -> String {
             '&' => out.push_str("&amp;"),
             '<' => out.push_str("&lt;"),
             '"' => out.push_str("&quot;"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
+fn xml_escape_attr_single(s: &str) -> String {
+    let mut out = String::new();
+    for ch in s.chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '\'' => out.push_str("&apos;"),
             _ => out.push(ch),
         }
     }
@@ -189,57 +227,89 @@ fn xml_unescape_text(s: &str) -> Result<String, String> {
 pub fn xml_document_to_text(doc: &XmlDocument) -> String {
     let mut out = String::new();
     if let Some(decl) = &doc.declaration {
-        out.push_str("<?xml version=\"");
+        out.push_str("<?xml version='");
         out.push_str(&decl.version);
-        out.push('"');
+        out.push('\'');
         if let Some(encoding) = &decl.encoding {
-            out.push_str(" encoding=\"");
+            out.push_str(" encoding='");
             out.push_str(encoding);
-            out.push('"');
+            out.push('\'');
         }
         if let Some(standalone) = decl.standalone {
-            out.push_str(" standalone=\"");
+            out.push_str(" standalone='");
             out.push_str(if standalone { "yes" } else { "no" });
-            out.push('"');
+            out.push('\'');
         }
         out.push_str("?>\n");
+    }
+    for node in &doc.prolog {
+        xml_node_to_text(node, 0, &mut out);
+        out.push('\n');
     }
     if let Some(doctype) = &doc.doctype {
         out.push_str(doctype);
         out.push('\n');
     }
     if let Some(node) = &doc.root {
-        out.push_str(&xml_node_to_text(node, 0));
+        xml_node_to_text(node, 0, &mut out);
     }
     out
 }
 
-fn xml_node_to_text(node: &XmlNode, _depth: usize) -> String {
+fn xml_current_column(out: &str) -> usize {
+    out.rsplit_once('\n').map_or(out.len(), |(_, line)| line.len())
+}
+
+fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
     match node {
-        XmlNode::Text { text } => xml_escape_text(text),
-        XmlNode::CData { text } => format!("<![CDATA[{text}]]>"),
-        XmlNode::Comment { text } => format!("<!--{text}-->"),
+        XmlNode::Text { text } => out.push_str(&xml_escape_text(text)),
+        XmlNode::CData { text } => {
+            out.push_str("<![CDATA[");
+            out.push_str(text);
+            out.push_str("]]>");
+        }
+        XmlNode::Comment { text } => {
+            out.push_str("<!--");
+            out.push_str(text);
+            out.push_str("-->");
+        }
         XmlNode::ProcessingInstruction { target, data } => {
-            if data.is_empty() { format!("<?{target}?>") } else { format!("<?{target} {data}?>") }
+            out.push_str("<?");
+            out.push_str(target);
+            if !data.is_empty() {
+                out.push(' ');
+                out.push_str(data);
+            }
+            out.push_str("?>");
         }
         XmlNode::Element { name, attrs, children } => {
-            let mut out = format!("<{}", name);
+            out.push('<');
+            out.push_str(name);
             for attr in attrs {
-                out.push_str(&format!(" {}=\"{}\"", attr.name, xml_escape_attr(&attr.value)));
+                let rendered = format!("{}='{}'", attr.name, xml_escape_attr_single(&attr.value));
+                if xml_current_column(out) + 1 + rendered.len() > 120 {
+                    out.push('\n');
+                    out.push_str(&" ".repeat((depth + 1) * 4));
+                } else {
+                    out.push(' ');
+                }
+                out.push_str(&rendered);
             }
             if children.is_empty() {
-                out.push_str("/>");
-                return out;
+                out.push_str(" />");
+                return;
             }
             out.push('>');
             for child in children {
-                out.push_str(&xml_node_to_text(child, _depth + 1));
+                xml_node_to_text(child, depth + 1, out);
             }
-            out.push_str(&format!("</{}>", name));
-            out
+            out.push_str("</");
+            out.push_str(name);
+            out.push('>');
         }
     }
 }
+
 
 pub fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
     let trimmed = text.trim();
@@ -248,13 +318,13 @@ pub fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
     }
     let mut pos = 0;
     let declaration = parse_xml_declaration_prolog(trimmed, &mut pos)?;
-    let doctype = skip_misc(trimmed, &mut pos)?;
+    let (doctype, prolog) = skip_misc(trimmed, &mut pos)?;
     let root = parse_node(trimmed, &mut pos)?;
-    skip_misc(trimmed, &mut pos)?;
+    let _ = skip_misc(trimmed, &mut pos)?;
     if pos < trimmed.len() {
         return Err("trailing content after root element".into());
     }
-    Ok(XmlDocument { root: Some(root), doctype, declaration })
+    Ok(XmlDocument { root: Some(root), doctype, declaration, prolog })
 }
 
 /// 🏳️ Parses the leading `<?xml version="1.0" encoding="..." standalone="..."?>` declaration, if
@@ -287,7 +357,7 @@ fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDe
             return Err("expected = in xml declaration".into());
         }
         *pos += 1;
-        let value = parse_attr_value(s, pos)?;
+        let value = xml_unescape_text(&parse_attr_value(s, pos)?)?;
         match name.as_str() {
             "version" => version = Some(value),
             "encoding" => encoding = Some(value),
@@ -311,17 +381,25 @@ fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDe
 /// `<!DOCTYPE ...>` caused a hard parse failure one level up (`parse_name` rejects the leading
 /// `!`), which is why most real-world SVG 1.1 files (virtually all of which declare one) could
 /// not be parsed at all.
-fn skip_misc(s: &str, pos: &mut usize) -> Result<Option<String>, String> {
+fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<String>, Vec<XmlNode>), String> {
     let mut doctype = None;
+    let mut nodes = Vec::new();
     loop {
         skip_ws(s, pos);
         if s[*pos..].starts_with("<?") {
+            *pos += 2;
+            let target = parse_name(s, pos)?;
+            skip_ws(s, pos);
             let end = s[*pos..].find("?>").ok_or("unclosed processing instruction")?;
+            let data = s[*pos..*pos + end].to_string();
             *pos += end + 2;
+            nodes.push(XmlNode::ProcessingInstruction { target, data });
             continue;
         }
         if s[*pos..].starts_with("<!--") {
+            *pos += 4;
             let end = s[*pos..].find("-->").ok_or("unclosed comment")?;
+            nodes.push(XmlNode::Comment { text: s[*pos..*pos + end].to_string() });
             *pos += end + 3;
             continue;
         }
@@ -350,7 +428,7 @@ fn skip_misc(s: &str, pos: &mut usize) -> Result<Option<String>, String> {
         }
         break;
     }
-    Ok(doctype)
+    Ok((doctype, nodes))
 }
 
 fn skip_ws(s: &str, pos: &mut usize) {
@@ -417,7 +495,7 @@ fn parse_attrs(s: &str, pos: &mut usize) -> Result<Vec<XmlAttr>, String> {
             return Err("expected = in attribute".into());
         }
         *pos += 1;
-        let value = parse_attr_value(s, pos)?;
+        let value = xml_unescape_text(&parse_attr_value(s, pos)?)?;
         attrs.push(XmlAttr { name, value });
     }
     Ok(attrs)
@@ -510,17 +588,14 @@ impl store::ArtifactDsl for XmlSnapshot {
     fn envelope_id() -> &'static str { "stdio.xml" }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let doc = xml_document_from_text(body).map_err(|e| {
-            store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))
-        })?;
-        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc })
+        match store::semio_format::split_text_preamble(text) {
+            Ok((_, body)) => crate::artifacts::xml::schema::mutations::dec_xml_snapshot(body.trim())
+                .map_err(|e| store::TextError::new(format!("xml state parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))),
+        }
     }
     fn print_dsl(&self) -> String {
-        let body = xml_document_to_text(&self.doc);
+        let body = crate::artifacts::xml::schema::mutations::enc_xml_snapshot(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -541,7 +616,8 @@ impl store::ArtifactDsl for XmlSnapshot {
 impl store::ArtifactPack for XmlSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = xml_document_to_text(&self.doc).into_bytes();
+        let mut raw = vec![1];
+        crate::artifacts::xml::schema::mutations::enc_xml_snapshot_bin(self, &mut raw);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -560,9 +636,10 @@ impl store::ArtifactPack for XmlSnapshot {
             )));
         }
         let _ = options;
-        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let doc = xml_document_from_text(text).map_err(store::PackError::Schema)?;
-        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc })
+        let mut reader = store::ByteReader::new(&inner);
+        let version = reader.read_u8().map_err(|e| store::PackError::Schema(e.to_string()))?;
+        if version != 1 { return Err(store::PackError::Schema(format!("unsupported xml snapshot state version {version}"))); }
+        crate::artifacts::xml::schema::mutations::dec_xml_snapshot_bin(&mut reader).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

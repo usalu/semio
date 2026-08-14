@@ -212,7 +212,7 @@ fn s(text: &str) -> Part21Value {
     Part21Value::Str(text.to_string())
 }
 fn xyz(v: [f64; 3]) -> Part21Value {
-    Part21Value::List(vec![Part21Value::Real(v[0]), Part21Value::Real(v[1]), Part21Value::Real(v[2])])
+    Part21Value::List(vec![Part21Value::Real(v[0].into()), Part21Value::Real(v[1].into()), Part21Value::Real(v[2].into())])
 }
 
 /// 📤️ Regenerates a real, minimal AP214 `EDGE_LOOP`-based faceted b-rep from a `BrepMesh` —
@@ -239,7 +239,7 @@ pub fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
             let len = (dx * dx + dy * dy + dz * dz).sqrt();
             let dir = if len > 1e-12 { [dx / len, dy / len, dz / len] } else { [1.0, 0.0, 0.0] };
             let dir_id = b.alloc("DIRECTION", vec![s(""), xyz(dir)]);
-            let vec_id = b.alloc("VECTOR", vec![s(""), Part21Value::Ref(dir_id), Part21Value::Real(len)]);
+            let vec_id = b.alloc("VECTOR", vec![s(""), Part21Value::Ref(dir_id), Part21Value::Real(len.into())]);
             let line_id = b.alloc("LINE", vec![s(""), Part21Value::Ref(point_ids[a]), Part21Value::Ref(vec_id)]);
             let edge_id = b.alloc("EDGE_CURVE", vec![s(""), Part21Value::Ref(va), Part21Value::Ref(vb), Part21Value::Ref(line_id), Part21Value::Enum("T".into())]);
             let oe_id = b.alloc(

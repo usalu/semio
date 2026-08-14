@@ -1,6 +1,8 @@
 syntax = "proto3";
 package semio.s_stdio_ifc_2x3.artifact;
+message Ifc2x3EdmPreamble { string producer = 1; string module = 2; string creation_date = 3; string host = 4; string database = 5; string database_version = 6; string database_creation_date = 7; string schema = 8; string model = 9; string model_creation_date = 10; string header_model = 11; string header_model_creation_date = 12; string user = 13; string group = 14; string license = 15; string options = 16; }
 message Ifc2x3Artifact {
   string schema = 1;
   bytes document_wire = 2;
+  optional Ifc2x3EdmPreamble edm_preamble = 3;
 }

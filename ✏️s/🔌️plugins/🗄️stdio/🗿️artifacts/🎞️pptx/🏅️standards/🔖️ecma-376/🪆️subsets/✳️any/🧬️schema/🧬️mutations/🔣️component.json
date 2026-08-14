@@ -3,24 +3,19 @@
   "title": "PptxMutation",
   "type": "object",
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "mutation": {
+      "enum": ["noMutation", "setSnapshot", "insertSlide", "removeSlide", "moveSlide", "insertShape", "removeShape", "setShapeText", "setShapePosition"]
     },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  }
+    "snapshot": { "type": "object" },
+    "index": { "type": "integer", "minimum": 0 },
+    "from": { "type": "integer", "minimum": 0 },
+    "to": { "type": "integer", "minimum": 0 },
+    "slideIndex": { "type": "integer", "minimum": 0 },
+    "shapeIndex": { "type": "integer", "minimum": 0 },
+    "slide": { "type": "object" },
+    "shape": { "type": "object" },
+    "textFrame": { "type": "array", "items": { "type": "object" } },
+    "position": { "type": "object" }
+  },
+  "required": ["mutation"]
 }

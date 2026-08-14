@@ -32,6 +32,10 @@ use schema::ArtifactSchema;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xml.diff")]
 pub struct XmlDiff {
+    /// 🧭 Logical document-prolog nodes.
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prolog: Option<Vec<XmlNode>>,
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = declaration removed, `Some(Some(d))` = set.
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -159,7 +163,7 @@ pub fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
             }),
         });
     }
-    XmlDiff { declaration: None, doctype: None, root: Some(node_diff) }
+    XmlDiff { prolog: None, declaration: None, doctype: None, root: Some(node_diff) }
 }
 //#endregion 🔖️DiffAtPath
 
@@ -167,6 +171,9 @@ pub fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
 impl MutationDiff<XmlSnapshot> for XmlDiff {
     fn apply(&self, base: &XmlSnapshot) -> XmlSnapshot {
         let mut next = base.clone();
+        if let Some(prolog) = &self.prolog {
+            next.doc.prolog = prolog.clone();
+        }
         if let Some(declaration) = &self.declaration {
             next.doc.declaration = declaration.clone();
         }
@@ -180,6 +187,9 @@ impl MutationDiff<XmlSnapshot> for XmlDiff {
     }
 
     fn absorb(&mut self, other: Self) {
+        if other.prolog.is_some() {
+            self.prolog = other.prolog;
+        }
         if other.declaration.is_some() {
             self.declaration = other.declaration;
         }
@@ -274,6 +284,7 @@ fn apply_children_diff(children: &[XmlNode], diff: &XmlChildrenDiff) -> Vec<XmlN
 impl DiffAlgebra<XmlSnapshot> for XmlDiff {
     fn inverse(&self, base: &XmlSnapshot) -> Self {
         XmlDiff {
+            prolog: self.prolog.as_ref().map(|_| base.doc.prolog.clone()),
             declaration: self.declaration.as_ref().map(|_| base.doc.declaration.clone()),
             doctype: self.doctype.as_ref().map(|_| base.doc.doctype.clone()),
             root: self.root.as_ref().map(|d| inverse_node_diff(base.doc.root.as_ref(), d)),
@@ -282,6 +293,7 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
 
     fn between(base: &XmlSnapshot, other: &XmlSnapshot) -> Self {
         XmlDiff {
+            prolog: if base.doc.prolog != other.doc.prolog { Some(other.doc.prolog.clone()) } else { None },
             declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
             doctype: if base.doc.doctype != other.doc.doctype { Some(other.doc.doctype.clone()) } else { None },
             root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()),
@@ -289,7 +301,7 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
+        self.prolog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
     }
 }
 
@@ -642,6 +654,22 @@ pub(crate) fn enc_str(s: &str) -> String {
 }
 pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+pub(crate) fn enc_prolog(prolog: &Vec<XmlNode>) -> String {
+    format!("[{}]", prolog.iter().map(enc_xml_node).collect::<Vec<_>>().join(","))
+}
+pub(crate) fn dec_prolog(s: &str) -> Result<Vec<XmlNode>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().map(dec_xml_node).collect()
+}
+pub(crate) fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, prolog.len() as u64);
+    for node in prolog {
+        enc_xml_node_bin(node, out);
+    }
+}
+pub(crate) fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
+    let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
+    (0..count).map(|_| dec_xml_node_bin(reader)).collect()
 }
 fn parse_usize(s: &str) -> Result<usize, String> { s.parse().map_err(|e: std::num::ParseIntError| e.to_string()) }
 
@@ -1101,6 +1129,7 @@ fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlChildr
 //#region 🔖️TopLevel
 fn print_xml_diff(d: &XmlDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = &d.prolog { tokens.push(format!("prolog={}", enc_prolog(v))); }
     if let Some(v) = &d.declaration { tokens.push(format!("declaration={}", encode_option(v, enc_declaration))); }
     if let Some(v) = &d.doctype { tokens.push(format!("doctype={}", encode_option(v, |v| enc_str(v)))); }
     if let Some(v) = &d.root { tokens.push(format!("root={}", enc_node_diff(v))); }
@@ -1112,7 +1141,8 @@ fn parse_xml_diff(line: &str) -> Result<XmlDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("declaration=") { d.declaration = Some(decode_option(rest, dec_declaration)?); }
+        if let Some(rest) = token.strip_prefix("prolog=") { d.prolog = Some(dec_prolog(rest)?); }
+        else if let Some(rest) = token.strip_prefix("declaration=") { d.declaration = Some(decode_option(rest, dec_declaration)?); }
         else if let Some(rest) = token.strip_prefix("doctype=") { d.doctype = Some(decode_option(rest, dec_str)?); }
         else if let Some(rest) = token.strip_prefix("root=") { d.root = Some(dec_node_diff(rest)?); }
         else { return Err(format!("xml diff: unknown token {token:?}")); }
@@ -1138,6 +1168,7 @@ impl protocol::DiffCodec for XmlDiff {
         if self.declaration.is_some() { flags |= 0b001; }
         if self.doctype.is_some() { flags |= 0b010; }
         if self.root.is_some() { flags |= 0b100; }
+        if self.prolog.is_some() { flags |= 0b1000; }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(declaration) = &self.declaration {
             out.push(if declaration.is_some() { 1 } else { 0 });
@@ -1153,6 +1184,9 @@ impl protocol::DiffCodec for XmlDiff {
         }
         if let Some(root) = &self.root {
             enc_node_diff_bin(root, &mut out);
+        }
+        if let Some(prolog) = &self.prolog {
+            enc_prolog_bin(prolog, &mut out);
         }
         Ok(out)
     }
@@ -1174,7 +1208,10 @@ impl protocol::DiffCodec for XmlDiff {
             None
         };
         let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", reader.position(), e))?) } else { None };
-        Ok(XmlDiff { declaration, doctype, root })
+        let prolog = if flags & 0b1000 != 0 {
+            Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", reader.position(), e))?)
+        } else { None };
+        Ok(XmlDiff { prolog, declaration, doctype, root })
     }
 }
 //#endregion 🔖️TopLevel
@@ -1183,7 +1220,7 @@ impl protocol::DiffCodec for XmlDiff {
 //#region 🔖️DemoCases
 /// 🧪️ P2-FG1: representative `XmlDiff` values (both top-level tri-states, the recursive
 /// `Element`/`Text`/`Replace` `XmlNodeDiff` tree, attribute add/remove/modify, nested child
-/// add/remove/modify) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law`
+/// add/remove/modify) — the single prolog of truth reused by `diff_codec_text_binary_roundtrip_law`
 /// below AND by `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests.
 #[cfg(test)]
@@ -1205,6 +1242,7 @@ pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
         root: Some(elem("root", vec![("width", "10")], vec![elem("child", vec![("x", "0")], vec![])])),
         doctype: Some("<!DOCTYPE root>".into()),
         declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+        prolog: Vec::new(),
     });
     let b = snapshot(XmlDocument {
         root: Some(elem(
@@ -1214,8 +1252,9 @@ pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
         )),
         doctype: None,
         declaration: None,
+        prolog: Vec::new(),
     });
-    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None });
+    let c = snapshot(XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new() });
 
     vec![XmlDiff::default(), XmlDiff::between(&a, &b), XmlDiff::between(&b, &a), XmlDiff::between(&a, &c), XmlDiff::between(&c, &a)]
 }
@@ -1230,7 +1269,7 @@ mod handcrafted_diff_codec_tests {
     /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `XmlDiff` grammar — exercises the
     /// recursive enum tree (`Element`/`Text`/`Replace` `XmlNodeDiff` variants), both top-level
     /// tri-states, attribute add/remove/modify, and nested child add/remove/modify. Reuses
-    /// `demo_diff_cases()` (the single source of truth also consumed by
+    /// `demo_diff_cases()` (the single prolog of truth also consumed by
     /// `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`).
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {

@@ -33,7 +33,7 @@ pub mod derived_construction {
 
     impl Ifc2x3SavBuilderConstruction {
         pub fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document() } }
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None } }
         }
 
         /// ⚖️ Adds a load group (`IFCSTRUCTURALLOADGROUP`) instance.
@@ -213,6 +213,7 @@ pub mod derived_analysis {
             Ifc2x3Snapshot {
                 schema: "stdio.ifc.2x3".into(),
                 document: Part21Document { header: header("StructuralAnalysisView"), instances: vec![model, group, loads] },
+                edm_preamble: None,
             }
         }
 

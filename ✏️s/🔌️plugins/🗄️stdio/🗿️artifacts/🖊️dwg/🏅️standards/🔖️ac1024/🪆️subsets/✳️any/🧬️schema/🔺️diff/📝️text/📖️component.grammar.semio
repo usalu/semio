@@ -18,7 +18,7 @@ comment none
 # (`removed`'s bare `gone` -- `is_bare_ident("gone") == true` -- proves `removed: Vec<String>`
 # list items use the same bare-vs-quoted `text-value` rule as every other string field, not an
 # always-quoted convention.)
-diff = version-field? maintenance-version-field? codepage-field? bytes-field? sections-field?
+diff = version-field? maintenance-version-field? codepage-field? source-field? sections-field?
 
 text-value = IDENT | TEXT
 bit = "true" | "false"
@@ -26,9 +26,8 @@ bit = "true" | "false"
 version-field = "version" "=" text-value
 maintenance-version-field = "maintenance-version" "=" INT
 codepage-field = "codepage" "=" INT
-# Same `Option<Vec<u8>>` -> `Shape::List(UInt)` derive quirk as ac1018's own sibling `bytes-field`
-# (the `#[dsl(base64)]` attribute is a documented no-op through the `Option` layer).
-bytes-field = "bytes" "=" "[" INT* "]"
+source-field = "source" "=" artifact-source
+artifact-source = "bytes" "=" TEXT "semantic-blake3" "=" TEXT
 
 # `sections: Option<DwgSectionsDiff>` — no `#[dsl(block)]`, so no `{...}` wrapper: `sections=`
 # glues directly onto the nested record's own 3 keyed (all-`List`) fields, in declaration order.

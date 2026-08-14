@@ -1,6 +1,6 @@
 //! 📤️ Serialize `stdio.xml` to stdio.txt.
 
-use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::xml::XmlSnapshot;
 
 //#region 🔖️Codec
@@ -9,7 +9,8 @@ pub fn register() {}
 
 /// 📤️ Encode xml into a TxtSnapshot.
 pub fn serialize(from: &XmlSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::artifacts::xml::schema::snapshot::xml_document_to_text(&from.doc);
+    let text = String::from_utf8(from.export_utf8().map_err(store::PackError::Schema)?)
+        .map_err(|error| store::PackError::Schema(error.to_string()))?;
     Ok(TxtSnapshot::from_body(&text))
 }
 

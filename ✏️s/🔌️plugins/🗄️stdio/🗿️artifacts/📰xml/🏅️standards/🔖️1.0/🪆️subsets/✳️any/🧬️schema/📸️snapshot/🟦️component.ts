@@ -24,6 +24,7 @@ export interface XmlDocument {
   root?: XmlNode;
   doctype?: string;
   declaration?: XmlDeclaration;
+  prolog: XmlNode[];
 }
 
 /** 📸️ Persisted `stdio.xml` snapshot. */

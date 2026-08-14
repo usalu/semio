@@ -75,7 +75,7 @@ mod tests {
     fn point_instance(id: u64, x: f64, y: f64, z: f64) -> Part21Instance {
         Part21Instance {
             id,
-            entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(x), Part21Value::Real(y), Part21Value::Real(z)])])],
+            entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(x.into()), Part21Value::Real(y.into()), Part21Value::Real(z.into())])])],
         }
     }
 
@@ -92,6 +92,7 @@ mod tests {
                     Part21Instance { id: 4, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset])] },
                 ],
             },
+            edm_preamble: None,
         };
         let bounds = compute_ifc2x3_bounds(&snapshot);
         assert_eq!(bounds.min, [-2.0, 0.0, -4.0]);
@@ -104,6 +105,7 @@ mod tests {
         let snapshot = Ifc2x3Snapshot {
             schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
             document: Part21Document { header: Part21Header::default(), instances: vec![point_instance(1, 1.0, 1.0, 1.0)] },
+            edm_preamble: None,
         };
         assert_eq!(compute_ifc2x3_bounds(&snapshot), compute_ifc2x3_bounds(&snapshot));
     }

@@ -9,8 +9,9 @@
 //! `FILE_SCHEMA(('AUTOMOTIVE_DESIGN'))`). Reuses `step::engine::part21`'s tokenizer/writer
 //! functions directly — PARSING-CODE reuse; what's NOT reused is `Part21Document`'s type IDENTITY
 //! as this standard's snapshot type.
-use crate::artifacts::step::engine::part21::{parse_part21, write_part21};
-use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
+use crate::artifacts::step::engine::part21::{parse_part21, write_part21_with, Part21Preamble, Part21WriteOptions};
+use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
+use std::fmt::Write as _;
 
 //#region 🔖️Codec
 /// 📐️ The IFC2X3 FILE_SCHEMA name a conforming Part-21 file must declare.
@@ -30,15 +31,84 @@ pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
     if !declares_ifc2x3 {
         return Err(format!("ifc2x3: FILE_SCHEMA does not declare {IFC2X3_SCHEMA_NAME}"));
     }
-    Ok(Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document })
+    Ok(Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: parse_edm_preamble(text) })
 }
 
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
 /// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
 pub fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
-    Ok(write_part21(&snapshot.document).into_bytes())
+    if snapshot.schema != STDIO_IFC2X3_DOCUMENT_SCHEMA {
+        return Err(format!("ifc2x3: unsupported snapshot schema {:?}", snapshot.schema));
+    }
+    let options = Part21WriteOptions {
+        line_ending: "\r\n",
+        blank_after_header: snapshot.edm_preamble.is_some(),
+        blank_before_data: true,
+        blank_before_terminator: true,
+        space_after_instance_equals: true,
+    };
+    Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref().map(|preamble| preamble as &dyn Part21Preamble)).into_bytes())
 }
 //#endregion 🔖️Codec
+
+//#region 🏭️EdmPreamble
+fn parse_edm_preamble(text: &str) -> Option<Ifc2x3EdmPreamble> {
+    let lines = text.lines().map(|line| line.trim_end_matches('\r')).collect::<Vec<_>>();
+    let start = lines.iter().position(|line| *line == "/******************************************************************************************")?;
+    let end = lines[start + 1..].iter().position(|line| *line == "******************************************************************************************/")? + start + 1;
+    let value = |label: &str| {
+        let prefix = format!("* {label}");
+        lines[start + 1..end].iter().find_map(|line| line.strip_prefix(&prefix).map(str::trim_start)).map(str::to_string)
+    };
+    Some(Ifc2x3EdmPreamble {
+        producer: value("STEP Physical File produced by:")?,
+        module: value("Module:")?,
+        creation_date: value("Creation date:")?,
+        host: value("Host:")?,
+        database: value("Database:")?,
+        database_version: value("Database version:")?,
+        database_creation_date: value("Database creation date:")?,
+        schema: value("Schema:")?,
+        model: value("Model:")?,
+        model_creation_date: value("Model creation date:")?,
+        header_model: value("Header model:")?,
+        header_model_creation_date: value("Header model creation date:")?,
+        user: value("EDMuser:")?,
+        group: value("EDMgroup:")?,
+        license: value("License ID and type:")?,
+        options: value("EDMstepFileFactory options:")?,
+    })
+}
+
+impl Part21Preamble for Ifc2x3EdmPreamble {
+    fn write_preamble(&self, out: &mut String, line_ending: &str) {
+        out.push_str("/******************************************************************************************");
+        out.push_str(line_ending);
+        for (label, value) in [
+            ("STEP Physical File produced by:", self.producer.as_str()),
+            ("Module:", self.module.as_str()),
+            ("Creation date:", self.creation_date.as_str()),
+            ("Host:", self.host.as_str()),
+            ("Database:", self.database.as_str()),
+            ("Database version:", self.database_version.as_str()),
+            ("Database creation date:", self.database_creation_date.as_str()),
+            ("Schema:", self.schema.as_str()),
+            ("Model:", self.model.as_str()),
+            ("Model creation date:", self.model_creation_date.as_str()),
+            ("Header model:", self.header_model.as_str()),
+            ("Header model creation date:", self.header_model_creation_date.as_str()),
+            ("EDMuser:", self.user.as_str()),
+            ("EDMgroup:", self.group.as_str()),
+            ("License ID and type:", self.license.as_str()),
+            ("EDMstepFileFactory options:", self.options.as_str()),
+        ] {
+            write!(out, "* {label:<31} {value}{line_ending}").expect("String write");
+        }
+        out.push_str("******************************************************************************************/");
+        out.push_str(line_ending);
+    }
+}
+//#endregion 🏭️EdmPreamble
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -89,8 +159,29 @@ pub use derived_composition::*;
 mod tests {
     use super::*;
     use crate::artifacts::ifc::standards::v2x3::engine::{demo_ifc2x3_snapshot, empty_ifc2x3_snapshot};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     const IFC2X3_FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.ifc','2026-08-11T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('IFC2X3'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('0YvctVUKr0kugbFTf53O9L',$,'Project',$,$,$,$,(#20),#30);\n#20=IFCUNITASSIGNMENT((#21));\n#21=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);\n#30=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#31,$);\n#31=IFCAXIS2PLACEMENT3D(#32,$,$);\n#32=IFCCARTESIANPOINT((0.,0.,0.));\n#40=IFCBUILDING('0YvctVUKr0kugbFTf53O9M',$,'Building',$,$,#41,$,$,.ELEMENT.,$,$,$);\n#41=IFCLOCALPLACEMENT($,#31);\nENDSEC;\nEND-ISO-10303-21;\n";
+
+    fn exact_fixture_bytes() -> &'static [u8] {
+        static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
+        BYTES.get_or_init(|| {
+            std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc"))
+                .expect("read temp/wellness-center-sama.ifc")
+        })
+    }
+
+    fn assert_exact(label: &str, actual: &[u8]) {
+        let expected = exact_fixture_bytes();
+        let first_difference = actual.iter().zip(expected).position(|(left, right)| left != right);
+        assert!(
+            actual == expected,
+            "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}",
+            expected.len(),
+            actual.len(),
+        );
+    }
 
     #[test]
     fn decode_rejects_non_ifc2x3_schema() {
@@ -129,6 +220,57 @@ mod tests {
         let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode_pack");
         assert_eq!(decoded, snap);
     }
+
+    //#region 🔖️LosslessNativeRouting
+    #[test]
+    fn exact_native_engine_raw_serializers_analyzer_and_composer_roundtrip() {
+        use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+        use crate::artifacts::ifc::standards::v2x3::subsets::any::io::export::serializers::artifacts::{
+            binary::v_raw::any as binary_export,
+            txt::v_utf_8::any as text_export,
+        };
+        use crate::artifacts::ifc::standards::v2x3::subsets::any::io::import::deserializers::artifacts::{
+            binary::v_raw::any as binary_import,
+            txt::v_utf_8::any as text_import,
+        };
+        use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Analyzer;
+        use crate::artifacts::txt::TxtSnapshot;
+
+        let original = exact_fixture_bytes();
+        let imported = decode_ifc2x3(original).expect("direct IFC2X3 import");
+        assert_eq!(imported.document.instances.len(), 409_102, "fixture entity count changed");
+        assert_exact("direct engine export", &encode_ifc2x3(&imported).expect("direct engine export"));
+
+        let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: original.to_vec() };
+        let binary_snapshot = binary_import::deserialize(&binary).expect("raw binary deserialize");
+        let binary_output = binary_export::serialize(&binary_snapshot).expect("raw binary serialize");
+        assert_exact("raw binary route", &binary_output.bytes);
+
+        let text = std::str::from_utf8(original).expect("fixture UTF-8");
+        let txt = TxtSnapshot::from_body(text);
+        let text_snapshot = text_import::deserialize(&txt).expect("raw text deserialize");
+        let text_output = text_export::serialize(&text_snapshot).expect("raw text serialize");
+        assert_exact("raw text route", text_output.to_body().as_bytes());
+
+        let text_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Text(text)]);
+        assert!(text_analysis.diagnostics.is_empty(), "text analyzer diagnostics: {:?}", text_analysis.diagnostics);
+        assert_exact("text analyzer export", &encode_ifc2x3(&text_analysis.parts.snapshot.expect("text analyzer snapshot")).expect("text analyzer export"));
+
+        let pack = store::ArtifactPack::encode_pack(&imported);
+        let pack_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&pack)]);
+        assert!(pack_analysis.diagnostics.is_empty(), "pack analyzer diagnostics: {:?}", pack_analysis.diagnostics);
+        assert_exact("pack analyzer export", &encode_ifc2x3(&pack_analysis.parts.snapshot.expect("pack analyzer snapshot")).expect("pack analyzer export"));
+
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
+        let text_sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Text(text) }];
+        let text_composition = Ifc2x3ComposerComposition::compose(&text_sources).expect("compose native IFC2X3 text");
+        assert_exact("text composer export", &encode_ifc2x3(&text_composition.snapshot).expect("text composer export"));
+
+        let pack_sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&pack) }];
+        let pack_composition = Ifc2x3ComposerComposition::compose(&pack_sources).expect("compose IFC2X3 pack");
+        assert_exact("pack composer export", &encode_ifc2x3(&pack_composition.snapshot).expect("pack composer export"));
+    }
+    //#endregion 🔖️LosslessNativeRouting
 
     //#region 🔖️ConformanceLaws
     /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: per-artifact

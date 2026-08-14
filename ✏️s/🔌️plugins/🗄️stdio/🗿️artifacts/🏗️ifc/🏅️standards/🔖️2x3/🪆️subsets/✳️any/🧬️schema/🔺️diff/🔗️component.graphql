@@ -1,7 +1,10 @@
 # 🔺️ Ifc2x3Diff
+type Ifc2x3EdmPreamble { producer: String! module: String! creationDate: String! host: String! database: String! databaseVersion: String! databaseCreationDate: String! schema: String! model: String! modelCreationDate: String! headerModel: String! headerModelCreationDate: String! user: String! group: String! license: String! options: String! }
 type Ifc2x3Diff {
   schema: String @state(class: ARTIFACT)
   header: Bytes @state(class: ARTIFACT)
   removedInstances: [Int!] @state(class: ARTIFACT)
   upsertedInstances: [Bytes!] @state(class: ARTIFACT)
+  edmPreamble: Ifc2x3EdmPreamble @state(class: ARTIFACT)
+  instanceOrder: [Int!] @state(class: ARTIFACT)
 }

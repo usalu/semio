@@ -210,6 +210,45 @@ pub fn decompress_r2004_section(comp: &[u8], decomp_size: usize) -> Result<Vec<u
     }
     Ok(dec)
 }
+
+/// 🗜️ Encodes a canonical literal-only R2004 stream. This is the writer's total fallback; the
+/// match finder may replace literal runs with equivalent back-references without changing meaning.
+pub fn compress_r2004_section(data: &[u8]) -> Result<Vec<u8>, String> {
+    if data.is_empty() {
+        return Ok(vec![0x11]);
+    }
+    if data.len() < 4 {
+        return Err("R2004 compression needs at least four initial literal bytes".into());
+    }
+    let mut encoded = Vec::with_capacity(data.len() + 8);
+    if data.len() <= 18 {
+        encoded.push((data.len() - 3) as u8);
+    } else {
+        encoded.push(0);
+        let remaining = data.len() - 18;
+        let zero_count = (remaining - 1) / 0xff;
+        encoded.extend(std::iter::repeat_n(0, zero_count));
+        encoded.push(((remaining - 1) % 0xff + 1) as u8);
+    }
+    encoded.extend_from_slice(data);
+    encoded.push(0x11);
+    Ok(encoded)
+}
+
+/// 🧮 R2004 system/data-page checksum from §4.2 of the Open Design specification.
+pub fn r2004_page_checksum(seed: u32, data: &[u8]) -> u32 {
+    let mut sum1 = seed & 0xffff;
+    let mut sum2 = seed >> 16;
+    for chunk in data.chunks(0x15b0) {
+        for byte in chunk {
+            sum1 += *byte as u32;
+            sum2 += sum1;
+        }
+        sum1 %= 0xfff1;
+        sum2 %= 0xfff1;
+    }
+    (sum2 << 16) | sum1
+}
 //#endregion 🔖️Lz77Variant
 
 //#region 🔖️PageHeaderDecrypt
@@ -239,7 +278,9 @@ fn decrypt_page_header(raw32: &[u8; 32], file_address: u64) -> PageHeader {
 #[derive(Debug, Clone, Copy)]
 struct PageDirEntry {
     number: i32,
+    size: u32,
     address: u64,
+    gap_tree: Option<[i32; 4]>,
 }
 
 fn parse_page_directory(dec: &[u8], section_array_size: u32) -> Vec<PageDirEntry> {
@@ -250,16 +291,152 @@ fn parse_page_directory(dec: &[u8], section_array_size: u32) -> Vec<PageDirEntry
         let number = i32::from_le_bytes(dec[pos..pos + 4].try_into().unwrap());
         let size = u32::from_le_bytes(dec[pos + 4..pos + 8].try_into().unwrap());
         pos += 8;
-        out.push(PageDirEntry { number, address });
+        let entry_address = address;
+        let mut gap_tree = None;
         if number <= section_array_size as i32 {
             address += size as u64;
         }
         if number < 0 && pos + 16 <= dec.len() {
-            pos += 16; // parent/left/right/x00 gap-tree bookkeeping, unused for D1-D2 location.
+            gap_tree = Some([
+                i32::from_le_bytes(dec[pos..pos + 4].try_into().unwrap()),
+                i32::from_le_bytes(dec[pos + 4..pos + 8].try_into().unwrap()),
+                i32::from_le_bytes(dec[pos + 8..pos + 12].try_into().unwrap()),
+                i32::from_le_bytes(dec[pos + 12..pos + 16].try_into().unwrap()),
+            ]);
+            pos += 16;
         }
+        out.push(PageDirEntry { number, size, address: entry_address, gap_tree });
     }
     out
 }
+
+//#region 🧱️R2004PhysicalLayout
+fn typed_file_header(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgFileHeader, String> {
+    use crate::artifacts::dwg::schema::snapshot::DwgFileHeader;
+    if bytes.len() < R2004_HEADER_LEN { return Err("typed R2004 header is truncated".into()); }
+    let u32_at = |offset| u32::from_le_bytes(bytes[offset..offset + 4].try_into().unwrap());
+    let u64_at = |offset| u64::from_le_bytes(bytes[offset..offset + 8].try_into().unwrap());
+    Ok(DwgFileHeader {
+        file_id: bytes[0..0x0c].to_vec(), reserved_0c_2b: bytes[0x0c..0x2c].to_vec(),
+        last_section_address: u64_at(0x2c), second_header_address: u64_at(0x34),
+        num_gaps: u32_at(0x3c), num_sections: u32_at(0x40), reserved_44_4f: bytes[0x44..0x50].to_vec(),
+        section_map_id: u32_at(0x50) as i32, section_map_address: u64_at(0x54),
+        section_info_id: u32_at(0x5c) as i32, section_array_size: u32_at(0x60),
+        reserved_64_67: u32_at(0x64), crc32: u32_at(0x68),
+    })
+}
+
+fn encode_typed_file_header(header: &crate::artifacts::dwg::schema::snapshot::DwgFileHeader) -> Result<Vec<u8>, String> {
+    if header.file_id.len() != 0x0c || header.reserved_0c_2b.len() != 0x20 || header.reserved_44_4f.len() != 0x0c {
+        return Err("typed R2004 header has invalid reserved-span lengths".into());
+    }
+    let mut bytes = vec![0; R2004_HEADER_LEN];
+    bytes[0..0x0c].copy_from_slice(&header.file_id); bytes[0x0c..0x2c].copy_from_slice(&header.reserved_0c_2b);
+    bytes[0x2c..0x34].copy_from_slice(&header.last_section_address.to_le_bytes());
+    bytes[0x34..0x3c].copy_from_slice(&header.second_header_address.to_le_bytes());
+    bytes[0x3c..0x40].copy_from_slice(&header.num_gaps.to_le_bytes()); bytes[0x40..0x44].copy_from_slice(&header.num_sections.to_le_bytes());
+    bytes[0x44..0x50].copy_from_slice(&header.reserved_44_4f); bytes[0x50..0x54].copy_from_slice(&(header.section_map_id as u32).to_le_bytes());
+    bytes[0x54..0x5c].copy_from_slice(&header.section_map_address.to_le_bytes()); bytes[0x5c..0x60].copy_from_slice(&(header.section_info_id as u32).to_le_bytes());
+    bytes[0x60..0x64].copy_from_slice(&header.section_array_size.to_le_bytes()); bytes[0x64..0x68].copy_from_slice(&header.reserved_64_67.to_le_bytes());
+    bytes[0x68..0x6c].copy_from_slice(&header.crc32.to_le_bytes()); Ok(bytes)
+}
+
+fn data_header_words(raw: &[u8], address: u64) -> Result<[u32; 8], String> {
+    if raw.len() < 32 { return Err("encrypted data-page header is truncated".into()); }
+    let mask = 0x4164536bu32 ^ address as u32;
+    let mut words = [0; 8];
+    for (index, word) in words.iter_mut().enumerate() {
+        *word = u32::from_le_bytes(raw[index * 4..index * 4 + 4].try_into().unwrap()) ^ mask;
+    }
+    Ok(words)
+}
+
+fn encode_page_directory(entries: &[crate::artifacts::dwg::schema::snapshot::DwgPageDirectoryEntry]) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    for entry in entries {
+        push_u32(&mut bytes, entry.number as u32); push_u32(&mut bytes, entry.allocation_size);
+        if let Some(tree) = &entry.gap_tree {
+            push_u32(&mut bytes, tree.parent as u32); push_u32(&mut bytes, tree.left as u32);
+            push_u32(&mut bytes, tree.right as u32); push_u32(&mut bytes, tree.zero as u32);
+        }
+    }
+    bytes
+}
+
+/// 🧱️ Decodes AC1024 into typed physical records; opacity is confined to page payloads and unknown records.
+pub fn decode_r2004_physical(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgPhysicalLayout, String> {
+    use crate::artifacts::dwg::schema::snapshot::{DwgDataPageHeader, DwgGapTree, DwgPageDirectoryEntry, DwgPhysicalLayout, DwgPhysicalPage, DwgPhysicalPageKind, DwgPreamble, DwgSystemPageHeader, DwgTrailer};
+    if bytes.len() < 0x100 { return Err("R2004 file is shorter than its preamble".into()); }
+    let encrypted_header_address = u32::from_le_bytes(bytes[0x28..0x2c].try_into().unwrap());
+    if encrypted_header_address != 0x80 { return Err(format!("unsupported encrypted header address {encrypted_header_address:#x}")); }
+    let preamble = DwgPreamble {
+        reserved_06_0a: bytes[0x06..0x0b].to_vec(), zero_one_or_three: bytes[0x0b], reserved_0c: bytes[0x0c],
+        thumbnail_address: u32::from_le_bytes(bytes[0x0d..0x11].try_into().unwrap()), drawing_version: bytes[0x11],
+        reserved_15_27: bytes[0x15..0x28].to_vec(), encrypted_header_address, reserved_2c_7f: bytes[0x2c..0x80].to_vec(),
+    };
+    let decrypted = decrypt_r2004_header(&bytes[0x80..0x80 + R2004_HEADER_LEN]);
+    let encrypted_header = typed_file_header(&decrypted)?;
+    let header = parse_r2004_file_header(&decrypted)?;
+    let map_address = (header.section_map_address + 0x100) as usize;
+    if map_address + 20 > bytes.len() { return Err("page-map header is out of bounds".into()); }
+    let map_dec_size = u32::from_le_bytes(bytes[map_address + 4..map_address + 8].try_into().unwrap()) as usize;
+    let map_comp_size = u32::from_le_bytes(bytes[map_address + 8..map_address + 12].try_into().unwrap()) as usize;
+    if map_address + 20 + map_comp_size > bytes.len() { return Err("page-map payload is out of bounds".into()); }
+    let map_decoded = decompress_r2004_section(&bytes[map_address + 20..map_address + 20 + map_comp_size], map_dec_size)?;
+    let raw_directory = parse_page_directory(&map_decoded, header.section_array_size);
+    let page_directory: Vec<DwgPageDirectoryEntry> = raw_directory.iter().map(|entry| DwgPageDirectoryEntry {
+        number: entry.number, allocation_size: entry.size,
+        gap_tree: entry.gap_tree.map(|tree| DwgGapTree { parent: tree[0], left: tree[1], right: tree[2], zero: tree[3] }),
+    }).collect();
+    let directory_length = encode_page_directory(&page_directory).len();
+    if directory_length > map_decoded.len() { return Err("typed page directory exceeds decoded page map".into()); }
+    let page_directory_trailing = map_decoded[directory_length..].to_vec();
+    let sections = locate_r2004_sections(bytes)?;
+    let data_pages: std::collections::HashSet<i32> = sections.iter().flat_map(|section| section.pages.iter().map(|page| page.page_number)).collect();
+    let mut pages = Vec::with_capacity(raw_directory.len());
+    for entry in &raw_directory {
+        let start = entry.address as usize; let end = start.checked_add(entry.size as usize).ok_or("physical page allocation overflow")?;
+        if end > bytes.len() { return Err(format!("physical page {} exceeds file", entry.number)); }
+        let kind = if entry.number == header.section_map_id { DwgPhysicalPageKind::PageMap }
+            else if entry.number == header.section_info_id { DwgPhysicalPageKind::SectionInfo }
+            else if entry.number < 0 { DwgPhysicalPageKind::Gap }
+            else if data_pages.contains(&entry.number) { DwgPhysicalPageKind::Data } else { DwgPhysicalPageKind::Unknown };
+        let mut page = DwgPhysicalPage { number: entry.number, address: entry.address, allocation_size: entry.size, kind, ..Default::default() };
+        match kind {
+            DwgPhysicalPageKind::PageMap | DwgPhysicalPageKind::SectionInfo => {
+                if start + 20 > end { return Err(format!("system page {} header is truncated", entry.number)); }
+                let system = DwgSystemPageHeader {
+                    page_type: u32::from_le_bytes(bytes[start..start + 4].try_into().unwrap()),
+                    decompressed_size: u32::from_le_bytes(bytes[start + 4..start + 8].try_into().unwrap()),
+                    compressed_size: u32::from_le_bytes(bytes[start + 8..start + 12].try_into().unwrap()),
+                    compression_type: u32::from_le_bytes(bytes[start + 12..start + 16].try_into().unwrap()),
+                    checksum: u32::from_le_bytes(bytes[start + 16..start + 20].try_into().unwrap()),
+                };
+                let payload_end = start + 20 + system.compressed_size as usize;
+                if payload_end > end { return Err(format!("system page {} payload exceeds allocation", entry.number)); }
+                page.opaque_payload = bytes[start + 20..payload_end].to_vec(); page.trailing_bytes = bytes[payload_end..end].to_vec(); page.system_header = Some(system);
+            }
+            DwgPhysicalPageKind::Data => {
+                let words = data_header_words(&bytes[start..end], entry.address)?;
+                let data = DwgDataPageHeader { page_type: words[0], section_id: words[1], data_size: words[2], page_size: words[3], start_offset: words[4], header_checksum: words[5], data_checksum: words[6], unknown: words[7] };
+                let payload_end = start + 32 + data.data_size as usize;
+                if payload_end > end { return Err(format!("data page {} payload exceeds allocation", entry.number)); }
+                page.opaque_payload = bytes[start + 32..payload_end].to_vec(); page.trailing_bytes = bytes[payload_end..end].to_vec(); page.data_header = Some(data);
+            }
+            DwgPhysicalPageKind::Gap | DwgPhysicalPageKind::Unknown => page.opaque_payload = bytes[start..end].to_vec(),
+        }
+        pages.push(page);
+    }
+    let trailer_address = encrypted_header.second_header_address as usize;
+    if trailer_address > bytes.len() { return Err("trailer address exceeds file".into()); }
+    let trailer_bytes = &bytes[trailer_address..];
+    let second = (trailer_bytes.len() >= R2004_HEADER_LEN).then(|| decrypt_r2004_header(&trailer_bytes[..R2004_HEADER_LEN]));
+    let (second_header, unknown_suffix) = if second.as_ref().is_some_and(|value| value.starts_with(b"AcFssFcAJMB")) {
+        (Some(typed_file_header(second.as_ref().unwrap())?), trailer_bytes[R2004_HEADER_LEN..].to_vec())
+    } else { (None, trailer_bytes.to_vec()) };
+    Ok(DwgPhysicalLayout { preamble, encrypted_header, encrypted_header_padding: bytes[0xec..0x100].to_vec(), page_directory, page_directory_trailing, pages, trailer: DwgTrailer { address: trailer_address as u64, second_header, unknown_suffix } })
+}
+//#endregion 🧱️R2004PhysicalLayout
 
 /// 🗿️ One raw decoded page's content plus its on-disk location, before any bitcode
 /// interpretation (D3+ is out of scope for this ticket's D1-D2 bar) -- kept as an opaque byte
@@ -269,9 +446,11 @@ pub struct DwgRawPage {
     pub page_number: i32,
     pub file_address: u64,
     pub compressed_size: u32,
+    pub start_offset: u64,
+    pub decompressed_size: u32,
     /// Empty iff this specific page's own decompression failed (see `DwgRawPage::error`) --
     /// the section/page LOCATION (D1) still succeeded even when a given page's content (D2)
-    /// couldn't be recovered, and the whole-file `DwgSnapshot.bytes` fallback stays lossless
+    /// couldn't be recovered, and the whole-file `DwgSnapshot.source` fallback stays lossless
     /// regardless.
     pub decoded: Vec<u8>,
     pub error: Option<String>,
@@ -291,11 +470,12 @@ pub struct DwgRawSection {
     /// crate technique after the first engine port used `page_size` and every compressed
     /// section on the real fixture failed).
     pub max_decomp_size: u32,
+    pub section_id: u32,
+    pub encrypted: u32,
     pub pages: Vec<DwgRawPage>,
 }
 
-fn parse_section_info(dec: &[u8]) -> Result<Vec<(String, u64, u32, u32, Vec<(i32, u32, u64)>)>, String> {
-    // Returns (name, declared_size, compressed_flag, max_decomp_size, [(page_number, compressed_size, address_offset)]).
+fn parse_section_info(dec: &[u8]) -> Result<Vec<(String, u64, u32, u32, u32, u32, Vec<(i32, u32, u64)>)>, String> {
     if dec.len() < 20 {
         return Err("section info: header shorter than 20 bytes".into());
     }
@@ -316,6 +496,8 @@ fn parse_section_info(dec: &[u8]) -> Result<Vec<(String, u64, u32, u32, Vec<(i32
         let num_sections = u32_at(pos + 8)?;
         let max_decomp_size = u32_at(pos + 12)?;
         let compressed = u32_at(pos + 20)?;
+        let section_id = u32_at(pos + 24)?;
+        let encrypted = u32_at(pos + 28)?;
         let name_raw = &dec[pos + 32..pos + 32 + 64];
         let end = name_raw.iter().position(|&b| b == 0).unwrap_or(64);
         let name = String::from_utf8_lossy(&name_raw[..end]).into_owned();
@@ -331,7 +513,7 @@ fn parse_section_info(dec: &[u8]) -> Result<Vec<(String, u64, u32, u32, Vec<(i32
             pages.push((pnum, psize, paddr));
             pos += 16;
         }
-        out.push((name, size, compressed, max_decomp_size, pages));
+        out.push((name, size, compressed, max_decomp_size, section_id, encrypted, pages));
     }
     Ok(out)
 }
@@ -402,18 +584,18 @@ pub fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String>
 
     let by_number: std::collections::HashMap<i32, u64> = page_dir.iter().map(|e| (e.number, e.address)).collect();
     let mut out = Vec::with_capacity(descriptors.len());
-    for (name, declared_size, compressed_flag, max_decomp_size, pages) in descriptors {
+    for (name, declared_size, compressed_flag, max_decomp_size, section_id, encrypted, pages) in descriptors {
         if name.is_empty() {
             continue; // padding descriptor slot (section-info headers sometimes reserve one).
         }
         let mut raw_pages = Vec::with_capacity(pages.len());
-        for (pnum, psize, _addr_offset) in pages {
+        for (pnum, psize, start_offset) in pages {
             let file_address = *by_number
                 .get(&pnum)
                 .ok_or_else(|| format!("r2004: page {pnum} for section {name} not in page directory"))?;
-            raw_pages.push(DwgRawPage { page_number: pnum, file_address, compressed_size: psize, decoded: Vec::new(), error: None });
+            raw_pages.push(DwgRawPage { page_number: pnum, file_address, compressed_size: psize, start_offset, decompressed_size: 0, decoded: Vec::new(), error: None });
         }
-        out.push(DwgRawSection { name, compressed: compressed_flag == 2, declared_size, max_decomp_size, pages: raw_pages });
+        out.push(DwgRawSection { name, compressed: compressed_flag == 2, declared_size, max_decomp_size, section_id, encrypted, pages: raw_pages });
     }
     Ok(out)
 }
@@ -434,6 +616,7 @@ pub fn decode_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String>
             let mut raw32 = [0u8; 32];
             raw32.copy_from_slice(&bytes[addr..addr + 32]);
             let ph = decrypt_page_header(&raw32, page.file_address);
+            page.decompressed_size = ph.page_size;
             if ph.page_type != 0x4163043b {
                 page.error = Some(format!("page {} page_type {:#x} != 0x4163043b", page.page_number, ph.page_type));
                 continue;
@@ -463,6 +646,294 @@ pub fn decode_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String>
     }
     Ok(sections)
 }
+
+//#region 🔖️R2004Writer
+#[derive(Clone)]
+struct EncodedR2004Page {
+    section_id: u32,
+    page_number: i32,
+    start_offset: u64,
+    decompressed_size: u32,
+    payload: Vec<u8>,
+    address: u64,
+    allocation_size: u32,
+}
+
+fn align_r2004(value: usize) -> usize {
+    (value + 0x1f) & !0x1f
+}
+
+fn push_u32(output: &mut Vec<u8>, value: u32) {
+    output.extend_from_slice(&value.to_le_bytes());
+}
+
+fn push_u64(output: &mut Vec<u8>, value: u64) {
+    output.extend_from_slice(&value.to_le_bytes());
+}
+
+fn r2004_crc32(data: &[u8]) -> u32 {
+    let mut crc = 0xffff_ffffu32;
+    for byte in data {
+        crc ^= *byte as u32;
+        for _ in 0..8 {
+            crc = (crc >> 1) ^ (0xedb8_8320u32 & (0u32.wrapping_sub(crc & 1)));
+        }
+    }
+    !crc
+}
+
+fn encrypt_data_page_header(mut header: [u8; 32], address: u64) -> [u8; 32] {
+    let mask = 0x4164536bu32 ^ address as u32;
+    for chunk in header.chunks_exact_mut(4) {
+        let value = u32::from_le_bytes(chunk.try_into().unwrap()) ^ mask;
+        chunk.copy_from_slice(&value.to_le_bytes());
+    }
+    header
+}
+
+fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Result<(), String> {
+    if output.len() as u64 != page.address {
+        return Err(format!("page {} address {} != output {}", page.page_number, page.address, output.len()));
+    }
+    let data_checksum = r2004_page_checksum(0, &page.payload);
+    let mut header = [0u8; 32];
+    header[0..4].copy_from_slice(&0x4163043bu32.to_le_bytes());
+    header[4..8].copy_from_slice(&page.section_id.to_le_bytes());
+    header[8..12].copy_from_slice(&(page.payload.len() as u32).to_le_bytes());
+    header[12..16].copy_from_slice(&page.decompressed_size.to_le_bytes());
+    header[16..20].copy_from_slice(&(page.start_offset as u32).to_le_bytes());
+    header[24..28].copy_from_slice(&data_checksum.to_le_bytes());
+    let header_checksum = r2004_page_checksum(data_checksum, &header);
+    header[20..24].copy_from_slice(&header_checksum.to_le_bytes());
+    output.extend_from_slice(&encrypt_data_page_header(header, page.address));
+    output.extend_from_slice(&page.payload);
+    output.resize(page.address as usize + page.allocation_size as usize, 0);
+    Ok(())
+}
+
+fn write_system_page(output: &mut Vec<u8>, page_type: u32, decoded: &[u8]) -> Result<u32, String> {
+    let payload = compress_r2004_section(decoded)?;
+    let start = output.len();
+    let mut header = Vec::with_capacity(20);
+    push_u32(&mut header, page_type);
+    push_u32(&mut header, decoded.len() as u32);
+    push_u32(&mut header, payload.len() as u32);
+    push_u32(&mut header, 2);
+    push_u32(&mut header, 0);
+    let checksum = r2004_page_checksum(r2004_page_checksum(0, &header), &payload);
+    header[16..20].copy_from_slice(&checksum.to_le_bytes());
+    output.extend_from_slice(&header);
+    output.extend_from_slice(&payload);
+    output.extend_from_slice(&page_type.to_le_bytes());
+    output.extend_from_slice(&[0; 16]);
+    output.resize(align_r2004(output.len()), 0);
+    Ok((output.len() - start) as u32)
+}
+
+fn encode_section_info(
+    sections: &[crate::artifacts::dwg::schema::snapshot::DwgSection],
+    pages: &[EncodedR2004Page],
+) -> Vec<u8> {
+    let mut output = Vec::new();
+    push_u32(&mut output, sections.len() as u32 + 1);
+    push_u32(&mut output, 2);
+    push_u32(&mut output, 0x7400);
+    push_u32(&mut output, 0);
+    push_u32(&mut output, sections.len() as u32 + 1);
+    let mut descriptors: Vec<Option<&crate::artifacts::dwg::schema::snapshot::DwgSection>> = vec![None];
+    descriptors.extend(sections.iter().map(Some));
+    for section in descriptors {
+        let section_id = section.map_or(0, |value| value.section_id);
+        let section_pages: Vec<&EncodedR2004Page> = pages.iter().filter(|page| page.section_id == section_id).collect();
+        push_u64(&mut output, section.map_or(0, |value| value.declared_size));
+        push_u32(&mut output, section_pages.len() as u32);
+        push_u32(&mut output, section.map_or(0x7400, |value| value.max_decompressed_page_size.max(1)));
+        push_u32(&mut output, 1);
+        push_u32(&mut output, section.map_or(2, |value| if value.compressed { 2 } else { 1 }));
+        push_u32(&mut output, section_id);
+        push_u32(&mut output, section.map_or(0, |value| value.encrypted));
+        let mut name = [0u8; 64];
+        if let Some(section) = section {
+            let length = section.name.len().min(63);
+            name[..length].copy_from_slice(&section.name.as_bytes()[..length]);
+        }
+        output.extend_from_slice(&name);
+        for page in section_pages {
+            push_u32(&mut output, page.page_number as u32);
+            push_u32(&mut output, page.payload.len() as u32);
+            push_u64(&mut output, page.start_offset);
+        }
+    }
+    output
+}
+
+/// 🏗️ Materializes a canonical R2004-family file exclusively from logical AC1024 section values.
+fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
+    if snapshot.version.as_bytes().len() != 6 {
+        return Err("version sentinel must contain six bytes".into());
+    }
+    let mut sections = snapshot.sections.clone();
+    sections.sort_by_key(|section| std::cmp::Reverse(section.section_id));
+    let mut pages = Vec::new();
+    let mut address = 0x100usize;
+    let mut next_page_number = 1i32;
+    for section in &sections {
+        let mut logical_pages = section.pages.clone();
+        logical_pages.sort_by_key(|page| page.start_offset);
+        for logical in logical_pages {
+            if logical.error.is_some() {
+                return Err(format!("section {} page {} has no semantic payload", section.name, logical.page_number));
+            }
+            let payload = if section.compressed { compress_r2004_section(&logical.decoded)? } else { logical.decoded.clone() };
+            let allocation_size = align_r2004(32 + payload.len()) as u32;
+            pages.push(EncodedR2004Page {
+                section_id: section.section_id,
+                page_number: next_page_number,
+                start_offset: logical.start_offset,
+                decompressed_size: logical.decompressed_size.max(logical.decoded.len() as u32),
+                payload,
+                address: address as u64,
+                allocation_size,
+            });
+            next_page_number += 1;
+            address += allocation_size as usize;
+        }
+    }
+
+    let section_info = encode_section_info(&sections, &pages);
+    let section_info_page_number = next_page_number;
+    let section_info_address = address;
+    let section_info_payload = compress_r2004_section(&section_info)?;
+    let section_info_allocation = align_r2004(40 + section_info_payload.len());
+    address += section_info_allocation;
+
+    let mut page_map = Vec::new();
+    for page in &pages {
+        push_u32(&mut page_map, page.page_number as u32);
+        push_u32(&mut page_map, page.allocation_size);
+    }
+    push_u32(&mut page_map, section_info_page_number as u32);
+    push_u32(&mut page_map, section_info_allocation as u32);
+    let page_map_address = address;
+
+    let mut output = vec![0u8; 0x100];
+    output[0..6].copy_from_slice(snapshot.version.as_bytes());
+    output[0x12] = snapshot.maintenance_version;
+    output[0x13..0x15].copy_from_slice(&snapshot.codepage.to_le_bytes());
+    output[0x28..0x2c].copy_from_slice(&0x80u32.to_le_bytes());
+    for page in &pages {
+        write_data_page(&mut output, page)?;
+    }
+    let written_info = write_system_page(&mut output, 0x4163003b, &section_info)?;
+    if written_info as usize != section_info_allocation {
+        return Err("section info allocation changed during materialization".into());
+    }
+    write_system_page(&mut output, 0x41630e3b, &page_map)?;
+    let second_header_address = output.len() as u64;
+
+    let mut header = vec![0u8; R2004_HEADER_LEN];
+    header[0..12].copy_from_slice(b"AcFssFcAJMB\0");
+    header[0x10..0x14].copy_from_slice(&0x6cu32.to_le_bytes());
+    header[0x14..0x18].copy_from_slice(&4u32.to_le_bytes());
+    header[0x24..0x28].copy_from_slice(&1u32.to_le_bytes());
+    header[0x28..0x2c].copy_from_slice(&(next_page_number as u32).to_le_bytes());
+    header[0x2c..0x34].copy_from_slice(&(output.len() as u64).to_le_bytes());
+    header[0x34..0x3c].copy_from_slice(&second_header_address.to_le_bytes());
+    header[0x40..0x44].copy_from_slice(&(pages.len() as u32 + 1).to_le_bytes());
+    header[0x44..0x48].copy_from_slice(&0x20u32.to_le_bytes());
+    header[0x48..0x4c].copy_from_slice(&0x80u32.to_le_bytes());
+    header[0x4c..0x50].copy_from_slice(&0x40u32.to_le_bytes());
+    header[0x50..0x54].copy_from_slice(&((next_page_number + 1) as u32).to_le_bytes());
+    header[0x54..0x5c].copy_from_slice(&((page_map_address - 0x100) as u64).to_le_bytes());
+    header[0x5c..0x60].copy_from_slice(&(section_info_page_number as u32).to_le_bytes());
+    header[0x60..0x64].copy_from_slice(&(next_page_number as u32 + 1).to_le_bytes());
+    let crc = r2004_crc32(&header);
+    header[0x68..0x6c].copy_from_slice(&crc.to_le_bytes());
+    output[0x80..0xec].copy_from_slice(&decrypt_r2004_header(&header));
+    let magic = decrypt_r2004_header(&vec![0; R2004_HEADER_LEN]);
+    output[0xec..0x100].copy_from_slice(&magic[R2004_HEADER_LEN - 0x14..]);
+    output.extend_from_slice(&header);
+    Ok(output)
+}
+
+fn raw_sections_equal_snapshot(raw: &[DwgRawSection], snapshot: &crate::artifacts::dwg::DwgSnapshot) -> bool {
+    raw.len() == snapshot.sections.len() && raw.iter().zip(&snapshot.sections).all(|(left, right)| {
+        left.name == right.name && left.compressed == right.compressed && left.declared_size == right.declared_size
+            && left.max_decomp_size == right.max_decompressed_page_size && left.section_id == right.section_id
+            && left.encrypted == right.encrypted && left.pages.len() == right.pages.len()
+            && left.pages.iter().zip(&right.pages).all(|(a, b)| a.page_number == b.page_number
+                && a.start_offset == b.start_offset && a.decompressed_size == b.decompressed_size
+                && a.decoded == b.decoded && a.error == b.error)
+    })
+}
+
+fn encode_physical_page(page: &crate::artifacts::dwg::schema::snapshot::DwgPhysicalPage) -> Result<Vec<u8>, String> {
+    use crate::artifacts::dwg::schema::snapshot::DwgPhysicalPageKind;
+    let mut bytes = Vec::new();
+    match page.kind {
+        DwgPhysicalPageKind::Data => {
+            let header = page.data_header.as_ref().ok_or_else(|| format!("data page {} has no typed header", page.number))?;
+            if header.data_size as usize != page.opaque_payload.len() { return Err(format!("data page {} payload size disagrees with header", page.number)); }
+            let words = [header.page_type, header.section_id, header.data_size, header.page_size, header.start_offset, header.header_checksum, header.data_checksum, header.unknown];
+            let mut plain = [0; 32];
+            for (index, word) in words.iter().enumerate() { plain[index * 4..index * 4 + 4].copy_from_slice(&word.to_le_bytes()); }
+            bytes.extend_from_slice(&encrypt_data_page_header(plain, page.address)); bytes.extend_from_slice(&page.opaque_payload); bytes.extend_from_slice(&page.trailing_bytes);
+        }
+        DwgPhysicalPageKind::PageMap | DwgPhysicalPageKind::SectionInfo => {
+            let header = page.system_header.as_ref().ok_or_else(|| format!("system page {} has no typed header", page.number))?;
+            if header.compressed_size as usize != page.opaque_payload.len() { return Err(format!("system page {} payload size disagrees with header", page.number)); }
+            push_u32(&mut bytes, header.page_type); push_u32(&mut bytes, header.decompressed_size); push_u32(&mut bytes, header.compressed_size);
+            push_u32(&mut bytes, header.compression_type); push_u32(&mut bytes, header.checksum); bytes.extend_from_slice(&page.opaque_payload); bytes.extend_from_slice(&page.trailing_bytes);
+        }
+        DwgPhysicalPageKind::Gap | DwgPhysicalPageKind::Unknown => bytes.extend_from_slice(&page.opaque_payload),
+    }
+    if bytes.len() != page.allocation_size as usize { return Err(format!("physical page {} allocation mismatch: {} != {}", page.number, bytes.len(), page.allocation_size)); }
+    Ok(bytes)
+}
+
+fn encode_r2004_physical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
+    let layout = &snapshot.physical;
+    if snapshot.version.len() != 6 { return Err("version sentinel must contain six bytes".into()); }
+    if layout.pages.is_empty() { return Err("snapshot has no physical AC1024 pages".into()); }
+    if layout.preamble.reserved_06_0a.len() != 5 || layout.preamble.reserved_15_27.len() != 0x13
+        || layout.preamble.reserved_2c_7f.len() != 0x54 || layout.encrypted_header_padding.len() != 0x14 {
+        return Err("physical preamble reserved spans have invalid lengths".into());
+    }
+    if layout.page_directory.len() != layout.pages.len() { return Err("page directory and physical pages disagree".into()); }
+    let directory = encode_page_directory(&layout.page_directory);
+    let map_page = layout.pages.iter().find(|page| page.kind == crate::artifacts::dwg::schema::snapshot::DwgPhysicalPageKind::PageMap).ok_or("physical page map is missing")?;
+    let map_header = map_page.system_header.as_ref().ok_or("physical page map header is missing")?;
+    let current_directory = decompress_r2004_section(&map_page.opaque_payload, map_header.decompressed_size as usize)?;
+    let mut expected_directory = directory; expected_directory.extend_from_slice(&layout.page_directory_trailing);
+    if current_directory != expected_directory { return Err("dirty physical page-directory edits require recompression and checksum rematerialization".into()); }
+    let mut bytes = vec![0; 0x100];
+    bytes[0..6].copy_from_slice(snapshot.version.as_bytes()); bytes[0x06..0x0b].copy_from_slice(&layout.preamble.reserved_06_0a);
+    bytes[0x0b] = layout.preamble.zero_one_or_three; bytes[0x0c] = layout.preamble.reserved_0c;
+    bytes[0x0d..0x11].copy_from_slice(&layout.preamble.thumbnail_address.to_le_bytes()); bytes[0x11] = layout.preamble.drawing_version;
+    bytes[0x12] = snapshot.maintenance_version; bytes[0x13..0x15].copy_from_slice(&snapshot.codepage.to_le_bytes());
+    bytes[0x15..0x28].copy_from_slice(&layout.preamble.reserved_15_27); bytes[0x28..0x2c].copy_from_slice(&layout.preamble.encrypted_header_address.to_le_bytes());
+    bytes[0x2c..0x80].copy_from_slice(&layout.preamble.reserved_2c_7f);
+    bytes[0x80..0xec].copy_from_slice(&decrypt_r2004_header(&encode_typed_file_header(&layout.encrypted_header)?));
+    bytes[0xec..0x100].copy_from_slice(&layout.encrypted_header_padding);
+    for (entry, page) in layout.page_directory.iter().zip(&layout.pages) {
+        if entry.number != page.number || entry.allocation_size != page.allocation_size { return Err(format!("page {} disagrees with directory", page.number)); }
+        if bytes.len() as u64 != page.address { return Err(format!("page {} address {} != writer position {}", page.number, page.address, bytes.len())); }
+        bytes.extend_from_slice(&encode_physical_page(page)?);
+    }
+    if bytes.len() as u64 != layout.trailer.address { return Err(format!("trailer address {} != writer position {}", layout.trailer.address, bytes.len())); }
+    if let Some(second_header) = &layout.trailer.second_header { bytes.extend_from_slice(&decrypt_r2004_header(&encode_typed_file_header(second_header)?)); }
+    bytes.extend_from_slice(&layout.trailer.unknown_suffix); Ok(bytes)
+}
+
+/// 🧱️ Serializes the retained physical AC1024 records in original order.
+pub fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
+    let bytes = encode_r2004_physical(snapshot)?;
+    let sections = decode_r2004_sections(&bytes)?;
+    if raw_sections_equal_snapshot(&sections, snapshot) { Ok(bytes) } else {
+        Err("dirty DWG section edits cannot be exported without rematerializing physical page allocation, compression, and checksums".into())
+    }
+}
+//#endregion 🔖️R2004Writer
 //#endregion 🔖️SectionMapAndInfo
 
 //#region 🎹️DerivedComposition
@@ -1782,7 +2253,6 @@ mod tests {
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.version, "AC1024");
-        assert_eq!(parsed.bytes, stub);
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
@@ -2019,6 +2489,23 @@ mod tests {
     }
 
     #[test]
+    fn lz_writer_roundtrips_every_literal_length_boundary() {
+        for length in [4usize, 18, 19, 20, 272, 273, 274, 527, 528, 4096] {
+            let input: Vec<u8> = (0..length).map(|index| index as u8).collect();
+            let encoded = compress_r2004_section(&input).expect("compress");
+            let decoded = decompress_r2004_section(&encoded, input.len()).expect("decompress");
+            assert_eq!(decoded, input, "literal length {length}");
+        }
+    }
+
+    #[test]
+    fn page_checksum_supports_seeded_stages() {
+        assert_eq!(r2004_page_checksum(0, b""), 0);
+        let header = r2004_page_checksum(0, b"header");
+        assert_eq!(r2004_page_checksum(header, b"payload"), 0x250a0553);
+    }
+
+    #[test]
     fn lz_rejects_out_of_bounds_backref() {
         // opcode 0x40 (short-match branch, comp_bytes=(0x40>>4)-1=3) with a huge encoded offset
         // and nothing decoded yet -- must error, never panic or fabricate bytes.
@@ -2029,7 +2516,7 @@ mod tests {
     //#endregion 🔖️Lz77VariantUnit
 
     //#region 🔖️RealFixture
-    const ARCHITECTURAL_FIXTURE: &[u8] = include_bytes!("../../../../🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg");
+    const ARCHITECTURAL_FIXTURE: &[u8] = include_bytes!("../../../../../../../../../../temp/architectural_example.dwg");
 
     /// 🧪️ D1: file header decrypts cleanly and every section+page is located by name, on the
     /// real ~145KB AC1024 fixture -- the actual regression test for "sentinel + passthrough"
@@ -2114,6 +2601,104 @@ mod tests {
             }
         }
         assert_eq!(total, hdr.last_section_address + 0x100, "page directory total size must match independent header field");
+    }
+
+    /// 🔁 Exact imported bytes survive every persisted snapshot/diff/mutation/raw-I/O route.
+    #[test]
+    fn well_known_fixture_lossless_system_roundtrip() {
+        use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+        use crate::artifacts::dwg::schema::diff::DwgDiff;
+        use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, DwgMutation};
+        use crate::artifacts::dwg::schema::snapshot::encode_dwg;
+        use protocol::command::DiffAlgebra;
+        use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
+
+        assert_eq!(ARCHITECTURAL_FIXTURE.len(), 148_638);
+        assert_eq!(&ARCHITECTURAL_FIXTURE[..6], b"AC1024");
+        let snapshot = crate::artifacts::dwg::schema::snapshot::decode_dwg(ARCHITECTURAL_FIXTURE).expect("import fixture");
+        assert_eq!(encode_dwg(&snapshot).expect("direct export"), ARCHITECTURAL_FIXTURE);
+
+        let raw = BinarySnapshot {
+            schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
+            bytes: ARCHITECTURAL_FIXTURE.to_vec(),
+        };
+        let raw_snapshot = crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any::deserialize(&raw)
+            .expect("raw deserialize");
+        let raw_export = crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any::serialize(&raw_snapshot)
+            .expect("raw serialize");
+        assert_eq!(raw_export.bytes, ARCHITECTURAL_FIXTURE);
+
+        let dsl = store::ArtifactDsl::print_dsl(&snapshot);
+        let fixture_hex: String = ARCHITECTURAL_FIXTURE.iter().map(|byte| format!("{byte:02x}")).collect();
+        assert!(dsl.contains("physical"));
+        assert!(!dsl.contains(&fixture_hex), "DSL must serialize typed snapshot state, not a native DWG hex replay");
+        let dsl_snapshot = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("DSL parse");
+        assert_eq!(encode_dwg(&dsl_snapshot).expect("DSL export"), ARCHITECTURAL_FIXTURE);
+
+        let pack = store::ArtifactPack::encode_pack(&snapshot);
+        assert!(
+            !pack.windows(ARCHITECTURAL_FIXTURE.len()).any(|window| window == ARCHITECTURAL_FIXTURE),
+            "pack must serialize typed snapshot state, not embed the native DWG document",
+        );
+        let pack_snapshot = <DwgSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("pack decode");
+        assert_eq!(encode_dwg(&pack_snapshot).expect("pack export"), ARCHITECTURAL_FIXTURE);
+
+        let self_diff = DwgDiff::between(&snapshot, &snapshot);
+        assert!(self_diff.is_empty());
+        assert_eq!(encode_dwg(&self_diff.apply(&snapshot)).expect("self-diff export"), ARCHITECTURAL_FIXTURE);
+
+        let mut no_op_snapshot = snapshot.clone();
+        let no_op_diff = apply_dwg_mutation(&mut no_op_snapshot, &DwgMutation::NoMutation);
+        assert!(no_op_diff.is_empty());
+        assert_eq!(encode_dwg(&no_op_snapshot).expect("no-op export"), ARCHITECTURAL_FIXTURE);
+
+        let set_snapshot = DwgMutation::SetSnapshot { snapshot: snapshot.clone() };
+        let set_text = set_snapshot.print_op();
+        let set_from_text = DwgMutation::parse_op(&set_text).expect("set-snapshot text decode");
+        let set_binary = set_snapshot.encode_op().expect("set-snapshot binary encode");
+        let set_from_binary = DwgMutation::decode_op(&set_binary).expect("set-snapshot binary decode");
+        assert_eq!(set_from_text, set_snapshot);
+        assert_eq!(set_from_binary, set_snapshot);
+        let mut applied_set = DwgSnapshot::default();
+        apply_dwg_mutation(&mut applied_set, &set_from_binary);
+        assert_eq!(encode_dwg(&applied_set).expect("set-snapshot export"), ARCHITECTURAL_FIXTURE);
+
+        let persisted_diff = DwgDiff::between(&DwgSnapshot::default(), &snapshot);
+        let diff_text = persisted_diff.print_diff();
+        assert_eq!(DwgDiff::parse_diff(&diff_text).expect("diff text decode"), persisted_diff);
+        let diff_binary = persisted_diff.encode_diff().expect("diff binary encode");
+        let decoded_diff = DwgDiff::decode_diff(&diff_binary).expect("diff binary decode");
+        let from_persisted_diff = decoded_diff.apply(&DwgSnapshot::default());
+        assert_eq!(encode_dwg(&from_persisted_diff).expect("diff export"), ARCHITECTURAL_FIXTURE);
+
+        let mut absorbed = persisted_diff.clone();
+        absorbed.absorb(DwgDiff::between(&snapshot, &snapshot));
+        assert_eq!(
+            encode_dwg(&absorbed.apply(&DwgSnapshot::default())).expect("absorbed export"),
+            ARCHITECTURAL_FIXTURE,
+        );
+
+        let header_mutation = DwgMutation::SetVersionInfo {
+            version: "AC1024".into(),
+            maintenance_version: snapshot.maintenance_version.wrapping_add(1),
+            codepage: 1252,
+        };
+        let mut header_snapshot = snapshot.clone();
+        apply_dwg_mutation(&mut header_snapshot, &header_mutation);
+        let header_bytes = encode_dwg(&header_snapshot).expect("supported header export");
+        assert_ne!(header_bytes, ARCHITECTURAL_FIXTURE);
+        assert_eq!(header_bytes[0x12], header_snapshot.maintenance_version);
+        assert_eq!(u16::from_le_bytes([header_bytes[0x13], header_bytes[0x14]]), 1252);
+        for inverse in header_mutation.inverse(&snapshot) {
+            apply_dwg_mutation(&mut header_snapshot, &inverse);
+        }
+        assert_eq!(encode_dwg(&header_snapshot).expect("inverse export"), ARCHITECTURAL_FIXTURE);
+        assert_eq!(header_snapshot, snapshot);
+
+        let mut unsupported = snapshot.clone();
+        let section_name = unsupported.section_names.first().expect("fixture section").clone();
+        apply_dwg_mutation(&mut unsupported, &DwgMutation::RemoveSection { name: section_name });
+        assert!(encode_dwg(&unsupported).unwrap_err().to_string().contains("dirty DWG section edits"));
     }
     //#endregion 🔖️RealFixture
 

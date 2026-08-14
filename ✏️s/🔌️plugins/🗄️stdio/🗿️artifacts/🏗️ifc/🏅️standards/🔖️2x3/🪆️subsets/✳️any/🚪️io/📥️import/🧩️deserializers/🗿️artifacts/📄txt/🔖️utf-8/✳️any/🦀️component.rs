@@ -6,7 +6,7 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2
 pub fn register() {}
 
 pub fn deserialize(from: &TxtSnapshot) -> Result<Ifc2x3Snapshot, store::TextError> {
-    crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(from.to_body().trim().as_bytes())
+    crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(from.to_body().as_bytes())
         .map_err(|e| store::TextError::new(format!("ifc2x3 parse: {e}"), dsl::TextSpan::at(1, 1)))
 }
 

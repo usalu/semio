@@ -11,6 +11,11 @@ message SvgDiff {
   optional NullableXmlDeclaration declaration = 1;
   optional NullableString doctype = 2;
   optional SvgNodeDiff root = 3;
+  optional XmlNodeList prolog = 4;
+}
+
+message XmlNodeList {
+  repeated semio.s_stdio_xml.snapshot.XmlNode values = 1;
 }
 
 // 🏳️ Tri-state wrapper: unset `NullableXmlDeclaration` field on `SvgDiff` = unchanged; present

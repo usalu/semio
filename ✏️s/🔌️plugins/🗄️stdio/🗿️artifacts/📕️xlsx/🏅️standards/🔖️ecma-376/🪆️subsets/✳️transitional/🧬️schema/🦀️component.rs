@@ -287,6 +287,7 @@ pub mod derived_analysis {
                 }),
                 doctype: None,
                 declaration: None,
+                prolog: Vec::new(),
             };
             xml_document_to_text(&doc).into_bytes()
         }

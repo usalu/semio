@@ -1,0 +1,18 @@
+*** Begin Patch
+*** Update File: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+@@
++// Restore the strict R2004PhysicalLayout region recorded in
++// 🛠️dwg-implementation.md: typed preamble/header/page-directory/pages/trailer,
++// retained per-page payload/allocation bytes, physical-order writer, and dirty-section error.
+@@
+-pub fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
+-    encode_r2004_canonical(snapshot)
+-}
++pub fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
++    let bytes = encode_r2004_physical(snapshot)?;
++    let sections = decode_r2004_sections(&bytes)?;
++    if raw_sections_equal_snapshot(&sections, snapshot) { Ok(bytes) } else {
++        Err("dirty DWG section edits cannot be exported without rematerializing physical page allocation, compression, and checksums".into())
++    }
++}
+*** End Patch

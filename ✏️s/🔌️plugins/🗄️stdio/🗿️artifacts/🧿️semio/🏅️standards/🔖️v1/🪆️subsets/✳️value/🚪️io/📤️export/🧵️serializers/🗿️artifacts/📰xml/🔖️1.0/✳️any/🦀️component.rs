@@ -174,7 +174,17 @@ pub fn xml_document_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioV
         },
         None => None,
     };
-    Ok(XmlDocument { root, doctype, declaration })
+    let prolog = match find(&entries, "prolog") {
+        Some(raw) => match resolve(&raw, nodes, visiting)? {
+            SemioValue::List { items } => items
+                .iter()
+                .map(|node| xml_node_from_semio(node, nodes, visiting))
+                .collect::<Result<Vec<_>, store::PackError>>()?,
+            other => return Err(err(format!("value->xml: \"prolog\" must be a List, got {other:?}"))),
+        },
+        None => Vec::new(),
+    };
+    Ok(XmlDocument { root, doctype, declaration, prolog })
 }
 //#endregion 🔖️Convert
 
@@ -209,6 +219,7 @@ mod tests {
             }),
             doctype: Some("<!DOCTYPE svg>".into()),
             declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(false) }),
+            prolog: vec![XmlNode::Comment { text: "generated".into() }],
         };
         assert_eq!(round_trip(doc.clone()), doc);
     }

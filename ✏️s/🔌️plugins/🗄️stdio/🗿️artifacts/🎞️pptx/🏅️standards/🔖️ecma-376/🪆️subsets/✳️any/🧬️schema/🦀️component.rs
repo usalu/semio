@@ -1,6 +1,6 @@
 //! 🧬️ PptxArtifact schema — full artifact state.
 
-use crate::artifacts::pptx::schema::snapshot::PptxPresentation;
+use crate::artifacts::pptx::schema::snapshot::{PptxPhysicalState, PptxPresentation, PptxXmlPart};
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
@@ -19,7 +19,13 @@ pub struct PptxArtifact {
     pub opc: OpcPackage,
     #[state(artifact)]
     #[serde(default)]
+    pub xml_parts: Vec<PptxXmlPart>,
+    #[state(artifact)]
+    #[serde(default)]
     pub presentation: PptxPresentation,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub physical: Option<PptxPhysicalState>,
 }
 //#endregion Artifact
 
@@ -33,19 +39,21 @@ impl Default for PptxArtifact {
 impl PptxArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> PptxSnapshot {
-        PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), presentation: self.presentation.clone() }
+        PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone(), presentation: self.presentation.clone(), physical: self.physical.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: PptxSnapshot) -> Self {
-        Self { schema: snapshot.schema, opc: snapshot.opc, presentation: snapshot.presentation }
+        Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts, presentation: snapshot.presentation, physical: snapshot.physical }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: PptxSnapshot) {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
+        self.xml_parts = snapshot.xml_parts;
         self.presentation = snapshot.presentation;
+        self.physical = snapshot.physical;
     }
 }
 //#endregion Conversions
@@ -88,9 +96,9 @@ pub fn pptx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
     use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.pptx` snapshot.
@@ -125,7 +133,11 @@ pub mod derived_construction {
             self
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion 🔖️Builder
@@ -175,8 +187,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::pptx::PptxSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.pptx` parts.
@@ -213,22 +225,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.text",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error(
-                                "stdio.analyze.binary",
-                                dsl::TextSpan::at(1, 1),
-                                err.to_string(),
-                            ));
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -242,12 +246,14 @@ pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
-pub fn empty_pptx_snapshot() -> PptxSnapshot { PptxSnapshot::default() }
+pub fn empty_pptx_snapshot() -> PptxSnapshot {
+    PptxSnapshot::default()
+}
 
 /// 📄️ FG-wave: the demo `stdio.pptx` presentation — a genuinely non-trivial `PptxSnapshot`
 /// exercising a title `Placeholder` (bold run), a `Picture`, a `TextBox` with mixed bold/italic
-/// runs across two paragraphs, and one raw-retained `Other` shape (`p:graphicFrame`, round-tripped
-/// verbatim), plus one unmodeled raw OPC part (`ppt/media/image1.png`, verbatim-retained). The
+/// runs across two paragraphs, and one logical `Other` shape (`p:graphicFrame`), plus one
+/// semantically binary OPC part (`ppt/media/image1.png`). The
 /// single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
 /// asserted equal by `fixture_honesty_law` below) — same shape docx's own `demo_docx_snapshot()`
@@ -272,12 +278,7 @@ pub fn demo_pptx_snapshot() -> PptxSnapshot {
                 shapes: vec![
                     PptxShape::TextBox {
                         text_frame: vec![
-                            PptxParagraph {
-                                runs: vec![
-                                    PptxRun { text: "Bold and ".into(), bold: true, italic: false, font_size: None },
-                                    PptxRun { text: "italic".into(), bold: false, italic: true, font_size: None },
-                                ],
-                            },
+                            PptxParagraph { runs: vec![PptxRun { text: "Bold and ".into(), bold: true, italic: false, font_size: None }, PptxRun { text: "italic".into(), bold: false, italic: true, font_size: None }] },
                             PptxParagraph::text("second paragraph"),
                         ],
                         position: PptxTransform { x: 685800, y: 457200, cx: 7772400, cy: 2286000 },
@@ -286,7 +287,7 @@ pub fn demo_pptx_snapshot() -> PptxSnapshot {
                     // element (real bytes `<a:graphic/>`, no space) would hit the SAME lexer
                     // identifier-fusion property this file's own grammar documents for `p:nvPr`/
                     // `p:grpSpPr`/etc (`"cNvGrpSpPr/"` fuses into ONE token) -- but the GENERIC
-                    // `x-elem` raw-retention fallback (unlike this artifact's own TYPED shape
+                    // `x-elem` logical fallback (unlike this artifact's own TYPED shape
                     // productions, which model every real fused case with an explicit literal
                     // token) has no way to disambiguate "bare self-close" from "open tag, more
                     // content follows" using only same-shape `LT x-name GT` lookahead -- a
@@ -294,23 +295,20 @@ pub fn demo_pptx_snapshot() -> PptxSnapshot {
                     // own snapshot grammar's `x-elem` inherits), not something this demo fixture
                     // should paper over by accident. Keeping every attr non-empty here keeps the
                     // conformance law honest without exercising that known gap.
-                    PptxShape::Other { xml: r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="9" name="Table 1"/></p:nvGraphicFramePr></p:graphicFrame>"#.into() },
+                    PptxShape::Other {
+                        node: crate::artifacts::xml::schema::snapshot::xml_document_from_text(r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="9" name="Table 1"/></p:nvGraphicFramePr></p:graphicFrame>"#)
+                            .expect("valid logical fallback XML")
+                            .root
+                            .expect("fallback XML root"),
+                    },
                 ],
             },
         ],
     };
     let mut snap = build_minimal_pptx(presentation);
     snap.opc.set_part("ppt/media/image1.png", "image/png", b"\x89PNG\r\n\x1a\n".to_vec());
-    // 🩹 Canonicalize `opc.parts` ORDER by round-tripping through one real encode/decode pass --
-    // `regenerate_presentation_parts` (invoked again inside `encode_pptx`) retains-away and
-    // re-appends `ppt/slides/*`/`ppt/presentation.xml` on EVERY call (see
-    // `double_regenerate_keeps_opc_parts_order_stable`'s own regression note in the tests below);
-    // since THIS demo snapshot manually appends an EXTRA raw part (`ppt/media/image1.png`) AFTER
-    // `build_minimal_pptx`'s own regen pass, a LATER `encode_pptx` call (invoked by `print_dsl`/
-    // `encode_pack`/every conformance law below) would otherwise reorder `opc.parts` differently
-    // from whatever order this function returns -- exactly the failure mode
-    // `fixture_honesty_law`'s `print_dsl`/`parse_dsl` round trip exists to catch. Round-tripping
-    // once here means every LATER `encode_pptx` call on this snapshot is a stable no-op reorder.
+    // 🩹 Normalize the authored binary media plus logical XML through the same deterministic
+    // materialization/deserialization boundary used by native I/O.
     let canonical_bytes = encode_pptx(&snap).expect("encode demo pptx for order canonicalization");
     decode_pptx(&canonical_bytes).expect("decode demo pptx for order canonicalization")
 }
@@ -337,8 +335,8 @@ mod tests {
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_pptx, encode_pptx};
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::{
-        PptxError, MINIMAL_SLIDE_MASTER_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER,
-        SLIDE_CONTENT_TYPE, SLIDE_MASTER_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_PART, THEME_PART,
+        PptxError, MINIMAL_SLIDE_MASTER_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_PART,
+        SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_PART,
     };
     use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
@@ -355,10 +353,7 @@ mod tests {
                 PptxSlide {
                     shapes: vec![
                         PptxShape::TextBox { text_frame: vec![PptxParagraph::text("Second slide, plain.")], position: PptxTransform::default() },
-                        PptxShape::TextBox {
-                            text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "italic note".into(), bold: false, italic: true, font_size: None }] }],
-                            position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 },
-                        },
+                        PptxShape::TextBox { text_frame: vec![PptxParagraph { runs: vec![PptxRun { text: "italic note".into(), bold: false, italic: true, font_size: None }] }], position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } },
                         PptxShape::Picture { blip_rel_id: "rId5".into(), position: PptxTransform { x: 10, y: 20, cx: 30, cy: 40 } },
                     ],
                 },
@@ -375,9 +370,9 @@ mod tests {
         let decoded = decode_pptx(&bytes).expect("decode minimal package");
         assert_eq!(decoded.presentation, sample_presentation());
         // The synthesized boilerplate chain must actually be present — a real reader needs it.
-        assert!(decoded.opc.part(SLIDE_MASTER_PART).is_some());
-        assert!(decoded.opc.part(SLIDE_LAYOUT_PART).is_some());
-        assert!(decoded.opc.part(THEME_PART).is_some());
+        assert!(decoded.xml_parts.iter().any(|part| part.path == SLIDE_MASTER_PART));
+        assert!(decoded.xml_parts.iter().any(|part| part.path == SLIDE_LAYOUT_PART));
+        assert!(decoded.xml_parts.iter().any(|part| part.path == THEME_PART));
     }
 
     #[test]
@@ -435,9 +430,9 @@ mod tests {
     }
 
     #[test]
-    fn decode_preserves_unmodeled_shape_kinds_as_other_verbatim() {
+    fn decode_preserves_unmodeled_shape_kinds_as_logical_other() {
         // A `p:graphicFrame` (chart/table/SmartArt) direct child -- not typed by this layer --
-        // must survive decode->encode->decode verbatim via `PptxShape::Other`.
+        // must survive decode->encode->decode as a logical `PptxShape::Other` XML node.
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
@@ -469,10 +464,11 @@ mod tests {
         let bytes = opc::encode_opc(&opc).expect("encode");
         let decoded = decode_pptx(&bytes).expect("decode");
         assert_eq!(decoded.presentation.slides[0].shapes.len(), 1);
-        let PptxShape::Other { xml } = &decoded.presentation.slides[0].shapes[0] else { panic!("expected Other shape") };
-        assert!(xml.contains("p:graphicFrame") && xml.contains("Table 1"));
+        let PptxShape::Other { node } = &decoded.presentation.slides[0].shapes[0] else { panic!("expected Other shape") };
+        let node_json = serde_json::to_string(node).expect("serialize logical other node");
+        assert!(node_json.contains("p:graphicFrame") && node_json.contains("Table 1"));
 
-        // Re-encode -> re-decode: the raw xml must survive the round trip verbatim.
+        // Re-encode -> re-decode: the logical XML node must survive the round trip.
         let re_encoded = encode_pptx(&decoded).expect("re-encode");
         let re_decoded = decode_pptx(&re_encoded).expect("re-decode");
         assert_eq!(re_decoded.presentation, decoded.presentation);
@@ -515,7 +511,7 @@ mod tests {
     }
 
     #[test]
-    fn unmodeled_slide_master_survives_decode_encode_verbatim() {
+    fn unmodeled_slide_master_survives_decode_encode_logically() {
         let snap = build_minimal_pptx(sample_presentation());
         // Replace the synthesized slide master with a distinguishable "real" one before encoding.
         let mut opc = snap.opc.clone();
@@ -545,41 +541,135 @@ mod tests {
     fn shrinking_slide_count_drops_stale_slide_parts_and_relationships() {
         let mut wide = sample_presentation();
         let snap_wide = build_minimal_pptx(wide.clone());
-        assert!(snap_wide.opc.part("ppt/slides/slide2.xml").is_some());
         assert!(!snap_wide.opc.relationships_for("ppt/slides/slide2.xml").is_empty());
 
         wide.slides.truncate(1);
-        let bytes = encode_pptx(&PptxSnapshot::from_parts(snap_wide.opc, wide)).expect("encode narrower presentation");
+        let bytes = encode_pptx(&PptxSnapshot::from_parts(snap_wide.opc, snap_wide.xml_parts, wide)).expect("encode narrower presentation");
         let decoded = decode_pptx(&bytes).expect("decode");
-        assert!(decoded.opc.part("ppt/slides/slide2.xml").is_none(), "stale second slide part must be dropped");
         assert!(decoded.opc.relationships_for("ppt/slides/slide2.xml").is_empty(), "stale second slide's relationships must be dropped too");
         assert_eq!(decoded.presentation.slides.len(), 1);
     }
 
     #[test]
-    fn double_regenerate_keeps_opc_parts_order_stable() {
-        // 🐛 Regression: `regenerate_presentation_parts` runs TWICE in a real round trip
-        // (`build_minimal_pptx` once, then `encode_pptx`/`store::ArtifactPack::encode_pack`
-        // again on the ALREADY-built snapshot). The slide parts get retained-away + re-appended
-        // on EVERY call, but `ppt/presentation.xml` didn't, so on the SECOND call it stayed at
-        // its OLD position (before the slides, from the first call) while the slides moved to
-        // the true end -- flipping their relative `opc.parts` order and breaking exact
-        // `Vec<OpcPart>` equality (caught by `codec_retention_law`). Asserts the FIX: two
-        // `regenerate` passes produce the IDENTICAL parts order as one.
+    fn repeated_materialization_is_deterministic() {
         let snap = build_minimal_pptx(sample_presentation());
-        let once = snap.opc.parts.iter().map(|p| p.path.clone()).collect::<Vec<_>>();
-        let twice_bytes = encode_pptx(&snap).expect("encode (second regenerate pass)");
-        let twice = decode_pptx(&twice_bytes).expect("decode").opc.parts.iter().map(|p| p.path.clone()).collect::<Vec<_>>();
-        assert_eq!(once, twice, "opc.parts order must be stable across repeated regenerate passes");
-        // `ppt/presentation.xml` must always sort AFTER every `ppt/slides/*` part specifically
-        // (the exact symptom the bug produced).
-        let pres_idx = once.iter().position(|p| p == PRESENTATION_PART).expect("presentation.xml present");
-        for (i, p) in once.iter().enumerate() {
-            if p.starts_with("ppt/slides/") {
-                assert!(i < pres_idx, "slide part {p} must precede presentation.xml in opc.parts");
+        let once = encode_pptx(&snap).expect("first materialization");
+        let decoded = decode_pptx(&once).expect("decode first materialization");
+        let twice = encode_pptx(&decoded).expect("second materialization");
+        assert_eq!(once, twice);
+    }
+
+    //#region 🔖️ExactSourceRoundtrip
+    fn exact_pptx_bytes() -> Vec<u8> {
+        std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact pptx fixture")
+    }
+
+    fn assert_canonical_export(snapshot: &PptxSnapshot, expected: &[u8]) {
+        assert_eq!(encode_pptx(snapshot).expect("export canonical fixture"), expected);
+    }
+
+    fn first_positioned_shape(snapshot: &PptxSnapshot) -> (usize, usize, PptxTransform) {
+        for (slide_index, slide) in snapshot.presentation.slides.iter().enumerate() {
+            for (shape_index, shape) in slide.shapes.iter().enumerate() {
+                let position = match shape {
+                    PptxShape::TextBox { position, .. } | PptxShape::Picture { position, .. } | PptxShape::Placeholder { position, .. } => *position,
+                    PptxShape::Other { .. } => continue,
+                };
+                return (slide_index, shape_index, position);
             }
         }
+        panic!("exact fixture has no positioned shape");
     }
+
+    #[test]
+    fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
+        use crate::artifacts::pptx::{PptxDiff, PptxMutation};
+        use protocol::{DiffAlgebra, DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
+
+        let exact_bytes = exact_pptx_bytes();
+        let snapshot = decode_pptx(&exact_bytes).expect("import exact fixture");
+        assert_eq!(snapshot.presentation.slides.len(), 62);
+        assert!(!snapshot.xml_parts.is_empty());
+        let canonical_bytes = encode_pptx(&snapshot).expect("canonicalize exact fixture logically");
+        let canonical_snapshot = decode_pptx(&canonical_bytes).expect("decode canonical fixture");
+        assert_eq!(canonical_snapshot, snapshot);
+        assert_canonical_export(&canonical_snapshot, &canonical_bytes);
+
+        let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&exact_bytes).expect("decode exact zip");
+        assert_eq!(zip.entries.len(), 211);
+        assert_eq!(zip.entries.iter().filter(|entry| entry.name.starts_with("ppt/slides/slide") && entry.name.ends_with(".xml")).count(), 62);
+        assert_eq!(zip.entries.iter().filter(|entry| entry.name.ends_with(".rels")).count(), 78);
+
+        let packed = store::ArtifactPack::encode_pack(&snapshot);
+        let unpacked = <PptxSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("unpack exact fixture");
+        assert_eq!(unpacked, snapshot);
+        assert_canonical_export(&unpacked, &canonical_bytes);
+
+        let binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::serialize(&snapshot).expect("serialize exact fixture to binary");
+        let from_binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any::deserialize(&binary).expect("deserialize exact fixture from binary");
+        assert_eq!(from_binary, snapshot);
+        assert_canonical_export(&from_binary, &canonical_bytes);
+
+        let dsl = store::ArtifactDsl::print_dsl(&snapshot);
+        let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse exact fixture dsl");
+        assert_eq!(parsed, snapshot);
+        assert_canonical_export(&parsed, &canonical_bytes);
+
+        let self_diff = PptxDiff::between(&snapshot, &snapshot);
+        assert!(self_diff.is_empty());
+        assert_canonical_export(&self_diff.apply(&snapshot), &canonical_bytes);
+
+        let mut no_op = snapshot.clone();
+        let no_op_diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut no_op, &PptxMutation::NoMutation);
+        assert!(no_op_diff.is_empty());
+        assert_canonical_export(&no_op, &canonical_bytes);
+
+        let (slide_index, shape_index, position) = first_positioned_shape(&snapshot);
+        let changed_x = if position.x == i64::MAX { position.x - 1 } else { position.x + 1 };
+        let mutation = PptxMutation::SetShapePosition { slide_index, shape_index, position: PptxTransform { x: changed_x, ..position } };
+        let mut changed = snapshot.clone();
+        let forward = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut changed, &mutation);
+        assert_ne!(changed, snapshot);
+        assert_ne!(encode_pptx(&changed).expect("encode mutated presentation"), canonical_bytes);
+        for inverse in mutation.inverse(&snapshot) {
+            crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut changed, &inverse);
+        }
+        assert_eq!(changed, snapshot);
+        assert_canonical_export(&changed, &canonical_bytes);
+
+        let mid = forward.apply(&snapshot);
+        let inverse = forward.inverse(&snapshot);
+        let mut absorbed = forward.clone();
+        absorbed.absorb(inverse.clone());
+        let restored = inverse.apply(&mid);
+        assert_eq!(restored, snapshot);
+        assert_eq!(absorbed.apply(&snapshot), snapshot);
+        assert_canonical_export(&restored, &canonical_bytes);
+        assert_canonical_export(&absorbed.apply(&snapshot), &canonical_bytes);
+
+        let mut without_xml_parts = snapshot.clone();
+        without_xml_parts.xml_parts.clear();
+        let xml_parts_diff = PptxDiff::between(&without_xml_parts, &snapshot);
+        let printed_diff = xml_parts_diff.print_diff();
+        let parsed_diff = PptxDiff::parse_diff(&printed_diff).expect("parse logical XML parts diff");
+        assert_canonical_export(&parsed_diff.apply(&without_xml_parts), &canonical_bytes);
+        let encoded_diff = xml_parts_diff.encode_diff().expect("encode logical XML parts diff");
+        let decoded_diff = PptxDiff::decode_diff(&encoded_diff).expect("decode logical XML parts diff");
+        assert_canonical_export(&decoded_diff.apply(&without_xml_parts), &canonical_bytes);
+
+        let set_snapshot = PptxMutation::SetSnapshot { snapshot: snapshot.clone() };
+        let printed_op = set_snapshot.print_op();
+        let parsed_op = PptxMutation::parse_op(&printed_op).expect("parse exact set-snapshot");
+        let mut via_text_op = without_xml_parts.clone();
+        crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut via_text_op, &parsed_op);
+        assert_canonical_export(&via_text_op, &canonical_bytes);
+        let encoded_op = set_snapshot.encode_op().expect("encode exact set-snapshot");
+        let decoded_op = PptxMutation::decode_op(&encoded_op).expect("decode exact set-snapshot");
+        let mut via_binary_op = without_xml_parts;
+        crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut via_binary_op, &decoded_op);
+        assert_canonical_export(&via_binary_op, &canonical_bytes);
+    }
+    //#endregion 🔖️ExactSourceRoundtrip
 
     //#region 🔖️ConformanceLaws
     /// 🧪️ FG-wave: per-artifact conformance laws (`📖️grammar-recipe.md` §4's checklist item) --
@@ -600,19 +690,11 @@ mod tests {
         /// message).
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [
-                ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO),
-            ] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [
-                ("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO),
-            ] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }

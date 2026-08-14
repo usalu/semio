@@ -6,8 +6,8 @@
 # comment for the full `DslField`/recursion rationale — it applies identically here, `Part21Value`'s
 # self-recursive `List`/`Typed` case is the same recursion problem `4`'s own `IfcValue` has).
 #
-# `format u8` + `flags u8` (bit0..3 = `schema`/`header`/non-empty-`removed_instances`/
-# non-empty-`upserted_instances` presence, same order the text grammar's token list uses) as two REAL
+# `format u8` + `flags u8` (bit0..5 = `schema`/`header`/non-empty-`removed_instances`/
+# non-empty-`upserted_instances`/`edm_preamble`/`instance_order` presence) as two REAL
 # fixed fields, then each present field's payload in that order as one trailing `bytes` chain.
 # `schema`/`header`/`removed_instances`' own ids and `upserted_instances`' own per-instance fields are
 # real field-by-field binary at the Rust layer (`enc_part21_header_bin`/`enc_instance_list_bin` in

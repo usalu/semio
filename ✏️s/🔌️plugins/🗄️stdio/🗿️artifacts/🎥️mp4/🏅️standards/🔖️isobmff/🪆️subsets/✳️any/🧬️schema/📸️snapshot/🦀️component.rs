@@ -1,13 +1,9 @@
 //! 🧬️ Mp4Snapshot — ISO-BMFF: `ftyp` typed, decoded per-track sample tables (`stts`/`ctts`/
 //! `stsc`/`stsz`/`stco`/`stss` flattened into per-sample records), AVC codec config typed
-//! (`avcC` SPS/PPS), everything else typed-raw retained (`unknown_boxes`) — never a fabricated
-//! decode. Real binary codec: `ArtifactPack`/`ArtifactDsl` below wrap the REAL ISO-BMFF bytes
-//! produced/consumed by `⚙️engine::{decode_mp4,encode_mp4}` (moved from remodel's video engine,
-//! see that module's doc comment), the same pattern `stdio.png`'s snapshot uses — NOT a
-//! JSON-pack passthrough.
+//! (`avcC` SPS/PPS) and logical sample-to-chunk grouping. Native bytes are materialized only by
+//! the ordinary ISO-BMFF writer.
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::io as engine;
-use crate::ArtifactSource;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -28,6 +24,16 @@ pub struct Mp4Ftyp {
 //#endregion 🔖️Ftyp
 
 //#region 🔖️Codec
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4AvcExtension {
+    pub chroma_format: u8,
+    pub bit_depth_luma_minus8: u8,
+    pub bit_depth_chroma_minus8: u8,
+    #[serde(default)]
+    pub sps_ext: Vec<Vec<u8>>,
+}
+
 /// 🎥️ A track's sample-description codec: AVC typed (SPS/PPS NAL lists + AVCC length-field
 /// width), anything else typed-raw (the full first sample-description entry box, verbatim —
 /// honest boundary, never a fabricated decode of a codec this engine doesn't understand).
@@ -40,6 +46,8 @@ pub enum Mp4Codec {
         #[serde(default)]
         pps: Vec<Vec<u8>>,
         nal_length_size: u8,
+        #[serde(default)]
+        extension: Option<Mp4AvcExtension>,
     },
     Other {
         fourcc: String,
@@ -70,6 +78,167 @@ pub struct Mp4Sample {
 }
 //#endregion 🔖️Sample
 
+//#region 🎬️Movie
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4Movie {
+    pub creation_time: u64,
+    pub modification_time: u64,
+    pub timescale: u32,
+    pub duration: u64,
+    pub rate: i32,
+    pub volume: i16,
+    pub matrix: [i32; 9],
+    pub next_track_id: u32,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub encoder: Option<String>,
+}
+
+impl Default for Mp4Movie {
+    fn default() -> Self {
+        Self {
+            creation_time: 0,
+            modification_time: 0,
+            timescale: 1000,
+            duration: 0,
+            rate: 0x0001_0000,
+            volume: 0x0100,
+            matrix: [0x0001_0000, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000],
+            next_track_id: 1,
+            title: None,
+            encoder: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4Edit {
+    pub segment_duration: u64,
+    pub media_time: i64,
+    pub media_rate_integer: i16,
+    pub media_rate_fraction: i16,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4VisualSampleEntry {
+    pub data_reference_index: u16,
+    pub version: u16,
+    pub revision_level: u16,
+    pub vendor: u32,
+    pub temporal_quality: u32,
+    pub spatial_quality: u32,
+    pub horizontal_resolution: u32,
+    pub vertical_resolution: u32,
+    pub frame_count: u16,
+    pub compressor_name: String,
+    pub depth: u16,
+    pub color_table_id: i16,
+}
+
+impl Default for Mp4VisualSampleEntry {
+    fn default() -> Self {
+        Self {
+            data_reference_index: 1,
+            version: 0,
+            revision_level: 0,
+            vendor: 0,
+            temporal_quality: 0,
+            spatial_quality: 0,
+            horizontal_resolution: 0x0048_0000,
+            vertical_resolution: 0x0048_0000,
+            frame_count: 1,
+            compressor_name: String::new(),
+            depth: 24,
+            color_table_id: -1,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4Color {
+    pub color_type: String,
+    pub primaries: u16,
+    pub transfer: u16,
+    pub matrix: u16,
+    #[serde(default)]
+    pub full_range: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4PixelAspectRatio {
+    pub horizontal_spacing: u32,
+    pub vertical_spacing: u32,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4Bitrate {
+    pub buffer_size: u32,
+    pub maximum: u32,
+    pub average: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mp4TrackMetadata {
+    pub creation_time: u64,
+    pub modification_time: u64,
+    pub flags: u32,
+    pub duration: u64,
+    pub layer: i16,
+    pub alternate_group: i16,
+    pub volume: i16,
+    pub matrix: [i32; 9],
+    pub media_duration: u64,
+    pub media_creation_time: u64,
+    pub media_modification_time: u64,
+    pub language: String,
+    pub quality: u16,
+    pub handler_name: String,
+    #[serde(default)]
+    pub edits: Vec<Mp4Edit>,
+    pub visual: Mp4VisualSampleEntry,
+    #[serde(default)]
+    pub color: Option<Mp4Color>,
+    #[serde(default)]
+    pub pixel_aspect_ratio: Option<Mp4PixelAspectRatio>,
+    #[serde(default)]
+    pub bitrate: Option<Mp4Bitrate>,
+}
+
+impl Default for Mp4TrackMetadata {
+    fn default() -> Self {
+        Self {
+            creation_time: 0,
+            modification_time: 0,
+            flags: 3,
+            duration: 0,
+            layer: 0,
+            alternate_group: 0,
+            volume: 0,
+            matrix: [0x0001_0000, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000],
+            media_duration: 0,
+            media_creation_time: 0,
+            media_modification_time: 0,
+            language: "und".into(),
+            quality: 0,
+            handler_name: String::new(),
+            edits: Vec::new(),
+            visual: Mp4VisualSampleEntry::default(),
+            color: None,
+            pixel_aspect_ratio: None,
+            bitrate: None,
+        }
+    }
+}
+//#endregion 🎬️Movie
+
 //#region 🔖️Track
 /// 🛤️ One `trak` (this codec decodes video-handler tracks only — a non-`vide` `trak` is retained
 /// whole in `unknown_boxes` under fourcc `"trak"`, never silently dropped).
@@ -81,6 +250,10 @@ pub struct Mp4Track {
     pub codec: Mp4Codec,
     pub width: u32,
     pub height: u32,
+    pub metadata: Mp4TrackMetadata,
+    /// 🧱️ Logical sample grouping per media chunk, in `stco`/`co64` order.
+    #[serde(default)]
+    pub chunk_sample_counts: Vec<u32>,
     #[serde(default)]
     pub samples: Vec<Mp4Sample>,
 }
@@ -110,14 +283,13 @@ pub struct Mp4Snapshot {
     #[state(artifact)]
     pub ftyp: Mp4Ftyp,
     #[state(artifact)]
+    pub movie: Mp4Movie,
+    #[state(artifact)]
     #[serde(default)]
     pub tracks: Vec<Mp4Track>,
     #[state(artifact)]
     #[serde(default)]
     pub unknown_boxes: Vec<Mp4Box>,
-    #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub source: Option<ArtifactSource>,
 }
 
 fn default_schema() -> String { STDIO_MP4_DOCUMENT_SCHEMA.into() }
@@ -127,25 +299,13 @@ impl Default for Mp4Snapshot {
     /// for a genuinely valid box (unlike an empty string, which `⚙️engine::encode_mp4` would have
     /// to pad, breaking the empty-snapshot round trip below).
     fn default() -> Self {
-        Self { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, tracks: Vec::new(), unknown_boxes: Vec::new(), source: None }
-    }
-}
-
-impl Mp4Snapshot {
-    /// 🪞️ Clones the semantic projection without its native source image.
-    pub fn projection(&self) -> Self {
-        let mut projection = self.clone();
-        projection.source = None;
-        projection
+        Self { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, movie: Mp4Movie::default(), tracks: Vec::new(), unknown_boxes: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🎙️ Real binary codec: the `.semio` envelope wrapping the REAL ISO-BMFF bytes this engine
-/// decodes/encodes (moved from remodel's video engine — see `⚙️engine`'s doc comment). Text form
-/// is a whitespace-tolerant ASCII hex dump of those same real bytes (mirrors `stdio.png`'s
-/// pattern exactly — PNG likewise has no textual syntax of its own).
+/// 🎙️ Snapshot-model codecs serialize only the logical ISO-BMFF model.
 impl store::ArtifactDsl for Mp4Snapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str { STDIO_MP4_DOCUMENT_SCHEMA }
@@ -155,24 +315,11 @@ impl store::ArtifactDsl for Mp4Snapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16)
-                .map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        engine::decode_mp4(&bytes).map_err(|e| store::TextError::new(format!("mp4 decode: {e}"), dsl::TextSpan::at(1, 1)))
+        serde_json::from_str(body).map_err(|e| store::TextError::new(format!("mp4 snapshot decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = engine::encode_mp4(self);
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let body = serde_json::to_string(self).expect("Mp4Snapshot JSON serialization");
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -185,7 +332,7 @@ impl store::ArtifactDsl for Mp4Snapshot {
 impl store::ArtifactPack for Mp4Snapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = engine::encode_mp4(self);
+        let raw = serde_json::to_vec(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -204,7 +351,7 @@ impl store::ArtifactPack for Mp4Snapshot {
             )));
         }
         let _ = options;
-        engine::decode_mp4(&inner).map_err(store::PackError::Schema)
+        serde_json::from_slice(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -218,19 +365,21 @@ mod tests {
         Mp4Snapshot {
             schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
             ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "iso2".into(), "avc1".into(), "mp41".into()] },
+            movie: Mp4Movie::default(),
             tracks: vec![Mp4Track {
                 track_id: 1,
                 timescale: 1000,
-                codec: Mp4Codec::Avc { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4 },
+                codec: Mp4Codec::Avc { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4, extension: None },
                 width: 64,
                 height: 64,
+                metadata: Mp4TrackMetadata::default(),
+                chunk_sample_counts: vec![2],
                 samples: vec![
                     Mp4Sample { data: vec![0, 0, 0, 4, 0x65, 1, 2, 3], duration: 33, cts_offset: 0, sync: true },
                     Mp4Sample { data: vec![0, 0, 0, 3, 0x61, 4, 5], duration: 33, cts_offset: 33, sync: false },
                 ],
             }],
             unknown_boxes: vec![Mp4Box { fourcc: "free".into(), data: vec![0, 0, 0, 0] }],
-            source: None,
         }
     }
 
@@ -239,7 +388,7 @@ mod tests {
         let snap = sample_snapshot();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
-        assert_eq!(snap, back.projection());
+        assert_eq!(snap, back);
     }
 
     #[test]
@@ -247,7 +396,7 @@ mod tests {
         let snap = sample_snapshot();
         let text = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
-        assert_eq!(snap, back.projection());
+        assert_eq!(snap, back);
     }
 
     #[test]
@@ -255,7 +404,7 @@ mod tests {
         let snap = Mp4Snapshot::default();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
-        assert_eq!(snap, back.projection());
+        assert_eq!(snap, back);
     }
 
     #[test]

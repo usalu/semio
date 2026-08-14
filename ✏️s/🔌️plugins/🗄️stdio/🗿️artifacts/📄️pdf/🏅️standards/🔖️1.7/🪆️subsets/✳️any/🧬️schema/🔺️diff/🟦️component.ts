@@ -5,7 +5,7 @@
  *  reuses `PdfDictDiff` verbatim (trailer is itself a Dict-shaped structure). No
  *  `snapshot?: PdfSnapshot` full-replace slot anywhere. */
 
-import type { ObjRef, PdfDictEntry, PdfInfo, PdfObject, PdfPage } from '../📸️snapshot/🟦️component.ts';
+import type { ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage } from '../📸️snapshot/🟦️component.ts';
 
 /** 📄️ Sparse per-field patch for one `PdfPage` (weak entity -- flat fields only). `cropBox` is
  *  tri-state: absent = unchanged, `null` = cleared, a box = set. */
@@ -71,7 +71,7 @@ export type PdfValueDiff =
   | { kind: 'replace'; value: PdfObject }
   | { kind: 'bool'; value: boolean }
   | { kind: 'int'; value: number }
-  | { kind: 'real'; value: number }
+  | { kind: 'real'; value: PdfDecimal }
   | { kind: 'str'; value: number[] }
   | { kind: 'name'; value: string }
   | { kind: 'ref'; value: ObjRef }

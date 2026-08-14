@@ -73,7 +73,7 @@ message PdfValueDiff {
   semio.s_stdio_pdf_1_7.snapshot.PdfObject replace_value = 2;
   bool bool_value = 3;
   int64 int_value = 4;
-  double real_value = 5;
+  semio.s_stdio_pdf_1_7.snapshot.PdfDecimal real_value = 5;
   bytes str_value = 6;
   string name_value = 7;
   semio.s_stdio_pdf_1_7.snapshot.ObjRef ref_value = 8;

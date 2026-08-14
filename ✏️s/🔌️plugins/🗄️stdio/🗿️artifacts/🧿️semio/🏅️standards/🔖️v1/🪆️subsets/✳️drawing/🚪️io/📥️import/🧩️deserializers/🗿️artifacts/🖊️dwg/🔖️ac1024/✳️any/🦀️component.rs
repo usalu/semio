@@ -1,9 +1,5 @@
-//! 📥️ `dwg` (ac1024) → `s.stdio.semio/v1/drawing` — reads `DwgSnapshot.bytes` through the
-//! relocated (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS G2)
-//! hand-rolled DWG structural codec's own `dwg_from_bytes` + `dwg_geometry_to_path_segments` (the
-//! SAME semio-authored, round-trippable AC1015-flavored byte format the sibling export leaf's
-//! `dwg_to_bytes` writes — NOT the real R2004+ decode this standard tier's `DwgSnapshot`
-//! otherwise carries; see the codec's own module doc). One `DrawLayer` per real DWG layer, one
+//! 📥️ `dwg` (ac1024) → `s.stdio.semio/v1/drawing` — reads the shared logical `DwgSnapshot`
+//! drawing model and maps it with `dwg_geometry_to_path_segments`. One `DrawLayer` per DWG layer, one
 //! `DrawNode` per entity, in entity order — the exact inverse of the sibling export leaf's own
 //! per-layer `paths_to_dwg_drawing` + `DwgGeometry::Text` push order.
 //!
@@ -13,9 +9,9 @@
 //! - Every `DwgGeometry` kind `dwg_geometry_to_path_segments` doesn't cover (`Line`/`Point`/`Arc`/
 //!   `Ellipse`/`Polyline3d`/`PolyfaceMesh`/`Face3d`) has no `DrawNode` equivalent here and is
 //!   dropped — mesh-shaped content is the `✳️mesh` bridge's job, not this one's.
-//! - A malformed (non-`"AC10xx"`-sentinel) payload is a hard `Err`, not a fabricated empty drawing.
+//! - Malformed logical geometry is a hard `Err`, not a fabricated empty drawing.
 
-use crate::artifacts::dwg::{DwgDrawing, DwgGeometry, DwgSnapshot, dwg_from_bytes, dwg_geometry_to_path_segments};
+use crate::artifacts::dwg::{DwgDrawing, DwgGeometry, DwgSnapshot, dwg_geometry_to_path_segments};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
@@ -60,7 +56,7 @@ impl ArtifactDeserializer for SemioDrawingFromDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let drawing: DwgDrawing = dwg_from_bytes(&from.bytes).map_err(store::PackError::Schema)?;
+        let drawing: DwgDrawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
         let layers = drawing
             .layers
             .iter()
@@ -82,7 +78,8 @@ impl ArtifactDeserializer for SemioDrawingFromDwg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dwg::{DwgColor, DwgEntity, STDIO_DWG_DOCUMENT_SCHEMA, dwg_to_bytes};
+    use crate::artifacts::dwg::{DwgColor, DwgEntity};
+    use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
 
     fn sample_dwg() -> DwgSnapshot {
         let mut drawing = DwgDrawing::default();
@@ -93,8 +90,7 @@ mod tests {
             geometry: DwgGeometry::LwPolyline { closed: false, elevation: 0.0, vertices: vec![[0.0, 0.0], [5.0, 0.0]], bulges: vec![0.0, 0.0] },
         });
         drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [1.0, 1.0, 0.0], height: 1.0, rotation: 0.0, content: "hi".into() } });
-        let bytes = dwg_to_bytes(&drawing).expect("encode sample");
-        DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version: "AC1015".into(), bytes, ..DwgSnapshot::default() }
+        DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&drawing), ..DwgSnapshot::default() }
     }
 
     #[test]
@@ -114,7 +110,7 @@ mod tests {
 
     #[test]
     fn rejects_malformed_payload() {
-        let bad = DwgSnapshot { bytes: vec![0u8; 4], ..DwgSnapshot::default() };
+        let bad = DwgSnapshot { drawing: crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing { extmin: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
         assert!(SemioDrawingFromDwg::deserialize(&bad).is_err());
     }
 }

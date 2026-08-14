@@ -1,6 +1,8 @@
 syntax = "proto3";
 package semio.s_stdio_pptx.diff;
+message PptxXmlPartsReplacement { repeated semio.s_stdio_pptx.snapshot.PptxXmlPart parts = 1; }
 message PptxDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional semio.s_stdio_pptx.snapshot.OpcPackage opc = 1;
+  optional PptxXmlPartsReplacement xml_parts = 2;
+  optional semio.s_stdio_pptx.snapshot.PptxPresentation presentation = 3;
 }

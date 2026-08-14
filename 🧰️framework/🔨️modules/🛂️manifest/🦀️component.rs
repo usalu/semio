@@ -842,7 +842,7 @@ pub struct CommandDefinition {
     pub kind: ActionKind,
     /// 📝️ Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
     pub args: Vec<ActionArgDef>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub keybindings: Vec<PlatformKeybinding>,
     #[serde(default)]
     pub in_palette: bool,
@@ -922,7 +922,7 @@ pub struct CommandInvocation {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct OsDefinition {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub commands: Vec<CommandDefinition>,
 }
 //#endregion 🔖️Commands
@@ -1437,9 +1437,9 @@ pub enum IntroductionGesture {
     Drag {
         from: IntroductionPoint,
         to: IntroductionPoint,
-        #[serde(default = "introduction_pointer_button_left", skip_serializing_if = "IntroductionPointerButton::is_left")]
+        #[serde(default = "introduction_pointer_button_left")]
         button: IntroductionPointerButton,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[serde(default)]
         modifiers: Vec<IntroductionKeyModifier>,
     },
     Scroll { at: IntroductionPoint, delta_y: f64 },
@@ -1448,9 +1448,9 @@ pub enum IntroductionGesture {
     Orbit {
         from: IntroductionPoint,
         to: IntroductionPoint,
-        #[serde(default = "introduction_pointer_button_right", skip_serializing_if = "IntroductionPointerButton::is_right")]
+        #[serde(default = "introduction_pointer_button_right")]
         button: IntroductionPointerButton,
-        #[serde(default = "introduction_orbit_default_modifiers", skip_serializing_if = "introduction_orbit_modifiers_is_default")]
+        #[serde(default = "introduction_orbit_default_modifiers")]
         modifiers: Vec<IntroductionKeyModifier>,
     }
 }
@@ -1560,7 +1560,7 @@ pub struct TutorialDefinition {
     /// ⏱️ Total timeline length in milliseconds; every track entry's `at` (+ duration) must fit within.
     pub duration_ms: u64,
     /// 📖️ Scrub-bar markers, sorted ascending by `at`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub chapters: Vec<TutorialChapter>,
     /// 🎬️ Starting conditions the player restores into its sandbox before t=0.
     pub base: TutorialBase,
@@ -1611,7 +1611,7 @@ pub struct TutorialBase {
     pub example_id: Option<String>,
     pub ui: TutorialUiSnapshot,
     /// 🎥️ Initial camera per window instance (every entry's `at` is `0`).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub cameras: Vec<TutorialCameraKeyframe>,
 }
 
@@ -1622,22 +1622,22 @@ pub struct TutorialBase {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialTracks {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub narration: Vec<TutorialNarrationCue>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub video: Vec<TutorialVideoCue>,
     /// 🏷️ Annotational only — drives affordance pulses and scrub-bar tick marks; playback never
     /// re-dispatches these into a plugin (see `TutorialEventKind`).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub events: Vec<TutorialEvent>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub ui: Vec<TutorialUiKeyframe>,
     /// 🖋️ The sole source of document mutation during playback — see `TutorialArtifactEventKind`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub document: Vec<TutorialArtifactEvent>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub camera: Vec<TutorialCameraKeyframe>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub gestures: Vec<TutorialGestureCue>,
 }
 
@@ -1693,7 +1693,7 @@ pub struct TutorialNarrationCue {
     pub rate: f64,
     /// 💬️ Timed caption sub-segments (offsets relative to this cue's `at`); empty means `text` is shown
     /// whole for the cue's `duration_ms`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub captions: Vec<TutorialCaption>,
 }
 
@@ -1833,7 +1833,7 @@ pub struct TutorialUiSnapshot {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub open_dialog_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub expanded_tree_ids: Vec<String>,
     #[serde(default)]
     pub command_panel_open: bool,
@@ -1885,7 +1885,7 @@ pub enum TutorialUiChange {
     Selection {
         domain_id: String,
         granularity: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[serde(default)]
         ids: Vec<String>,
     },
     Dialog {
@@ -2391,13 +2391,13 @@ pub struct ModeDefinition {
     pub label: LocalizedLabel,
     pub icon_id: IconName,
     /// 🛠️ Tools available while this mode is active — references `AppDefinition.tools` ids.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub tools: Vec<ToolRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub layout_id: Option<String>,
     /// 🎛️ Commands owned by this mode and active only while it is active.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub commands: Vec<CommandDefinition>,
 }
 
@@ -2506,14 +2506,14 @@ pub struct WindowKindDefinition {
     #[serde(default)]
     pub options: WindowOptions,
     /// 📇️ Actions owned by this window kind. Mandatory, may be empty, never absent.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub actions: Vec<ActionDefinition>,
     /// 🧰️ Utilities this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub utilities: Vec<UtilityRef>,
     /// 🕹️ Interaction domains this window kind accepts — references `AppDefinition.interactions` ids.
     /// Empty = no interactions.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub interactions: Vec<InteractionRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -2527,7 +2527,7 @@ pub struct WindowKindDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub output_schema: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub capabilities: Vec<kernel::CapabilityRequirement>,
 }
 
@@ -2614,7 +2614,7 @@ pub struct PanelTabDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub body_key: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub children: Vec<PanelTabDefinition>,
 }
 
@@ -2651,29 +2651,29 @@ pub struct AppDefinition {
     pub panel_tabs: Vec<PanelTabDefinition>,
     pub keybindings: Vec<Keybinding>,
     /// 🧰️ The interactive utilities this app exposes (referenced by `WindowKindDefinition.utilities`).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub utilities: Vec<UtilityDefinition>,
     /// 🛠️ The mode-level tools this app exposes (referenced by `ModeDefinition.tools`).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub tools: Vec<ToolDefinition>,
     /// 🎛️ Commands owned by this app and active whenever it is focused.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub commands: Vec<CommandDefinition>,
     /// 🕹️ The interaction domains (hover + selection) this app exposes (referenced by
     /// `WindowKindDefinition.interactions`) — see `crate::InteractionDefinition`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub interactions: Vec<InteractionDefinition>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_layout: Option<WindowLayout>,
     /// 🗣️ Terminology ids this app declares beyond the implicit "native" default.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub terminologies: Vec<String>,
     /// 🗺️ Terminology id -> full replacement breadcrumb (product + app segments), e.g. "reuse" ->
     /// ["Entwerfen mit Bestand", "Aggregator"]; ids absent here keep the canonical breadcrumb under that terminology.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    #[serde(default)]
     pub terminology_breadcrumbs: std::collections::HashMap<String, Vec<String>>,
     /// 🎓️ This app's first-run walkthrough, if it declares one — see `IntroductionDefinition`.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2681,20 +2681,20 @@ pub struct AppDefinition {
     pub introduction: Option<IntroductionDefinition>,
     /// 🎬️ Recorded, timed walkthroughs this app declares — see `TutorialDefinition`. A brand's own
     /// `tutorials` (if any) are shown alongside these, never replacing them (unlike `introduction`).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub tutorials: Vec<TutorialDefinition>,
     /// 🗨️ The modal form dialogs this app can open via `HostEffect::OpenDialog`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub dialogs: Vec<DialogDefinition>,
     /// 🔌️ This app's workflow input ports — see `crate::MediaPortSpec`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub media_inputs: Vec<MediaPortSpec>,
     /// 🔌️ This app's workflow output ports — see `crate::MediaPortSpec`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub media_outputs: Vec<MediaPortSpec>,
     /// 🗂️ OS resource kinds this app produces/consumes — see `crate::ArtifactKindSpec`. Drives
     /// `framework/product/os/core`'s artifact catalog registry instead of a hardcoded per-app match.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub artifact_kinds: Vec<ArtifactKindSpec>,
     /// 🧮️ This app's typed configuration record — see `crate::ConfigSpec`. Empty until per-app waves
     /// populate it.
@@ -2892,16 +2892,16 @@ pub struct PluginManifest {
     pub version: String,
     pub apps: Vec<AppDefinition>,
     pub examples: Vec<ExampleDefinition>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub capabilities: Vec<kernel::CapabilityRequirement>,
     /// 🗂️ Open plugin contributions — see `TopicContribution`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub topic_contributions: Vec<TopicContribution>,
     /// 🎛️ Plugin-scope commands this program exposes — apply whenever any of its apps is focused.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub commands: Vec<CommandDefinition>,
     /// 🗂️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub artifact_kinds: Vec<ArtifactKindSpec>,
 }
 
@@ -2954,7 +2954,7 @@ pub struct ViewModel {
     pub window_id: Option<String>,
     /// 🪟️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
     /// `window_engagements`/`window_measures` can return one entry per instance instead of per kind.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub window_instances: Vec<ViewWindowInstance>,
 }
 
@@ -3023,10 +3023,10 @@ pub struct ArtifactKindSpec {
     pub export_formats: Vec<String>,
     pub import_formats: Vec<String>,
     /// 🗄️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty", skip_deserializing)]
+    #[serde(default, skip_deserializing)]
     pub export_stdio_kinds: Vec<&'static str>,
     /// 🗄️ Stdio import source kind ids — additive peer of `import_formats`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty", skip_deserializing)]
+    #[serde(default, skip_deserializing)]
     pub import_stdio_kinds: Vec<&'static str>,
 }
 //#endregion ArtifactKind
@@ -3310,7 +3310,7 @@ pub struct ConfigFieldSpec {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigSpec {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub fields: Vec<ConfigFieldSpec>,
 }
 
@@ -3351,7 +3351,7 @@ pub struct CommandVariantSpec {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CommandGrammar {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub variants: Vec<CommandVariantSpec>,
 }
 
@@ -3804,6 +3804,32 @@ mod app_label_tests {
         assert_eq!(parsed, app);
         assert_eq!(parsed.window_kinds.first().interactions, vec![InteractionRef::new("graph")]);
     }
+    /// ⚖️ LAW: an EMPTY collection still reaches the wire as `[]`, never as an absent key.
+    ///
+    /// The generated TypeScript (`🤖️generated/🟦️manifest.ts`) declares these fields as **required**
+    /// arrays — `commands: Array<CommandDefinition>`, not `commands?:` — because only
+    /// `#[cfg_attr(feature = "typegen", ts(optional))]` makes a field optional there, and no `Vec`
+    /// field carries it. A `skip_serializing_if = "Vec::is_empty"` therefore handed the host
+    /// `undefined` where its own types promised an array, and every unguarded `app.commands.some(…)`
+    /// threw. That is not hypothetical: it is what emptied the Koordinator pane in ticket
+    /// `26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION` — the demonstrator pushed
+    /// `setContributions` at `📐️cad`, an app that declares no commands.
+    ///
+    /// Deserialization stays tolerant (`#[serde(default)]`), so an absent key still parses; it is only
+    /// the *emitted* form that is now total.
+    #[test]
+    fn empty_collections_serialize_as_arrays_rather_than_vanishing_from_the_manifest() {
+        let app = app_with(vec![], vec![]);
+        assert!(app.commands.is_empty(), "this law is about the EMPTY case");
+        let json = serde_json::to_string(&app).unwrap();
+        for key in ["commands", "utilities", "tools", "interactions", "namedLayouts", "terminologies", "tutorials", "dialogs", "mediaInputs", "mediaOutputs", "artifactKinds"] {
+            assert!(json.contains(&format!("\"{key}\":[")), "`{key}` must serialize as [] so the required TS array is never undefined — missing from {json}");
+        }
+        let parsed: AppDefinition = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, app);
+        let without_keys = serde_json::from_str::<AppDefinition>(&json.replace("\"commands\":[],", "")).expect("an absent key must still deserialize via #[serde(default)]");
+        assert!(without_keys.commands.is_empty());
+    }
     //#endregion 🔖️InteractionTests
 
     fn app_with_modes_and_tools(mut modes: Vec<crate::ui::ModeDefinition>, tools: Vec<crate::ui::ToolDefinition>) -> AppDefinition {
@@ -4209,9 +4235,14 @@ mod app_label_tests {
             drag,
             IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] }
         );
+        // ⚖️ Defaults are still INFERRED on the way in (the input literal above names neither field),
+        // but they are always WRITTEN on the way out: `🤖️generated/🟦️manifest.ts` declares both
+        // `button: IntroductionPointerButton` and `modifiers: Array<IntroductionKeyModifier>` as
+        // required, so omitting a defaulted value handed the host `undefined` where its own types
+        // promised a value. Asserting the omission — as this test previously did — pinned the defect.
         let drag_json = serde_json::to_string(&drag).unwrap();
-        assert!(!drag_json.contains("button"), "{drag_json}");
-        assert!(!drag_json.contains("modifiers"), "{drag_json}");
+        assert!(drag_json.contains("\"button\":\"left\""), "{drag_json}");
+        assert!(drag_json.contains("\"modifiers\":[]"), "{drag_json}");
 
         let orbit: IntroductionGesture = serde_json::from_str(r#"{"kind":"orbit","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
         assert_eq!(
@@ -4224,8 +4255,8 @@ mod app_label_tests {
             }
         );
         let orbit_json = serde_json::to_string(&orbit).unwrap();
-        assert!(!orbit_json.contains("button"), "{orbit_json}");
-        assert!(!orbit_json.contains("modifiers"), "{orbit_json}");
+        assert!(orbit_json.contains("\"button\":\"right\""), "{orbit_json}");
+        assert!(orbit_json.contains("\"modifiers\":[\"alt\"]"), "{orbit_json}");
 
         let middle_drag = IntroductionGesture::Drag {
             from: at.clone(),

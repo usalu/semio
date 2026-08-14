@@ -1,6 +1,6 @@
 //! 🧬️ DwgArtifact schema — full artifact state.
 
-use crate::artifacts::dwg::DwgSnapshot;
+use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -44,10 +44,6 @@ impl DwgArtifact {
             codepage: self.codepage,
             bytes: self.bytes.clone(),
             section_names: self.section_names.clone(),
-            // 🚧️ ac1018 is a legacy shim (nothing real behind it, per Decision #5) — it never ran
-            // the real ac1024 D1/D2 decode pipeline, so it has no structural insight to carry.
-            sections: Vec::new(),
-            decode_status: Default::default(),
         }
     }
 
@@ -264,6 +260,20 @@ mod tests {
     fn empty_snapshot_matches_schema() {
         let snapshot = empty_dwg_snapshot();
         assert_eq!(snapshot.schema, STDIO_DWG_AC1018_DOCUMENT_SCHEMA);
+    }
+
+    #[test]
+    fn artifact_snapshot_conversion_preserves_current_schema_fields() {
+        let snapshot = DwgSnapshot {
+            schema: STDIO_DWG_AC1018_DOCUMENT_SCHEMA.into(),
+            version: "AC1018".into(),
+            maintenance_version: 2,
+            codepage: 30,
+            bytes: b"AC1018".to_vec(),
+            section_names: vec!["AcDb:Header".into()],
+        };
+        let artifact = DwgArtifact::from_snapshot(snapshot.clone());
+        assert_eq!(artifact.to_snapshot(), snapshot);
     }
 
     #[test]

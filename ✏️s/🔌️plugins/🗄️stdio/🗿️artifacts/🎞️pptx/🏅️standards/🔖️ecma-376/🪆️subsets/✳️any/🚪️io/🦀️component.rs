@@ -13,6 +13,7 @@
 #[derive(Clone, Debug, PartialEq)]
 pub enum PptxError {
     Opc(crate::artifacts::zip::opc::OpcError),
+    Zip(crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError),
     MissingPresentationRelationship,
     MissingPart(String),
     Xml { part: String, detail: String },
@@ -23,6 +24,7 @@ impl std::fmt::Display for PptxError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Opc(e) => write!(f, "pptx: {e}"),
+            Self::Zip(e) => write!(f, "pptx: {e}"),
             Self::MissingPresentationRelationship => write!(f, "pptx: package root has no officeDocument relationship"),
             Self::MissingPart(p) => write!(f, "pptx: missing required part {p}"),
             Self::Xml { part, detail } => write!(f, "pptx: xml in {part}: {detail}"),
@@ -34,7 +36,12 @@ impl std::fmt::Display for PptxError {
 impl std::error::Error for PptxError {}
 
 impl From<crate::artifacts::zip::opc::OpcError> for PptxError {
-    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self { Self::Opc(e) }
+    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+        Self::Opc(e)
+    }
+}
+impl From<crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError> for PptxError {
+    fn from(e: crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError) -> Self { Self::Zip(e) }
 }
 //#endregion 🔖️Error
 
@@ -93,21 +100,6 @@ pub fn element_children(node: &crate::artifacts::xml::schema::snapshot::XmlNode)
     }
 }
 
-/// 🔤️ Serializes a single node (not a whole document) via the xml module's own document
-/// serializer -- wraps it as a document root, discards the (absent) declaration/doctype.
-pub fn node_to_text(node: &crate::artifacts::xml::schema::snapshot::XmlNode) -> String {
-    crate::artifacts::xml::schema::snapshot::xml_document_to_text(&crate::artifacts::xml::schema::snapshot::XmlDocument { root: Some(node.clone()), doctype: None, declaration: None })
-}
-
-/// 🔤️ Parses a single node back from `node_to_text`'s output (or any other well-formed XML
-/// fragment). Falls back to a `Comment` node carrying the raw text verbatim on parse failure --
-/// this can only happen for a hand-constructed `PptxShape::Other{xml}` with malformed content
-/// (never for anything this engine itself produced), and a comment still round-trips the string
-/// losslessly instead of panicking or silently dropping it.
-pub fn node_from_text(text: &str) -> crate::artifacts::xml::schema::snapshot::XmlNode {
-    crate::artifacts::xml::schema::snapshot::xml_document_from_text(text).ok().and_then(|d| d.root).unwrap_or_else(|| crate::artifacts::xml::schema::snapshot::XmlNode::Comment { text: text.to_string() })
-}
-
 /// 📐️ Minimal-but-schema-shaped `slideMaster1.xml` — synthesized once when a package has no
 /// existing slide master, never regenerated over a decoded one.
 pub const MINIMAL_SLIDE_MASTER_XML: &str = concat!(
@@ -162,15 +154,14 @@ pub const MINIMAL_THEME_XML: &str = concat!(
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::pptx::PptxSnapshot;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxAnalyzer;
+    use crate::artifacts::pptx::PptxSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_XML: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
-
 
     pub struct PptxComposerComposition;
 
@@ -199,10 +190,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "PptxComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = PptxAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "PptxComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PptxComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -212,11 +200,11 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxComposer as PptxRawAnyComposer;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::PptxStrictComposer;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::PptxTransitionalComposer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

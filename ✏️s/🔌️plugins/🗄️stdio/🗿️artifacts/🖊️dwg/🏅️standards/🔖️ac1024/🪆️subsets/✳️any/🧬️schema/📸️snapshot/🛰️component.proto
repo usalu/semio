@@ -1,6 +1,15 @@
 syntax = "proto3";
 package semio.s_stdio_dwg.snapshot;
+message DwgLogicalGeometry { string kind = 1; repeated double values = 2; repeated sint32 indices = 3; string text = 4; bool closed = 5; }
+message DwgLogicalLayer { string name = 1; uint32 color = 2; }
+message DwgLogicalEntity { uint64 layer = 1; sint32 color = 2; DwgLogicalGeometry geometry = 3; }
+message DwgLogicalDrawing { repeated DwgLogicalLayer layers = 1; repeated DwgLogicalEntity entities = 2; repeated double extmin = 3; repeated double extmax = 4; }
 message DwgSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  string version = 2;
+  uint32 maintenance_version = 3;
+  uint32 codepage = 4;
+  DwgLogicalDrawing drawing = 5;
+  repeated string section_names = 6;
+  string decode_status = 7;
 }

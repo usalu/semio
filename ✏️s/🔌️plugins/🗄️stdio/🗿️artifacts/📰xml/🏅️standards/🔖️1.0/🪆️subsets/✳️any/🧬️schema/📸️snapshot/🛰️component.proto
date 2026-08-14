@@ -49,6 +49,7 @@ message XmlDocument {
   optional XmlNode root = 1;
   optional string doctype = 2;
   optional XmlDeclaration declaration = 3;
+  repeated XmlNode prolog = 4;
 }
 
 message XmlSnapshot {

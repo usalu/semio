@@ -1,5 +1,5 @@
 type Mp4SampleDiff { data: [Int!] duration: Int ctsOffset: Int sync: Boolean }
-type Mp4TrackDiff { trackId: Int timescale: Int codec: Mp4Codec width: Int height: Int samplesRemoved: [Int!] }
+type Mp4TrackDiff { trackId: Int timescale: Int codec: Mp4Codec width: Int height: Int chunkSampleCounts: [Int!] samplesRemoved: [Int!] }
 type Mp4Diff {
   ftyp: Mp4Ftyp
   tracksRemoved: [Int!]

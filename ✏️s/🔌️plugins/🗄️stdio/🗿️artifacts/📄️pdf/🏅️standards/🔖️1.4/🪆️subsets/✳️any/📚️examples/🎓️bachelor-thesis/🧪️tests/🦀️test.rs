@@ -25,15 +25,21 @@
 
 use crate::artifacts::pdf::examples::bachelor_thesis::{source, FIXTURE_BYTES};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilderConstruction as PdfBuilder;
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::Pdf17Inference;
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::Pdf17Inference;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
-use protocol::{Inference, Mutation, MutationDiff};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilderConstruction as PdfBuilder;
 use protocol::command::DiffAlgebra;
+use protocol::{DiffCodec, Inference, Mutation, MutationDiff, OpBinary};
 use semio_framework_plugin::ArtifactBuilder;
 use store::{ArtifactDsl, ArtifactPack};
+
+fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {
+    assert!(snapshot.objects.len() > 1_000, "native PDF import must retain the logical COS object graph");
+    assert!(snapshot.objects.iter().any(|object| matches!(object.value, crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfObject::Stream { ref data, .. } if !data.is_empty())));
+    assert!(snapshot.trailer.iter().any(|entry| entry.key == "Root"));
+}
 
 #[test]
 fn fixture_is_real_pdf_not_a_stub() {
@@ -73,14 +79,12 @@ fn real_decode_has_many_pages_and_real_extracted_text() {
 
 //#region (b) DecodeEncodeDecodeStructuralEquality
 /// 🧪️ `codec_retention_law` (real-fixture instance, per the ticket's test-law naming
-/// convention): decode→encode→decode is structurally equal at the page level on the real
-/// bachelor-thesis fixture -- `objects`/`trailer` are intentionally NOT re-emitted (see
-/// `PdfSnapshot`'s own doc comment), so this asserts the writer's honestly-scoped normal form,
-/// not full-file byte identity.
+/// convention): decode→writer reconstruction reaches a deterministic logical fixed point.
 #[test]
 fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
     let original = decode_pdf(FIXTURE_BYTES).expect("decode");
     let rewritten_bytes = encode_pdf(&original).expect("encode");
+    assert_eq!(encode_pdf(&decode_pdf(&rewritten_bytes).expect("re-decode canonical output")).expect("re-encode canonical output"), rewritten_bytes);
     let redecoded = decode_pdf(&rewritten_bytes).expect("re-decode");
     assert_eq!(redecoded.pages.len(), original.pages.len());
     for (a, b) in original.pages.iter().zip(redecoded.pages.iter()) {
@@ -91,50 +95,70 @@ fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
 }
 
 #[test]
-fn lossless_source_law_bachelor_thesis_direct_dsl_pack_diff_and_inverse() {
+fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse() {
     let original = decode_pdf(FIXTURE_BYTES).expect("decode exact fixture");
-    let source = original.source.as_ref().expect("native PDF import must retain its exact source image");
-    assert_eq!(source.bytes, FIXTURE_BYTES);
-    assert!(source.matches(&original.semantic_projection()).expect("semantic fingerprint"));
-    assert_eq!(encode_pdf(&original).expect("unchanged source export"), FIXTURE_BYTES);
+    assert_logical_cos_retained(&original);
+    let canonical = encode_pdf(&original).expect("logical writer export");
 
     let dsl = original.print_dsl();
     let from_dsl = PdfSnapshot::parse_dsl(&dsl).expect("snapshot DSL roundtrip");
-    assert_eq!(encode_pdf(&from_dsl).expect("DSL-restored source export"), FIXTURE_BYTES);
+    assert_eq!(from_dsl, original, "DSL must carry the complete logical snapshot model");
+    assert_logical_cos_retained(&from_dsl);
+    assert_eq!(encode_pdf(&from_dsl).expect("DSL-restored logical export"), canonical);
 
-    let pack = original.encode_pack().expect("snapshot pack roundtrip");
+    let pack = original.encode_pack();
     let from_pack = PdfSnapshot::decode_pack(&pack).expect("snapshot unpack");
-    assert_eq!(encode_pdf(&from_pack).expect("pack-restored source export"), FIXTURE_BYTES);
+    assert_eq!(from_pack, original, "pack must carry the complete logical snapshot model");
+    assert_logical_cos_retained(&from_pack);
+    assert_eq!(encode_pdf(&from_pack).expect("pack-restored logical export"), canonical);
 
     let empty = PdfDiff::between(&original, &original);
     assert!(empty.is_empty());
-    assert_eq!(encode_pdf(&empty.apply(&original)).expect("self-diff export"), FIXTURE_BYTES);
+    assert_eq!(encode_pdf(&empty.apply(&original)).expect("self-diff logical export"), canonical);
 
     let mut no_op = original.clone();
     let no_op_diff = apply_pdf_mutation(&mut no_op, &PdfMutation::NoMutation);
     assert!(no_op_diff.is_empty());
-    assert_eq!(encode_pdf(&no_op).expect("no-op mutation export"), FIXTURE_BYTES);
+    assert_eq!(encode_pdf(&no_op).expect("no-op mutation logical export"), canonical);
 
     let mutation = PdfMutation::AppendPageContent { index: 0, text: "dirty".into() };
-    let mut dirty = original.clone();
-    apply_pdf_mutation(&mut dirty, &mutation);
-    assert!(matches!(encode_pdf(&dirty), Err(crate::artifacts::pdf::standards::v1_7::subsets::any::io::PdfEngineError::Unsupported(_))));
-    for inverse in mutation.inverse(&original) {
-        apply_pdf_mutation(&mut dirty, &inverse);
+    let mutation_frame = mutation.encode_op().expect("encode structural mutation");
+    let restored_mutation = PdfMutation::decode_op(&mutation_frame).expect("decode structural mutation");
+    assert_eq!(restored_mutation, mutation);
+    let diff = restored_mutation.diff(&original);
+    let diff_frame = diff.encode_diff().expect("encode structural diff");
+    let restored_diff = PdfDiff::decode_diff(&diff_frame).expect("decode structural diff");
+    assert_eq!(restored_diff, diff);
+    let dirty = restored_diff.apply(&original);
+    let dirty_bytes = encode_pdf(&dirty).expect("dirty snapshot must use the canonical writer");
+    assert_ne!(dirty_bytes, canonical);
+    let dirty_redecoded = decode_pdf(&dirty_bytes).expect("dirty writer output must remain valid PDF");
+    assert!(dirty_redecoded.pages[0].text.ends_with("dirty"));
+
+    let inverse = restored_diff.inverse(&original);
+    let inverse_frame = inverse.encode_diff().expect("encode inverse diff");
+    let restored_inverse = PdfDiff::decode_diff(&inverse_frame).expect("decode inverse diff");
+    let restored = restored_inverse.apply(&dirty);
+    assert_eq!(restored, original, "diff inverse must restore the complete logical model");
+    assert_eq!(encode_pdf(&restored).expect("inverse logical writer export"), canonical);
+
+    let mut mutation_dirty = original.clone();
+    apply_pdf_mutation(&mut mutation_dirty, &restored_mutation);
+    for inverse_mutation in restored_mutation.inverse(&original) {
+        let inverse_mutation_frame = inverse_mutation.encode_op().expect("encode inverse mutation");
+        let restored_inverse_mutation = PdfMutation::decode_op(&inverse_mutation_frame).expect("decode inverse mutation");
+        apply_pdf_mutation(&mut mutation_dirty, &restored_inverse_mutation);
     }
-    assert_eq!(dirty, original);
-    assert_eq!(encode_pdf(&dirty).expect("mutation inverse source export"), FIXTURE_BYTES);
+    assert_eq!(mutation_dirty, original);
+    assert_eq!(encode_pdf(&mutation_dirty).expect("mutation inverse logical export"), canonical);
 }
 
 #[test]
 fn decode_encode_decode_is_structurally_equal_at_page_level() {
-    // 📏 Structural, not byte-identical (the writer regenerates a fresh minimal file from
-    // pages+info only -- `objects`, the raw graph, is intentionally NOT re-emitted; see the 1.7
-    // snapshot's doc comment). Page-level fields (media box, rotate, extracted text) must match
-    // exactly since our own Identity-H + ToUnicode writer/reader round-trips any Unicode string
-    // losslessly, including any U+FFFD the original extraction produced.
+    // 📏 The logical writer deterministically materializes a fresh PDF serialization.
     let original = decode_pdf(FIXTURE_BYTES).expect("decode");
     let rewritten_bytes = encode_pdf(&original).expect("encode");
+    assert_eq!(encode_pdf(&decode_pdf(&rewritten_bytes).expect("canonical decode")).expect("canonical re-encode"), rewritten_bytes);
     let redecoded = decode_pdf(&rewritten_bytes).expect("re-decode");
 
     assert_eq!(redecoded.pages.len(), original.pages.len());

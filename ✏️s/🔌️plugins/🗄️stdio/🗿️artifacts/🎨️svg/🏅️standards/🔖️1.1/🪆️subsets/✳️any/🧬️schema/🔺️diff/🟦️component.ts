@@ -8,6 +8,7 @@ export type { XmlDeclaration, XmlNode };
  * unchanged, present = set). No `snapshot`-shaped full-replace field anywhere -- even a
  * `setSnapshot` mutation's diff is the sparse field-by-field delta below. */
 export interface SvgDiff {
+  prolog?: XmlNode[];
   declaration?: XmlDeclaration | null;
   doctype?: string | null;
   root?: SvgNodeDiff;

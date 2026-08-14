@@ -83,6 +83,7 @@ pub mod derived_construction {
             })
             .collect();
         XmlDocument {
+            prolog: Vec::new(),
             root: Some(XmlNode::Element {
                 name: "w:document".into(),
                 attrs: vec![

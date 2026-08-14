@@ -85,10 +85,7 @@ fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::Composer
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
-/// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
-/// verbatim (five `LanguageSpec` rows, one per role, INCLUDING the `Some("bin")` document
-/// extension — not a typo, copied as-is) from `crate::artifacts::dwg::standards::v_ac1024::engine::
-/// register_pilot_languages`'s own `dsl::register_language(...)` call bodies.
+/// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
@@ -96,7 +93,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
             vec![
                 dsl::LanguageSpec {
                     id: "stdio.dwg",
-                    extension: Some("bin"),
+                    extension: Some("dwg"),
                     role: dsl::LanguageRole::Document,
                     grammar: Some(crate::artifacts::dwg::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::artifacts::dwg::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),

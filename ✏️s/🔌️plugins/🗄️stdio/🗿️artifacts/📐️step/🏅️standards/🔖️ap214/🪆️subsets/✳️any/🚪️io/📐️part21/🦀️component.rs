@@ -10,6 +10,76 @@ use std::fmt;
 use std::fmt::Write as _;
 
 //#region 🔖️Value
+/// 🔢️ Exact logical STEP real: decimal coefficient/scale plus an optional base-10 exponent.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Part21Decimal {
+    pub negative: bool,
+    pub coefficient: String,
+    pub scale: u32,
+    pub exponent: Option<i32>,
+}
+
+impl Part21Decimal {
+    pub fn parse(text: &str) -> Result<Self, String> {
+        let (negative, unsigned) = match text.as_bytes().first() {
+            Some(b'-') => (true, &text[1..]),
+            Some(b'+') => (false, &text[1..]),
+            _ => (false, text),
+        };
+        let (mantissa, exponent) = match unsigned.find(['E', 'e']) {
+            Some(index) => (&unsigned[..index], Some(unsigned[index + 1..].parse::<i32>().map_err(|e| e.to_string())?)),
+            None => (unsigned, None),
+        };
+        let (integer, fraction) = mantissa.split_once('.').ok_or_else(|| format!("STEP real requires decimal point: {text:?}"))?;
+        if integer.is_empty() || !integer.bytes().all(|b| b.is_ascii_digit()) || !fraction.bytes().all(|b| b.is_ascii_digit()) {
+            return Err(format!("invalid STEP real: {text:?}"));
+        }
+        Ok(Self { negative, coefficient: format!("{integer}{fraction}"), scale: fraction.len() as u32, exponent })
+    }
+
+    pub fn from_f64(value: f64) -> Self {
+        let text = format!("{value}");
+        let normalized = if text.contains('.') || text.contains('e') || text.contains('E') { text } else { format!("{text}.") };
+        Self::parse(&normalized).expect("finite f64 has valid STEP decimal form")
+    }
+
+    pub fn to_f64(&self) -> Option<f64> {
+        self.to_string().parse().ok()
+    }
+}
+
+impl From<f64> for Part21Decimal {
+    fn from(value: f64) -> Self {
+        Self::from_f64(value)
+    }
+}
+
+impl fmt::Display for Part21Decimal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.negative {
+            f.write_char('-')?;
+        }
+        let scale = self.scale as usize;
+        if scale >= self.coefficient.len() {
+            f.write_str("0.")?;
+            for _ in 0..scale.saturating_sub(self.coefficient.len()) {
+                f.write_char('0')?;
+            }
+            f.write_str(&self.coefficient)?;
+        } else {
+            let split = self.coefficient.len() - scale;
+            f.write_str(&self.coefficient[..split])?;
+            f.write_char('.')?;
+            f.write_str(&self.coefficient[split..])?;
+        }
+        if let Some(exponent) = self.exponent {
+            write!(f, "E{exponent}")?;
+        }
+        Ok(())
+    }
+}
+
 /// 🔤️ A single typed value in Part-21 argument-list syntax.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Part21Value {
@@ -17,7 +87,7 @@ pub enum Part21Value {
     Str(String),
     Enum(String),
     Int(i64),
-    Real(f64),
+    Real(Part21Decimal),
     List(Vec<Part21Value>),
     /// 🏷️ A "defined type" wrapper appearing as an argument, e.g. `IFCLENGTHMEASURE(3000.)`.
     Typed(String, Vec<Part21Value>),
@@ -37,7 +107,7 @@ impl Part21Value {
     }
     pub fn as_real(&self) -> Option<f64> {
         match self {
-            Part21Value::Real(r) => Some(*r),
+            Part21Value::Real(r) => r.to_f64(),
             Part21Value::Int(i) => Some(*i as f64),
             _ => None,
         }
@@ -381,7 +451,7 @@ impl Lexer {
             }
         }
         if is_real {
-            s.parse::<f64>().map(Part21Value::Real).map_err(|_| Part21Error::InvalidNumber { at: start, text: s })
+            Part21Decimal::parse(&s).map(Part21Value::Real).map_err(|_| Part21Error::InvalidNumber { at: start, text: s })
         } else {
             s.parse::<i64>().map(Part21Value::Int).map_err(|_| Part21Error::InvalidNumber { at: start, text: s })
         }
@@ -558,30 +628,79 @@ pub fn parse_part21(text: &str) -> Result<Part21Document, Part21Error> {
 //#endregion 🔖️Parse
 
 //#region 🔖️Write
+/// 🧭️ Deterministic physical layout selected by a standard-specific serializer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Part21WriteOptions {
+    pub line_ending: &'static str,
+    pub blank_after_header: bool,
+    pub blank_before_data: bool,
+    pub blank_before_terminator: bool,
+    pub space_after_instance_equals: bool,
+}
+
+impl Default for Part21WriteOptions {
+    fn default() -> Self {
+        Self { line_ending: "\n", blank_after_header: false, blank_before_data: false, blank_before_terminator: false, space_after_instance_equals: false }
+    }
+}
+
+/// 🏭️ Logical producer metadata capable of deterministic Part-21 header materialization.
+pub trait Part21Preamble {
+    fn write_preamble(&self, out: &mut String, line_ending: &str);
+}
+
 /// 📤️ Regenerates valid Part-21 text from the generic graph — round-trip losslessness is
 /// the writer's job; it never re-derives STEP/IFC semantics.
 pub fn write_part21(doc: &Part21Document) -> String {
-    let mut out = String::from("ISO-10303-21;\nHEADER;\n");
-    write_record(&mut out, "FILE_DESCRIPTION", &doc.header.file_description);
-    write_record(&mut out, "FILE_NAME", &doc.header.file_name);
-    write_record(&mut out, "FILE_SCHEMA", &doc.header.file_schema);
-    out.push_str("ENDSEC;\nDATA;\n");
-    for inst in &doc.instances {
-        write_instance(&mut out, inst);
+    write_part21_with(doc, Part21WriteOptions::default(), None)
+}
+
+/// 📤️ Regenerates Part-21 with a standard-selected deterministic layout and typed preamble.
+pub fn write_part21_with(doc: &Part21Document, options: Part21WriteOptions, preamble: Option<&dyn Part21Preamble>) -> String {
+    let eol = options.line_ending;
+    let mut out = format!("ISO-10303-21;{eol}HEADER;{eol}");
+    if options.blank_after_header {
+        out.push_str(eol);
     }
-    out.push_str("ENDSEC;\nEND-ISO-10303-21;\n");
+    if let Some(preamble) = preamble {
+        preamble.write_preamble(&mut out, eol);
+    }
+    write_record(&mut out, "FILE_DESCRIPTION", &doc.header.file_description, eol);
+    write_record(&mut out, "FILE_NAME", &doc.header.file_name, eol);
+    write_record(&mut out, "FILE_SCHEMA", &doc.header.file_schema, eol);
+    out.push_str("ENDSEC;");
+    out.push_str(eol);
+    if options.blank_before_data {
+        out.push_str(eol);
+    }
+    out.push_str("DATA;");
+    out.push_str(eol);
+    for inst in &doc.instances {
+        write_instance(&mut out, inst, eol, options.space_after_instance_equals);
+    }
+    out.push_str("ENDSEC;");
+    out.push_str(eol);
+    if options.blank_before_terminator {
+        out.push_str(eol);
+    }
+    out.push_str("END-ISO-10303-21;");
+    out.push_str(eol);
     out
 }
 
-fn write_record(out: &mut String, name: &str, args: &[Part21Value]) {
+fn write_record(out: &mut String, name: &str, args: &[Part21Value], line_ending: &str) {
     out.push_str(name);
     out.push('(');
     write_value_list(out, args);
-    out.push_str(");\n");
+    out.push_str(");");
+    out.push_str(line_ending);
 }
 
-fn write_instance(out: &mut String, inst: &Part21Instance) {
+fn write_instance(out: &mut String, inst: &Part21Instance, line_ending: &str, space_after_equals: bool) {
     let _ = write!(out, "#{}=", inst.id);
+    if space_after_equals {
+        out.push(' ');
+    }
     if inst.entities.len() == 1 {
         let (name, args) = &inst.entities[0];
         out.push_str(name);
@@ -598,7 +717,8 @@ fn write_instance(out: &mut String, inst: &Part21Instance) {
         }
         out.push(')');
     }
-    out.push_str(";\n");
+    out.push(';');
+    out.push_str(line_ending);
 }
 
 fn write_value_list(out: &mut String, items: &[Part21Value]) {
@@ -628,7 +748,7 @@ fn write_value(out: &mut String, v: &Part21Value) {
         Part21Value::Int(i) => {
             let _ = write!(out, "{i}");
         }
-        Part21Value::Real(r) => out.push_str(&format_real(*r)),
+        Part21Value::Real(r) => write!(out, "{r}").expect("String write"),
         Part21Value::List(items) => {
             out.push('(');
             write_value_list(out, items);
@@ -643,13 +763,6 @@ fn write_value(out: &mut String, v: &Part21Value) {
         Part21Value::Unset => out.push('$'),
         Part21Value::Derived => out.push('*'),
     }
-}
-
-/// 🔢️ STEP reals always carry a decimal point (`digit+ '.' digit*`); Rust's own f64 `Display`
-/// never emits one for whole numbers and never uses exponent notation, so only that case needs help.
-fn format_real(r: f64) -> String {
-    let s = format!("{r}");
-    if s.contains('.') { s } else { format!("{s}.") }
 }
 
 /// 🔡️ Inverse of the lexer's `read_escape`: `'` doubles, backslash is escaped (to stay

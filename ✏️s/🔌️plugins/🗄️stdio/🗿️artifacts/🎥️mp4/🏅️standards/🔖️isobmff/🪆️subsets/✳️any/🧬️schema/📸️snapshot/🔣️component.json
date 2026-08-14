@@ -21,6 +21,7 @@
             { "type": "object", "properties": { "codec": { "const": "other" }, "fourcc": { "type": "string" }, "raw": { "type": "array", "items": { "type": "integer" } } } }
           ] },
           "width": { "type": "integer" }, "height": { "type": "integer" },
+          "chunkSampleCounts": { "type": "array", "items": { "type": "integer" } },
           "samples": { "type": "array", "items": {
             "type": "object",
             "properties": { "data": { "type": "array", "items": { "type": "integer" } }, "duration": { "type": "integer" }, "ctsOffset": { "type": "integer" }, "sync": { "type": "boolean" } }

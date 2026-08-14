@@ -1,2 +1,5 @@
-# schema facet
- type Placeholder { doc: String! }
+""" 🧬️ XmlArtifact schema — full persisted state. """
+type XmlArtifact {
+  schema: String! @state(class: ARTIFACT)
+  doc: XmlDocument! @state(class: ARTIFACT)
+}

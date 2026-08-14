@@ -2,6 +2,7 @@
   "$id": "https://semio.tech/schema/s.stdio.ifc.2x3/snapshot.json",
   "title": "Ifc2x3Snapshot",
   "type": "object",
+  "$defs": { "Ifc2x3EdmPreamble": {"type":"object","properties":{"producer":{"type":"string"},"module":{"type":"string"},"creationDate":{"type":"string"},"host":{"type":"string"},"database":{"type":"string"},"databaseVersion":{"type":"string"},"databaseCreationDate":{"type":"string"},"schema":{"type":"string"},"model":{"type":"string"},"modelCreationDate":{"type":"string"},"headerModel":{"type":"string"},"headerModelCreationDate":{"type":"string"},"user":{"type":"string"},"group":{"type":"string"},"license":{"type":"string"},"options":{"type":"string"}},"required":["producer","module","creationDate","host","database","databaseVersion","databaseCreationDate","schema","model","modelCreationDate","headerModel","headerModelCreationDate","user","group","license","options"]} },
   "properties": {
     "schema": {
       "type": "string",
@@ -9,6 +10,10 @@
     },
     "document": {
       "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "edmPreamble": {
+      "$ref": "#/$defs/Ifc2x3EdmPreamble",
       "x-semio-state": "artifact"
     }
   }

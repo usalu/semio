@@ -11,6 +11,12 @@ message PdfDictEntry {
   PdfObject value = 2;
 }
 
+message PdfDecimal {
+  bool negative = 1;
+  string coefficient = 2;
+  uint32 scale = 3;
+}
+
 // ISO 32000-1 §7.3 COS object grammar, including streams. `str_value` is a byte string.
 message PdfObject {
   enum Kind {
@@ -28,7 +34,7 @@ message PdfObject {
   Kind kind = 1;
   bool bool_value = 2;
   int64 int_value = 3;
-  double real_value = 4;
+  PdfDecimal real_value = 4;
   bytes str_value = 5;
   string name_value = 6;
   repeated PdfObject array_value = 7;
@@ -60,11 +66,6 @@ message PdfInfo {
   optional string producer = 6;
 }
 
-message ArtifactSource {
-  bytes bytes = 1;
-  bytes semantic_blake3 = 2;
-}
-
 message PdfSnapshot {
   string schema = 1;
   string declared_version = 2;
@@ -72,5 +73,4 @@ message PdfSnapshot {
   PdfInfo info = 4;
   repeated PdfIndirectObject objects = 5;
   repeated PdfDictEntry trailer = 6;
-  optional ArtifactSource source = 7;
 }

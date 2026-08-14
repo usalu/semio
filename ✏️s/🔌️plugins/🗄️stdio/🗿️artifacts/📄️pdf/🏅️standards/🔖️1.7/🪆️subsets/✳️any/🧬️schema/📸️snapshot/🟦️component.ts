@@ -14,6 +14,12 @@ export interface PdfDictEntry {
   value: PdfObject;
 }
 
+export interface PdfDecimal {
+  negative: boolean;
+  coefficient: string;
+  scale: number;
+}
+
 /** 🎯 A parsed PDF object -- the full COS object grammar (ISO 32000-1 §7.3), including streams.
  *  `str` is a byte string (not necessarily UTF-8), hence `number[]`. `stream.rawFilter` present
  *  means `data` is still filter-encoded verbatim (an unsupported filter we deliberately don't
@@ -22,7 +28,7 @@ export type PdfObject =
   | { kind: 'null' }
   | { kind: 'bool'; value: boolean }
   | { kind: 'int'; value: number }
-  | { kind: 'real'; value: number }
+  | { kind: 'real'; value: PdfDecimal }
   | { kind: 'str'; value: number[] }
   | { kind: 'name'; value: string }
   | { kind: 'array'; value: PdfObject[] }
@@ -55,12 +61,6 @@ export interface PdfInfo {
   producer?: string;
 }
 
-/** 🧬️ Exact imported PDF bytes paired with their semantic fingerprint. */
-export interface ArtifactSource {
-  bytes: number[];
-  semanticBlake3: number[];
-}
-
 /** 🧬️ `stdio.pdf` (1.7) persistent snapshot. */
 export interface PdfSnapshot {
   /** @state artifact */ schema: string;
@@ -69,5 +69,4 @@ export interface PdfSnapshot {
   /** @state artifact */ info: PdfInfo;
   /** @state artifact */ objects: PdfIndirectObject[];
   /** @state artifact */ trailer: PdfDictEntry[];
-  /** @state artifact */ source?: ArtifactSource;
 }

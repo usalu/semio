@@ -353,7 +353,7 @@ mod tests {
                 SvgElement::Text { common: CommonAttrs::default(), x: Some(1.0), y: Some(2.0), children: vec![SvgElement::TextNode("hi".into())] },
             ],
         };
-        SvgSnapshot { doc: XmlDocument { root: Some(crate::artifacts::svg::schema::snapshot::svg_element_to_xml_node(&svg_el)), doctype: None, declaration: None }, ..SvgSnapshot::default() }
+        SvgSnapshot { doc: XmlDocument { root: Some(crate::artifacts::svg::schema::snapshot::svg_element_to_xml_node(&svg_el)), doctype: None, declaration: None, prolog: Vec::new() }, ..SvgSnapshot::default() }
     }
 
     #[test]

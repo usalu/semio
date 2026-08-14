@@ -1,8 +1,22 @@
-type PptxEntry {
-  name: String!
-  data: [Int!]!
-}
+type PptxNameValue { name: String!, value: String! }
+type PptxOpcRelationship { id: String!, relType: String!, target: String!, targetMode: String! }
+type PptxOpcRelationshipOwner { owner: String!, relationships: [PptxOpcRelationship!]! }
+type PptxOpcPart { path: String!, contentType: String!, bytes: [Int!]! }
+type PptxOpcPackage { defaults: [PptxNameValue!]!, overrides: [PptxNameValue!]!, parts: [PptxOpcPart!]!, relationships: [PptxOpcRelationshipOwner!]! }
+type PptxXmlAttr { name: String!, value: String! }
+type PptxXmlNode { kind: String!, name: String, attrs: [PptxXmlAttr!], children: [PptxXmlNode!], text: String, target: String, data: String }
+type PptxXmlDeclaration { version: String!, encoding: String, standalone: Boolean }
+type PptxXmlDocument { declaration: PptxXmlDeclaration, prolog: [PptxXmlNode!]!, root: PptxXmlNode }
+type PptxXmlPart { path: String!, contentType: String!, document: PptxXmlDocument! }
+type PptxTransform { x: Float!, y: Float!, cx: Float!, cy: Float! }
+type PptxRun { text: String!, bold: Boolean!, italic: Boolean!, fontSize: Int }
+type PptxParagraph { runs: [PptxRun!]! }
+type PptxShape { shapeKind: String!, kind: String, blipRelId: String, textFrame: [PptxParagraph!], position: PptxTransform, node: PptxXmlNode }
+type PptxSlide { shapes: [PptxShape!]! }
+type PptxPresentation { slides: [PptxSlide!]! }
 type PptxSnapshot {
   schema: String! @state(class: ARTIFACT)
-  entries: [PptxEntry!]! @state(class: ARTIFACT)
+  opc: PptxOpcPackage! @state(class: ARTIFACT)
+  xmlParts: [PptxXmlPart!]! @state(class: ARTIFACT)
+  presentation: PptxPresentation! @state(class: ARTIFACT)
 }

@@ -1,7 +1,7 @@
 //! 🧬️ DwgArtifact schema — full artifact state.
 
 use crate::artifacts::dwg::DwgSnapshot;
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgDecodeStatus, DwgSection};
+use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgDecodeStatus, DwgLogicalDrawing, DwgPhysicalLayout, DwgSection};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ pub struct DwgArtifact {
     pub codepage: u16,
     #[state(artifact)]
     #[serde(default)]
-    pub bytes: Vec<u8>,
+    pub drawing: DwgLogicalDrawing,
     #[state(artifact)]
     #[serde(default)]
     pub section_names: Vec<String>,
@@ -32,6 +32,9 @@ pub struct DwgArtifact {
     #[state(artifact)]
     #[serde(default)]
     pub decode_status: DwgDecodeStatus,
+    #[state(artifact)]
+    #[serde(default)]
+    pub physical: DwgPhysicalLayout,
 }
 //#endregion 🔖️Artifact
 
@@ -49,10 +52,11 @@ impl DwgArtifact {
             version: self.version.clone(),
             maintenance_version: self.maintenance_version,
             codepage: self.codepage,
-            bytes: self.bytes.clone(),
+            drawing: self.drawing.clone(),
             section_names: self.section_names.clone(),
             sections: self.sections.clone(),
             decode_status: self.decode_status,
+            physical: self.physical.clone(),
         }
     }
 
@@ -62,10 +66,11 @@ impl DwgArtifact {
             version: snapshot.version,
             maintenance_version: snapshot.maintenance_version,
             codepage: snapshot.codepage,
-            bytes: snapshot.bytes,
+            drawing: snapshot.drawing,
             section_names: snapshot.section_names,
             sections: snapshot.sections,
             decode_status: snapshot.decode_status,
+            physical: snapshot.physical,
         }
     }
 
@@ -74,10 +79,11 @@ impl DwgArtifact {
         self.version = snapshot.version;
         self.maintenance_version = snapshot.maintenance_version;
         self.codepage = snapshot.codepage;
-        self.bytes = snapshot.bytes;
+        self.drawing = snapshot.drawing;
         self.section_names = snapshot.section_names;
         self.sections = snapshot.sections;
         self.decode_status = snapshot.decode_status;
+        self.physical = snapshot.physical;
     }
 }
 //#endregion 🔖️Conversions

@@ -59,7 +59,7 @@ type PdfValueDiff {
   replaceValue: PdfObject
   boolValue: Boolean
   intValue: Int
-  realValue: Float
+  realValue: PdfDecimal
   strValue: [Int!]
   nameValue: String
   refValue: ObjRef

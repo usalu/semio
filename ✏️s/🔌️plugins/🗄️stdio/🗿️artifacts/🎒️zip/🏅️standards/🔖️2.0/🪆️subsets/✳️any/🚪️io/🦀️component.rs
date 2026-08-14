@@ -2,15 +2,14 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::zip::ZipSnapshot;
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzer;
+    use crate::artifacts::zip::ZipSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
     const DEP_DEFLATE: Dialect = Dialect { artifact_kind: "s.stdio.deflate", standard: StandardId("rfc1950"), subset: SubsetId("*") };
-
 
     pub struct ZipComposerComposition;
 
@@ -39,10 +38,7 @@ pub mod derived_composition {
                 return Err(ComposeError { message: "ZipComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
             let analysis = ZipAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError {
-                message: "ZipComposerComposition: analysis produced no snapshot".into(),
-                diagnostics: analysis.diagnostics.clone(),
-            })?;
+            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "ZipComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
     }
@@ -59,8 +55,10 @@ pub use derived_composition::*;
 // polynomial); real compression is reused from the deflate artifact's own codec
 // (`crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{deflate_raw,
 // inflate_raw}`) — never reimplemented here.
+use crate::artifacts::zip::schema::snapshot::{
+    ZipCentralRecord, ZipCompressionMethod, ZipDataDescriptor, ZipEndRecords, ZipEntry, ZipExtraField, ZipLocalRecord, ZipPhysicalEntry, ZipPhysicalLayout,
+};
 use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-use crate::artifacts::zip::schema::snapshot::{ZipCompressionMethod, ZipEntry, ZipExtraField};
 
 //#region CRC32
 fn crc32_table() -> [u32; 256] {
@@ -133,20 +131,32 @@ impl std::error::Error for ZipError {}
 //#endregion Error
 
 //#region ByteReaders
-fn u16_le(n: u16) -> [u8; 2] { n.to_le_bytes() }
-fn u32_le(n: u32) -> [u8; 4] { n.to_le_bytes() }
-fn u64_le(n: u64) -> [u8; 8] { n.to_le_bytes() }
+fn u16_le(n: u16) -> [u8; 2] {
+    n.to_le_bytes()
+}
+fn u32_le(n: u32) -> [u8; 4] {
+    n.to_le_bytes()
+}
+fn u64_le(n: u64) -> [u8; 8] {
+    n.to_le_bytes()
+}
 
 fn read_u16(data: &[u8], off: usize) -> Result<u16, ZipError> {
-    if off + 2 > data.len() { return Err(ZipError::Truncated("u16 field")); }
+    if off + 2 > data.len() {
+        return Err(ZipError::Truncated("u16 field"));
+    }
     Ok(u16::from_le_bytes([data[off], data[off + 1]]))
 }
 fn read_u32(data: &[u8], off: usize) -> Result<u32, ZipError> {
-    if off + 4 > data.len() { return Err(ZipError::Truncated("u32 field")); }
+    if off + 4 > data.len() {
+        return Err(ZipError::Truncated("u32 field"));
+    }
     Ok(u32::from_le_bytes([data[off], data[off + 1], data[off + 2], data[off + 3]]))
 }
 fn read_u64(data: &[u8], off: usize) -> Result<u64, ZipError> {
-    if off + 8 > data.len() { return Err(ZipError::Truncated("u64 field")); }
+    if off + 8 > data.len() {
+        return Err(ZipError::Truncated("u64 field"));
+    }
     let mut buf = [0u8; 8];
     buf.copy_from_slice(&data[off..off + 8]);
     Ok(u64::from_le_bytes(buf))
@@ -158,14 +168,9 @@ fn read_u64(data: &[u8], off: usize) -> Result<u64, ZipError> {
 /// themselves (ASCII), exactly like every legacy zip tool's fallback when general-purpose
 /// bit 11 is unset — this is a real decode difference from UTF-8, not a cosmetic one.
 const CP437_HIGH: [char; 128] = [
-    'Ç', 'ü', 'é', 'â', 'ä', 'à', 'å', 'ç', 'ê', 'ë', 'è', 'ï', 'î', 'ì', 'Ä', 'Å',
-    'É', 'æ', 'Æ', 'ô', 'ö', 'ò', 'û', 'ù', 'ÿ', 'Ö', 'Ü', '¢', '£', '¥', '₧', 'ƒ',
-    'á', 'í', 'ó', 'ú', 'ñ', 'Ñ', 'ª', 'º', '¿', '⌐', '¬', '½', '¼', '¡', '«', '»',
-    '░', '▒', '▓', '│', '┤', '╡', '╢', '╖', '╕', '╣', '║', '╗', '╝', '╜', '╛', '┐',
-    '└', '┴', '┬', '├', '─', '┼', '╞', '╟', '╚', '╔', '╩', '╦', '╠', '═', '╬', '╧',
-    '╨', '╤', '╥', '╙', '╘', '╒', '╓', '╫', '╪', '┘', '┌', '█', '▄', '▌', '▐', '▀',
-    'α', 'ß', 'Γ', 'π', 'Σ', 'σ', 'µ', 'τ', 'Φ', 'Θ', 'Ω', 'δ', '∞', 'φ', 'ε', '∩',
-    '≡', '±', '≥', '≤', '⌠', '⌡', '÷', '≈', '°', '∙', '·', '√', 'ⁿ', '²', '■', '\u{00a0}',
+    'Ç', 'ü', 'é', 'â', 'ä', 'à', 'å', 'ç', 'ê', 'ë', 'è', 'ï', 'î', 'ì', 'Ä', 'Å', 'É', 'æ', 'Æ', 'ô', 'ö', 'ò', 'û', 'ù', 'ÿ', 'Ö', 'Ü', '¢', '£', '¥', '₧', 'ƒ', 'á', 'í', 'ó', 'ú', 'ñ', 'Ñ', 'ª', 'º', '¿', '⌐', '¬', '½', '¼', '¡', '«', '»', '░',
+    '▒', '▓', '│', '┤', '╡', '╢', '╖', '╕', '╣', '║', '╗', '╝', '╜', '╛', '┐', '└', '┴', '┬', '├', '─', '┼', '╞', '╟', '╚', '╔', '╩', '╦', '╠', '═', '╬', '╧', '╨', '╤', '╥', '╙', '╘', '╒', '╓', '╫', '╪', '┘', '┌', '█', '▄', '▌', '▐', '▀', 'α', 'ß',
+    'Γ', 'π', 'Σ', 'σ', 'µ', 'τ', 'Φ', 'Θ', 'Ω', 'δ', '∞', 'φ', 'ε', '∩', '≡', '±', '≥', '≤', '⌠', '⌡', '÷', '≈', '°', '∙', '·', '√', 'ⁿ', '²', '■', '\u{00a0}',
 ];
 
 fn cp437_decode(bytes: &[u8]) -> String {
@@ -175,8 +180,7 @@ fn cp437_decode(bytes: &[u8]) -> String {
 /// 🔤️ Decodes a filename/comment field per general-purpose bit 11: UTF-8 when set, CP437 otherwise.
 fn decode_zip_text(bytes: &[u8], utf8: bool, what: &'static str) -> Result<String, ZipError> {
     if utf8 {
-        String::from_utf8(bytes.to_vec())
-            .map_err(|_| ZipError::Utf8 { what, name_hint: cp437_decode(bytes) })
+        String::from_utf8(bytes.to_vec()).map_err(|_| ZipError::Utf8 { what, name_hint: cp437_decode(bytes) })
     } else {
         Ok(cp437_decode(bytes))
     }
@@ -187,6 +191,7 @@ fn decode_zip_text(bytes: &[u8], utf8: bool, what: &'static str) -> Result<Strin
 fn decode_best_effort_text(bytes: &[u8]) -> String {
     String::from_utf8(bytes.to_vec()).unwrap_or_else(|_| cp437_decode(bytes))
 }
+
 //#endregion Cp437
 
 //#region ExtraFields
@@ -241,19 +246,11 @@ struct Zip64Fields {
     disk_start: Option<u32>,
 }
 
-fn parse_zip64_extra(
-    fields: &[ZipExtraField],
-    need_uncomp: bool,
-    need_comp: bool,
-    need_offset: bool,
-    need_disk: bool,
-) -> Result<Zip64Fields, ZipError> {
+fn parse_zip64_extra(fields: &[ZipExtraField], need_uncomp: bool, need_comp: bool, need_offset: bool, need_disk: bool) -> Result<Zip64Fields, ZipError> {
     if !(need_uncomp || need_comp || need_offset || need_disk) {
         return Ok(Zip64Fields { uncomp_size: None, comp_size: None, local_offset: None, disk_start: None });
     }
-    let record = fields.iter().find(|f| f.id == EXTRA_ZIP64).ok_or_else(|| {
-        ZipError::Malformed("32-bit sentinel field present without a ZIP64 extra record".into())
-    })?;
+    let record = fields.iter().find(|f| f.id == EXTRA_ZIP64).ok_or_else(|| ZipError::Malformed("32-bit sentinel field present without a ZIP64 extra record".into()))?;
     let mut pos = 0usize;
     let mut out = Zip64Fields { uncomp_size: None, comp_size: None, local_offset: None, disk_start: None };
     if need_uncomp {
@@ -336,6 +333,109 @@ fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDirLocat
     let cd_offset = read_u64(data, record_offset + 48)?;
     Ok(CentralDirLocation { count: total_entries as usize, cd_size: cd_size as usize, cd_offset: cd_offset as usize, comment })
 }
+
+fn zip_semantic_fingerprint(entries: &[ZipEntry], comment: &str) -> Result<Vec<u8>, ZipError> {
+    let bytes = serde_json::to_vec(&(entries, comment)).map_err(|error| ZipError::Malformed(error.to_string()))?;
+    Ok(blake3::hash(&bytes).as_bytes().to_vec())
+}
+
+fn capture_physical_layout(data: &[u8], eocd: usize, loc: &CentralDirLocation, entries: &[ZipEntry]) -> Result<ZipPhysicalLayout, ZipError> {
+    if read_u16(data, eocd + 10)? == 0xffff || read_u32(data, eocd + 16)? == 0xffff_ffff {
+        return Err(ZipError::Malformed("ZIP64 physical capture is not implemented".into()));
+    }
+    let mut records = Vec::with_capacity(loc.count);
+    let mut pos = loc.cd_offset;
+    for entry_index in 0..loc.count {
+        let version_made_by = read_u16(data, pos + 4)?;
+        let version_needed = read_u16(data, pos + 6)?;
+        let flags = read_u16(data, pos + 8)?;
+        let method = read_u16(data, pos + 10)?;
+        let dos_time = read_u16(data, pos + 12)?;
+        let dos_date = read_u16(data, pos + 14)?;
+        let crc32 = read_u32(data, pos + 16)?;
+        let compressed_size_32 = read_u32(data, pos + 20)?;
+        let uncompressed_size_32 = read_u32(data, pos + 24)?;
+        let name_len = read_u16(data, pos + 28)? as usize;
+        let extra_len = read_u16(data, pos + 30)? as usize;
+        let comment_len = read_u16(data, pos + 32)? as usize;
+        let disk_start = read_u16(data, pos + 34)?;
+        let internal_attrs = read_u16(data, pos + 36)?;
+        let external_attrs = read_u32(data, pos + 38)?;
+        let local_offset_32 = read_u32(data, pos + 42)?;
+        let name_start = pos + 46;
+        let extra_start = name_start + name_len;
+        let comment_start = extra_start + extra_len;
+        pos = comment_start + comment_len;
+        let local_offset = local_offset_32 as usize;
+        let local_name_len = read_u16(data, local_offset + 26)? as usize;
+        let local_extra_len = read_u16(data, local_offset + 28)? as usize;
+        let local_name_start = local_offset + 30;
+        let local_extra_start = local_name_start + local_name_len;
+        let payload_start = local_extra_start + local_extra_len;
+        let payload_end = payload_start + compressed_size_32 as usize;
+        let descriptor = if flags & 8 != 0 {
+            let has_signature = read_u32(data, payload_end)? == SIG_DATA_DESCRIPTOR;
+            let base = payload_end + if has_signature { 4 } else { 0 };
+            Some(ZipDataDescriptor { has_signature, zip64_width: false, crc32: read_u32(data, base)?, compressed_size: read_u32(data, base + 4)? as u64, uncompressed_size: read_u32(data, base + 8)? as u64 })
+        } else { None };
+        records.push(ZipPhysicalEntry {
+            entry_index,
+            local_offset,
+            local: ZipLocalRecord {
+                signature: read_u32(data, local_offset)?,
+                version_needed: read_u16(data, local_offset + 4)?,
+                flags: read_u16(data, local_offset + 6)?,
+                method: read_u16(data, local_offset + 8)?,
+                dos_time: read_u16(data, local_offset + 10)?,
+                dos_date: read_u16(data, local_offset + 12)?,
+                crc32: read_u32(data, local_offset + 14)?,
+                compressed_size_32: read_u32(data, local_offset + 18)?,
+                uncompressed_size_32: read_u32(data, local_offset + 22)?,
+                name_bytes: data[local_name_start..local_extra_start].to_vec(),
+                extra_bytes: data[local_extra_start..payload_start].to_vec(),
+                compressed_data: data[payload_start..payload_end].to_vec(),
+                descriptor,
+                trailing_gap: Vec::new(),
+            },
+            central: ZipCentralRecord {
+                signature: SIG_CENTRAL, version_made_by, version_needed, flags, method, dos_time, dos_date, crc32, compressed_size_32, uncompressed_size_32,
+                name_bytes: data[name_start..extra_start].to_vec(),
+                extra_bytes: data[extra_start..comment_start].to_vec(),
+                comment_bytes: data[comment_start..pos].to_vec(),
+                disk_start, internal_attrs, external_attrs, local_offset_32,
+            },
+        });
+    }
+    let mut order = (0..records.len()).collect::<Vec<_>>();
+    order.sort_by_key(|&index| records[index].local_offset);
+    for (position, &index) in order.iter().enumerate() {
+        let record = &records[index];
+        let descriptor_len = record.local.descriptor.as_ref().map_or(0, |descriptor| 12 + if descriptor.has_signature { 4 } else { 0 });
+        let end = record.local_offset + 30 + record.local.name_bytes.len() + record.local.extra_bytes.len() + record.local.compressed_data.len() + descriptor_len;
+        let next = order.get(position + 1).map_or(loc.cd_offset, |&next| records[next].local_offset);
+        records[index].local.trailing_gap = data[end..next].to_vec();
+    }
+    let comment_len = read_u16(data, eocd + 20)? as usize;
+    let eocd_end = eocd + 22 + comment_len;
+    let prefix_end = records.iter().map(|record| record.local_offset).min().unwrap_or(loc.cd_offset);
+    Ok(ZipPhysicalLayout {
+        semantic_blake3: zip_semantic_fingerprint(entries, &loc.comment)?,
+        prefix: data[..prefix_end].to_vec(),
+        entries: records,
+        central_trailer: data[pos..eocd].to_vec(),
+        end_records: ZipEndRecords {
+            zip64: None,
+            disk_number: read_u16(data, eocd + 4)?,
+            central_disk: read_u16(data, eocd + 6)?,
+            entries_on_disk: read_u16(data, eocd + 8)?,
+            entries_total: read_u16(data, eocd + 10)?,
+            central_size_32: read_u32(data, eocd + 12)?,
+            central_offset_32: read_u32(data, eocd + 16)?,
+            comment_bytes: data[eocd + 22..eocd_end].to_vec(),
+            trailer: data[eocd_end..].to_vec(),
+        },
+    })
+}
 //#endregion Eocd
 
 //#region Decode
@@ -386,13 +486,7 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         let central_extra = parse_extra_fields(&data[extra_start..extra_end])?;
         let comment = decode_zip_text(&data[comment_start..comment_end], utf8, "central directory comment")?;
 
-        let zip64 = parse_zip64_extra(
-            &central_extra,
-            uncomp_size32 == 0xFFFF_FFFF,
-            comp_size32 == 0xFFFF_FFFF,
-            local_off32 == 0xFFFF_FFFF,
-            disk_start16 == 0xFFFF,
-        )?;
+        let zip64 = parse_zip64_extra(&central_extra, uncomp_size32 == 0xFFFF_FFFF, comp_size32 == 0xFFFF_FFFF, local_off32 == 0xFFFF_FFFF, disk_start16 == 0xFFFF)?;
         let uncomp_size = zip64.uncomp_size.unwrap_or(uncomp_size32 as u64) as usize;
         let comp_size = zip64.comp_size.unwrap_or(comp_size32 as u64) as usize;
         let local_off = zip64.local_offset.unwrap_or(local_off32 as u64) as usize;
@@ -407,8 +501,14 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         if read_u32(data, local_off)? != SIG_LOCAL {
             return Err(ZipError::BadSignature { what: "local file header", at: local_off });
         }
+        let _l_version_needed = read_u16(data, local_off + 4)?;
         let l_flags = read_u16(data, local_off + 6)?;
         let l_method = read_u16(data, local_off + 8)?;
+        let _l_dos_time = read_u16(data, local_off + 10)?;
+        let _l_dos_date = read_u16(data, local_off + 12)?;
+        let _l_crc = read_u32(data, local_off + 14)?;
+        let _l_comp_size = read_u32(data, local_off + 18)?;
+        let _l_uncomp_size = read_u32(data, local_off + 22)?;
         if l_method != method_code {
             return Err(ZipError::MethodMismatch { name, local: l_method, central: method_code });
         }
@@ -421,8 +521,7 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         }
         let local_extra = parse_extra_fields(&data[l_extra_start..l_extra_end])?;
 
-        let method = ZipCompressionMethod::from_code(method_code)
-            .ok_or_else(|| ZipError::UnsupportedMethod { name: name.clone(), method: method_code })?;
+        let method = ZipCompressionMethod::from_code(method_code).ok_or_else(|| ZipError::UnsupportedMethod { name: name.clone(), method: method_code })?;
 
         let data_off = l_extra_end;
         let data_end = data_off + comp_size;
@@ -434,7 +533,8 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         // ---- Optional trailing data descriptor (general-purpose bit 3) ----
         if uses_descriptor {
             let mut desc_pos = data_end;
-            if read_u32(data, desc_pos)? == SIG_DATA_DESCRIPTOR {
+            let has_signature = read_u32(data, desc_pos)? == SIG_DATA_DESCRIPTOR;
+            if has_signature {
                 desc_pos += 4;
             }
             let is_zip64_entry = zip64.uncomp_size.is_some() || zip64.comp_size.is_some();
@@ -446,17 +546,15 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
             if d_crc != crc || d_comp != comp_size || d_uncomp != uncomp_size {
                 return Err(ZipError::DataDescriptorMismatch { name });
             }
+            let _ = has_signature;
         }
 
         let raw = match method {
             ZipCompressionMethod::Stored => payload.to_vec(),
-            ZipCompressionMethod::Deflate => crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::inflate_raw(payload)
-                .map_err(ZipError::Malformed)?,
+            ZipCompressionMethod::Deflate => crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::inflate_raw(payload).map_err(ZipError::Malformed)?,
         };
         if raw.len() != uncomp_size {
-            return Err(ZipError::Malformed(format!(
-                "{name}: decompressed size {} != declared uncompressed size {uncomp_size}", raw.len()
-            )));
+            return Err(ZipError::Malformed(format!("{name}: decompressed size {} != declared uncompressed size {uncomp_size}", raw.len())));
         }
         let got_crc = crc32(&raw);
         if got_crc != crc {
@@ -465,30 +563,12 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
 
         let unix_mtime = parse_ut_mtime(&local_extra).or_else(|| parse_ut_mtime(&central_extra));
 
-        entries.push(ZipEntry {
-            name,
-            data: raw,
-            method,
-            dos_date,
-            dos_time,
-            unix_mtime,
-            flags,
-            version_made_by,
-            version_needed,
-            internal_attrs,
-            external_attrs,
-            local_extra,
-            central_extra,
-            comment,
-        });
+        entries.push(ZipEntry { name, data: raw, method, dos_date, dos_time, unix_mtime, flags, version_made_by, version_needed, internal_attrs, external_attrs, local_extra, central_extra, comment });
         let _ = l_flags; // local flags kept implicitly consistent via `flags` (central is authoritative)
     }
 
-    Ok(ZipSnapshot {
-        schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-        entries,
-        comment: loc.comment,
-    })
+    let physical = capture_physical_layout(data, eocd, &loc, &entries)?;
+    Ok(ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: loc.comment, physical: Some(physical) })
 }
 //#endregion Decode
 
@@ -503,6 +583,80 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
 /// `ZipError::UnsupportedZip64Write` rather than silently truncating a 64-bit value into 32 bits
 /// when an entry or the archive itself would require ZIP64 to represent.
 pub fn encode_zip(snapshot: &ZipSnapshot) -> Result<Vec<u8>, ZipError> {
+    if let Some(physical) = &snapshot.physical {
+        if physical.semantic_blake3 == zip_semantic_fingerprint(&snapshot.entries, &snapshot.comment)? {
+            let mut local_order = physical.entries.iter().collect::<Vec<_>>();
+            local_order.sort_by_key(|record| record.local_offset);
+            let mut out = physical.prefix.clone();
+            for record in local_order {
+                let local = &record.local;
+                out.extend_from_slice(&u32_le(local.signature));
+                out.extend_from_slice(&u16_le(local.version_needed));
+                out.extend_from_slice(&u16_le(local.flags));
+                out.extend_from_slice(&u16_le(local.method));
+                out.extend_from_slice(&u16_le(local.dos_time));
+                out.extend_from_slice(&u16_le(local.dos_date));
+                out.extend_from_slice(&u32_le(local.crc32));
+                out.extend_from_slice(&u32_le(local.compressed_size_32));
+                out.extend_from_slice(&u32_le(local.uncompressed_size_32));
+                out.extend_from_slice(&u16_le(local.name_bytes.len() as u16));
+                out.extend_from_slice(&u16_le(local.extra_bytes.len() as u16));
+                out.extend_from_slice(&local.name_bytes);
+                out.extend_from_slice(&local.extra_bytes);
+                out.extend_from_slice(&local.compressed_data);
+                if let Some(descriptor) = &local.descriptor {
+                    if descriptor.has_signature { out.extend_from_slice(&u32_le(SIG_DATA_DESCRIPTOR)); }
+                    out.extend_from_slice(&u32_le(descriptor.crc32));
+                    if descriptor.zip64_width {
+                        out.extend_from_slice(&u64_le(descriptor.compressed_size));
+                        out.extend_from_slice(&u64_le(descriptor.uncompressed_size));
+                    } else {
+                        out.extend_from_slice(&u32_le(descriptor.compressed_size as u32));
+                        out.extend_from_slice(&u32_le(descriptor.uncompressed_size as u32));
+                    }
+                }
+                out.extend_from_slice(&local.trailing_gap);
+            }
+            let mut central_order = physical.entries.iter().collect::<Vec<_>>();
+            central_order.sort_by_key(|record| record.entry_index);
+            for record in central_order {
+                let central = &record.central;
+                out.extend_from_slice(&u32_le(central.signature));
+                out.extend_from_slice(&u16_le(central.version_made_by));
+                out.extend_from_slice(&u16_le(central.version_needed));
+                out.extend_from_slice(&u16_le(central.flags));
+                out.extend_from_slice(&u16_le(central.method));
+                out.extend_from_slice(&u16_le(central.dos_time));
+                out.extend_from_slice(&u16_le(central.dos_date));
+                out.extend_from_slice(&u32_le(central.crc32));
+                out.extend_from_slice(&u32_le(central.compressed_size_32));
+                out.extend_from_slice(&u32_le(central.uncompressed_size_32));
+                out.extend_from_slice(&u16_le(central.name_bytes.len() as u16));
+                out.extend_from_slice(&u16_le(central.extra_bytes.len() as u16));
+                out.extend_from_slice(&u16_le(central.comment_bytes.len() as u16));
+                out.extend_from_slice(&u16_le(central.disk_start));
+                out.extend_from_slice(&u16_le(central.internal_attrs));
+                out.extend_from_slice(&u32_le(central.external_attrs));
+                out.extend_from_slice(&u32_le(central.local_offset_32));
+                out.extend_from_slice(&central.name_bytes);
+                out.extend_from_slice(&central.extra_bytes);
+                out.extend_from_slice(&central.comment_bytes);
+            }
+            out.extend_from_slice(&physical.central_trailer);
+            let end = &physical.end_records;
+            out.extend_from_slice(&u32_le(SIG_EOCD));
+            out.extend_from_slice(&u16_le(end.disk_number));
+            out.extend_from_slice(&u16_le(end.central_disk));
+            out.extend_from_slice(&u16_le(end.entries_on_disk));
+            out.extend_from_slice(&u16_le(end.entries_total));
+            out.extend_from_slice(&u32_le(end.central_size_32));
+            out.extend_from_slice(&u32_le(end.central_offset_32));
+            out.extend_from_slice(&u16_le(end.comment_bytes.len() as u16));
+            out.extend_from_slice(&end.comment_bytes);
+            out.extend_from_slice(&end.trailer);
+            return Ok(out);
+        }
+    }
     if snapshot.entries.len() > 0xFFFF {
         return Err(ZipError::UnsupportedZip64Write);
     }
@@ -618,7 +772,11 @@ pub fn encode_zip(snapshot: &ZipSnapshot) -> Result<Vec<u8>, ZipError> {
 /// 🎚️ Byte-level sniff confidence — kept local to the codec (no framework dependency here);
 /// the analyzer maps this onto `IoConfidence` at the layer that owns that type.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SniffConfidence { High, Medium, Low }
+pub enum SniffConfidence {
+    High,
+    Medium,
+    Low,
+}
 
 /// 🕵️ Structural sniff: recognizes ZIP local-file-header (`PK\x03\x04`), empty-archive EOCD
 /// (`PK\x05\x06`), and spanned-archive (`PK\x07\x08`) magics, corroborated by actually finding
@@ -628,9 +786,7 @@ pub fn sniff_zip_bytes(data: &[u8]) -> SniffConfidence {
         return SniffConfidence::Low;
     }
     let magic = &data[0..4];
-    let starts_recognized = magic == [0x50, 0x4b, 0x03, 0x04]
-        || magic == [0x50, 0x4b, 0x05, 0x06]
-        || magic == [0x50, 0x4b, 0x07, 0x08];
+    let starts_recognized = magic == [0x50, 0x4b, 0x03, 0x04] || magic == [0x50, 0x4b, 0x05, 0x06] || magic == [0x50, 0x4b, 0x07, 0x08];
     let eocd_ok = find_eocd(data).is_ok();
     match (starts_recognized, eocd_ok) {
         (true, true) => SniffConfidence::High,
@@ -773,11 +929,9 @@ mod codec_tests {
     fn zip_store_round_trip() {
         let snap = ZipSnapshot {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-            entries: vec![
-                ZipEntry { name: "a.txt".into(), data: b"hello".to_vec(), ..Default::default() },
-                ZipEntry { name: "b/bin.dat".into(), data: vec![0, 1, 2, 3, 255], ..Default::default() },
-            ],
+            entries: vec![ZipEntry { name: "a.txt".into(), data: b"hello".to_vec(), ..Default::default() }, ZipEntry { name: "b/bin.dat".into(), data: vec![0, 1, 2, 3, 255], ..Default::default() }],
             comment: String::new(),
+            physical: None,
         };
         let bytes = encode_zip(&snap).expect("encode store");
         let decoded = decode_zip(&bytes).expect("decode store");
@@ -792,13 +946,9 @@ mod codec_tests {
     fn zip_deflate_round_trip() {
         let snap = ZipSnapshot {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-            entries: vec![ZipEntry {
-                name: "poem.txt".into(),
-                data: b"deflate inside zip via stdio.deflate raw".to_vec(),
-                method: ZipCompressionMethod::Deflate,
-                ..Default::default()
-            }],
+            entries: vec![ZipEntry { name: "poem.txt".into(), data: b"deflate inside zip via stdio.deflate raw".to_vec(), method: ZipCompressionMethod::Deflate, ..Default::default() }],
             comment: String::new(),
+            physical: None,
         };
         let bytes = encode_zip(&snap).expect("encode deflate");
         let decoded = decode_zip(&bytes).expect("decode deflate");
@@ -808,11 +958,7 @@ mod codec_tests {
 
     #[test]
     fn codec_round_trip() {
-        let snap = ZipSnapshot {
-            schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-            entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }],
-            comment: String::new(),
-        };
+        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }], comment: String::new(), physical: None };
         let pack = store::ArtifactPack::encode_pack(&snap);
         let decoded = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
         // Byte round-tripping through the on-disk format legitimately normalizes metadata that
@@ -919,10 +1065,7 @@ mod codec_tests {
         let streamed = &snap.entries[3];
         assert_eq!(streamed.name, "streamed.bin");
         assert_eq!(streamed.flags & 0x0008, 0x0008);
-        assert_eq!(
-            streamed.data,
-            b"data written before its size was known, so a trailing descriptor carries the real crc/sizes".to_vec()
-        );
+        assert_eq!(streamed.data, b"data written before its size was known, so a trailing descriptor carries the real crc/sizes".to_vec());
 
         let zip64_entry = &snap.entries[4];
         assert_eq!(zip64_entry.name, "huge-in-theory.bin");
@@ -956,19 +1099,7 @@ mod codec_tests {
 
     #[test]
     fn decode_rejects_crc_mismatch() {
-        let mut raw = build_raw_zip(
-            vec![RawZipEntry {
-                name: b"a.txt".to_vec(),
-                data: b"original".to_vec(),
-                method: 0,
-                flags: 0x0800,
-                extra: Vec::new(),
-                comment: Vec::new(),
-                use_descriptor: false,
-                force_zip64_sentinel: false,
-            }],
-            b"",
-        );
+        let mut raw = build_raw_zip(vec![RawZipEntry { name: b"a.txt".to_vec(), data: b"original".to_vec(), method: 0, flags: 0x0800, extra: Vec::new(), comment: Vec::new(), use_descriptor: false, force_zip64_sentinel: false }], b"");
         // Corrupt the stored payload byte in place (after the 30-byte local header + name).
         let payload_offset = 30 + "a.txt".len();
         raw[payload_offset] ^= 0xFF;
@@ -990,16 +1121,19 @@ mod codec_tests {
             version_needed: 20,
             internal_attrs: 1,
             external_attrs: 0o100644 << 16,
-            local_extra: vec![ZipExtraField { id: 0x5455, payload: {
-                let mut p = vec![0x01u8];
-                p.extend_from_slice(&1_700_000_000i32.to_le_bytes());
-                p
-            } }],
+            local_extra: vec![ZipExtraField {
+                id: 0x5455,
+                payload: {
+                    let mut p = vec![0x01u8];
+                    p.extend_from_slice(&1_700_000_000i32.to_le_bytes());
+                    p
+                },
+            }],
             central_extra: Vec::new(),
             comment: "a readme".into(),
         };
         entry.flags = 0; // encoder recomputes bit 3 (clear) + bit 11 (set) unconditionally
-        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![entry], comment: "archive comment".into() };
+        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![entry], comment: "archive comment".into(), physical: None };
 
         let bytes = encode_zip(&snap).expect("encode full metadata");
         let decoded = decode_zip(&bytes).expect("decode full metadata");
@@ -1030,22 +1164,18 @@ mod codec_tests {
         for i in 0..=0xFFFFu32 {
             entries.push(ZipEntry { name: format!("f{i}"), data: Vec::new(), ..Default::default() });
         }
-        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
+        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new(), physical: None };
         let err = encode_zip(&snap).expect_err("more than 0xFFFF entries requires ZIP64");
         assert_eq!(err, ZipError::UnsupportedZip64Write);
     }
 
     #[test]
     fn sniff_recognizes_real_magic_and_rejects_garbage() {
-        let snap = ZipSnapshot {
-            schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-            entries: vec![ZipEntry { name: "a".into(), data: b"b".to_vec(), ..Default::default() }],
-            comment: String::new(),
-        };
+        let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "a".into(), data: b"b".to_vec(), ..Default::default() }], comment: String::new(), physical: None };
         let real = encode_zip(&snap).expect("encode");
         assert_eq!(sniff_zip_bytes(&real), SniffConfidence::High);
 
-        let empty_archive = encode_zip(&ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: Vec::new(), comment: String::new() }).unwrap();
+        let empty_archive = encode_zip(&ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: Vec::new(), comment: String::new(), physical: None }).unwrap();
         assert_eq!(sniff_zip_bytes(&empty_archive), SniffConfidence::High);
 
         assert_eq!(sniff_zip_bytes(b"not a zip at all, just prose"), SniffConfidence::Low);
@@ -1064,10 +1194,10 @@ mod codec_tests {
 /// DIFFERENT return type (`&'static [&'static ComposerEntry]` vs this module's
 /// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipComposer as ZipRawAnyComposer;
     use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::ZipIso21320Composer;
+    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 

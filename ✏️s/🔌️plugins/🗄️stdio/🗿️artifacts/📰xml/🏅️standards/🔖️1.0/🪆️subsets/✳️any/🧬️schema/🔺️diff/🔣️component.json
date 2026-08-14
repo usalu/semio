@@ -3,6 +3,7 @@
   "title": "XmlDiff",
   "type": "object",
   "properties": {
+    "prolog": { "type": "array", "items": { "type": "object" } },
     "declaration": { "$ref": "#/$defs/NullableXmlDeclaration" },
     "doctype": { "$ref": "#/$defs/NullableString" },
     "root": { "$ref": "#/$defs/XmlNodeDiff" }
