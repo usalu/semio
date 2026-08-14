@@ -5,7 +5,7 @@ use crate::framework_surface_terrain::TerrainSessionCore;
 use ui_wgpu::wgpu::{
     aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers, marquee_is_crossing_from_path,
     mesh_content_version, paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb,
-    vec3_from_f64, widgets::gizmo, ActionDescriptor, Camera3d, GpuContext, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mesh3d, OrbitController, PointerModifiers, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d,
+    vec3_from_f64, widgets::gizmo, ActionDescriptor, Camera3d, GpuContext, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3d, OrbitController, PointerModifiers, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d,
     UiComponentSceneNode, Vec3, WidgetContext,
 };
 
@@ -13,7 +13,7 @@ use ui_wgpu::wgpu::{
 // GLB decoding, not reimplemented locally and not yet routed through stdio's gltf/mesh artifact
 // facet (that facet yields a structured document snapshot, not flat render buffers — see
 // 📓️wave-g1b-infinite-report.md for why wiring it is not a bounded edit).
-use semio_framework::{mesh_from_glb, optional_json_to_dsl, MeshData};
+use semio_framework::{mesh_from_glb, optional_json_to_dsl, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MeshData, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
 use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
@@ -2642,7 +2642,9 @@ pub fn handle_world3d_wheel(state: &mut World3dState, delta: f32) {
 
 fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<String> {
     match merge {
-        "add" => {
+        // 🕹️ `"additive"` is the framework `MergeMode` wire label (see `world_interaction_definition`);
+        // `"add"` is `worldPick`'s own pre-existing, untouched-this-wave vocabulary — both accepted here.
+        "add" | "additive" => {
             let mut merged = existing.to_vec();
             for id in incoming {
                 if !merged.contains(id) {
@@ -2665,6 +2667,68 @@ fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Ve
         _ => incoming.to_vec(),
     }
 }
+
+//#region 🔖️WorldInteractionDomain
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3c: the OS `world` domain — plain
+/// (non-component) 3D-world object picking/hover, declared once here so any app mounting a world3d
+/// surface can push it onto its `AppDefinition.interactions` (wave 4). Granularity `"item"` targets are
+/// `"{surfaceId}/{objectId}"`, split by [`HierarchyProvider::PathDelimited`] — `"surface"` covers a
+/// future whole-surface selection, not emitted by pointer picking today. Component-level (vertex/edge/
+/// face) picking is a separate, unconverted mechanism (`worldPick`/`setSelection`) — out of this wave's
+/// named scope (see the module's W3c task brief).
+pub const WORLD_INTERACTION_DOMAIN_ID: &str = "world";
+const WORLD_ITEM_GRANULARITY_ID: &str = "item";
+const WORLD_ITEM_PATH_DELIMITER: &str = "/";
+
+pub fn world_interaction_definition() -> InteractionDefinition {
+    InteractionDefinition {
+        id: WORLD_INTERACTION_DOMAIN_ID.into(),
+        label: LocalizedLabel::native("World", "Welt"),
+        granularities: vec![
+            GranularityDefinition { id: "surface".into(), label: LocalizedLabel::native("Surface", "Fläche"), icon_id: "layers".into() },
+            GranularityDefinition { id: WORLD_ITEM_GRANULARITY_ID.into(), label: LocalizedLabel::native("Item", "Objekt"), icon_id: "box".into() },
+        ],
+        hierarchy: HierarchyProvider::PathDelimited { delimiter: WORLD_ITEM_PATH_DELIMITER.into() },
+        hover: HoverSpec::default(),
+        selection: SelectionSpec {
+            modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+            methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+            merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Invertive],
+            transitive: false,
+            broadcast: true,
+        },
+    }
+}
+
+fn world_item_target_id(surface_id: &str, object_id: &str) -> String {
+    format!("{surface_id}{WORLD_ITEM_PATH_DELIMITER}{object_id}")
+}
+
+/// 🔤️ Strips this state's own `surfaceId/` prefix from a `world`-domain item target id — the inverse
+/// of [`world_item_target_id`]. Targets for a different surface (cross-surface batch, not produced by
+/// this file's single-surface pointer handlers) are dropped rather than mis-parsed.
+fn world_item_id_for_surface<'a>(state: &World3dState, target_id: &'a str) -> Option<&'a str> {
+    target_id.strip_prefix(&state.surface_id).and_then(|rest| rest.strip_prefix(WORLD_ITEM_PATH_DELIMITER))
+}
+
+fn merge_mode_wire_str(merge: MergeMode) -> &'static str {
+    match merge {
+        MergeMode::Replace => "replace",
+        MergeMode::Additive => "additive",
+        MergeMode::Subtractive => "subtractive",
+        MergeMode::Invertive => "invertive",
+        MergeMode::Range => "range",
+    }
+}
+
+fn selection_method_wire_str(method: SelectionMethod) -> &'static str {
+    match method {
+        SelectionMethod::Pick => "pick",
+        SelectionMethod::Rectangle => "rectangle",
+        SelectionMethod::Lasso => "lasso",
+    }
+}
+//#endregion 🔖️WorldInteractionDomain
 
 /// Applies hover/selection action payloads to renderer-local world state before the plugin round-trip.
 pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescriptor) {
@@ -2711,13 +2775,28 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
                 state.component_ids = merge_string_ids(&state.component_ids, &[id], merge);
             }
         }
-        "worldSelect" => {
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3c: replaces the deleted
+        // ad-hoc `worldSelect`/`worldHover` command strings with the framework interaction verbs
+        // (`domainId`/`targets`/`merge`/`method`, `domainId`/`channel`/`targets`) — see
+        // `world_interaction_definition`. This is still the OPTIMISTIC LOCAL PREVIEW only; the
+        // framework's `next_selection`/`next_hover` machine (not this file) is the source of truth
+        // once the round-trip settles.
+        "interactionSelect" if args.get("domainId").and_then(|value| value.as_str()) == Some(WORLD_INTERACTION_DOMAIN_ID) => {
             let merge = args.get("merge").and_then(|value| value.as_str()).unwrap_or("replace");
-            let ids = args.get("ids").map(dsl_string_vec).unwrap_or_default();
+            let ids: Vec<String> = args
+                .get("targets")
+                .and_then(|value| value.as_array())
+                .map(|targets| targets.iter().filter_map(|target| target.get("id").and_then(dsl_id_to_string)).filter_map(|id| world_item_id_for_surface(state, &id).map(str::to_string)).collect())
+                .unwrap_or_default();
             state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
         }
-        "worldHover" => {
-            state.local_hover_id = args.get("id").and_then(|value| value.as_str()).map(str::to_string);
+        "interactionHover" if args.get("domainId").and_then(|value| value.as_str()) == Some(WORLD_INTERACTION_DOMAIN_ID) => {
+            state.local_hover_id = args
+                .get("targets")
+                .and_then(|value| value.as_array())
+                .and_then(|targets| targets.first())
+                .and_then(|target| target.get("id").and_then(dsl_id_to_string))
+                .and_then(|id| world_item_id_for_surface(state, &id).map(str::to_string));
         }
         "setSelection" => {
             if let Some(mode) = args.get("mode").and_then(|value| value.as_str()) {
@@ -2800,16 +2879,24 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
         return None;
     }
     state.local_hover_id = hit.clone();
-    Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldHover".into(), args: action_args(json!({ "surfaceId": state.surface_id, "id": hit })) })
+    // 🕹️ `interactionHover` — empty `targets` clears the channel (see `HoverInput`/`next_hover`).
+    let targets = match &hit {
+        Some(id) => json!([{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": world_item_target_id(&state.surface_id, id) }]),
+        None => json!([]),
+    };
+    Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "interactionHover".into(), args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "channel": "pointer", "targets": targets })) })
 }
 
 fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: bool, ctrl: bool) -> Option<ActionDescriptor> {
+    // 🕹️ Canonical `MergeMode` wire labels (see `merge_mode_wire_str`) — `merge_string_ids` accepts
+    // these directly for both `worldPick` (unconverted, component-level picking) and the `interactionSelect`
+    // emission below, so this one computation feeds both branches unchanged.
     let merge = if shift {
-        "add"
+        merge_mode_wire_str(MergeMode::Additive)
     } else if ctrl {
-        "toggle"
+        merge_mode_wire_str(MergeMode::Invertive)
     } else {
-        "replace"
+        merge_mode_wire_str(MergeMode::Replace)
     };
     if state.interaction_mode == "paint" {
         return None;
@@ -2853,13 +2940,15 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
         });
     }
     let hit = pick_instance_at(state, x, y, inner);
+    let targets: Vec<serde_json::Value> = hit.into_iter().map(|id| json!({ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": world_item_target_id(&state.surface_id, &id) })).collect();
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
-        action: "worldSelect".into(),
+        action: "interactionSelect".into(),
         args: action_args(json!({
-            "surfaceId": state.surface_id,
-            "ids": hit.map(|id| vec![id]).unwrap_or_default(),
+            "domainId": WORLD_INTERACTION_DOMAIN_ID,
+            "targets": targets,
             "merge": merge,
+            "method": selection_method_wire_str(SelectionMethod::Pick),
         })),
     })
 }
@@ -2882,7 +2971,8 @@ fn merge_u32_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<u
     let existing_ids = parse(existing);
     let incoming_ids = parse(incoming);
     match merge {
-        "add" => {
+        // 🕹️ `"additive"` is the framework `MergeMode` wire label — see `merge_string_ids`.
+        "add" | "additive" => {
             let mut merged = existing_ids;
             for id in incoming_ids {
                 if !merged.contains(&id) {
@@ -2921,12 +3011,13 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     };
     state.marquee_points.clear();
     state.marquee_preview_ids.clear();
+    // 🕹️ Canonical `MergeMode` wire labels — see `pick_select_action`'s identical rationale.
     let merge = if shift {
-        "add"
+        merge_mode_wire_str(MergeMode::Additive)
     } else if ctrl {
-        "toggle"
+        merge_mode_wire_str(MergeMode::Invertive)
     } else {
-        "replace"
+        merge_mode_wire_str(MergeMode::Replace)
     };
     if component_mode_active(state) {
         let merged = merge_u32_ids(&state.component_ids, &ids, merge);
@@ -2939,13 +3030,18 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
             })),
         });
     }
+    // 🕹️ Marquee/lasso stays GEOMETRIC here — `screen_select_instances` above is the surface's own
+    // hit-test, this just batches its raw hits into ONE `interactionSelect`; the merge/mode algebra is
+    // the os-kernel `next_selection` machine's job, not this file's.
+    let targets: Vec<serde_json::Value> = ids.iter().map(|id| json!({ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": world_item_target_id(&state.surface_id, id) })).collect();
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
-        action: "worldSelect".into(),
+        action: "interactionSelect".into(),
         args: action_args(json!({
-            "surfaceId": state.surface_id,
-            "ids": ids,
+            "domainId": WORLD_INTERACTION_DOMAIN_ID,
+            "targets": targets,
             "merge": merge,
+            "method": selection_method_wire_str(SelectionMethod::Rectangle),
         })),
     })
 }
@@ -3837,6 +3933,123 @@ mod tests {
         let args = action.args.expect("args");
         assert_eq!(args["id"], json!(1));
     }
+
+    //#region 🔖️WorldInteractionVerbs
+    #[test]
+    fn world_interaction_definition_declares_path_delimited_item_domain() {
+        let def = world_interaction_definition();
+        assert_eq!(def.id, WORLD_INTERACTION_DOMAIN_ID);
+        assert_eq!(def.granularities.iter().map(|granularity| granularity.id.clone()).collect::<Vec<_>>(), vec!["surface".to_string(), "item".to_string()]);
+        assert!(matches!(def.hierarchy, HierarchyProvider::PathDelimited { ref delimiter } if delimiter == "/"));
+        assert!(def.selection.methods.contains(&SelectionMethod::Pick));
+        assert!(def.selection.methods.contains(&SelectionMethod::Rectangle));
+        assert!(def.selection.merges.contains(&MergeMode::Additive));
+    }
+
+    #[test]
+    fn pick_select_emits_batched_interaction_select_for_plain_object_pick() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        // 🕹️ default `granularity` ("object") is neither component-mode nor "mesh" — this is the
+        // plain `world`-domain item pick path (see `pick_select_action`'s final fallback branch).
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
+        let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+        state.bounds = inner;
+        state.pick_bounds = inner;
+        let camera = state.orbit.to_camera();
+        let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("object projects");
+        let action = pick_select_action(&state, screen[0], screen[1], inner, true, false).expect("pick action");
+        assert_eq!(action.action, "interactionSelect");
+        let args = action.args.expect("args");
+        assert_eq!(args["domainId"], json!(WORLD_INTERACTION_DOMAIN_ID));
+        assert_eq!(args["method"], json!("pick"));
+        assert_eq!(args["merge"], json!("additive"), "shift modifier maps to the canonical MergeMode label");
+        let targets = args["targets"].as_array().expect("targets array");
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0]["granularity"], json!(WORLD_ITEM_GRANULARITY_ID));
+        assert_eq!(targets[0]["id"], json!("surface-1/obj-1"), "item target id is surfaceId/objectId (PathDelimited)");
+    }
+
+    #[test]
+    fn marquee_select_emits_batched_interaction_select_with_rectangle_method() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.meshes.insert("mesh-1".into(), topology_mesh());
+        state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
+        state.marquee_points = vec![[0.0, 0.0], [400.0, 400.0]];
+        let action = marquee_select_action(&mut state, Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 }, false, true).expect("marquee action");
+        assert_eq!(action.action, "interactionSelect");
+        let args = action.args.expect("args");
+        assert_eq!(args["method"], json!("rectangle"));
+        assert_eq!(args["merge"], json!("invertive"), "ctrl modifier maps to the canonical MergeMode label");
+        assert!(state.marquee_points.is_empty(), "marquee is consumed after gathering targets");
+    }
+
+    #[test]
+    fn pick_hover_emits_interaction_hover_and_clears_when_nothing_hit() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
+        let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+        state.bounds = inner;
+        state.pick_bounds = inner;
+        let camera = state.orbit.to_camera();
+        let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("object projects");
+        let action = pick_hover_action(&mut state, screen[0], screen[1], inner).expect("hover action");
+        assert_eq!(action.action, "interactionHover");
+        let args = action.args.expect("args");
+        assert_eq!(args["domainId"], json!(WORLD_INTERACTION_DOMAIN_ID));
+        assert_eq!(args["channel"], json!("pointer"));
+        let targets = args["targets"].as_array().expect("targets array");
+        assert_eq!(targets[0]["id"], json!("surface-1/obj-1"));
+
+        // 🖱️ Moving off the instance clears — empty `targets` is `next_hover`'s clear signal.
+        let action = pick_hover_action(&mut state, 5.0, 5.0, inner).expect("clear action");
+        assert_eq!(action.action, "interactionHover");
+        let args = action.args.expect("args");
+        assert!(args["targets"].as_array().expect("targets array").is_empty());
+    }
+
+    #[test]
+    fn apply_world_action_preview_applies_interaction_select_and_hover_for_world_domain() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        apply_world_action_preview(
+            &mut state,
+            &ActionDescriptor {
+                controller_id: "controller-1".into(),
+                action: "interactionSelect".into(),
+                args: action_args(json!({
+                    "domainId": WORLD_INTERACTION_DOMAIN_ID,
+                    "targets": [{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": "surface-1/obj-1" }],
+                    "merge": "replace",
+                    "method": "pick",
+                })),
+            },
+        );
+        assert_eq!(state.selected_ids, vec!["obj-1".to_string()], "surfaceId/ prefix is stripped for this surface");
+
+        apply_world_action_preview(
+            &mut state,
+            &ActionDescriptor {
+                controller_id: "controller-1".into(),
+                action: "interactionHover".into(),
+                args: action_args(json!({
+                    "domainId": WORLD_INTERACTION_DOMAIN_ID,
+                    "channel": "pointer",
+                    "targets": [{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": "surface-1/obj-2" }],
+                })),
+            },
+        );
+        assert_eq!(state.local_hover_id.as_deref(), Some("obj-2"));
+
+        apply_world_action_preview(
+            &mut state,
+            &ActionDescriptor { controller_id: "controller-1".into(), action: "interactionHover".into(), args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "channel": "pointer", "targets": [] })) },
+        );
+        assert!(state.local_hover_id.is_none(), "empty targets clears hover");
+    }
+    //#endregion 🔖️WorldInteractionVerbs
 
     #[test]
     fn marquee_preview_respects_pick_bounds_offset() {

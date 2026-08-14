@@ -1,0 +1,60 @@
+
+thread 'apps::space::engine::tests::compiled_dag_wire_literal_mentions_app_instances' (319945379) panicked at ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/../../🦀️component.rs:41:97:
+bundled example/✏️demo.s is valid WorkflowSnapshot DSL text: TextError { message: "list element made no progress at Ident 'document-ref' — likely an unrecognized field key", span: TextSpan { line: 3, column: 120, length: 12 }, expected: None }
+
+---- apps::space::engine::tests::patch_parameter_op_updates_numeric_value stdout ----
+
+thread 'apps::space::engine::tests::patch_parameter_op_updates_numeric_value' (319945380) panicked at ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/../../🦀️component.rs:41:97:
+bundled example/✏️demo.s is valid WorkflowSnapshot DSL text: TextError { message: "list element made no progress at Ident 'document-ref' — likely an unrecognized field key", span: TextSpan { line: 3, column: 120, length: 12 }, expected: None }
+
+---- apps::space::panels::inspection::tests::inspector_tree_exposes_label_field stdout ----
+
+thread 'apps::space::panels::inspection::tests::inspector_tree_exposes_label_field' (319945385) panicked at ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/../../🦀️component.rs:41:97:
+bundled example/✏️demo.s is valid WorkflowSnapshot DSL text: TextError { message: "list element made no progress at Ident 'document-ref' — likely an unrecognized field key", span: TextSpan { line: 3, column: 120, length: 12 }, expected: None }
+
+---- apps::space::modes::main::windows::compiled_dag::component::tests::renders_compiled_dag_editor stdout ----
+
+thread 'apps::space::modes::main::windows::compiled_dag::component::tests::renders_compiled_dag_editor' (319945381) panicked at ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/../../🦀️component.rs:41:97:
+bundled example/✏️demo.s is valid WorkflowSnapshot DSL text: TextError { message: "list element made no progress at Ident 'document-ref' — likely an unrecognized field key", span: TextSpan { line: 3, column: 120, length: 12 }, expected: None }
+
+
+failures:
+    apps::home::commands::create_studio::tests::creates_studio_via_home_action
+    apps::home::commands::create_studio::tests::temporary_studio_uses_ephemeral_registry_not_catalog
+    apps::home::component::tests::home_labels_resolve_native_english_by_default
+    apps::home::component::tests::home_labels_resolve_native_german_locale
+    apps::home::modes::explore::windows::main::component::tests::home_vfs_lists_seeded_studio
+    apps::space::commands::connect_media_ports::tests::connect_media_ports_negotiates_a_contract_for_compatible_types
+    apps::space::commands::connect_media_ports::tests::connect_media_ports_rejects_incompatible_types_via_notice
+    apps::space::commands::delete_selection::tests::delete_selection_removes_the_live_selected_node
+    apps::space::commands::export_media::tests::export_media_emits_download_effect_and_import_requests_file_open
+    apps::space::commands::node_graph_edit::tests::node_graph_edit_set_fixture_moves_node_and_persists_camera
+    apps::space::commands::open_instance::tests::open_and_close_focused_instance
+    apps::space::commands::open_instance::tests::open_instance_emits_open_plugin_instance_effect_matching_instance
+    apps::space::commands::patch_parameter::tests::patch_parameter_action_updates_value
+    apps::space::commands::patch_parameter::tests::unbind_parameter_field_removes_binding
+    apps::space::commands::presence_heartbeat::tests::presence_heartbeat_declares_none_ui_scope
+    apps::space::commands::set_active_example::tests::open_studio_demo_explicit_loads_demo_fixture
+    apps::space::commands::set_active_example::tests::open_studio_unknown_id_returns_not_found
+    apps::space::commands::spawn_app::tests::move_media_node_emits_coalesced_move_operation
+    apps::space::commands::spawn_app::tests::patch_app_instances_updates_labels
+    apps::space::commands::spawn_app::tests::spawns_draw_app_instance
+    apps::space::commands::spawn_app::tests::spawns_draw_app_instance_at_drop_position
+    apps::space::commands::spawn_app::tests::spawns_puzzle5d_and_shooting_with_multi_port_registrations
+    apps::space::component::tests::demo_document_has_instances_and_edges
+    apps::space::component::tests::space_declares_expected_actions_and_examples
+    apps::space::component::tests::space_labels_resolve_native_english_by_default
+    apps::space::component::tests::space_labels_resolve_native_german_locale
+    apps::space::component::tests::space_manifest_uses_studio_app_id
+    apps::space::component::tests::space_window_kind_actions_scope_editing_to_workflow
+    apps::space::component::tests::space_workflow_context_menu_stays_within_budget_with_destructive_tail
+    apps::space::component::tests::testkit_studio_emit_smoke_test
+    apps::space::component::tests::two_instances_converge_on_disjoint_edits_via_backbone
+    apps::space::engine::tests::compiled_dag_wire_literal_mentions_app_instances
+    apps::space::engine::tests::patch_parameter_op_updates_numeric_value
+    apps::space::modes::main::windows::compiled_dag::component::tests::renders_compiled_dag_editor
+    apps::space::panels::inspection::tests::inspector_tree_exposes_label_field
+
+test result: FAILED. 55 passed; 35 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `-p semio-s-plugin-space --lib`

@@ -5,30 +5,20 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of gis2d view state (selection, hover, camera, selection tool).
+/// 👥️ Shareable live subset of gis2d view state — just the camera now; selection/hover broadcast
+/// automatically via the framework's typed `PresenceInteraction` (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "gis2d.presence")]
 #[dsl(layout = "lines")]
 pub struct Gis2dPresence {
-    pub selected_ids: Vec<String>,
     pub camera_json: String,
-    pub feature_selection_json: String,
-    pub hover_json: String,
-    pub selection_method: String,
-    pub selection_mode: String,
 }
 
 impl Default for Gis2dPresence {
     fn default() -> Self {
-        Self {
-            selected_ids: Vec::new(),
-            camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into(),
-            feature_selection_json: r#"{"positions":[],"routes":[]}"#.into(),
-            hover_json: "null".into(),
-            selection_method: "rectangle".into(),
-            selection_mode: "default".into(),
-        }
+        Self { camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into() }
     }
 }
 

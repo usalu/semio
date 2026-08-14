@@ -1664,15 +1664,6 @@ function FrameworkOsShellInner({
     });
   }, [registry, pluginSource, installPlugin, reloadPlugin]);
 
-  const findPluginForAction = useCallback(
-    (action: ActionDescriptor) => {
-      const byController = loadedPlugins.find((entry) => entry.manifest.apps.some((app) => app.controllerId === action.controllerId));
-      if (byController) return byController;
-      return loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId);
-    },
-    [loadedPlugins, session?.pluginId],
-  );
-
   const requestContextMenu = useCallback(
     async (request: PluginContextMenuRequest): Promise<readonly ContextMenuItemSpec[]> => {
       if (!session) return [];
@@ -2617,7 +2608,7 @@ function FrameworkOsShellInner({
           dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
         }
         if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "utility" && interaction.on.id === next);
-        const pluginEntry = findPluginForAction(action);
+        const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
         const program = pluginEntry?.handle;
         if (program) {
           const viewState: ViewModel = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
@@ -2641,7 +2632,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_ACTIVE_TOOL", toolId: next });
         if (next) clearAllWindowUtilities();
         if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
-        const pluginEntry = findPluginForAction(action);
+        const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
         const program = pluginEntry?.handle;
         if (program) {
           const viewState: ViewModel = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
@@ -2718,10 +2709,6 @@ function FrameworkOsShellInner({
         return;
       }
 
-      const pluginEntry = findPluginForAction(action);
-      const plugin = pluginEntry?.handle;
-      if (!plugin) return;
-
       const targetSession =
         hostMode && action.controllerId !== session.app.controllerId
           ? (() => {
@@ -2735,6 +2722,8 @@ function FrameworkOsShellInner({
               return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
             })()
           : session;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
+      if (!plugin) return;
 
       // 🚫️ The old `setDocument` → `patchAppSource` mirror (spawned-instance content write-back on the
       // os document) is deleted — app content no longer embeds on the os document at all
@@ -2777,7 +2766,6 @@ function FrameworkOsShellInner({
       attachSyncBackbone,
       clearAllWindowUtilities,
       detachSyncBackbone,
-      findPluginForAction,
       injectActiveUtility,
       loadedPlugins,
       panel,

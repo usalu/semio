@@ -2,8 +2,8 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/`
 //! because nothing in it survives into the `.note` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so selection/camera/utility edits are VCS'd exactly like
-//! document content.
+//! `ArtifactStore` (with a real `backwards`), so camera/utility edits are VCS'd exactly like document
+//! content.
 
 use crate::artifacts::note::NoteCamera;
 use protocol::Mutation;
@@ -11,18 +11,16 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ Note's real `ArtifactApp::Config` — mirrors `shooting_engine::ShootingConfig`'s pilot shape.
-/// Absorbs every field that used to live on the old ui crate's `NotePlayRuntime` (selection, hover, the
-/// in-progress engagement-rename input, and the free/live canvas camera) plus the two `ViewModel`
-/// fields the note UI actually reads (`locale`/`active_utility_id`) — see
-/// `crate::apps::note::NotePlayApp::render`.
+/// Absorbs every field that used to live on the old ui crate's `NotePlayRuntime` (the in-progress
+/// engagement-rename input, and the free/live canvas camera) plus the two `ViewModel` fields the note
+/// UI actually reads (`locale`/`active_utility_id`) — see `crate::apps::note::NotePlayApp::render`.
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_block_ids`/`hovered_block_id`
+/// moved OUT of here into the framework-owned `InteractionState` (the "blocks" domain declared on
+/// `create_note_app`) — see `crate::apps::note::NoteDispatchCtx`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(id = "note.config", layout = "lines")]
 pub struct NoteConfig {
-    /// 👁️ Selected block ids — was `NotePlayRuntime::selected_ids`.
-    pub selected_block_ids: Vec<String>,
-    /// 👁️ Hovered block id — was `NotePlayRuntime::hovered_id`.
-    pub hovered_block_id: Option<String>,
     /// ✏️ In-progress engagement-rename input — was `NotePlayRuntime::engagement_input`.
     pub engagement_input: String,
     /// 📷️ The free/live canvas camera — session-only, never a document field. Was
@@ -101,7 +99,7 @@ impl store::ArtifactPack for NoteConfig {
 
 impl Default for NoteConfig {
     fn default() -> Self {
-        Self { selected_block_ids: Vec::new(), hovered_block_id: None, engagement_input: String::new(), camera: NoteCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
+        Self { engagement_input: String::new(), camera: NoteCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
     }
 }
 
@@ -121,10 +119,6 @@ pub enum NoteConfigMutation {
         #[dsl(block)]
         config: NoteConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { block_ids: Vec<String> },
-    #[dsl(key = "hovered-block")]
-    SetHoveredBlock { block_id: Option<String> },
     #[dsl(key = "engagement-input")]
     SetEngagementInput { value: String },
     #[dsl(key = "camera")]
@@ -217,8 +211,6 @@ impl Mutation<NoteConfig> for NoteConfigMutation {
         let mut next = base.clone();
         match self {
             NoteConfigMutation::Snapshot { config } => return config.clone(),
-            NoteConfigMutation::SetSelection { block_ids } => next.selected_block_ids = block_ids.clone(),
-            NoteConfigMutation::SetHoveredBlock { block_id } => next.hovered_block_id = block_id.clone(),
             NoteConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             NoteConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             NoteConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
@@ -241,8 +233,6 @@ mod tests {
     #[test]
     fn note_config_default_matches_the_pre_migration_runtime_defaults() {
         let config = NoteConfig::default();
-        assert!(config.selected_block_ids.is_empty());
-        assert!(config.hovered_block_id.is_none());
         assert_eq!(config.active_utility_id, "selectDirect");
         assert_eq!(config.locale, "en-US");
         assert_eq!(config.camera, NoteCamera::default());
@@ -252,8 +242,6 @@ mod tests {
     #[test]
     fn note_config_dsl_pack_round_trips() {
         let config = NoteConfig {
-            selected_block_ids: vec!["text-1".into(), "table-2".into()],
-            hovered_block_id: Some("image-3".into()),
             engagement_input: "Renaming…".into(),
             camera: NoteCamera { x: 12.5, y: -4.0, zoom: 2.5 },
             active_utility_id: "pencil".into(),
@@ -265,17 +253,12 @@ mod tests {
     #[test]
     fn note_config_operation_text_and_binary_round_trip_every_variant() {
         let config = NoteConfig {
-            selected_block_ids: vec!["text-1".into()],
-            hovered_block_id: Some("image-2".into()),
             engagement_input: "Renaming…".into(),
             camera: NoteCamera { x: 3.0, y: -1.5, zoom: 1.75 },
             active_utility_id: "pencil".into(),
             locale: "de-DE".into(),
         };
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::Snapshot { config });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetSelection { block_ids: vec!["text-1".into(), "table-2".into()] });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetHoveredBlock { block_id: Some("image-2".into()) });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetHoveredBlock { block_id: None });
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetEngagementInput { value: "Renaming…".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetActiveUtility { utility_id: "eraserStroke".into() });

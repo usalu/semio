@@ -7,6 +7,7 @@
 //! `command_id()` is a static 1:1 row→literal mapping with no payload-conditional escape hatch.
 
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::apps::shooting::ShootingDispatchCtx;
 use crate::artifacts::shooting::schema::shooting_icon_render_request_json;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingSnapshot, ShootingShot};
@@ -24,7 +25,7 @@ pub mod export_shots {
         pub all: bool,
     }
 
-    pub fn handle(payload: &ExportShots, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ExportShots, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         if let Some(asset) = crate::artifacts::shooting::schema::active_asset(doc.snapshot) {

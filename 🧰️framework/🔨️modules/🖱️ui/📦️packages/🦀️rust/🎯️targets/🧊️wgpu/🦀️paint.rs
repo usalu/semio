@@ -1113,11 +1113,9 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
             presence: UiPresence::status(UiStatus::Loading),
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
             drop_action: None,
             menu: None,
+            interaction_domain: None,
         })
     }
 
@@ -1125,11 +1123,9 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
             presence: UiPresence::status(UiStatus::Waiting),
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
             drop_action: None,
             menu: None,
+            interaction_domain: None,
         })
     }
 
@@ -1241,11 +1237,9 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
             presence: UiPresence::default(),
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
             drop_action: None,
             menu: None,
+            interaction_domain: None,
         })
     }
 
@@ -1253,11 +1247,9 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item One")] }],
             presence: UiPresence::default(),
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
             drop_action: None,
             menu: None,
+            interaction_domain: None,
         })
     }
 
@@ -1394,11 +1386,9 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
             presence: UiPresence::default(),
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
             drop_action: None,
             menu: None,
+            interaction_domain: None,
         })
     }
 

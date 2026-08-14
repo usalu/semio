@@ -3,10 +3,6 @@ package semio.app.remodel.remodel;
 
 message RemodelPresence {
   // @state presence
-  string selection_mode = 1;
-  // @state presence
-  repeated string selection_ids = 2;
-  // @state presence
   repeated double world_camera_position = 3;
   // @state presence
   repeated double world_camera_target = 4;

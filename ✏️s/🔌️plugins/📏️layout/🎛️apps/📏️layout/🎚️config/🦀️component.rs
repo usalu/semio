@@ -2,8 +2,9 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.layout` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so selection/camera/hover edits are VCS'd exactly like
-//! document content.
+//! `ArtifactStore` (with a real `backwards`), so camera/drop-ghost edits are VCS'd exactly like
+//! document content. Selection/hover moved OUT of this config into the framework-owned "elements"
+//! interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 
 pub use crate::artifacts::layout::LayoutDropPreviewState;
 use crate::artifacts::layout::LayoutCamera;
@@ -12,11 +13,11 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ B1: layout's real `ArtifactApp::Config` — absorbs every field that used to live on
-/// `layout_ui::LayoutPlayApp`'s `RefCell<LayoutPlayRuntime>` (active page, selection, hover, drop-ghost,
-/// engagement draft, and the two independent blueprint/preview camera poses) plus `locale`, the one
-/// `ViewModel` field the layout UI actually reads — session-only view state now round-trips through the
-/// config `ArtifactStore` exactly like document content, with a real `backwards` per
-/// `LayoutConfigMutation` instead of never being VCS'd at all.
+/// `layout_ui::LayoutPlayApp`'s `RefCell<LayoutPlayRuntime>` (active page, drop-ghost, engagement
+/// draft, and the two independent blueprint/preview camera poses) plus `locale`, the one `ViewModel`
+/// field the layout UI actually reads — session-only view state now round-trips through the config
+/// `ArtifactStore` exactly like document content, with a real `backwards` per `LayoutConfigMutation`
+/// instead of never being VCS'd at all.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "layout.config")]
@@ -25,10 +26,6 @@ use serde::{Deserialize, Serialize};
 pub struct LayoutConfig {
     /// 👁️ Active page shown/edited on the Blueprint surface — was `LayoutPlayRuntime::active_page_id`.
     pub active_page_id: String,
-    /// 👁️ Selected page/frame ids — was `LayoutPlayRuntime::selected_ids`.
-    pub selected_ids: Vec<String>,
-    /// 👁️ Hovered page/frame id — was `LayoutPlayRuntime::hovered_id`.
-    pub hovered_id: Option<String>,
     /// 👁️ Live catalogue drag-ghost — was `LayoutPlayRuntime::drop_preview` (`Option<LayoutDropPreviewState>`).
     #[dsl(block)]
     pub drop_preview: LayoutDropPreviewState,
@@ -111,8 +108,6 @@ impl Default for LayoutConfig {
     fn default() -> Self {
         Self {
             active_page_id: "page-1".into(),
-            selected_ids: Vec::new(),
-            hovered_id: None,
             drop_preview: LayoutDropPreviewState::default(),
             engagement_input: String::new(),
             camera: LayoutCamera::default(),
@@ -134,12 +129,8 @@ store::impl_whole_record_config!(LayoutConfig);
 /// snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum LayoutConfigMutation {
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "active-page")]
     SetActivePage { page_id: String },
-    #[dsl(key = "hover")]
-    SetHover { id: Option<String> },
     #[dsl(key = "drop-preview")]
     SetDropPreview {
         #[dsl(block)]
@@ -239,9 +230,7 @@ impl Mutation<LayoutConfig> for LayoutConfigMutation {
     fn diff(&self, base: &LayoutConfig) -> LayoutConfig {
         let mut next = base.clone();
         match self {
-            LayoutConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             LayoutConfigMutation::SetActivePage { page_id } => next.active_page_id = page_id.clone(),
-            LayoutConfigMutation::SetHover { id } => next.hovered_id = id.clone(),
             LayoutConfigMutation::SetDropPreview { preview } => next.drop_preview = preview.clone(),
             LayoutConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             LayoutConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
@@ -253,9 +242,7 @@ impl Mutation<LayoutConfig> for LayoutConfigMutation {
 
     fn inverse(&self, base: &LayoutConfig) -> Vec<Self> {
         match self {
-            LayoutConfigMutation::SetSelection { .. } => vec![LayoutConfigMutation::SetSelection { ids: base.selected_ids.clone() }],
             LayoutConfigMutation::SetActivePage { .. } => vec![LayoutConfigMutation::SetActivePage { page_id: base.active_page_id.clone() }],
-            LayoutConfigMutation::SetHover { .. } => vec![LayoutConfigMutation::SetHover { id: base.hovered_id.clone() }],
             LayoutConfigMutation::SetDropPreview { .. } => vec![LayoutConfigMutation::SetDropPreview { preview: base.drop_preview.clone() }],
             LayoutConfigMutation::SetEngagementInput { .. } => vec![LayoutConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
             LayoutConfigMutation::SetCamera { .. } => vec![LayoutConfigMutation::SetCamera { camera: base.camera.clone() }],
@@ -275,8 +262,6 @@ mod tests {
     fn layout_config_default_matches_the_existing_runtime_defaults() {
         let config = LayoutConfig::default();
         assert_eq!(config.active_page_id, "page-1");
-        assert!(config.selected_ids.is_empty());
-        assert!(config.hovered_id.is_none());
         assert_eq!(config.drop_preview, LayoutDropPreviewState::default());
         assert_eq!(config.camera, LayoutCamera::default());
         assert_eq!(config.preview_camera, LayoutCamera::default());
@@ -287,8 +272,6 @@ mod tests {
     fn layout_config_dsl_and_pack_round_trip() {
         let config = LayoutConfig {
             active_page_id: "page-2".into(),
-            selected_ids: vec!["frame-1".into(), "frame-2".into()],
-            hovered_id: Some("frame-3".into()),
             drop_preview: LayoutDropPreviewState { kind: "text".into(), x: 12.0, y: 34.0 },
             engagement_input: "export svg".into(),
             camera: LayoutCamera { x: 5.0, y: 6.0, zoom: 1.25 },
@@ -302,8 +285,6 @@ mod tests {
     fn sample_config() -> LayoutConfig {
         LayoutConfig {
             active_page_id: "page-2".into(),
-            selected_ids: vec!["frame-1".into()],
-            hovered_id: Some("frame-2".into()),
             drop_preview: LayoutDropPreviewState { kind: "rect".into(), x: 1.0, y: 2.0 },
             engagement_input: "export png".into(),
             camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 },
@@ -326,9 +307,7 @@ mod tests {
     #[test]
     fn config_mutations_apply_and_restore_every_field() {
         let base = LayoutConfig::default();
-        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetSelection { ids: vec!["a".into()] }).selected_ids, vec!["a".to_string()]);
         assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
-        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetHover { id: Some("frame-9".into()) }).hovered_id, Some("frame-9".to_string()));
         let previewed = config_round_trip(&base, &LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState { kind: "rect".into(), x: 5.0, y: 6.0 } });
         assert_eq!(previewed.drop_preview.kind, "rect");
         assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetEngagementInput { value: "undo".into() }).engagement_input, "undo");
@@ -341,15 +320,13 @@ mod tests {
 
     #[test]
     fn config_snapshot_op_text_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetHover { id: None });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetActivePage { page_id: "page-2".into() });
         store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale { value: "en-US".into() });
     }
 
     #[test]
     fn config_mutation_inverses_restore_each_field_without_a_snapshot_sentinel() {
         let base = sample_config();
-        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetSelection { ids: vec!["z".into()] }).selected_ids, vec!["z".to_string()]);
         assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
         assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale { value: "fr-FR".into() }).locale, "fr-FR");
     }

@@ -14,15 +14,15 @@ use serde_json::json;
 pub struct RemoveWidget {
     pub widget_id: String}
 
-pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+/// 🕹️ No longer prunes selection itself — the framework auto-prunes `graph`'s selection after any
+/// document mutation that deletes a selected id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let target_id = &payload.widget_id;
     let mut host = host_from_fixture(fixture);
     if host.remove_widget(target_id).is_ok() {
         let operations = commit_fixture(fixture, &host.fixture);
-        let mut remaining = cfg.snapshot.selected_node_ids.clone();
-        remaining.retain(|id| id != target_id);
-        Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: remaining }], ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, ..Default::default() })
     } else {
         Ok(Emit::default())
     }
@@ -34,6 +34,7 @@ mod tests {
     use super::*;
     use crate::apps::procedural3d::testkit::{app, dispatch, drain_flow_eval_ticks};
     use crate::apps::procedural3d::Procedural3dCommand;
+    use crate::apps::procedural3d::commands::{add_widget, patch_flow_widgets};
 
     #[test]
     fn add_widget_action_appends_widget() {

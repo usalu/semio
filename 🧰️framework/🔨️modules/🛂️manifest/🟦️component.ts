@@ -18,6 +18,23 @@ import type {
   ActionArgOption as GeneratedActionArgOption,
   UtilityDefinition as GeneratedUtilityDefinition,
   UtilityRef as GeneratedUtilityRef,
+  // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
+  // definition family (see `🕹️interaction/🦀️component.rs`), typegen-mirrored here exactly like
+  // its `Action*`/`Utility*` neighbors above.
+  InteractionDefinition as GeneratedInteractionDefinition,
+  GranularityDefinition as GeneratedGranularityDefinition,
+  HierarchyProvider as GeneratedHierarchyProvider,
+  HoverSpec as GeneratedHoverSpec,
+  SelectionSpec as GeneratedSelectionSpec,
+  SelectionMode as GeneratedSelectionMode,
+  SelectionMethod as GeneratedSelectionMethod,
+  MergeMode as GeneratedMergeMode,
+  InteractionRef as GeneratedInteractionRef,
+  // 🕹️ W3a: `TutorialUiSnapshot.interactionSelection` carries this directly (see
+  // `TutorialUiChange` below) — the manifest-typegen twin of the hand-written runtime
+  // `DomainSelection` in `🕹️interaction/🟦️component.ts`, same duplication shape as
+  // `HierarchyProvider`/`HoverSpec`/`SelectionSpec`/`MergeMode` above.
+  DomainSelection as GeneratedDomainSelection,
   ToolDefinition as GeneratedToolDefinition,
   ToolRef as GeneratedToolRef,
   CommandScope as GeneratedCommandScope,
@@ -253,8 +270,6 @@ export type UiTreeItemNode = {
   readonly waiting?: boolean;
   readonly defaultOpen?: boolean;
   readonly action?: ActionDescriptor;
-  readonly hoverAction?: ActionDescriptor;
-  readonly unhoverAction?: ActionDescriptor;
   readonly actions?: readonly UiTreeItemAction[];
   readonly draggable?: boolean;
   readonly dragData?: Readonly<Record<string, string>>;
@@ -280,11 +295,12 @@ export type UiTreeNode = {
   readonly sections: readonly UiTreeSectionNode[];
   readonly loading?: boolean;
   readonly waiting?: boolean;
-  readonly selectedIds?: readonly string[];
-  readonly highlightedIds?: readonly string[];
-  readonly selectionChange?: ActionDescriptor;
   readonly dropAction?: ActionDescriptor;
   readonly menu?: UiMenuRef;  readonly presence?: UiPresence;
+  /** 🕹️ Binds this rendered tree to an app-declared `InteractionDefinition` domain so the framework
+   * (not the app) owns its selection/hover — replaces the deleted `selectedIds`/`highlightedIds`/
+   * `selectionChange` wire surface. */
+  readonly interactionDomain?: string;
 };
 
 export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
@@ -510,6 +526,19 @@ export type ActionArgOption = GeneratedActionArgOption;
 export type UtilityDefinition = GeneratedUtilityDefinition;
 export type UtilityRef = GeneratedUtilityRef;
 
+/** 🕹️ Generated from Rust `InteractionDefinition` family (`🕹️interaction/🦀️component.rs`) — see
+ * `js/generated/manifest.ts`. Mirrors `ActionDefinition`/`ActionRef`'s import shape above. */
+export type InteractionDefinition = GeneratedInteractionDefinition;
+export type GranularityDefinition = GeneratedGranularityDefinition;
+export type HierarchyProvider = GeneratedHierarchyProvider;
+export type HoverSpec = GeneratedHoverSpec;
+export type SelectionSpec = GeneratedSelectionSpec;
+export type SelectionMode = GeneratedSelectionMode;
+export type SelectionMethod = GeneratedSelectionMethod;
+export type MergeMode = GeneratedMergeMode;
+export type InteractionRef = GeneratedInteractionRef;
+export type DomainSelection = GeneratedDomainSelection;
+
 /** 🛠️ Generated from Rust `ToolDefinition`/`ToolRef` (`framework/core/rs/lib.rs`) — a mode-level,
  * activatable capability (e.g. puzzle3d fill), distinct from a per-window `UtilityDefinition`. See
  * `js/generated/manifest.ts`. */
@@ -526,6 +555,17 @@ export const SET_ACTIVE_UTILITY_ACTION_ID = "setActiveUtility";
 
 /** 🛠️ The framework-owned action id apps dispatch to activate a mode-level tool — mirrors Rust `SET_ACTIVE_TOOL_ACTION_ID`. */
 export const SET_ACTIVE_TOOL_ACTION_ID = "setActiveTool";
+
+/** 🕹️ The six framework-owned Interaction action ids (`interaction_action_definitions`), auto-injected
+ * into any app that declares at least one `InteractionDefinition` — mirrors `HISTORY_ACTION_IDS`.
+ * `interactionSelect`/`interactionHover` are raw dispatch verbs renderers translate clicks/marquee/
+ * hover into (never in the palette); the rest are user-facing and drive the per-domain Select controls. */
+export const INTERACTION_SELECT_ACTION_ID = "interactionSelect";
+export const INTERACTION_HOVER_ACTION_ID = "interactionHover";
+export const CLEAR_SELECTION_ACTION_ID = "clearSelection";
+export const SELECT_ALL_ACTION_ID = "selectAll";
+export const SET_SELECTION_MODE_ACTION_ID = "setSelectionMode";
+export const SET_INTERACTION_GRANULARITY_ACTION_ID = "setInteractionGranularity";
 
 /** 🎓️ The framework-owned action id apps dispatch (or the shell auto-injects into the command palette)
  * to (re)start an app's introduction — mirrors Rust `START_INTRODUCTION_ACTION_ID`. */
@@ -619,7 +659,9 @@ export type TutorialUiSnapshot = {
   readonly layout?: WindowLayout;
   readonly activePanelTabByGroup: Readonly<Record<string, string>>;
   readonly panelJson?: string;
-  readonly selectionJson?: string;
+  /** 🕹️ Per-domain selection state, keyed by `InteractionDefinition.id` — the framework-owned
+   * replacement for the deleted opaque `selectionJson`; see `TutorialUiChange`'s `"selection"` kind. */
+  readonly interactionSelection: Readonly<Record<string, DomainSelection>>;
   readonly openDialogId?: string;
   readonly expandedTreeIds: readonly string[];
   readonly commandPanelOpen: boolean;
@@ -633,7 +675,10 @@ export type TutorialUiChange =
   | { readonly kind: "layout"; readonly layout: WindowLayout }
   | { readonly kind: "panelTab"; readonly group: string; readonly tabId?: string }
   | { readonly kind: "panelState"; readonly panelJson: string }
-  | { readonly kind: "selection"; readonly selectionJson: string }
+  /** 🕹️ Drives one interaction domain's selection during replay — carries the resolved
+   * `DomainSelection` directly rather than re-dispatching `interactionSelect` (a raw pointer/keyboard
+   * event would be non-deterministic on replay). `ids: []` clears the domain's selection. */
+  | { readonly kind: "selection"; readonly domainId: string; readonly granularity: string; readonly ids: readonly string[] }
   | { readonly kind: "dialog"; readonly id?: string; readonly args?: unknown }
   | { readonly kind: "treeExpansion"; readonly id: string; readonly expanded: boolean }
   | { readonly kind: "commandPanel"; readonly open: boolean };
@@ -757,7 +802,6 @@ export type PluginViewState = {
   /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS operation) — mutually
    * exclusive with `activeUtilityId`: activating one clears the other. */
   readonly activeToolId?: string;
-  readonly selectionJson?: string;
   readonly panelJson?: string;
   readonly contributionsJson?: string;
   readonly locale?: string;

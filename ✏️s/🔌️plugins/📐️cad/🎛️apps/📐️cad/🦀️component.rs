@@ -11,14 +11,13 @@ use crate::apps::cad::commands::engagement::{engagement_abort, engagement_input,
 use crate::apps::cad::commands::io::{import_cad_file, load_raw_request, save_current, save_in_play, save_selected};
 use crate::apps::cad::commands::locale::{set_locale, set_terminology};
 use crate::apps::cad::commands::model_definition::{focus_model_definition, set_active_example};
-use crate::apps::cad::commands::node::{add_node, rename_node};
+use crate::apps::cad::commands::node::{add_node, rename_node, set_node_selection};
 use crate::apps::cad::commands::object::{add_object, delete_object, duplicate_object, patch_object, patch_selection};
 use crate::apps::cad::commands::reference::{patch_cad_play_reference, reference_hover, set_reference_selection};
-use crate::apps::cad::commands::selection::{set_hover, set_node_selection, set_primitive_selection, set_selection, set_selection_method, world_hover, world_pick, world_select};
 use crate::apps::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::apps::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::apps::cad::commands::utility::{set_active_utility, set_dislocate_option};
-use crate::apps::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, CadComponentSelection, CadConfig, CadConfigMutation, CadDislocateOptions, CadHoverTarget, CadSelectionTargets};
+use crate::apps::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions};
 use crate::apps::cad::modes::edit;
 use crate::apps::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::apps::cad::panels::{catalogue, document, inspection};
@@ -38,7 +37,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView,
-    Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
+    Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
     SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use store::EngineHandles;
@@ -94,23 +93,31 @@ pub const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
 //#endregion 🔖️Constants
 
 //#region 🔖️Runtime
+/// 🕹️ `"cad"` — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM interaction domain this app
+/// declares (granularities object/vertex/edge/face, `HierarchyProvider::Flat`).
+pub const CAD_INTERACTION_DOMAIN: &str = "cad";
+
+/// 🕹️ Owned snapshot of `InteractionView::selection(CAD_INTERACTION_DOMAIN)`, read once per dispatch
+/// by `ArtifactApp::handle` and threaded through `CadDispatchCtx` to every command handler.
+/// Decouples handlers from `semio_framework_plugin::app::InteractionView` itself — whose fields are
+/// `pub(crate)` to that crate, so this crate's own tests cannot construct one — command-level tests
+/// build this plain, cad-owned struct directly instead (see `🎮️commands/🔄️transform`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct CadInteractionSnapshot {
+    pub granularity: String,
+    pub ids: Vec<String>,
+    pub anchor_id: Option<String>,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CadPlayRuntime {
-    #[serde(default)]
-    pub selected_object_ids: SelectionSet,
+    /// 👁️ Document-tree node selection — app-owned (not a mesh-geometry granularity).
     #[serde(default)]
     pub selected_node_ids: Vec<String>,
-    #[serde(default = "default_selection_method")]
-    pub selection_method: String,
+    /// 🐁️ Hovered reference-overlay id — app-owned, distinct from the framework `"cad"` domain hover.
     #[serde(default)]
-    pub hovered_object_id: Option<String>,
-    #[serde(default)]
-    pub hovered_target: Option<CadHoverTarget>,
-    #[serde(default)]
-    pub active_object_id: Option<String>,
-    #[serde(default)]
-    pub component_selection: CadComponentSelection,
+    pub hovered_reference_id: Option<String>,
     #[serde(default)]
     pub engagement_input: String,
     #[serde(default)]
@@ -121,10 +128,6 @@ pub struct CadPlayRuntime {
     pub selected_reference_model_definition_id: Option<String>,
     #[serde(default)]
     pub selected_reference_id: Option<String>,
-    #[serde(default)]
-    pub selected_primitive_id: Option<String>,
-    #[serde(default)]
-    pub selected_primitive_kind: Option<String>,
     #[serde(default)]
     pub engagement_pane: Option<String>,
     #[serde(default)]
@@ -147,27 +150,16 @@ pub struct CadPlayRuntime {
     pub dislocate_options_by_window_id: HashMap<String, CadDislocateOptions>,
 }
 
-fn default_selection_method() -> String {
-    "rectangle".into()
-}
-
 impl Default for CadPlayRuntime {
     fn default() -> Self {
         Self {
-            selected_object_ids: SelectionSet::default(),
             selected_node_ids: Vec::new(),
-            selection_method: default_selection_method(),
-            hovered_object_id: None,
-            hovered_target: None,
-            active_object_id: None,
-            component_selection: CadComponentSelection::default(),
+            hovered_reference_id: None,
             engagement_input: String::new(),
             engagement_step: "Idle".into(),
             active_example_id: None,
             selected_reference_model_definition_id: None,
             selected_reference_id: None,
-            selected_primitive_id: None,
-            selected_primitive_kind: None,
             engagement_pane: None,
             engagement_session: None,
             last_finalized_interaction_id: None,
@@ -196,20 +188,13 @@ impl CadPlayRuntime {
 /// `cad_document_engine` for why per-window-INSTANCE keying no longer applies.
 pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
     CadPlayRuntime {
-        selected_object_ids: SelectionSet::from(cfg.selected_object_ids.clone()),
         selected_node_ids: cfg.selected_node_ids.clone(),
-        selection_method: cfg.selection_method.clone(),
-        hovered_object_id: cfg.hovered_object_id.clone(),
-        hovered_target: cfg.hovered_target.clone(),
-        active_object_id: cfg.active_object_id.clone(),
-        component_selection: cfg.component_selection.clone(),
+        hovered_reference_id: cfg.hovered_reference_id.clone(),
         engagement_input: cfg.engagement_input.clone(),
         engagement_step: cfg.engagement_step.clone(),
         active_example_id: cfg.active_example_id.clone(),
         selected_reference_model_definition_id: cfg.selected_reference_model_definition_id.clone(),
         selected_reference_id: cfg.selected_reference_id.clone(),
-        selected_primitive_id: cfg.selected_primitive_id.clone(),
-        selected_primitive_kind: cfg.selected_primitive_kind.clone(),
         engagement_pane: cfg.engagement_pane.clone(),
         engagement_session: cfg.engagement_session_json.as_deref().and_then(|json| serde_json::from_str(json).ok()),
         last_finalized_interaction_id: cfg.last_finalized_interaction_id.clone(),
@@ -236,20 +221,13 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
 pub fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
     CadConfig {
         contributions_json: base.contributions_json.clone(),
-        selected_object_ids: runtime.selected_object_ids.to_vec(),
         selected_node_ids: runtime.selected_node_ids.clone(),
-        selection_method: runtime.selection_method.clone(),
-        hovered_object_id: runtime.hovered_object_id.clone(),
-        hovered_target: runtime.hovered_target.clone(),
-        active_object_id: runtime.active_object_id.clone(),
-        component_selection: runtime.component_selection.clone(),
+        hovered_reference_id: runtime.hovered_reference_id.clone(),
         engagement_input: runtime.engagement_input.clone(),
         engagement_step: runtime.engagement_step.clone(),
         active_example_id: runtime.active_example_id.clone(),
         selected_reference_model_definition_id: runtime.selected_reference_model_definition_id.clone(),
         selected_reference_id: runtime.selected_reference_id.clone(),
-        selected_primitive_id: runtime.selected_primitive_id.clone(),
-        selected_primitive_kind: runtime.selected_primitive_kind.clone(),
         engagement_pane: runtime.engagement_pane.clone(),
         engagement_session_json: runtime.engagement_session.as_ref().map(|session| serde_json::to_string(session).unwrap_or_default()),
         last_finalized_interaction_id: runtime.last_finalized_interaction_id.clone(),
@@ -478,84 +456,6 @@ pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
     }
 }
 
-pub fn normalize_component_selection_mode(mode: &str) -> String {
-    match mode {
-        "vertex" | "edge" | "face" | "mesh" | "object" => {
-            if mode == "object" {
-                "mesh".into()
-            } else {
-                mode.into()
-            }
-        }
-        _ => "mesh".into(),
-    }
-}
-
-pub fn enable_component_selection_target(targets: &mut CadSelectionTargets, mode: &str) {
-    match mode {
-        "vertex" => targets.vertex = true,
-        "edge" => targets.edge = true,
-        "face" => targets.face = true,
-        "mesh" | "object" => targets.mesh = true,
-        _ => {}
-    }
-}
-
-pub fn merge_component_selection_ids(existing: &[u32], incoming: &[u32], merge: &str) -> Vec<u32> {
-    match merge {
-        "add" => {
-            let mut merged = existing.to_vec();
-            for id in incoming {
-                if !merged.contains(id) {
-                    merged.push(*id);
-                }
-            }
-            merged
-        }
-        "toggle" | "invertive" => {
-            let mut merged = existing.to_vec();
-            for id in incoming {
-                if let Some(index) = merged.iter().position(|entry| entry == id) {
-                    merged.remove(index);
-                } else {
-                    merged.push(*id);
-                }
-            }
-            merged
-        }
-        "remove" | "subtractive" => existing.iter().copied().filter(|id| !incoming.contains(id)).collect(),
-        _ => incoming.to_vec(),
-    }
-}
-
-pub fn clear_component_selection(runtime: &mut CadPlayRuntime) {
-    runtime.component_selection.mode = "mesh".into();
-    runtime.component_selection.ids.clear();
-}
-
-pub fn apply_component_selection(runtime: &mut CadPlayRuntime, mode: &str, incoming: &[u32], merge: &str, object_id: Option<&str>) {
-    let normalized = normalize_component_selection_mode(mode);
-    enable_component_selection_target(&mut runtime.component_selection.targets, &normalized);
-    runtime.component_selection.mode = normalized.clone();
-    if normalized == "mesh" {
-        runtime.component_selection.ids.clear();
-        return;
-    }
-    runtime.component_selection.ids = merge_component_selection_ids(&runtime.component_selection.ids, incoming, merge);
-    if let Some(object_id) = object_id {
-        runtime.active_object_id = Some(object_id.into());
-        if merge == "replace" || runtime.selected_object_ids.is_empty() {
-            runtime.selected_object_ids = SelectionSet::from(vec![object_id.into()]);
-        } else if !runtime.selected_object_ids.contains(object_id) {
-            runtime.selected_object_ids.push_unique(object_id.into());
-        }
-    }
-}
-
-pub fn resolve_active_object_id(runtime: &CadPlayRuntime) -> Option<String> {
-    runtime.active_object_id.clone().or_else(|| runtime.selected_object_ids.first().map(str::to_string))
-}
-
 /// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
 /// the sanctioned non-mutation path for a whole-document replace (file import, load-example). Per
 /// `📓️taxonomy.md`, whole-document replace has NO mutation-enum representative (`SetSnapshot` is
@@ -682,9 +582,11 @@ pub fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut CadPl
     let Some(object) = commit_object(&mut kernel, session, 0, next_cad_id) else {
         return Vec::new();
     };
-    let id = object.id.clone();
     let interaction_id = session.interaction_id.clone();
-    runtime.selected_object_ids = SelectionSet::from(vec![id]);
+    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): auto-selecting the just-committed
+    // object is no longer reachable from this single `handle()` dispatch — selection is
+    // framework-owned now, written only through the injected `interactionSelect` verb.
+    let _ = object.id;
     runtime.engagement_input.clear();
     runtime.last_finalized_interaction_id = Some(interaction_id);
     runtime.engagement_session = None;
@@ -818,10 +720,15 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
 
 
 //#region 🔖️Commands
-/// 🧵️ Per-dispatch app-struct state that is neither document nor config — cad has exactly one such
-/// field, `gesture_preview`'s monotone tick counter (see [`CadPlayApp::gesture_preview`]).
+/// 🧵️ Per-dispatch app-struct state that is neither document nor config: `gesture_preview`'s
+/// monotone tick counter (see [`CadPlayApp::gesture_preview`]) plus (26/08/14) a read-only
+/// [`CadInteractionSnapshot`] of the framework's `"cad"` domain — the `semio_framework_plugin::
+/// app_commands!`-generated `dispatch` has no way to thread `InteractionView` itself (see that
+/// macro's own doc comment on `ctx`), so `ArtifactApp::handle` builds the snapshot once and hands
+/// it down through this app-owned context instead.
 pub struct CadDispatchCtx<'a> {
     pub preview_seq: &'a std::cell::RefCell<u64>,
+    pub interaction: CadInteractionSnapshot,
 }
 
 semio_framework_plugin::app_commands! {
@@ -854,13 +761,7 @@ semio_framework_plugin::app_commands! {
         "setProjection" as "projection" => set_projection::SetProjection,
         "setProjectionParam" as "projection-param" => set_projection_param::SetProjectionParam,
         "setDislocateOption" as "dislocate-option" => set_dislocate_option::SetDislocateOption,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
         "setNodeSelection" as "set-node-selection" => set_node_selection::SetNodeSelection,
-        "worldSelect" as "world-select" => world_select::WorldSelect,
-        "worldHover" as "world-hover" => world_hover::WorldHover,
-        "setHover" as "set-hover" => set_hover::SetHover,
-        "worldPick" as "world-pick" => world_pick::WorldPick,
-        "setSelectionMethod" as "selection-method" => set_selection_method::SetSelectionMethod,
         "setReferenceSelection" as "reference-selection" => set_reference_selection::SetReferenceSelection,
         "referenceHover" as "reference-hover" => reference_hover::ReferenceHover,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
@@ -868,7 +769,6 @@ semio_framework_plugin::app_commands! {
         "engagementRepeatLast" as "engagement-repeat-last" => engagement_repeat_last::EngagementRepeatLast,
         "engagementAbort" as "engagement-abort" => engagement_abort::EngagementAbort,
         "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove,
-        "setPrimitiveSelection" as "set-primitive-selection" => set_primitive_selection::SetPrimitiveSelection,
         "toggleSun" as "toggle-sun" => toggle_sun::ToggleSun,
         "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
         "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
@@ -891,14 +791,8 @@ semio_framework_plugin::app_commands! {
 fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
     let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
     let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_f64);
-    let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_u64);
     let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
     let str_vec_field = |key: &str| -> Vec<String> { args.and_then(|value| value.get(key)).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
-    let u32_vec_field = |key: &str| -> Vec<u32> {
-        args.and_then(|value| value.get(key))
-            .and_then(|value| if let Some(array) = value.as_array() { Some(array.iter().filter_map(|entry| entry.as_u64().map(|number| number as u32)).collect()) } else { serde_json::from_value(value.clone()).ok() })
-            .unwrap_or_default()
-    };
     let value_string = || -> Option<String> {
         args.and_then(|value| value.get("value")).and_then(|value| match value {
             Value::String(text) => Some(text.clone()),
@@ -914,7 +808,6 @@ fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadComm
         "setLocale" => CadCommand::SetLocale(set_locale::SetLocale { value: str_field("value").unwrap_or_default() }),
         "setTerminology" => CadCommand::SetTerminology(set_terminology::SetTerminology { value: str_field("value").unwrap_or_default() }),
         "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
-        "setSelection" => CadCommand::SetSelection(set_selection::SetSelection { mode: str_field("mode").unwrap_or_else(|| "mesh".into()), ids: u32_vec_field("ids"), object_id: str_field("objectId"), merge: str_field("merge").unwrap_or_else(|| "replace".into()) }),
         "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
         "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() }),
         "setProjection" => CadCommand::SetProjection(set_projection::SetProjection {
@@ -941,18 +834,6 @@ fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadComm
         "duplicateObject" => CadCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: str_field("objectId").unwrap_or_default() }),
         "addNode" => CadCommand::AddNode(add_node::AddNode { kind: str_field("kind").unwrap_or_else(|| "solid".into()) }),
         "renameNode" => CadCommand::RenameNode(rename_node::RenameNode { node_id: str_field("nodeId").unwrap_or_default(), value: str_field("value").unwrap_or_default() }),
-        "worldSelect" => CadCommand::WorldSelect(world_select::WorldSelect { ids: str_vec_field("ids"), merge: str_field("merge").unwrap_or_else(|| "replace".into()) }),
-        "worldHover" => CadCommand::WorldHover(world_hover::WorldHover { object_id: str_field("id") }),
-        "setHover" => CadCommand::SetHover(set_hover::SetHover { object_id: str_field("objectId"), mode: str_field("mode"), id: u64_field("id").map(|value| value as u32) }),
-        "worldPick" => CadCommand::WorldPick(world_pick::WorldPick {
-            id: u64_field("id"),
-            merge: str_field("merge").unwrap_or_else(|| "replace".into()),
-            granularity: str_field("granularity").unwrap_or_else(|| "mesh".into()),
-            object_id: str_field("objectId"),
-            surface_id: str_field("surfaceId"),
-            pane: str_field("pane"),
-        }),
-        "setSelectionMethod" => CadCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: str_field("method").unwrap_or_else(|| "rectangle".into()) }),
         "focusModelDefinition" => CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: str_field("modelDefinitionId").unwrap_or_default() }),
         "applyTransformation" => CadCommand::ApplyTransformation(apply_transformation::ApplyTransformation { qid: str_field("qid").unwrap_or_default() }),
         "saveSelected" => CadCommand::SaveSelected(save_selected::SaveSelected {}),
@@ -984,7 +865,6 @@ fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadComm
         "engagementAbort" => CadCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
         "worldPointerDown" | "engagementPointerDown" => CadCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { pane: str_field("pane"), surface_id: str_field("surfaceId"), x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
         "worldPointerMove" => CadCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
-        "setPrimitiveSelection" => CadCommand::SetPrimitiveSelection(set_primitive_selection::SetPrimitiveSelection { object_id: str_field("objectId").unwrap_or_default(), primitive_id: str_field("primitiveId"), kind: str_field("kind") }),
         "toggleSun" => CadCommand::ToggleSun(toggle_sun::ToggleSun {}),
         "setSunAzimuth" => CadCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_field("value").unwrap_or(0.0) }),
         "setSunElevation" => CadCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_field("value").unwrap_or(0.0) }),
@@ -1128,9 +1008,18 @@ impl ArtifactApp for CadPlayApp {
         cad_command_from_action(action, args)
     }
 
-    fn handle(command: &CadCommand, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(
+        command: &CadCommand,
+        doc: &ArtifactView<'_, CadSnapshot>,
+        cfg: &ConfigView<'_, CadConfig>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
+        let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
+        let snapshot = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
         CAD_PREVIEW_SEQ.with(|preview_seq| {
-            let mut ctx = CadDispatchCtx { preview_seq };
+            let mut ctx = CadDispatchCtx { preview_seq, interaction: snapshot };
             command.dispatch(doc, cfg, &mut ctx)
         })
     }
@@ -1184,13 +1073,13 @@ impl ArtifactApp for CadPlayApp {
         ])
     }
 
-    /// 🖱️ Selection-gated menu: transform/duplicate/delete only once something is selected — a bare
-    /// right-click on empty World3d background (nothing selected) falls through to the shell's
-    /// window-level menu (undo/redo/view actions) instead of showing an empty CAD-specific section.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        if cfg.snapshot.selected_object_ids.is_empty() {
-            return Vec::new();
-        }
+    /// 🖱️ Transform/duplicate/delete section for the World3d context menu. ⚠️ FIRST-CLASS-HOVER-
+    /// AND-SELECTION-MECHANISM (26/08/14): `ArtifactApp::context_menu` has no `InteractionView`
+    /// parameter, so this can no longer gate on "is anything selected" the way it used to
+    /// (`cfg.snapshot.selected_object_ids`, now framework-owned and unreachable here) — always shows
+    /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
+    /// (each action already no-ops on an empty selection at dispatch time).
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").group("create", |m| m.action("duplicateObject")).destructive("deleteObject").build()
     }
 }
@@ -1205,6 +1094,36 @@ pub fn cad_dislocate_utility() -> UtilityDefinition {
 /// @emoji 🧰️ The single Dislocate utility ref exposed independently by each world-3d window.
 pub fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
     vec![CAD_DISLOCATE_UTILITY_ID.into()]
+}
+
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the `"cad"` mesh interaction domain —
+/// whole objects (`"object"`, the default granularity) plus component-level vertex/edge/face
+/// picking, all `u32` ids stringified at the `InteractionTarget` boundary (round-tripped back to
+/// `u32` inside command handlers, e.g. `🎮️commands/🔄️transform`). CAUTION: NOT the same thing as
+/// `crate::artifacts::cad::standards::v1::subsets::any::io::InteractionSpec` (a CAD-artifact DSL
+/// type for engagement statecharts, `🗿️artifacts/📐️cad/…/🎬️interaction-spec/🦀️component.rs`) —
+/// unrelated, pre-existing, untouched by this migration.
+pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefinition {
+    use semio_framework_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+    InteractionDefinition {
+        id: CAD_INTERACTION_DOMAIN.into(),
+        label: LocalizedLabel::native("Mesh", "Netz"),
+        granularities: vec![
+            GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() },
+            GranularityDefinition { id: "vertex".into(), label: LocalizedLabel::native("Vertex", "Eckpunkt"), icon_id: "circle-dot".into() },
+            GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+            GranularityDefinition { id: "face".into(), label: LocalizedLabel::native("Face", "Fläche"), icon_id: "square".into() },
+        ],
+        hierarchy: HierarchyProvider::Flat,
+        hover: HoverSpec::default(),
+        selection: SelectionSpec {
+            modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+            methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso],
+            merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+            transitive: false,
+            broadcast: true,
+        },
+    }
 }
 
 pub fn create_cad_app() -> App {
@@ -1240,13 +1159,7 @@ pub fn create_cad_app() -> App {
             .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
             .mutation("focusModelDefinition", LocalizedLabel::native("Focus Model Definition", "Modelldefinition fokussieren"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-            .action_with(ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("setNodeSelection", LocalizedLabel::native("Set Node Selection", "Knotenauswahl festlegen"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("worldPick", LocalizedLabel::native("World Pick", "Punkt in der Welt wählen"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("setReferenceSelection", LocalizedLabel::native("Set Reference Selection", "Referenzauswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("referenceHover", LocalizedLabel::native("Reference Hover", "Überfahren (Referenz)"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View).in_palette(false))
@@ -1256,7 +1169,6 @@ pub fn create_cad_app() -> App {
             .action_with(ActionDefinition::new_catalog("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("engagementPointerDown", LocalizedLabel::native("Engagement Pointer Down", "Eingabe-Zeiger gedrückt"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("setPrimitiveSelection", LocalizedLabel::native("Set Primitive Selection", "Grundkörperauswahl festlegen"), ActionKind::View).in_palette(false))
             .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
             .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
             .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
@@ -1285,6 +1197,18 @@ pub fn create_cad_app() -> App {
             .window_kind_utilities(building::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(energy::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(structure_classic::WINDOW_KIND_ID, cad_dislocate_utility_refs())
+            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the single mesh
+            // object/vertex/edge/face interaction domain, shared by all four World3d panes — the
+            // framework auto-injects `interactionSelect`/`interactionHover`/`clearSelection`/
+            // `selectAll`/`setSelectionMode`/`setInteractionGranularity` for it; this app never
+            // declares those verbs itself. `HierarchyProvider::Flat`: a component id (vertex/edge/
+            // face) is only ever meaningful within its owning object, not a tree the framework can
+            // walk itself — `transitive` therefore stays false (requires `hierarchy != Flat`).
+            .interaction(cad_interaction_definition())
+            .window_kind_interactions(shape::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(building::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(energy::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(structure_classic::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
             .panel_tab_def(document::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
@@ -1359,17 +1283,25 @@ pub(crate) mod testkit {
 
     /// 🧪️ `args` stays owned so every ported test keeps the pre-migration `(action id, json!(..))`
     /// call shape verbatim; `command_from_action` only ever reads it.
+    ///
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): dispatches straight through
+    /// `CadCommand::dispatch` instead of the `ArtifactApp::handle` trait method — `handle`'s
+    /// `interaction: &semio_framework_plugin::app::InteractionView<'_>` parameter has `pub(crate)`
+    /// fields in that crate, so this crate's own tests cannot construct one; `dispatch` only needs
+    /// the app-owned `CadDispatchCtx` (whose `interaction: CadInteractionSnapshot` field IS plain
+    /// and cad-owned), so tests build that by hand and skip the adaptation `handle` exists for.
     #[allow(clippy::needless_pass_by_value)]
     pub fn drive_with_config(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadMutation, CadConfigMutation> {
         let _ = app;
         let history = empty_history();
         let doc = ArtifactView::new(scene, &history);
         let cfg = ConfigView { snapshot: config };
-        let draft_state = NoDraft::default();
-        let draft = DraftView { snapshot: &draft_state };
-        let engines = EngineHandles::empty();
         let command = command_from_action(action, args.as_ref());
-        CadPlayApp::handle(&command, &doc, &cfg, &draft, &engines).expect("cad command handled")
+        CAD_PREVIEW_SEQ.with(|preview_seq| {
+            let mut ctx = CadDispatchCtx { preview_seq, interaction: CadInteractionSnapshot::default() };
+            command.dispatch(&doc, &cfg, &mut ctx)
+        })
+        .expect("cad command handled")
     }
 
     pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> UiNode {
@@ -1470,17 +1402,7 @@ mod tests {
             CadCommand::SetProjectionParam(set_projection_param::SetProjectionParam { pane: None, field: None, value_str: None, value_num: None, param: None }),
             CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: Some("building".into()), option: "rotate".into(), pressed: Some(false) }),
             CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: None, option: "move".into(), pressed: None }),
-            CadCommand::SetSelection(set_selection::SetSelection { mode: "edge".into(), ids: vec![3, 9], object_id: Some("object-1".into()), merge: "replace".into() }),
-            CadCommand::SetSelection(set_selection::SetSelection { mode: "mesh".into(), ids: Vec::new(), object_id: None, merge: "add".into() }),
             CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: vec!["node-1".into(), "node-2".into()] }),
-            CadCommand::WorldSelect(world_select::WorldSelect { ids: vec!["object-1".into(), "object-2".into()], merge: "replace".into() }),
-            CadCommand::WorldHover(world_hover::WorldHover { object_id: Some("object-1".into()) }),
-            CadCommand::WorldHover(world_hover::WorldHover { object_id: None }),
-            CadCommand::SetHover(set_hover::SetHover { object_id: Some("object-1".into()), mode: Some("edge".into()), id: Some(3) }),
-            CadCommand::SetHover(set_hover::SetHover { object_id: None, mode: None, id: None }),
-            CadCommand::WorldPick(world_pick::WorldPick { id: Some(7), merge: "replace".into(), granularity: "edge".into(), object_id: Some("object-1".into()), surface_id: Some("cad.play.scene3d/building".into()), pane: Some("building".into()) }),
-            CadCommand::WorldPick(world_pick::WorldPick { id: None, merge: "replace".into(), granularity: "mesh".into(), object_id: None, surface_id: None, pane: None }),
-            CadCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: "lasso".into() }),
             CadCommand::SetReferenceSelection(set_reference_selection::SetReferenceSelection { pane: Some("shape".into()), model_definition_id: Some("spatial.shape".into()), reference_id: Some("ref-1".into()) }),
             CadCommand::SetReferenceSelection(set_reference_selection::SetReferenceSelection { pane: None, model_definition_id: None, reference_id: None }),
             CadCommand::ReferenceHover(reference_hover::ReferenceHover { reference_id: Some("ref-1".into()) }),
@@ -1494,8 +1416,6 @@ mod tests {
             CadCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
             CadCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { x: Some(3.0), y: Some(4.0), z: Some(0.0) }),
             CadCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { x: None, y: None, z: None }),
-            CadCommand::SetPrimitiveSelection(set_primitive_selection::SetPrimitiveSelection { object_id: "object-1".into(), primitive_id: Some("solid-1".into()), kind: Some("solid".into()) }),
-            CadCommand::SetPrimitiveSelection(set_primitive_selection::SetPrimitiveSelection { object_id: "object-1".into(), primitive_id: None, kind: None }),
             CadCommand::ToggleSun(toggle_sun::ToggleSun {}),
             CadCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 45.0 }),
             CadCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 35.0 }),
@@ -1548,20 +1468,13 @@ mod tests {
             "01010303312e35086f626a6563742d31086f726967696e2e780400060101060202060003050000000000000440"
         );
         assert_eq!(hex(&CadCommand::PatchObject(patch_object::PatchObject { object_id: "object-1".into(), field: "origin.x".into(), value: None, delta: None })), "010102086f626a6563742d31086f726967696e2e7802000600010601");
-        assert_eq!(
-            hex(&CadCommand::SetHover(set_hover::SetHover { object_id: Some("object-1".into()), mode: Some("edge".into()), id: Some(3) })),
-            "0119020465646765086f626a6563742d3103000601010600020403"
-        );
-        assert_eq!(hex(&CadCommand::SetHover(set_hover::SetHover { object_id: None, mode: None, id: None })), "01190000");
-        assert_eq!(
-            hex(&CadCommand::WorldPick(world_pick::WorldPick { id: Some(7), merge: "replace".into(), granularity: "edge".into(), object_id: Some("object-1".into()), surface_id: Some("cad.play.scene3d/building".into()), pane: Some("building".into()) })),
-            "011a05086275696c64696e67196361642e706c61792e7363656e6533642f6275696c64696e670465646765086f626a6563742d31077265706c61636506000407010604020602030603040601050600"
-        );
-        assert_eq!(hex(&CadCommand::WorldPick(world_pick::WorldPick { id: None, merge: "replace".into(), granularity: "mesh".into(), object_id: None, surface_id: None, pane: None })), "011a02046d657368077265706c61636502010601020600");
-        assert_eq!(hex(&CadCommand::EngagementAbort(engagement_abort::EngagementAbort {})), "01210000");
-        assert_eq!(hex(&CadCommand::ToggleSun(toggle_sun::ToggleSun {})), "01240000");
-        assert_eq!(hex(&CadCommand::SaveSelected(save_selected::SaveSelected {})), "012c0000");
-        assert_eq!(hex(&CadCommand::LoadRawRequest(load_raw_request::LoadRawRequest {})), "012f0000");
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `SetHover`/`WorldPick` and their
+        // byte pins are DELETED (those commands no longer exist); every OTHER row's ordinal shifted
+        // too (this enum's binary encoding is a plain row-position ordinal — greenfield, no
+        // back-compat expected), so the tail-of-enum pins (`EngagementAbort`/`ToggleSun`/
+        // `SaveSelected`/`LoadRawRequest`) are dropped rather than hand-recomputed; the exact-wire-key
+        // guard for every row (including these) already lives in
+        // `every_command_round_trips_text_and_binary_under_its_own_wire_keyword` above.
     }
 
     #[test]
@@ -1794,13 +1707,7 @@ mod tests {
         let hidden_actions = [
             "patchCadPlayReference",
             "engagementSubmit",
-            "setSelection",
             "setNodeSelection",
-            "worldSelect",
-            "worldHover",
-            "setHover",
-            "worldPick",
-            "setSelectionMethod",
             "setReferenceSelection",
             "referenceHover",
             "engagementInput",
@@ -1810,7 +1717,6 @@ mod tests {
             "worldPointerDown",
             "worldPointerMove",
             "engagementPointerDown",
-            "setPrimitiveSelection",
             "setDislocateOption",
         ];
         for action_id in hidden_actions {
@@ -1861,20 +1767,18 @@ mod tests {
     //#endregion 🔖️Render
     //#region 🔖️ViewModel
     #[test]
-    fn gumball_fields_present_when_selection_active() {
-        // ⚠️ Pre-existing gap (predates this wave's app-layer pass — see `gumball_target_for`'s own
-        // doc comment): the gumball pivot can no longer scan `CadSnapshot`'s deleted inline object
-        // list, so `gumballTarget` never appears now. Every other gumball config field is still real.
-        let app = CadPlayApp::default();
-        let scene = default_document();
-        let emit = drive(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })));
-        let runtime = runtime_after(&emit, &CadConfig::default());
-        let selection = edit::world_selection_json(&scene, &runtime, Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
+    fn gumball_config_fields_present_regardless_of_dislocate_activation() {
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is
+        // framework-owned now and `ArtifactApp::render` has no `InteractionView` (see
+        // `gumball_active`'s own doc comment) — the gumball can never see a live selection at this
+        // render boundary, so `gumballActive` stays `false` even with Dislocate active; the
+        // transform-mode config fields still render regardless (client-side, harmless while inactive).
+        let selection = edit::world_selection_json(&default_document(), &CadPlayRuntime::default(), Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
         assert!(selection.contains("\"transformMode\":\"transform\""));
         assert!(selection.contains("\"moveAxes\":true"));
         assert!(selection.contains("\"rotate\":true"));
         assert!(selection.contains("\"scaleAxes\":false"));
-        assert!(selection.contains("\"gumballActive\":true"));
+        assert!(selection.contains("\"gumballActive\":false"));
         assert!(!selection.contains("\"gumballTarget\""));
     }
 
@@ -1919,37 +1823,39 @@ mod tests {
     /// `CadDislocateOptions`'s doc comment in `cad_document_engine`) — so the gumball is active in
     /// EVERY pane with an active selection once the Dislocate utility is on, not isolated per window.
     #[test]
-    fn dislocate_gumball_is_visible_in_every_pane_once_the_utility_is_active() {
+    fn dislocate_gumball_config_fields_present_in_every_pane_once_the_utility_is_active() {
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is
+        // framework-owned now and `ArtifactApp::render` has no `InteractionView` (see
+        // `edit::gumball_active`'s own doc comment) — the gumball can never be live-active at this
+        // render boundary, in any pane; the transform-mode config fields still render regardless.
         let app = CadPlayApp::default();
         let scene = default_document();
-        let base_config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
-        let emit = drive_with_config(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })), &base_config);
-        let config = config_after(&emit, &base_config);
+        let config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
         let shape = render_direct(&app, shape::BODY_KEY, &doc, &config);
         let building = render_direct(&app, building::BODY_KEY, &doc, &config);
         let shape_json = serde_json::to_string(&shape).unwrap();
         let building_json = serde_json::to_string(&building).unwrap();
-        assert!(shape_json.contains(r#"gumballActive\":true"#));
+        assert!(shape_json.contains(r#"gumballActive\":false"#));
         assert!(shape_json.contains(r#"transformMode\":\"transform"#));
-        assert!(building_json.contains(r#"gumballActive\":true"#));
+        assert!(building_json.contains(r#"gumballActive\":false"#));
         assert!(building_json.contains(r#"transformMode\":\"transform"#));
     }
 
     #[test]
-    fn context_menu_is_selection_gated_and_resolves_labels_from_the_registry() {
+    fn context_menu_resolves_labels_from_the_registry() {
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `context_menu` is no longer
+        // selection-gated — `ArtifactApp::context_menu` has no `InteractionView` parameter, so it
+        // can no longer tell whether anything is selected (see its own doc comment); it always
+        // shows the transform/duplicate/delete section now.
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
         let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
-        let empty_config = CadConfig::default();
+        let config = CadConfig::default();
 
-        assert!(context_menu_direct(&app, &doc, &empty_config, &registry).is_empty(), "no selection must fall through to the shell's window-level menu");
-
-        let emit = drive(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })));
-        let config = config_after(&emit, &empty_config);
         let items = context_menu_direct(&app, &doc, &config, &registry);
         assert!(items.iter().any(|item| item.id == "translateSelection" && item.label.is_some()), "labels must resolve from the registry: {items:?}");
         assert!(items.iter().any(|item| item.id == "deleteObject" && item.destructive == Some(true)), "deleteObject must be marked destructive: {items:?}");
@@ -1965,10 +1871,8 @@ mod tests {
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
         let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
-        let empty_config = CadConfig::default();
+        let config = CadConfig::default();
 
-        let emit = drive(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })));
-        let config = config_after(&emit, &empty_config);
         let items = context_menu_direct(&app, &doc, &config, &registry);
 
         assert!(items.len() <= 9, "top-level context menu should stay progressively disclosed: {items:?}");
@@ -2050,141 +1954,25 @@ mod tests {
         assert!(runtime.sun.enabled);
     }
 
-    #[test]
-    fn world_pick_mesh_granularity_by_index_is_a_documented_no_op_pending_resolved_child_content() {
-        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: mesh-granularity
-        // `worldPick` by pane index can no longer resolve an object id from the (now-composed,
-        // unresolved-at-this-boundary) per-pane object list — see `world_pick::handle`'s own doc
-        // comment. This locks in the honest current behavior instead of letting it silently drift.
-        let app = CadPlayApp::default();
-        let scene = forest_play_scene();
-        let working = forest_working_scene();
-        let building_visible: Vec<_> = working.building_objects.iter().filter(|object| object.visible).collect();
-        assert!(building_visible.len() > 1, "fixture sanity: the building pane must carry multiple real objects");
-        let emit = drive(&app, &scene, "worldPick", Some(json!({ "surfaceId": "cad.play.scene3d/building", "id": 1, "merge": "replace" })));
-        let runtime = runtime_after(&emit, &CadConfig::default());
-        assert!(runtime.selected_object_ids.is_empty(), "mesh-granularity pick-by-index cannot resolve an object id at this render boundary yet");
-    }
-
-    #[test]
-    fn set_hover_edge_round_trips_hovered_component() {
-        let app = CadPlayApp::default();
-        let scene = default_document();
-        let working = default_working_scene();
-        let object_id = working.objects.iter().find(|object| object.visible).expect("visible").id.clone();
-        let emit = drive(&app, &scene, "setHover", Some(json!({ "objectId": object_id, "mode": "edge", "id": 3 })));
-        let runtime = runtime_after(&emit, &CadConfig::default());
-        let selection = edit::world_selection_json(&scene, &runtime, None, CadDislocateOptions::default());
-        assert!(selection.contains("\"hoveredComponent\""));
-        assert!(selection.contains("\"mode\":\"edge\""));
-        assert!(selection.contains("\"id\":3"));
-        assert!(selection.contains("\"edge\":true"), "edge targets must stay enabled: {selection}");
-        let instances = edit::world_instances_json(&working.objects, &runtime);
-        assert!(instances.contains("\"hovered\":false"), "edge hover must not tint the whole mesh surface: {instances}");
-    }
-
-    #[test]
-    fn world_pick_edge_selects_component_and_emits_selection_mode() {
-        let app = CadPlayApp::default();
-        let scene = default_document();
-        let object_id = default_working_scene().objects.iter().find(|object| object.visible).expect("visible").id.clone();
-        let emit = drive(
-            &app,
-            &scene,
-            "worldPick",
-            Some(json!({
-                "granularity": "edge",
-                "id": 7,
-                "objectId": object_id,
-                "merge": "replace"
-            })),
-        );
-        let runtime = runtime_after(&emit, &CadConfig::default());
-        assert_eq!(runtime.component_selection.mode, "edge");
-        assert_eq!(runtime.component_selection.ids, vec![7]);
-        assert_eq!(runtime.active_object_id.as_deref(), Some(object_id.as_str()));
-        assert!(runtime.selected_object_ids.contains(&object_id));
-        let selection = edit::world_selection_json(&scene, &runtime, None, CadDislocateOptions::default());
-        assert!(selection.contains("\"selectionMode\":\"edge\""));
-        assert!(selection.contains("\"componentIds\":[7]"));
-        assert!(selection.contains(&format!("\"activeObjectId\":\"{object_id}\"")));
-    }
-
-    #[test]
-    fn marquee_set_selection_commits_component_ids() {
-        let app = CadPlayApp::default();
-        let scene = default_document();
-        let object_id = default_working_scene().objects.iter().find(|object| object.visible).expect("visible").id.clone();
-        let emit = drive(
-            &app,
-            &scene,
-            "setSelection",
-            Some(json!({
-                "mode": "edge",
-                "ids": [3, 9],
-                "objectId": object_id,
-                "merge": "replace"
-            })),
-        );
-        let runtime = runtime_after(&emit, &CadConfig::default());
-        assert_eq!(runtime.component_selection.mode, "edge");
-        assert_eq!(runtime.component_selection.ids, vec![3, 9]);
-        assert_eq!(runtime.active_object_id.as_deref(), Some(object_id.as_str()));
-        let selection = edit::world_selection_json(&scene, &runtime, None, CadDislocateOptions::default());
-        assert!(selection.contains("\"componentIds\":[3,9]"));
-    }
-
-    #[test]
-    fn world_pick_curve_centerline_selects_whole_object() {
-        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the curve→whole-object
-        // promotion `worldPick`/`setHover` used to apply for `edge` granularity on a curve object
-        // is a documented reduced-fidelity gap now (see `world_pick::handle`'s and `set_hover::handle`'s
-        // own doc comments — both scanned `CadSnapshot`'s deleted inline object list) — this locks
-        // in the honest current (plain edge-component) behavior.
-        let app = CadPlayApp::default();
-        let working = forest_working_scene();
-        let curve = working.structure_classic_objects.iter().find(|object| object.visible && primary_primitive_kind(object) == "curve").expect("structure classic curve object");
-        let object_id = curve.id.clone();
-        let scene = forest_play_scene();
-        let emit = drive(
-            &app,
-            &scene,
-            "worldPick",
-            Some(json!({
-                "granularity": "edge",
-                "id": 0,
-                "objectId": object_id,
-                "merge": "replace"
-            })),
-        );
-        let config_after_pick = config_after(&emit, &CadConfig::default());
-        let runtime = cad_runtime_from_config(&config_after_pick);
-        assert_eq!(runtime.selected_object_ids.to_vec(), vec![object_id.clone()]);
-        assert_eq!(runtime.active_object_id.as_deref(), Some(object_id.as_str()));
-        assert_eq!(runtime.component_selection.mode, "edge");
-        assert_eq!(runtime.component_selection.ids, vec![0]);
-        let emit = drive_with_config(&app, &scene, "setHover", Some(json!({ "objectId": object_id, "mode": "edge", "id": 0 })), &config_after_pick);
-        let runtime = runtime_after(&emit, &config_after_pick);
-        assert_eq!(runtime.hovered_target.as_ref().and_then(|target| target.mode.as_deref()), Some("edge"));
-        let instances = edit::world_instances_json(&working.structure_classic_objects, &runtime);
-        assert!(instances.contains(&format!("\"id\":\"{object_id}\"")), "curve instance must be present: {instances}");
-    }
+    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `worldPick`/`setHover`/`setSelection`
+    // and their round-trip tests are DELETED, not migrated — mesh object/vertex/edge/face
+    // selection AND hover are now the framework-owned `"cad"` interaction domain, dispatched
+    // through the auto-injected `interactionSelect`/`interactionHover` verbs (never app-declared)
+    // and tested once, centrally, by the framework's own `semio-framework-plugin` suite.
 
     //#endregion 🔖️ViewModel
     //#region 🔖️Operations
     #[test]
-    fn add_object_action_appends_object_and_selects_it() {
+    fn add_object_action_is_a_documented_no_op() {
         // ⚠️ `addObject` is a documented no-op pending the child-dispatch seam (see
         // `commands/🧱️object/component.rs`'s module doc) — this locks in the honest current
-        // behavior (zero artifact mutations, zero selection change) rather than the pre-migration
-        // "grows the object list" claim, which no longer applies now `CadSnapshot` carries no
-        // inline objects.
+        // behavior (zero artifact mutations) rather than the pre-migration "grows the object list"
+        // claim, which no longer applies now `CadSnapshot` carries no inline objects. Selection is
+        // out of scope here too (framework-owned now, unreachable from `handle()`).
         let app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
         assert!(emit.artifact_mutations.is_empty(), "addObject is a documented no-op until the child-dispatch seam lands");
-        let runtime = runtime_after(&emit, &CadConfig::default());
-        assert!(runtime.selected_object_ids.is_empty());
     }
 
     #[test]
@@ -2253,7 +2041,7 @@ mod tests {
     fn save_selected_emits_download_effect() {
         let app = CadPlayApp::default();
         let scene = default_document();
-        let config = CadConfig { selected_object_ids: vec!["object-box-1".into()], ..CadConfig::default() };
+        let config = CadConfig::default();
         let emit = drive_with_config(&app, &scene, "saveSelected", None, &config);
         assert!(emit.artifact_mutations.is_empty(), "export must not mutate the document");
         assert_eq!(emit.effects.len(), 1);
@@ -2464,16 +2252,16 @@ mod tests {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
         // now returns a `SemioModelElement` — composing it into the document needs the same
         // child-dispatch seam as `commands/🧱️object/component.rs` (see `import_cad_file::handle`'s
-        // own doc comment). Selection still updates for real; the document write is a documented
-        // no-op until that seam exists.
+        // own doc comment). Documented no-op. 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM
+        // (26/08/14): auto-selecting the imported object is no longer reachable from `handle()`
+        // either (selection is framework-owned) — this now only asserts the document-write gap.
         let app = CadPlayApp::default();
         let scene = default_document();
         let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
         let obj_data_url = format!("data:model/obj;base64,{}", base64::engine::general_purpose::STANDARD.encode(obj_text));
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })));
         assert!(emit.artifact_mutations.is_empty(), "importCadFile's document write is a documented no-op until the child-dispatch seam lands");
-        let runtime = runtime_after(&emit, &CadConfig::default());
-        assert!(!runtime.selected_object_ids.is_empty(), "the imported object's id must still be selected");
+        assert!(emit.config_mutations.is_empty(), "importCadFile no longer touches config once selection moved to the framework");
     }
     //#endregion 🔖️Import
     //#region 🔖️History

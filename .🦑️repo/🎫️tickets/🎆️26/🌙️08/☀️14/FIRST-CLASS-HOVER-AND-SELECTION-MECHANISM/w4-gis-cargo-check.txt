@@ -1,0 +1,25 @@
+15 | fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `serde_value_to_json` is never used
+  --> ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:26:4
+   |
+26 | fn serde_value_to_json(value: &serde_json::Value) -> JsonValue {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `serde_value_to_json` is never used
+  --> ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:10:4
+   |
+10 | fn serde_value_to_json(value: &serde_json::Value) -> JsonValue {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `json_value_to_serde` is never used
+  --> ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:21:4
+   |
+21 | fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-gis` (lib) generated 67 warnings (run `cargo fix --lib -p semio-s-plugin-gis` to apply 55 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 42.38s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 8`

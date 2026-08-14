@@ -595,8 +595,6 @@ pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, genera
                     presence: UiPresence::selected(selected_id == Some(generation.id.as_str())),
                     default_open: None,
                     action: Some(generation_action(controller_id, "selectGeneration", Some(json!({ "id": generation.id })))),
-                    hover_action: None,
-                    unhover_action: None,
                     actions: Some(actions),
                     draggable: None,
                     drag_data: None,
@@ -620,8 +618,6 @@ pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, genera
                     presence: UiPresence::default(),
                     default_open: None,
                     action: None,
-                    hover_action: None,
-                    unhover_action: None,
                     actions: None,
                     draggable: None,
                     drag_data: None,
@@ -647,8 +643,6 @@ pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, genera
                 presence: UiPresence::default(),
                 default_open: None,
                 action: Some(generation_action(controller_id, "addGeneration", None)),
-                hover_action: None,
-                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -659,7 +653,7 @@ pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, genera
             }],
             presence: UiPresence::default(),
         });
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: Some(generation_action(controller_id, "selectGeneration", None)), drop_action: None, menu: None })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
     fn render_question_field(question: &PlaybookBlock, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> Option<UiNode> {

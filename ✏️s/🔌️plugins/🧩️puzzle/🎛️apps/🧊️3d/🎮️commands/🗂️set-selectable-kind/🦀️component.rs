@@ -1,7 +1,5 @@
 //! 🗂️ `set-selectable-kind` command.
 
-use crate::apps::puzzle3d::config::Puzzle3dSelection;
-use semio_framework_plugin::{merge_world_selection_ids, SelectionSet};
 use serde_json::Value;
 use crate::apps::puzzle3d::Puzzle3dActionCtx;
 

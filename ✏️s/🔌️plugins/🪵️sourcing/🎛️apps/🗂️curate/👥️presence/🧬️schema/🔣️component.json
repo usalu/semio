@@ -9,10 +9,6 @@
     "worldCameraFov"
   ],
   "properties": {
-    "selectedObjectId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "worldCameraPosition": {
       "type": "array",
       "items": {

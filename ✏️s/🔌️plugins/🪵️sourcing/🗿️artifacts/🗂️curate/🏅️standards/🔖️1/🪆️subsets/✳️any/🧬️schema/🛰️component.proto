@@ -86,8 +86,6 @@ message CurateArtifact {
   repeated CuratedItem curated = 3;
   // @state config
   Filters filters = 4;
-  // @state presence
-  optional string selected_object_id = 5;
   // @state config
   string locale = 6;
   // @state config

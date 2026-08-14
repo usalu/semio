@@ -4,7 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedAstIds",
     "formatSignal",
     "lintSignal",
     "revision",
@@ -14,13 +13,6 @@
     "locale"
   ],
   "properties": {
-    "selectedAstIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "editorSelection": {
       "$ref": "#/$defs/WriterEditorSelection",
       "x-semio-state": "config"
@@ -45,15 +37,6 @@
     },
     "editorSettings": {
       "$ref": "#/$defs/WriterEditorSettings",
-      "x-semio-state": "config"
-    },
-    "treeHoveredAstId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "editorHoverOffset": {
-      "type": "integer",
-      "minimum": 0,
       "x-semio-state": "config"
     },
     "engagementInput": {

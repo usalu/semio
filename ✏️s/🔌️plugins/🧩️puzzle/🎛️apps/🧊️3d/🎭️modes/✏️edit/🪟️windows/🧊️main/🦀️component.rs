@@ -9,12 +9,12 @@
 //! three-point "Perspective" pane, and every view-local option (camera, grid, LOD, vortex display,
 //! sun, selection method) is per instance — see `🦀️config.rs`'s `load_window`/`save_window`.
 
-use crate::apps::puzzle3d::config::{Puzzle3dRuntime, Puzzle3dSelection};
+use crate::apps::puzzle3d::config::Puzzle3dRuntime;
 use crate::apps::puzzle3d::modes::edit::options;
 use crate::apps::puzzle3d::modes::edit::windows::main::utilities;
 use crate::apps::puzzle3d::terminology::{puzzle3d_localized, Puzzle3dLabels};
 use crate::apps::puzzle3d::{
-    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_brush_target_vortex, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture,
+    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture,
     Puzzle3dFixtureMeta, Puzzle3dObject, Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
 use crate::apps::puzzle3d::precompute::Puzzle3dPrecomputeSession;
@@ -51,6 +51,7 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
         actions: Vec::new(),
         utilities: vec![utilities::transform::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::volume_brush::UTILITY_ID.into(), utilities::world_relocate::UTILITY_ID.into()],
+        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::apps::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -103,9 +104,14 @@ pub fn transform_utility_active(active_utility: &str) -> bool {
     transform_handle(active_utility).is_some()
 }
 
-/// 🕹️ Whether the world gumball should render for the current selection and utility.
-pub fn gumball_active(runtime: &Puzzle3dRuntime, active_utility: &str) -> bool {
-    !runtime.selection.object_ids.is_empty() && transform_utility_active(active_utility)
+/// 🕹️ Whether the world gumball should render for the current selection and utility. 🕹️ ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection is framework-owned and
+/// `ArtifactApp::render` (this fn's only caller) never gained an `InteractionView` parameter, so this
+/// can no longer see whether anything is selected — see `panels::inspection::render`'s doc comment
+/// for the framework-level gap this is downstream of. Defaults to "never render an unattached
+/// gumball" rather than always-on.
+pub fn gumball_active(_runtime: &Puzzle3dRuntime, _active_utility: &str) -> bool {
+    false
 }
 //#endregion 🔖️SceneMode
 
@@ -215,21 +221,13 @@ fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id: Optio
     fallback.into()
 }
 
-/// 👁️ True when this object's vortices should render — always when `vortex_show` is Always; otherwise only when the parent object is hovered/selected, or any of its vortices are hovered/selected (vortex-only selection still needs markers).
-fn object_vortices_visible(object: &Puzzle3dObject, runtime: &Puzzle3dRuntime) -> bool {
-    if runtime.vortex_show == PUZZLE3D_VORTEX_SHOW_ALWAYS {
-        return true;
-    }
-    if runtime.selection.object_ids.contains(&object.id) {
-        return true;
-    }
-    if runtime.hovered_object_id.as_deref() == Some(object.id.as_str()) {
-        return true;
-    }
-    object.vortices.iter().any(|vortex| {
-        let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-        runtime.selection.vortex_ids.contains(&full_id) || runtime.hovered_vortex_full_id.as_deref() == Some(full_id.as_str())
-    })
+/// 👁️ True when this object's vortices should render — always when `vortex_show` is Always. 🕹️
+/// ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: used to also show when the
+/// parent object (or any of its vortices) was hovered/selected, but `render` has no live
+/// selection/hover to check (see `gumball_active`'s doc comment) — `PUZZLE3D_VORTEX_SHOW_SELECTED`
+/// mode's markers are unreachable until that framework gap closes.
+fn object_vortices_visible(_object: &Puzzle3dObject, runtime: &Puzzle3dRuntime) -> bool {
+    runtime.vortex_show == PUZZLE3D_VORTEX_SHOW_ALWAYS
 }
 
 pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
@@ -315,9 +313,9 @@ pub fn world_references_json(fixture: &Puzzle3dFixture) -> String {
 pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> String {
     let runtime = &envelope.runtime;
     let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
-        let (pending, candidates) = puzzle3d_brush_target_vortex(envelope)
-            .map_or((false, Vec::new()), |target| {
-                let result = session.brush_candidates(&target);
+        let (pending, candidates) = (!menu.vortex_full_id.is_empty())
+            .then(|| {
+                let result = session.brush_candidates(&menu.vortex_full_id);
                 let candidates: Vec<Value> = result
                     .free
                     .iter()
@@ -338,13 +336,14 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
                     })
                     .collect();
                 (result.unknown_pending, candidates)
-            });
+            })
+            .unwrap_or((false, Vec::new()));
         json!({
             "open": true,
             "x": menu.x,
             "y": menu.y,
             "windowId": menu.window_id,
-            "vortexFullId": puzzle3d_brush_target_vortex(envelope),
+            "vortexFullId": menu.vortex_full_id,
             "pending": pending,
             "candidates": candidates,
         })
@@ -363,7 +362,6 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
     json!({
         "activeUtility": scene_mode(&envelope.active_utility),
         "brushCandidateIndex": runtime.brush_candidate_index,
-        "hoveredVortexFullId": runtime.hovered_vortex_full_id.clone(),
         "voxelDims": runtime.voxel_dims,
         "gridFactor": runtime.grid_spacing,
         "suggestionMenu": suggestion_menu,
@@ -391,7 +389,11 @@ pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &
     if envelope.active_utility != utilities::brush::UTILITY_ID && envelope.runtime.suggestion_menu.is_none() {
         return None;
     }
-    let vortex_id = puzzle3d_brush_target_vortex(envelope)?;
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: the suggestion-menu
+    // path has a real target (`menu.vortex_full_id`, stored explicitly now); the plain brush-utility
+    // hover path has no live hover to read here (see `puzzle3d_brush_target_vortex`'s doc comment)
+    // until `render` gains an `InteractionView`.
+    let vortex_id = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.clone()).filter(|id| !id.is_empty())?;
     let preview = session.brush_preview(&vortex_id, envelope.runtime.brush_candidate_index)?;
     let color = object_kind_color(&envelope.fixture.meta, Some(preview.object_kind_id.as_str()));
     let mut value = serde_json::to_value(&preview).ok()?;
@@ -401,11 +403,16 @@ pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &
     serde_json::to_string(&value).ok()
 }
 
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/hover ids,
+/// merge mode, active-object id, and the gumball target/active flag all used to come from
+/// `runtime.selection`/`hovered_*`, now dissolved into the framework-owned `vortex` interaction
+/// domain. `render` never gained an `InteractionView` parameter (see `gumball_active`'s doc comment),
+/// so this payload carries no live ids at all until that framework gap closes — the world-3d host
+/// renders an always-empty selection/hover overlay in the meantime.
 pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
     let runtime = &envelope.runtime;
-    let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, runtime.selection.object_ids.as_slice(), runtime.hovered_object_id.as_deref())).unwrap_or_else(|_| json!({}));
+    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("selectionMergeMode".into(), json!(runtime.selection_mode_default));
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
         object.insert(
@@ -417,11 +424,8 @@ pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
                 "face": false,
             }),
         );
-        object.insert("targetVolumeIds".into(), json!(runtime.selection.target_volume_ids));
-        object.insert("vortexIds".into(), json!(runtime.selection.vortex_ids));
-        if let Some(vortex_hover) = runtime.hovered_vortex_full_id.as_deref() {
-            object.insert("hoveredVortexFullId".into(), json!(vortex_hover));
-        }
+        object.insert("targetVolumeIds".into(), json!([]));
+        object.insert("vortexIds".into(), json!([]));
         if let Some(transform_mode) = transform_handle(&envelope.active_utility) {
             object.insert("transformMode".into(), json!(transform_mode));
             object.insert(
@@ -436,58 +440,11 @@ pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
                 }),
             );
         }
-        if let Some(active_id) = runtime.selection.object_ids.first() {
-            object.insert("activeObjectId".into(), json!(active_id));
-        }
-        if let Some(kind_id) = runtime.hovered_kind_id.as_deref() {
-            object.insert("hoveredKindId".into(), json!(kind_id));
-        }
-        let gumball_active = gumball_active(runtime, &envelope.active_utility);
-        object.insert("gumballActive".into(), json!(gumball_active));
-        if gumball_active {
-            if let Some(target) = gumball_target_world(envelope) {
-                object.insert("gumballTarget".into(), json!(target));
-            }
-        }
+        object.insert("gumballActive".into(), json!(gumball_active(runtime, &envelope.active_utility)));
     }
     value.to_string()
 }
 
-fn gumball_target_world(envelope: &Puzzle3dScene) -> Option<[f64; 3]> {
-    let selected: Vec<&Puzzle3dObject> = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).collect();
-    if selected.is_empty() {
-        return None;
-    }
-    let mut sum = [0.0, 0.0, 0.0];
-    for object in &selected {
-        sum[0] += object.origin.first().copied().unwrap_or(0.0);
-        sum[1] += object.origin.get(1).copied().unwrap_or(0.0);
-        sum[2] += object.origin.get(2).copied().unwrap_or(0.0);
-    }
-    let count = selected.len() as f64;
-    Some([sum[0] / count, sum[1] / count, sum[2] / count])
-}
-
-/// 🎯️ Every document-tree row id currently selected — the shell mirrors this onto the panel trees.
-pub fn document_selected_ids(selection: &Puzzle3dSelection) -> Vec<String> {
-    let mut ids = Vec::new();
-    for id in selection.object_ids.iter() {
-        ids.push(format!("puzzle3d-object:{id}"));
-    }
-    for id in selection.reference_ids.iter() {
-        ids.push(format!("puzzle3d-reference:{id}"));
-    }
-    for id in selection.target_volume_ids.iter() {
-        ids.push(format!("puzzle3d-target-volume:{id}"));
-    }
-    for id in selection.vortex_ids.iter() {
-        ids.push(format!("puzzle3d-vortex:{id}"));
-    }
-    for id in selection.attraction_ids.iter() {
-        ids.push(format!("puzzle3d-attraction:{id}"));
-    }
-    ids
-}
 //#endregion 🔖️SceneJson
 
 //#region 🔖️Render

@@ -1,8 +1,6 @@
 type NotePresence {
-  selectedBlockIds: [String!]! @state(class: PRESENCE)
   cameraX: Float! @state(class: PRESENCE)
   cameraY: Float! @state(class: PRESENCE)
   cameraZoom: Float! @state(class: PRESENCE)
-  hoveredBlockId: String @state(class: PRESENCE)
   activeUtilityId: String! @state(class: PRESENCE)
 }

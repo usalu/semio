@@ -8,13 +8,8 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewrite.config")]
 pub struct RewriteConfig {
-    #[state(config)] pub selected_node_ids: Vec<String>,
     #[state(config)] pub before_pane_camera: Camera,
     #[state(config)] pub reorganize_epoch: u64,
-    #[state(config)] pub active_hover_var: String,
-    #[state(config)] pub hover_epoch: u64,
-    #[state(config)] pub active_select_var: String,
-    #[state(config)] pub select_epoch: u64,
     #[state(config)] pub lod_mode_by_window: BTreeMap<String, String>,
     #[state(config)] pub locale: String,
 }

@@ -10,13 +10,6 @@ message RemodelWorldCamera {
   double fov = 3;
 }
 
-message RemodelSelection {
-  // @state config
-  string mode = 4;
-  // @state config
-  repeated string ids = 5;
-}
-
 message RemodelLayerVisibility {
   // @state config
   bool mesh = 6;
@@ -40,8 +33,6 @@ message RemodelFrameCursor {
 message RemodelConfig {
   // @state config
   RemodelWorldCamera camera = 1;
-  // @state config
-  RemodelSelection selection = 2;
   // @state config
   RemodelLayerVisibility layers = 3;
   // @state config

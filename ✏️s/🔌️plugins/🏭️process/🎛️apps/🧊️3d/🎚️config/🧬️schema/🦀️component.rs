@@ -6,10 +6,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.3d.config")]
 pub struct Process3dConfig {
-    #[state(config)] pub selected_id: Option<String>,
-    #[state(config)] pub hovered_id: Option<String>,
-    #[state(config)] pub selected_face_id: Option<u32>,
-    #[state(config)] pub selection_method: String,
     #[state(config)] pub engagement_input: String,
     #[state(config)] pub camera_position: [f64; 3],
     #[state(config)] pub camera_target: [f64; 3],

@@ -447,6 +447,40 @@ fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
     crate::os_spr::decode_presence_peer(bytes).ok()
 }
 
+/// @emoji 📡️ Assembles `PresencePeer.interaction` from local `InteractionState` plus each domain's
+/// declared hover/selection behavior — the ONE place this logic lives, so every app broadcasts
+/// selection+hover with ZERO app-side code (call this wherever a `PresenceHeartbeat`'s `peer` is
+/// built, right before `presence_to_bytes`, at the same cadence cursor updates already get
+/// throttled at — this fn is pure/stateless, so it invents no throttle of its own). Forwards each
+/// domain's already-computed `ids` verbatim (never re-derives a closure itself) — EXPLICIT ids
+/// only cross the wire; a receiver re-expands any transitive closure via its own
+/// `crate::os_spr::DomainTopology`. Only the `"pointer"` hover channel ever broadcasts (any other
+/// channel, e.g. a drag-only one, stays local); a domain whose `HoverSpec::broadcast`/
+/// `SelectionSpec::broadcast` is `false` contributes nothing for that half. A domain that ends up
+/// with both halves empty is omitted from `domains` entirely.
+pub fn assemble_presence_interaction(app_id: &str, state: &crate::os_spr::InteractionState, hover_specs: &std::collections::BTreeMap<String, crate::os_spr::HoverSpec>, selection_specs: &std::collections::BTreeMap<String, crate::os_spr::SelectionSpec>) -> crate::os_spr::PresenceInteraction {
+    let mut domain_ids: std::collections::BTreeSet<&String> = std::collections::BTreeSet::new();
+    domain_ids.extend(state.selection.keys());
+    domain_ids.extend(state.hover.keys());
+
+    let mut domains = Vec::new();
+    for domain_id in domain_ids {
+        let selected = if selection_specs.get(domain_id).is_some_and(|spec| spec.broadcast) { state.selection.get(domain_id).map(|selection| selection.ids.clone()).unwrap_or_default() } else { Vec::new() };
+        let hovered = if hover_specs.get(domain_id).is_some_and(|spec| spec.broadcast) {
+            state.hover.get(domain_id).filter(|hover| hover.channel == "pointer").map(|hover| hover.ids.clone()).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        if selected.is_empty() && hovered.is_empty() {
+            continue;
+        }
+        let granularity = state.active_granularity.get(domain_id).cloned().unwrap_or_default();
+        domains.push(crate::os_spr::PresenceDomain { domain: domain_id.clone(), granularity, selected, hovered });
+    }
+
+    crate::os_spr::PresenceInteraction { app_id: app_id.to_string(), domains }
+}
+
 /// @emoji ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` natively,
 /// `js_sys::Date` in the browser wasm build (no `SystemTime` there).
 #[cfg(not(target_arch = "wasm32"))]
@@ -2043,6 +2077,7 @@ mod tests {
     }
 
     impl ArtifactDsl for DemoSnapshot {
+        const EXTENSION: &'static str = Self::__DSL_EXTENSION;
         fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
         fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
             let body = match semio_format::split_text_preamble(text) { Ok((_, rest)) => rest, Err(_) => text };
@@ -2317,7 +2352,7 @@ mod tests {
         write_client(&fixtures_dir, "📦️client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command);
         write_client(&fixtures_dir, "📦️client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command);
         write_client(&fixtures_dir, "📦️client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
-        write_client(&fixtures_dir, "📦️client-presence.bin", &ClientFrame::Presence { peer: b"{\"cursor\":[1,2]}".to_vec() }, Lane::Preview);
+        write_client(&fixtures_dir, "📦️client-presence.bin", &ClientFrame::Presence { peer: presence_to_bytes(&sample_presence_peer_with_interaction()) }, Lane::Preview);
         write_client(&fixtures_dir, "📦️client-credit-grant.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command);
         write_client(&fixtures_dir, "📦️client-bye.bin", &ClientFrame::Bye, Lane::Command);
         //#endregion 🔖️ClientFrame
@@ -2356,7 +2391,7 @@ mod tests {
             Lane::Command,
         );
         write_server(&fixtures_dir, "📦️server-preview.bin", &ServerFrame::Preview { actor: crate::os_spr::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
-        write_server(&fixtures_dir, "📦️server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), b"{\"id\":\"b\"}".to_vec()] }, Lane::Preview);
+        write_server(&fixtures_dir, "📦️server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction())] }, Lane::Preview);
         write_server(&fixtures_dir, "📦️server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command);
         write_server(&fixtures_dir, "📦️server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
         //#endregion 🔖️ServerFrame
@@ -2376,7 +2411,111 @@ mod tests {
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
         }
     }
+
+    /// @emoji 🕹️ A `PresencePeer` whose `interaction` carries THREE domains (one selection-only, one
+    /// hover-only, one with both) — `📦️client-presence.bin`/`📦️server-presence.bin` regenerate off
+    /// this so the TS vitest twin exercises bit 7 with a realistic multi-domain payload, not just the
+    /// placeholder JSON blob the fixtures carried before this field existed.
+    fn sample_presence_peer_with_interaction() -> PresencePeer {
+        PresencePeer {
+            actor: "actor-1".to_string(),
+            label: Some("Ada".to_string()),
+            presence_pack: None,
+            connected_at_ms: 1_700_000_000_000,
+            user_id: Some("user-9".to_string()),
+            role: Some("owner".to_string()),
+            cursor: Some(crate::os_spr::PresencePoint { x: 12.5, y: -4.0 }),
+            viewport: Some(crate::os_spr::PresenceViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
+            drag_ghost_json: None,
+            interaction: Some(crate::os_spr::PresenceInteraction {
+                app_id: "space".to_string(),
+                domains: vec![
+                    crate::os_spr::PresenceDomain { domain: "outline".to_string(), granularity: "task".to_string(), selected: vec!["t1".to_string(), "t2".to_string()], hovered: vec![] },
+                    crate::os_spr::PresenceDomain { domain: "board".to_string(), granularity: "card".to_string(), selected: vec![], hovered: vec!["c1".to_string()] },
+                    crate::os_spr::PresenceDomain { domain: "canvas".to_string(), granularity: "node".to_string(), selected: vec!["n9".to_string()], hovered: vec!["n9".to_string(), "n10".to_string()] },
+                ],
+            }),
+        }
+    }
     //#endregion 🧪️WireBridge
+
+    //#region 🧪️PresenceInteraction
+    fn selection(ids: &[&str]) -> crate::os_spr::DomainSelection {
+        crate::os_spr::DomainSelection { granularity: "node".into(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: None }
+    }
+
+    fn hover(channel: &str, ids: &[&str]) -> crate::os_spr::DomainHover {
+        crate::os_spr::DomainHover { channel: channel.into(), ids: ids.iter().map(|id| id.to_string()).collect() }
+    }
+
+    fn broadcasting_hover_spec() -> crate::os_spr::HoverSpec {
+        crate::os_spr::HoverSpec { enabled: true, transitive: false, channels: vec!["pointer".into()], broadcast: true }
+    }
+
+    fn broadcasting_selection_spec() -> crate::os_spr::SelectionSpec {
+        crate::os_spr::SelectionSpec { modes: vec![crate::os_spr::SelectionMode::Multiple], methods: vec![crate::os_spr::SelectionMethod::Pick], merges: vec![crate::os_spr::MergeMode::Replace], transitive: false, broadcast: true }
+    }
+
+    #[test]
+    fn assemble_presence_interaction_includes_broadcasting_domains() {
+        let mut state = crate::os_spr::InteractionState::default();
+        state.selection.insert("graph".into(), selection(&["n1", "n2"]));
+        state.hover.insert("graph".into(), hover("pointer", &["n3"]));
+        state.active_granularity.insert("graph".into(), "node".into());
+
+        let hover_specs = std::collections::BTreeMap::from([("graph".to_string(), broadcasting_hover_spec())]);
+        let selection_specs = std::collections::BTreeMap::from([("graph".to_string(), broadcasting_selection_spec())]);
+
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        assert_eq!(interaction.app_id, "draw");
+        assert_eq!(interaction.domains.len(), 1);
+        let domain = &interaction.domains[0];
+        assert_eq!(domain.domain, "graph");
+        assert_eq!(domain.granularity, "node");
+        assert_eq!(domain.selected, vec!["n1".to_string(), "n2".to_string()]);
+        assert_eq!(domain.hovered, vec!["n3".to_string()]);
+    }
+
+    #[test]
+    fn assemble_presence_interaction_omits_domains_with_broadcast_disabled() {
+        let mut state = crate::os_spr::InteractionState::default();
+        state.selection.insert("private".into(), selection(&["secret"]));
+        state.hover.insert("private".into(), hover("pointer", &["secret"]));
+
+        let hover_specs = std::collections::BTreeMap::from([("private".to_string(), crate::os_spr::HoverSpec { broadcast: false, ..broadcasting_hover_spec() })]);
+        let selection_specs = std::collections::BTreeMap::from([("private".to_string(), crate::os_spr::SelectionSpec { broadcast: false, ..broadcasting_selection_spec() })]);
+
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        assert!(interaction.domains.is_empty(), "broadcast:false on both halves drops the domain entirely");
+    }
+
+    #[test]
+    fn assemble_presence_interaction_only_broadcasts_the_pointer_hover_channel() {
+        let mut state = crate::os_spr::InteractionState::default();
+        state.hover.insert("graph".into(), hover("drag-preview", &["n1"]));
+
+        let hover_specs = std::collections::BTreeMap::from([("graph".to_string(), broadcasting_hover_spec())]);
+        let selection_specs = std::collections::BTreeMap::new();
+
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        assert!(interaction.domains.is_empty(), "a non-pointer hover channel never broadcasts");
+    }
+
+    #[test]
+    fn assemble_presence_interaction_respects_each_half_independently() {
+        let mut state = crate::os_spr::InteractionState::default();
+        state.selection.insert("graph".into(), selection(&["n1"]));
+        state.hover.insert("graph".into(), hover("pointer", &["n2"]));
+
+        let hover_specs = std::collections::BTreeMap::from([("graph".to_string(), crate::os_spr::HoverSpec { broadcast: false, ..broadcasting_hover_spec() })]);
+        let selection_specs = std::collections::BTreeMap::from([("graph".to_string(), broadcasting_selection_spec())]);
+
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        assert_eq!(interaction.domains.len(), 1);
+        assert_eq!(interaction.domains[0].selected, vec!["n1".to_string()], "selection still broadcasts");
+        assert!(interaction.domains[0].hovered.is_empty(), "hover suppressed by its own broadcast:false");
+    }
+    //#endregion 🧪️PresenceInteraction
 
     //#region 🧪️Helpers
 

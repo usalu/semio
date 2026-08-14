@@ -20,8 +20,6 @@ export interface JackDiff {
   /** @state artifact */
   rootNodeId?: string | null;
   /** @state presence */
-  selectedNodeIds?: JackStringList;
-  /** @state presence */
   activeFixtureId?: string;
   /** @state presence */
   jackQuery?: string;
@@ -45,10 +43,6 @@ export interface JackDiff {
   revision?: number;
   /** @state config */
   locale?: string;
-}
-
-export interface JackStringList {
-  values: string[];
 }
 
 export interface JackNodesDelta {

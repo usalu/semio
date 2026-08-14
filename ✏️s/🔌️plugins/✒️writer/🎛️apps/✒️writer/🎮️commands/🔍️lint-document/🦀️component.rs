@@ -18,6 +18,7 @@ pub fn handle(_payload: &LintDocument, _doc: &ArtifactView<'_, WriterSnapshot>, 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use super::LintDocument;
         use crate::apps::writer::commands::set_active_example;
     use crate::apps::writer::testkit::new_app_with_registry;
     use crate::apps::writer::WriterCommand;

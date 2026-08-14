@@ -12,8 +12,6 @@ export interface WriterArtifact {
   /** @state artifact */
   text: string;
   /** @state presence */
-  selectedAstIds: string[];
-  /** @state presence */
   editorSelection?: WriterEditorSelection;
   /** @state presence */
   editorSettings: WriterEditorSettings;
@@ -33,10 +31,6 @@ export interface WriterArtifact {
   cameraZoom: number;
   /** @state config */
   locale: string;
-  /** @state artifact */
-  treeHoveredAstId?: string;
-  /** @state artifact */
-  editorHoverOffset?: number;
 }
 
 export interface WriterEditorSelection {
@@ -49,10 +43,6 @@ export interface WriterEditorSettings {
   fontPx: number;
   lineHeight: number;
   tabSize: number;
-}
-
-export interface WriterStringList {
-  values: string[];
 }
 
 export interface WriterTextRangeEdit {

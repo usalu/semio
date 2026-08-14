@@ -1,5 +1,4 @@
 type JackPresence {
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
   activeFixtureId: String! @state(class: PRESENCE)
   jackQuery: String! @state(class: PRESENCE)
   camera: Camera! @state(class: PRESENCE)

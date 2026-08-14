@@ -1,10 +1,6 @@
 /** 🧬️ NoteConfig */
 export interface NoteConfig {
   /** @state config */
-  selectedBlockIds: string[];
-  /** @state config */
-  hoveredBlockId?: string;
-  /** @state config */
   engagementInput: string;
   /** @state config */
   camera: NoteCamera;

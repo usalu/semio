@@ -10,8 +10,6 @@ type RasterConfigViewportSize {
 }
 
 type RasterConfig {
-  selectedIds: [String!]! @state(class: CONFIG)
-  hoveredId: String @state(class: CONFIG)
   brushSize: Float! @state(class: CONFIG)
   brushOpacity: Float! @state(class: CONFIG)
   compositeViewport: RasterConfigViewportSize @state(class: CONFIG)

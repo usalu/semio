@@ -31,19 +31,12 @@ semio_framework_plugin::app_labels! {
         vector_style_inverted_figure: native_en "Inverted Figure", native_de "Invertierte Figur", reuse_en "Inverted Figure", reuse_de "Invertierte Figur";
         lod_mode: native_en "LOD Mode", native_de "LOD-Modus", reuse_en "LOD Mode", reuse_de "LOD-Modus";
         lod_automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
-        selection_method: native_en "Selection Method", native_de "Auswahlmethode", reuse_en "Selection Method", reuse_de "Auswahlmethode";
-        selection_method_rectangle: native_en "Rectangle", native_de "Rechteck", reuse_en "Rectangle", reuse_de "Rechteck";
-        selection_method_lasso: native_en "Lasso", native_de "Lasso", reuse_en "Lasso", reuse_de "Lasso";
         layers_group: native_en "Layers", native_de "Ebenen", reuse_en "Layers", reuse_de "Ebenen";
         layer_weights_group: native_en "Layer Weights", native_de "Ebenengewichte", reuse_en "Layer Weights", reuse_de "Ebenengewichte";
         weight_suffix: native_en "weight", native_de "Gewicht", reuse_en "weight", reuse_de "Gewicht";
-        selected_features: native_en "Selected Features", native_de "Ausgewählte Objekte", reuse_en "Selected Features", reuse_de "Ausgewählte Objekte";
         map_layer: native_en "Map Layer", native_de "Kartenebene", reuse_en "Map Layer", reuse_de "Kartenebene";
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         layers_visible: native_en "Layers visible", native_de "Sichtbare Ebenen", reuse_en "Layers visible", reuse_de "Sichtbare Ebenen";
-        field_id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
-        field_label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
-        field_visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
     }
 }
 

@@ -1,8 +1,4 @@
 type Process3dPresence {
-  selectedId: String @state(class: PRESENCE)
-  hoveredId: String @state(class: PRESENCE)
-  selectedFaceId: Int @state(class: PRESENCE)
-  selectionMethod: String! @state(class: PRESENCE)
   engagementInput: String! @state(class: PRESENCE)
   cameraPosition: [Float!]! @state(class: PRESENCE)
   cameraTarget: [Float!]! @state(class: PRESENCE)

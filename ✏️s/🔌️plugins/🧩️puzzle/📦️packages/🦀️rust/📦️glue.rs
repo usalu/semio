@@ -1778,12 +1778,6 @@ pub mod apps {
             pub mod redraw_handles;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️force-layout/🦀️component.rs"]
             pub mod force_layout;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️select-all/🦀️component.rs"]
-            pub mod select_all;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️clear-selection/🦀️component.rs"]
-            pub mod clear_selection;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️select-same-kind/🦀️component.rs"]
             pub mod select_same_kind;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️delete-selection/🦀️component.rs"]
@@ -1792,8 +1786,6 @@ pub mod apps {
             pub mod duplicate_selection;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️set-selection-flag/🦀️component.rs"]
             pub mod set_selection_flag;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️set-selection-method/🦀️component.rs"]
-            pub mod set_selection_method;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🖌️set-brush-kind-weights/🦀️component.rs"]
             pub mod set_brush_kind_weights;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🖌️set-brush-node-size/🦀️component.rs"]
@@ -1957,36 +1949,10 @@ pub mod apps {
             pub mod set_fixture_json;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🛍️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️world-select/🦀️component.rs"]
-            pub mod world_select;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️world-pick/🦀️component.rs"]
-            pub mod world_pick;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️world-vortex-select/🦀️component.rs"]
-            pub mod world_vortex_select;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️select-all/🦀️component.rs"]
-            pub mod select_all;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️clear-selection/🦀️component.rs"]
-            pub mod clear_selection;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️select-same-kind/🦀️component.rs"]
             pub mod select_same_kind;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️context-menu-at/🦀️component.rs"]
-            pub mod context_menu_at;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-method/🦀️component.rs"]
-            pub mod set_selection_method;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-mode-default/🦀️component.rs"]
-            pub mod set_selection_mode_default;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-selectable-kind/🦀️component.rs"]
             pub mod set_selectable_kind;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👆️world-hover/🦀️component.rs"]
-            pub mod world_hover;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👆️set-hover/🦀️component.rs"]
-            pub mod set_hover;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👆️world-vortex-hover/🦀️component.rs"]
-            pub mod world_vortex_hover;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👆️set-kind-hover/🦀️component.rs"]
-            pub mod set_kind_hover;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧊️add-object-kind/🦀️component.rs"]
             pub mod add_object_kind;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧊️delete-selection/🦀️component.rs"]
@@ -2201,20 +2167,8 @@ pub mod apps {
             pub mod set_fixture_json;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/🛍️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️clear-selection/🦀️component.rs"]
-            pub mod clear_selection;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️select-all/🦀️component.rs"]
-            pub mod select_all;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️select-same-kind/🦀️component.rs"]
             pub mod select_same_kind;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️set-selection-method/🦀️component.rs"]
-            pub mod set_selection_method;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️world-select/🦀️component.rs"]
-            pub mod world_select;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️world-pick/🦀️component.rs"]
-            pub mod world_pick;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/🧩️add-node/🦀️component.rs"]
             pub mod add_node;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/🧩️add-part-kind/🦀️component.rs"]
@@ -2241,14 +2195,6 @@ pub mod apps {
             pub mod patch_grip;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/✏️patch-fastener/🦀️component.rs"]
             pub mod patch_fastener;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/👆️world-hover/🦀️component.rs"]
-            pub mod world_hover;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/👆️set-hover/🦀️component.rs"]
-            pub mod set_hover;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/👆️world-vortex-hover/🦀️component.rs"]
-            pub mod world_vortex_hover;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/👆️world-vortex-select/🦀️component.rs"]
-            pub mod world_vortex_select;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎥️set-camera/🦀️component.rs"]
             pub mod set_camera;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎥️set-camera-2d/🦀️component.rs"]

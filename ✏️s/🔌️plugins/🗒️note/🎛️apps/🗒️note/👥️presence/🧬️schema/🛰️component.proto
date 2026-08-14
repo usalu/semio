@@ -1,16 +1,13 @@
 syntax = "proto3";
 package semio.app.note.note;
 message NotePresence {
-  // @state presence
-  repeated string selected_block_ids = 1;
+  reserved 1, 5;
   // @state presence
   double camera_x = 2;
   // @state presence
   double camera_y = 3;
   // @state presence
   double camera_zoom = 4;
-  // @state presence
-  optional string hovered_block_id = 5;
   // @state presence
   string active_utility_id = 6;
 }

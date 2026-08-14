@@ -6816,6 +6816,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tokio-tungstenite 0.26.2",
+ "ts-rs",
  "ureq",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -7123,6 +7124,7 @@ dependencies = [
 name = "semio-s-plugin-block"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",

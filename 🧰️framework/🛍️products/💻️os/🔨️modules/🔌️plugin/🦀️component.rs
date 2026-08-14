@@ -199,8 +199,9 @@ pub mod app {
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
         start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppIo, CommandDefinition, CommandGrammar, CommandRef, CommandScope, ConfigSpec, DialogDefinition, ExampleDefinition,
         IconName, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef,
-        TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+        TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, Fault, FaultCode, FaultFrom, FaultOrigin, InteractionDefinition, InteractionRef, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
         SET_HISTORY_COMMAND_FILTER_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
+        CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
     };
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
@@ -208,7 +209,7 @@ pub mod app {
     use std::collections::{HashMap, HashSet};
     use store::{
         build_history_columns, child_store_factory, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, ChildGenesis, ChildStoreFactory, CompositionCoordinator, ConfigStore, EngineHandles,
-        GroupMeta, GroupReceipt, HistoryColumn, OwnerRef, SpaceConflict, SpaceMember,
+        GroupMeta, GroupReceipt, HistoryColumn, HistoryLane, OwnerRef, SpaceConflict, SpaceMember,
     };
     /// 🚪️ `os_io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
     /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
@@ -224,6 +225,94 @@ pub mod app {
     fn plugin_sdk_fault(message: impl Into<String>) -> Fault {
         Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
     }
+
+    //#region 🔖️InteractionArgs
+    /// 🕹️ Reads the required `domainId` text arg every interaction verb except `clearSelection`/
+    /// `selectAll` carries (see `interaction_action_definitions`'s arg declarations).
+    fn interaction_domain_id_arg(args: Option<&Value>, action: &str) -> Result<String, Fault> {
+        args.and_then(|value| value.get("domainId")).and_then(Value::as_str).map(str::to_string).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg domainId")))
+    }
+
+    /// 🕹️ Decodes the required `targets` arg — a JSON-encoded `Vec<InteractionTarget>`, matching the
+    /// `ActionArgDef::text` declaration `interaction_action_definitions` gives both `interactionSelect`
+    /// and `interactionHover` (a renderer JSON-serializes its gathered pick/marquee/hover batch into
+    /// this one string arg, the same convention other JSON-blob action args in this codebase already use).
+    fn parse_interaction_targets(args: Option<&Value>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
+        let raw = args.and_then(|value| value.get("targets")).and_then(Value::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg targets")))?;
+        serde_json::from_str(raw).map_err(|error| plugin_sdk_fault(format!("{action}: malformed targets ({error})")))
+    }
+
+    /// 🕹️ Decodes `interactionSelect`'s `merge` select-arg — defaults to `Replace` (a plain pick) when
+    /// absent, matching the un-modified-click case every renderer's modifier→merge policy falls back to.
+    fn parse_merge_mode(args: Option<&Value>) -> Result<protocol::MergeMode, Fault> {
+        let raw = args.and_then(|value| value.get("merge")).and_then(Value::as_str).unwrap_or("replace");
+        match raw {
+            "replace" => Ok(protocol::MergeMode::Replace),
+            "additive" => Ok(protocol::MergeMode::Additive),
+            "subtractive" => Ok(protocol::MergeMode::Subtractive),
+            "invertive" => Ok(protocol::MergeMode::Invertive),
+            "range" => Ok(protocol::MergeMode::Range),
+            other => Err(plugin_sdk_fault(format!("interactionSelect: unknown merge '{other}'"))),
+        }
+    }
+
+    /// 🕹️ Decodes `setSelectionMode`'s `mode` select-arg.
+    fn parse_selection_mode(raw: &str) -> Result<protocol::SelectionMode, Fault> {
+        match raw {
+            "single" => Ok(protocol::SelectionMode::Single),
+            "multiple" => Ok(protocol::SelectionMode::Multiple),
+            other => Err(plugin_sdk_fault(format!("setSelectionMode: unknown mode '{other}'"))),
+        }
+    }
+
+    /// 🕹️ `HierarchyProvider::PathDelimited`'s wrapper self-derivation (see `resolve_domain_topology`'s
+    /// doc for the "known ids only" limitation): every non-empty prefix chain of each id in `known_ids`,
+    /// split on `delimiter`, becomes one `TopologyNode` (`granularity` from `def.granularities[depth]`,
+    /// clamped to the last declared granularity for a deeper id than declared granularities), parented
+    /// to the next-shallower prefix. Dedup'd (and stably ordered) by id via the `BTreeMap` key.
+    fn derive_path_delimited_topology(def: &InteractionDefinition, delimiter: &str, known_ids: impl Iterator<Item = String>) -> protocol::DomainTopology {
+        let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+        for id in known_ids {
+            let segments: Vec<&str> = id.split(delimiter).collect();
+            let mut prefix = String::new();
+            let mut parent: Option<String> = None;
+            for (depth, segment) in segments.iter().enumerate() {
+                if depth > 0 {
+                    prefix.push_str(delimiter);
+                }
+                prefix.push_str(segment);
+                let granularity_index = depth.min(def.granularities.len().saturating_sub(1));
+                let granularity = def.granularities.get(granularity_index).map(|granularity| granularity.id.clone()).unwrap_or_default();
+                nodes.entry(prefix.clone()).or_insert_with(|| protocol::TopologyNode { id: prefix.clone(), granularity, parent: parent.clone() });
+                parent = Some(prefix.clone());
+            }
+        }
+        protocol::DomainTopology { ordered: nodes.into_values().collect() }
+    }
+
+    /// 🌳️ `HierarchyProvider::UiTree`'s wrapper self-derivation: pre-order-walks `sections`' (possibly
+    /// nested via `UiTreeItemNode.items`) rows into `TopologyNode`s, parented by tree nesting.
+    /// `granularity` is applied uniformly to every node — `UiTreeItemNode` carries no per-row
+    /// granularity of its own, so this assumes (matching every `UiTree`-hierarchy domain in the
+    /// inventory — writer's AST, note's blocks, …) that a `UiTree`-bound domain's rendered tree is
+    /// single-granularity; a domain needing per-row granularity declares `HierarchyProvider::Topology`
+    /// and supplies its own `interaction_topology` instead.
+    fn ui_tree_domain_topology(sections: &[UiTreeSectionNode], granularity: &str) -> protocol::DomainTopology {
+        fn visit(items: &[UiTreeItemNode], parent: Option<&str>, granularity: &str, out: &mut Vec<protocol::TopologyNode>) {
+            for item in items {
+                out.push(protocol::TopologyNode { id: item.id.clone(), granularity: granularity.to_string(), parent: parent.map(str::to_string) });
+                if let Some(children) = &item.items {
+                    visit(children, Some(&item.id), granularity, out);
+                }
+            }
+        }
+        let mut ordered = Vec::new();
+        for section in sections {
+            visit(&section.items, None, granularity, &mut ordered);
+        }
+        protocol::DomainTopology { ordered }
+    }
+    //#endregion 🔖️InteractionArgs
 
     pub struct ModeSpec {
         pub id: String,
@@ -244,6 +333,7 @@ pub mod app {
         pub engagement: Option<WindowEngagement>,
         pub actions: Vec<ActionRef>,
         pub utilities: Vec<UtilityRef>,
+        pub interactions: Vec<InteractionRef>,
         /// 🧱️ Carried verbatim from `.window_kind_def(WindowKindDefinition)`; the scalar-arg constructors
         /// (`.window_kind()`/`.window_kind_with_engagement()`) always leave these `None`/empty, matching
         /// `build_definition`'s prior hardcoded defaults for those paths.
@@ -321,6 +411,7 @@ pub mod app {
             engagement: def.options.engagement.as_option().cloned(),
             actions: def.actions,
             utilities: def.utilities,
+            interactions: def.interactions,
             params_schema: def.params_schema,
             artifact_snapshot_schema: def.artifact_snapshot_schema,
             input_event_schema: def.input_event_schema,
@@ -1308,6 +1399,7 @@ pub mod app {
         keybindings: Vec<KeybindingSpec>,
         actions: Vec<ActionDefinition>,
         utilities: Vec<UtilityDefinition>,
+        interactions: Vec<InteractionDefinition>,
         tools: Vec<ToolDefinition>,
         commands: Vec<CommandDefinition>,
         named_layouts: Vec<NamedLayout>,
@@ -1341,6 +1433,7 @@ pub mod app {
                 keybindings: Vec::new(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
+                interactions: Vec::new(),
                 tools: Vec::new(),
                 commands: Vec::new(),
                 named_layouts: Vec::new(),
@@ -1498,6 +1591,7 @@ pub mod app {
                 engagement: None,
                 actions: Vec::new(),
                 utilities: Vec::new(),
+                interactions: Vec::new(),
                 params_schema: None,
                 artifact_snapshot_schema: None,
                 input_event_schema: None,
@@ -1518,6 +1612,7 @@ pub mod app {
                 engagement: Some(engagement),
                 actions: Vec::new(),
                 utilities: Vec::new(),
+                interactions: Vec::new(),
                 params_schema: None,
                 artifact_snapshot_schema: None,
                 input_event_schema: None,
@@ -1537,7 +1632,8 @@ pub mod app {
         }
 
         /// @emoji 🧱️ Declares a window kind from an already-built `WindowKindDefinition` — mirrors
-        /// `.mode_def()`. `.window_kind_measures()`/`.window_kind_actions()`/`.window_kind_utilities()`
+        /// `.mode_def()`. `.window_kind_measures()`/`.window_kind_actions()`/`.window_kind_utilities()`/
+        /// `.window_kind_interactions()`
         /// still apply post-hoc.
         pub fn window_kind_def(mut self, def: WindowKindDefinition) -> Self {
             self.window_kinds.push(window_kind_definition_to_spec(def));
@@ -1575,6 +1671,15 @@ pub mod app {
             let window_kind_id = window_kind_id.as_ref();
             if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
                 window.utilities = utility_ids;
+            }
+            self
+        }
+
+        /// 🕹️ Scopes declarative interaction domains to a window kind.
+        pub fn window_kind_interactions(mut self, window_kind_id: impl AsRef<str>, interaction_ids: Vec<InteractionRef>) -> Self {
+            let window_kind_id = window_kind_id.as_ref();
+            if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
+                window.interactions = interaction_ids;
             }
             self
         }
@@ -1679,6 +1784,12 @@ pub mod app {
             self
         }
 
+        /// 🕹️ Declares a framework-managed hover and selection domain.
+        pub fn interaction(mut self, interaction: InteractionDefinition) -> Self {
+            self.interactions.push(interaction);
+            self
+        }
+
         /// @emoji 🧰️ Declares a utility with default settings (no group/keys/cursor/category, gates actions while active).
         pub fn utility_simple(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
             self.utility(UtilityDefinition::new(id, label, icon_id))
@@ -1751,6 +1862,21 @@ pub mod app {
             for utility in &self.utilities {
                 assert!(!utility.id.trim().is_empty(), "app {} utility id must be non-empty", self.id);
                 assert!(declared_utility_ids.insert(utility.id.clone()), "app {} duplicate utility id {}", self.id, utility.id);
+            }
+            let mut declared_interaction_ids = HashSet::new();
+            for interaction in &self.interactions {
+                assert!(!interaction.id.trim().is_empty(), "app {} interaction id must be non-empty", self.id);
+                assert!(declared_interaction_ids.insert(interaction.id.clone()), "app {} duplicate interaction id {}", self.id, interaction.id);
+                assert!(!interaction.granularities.is_empty(), "app {} interaction {} must declare at least one granularity", self.id, interaction.id);
+                assert!(!interaction.selection.modes.is_empty(), "app {} interaction {} must declare at least one selection mode", self.id, interaction.id);
+                assert!(!interaction.selection.methods.is_empty(), "app {} interaction {} must declare at least one selection method", self.id, interaction.id);
+                assert!(!interaction.selection.merges.is_empty(), "app {} interaction {} must declare at least one merge mode", self.id, interaction.id);
+                // 🕹️ W3b: `transitive` (hover or selection) means "expand to descendant closure" — over
+                // `HierarchyProvider::Flat` there is no descendant relation to expand along at all, so a
+                // transitive `Flat` domain could only ever silently degrade to non-transitive behavior;
+                // reject it at build time instead.
+                assert!(!interaction.hover.transitive || !matches!(interaction.hierarchy, semio_framework::HierarchyProvider::Flat), "app {} interaction {} declares hover.transitive with HierarchyProvider::Flat (transitive requires a real hierarchy)", self.id, interaction.id);
+                assert!(!interaction.selection.transitive || !matches!(interaction.hierarchy, semio_framework::HierarchyProvider::Flat), "app {} interaction {} declares selection.transitive with HierarchyProvider::Flat (transitive requires a real hierarchy)", self.id, interaction.id);
             }
             let mut declared_tool_ids = HashSet::new();
             for tool in &self.tools {
@@ -1836,6 +1962,9 @@ pub mod app {
                 }
                 for utility_ref in &window.utilities {
                     assert!(declared_utility_ids.contains(utility_ref.as_str()), "app {} window kind {} references undeclared utility {}", self.id, window.id, utility_ref.as_str());
+                }
+                for interaction_ref in &window.interactions {
+                    assert!(declared_interaction_ids.contains(interaction_ref.as_str()), "app {} window kind {} references undeclared interaction {}", self.id, window.id, interaction_ref.as_str());
                 }
             }
             for mode in &self.modes {
@@ -1950,7 +2079,7 @@ pub mod app {
                 assert!(port.direction == MediaPortDirection::Out, "app {} media output {} must declare direction Out", self.id, port.id);
                 assert!(!matches!(port.media_type.form, MediaForm::Any), "app {} media output {} must not declare MediaForm::Any (Any is only legal on inputs, see media_types_compatible)", self.id, port.id);
             }
-            AppDefinition {
+            let mut definition = AppDefinition {
                 id: self.id,
                 label: self.label,
                 breadcrumb: self.document,
@@ -1971,6 +2100,7 @@ pub mod app {
                             options: WindowOptions { measures: window.measures, engagement: window.engagement.map_or(WindowEngagementSlot::None, WindowEngagementSlot::Some) },
                             actions: window.actions,
                             utilities: window.utilities,
+                            interactions: window.interactions,
                             params_schema: window.params_schema,
                             artifact_snapshot_schema: window.artifact_snapshot_schema,
                             input_event_schema: window.input_event_schema,
@@ -1984,6 +2114,7 @@ pub mod app {
                 keybindings,
                 actions,
                 utilities: self.utilities,
+                interactions: self.interactions,
                 tools: self.tools,
                 commands: self.commands,
                 named_layouts: self.named_layouts,
@@ -1999,7 +2130,18 @@ pub mod app {
                 config: self.config,
                 command_grammar: self.command_grammar,
                 io: self.io,
+            };
+            for action in semio_framework::interaction_action_definitions(&definition) {
+                if declared_action_ids.insert(action.id.clone()) {
+                    if let Some(keys) = &action.keys {
+                        if bound_keys.insert(keys.clone()) {
+                            definition.keybindings.push(Keybinding { keys: keys.clone(), action: ActionDescriptor { controller_id: definition.controller_id.clone(), action: action.id.clone(), args: None } });
+                        }
+                    }
+                    definition.actions.push(action);
+                }
             }
+            definition
         }
     }
 
@@ -2045,21 +2187,22 @@ pub mod app {
 
     /// 🌳️ Fluent builder for the `build_document_tree`/`build_inspector_tree`/`build_catalogue_tree`
     /// skeleton duplicated across plugin crates: namespaced item ids, sections (optionally substituting a
-    /// single "(none)" placeholder item for the empty state), a selected/highlighted id set, a
-    /// selection-change action, and a drop action — ending in `.build()` -> a `UiNode::Tree`.
+    /// single "(none)" placeholder item for the empty state), a selected/highlighted id set (stamped as
+    /// item `presence` via `ui_tree_stamp_presence`), an `interaction_domain` binding, and a drop action —
+    /// ending in `.build()` -> a `UiNode::Tree`.
     pub struct PanelTreeBuilder {
         namespace: String,
         sections: Vec<UiTreeSectionNode>,
         selected_ids: Option<Vec<String>>,
         highlighted_ids: Option<Vec<String>>,
-        selection_change: Option<ActionDescriptor>,
+        interaction_domain: Option<String>,
         drop_action: Option<ActionDescriptor>,
     }
 
     impl PanelTreeBuilder {
         /// 🌳️ `namespace` prefixes every id built via `.item_id()`, e.g. `"flow-play-document"`.
         pub fn new(namespace: impl Into<String>) -> Self {
-            Self { namespace: namespace.into(), sections: Vec::new(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }
+            Self { namespace: namespace.into(), sections: Vec::new(), selected_ids: None, highlighted_ids: None, interaction_domain: None, drop_action: None }
         }
 
         /// 🌳️ Builds a namespaced item id: `"{namespace}.{kind}.{id}"`.
@@ -2092,8 +2235,10 @@ pub mod app {
             self
         }
 
-        pub fn selection_change(mut self, action: ActionDescriptor) -> Self {
-            self.selection_change = Some(action);
+        /// 🕹️ Binds the built tree to an app-declared `InteractionDefinition` domain id — the framework
+        /// then owns this domain's selection/hover, replacing the deleted per-app `selection_change` action.
+        pub fn interaction_domain(mut self, id: impl Into<String>) -> Self {
+            self.interaction_domain = Some(id.into());
             self
         }
 
@@ -2106,15 +2251,7 @@ pub mod app {
             let selected = self.selected_ids.iter().flatten().cloned().collect::<HashSet<_>>();
             let highlighted = self.highlighted_ids.iter().flatten().cloned().collect::<HashSet<_>>();
             ui_tree_stamp_presence(&mut self.sections, &selected, &highlighted);
-            UiNode::Tree(UiTreeNode {
-                sections: self.sections,
-                presence: UiPresence::default(),
-                selected_ids: self.selected_ids.clone(),
-                highlighted_ids: self.highlighted_ids.clone(),
-                selection_change: self.selection_change,
-                drop_action: self.drop_action,
-                menu: None,
-            })
+            UiNode::Tree(UiTreeNode { sections: self.sections, presence: UiPresence::default(), interaction_domain: self.interaction_domain, drop_action: self.drop_action, menu: None })
         }
     }
 
@@ -2156,12 +2293,14 @@ pub mod app {
                 .section("ns-play-document.widgets", Some(Label::data("Widgets")), true, vec![tree_item(item_id, Label::data("W1"))])
                 .section_or_placeholder("ns-play-document.synapses", Some(Label::data("Synapses")), false, vec![], Label::data("(none)"))
                 .selected(vec!["ns-play-document.widget.w1".into()])
+                .interaction_domain("ns-play-document")
                 .build();
             let UiNode::Tree(tree) = node else { panic!("expected a Tree node") };
             assert_eq!(tree.sections.len(), 2);
             assert_eq!(tree.sections[0].items.len(), 1);
             assert_eq!(tree.sections[1].items[0].label.as_str(), "(none)");
             assert!(tree.sections[0].items[0].presence.selected, "the .selected(...) id must be stamped as selected presence on its matching item");
+            assert_eq!(tree.interaction_domain.as_deref(), Some("ns-play-document"));
         }
     }
     //#endregion 🔖️PanelKit
@@ -2906,6 +3045,12 @@ pub mod app {
                 "startTutorial",
                 "setActiveUtility",
                 "setActiveTool",
+                "interactionSelect",
+                "interactionHover",
+                "clearSelection",
+                "selectAll",
+                "setSelectionMode",
+                "setInteractionGranularity",
             ];
             for action in &definition.actions {
                 if skip.contains(&action.id.as_str()) {
@@ -3177,7 +3322,7 @@ pub mod app {
                     DummySnapshot::default()
                 }
 
-                fn handle(command: &DummyCommand, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyMutation>, Fault> {
+                fn handle(command: &DummyCommand, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &crate::app::InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<DummyMutation>, Fault> {
                     match command {
                         DummyCommand::Increment => Ok(Emit { artifact_mutations: vec![DummyMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
                     }
@@ -3476,6 +3621,26 @@ pub mod app {
         fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
             let result = std::panic::catch_unwind(|| minimal_app("bad-action-ref-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).window_kind_actions("main", vec!["removeLayer".into()]).build_definition());
             assert!(result.is_err());
+        }
+
+        #[test]
+        fn build_definition_carries_window_interactions_and_injects_framework_actions() {
+            use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_HOVER_ACTION_ID};
+            let definition = minimal_app("interaction-app")
+                .interaction(InteractionDefinition {
+                    id: "world".into(),
+                    label: LocalizedLabel::data("World"),
+                    granularities: vec![GranularityDefinition { id: "object".into(), label: LocalizedLabel::data("Object"), icon_id: "box".into() }],
+                    hierarchy: HierarchyProvider::Flat,
+                    hover: HoverSpec::default(),
+                    selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
+                })
+                .window_kind_interactions("main", vec![InteractionRef::new("world")])
+                .build_definition();
+            assert_eq!(definition.interactions.len(), 1);
+            assert_eq!(definition.window_kinds.first().interactions, vec![InteractionRef::new("world")]);
+            assert_eq!(definition.actions.iter().find(|action| action.id == INTERACTION_HOVER_ACTION_ID).map(|action| action.kind), Some(ActionKind::Interaction));
+            assert_eq!(definition.keybindings.iter().find(|binding| binding.keys == "escape").map(|binding| binding.action.action.as_str()), Some("clearSelection"));
         }
 
         #[test]
@@ -4081,6 +4246,65 @@ pub mod app {
         pub snapshot: &'a T,
     }
 
+    //#region 🔖️InteractionView
+    /// 🈳️ Lazily-initialized empty fallbacks `InteractionView`'s accessors return for an undeclared or
+    /// never-touched domain — one static pair shared across every instance, so the accessor methods
+    /// below can return a plain `&DomainSelection`/`&DomainHover` (no `Option`, no per-call allocation)
+    /// exactly like the ticket's specified signature.
+    fn empty_domain_selection() -> &'static protocol::DomainSelection {
+        static EMPTY: std::sync::OnceLock<protocol::DomainSelection> = std::sync::OnceLock::new();
+        EMPTY.get_or_init(protocol::DomainSelection::default)
+    }
+
+    fn empty_domain_hover() -> &'static protocol::DomainHover {
+        static EMPTY: std::sync::OnceLock<protocol::DomainHover> = std::sync::OnceLock::new();
+        EMPTY.get_or_init(protocol::DomainHover::default)
+    }
+
+    /// 🕹️ Read-only view of the framework-owned INTERACTION mechanism (hover + selection + active
+    /// mode/granularity per domain) — threaded into `ArtifactApp::handle`/`copy_fragment`/
+    /// `cut_operations` so an app reads its own current selection/hover instead of ever storing it
+    /// again itself. `state` is the persisted-local half (selection/mode/granularity, one
+    /// `VcsArtifactApp::interaction_store` `ApplyInLane{lane: HistoryLane::Interaction}` dispatch away
+    /// from every change); `hover` is the ephemeral-local half (`VcsArtifactApp::interaction_hover`,
+    /// never persisted — see that field's own doc comment). Both are combined once per dispatch by
+    /// `VcsArtifactApp::interaction_view`, never mutated through this read-only handle.
+    pub struct InteractionView<'a> {
+        pub(crate) state: &'a protocol::InteractionState,
+        pub(crate) hover: &'a InteractionHoverState,
+    }
+
+    impl<'a> InteractionView<'a> {
+        /// 🖱️ `domain`'s current selection — an empty `DomainSelection` (not `None`) for an undeclared
+        /// or never-selected domain, so call sites never have to unwrap.
+        pub fn selection(&self, domain: &str) -> &protocol::DomainSelection {
+            self.state.selection.get(domain).unwrap_or_else(|| empty_domain_selection())
+        }
+
+        /// 🐁️ `domain`'s current hover on `channel` — empty when nothing is hovered on that channel
+        /// right now. `InteractionState.hover` holds exactly one live channel per domain at a time (the
+        /// most recently hovered — see `next_hover`'s doc), so a `channel` mismatch also reads empty
+        /// rather than returning a stale different-channel hover.
+        pub fn hover(&self, domain: &str, channel: &str) -> &protocol::DomainHover {
+            match self.hover.get(domain) {
+                Some(hover) if hover.channel == channel => hover,
+                _ => empty_domain_hover(),
+            }
+        }
+
+        /// 🪜️ `domain`'s active granularity id, `None` for an undeclared domain (never dispatched
+        /// through `validate_state` yet — e.g. a registry-less test construction).
+        pub fn active_granularity(&self, domain: &str) -> Option<&str> {
+            self.state.active_granularity.get(domain).map(String::as_str)
+        }
+
+        /// 🔀️ `domain`'s active `SelectionMode`, `None` for an undeclared domain.
+        pub fn active_mode(&self, domain: &str) -> Option<protocol::SelectionMode> {
+            self.state.active_mode.get(domain).copied()
+        }
+    }
+    //#endregion 🔖️InteractionView
+
     //#region 🔖️NoConfig
     /// @emoji 🧮️ Default `ArtifactApp::Config` for apps with no config artifact yet.
     #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -4377,6 +4601,83 @@ pub mod app {
     }
     //#endregion 🔖️NoTransient
 
+    //#region 🔖️InteractionConfig
+    /// 🐁️ The ephemeral, never-persisted half of the interaction mechanism — `VcsArtifactApp`'s hover
+    /// map, one `DomainHover` per domain (mirrors `protocol::InteractionState.hover`'s own shape; see
+    /// that field's doc for why one slot per domain, not per channel). Deliberately a plain type alias,
+    /// not a generic `TransientStore<P, M>` instance: hover here is applied directly by the interaction
+    /// dispatch interception, never through an app's own `Emit`/ephemeral lane, so the `Mutation`-trait
+    /// machinery `TransientStore` requires would be unused ceremony.
+    pub type InteractionHoverState = std::collections::BTreeMap<String, protocol::DomainHover>;
+
+    /// 🕹️ The single mutation `VcsArtifactApp::interaction_store` (the framework-owned, persisted-local
+    /// selection + active mode/granularity store — see that field's doc comment) ever applies: a
+    /// whole-`InteractionState` replace, mirroring the `NoConfig` family's "whole record, no field-level
+    /// diff" pattern (`validate_state` already recomputes the whole thing on every dispatch, so a
+    /// field-level diff would buy nothing). `protocol::InteractionState` and the `Mutation`/`MutationDiff`/
+    /// `OpText`/`OpBinary` traits are all foreign to this crate — this concrete enum (not `InteractionState`
+    /// itself) is the `Self` the orphan rule requires, so its own `Diff` type is itself.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum InteractionConfigMutation {
+        SetState(protocol::InteractionState),
+    }
+
+    /// 🕹️ `MutationDiff`'s supertrait bound — a "no-op" default, never dispatched as a real mutation
+    /// (only `apply`/`absorb` are ever called on a diff value; a `Self::Diff` is never itself the
+    /// starting point of a fresh mutation).
+    impl Default for InteractionConfigMutation {
+        fn default() -> Self {
+            InteractionConfigMutation::SetState(protocol::InteractionState::default())
+        }
+    }
+
+    impl ::protocol::MutationDiff<protocol::InteractionState> for InteractionConfigMutation {
+        fn apply(&self, _base: &protocol::InteractionState) -> protocol::InteractionState {
+            let InteractionConfigMutation::SetState(state) = self;
+            state.clone()
+        }
+        fn absorb(&mut self, other: Self) {
+            *self = other;
+        }
+    }
+
+    impl ::protocol::Mutation<protocol::InteractionState> for InteractionConfigMutation {
+        type Diff = InteractionConfigMutation;
+
+        fn diff(&self, _base: &protocol::InteractionState) -> Self::Diff {
+            self.clone()
+        }
+
+        fn inverse(&self, base: &protocol::InteractionState) -> Vec<Self> {
+            vec![InteractionConfigMutation::SetState(base.clone())]
+        }
+    }
+
+    impl ::protocol::OpText for InteractionConfigMutation {
+        fn print_op(&self) -> String {
+            let InteractionConfigMutation::SetState(state) = self;
+            format!("set-interaction-state {}", serde_json::to_string(state).expect("InteractionState always serializes"))
+        }
+        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+            let body = line.strip_prefix("set-interaction-state ").ok_or_else(|| ::store::TextError::new(format!("unknown interaction config op '{line}'"), ::store::TextSpan::at(1, 1)))?;
+            let state: protocol::InteractionState = serde_json::from_str(body).map_err(|error| ::store::TextError::new(error.to_string(), ::store::TextSpan::at(1, 1)))?;
+            Ok(InteractionConfigMutation::SetState(state))
+        }
+    }
+
+    impl ::protocol::OpBinary for InteractionConfigMutation {
+        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            let InteractionConfigMutation::SetState(state) = self;
+            serde_json::to_vec(state).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            let state: protocol::InteractionState = serde_json::from_slice(bytes).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })?;
+            Ok(InteractionConfigMutation::SetState(state))
+        }
+    }
+    //#endregion 🔖️InteractionConfig
+
     //#region 🔖️CommandLog
     /// @emoji 🎚️ Tri-state operations filter of the framework history panel — `All` is the default.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -4506,6 +4807,7 @@ pub mod app {
             // host effect — distinct icons so a folded ×count row reads at a glance.
             ActionKind::View => IconName::Eye,
             ActionKind::Shell => IconName::Monitor,
+            ActionKind::Interaction => "mouse-pointer".into(),
         }
     }
 
@@ -4602,9 +4904,7 @@ pub mod app {
                 UiTreeSectionNode { id: "framework.history.commands".into(), label: Some(Label::data(if is_de { "Befehle" } else { "Commands" })), default_open: Some(true), presence: UiPresence::default(), items: command_items },
             ],
             presence: UiPresence::default(),
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
+            interaction_domain: None,
             drop_action: None,
             menu: None,
         })
@@ -5321,6 +5621,7 @@ pub mod app {
             command: &Self::Command,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
+            interaction: &InteractionView<'_>,
             draft: &DraftView<'_, Self::Draft>,
             engines: &EngineHandles,
         ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault>;
@@ -5367,11 +5668,21 @@ pub mod app {
         /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
         /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
         /// interception only calls this when a media type is declared).
-        fn copy_fragment( _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
+        fn copy_fragment( _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
             Err(ClipboardError::EmptySelection)
         }
-        fn cut_operations( _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Mutation> {
+        fn cut_operations( _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Vec<Self::Mutation> {
             Vec::new()
+        }
+        /// 🕹️ This app's `InteractionTopology` for the CURRENT document/config — one `DomainTopology`
+        /// per domain whose `HierarchyProvider::Topology` the app itself supplies (a DAG, scene graph,
+        /// AST parent chain, …). Default: empty (correct for `Flat`/`UiTree`/`PathDelimited` domains,
+        /// which `VcsArtifactApp` derives itself — see `resolve_domain_topology`); an app that declares
+        /// any `HierarchyProvider::Topology` domain MUST override this or that domain's transitive
+        /// hover/select and range-selection degrade to single-target (an empty topology contains no
+        /// node, so `DomainTopology::descendant_closure`/`index_of` find nothing).
+        fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+            protocol::InteractionTopology::default()
         }
         fn paste_operations( _doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
@@ -5689,6 +6000,12 @@ pub mod app {
         /// @emoji 📇️ The app's `controller_id` — addresses `ActionDescriptor.controller_id` for the
         /// framework-built history panel. Empty for the registry-less test path.
         controller_id: String,
+        /// 🕹️ The app's declared `InteractionDefinition`s indexed by domain id — `dispatch_interaction_action`'s
+        /// sole source of domain declarations (granularities, hierarchy, hover/selection specs). Empty
+        /// for the registry-less test path, exactly like `actions`/`commands` — an app constructed via
+        /// `VcsArtifactApp::new` therefore has no interaction domains to intercept, matching the fact
+        /// that `AppBuilder::interaction(...)` calls never reach a registry built that way either.
+        interactions: HashMap<String, InteractionDefinition>,
     }
 
     impl AppActionRegistry {
@@ -5699,6 +6016,7 @@ pub mod app {
                 actions: definition.actions.iter().map(|action| (action.id.clone(), action.clone())).collect(),
                 commands: definition.commands.iter().map(|command| (command.id.clone(), command.clone())).collect(),
                 controller_id: definition.controller_id.clone(),
+                interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect(),
             }
         }
 
@@ -5708,6 +6026,17 @@ pub mod app {
 
         fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
             self.commands.get(id)
+        }
+
+        /// 🕹️ `domain_id`'s declared `InteractionDefinition`, `None` when undeclared.
+        pub(crate) fn interaction(&self, domain_id: &str) -> Option<&InteractionDefinition> {
+            self.interactions.get(domain_id)
+        }
+
+        /// 🕹️ Every declared interaction domain, in no particular order — `clearSelection`/`selectAll`
+        /// (which carry no `domainId` arg, applying to every declared domain at once) iterate this.
+        pub(crate) fn interactions(&self) -> impl Iterator<Item = &InteractionDefinition> {
+            self.interactions.values()
         }
 
         /// 🗂️ Ribbon-parent-taxonomy category (a `ui_wgpu::wgpu::RIBBON_PARENT_CATEGORIES` id) for a declared
@@ -5997,6 +6326,30 @@ pub mod app {
         /// instance (i.e. per document), exactly like `store`/`config_store`/`draft_store` are
         /// per-instance rather than global.
         pub(crate) composition: CompositionCoordinator,
+        /// 🕹️ The framework-owned, PERSISTED-LOCAL half of the interaction mechanism: one domain's
+        /// current selection + active mode/granularity, written ONLY by the six intercepted interaction
+        /// verbs (`dispatch_interaction_action`) through `ApplyInLane{lane: HistoryLane::Interaction}` —
+        /// single writer, so it never drifts from what the presence broadcast reports. Persists/reloads
+        /// like `config_store`; the general "undo"/"redo" actions above only ever dispatch against
+        /// `self.store` (the DOCUMENT store), never this one, so a pick is never undoable by construction
+        /// — the `HistoryLane` tag on its own entries additionally lets a lane-aware caller walk PAST them
+        /// (`ArtifactCommand::UndoInLane`/`RedoInLane`) without needing a second store at all. A real
+        /// `store::ConfigStore<InteractionState, _>` instance (not folded into `config_store: ConfigStore
+        /// <A::Config, A::ConfigMutation>`, which is per-app-config-typed): keeps this zero-touch for
+        /// every app's own `Config`/`ConfigMutation` types, since ~17 crates never need to know this
+        /// exists — see `InteractionConfigMutation`'s own doc comment for the orphan-rule reason its
+        /// `Mutation` impl couldn't target `A::Config` directly either way.
+        pub(crate) interaction_store: ConfigStore<protocol::InteractionState, InteractionConfigMutation>,
+        /// 🐁️ The EPHEMERAL-local half — see `InteractionHoverState`'s own doc comment. Never persisted,
+        /// never undoable, mirrored into the ephemeral-shared `PresenceInteraction` broadcast
+        /// (`interaction_state`) exactly like `presence_store`'s own local half.
+        pub(crate) interaction_hover: InteractionHoverState,
+        /// 🌳️ One `DomainTopology` per `HierarchyProvider::UiTree` domain, derived from the LAST
+        /// rendered `UiNode::Tree` carrying that `interaction_domain` (see `render`'s post-processing
+        /// pass) — `resolve_domain_topology`'s cache for domains the app itself never supplies a
+        /// topology for. Empty (safely degrading to Flat-like single-target behavior) until the first
+        /// render of that domain's tree.
+        pub(crate) interaction_ui_topology: HashMap<String, protocol::DomainTopology>,
     }
 
     /// 🆔️ Deterministic session-local `ArtifactHandle` for a CHILD's real (string) artifact id.
@@ -6024,6 +6377,11 @@ pub mod app {
 
     const CLIPBOARD_ACTION_IDS: [&str; 3] = ["copy", "cut", "paste"];
 
+    /// 🕹️ The six framework-owned interaction actions `dispatch_action` intercepts before any of the
+    /// other framework-reserved branches — see `dispatch_interaction_action`'s own doc comment.
+    const INTERACTION_ACTION_IDS: [&str; 6] =
+        [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID];
+
     impl<A: ArtifactApp> VcsArtifactApp<A> {
         /// @emoji 🧬️ Constructs a wrapper with an empty registry — contract enforcement is skipped. Used by
         /// tests and any registry-less construction path.
@@ -6039,9 +6397,12 @@ pub mod app {
             let config_envelope = create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema(), &config_id, A::initial_config(), None);
             let draft_id = format!("{}-draft", A::APP_ID);
             let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft(), None);
+            let interaction_id = format!("{}-interaction", A::APP_ID);
+            let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
             let mut store = ArtifactStore::new(envelope);
             let config_store = ConfigStore::new(config_envelope);
             let draft_store = store::DraftStore::new(draft_envelope);
+            let interaction_store = ConfigStore::new(interaction_envelope);
             let genesis_mutations = A::genesis();
             if !genesis_mutations.is_empty() {
                 store
@@ -6065,6 +6426,9 @@ pub mod app {
                 children: HashMap::new(),
                 pending_child_pins: Vec::new(),
                 composition: CompositionCoordinator::new(),
+                interaction_store,
+                interaction_hover: InteractionHoverState::new(),
+                interaction_ui_topology: HashMap::new(),
             }
         }
 
@@ -6579,6 +6943,10 @@ pub mod app {
             };
             self.store.dispatch(vcs_command).map_err(|error| error.into_fault())?;
             self.cache = None;
+            // 🕹️ Task 4: after EVERY artifact (document) dispatch, re-derive fresh topology and prune
+            // any selection/hover id no longer present — a document edit that deleted a node must not
+            // leave it lingering in another window's selection.
+            self.revalidate_interaction_state_after_document_change(meta)?;
             let amended_same_edit = before_edit_id.is_some() && self.store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_edit_id.as_ref();
             // 🧾️ One command-log entry per VCS edit — a coalesced gesture (`amended_same_edit`) grows the
             // existing entry's `op_lines` live (see `build_history_view`), it never appends a new entry.
@@ -6905,12 +7273,236 @@ pub mod app {
             Ok(result)
         }
 
+        //#region 🔖️InteractionDispatch
+        /// 🕹️ Combines the persisted-local `interaction_store` snapshot with the ephemeral
+        /// `interaction_hover` map into one `InteractionState` — the "app-side source" a host's presence
+        /// heartbeat reads for THIS app instance before calling `assemble_presence_interaction`
+        /// (`🏪️store/🔄️sync/🦀️component.rs`, wave 2a) with it plus this app's declared hover/selection
+        /// specs (from `AppDefinition.interactions`, already available wherever a heartbeat is built).
+        pub fn interaction_state(&self) -> protocol::InteractionState {
+            let mut state = self.interaction_store.snapshot().unwrap_or_default();
+            state.hover = self.interaction_hover.clone();
+            state
+        }
+
+        /// 🌳️ Resolves `def`'s `DomainTopology` for the current document — the CLOSURE/RANGE-ARITHMETIC
+        /// use (always a concrete, possibly-empty topology; safe for `next_selection`/`next_hover`, which
+        /// degrade gracefully to single-target over an empty one). `HierarchyProvider::Topology` calls the
+        /// app's own `interaction_topology`; `HierarchyProvider::UiTree` reads the cache `render`'s
+        /// post-processing pass populates from the last rendered tree; `HierarchyProvider::Flat` is
+        /// trivially empty (no structure by declaration); `HierarchyProvider::PathDelimited` self-derives
+        /// a topology from `known_ids` (the ids already involved in this dispatch — the current batch's
+        /// targets plus whatever was already selected/hovered) by splitting each on `delimiter` — an
+        /// INHERENT approximation (only ids the interaction machine has already seen are represented,
+        /// since the wrapper has no document access of its own for an arbitrary id space); an app needing
+        /// a real full-universe topology for a delimited id scheme declares `HierarchyProvider::Topology`
+        /// and implements `interaction_topology` instead.
+        fn resolve_domain_topology(&mut self, def: &InteractionDefinition, known_ids: impl Iterator<Item = String>) -> Result<protocol::DomainTopology, Fault> {
+            match &def.hierarchy {
+                protocol::HierarchyProvider::Flat => Ok(protocol::DomainTopology::default()),
+                protocol::HierarchyProvider::Topology => {
+                    self.refresh_cache()?;
+                    let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
+                    let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(&self.children));
+                    let cfg = ConfigView { snapshot: config };
+                    let topology = A::interaction_topology(&doc, &cfg);
+                    Ok(topology.domains.get(&def.id).cloned().unwrap_or_default())
+                }
+                protocol::HierarchyProvider::UiTree => Ok(self.interaction_ui_topology.get(&def.id).cloned().unwrap_or_default()),
+                protocol::HierarchyProvider::PathDelimited { delimiter } => Ok(derive_path_delimited_topology(def, delimiter, known_ids)),
+            }
+        }
+
+        /// 🧹 Builds the `InteractionTopology` `validate_state`'s PRUNING (existence-check) use needs —
+        /// deliberately DIFFERENT from `resolve_domain_topology`'s closure/range use: a `Flat` domain is
+        /// OMITTED from the map entirely (not inserted as an empty topology), because `validate_state`
+        /// treats a missing domain entry as "no membership information, keep every id" while an EMPTY
+        /// `DomainTopology` would mean "no id is a member" and prune every `Flat` selection on every
+        /// dispatch — `Flat` genuinely has no structure to check staleness against, by declaration; an app
+        /// wanting deleted-node pruning for a nominally-flat domain declares `HierarchyProvider::Topology`
+        /// with one root `TopologyNode` per valid id instead.
+        fn build_full_interaction_topology(&mut self, state: &protocol::InteractionState) -> Result<protocol::InteractionTopology, Fault> {
+            let defs: Vec<InteractionDefinition> = self.registry.interactions().cloned().collect();
+            let mut domains = std::collections::BTreeMap::new();
+            for def in &defs {
+                if matches!(def.hierarchy, protocol::HierarchyProvider::Flat) {
+                    continue;
+                }
+                let selected_ids = state.selection.get(&def.id).map(|selection| selection.ids.clone()).unwrap_or_default();
+                let hovered_ids = state.hover.get(&def.id).map(|hover| hover.ids.clone()).unwrap_or_default();
+                let topology = self.resolve_domain_topology(def, selected_ids.into_iter().chain(hovered_ids))?;
+                domains.insert(def.id.clone(), topology);
+            }
+            Ok(protocol::InteractionTopology { domains })
+        }
+
+        /// 🧹 `validate_state` against fresh topology, then persists the result: hover into the ephemeral
+        /// `interaction_hover` map, selection/mode/granularity into `interaction_store` via
+        /// `ApplyInLane{lane: HistoryLane::Interaction}` — but ONLY when the persisted half actually
+        /// changed, so a no-op revalidation (the common case for `revalidate_interaction_state_after_document_change`,
+        /// called after every artifact dispatch even when nothing was selected) never mints an empty edit.
+        fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, meta: &ActionMeta) -> Result<(), Fault> {
+            let outlines: Vec<protocol::InteractionOutline> = self.registry.interactions().map(InteractionDefinition::outline).collect();
+            let topology = self.build_full_interaction_topology(&combined)?;
+            let validated = protocol::validate_state(&outlines, &topology, &combined);
+            self.interaction_hover = validated.hover.clone();
+            let persisted_before = self.interaction_store.snapshot().unwrap_or_default();
+            let persisted = protocol::InteractionState { selection: validated.selection, hover: std::collections::BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
+            if persisted != persisted_before {
+                self.interaction_store.set_local_actor_id(Some(meta.actor.clone()));
+                self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::SetState(persisted)], description: None, lane: HistoryLane::Interaction }).map_err(|error| error.into_fault())?;
+            }
+            Ok(())
+        }
+
+        /// 🕹️ Task 4: called after every artifact (document) dispatch so an id deleted elsewhere in the
+        /// document drops out of selection/hover automatically. Skips the topology/validate work
+        /// entirely when the app declares no interaction domains at all (the overwhelming majority of
+        /// dispatches, for an app mid-migration or with no interactions yet).
+        fn revalidate_interaction_state_after_document_change(&mut self, meta: &ActionMeta) -> Result<(), Fault> {
+            if self.registry.interactions().next().is_none() {
+                return Ok(());
+            }
+            self.revalidate_and_persist_interaction_state(self.interaction_state(), meta)
+        }
+
+        /// 🕹️ The actual body of `dispatch_action`'s interception for the six framework interaction verbs
+        /// (`INTERACTION_ACTION_IDS`) — the ONE place any app's hover/selection ever mutates. Runs the
+        /// pure os-kernel machine (`next_selection`/`next_hover`), re-validates+persists via
+        /// `revalidate_and_persist_interaction_state`, records the command-log row under `ActionKind::Interaction`
+        /// (kept out of the history panel — `finish_recorded`'s `skip_history_panel` check), and always
+        /// returns `UiDirtyScope::Full` (mirrors the history actions' own reasoning: a selection/hover
+        /// change can affect the interacted tree/viewport plus every peer's presence overlay across
+        /// multiple window kinds — narrower scoping would need per-window interaction-domain bookkeeping
+        /// this wave doesn't build).
+        fn dispatch_interaction_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            self.refresh_cache()?;
+            let mut state = self.interaction_store.snapshot().unwrap_or_default();
+            match action {
+                _ if action == INTERACTION_SELECT_ACTION_ID => {
+                    let domain_id = interaction_domain_id_arg(args, action)?;
+                    let def = self.registry.interaction(&domain_id).cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
+                    let targets = parse_interaction_targets(args, action)?;
+                    let merge = parse_merge_mode(args)?;
+                    let mode = state.active_mode.get(&domain_id).copied().unwrap_or_else(|| def.selection.modes.first().copied().unwrap_or(protocol::SelectionMode::Single));
+                    let current = state.selection.get(&domain_id).cloned().unwrap_or_default();
+                    let known_ids = current.ids.iter().cloned().chain(targets.iter().map(|target| target.id.clone()));
+                    let topology = self.resolve_domain_topology(&def, known_ids)?;
+                    let next = protocol::next_selection(&def.selection, &current, &topology, &protocol::SelectionInput { targets, merge, mode });
+                    state.selection.insert(domain_id.clone(), next);
+                    state.active_mode.insert(domain_id, mode);
+                }
+                _ if action == INTERACTION_HOVER_ACTION_ID => {
+                    let domain_id = interaction_domain_id_arg(args, action)?;
+                    let def = self.registry.interaction(&domain_id).cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
+                    let channel = args.and_then(|value| value.get("channel")).and_then(Value::as_str).unwrap_or("pointer").to_string();
+                    let targets = parse_interaction_targets(args, action)?;
+                    let current = self.interaction_hover.get(&domain_id).cloned().unwrap_or_default();
+                    let known_ids = current.ids.iter().cloned().chain(targets.iter().map(|target| target.id.clone()));
+                    let topology = self.resolve_domain_topology(&def, known_ids)?;
+                    let next = protocol::next_hover(&def.hover, &topology, &protocol::HoverInput { channel, targets });
+                    if next.ids.is_empty() {
+                        self.interaction_hover.remove(&domain_id);
+                    } else {
+                        self.interaction_hover.insert(domain_id, next);
+                    }
+                }
+                _ if action == CLEAR_SELECTION_ACTION_ID => {
+                    for domain_id in self.registry.interactions().map(|def| def.id.clone()).collect::<Vec<_>>() {
+                        state.selection.remove(&domain_id);
+                    }
+                }
+                _ if action == SELECT_ALL_ACTION_ID => {
+                    for def in self.registry.interactions().cloned().collect::<Vec<_>>() {
+                        let granularity = state.active_granularity.get(&def.id).cloned().unwrap_or_else(|| def.granularities.first().map(|granularity| granularity.id.clone()).unwrap_or_default());
+                        let mode = state.active_mode.get(&def.id).copied().unwrap_or_else(|| def.selection.modes.first().copied().unwrap_or(protocol::SelectionMode::Multiple));
+                        let current = state.selection.get(&def.id).cloned().unwrap_or_default();
+                        let hovered_ids = self.interaction_hover.get(&def.id).map(|hover| hover.ids.clone()).unwrap_or_default();
+                        let known_ids = current.ids.iter().cloned().chain(hovered_ids);
+                        let topology = self.resolve_domain_topology(&def, known_ids)?;
+                        let ids: Vec<String> = topology.ordered.iter().filter(|node| node.granularity == granularity).map(|node| node.id.clone()).collect();
+                        if !ids.is_empty() {
+                            state.selection.insert(def.id.clone(), protocol::DomainSelection { granularity, ids, anchor_id: None });
+                        }
+                        state.active_mode.insert(def.id.clone(), mode);
+                    }
+                }
+                _ if action == SET_SELECTION_MODE_ACTION_ID => {
+                    let domain_id = interaction_domain_id_arg(args, action)?;
+                    let def = self.registry.interaction(&domain_id).cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
+                    let raw = args.and_then(|value| value.get("mode")).and_then(Value::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing mode")))?;
+                    let mode = parse_selection_mode(raw)?;
+                    if !def.selection.modes.contains(&mode) {
+                        return Err(plugin_sdk_fault(format!("{action}: domain {domain_id} does not declare mode {raw}")));
+                    }
+                    state.active_mode.insert(domain_id, mode);
+                }
+                _ if action == SET_INTERACTION_GRANULARITY_ACTION_ID => {
+                    let domain_id = interaction_domain_id_arg(args, action)?;
+                    let def = self.registry.interaction(&domain_id).cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
+                    let granularity_id = args.and_then(|value| value.get("granularityId")).and_then(Value::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing granularityId")))?.to_string();
+                    if !def.granularities.iter().any(|granularity| granularity.id == granularity_id) {
+                        return Err(plugin_sdk_fault(format!("{action}: domain {domain_id} does not declare granularity {granularity_id}")));
+                    }
+                    state.active_granularity.insert(domain_id, granularity_id);
+                }
+                _ => unreachable!("dispatch_interaction_action called for non-interaction action {action} — INTERACTION_ACTION_IDS out of sync"),
+            }
+            state.hover = self.interaction_hover.clone();
+            self.revalidate_and_persist_interaction_state(state, meta)?;
+            self.record_command(action, ActionKind::Interaction, None, None, None, None);
+            Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::Full))
+        }
+        /// 🕹️ Task 5: recursively walks a just-rendered `UiNode`, and for every `UiNode::Tree` carrying
+        /// an `interaction_domain` (1) caches a `DomainTopology` derived from its (possibly nested)
+        /// `sections`/`items` shape into `interaction_ui_topology` (the `HierarchyProvider::UiTree` half
+        /// of `resolve_domain_topology`) and (2) OVERWRITES that tree's item `presence.selected`/hover
+        /// via `ui_tree_stamp_presence` from the combined `state` — REPLACING whatever the app itself
+        /// stamped through `PanelTreeBuilder::selected()`/`.highlighted()`, since a domain-bound tree's
+        /// selection is now framework-owned. Recurses through every `UiNode` variant that can nest
+        /// another (`Stack`/`Section`/`Group`/`Field`); every other variant is a leaf.
+        pub(crate) fn stamp_and_cache_interaction_ui(&mut self, node: &mut UiNode, state: &protocol::InteractionState) {
+            match node {
+                UiNode::Tree(tree) => {
+                    if let Some(domain_id) = tree.interaction_domain.clone() {
+                        let granularity = self.registry.interaction(&domain_id).and_then(|def| def.granularities.first()).map(|granularity| granularity.id.clone()).unwrap_or_default();
+                        self.interaction_ui_topology.insert(domain_id.clone(), ui_tree_domain_topology(&tree.sections, &granularity));
+                        let selected: HashSet<String> = state.selection.get(&domain_id).map(|selection| selection.ids.iter().cloned().collect()).unwrap_or_default();
+                        let hovered: HashSet<String> = state.hover.get(&domain_id).map(|hover| hover.ids.iter().cloned().collect()).unwrap_or_default();
+                        ui_tree_stamp_presence(&mut tree.sections, &selected, &hovered);
+                    }
+                }
+                UiNode::Stack(stack) => {
+                    for child in &mut stack.children {
+                        self.stamp_and_cache_interaction_ui(child, state);
+                    }
+                }
+                UiNode::Section(section) => {
+                    for child in &mut section.children {
+                        self.stamp_and_cache_interaction_ui(child, state);
+                    }
+                }
+                UiNode::Group(group) => {
+                    for child in &mut group.children {
+                        self.stamp_and_cache_interaction_ui(child, state);
+                    }
+                }
+                UiNode::Field(field) => {
+                    self.stamp_and_cache_interaction_ui(&mut field.child, state);
+                }
+                _ => {}
+            }
+        }
+        //#endregion 🔖️InteractionDispatch
+
         /// @emoji 🕰️ The actual body of `PluginApp::handle_action` — renamed to an inherent method so
         /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). B1:
-        /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard) — an app's own
-        /// behavior is dispatched exclusively through `dispatch_typed_command` now.
+        /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard/interaction) —
+        /// an app's own behavior is dispatched exclusively through `dispatch_typed_command` now.
         pub(crate) fn dispatch_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            if HISTORY_ACTION_IDS.contains(&action) {
+            if INTERACTION_ACTION_IDS.contains(&action) {
+                self.dispatch_interaction_action(action, args, meta)
+            } else if HISTORY_ACTION_IDS.contains(&action) {
                 // 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): when the tail edit (undo) / redo-tail
                 // edit (redo) carries a `MutationMeta.group_id`, this history action must reverse the
                 // WHOLE composite gesture — every member the group's `dispatch_group` call touched,
@@ -7057,19 +7649,26 @@ pub mod app {
                 Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None))
             } else if CLIPBOARD_ACTION_IDS.contains(&action) {
                 self.refresh_cache()?;
+                // 🕹️ Materialized BEFORE the field-wise `self` destructure below (owned, not
+                // borrowed) — `interaction_view` needs `&self` as a whole, which the destructure's
+                // partial `app`/`cache`/`children` borrows would otherwise block for the rest of this
+                // block.
+                let interaction_state = self.interaction_store.snapshot().unwrap_or_default();
+                let interaction_hover = self.interaction_hover.clone();
                 let emit = {
                     let VcsArtifactApp { app, cache, children, .. } = self;
                     let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                     let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                     let cfg = ConfigView { snapshot: config };
+                    let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover };
                     match action {
-                        "copy" => match A::copy_fragment(&doc, &cfg) {
+                        "copy" => match A::copy_fragment(&doc, &cfg, &interaction) {
                             Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Default::default() },
                             Err(_) => Emit::default(),
                         },
                         "cut" => {
-                            let fragment = A::copy_fragment(&doc, &cfg).ok();
-                            let operations = A::cut_operations(&doc, &cfg);
+                            let fragment = A::copy_fragment(&doc, &cfg, &interaction).ok();
+                            let operations = A::cut_operations(&doc, &cfg, &interaction);
                             let mut emit = Emit::mutations(operations);
                             emit.description = Some("Cut".into());
                             if let Some(fragment) = fragment {
@@ -7141,6 +7740,10 @@ pub mod app {
         fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.refresh_cache()?;
             let draft_snapshot = self.draft_store.snapshot().map_err(|error| error.into_fault())?;
+            // 🕹️ Same "materialize owned before the field-wise destructure" reasoning as the clipboard
+            // branch above.
+            let interaction_state = self.interaction_store.snapshot().unwrap_or_default();
+            let interaction_hover = self.interaction_hover.clone();
                 let (verb, emit, ephemeral) = {
                 let VcsArtifactApp { app, cache, children, presence_store, transient_store, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
@@ -7149,13 +7752,14 @@ pub mod app {
                 let draft = DraftView { snapshot: &draft_snapshot };
                 let presence = PresenceView { local: presence_store.local(), peers: presence_store.peers() };
                 let transient = TransientView { snapshot: transient_store.current() };
+                let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover };
                 let engines = EngineHandles::empty();
                 let verb = A::command_id(&command).to_string();
                 // 👥️🫧️ The ephemeral lanes are computed BEFORE `handle` so they still see the
                 // pre-command state, and they are computed unconditionally: a command that fails
                 // still moved the cursor that provoked it.
                 let ephemeral = A::ephemeral(&command, &doc, &cfg, &presence, &transient);
-                let emit = A::handle(&command, &doc, &cfg, &draft, &engines)?;
+                let emit = A::handle(&command, &doc, &cfg, &interaction, &draft, &engines)?;
                 (verb, emit, ephemeral)
             };
             // 👥️🫧️ Applied outside the borrow above, and never through `dispatch_emit`: neither lane
@@ -7214,7 +7818,9 @@ pub mod app {
         /// (`log_generation` advanced) — the seam that makes the panel live without every action opting in.
         fn finish_recorded(&self, log_generation_before: u64, verb: &str, mut result: InvocationResult) -> InvocationResult {
             if self.log_generation != log_generation_before {
-                let skip_history_panel = self.registry.get(verb).is_some_and(|def| matches!(def.kind, ActionKind::View));
+                // 🕹️ `Interaction`-kind rows (the six injected hover/selection verbs) stay out of the
+                // history panel exactly like `View`-kind rows — see `dispatch_interaction_action`'s doc.
+                let skip_history_panel = self.registry.get(verb).is_some_and(|def| matches!(def.kind, ActionKind::View | ActionKind::Interaction));
                 if !skip_history_panel {
                     result.ui_scope = with_history_panel_scope(result.ui_scope);
                 }
@@ -7423,19 +8029,28 @@ pub mod app {
             } else {
                 body_key.to_string()
             };
+            // 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
+            // `interaction_domain`-bound `UiTree` this render produces — see `stamp_and_cache_interaction_ui`.
+            let interaction_state = self.interaction_state();
             if let Some(json) = snapshot_override_json {
                 let snapshot: A::Snapshot = serde_json::from_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 let history = self.build_history_view();
                 let doc = ArtifactView::new(&snapshot, &history);
                 let config = self.config_store.snapshot().unwrap_or_else(|_| A::Config::default());
                 let cfg = ConfigView { snapshot: &config };
-                return Ok(A::render(&effective_body_key, &doc, &cfg));
+                let mut node = A::render(&effective_body_key, &doc, &cfg);
+                self.stamp_and_cache_interaction_ui(&mut node, &interaction_state);
+                return Ok(node);
             }
-            let VcsArtifactApp { app, cache, children, .. } = self;
-            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
-            let cfg = ConfigView { snapshot: config };
-            Ok(A::render(&effective_body_key, &doc, &cfg))
+            let mut node = {
+                let VcsArtifactApp { app, cache, children, .. } = self;
+                let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
+                let cfg = ConfigView { snapshot: config };
+                A::render(&effective_body_key, &doc, &cfg)
+            };
+            self.stamp_and_cache_interaction_ui(&mut node, &interaction_state);
+            Ok(node)
         }
 
         fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
@@ -8813,7 +9428,7 @@ pub mod plugin_runtime {
         use serde_json::json;
         use store::{Backbone, BackboneMessage, MemoryBackbone};
         use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
-        use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
+        use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
         #[dsl(extension = "testkit-macro")]
@@ -9267,7 +9882,7 @@ pub mod plugin_runtime {
                 }
             }
 
-            fn handle(command: &TestCommand, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
+            fn handle(command: &TestCommand, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &crate::app::InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
                 let _ = Self::command_id(command);
                 match command {
                     TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
@@ -9301,7 +9916,7 @@ pub mod plugin_runtime {
                 Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
             }
 
-            fn copy_fragment(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {
+            fn copy_fragment(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &crate::app::InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
                 if doc.snapshot.label.is_empty() {
                     return Err(ClipboardError::EmptySelection);
                 }
@@ -9315,7 +9930,7 @@ pub mod plugin_runtime {
                 })
             }
 
-            fn cut_operations(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestMutation> {
+            fn cut_operations(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &crate::app::InteractionView<'_>) -> Vec<TestMutation> {
                 if doc.snapshot.label.is_empty() {
                     Vec::new()
                 } else {
@@ -9346,6 +9961,18 @@ pub mod plugin_runtime {
                     .when(!doc.snapshot.label.is_empty() && doc.snapshot.label != "flat-menu-test", |m| m.command("incrementViaCommand"))
                     .when(doc.snapshot.label == "flat-menu-test", |m| (1..=10).fold(m, |m, index| m.action(format!("flatLeaf{index}"))))
                     .build()
+            }
+
+            /// 🧪️ `🕹️InteractionDispatch` fixture: the "items" domain (declared only by `interaction_registry`
+            /// below — every OTHER test's registry declares no interactions, so this is never called for
+            /// them) is `HierarchyProvider::Topology`-backed by a single synthetic id, "item-1", present
+            /// exactly when `doc.snapshot.label` is non-empty — lets a test simulate "delete the selected
+            /// node" by setting the label back to empty and observing `validate_state` prune it.
+            fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> protocol::InteractionTopology {
+                let mut domains = std::collections::BTreeMap::new();
+                let ordered = if doc.snapshot.label.is_empty() { Vec::new() } else { vec![protocol::TopologyNode { id: "item-1".into(), granularity: "item".into(), parent: None }] };
+                domains.insert("items".to_string(), protocol::DomainTopology { ordered });
+                protocol::InteractionTopology { domains }
             }
         }
 
@@ -9392,6 +10019,49 @@ pub mod plugin_runtime {
 
         fn contract_app_under_test() -> VcsArtifactApp<TestApp> {
             VcsArtifactApp::with_registry(TestApp::default(), contract_registry())
+        }
+
+        /// 🧪️ A registry declaring one `HierarchyProvider::Topology` interaction domain ("items", see
+        /// `TestApp::interaction_topology`) — the `🕹️InteractionDispatch` fixture. Auto-injects the six
+        /// framework interaction actions via `interaction_action_definitions` (verified by
+        /// `build_definition_carries_window_interactions_and_injects_framework_actions` above).
+        fn interaction_registry() -> AppActionRegistry {
+            let app = App::from_builder(
+                App::builder("synthetic-play", LocalizedLabel::data("Synthetic"))
+                    .document(["state"])
+                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                    .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .interaction(semio_framework::InteractionDefinition {
+                        id: "items".into(),
+                        label: LocalizedLabel::data("Items"),
+                        granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
+                        hierarchy: protocol::HierarchyProvider::Topology,
+                        hover: protocol::HoverSpec::default(),
+                        selection: protocol::SelectionSpec {
+                            modes: vec![protocol::SelectionMode::Multiple, protocol::SelectionMode::Single],
+                            methods: vec![protocol::SelectionMethod::Pick],
+                            merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+                            transitive: false,
+                            broadcast: true,
+                        },
+                    })
+                    .window_kind_interactions("main", vec![semio_framework::InteractionRef::new("items")]),
+            );
+            AppActionRegistry::from_definition(&app.definition)
+        }
+
+        fn interaction_app_under_test() -> VcsArtifactApp<TestApp> {
+            VcsArtifactApp::with_registry(TestApp::default(), interaction_registry())
+        }
+
+        /// 🧪️ Builds the JSON `args` an `interactionSelect`/`interactionHover` dispatch carries — the
+        /// `targets` arg is itself a JSON-encoded string (an `ActionArgDef::text`, matching
+        /// `interaction_action_definitions`'s declaration), not a nested JSON array.
+        fn interaction_target_args(extra: serde_json::Value, id: &str) -> serde_json::Value {
+            let targets = serde_json::to_string(&vec![protocol::InteractionTarget { granularity: "item".into(), id: id.into() }]).expect("targets serialize");
+            let mut object = extra;
+            object["targets"] = json!(targets);
+            object
         }
 
         fn synthetic_setup() {}
@@ -10365,6 +11035,141 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default());
             app.dispatch_typed(TestCommand::BadView, &meta()).expect("no registry ⇒ kind discipline skipped");
         }
+
+        //#region 🔖️InteractionDispatchTests
+        #[test]
+        fn interaction_select_replace_persists_through_the_interaction_store() {
+            let mut app = interaction_app_under_test();
+            // 🕹️ `interaction_topology` requires a non-empty `label` for "item-1" to exist.
+            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
+            app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
+            let selection = app.interaction_state().selection.get("items").cloned().expect("items domain selected");
+            assert_eq!(selection.ids, vec!["item-1".to_string()]);
+            assert_eq!(selection.granularity, "item");
+        }
+
+        #[test]
+        fn interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store() {
+            let mut app = interaction_app_under_test();
+            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
+            app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
+            let edits_after_select = app.interaction_store.envelope().vcs.edits.len();
+
+            app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &meta()).expect("interactionHover");
+
+            assert_eq!(app.interaction_store.envelope().vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
+            assert_eq!(app.interaction_state().hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
+
+            // 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
+            app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&json!({ "domainId": "items", "channel": "pointer", "targets": "[]" })), &meta()).expect("clear hover");
+            assert!(app.interaction_state().hover.get("items").is_none(), "an emptied hover channel is removed, not left as an empty entry");
+        }
+
+        #[test]
+        fn a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store() {
+            let mut app = interaction_app_under_test();
+            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
+            app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
+            assert_eq!(app.interaction_state().selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
+
+            // 🕰️ The framework-injected "undo" action only ever dispatches against `self.store` (the
+            // DOCUMENT store) — with only the label-seed edit on it, one undo reverts THAT, not the pick.
+            app.handle_action("undo", None, &meta()).expect("undo");
+            assert_eq!(app.test_snapshot().label, "", "undo must revert the document edit (seeding the label)");
+            assert_eq!(app.interaction_state().selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
+        }
+
+        #[test]
+        fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
+            let mut app = interaction_app_under_test();
+            app.handle_action(semio_framework::SET_SELECTION_MODE_ACTION_ID, Some(&json!({ "domainId": "items", "mode": "single" })), &meta()).expect("setSelectionMode");
+            assert_eq!(app.interaction_state().active_mode.get("items").copied(), Some(protocol::SelectionMode::Single));
+
+            app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId": "item" })), &meta()).expect("setInteractionGranularity");
+            assert_eq!(app.interaction_state().active_granularity.get("items").map(String::as_str), Some("item"));
+
+            // 🛂️ An undeclared granularity is rejected, not silently accepted.
+            let error = app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId": "bogus" })), &meta()).expect_err("undeclared granularity must be rejected");
+            assert!(error.message.contains("bogus"), "unexpected error: {}", error.message);
+        }
+
+        #[test]
+        fn clear_selection_and_select_all_apply_across_every_declared_domain() {
+            let mut app = interaction_app_under_test();
+            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
+
+            app.handle_action(semio_framework::SELECT_ALL_ACTION_ID, None, &meta()).expect("selectAll");
+            assert_eq!(app.interaction_state().selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "selectAll must select every id `interaction_topology` reports for the declared granularity");
+
+            app.handle_action(semio_framework::CLEAR_SELECTION_ACTION_ID, None, &meta()).expect("clearSelection");
+            assert!(app.interaction_state().selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "clearSelection must empty every declared domain's selection");
+        }
+
+        #[test]
+        fn validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it() {
+            let mut app = interaction_app_under_test();
+            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
+            app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
+            assert_eq!(app.interaction_state().selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
+
+            // 🧹️ `TestApp::interaction_topology` reports NO ids once `label` is empty again — simulates
+            // "item-1 was deleted from the document" — task 4: revalidated after EVERY artifact dispatch.
+            app.dispatch_typed(TestCommand::SetLabel { value: "".into() }, &meta()).expect("delete item-1 (empty label)");
+
+            assert!(app.interaction_state().selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "the deleted id must be pruned from selection automatically");
+        }
+
+        #[test]
+        fn interaction_verbs_are_recorded_under_the_interaction_action_kind() {
+            let mut app = interaction_app_under_test();
+            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
+            app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
+            let history = app.test_history();
+            let row = history.commands.first().expect("one logged row");
+            assert_eq!(row.action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
+            assert_eq!(row.kind, ActionKind::Interaction);
+            assert!(!row.revertible, "an Interaction-kind row carries no edit/config_edit/inverse — never revertible");
+        }
+
+        #[test]
+        fn build_definition_rejects_transitive_flat_interaction() {
+            let outcome = std::panic::catch_unwind(|| {
+                App::from_builder(
+                    App::builder("bad-transitive-flat", LocalizedLabel::data("Bad"))
+                        .document(["state"])
+                        .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                        .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                        .interaction(semio_framework::InteractionDefinition {
+                            id: "items".into(),
+                            label: LocalizedLabel::data("Items"),
+                            granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
+                            hierarchy: protocol::HierarchyProvider::Flat,
+                            hover: protocol::HoverSpec { transitive: true, ..protocol::HoverSpec::default() },
+                            selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+                        }),
+                )
+            });
+            assert!(outcome.is_err(), "build_definition must reject transitive hover paired with HierarchyProvider::Flat");
+        }
+
+        #[test]
+        fn ui_tree_stamping_replaces_app_supplied_presence_from_interaction_state() {
+            let mut app = interaction_app_under_test();
+            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
+            app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
+
+            // 🕹️ Stamp directly (unit-level, independent of any real `UiTree`-producing app render): a
+            // hand-built domain-bound tree with a row the app itself marks selected=false must come out
+            // selected=true after `stamp_and_cache_interaction_ui` — the framework wins.
+            let mut item = UiTreeItemNode::base("item-1", Label::data("Item 1"));
+            item.presence.selected = false;
+            let mut node = UiNode::Tree(UiTreeNode { sections: vec![UiTreeSectionNode { id: "sec".into(), label: None, default_open: None, presence: UiPresence::default(), items: vec![item] }], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: Some("items".into()) });
+            let state = app.interaction_state();
+            app.stamp_and_cache_interaction_ui(&mut node, &state);
+            let UiNode::Tree(tree) = &node else { panic!("still a Tree node") };
+            assert!(tree.sections[0].items[0].presence.selected, "framework stamping must win over app-supplied presence");
+        }
+        //#endregion 🔖️InteractionDispatchTests
     }
     // #endregion plugin_runtime
 }

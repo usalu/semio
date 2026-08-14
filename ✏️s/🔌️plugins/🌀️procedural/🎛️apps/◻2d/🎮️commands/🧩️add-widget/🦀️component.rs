@@ -17,6 +17,8 @@ pub struct AddWidget {
     pub x: Option<f64>,
     pub y: Option<f64>}
 
+/// 🕹️ No longer auto-selects the newly-added widget — no `Emit` channel writes `graph`'s selection
+/// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let descriptor = match payload.kind.as_str() {
@@ -24,8 +26,8 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>,
         other => json!({ "kind": other }).to_string()};
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();
-    if let Ok(id) = host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)) {
-        return Ok(Emit { artifact_mutations: procedural2d_fixture_operations(&baseline, &host.fixture), config_mutations: vec![Procedural2dConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() });
+    if host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).is_ok() {
+        return Ok(Emit { artifact_mutations: procedural2d_fixture_operations(&baseline, &host.fixture), ..Default::default() });
     }
     Ok(Emit::default())
 }

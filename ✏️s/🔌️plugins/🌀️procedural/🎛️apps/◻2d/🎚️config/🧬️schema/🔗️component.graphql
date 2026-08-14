@@ -1,5 +1,4 @@
 type Procedural2dConfig {
-  selectedIds: [String!]! @state(class: CONFIG)
   camera: CameraJson! @state(class: CONFIG)
   showMode: String! @state(class: CONFIG)
   selectedGenerationId: String @state(class: CONFIG)

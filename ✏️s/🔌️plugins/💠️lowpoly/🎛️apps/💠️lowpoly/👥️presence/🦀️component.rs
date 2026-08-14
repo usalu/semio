@@ -11,17 +11,6 @@ use store::ArtifactPack;
 #[dsl(extension = "lowpoly.presence")]
 #[dsl(layout = "lines")]
 pub struct LowpolyPresence {
-    pub selection_mode: String,
-    pub selection_ids: Vec<u32>,
-    pub selection_targets_mesh: bool,
-    pub selection_targets_vertex: bool,
-    pub selection_targets_edge: bool,
-    pub selection_targets_face: bool,
-    pub selected_object_ids: Vec<String>,
-    pub hovered_object_id: Option<String>,
-    pub hovered_target_object_id: Option<String>,
-    pub hovered_target_mode: Option<String>,
-    pub hovered_target_id: Option<u32>,
     pub world_camera_position: [f64; 3],
     pub world_camera_target: [f64; 3],
     pub world_camera_fov: f64,
@@ -32,17 +21,6 @@ pub struct LowpolyPresence {
 impl Default for LowpolyPresence {
     fn default() -> Self {
         Self {
-            selection_mode: "object".into(),
-            selection_ids: Vec::new(),
-            selection_targets_mesh: true,
-            selection_targets_vertex: false,
-            selection_targets_edge: false,
-            selection_targets_face: false,
-            selected_object_ids: Vec::new(),
-            hovered_object_id: None,
-            hovered_target_object_id: None,
-            hovered_target_mode: None,
-            hovered_target_id: None,
             world_camera_position: [2.5, 2.0, 2.5],
             world_camera_target: [0.0, 0.0, 0.0],
             world_camera_fov: 50.0,

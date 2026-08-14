@@ -1,6 +1,9 @@
 //! 👥️ Procedural2dPresence — shareable live ephemeral state + mutations.
 //!
-//! Shareable live subset of the 2d procedural surface: selection, graph camera, show-mode, generation pick.
+//! Shareable live subset of the 2d procedural surface: graph camera, show-mode, generation pick.
+//! Selection/hover broadcast automatically via the framework's typed `PresenceInteraction` (ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_procedural2d_app`'s
+//! `.interaction(...)` declaration.
 
 use flow::CameraJson;
 use protocol::Mutation;
@@ -9,14 +12,12 @@ use store::ArtifactPack;
 
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of procedural 2d view state (selection, camera, show-mode, generation).
+/// 👥️ Shareable live subset of procedural 2d view state (camera, show-mode, generation).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural2d.presence")]
 #[dsl(layout = "lines")]
 pub struct Procedural2dPresence {
-    /// 👁️ Selected widget ids.
-    pub selected_ids: Vec<String>,
     /// 🗺️ The node-graph camera.
     #[dsl(block)]
     pub camera: CameraJson,
@@ -29,7 +30,6 @@ pub struct Procedural2dPresence {
 impl Default for Procedural2dPresence {
     fn default() -> Self {
         Self {
-            selected_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             show_mode: "preview".into(),
             selected_generation_id: None,

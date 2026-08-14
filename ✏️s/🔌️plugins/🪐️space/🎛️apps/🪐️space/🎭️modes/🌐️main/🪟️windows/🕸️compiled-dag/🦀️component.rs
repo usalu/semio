@@ -4,7 +4,7 @@
 use crate::apps::space::engine::compiled_dag_wire_literal;
 use crate::demo_space_projection;
 use semio_framework_os::WorkflowSnapshot;
-use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{build_text_editor_scene, InteractionRef, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const S_PLAY_WINDOW_COMPILED_DAG: &str = "s-compiled-dag";
@@ -37,6 +37,9 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
         actions: Vec::new(),
         utilities: Vec::new(),
+        // 🕹️ Read-only text projection of the SAME `graph` node graph the Workflow window edits — hosts
+        // the "graph" domain too (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+        interactions: vec![InteractionRef::new(crate::apps::space::S_PLAY_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

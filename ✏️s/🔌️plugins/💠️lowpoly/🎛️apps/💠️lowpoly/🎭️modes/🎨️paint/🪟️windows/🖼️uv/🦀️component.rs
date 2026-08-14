@@ -36,6 +36,9 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
         actions: LOWPOLY_UV_ACTIONS.iter().map(|id| ActionRef::from(*id)).collect(),
         utilities: ["brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the UV window paints textures —
+        // it never selects/hovers mesh components, so it declares no interaction domain.
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

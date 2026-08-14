@@ -49,11 +49,10 @@ pub mod set_active_utility {
 
     pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.reset_gestures();
-        let mut config_mutations = vec![
-            LowpolyConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() },
-            LowpolyConfigMutation::SetHoveredTarget { object_id: None, mode: None, id: None },
-            LowpolyConfigMutation::SetHoveredObject { object_id: None },
-        ];
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: hover used to be cleared here
+        // (`SetHoveredTarget`/`SetHoveredObject`) — it is framework-owned ephemeral state now, cleared by
+        // the surface's own `interactionHover{targets:[]}` on pointer-leave, never app-side.
+        let mut config_mutations = vec![LowpolyConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }];
         if is_paint_utility(&payload.utility_id) {
             config_mutations.push(LowpolyConfigMutation::SetPaintUtility { value: payload.utility_id.clone() });
         }

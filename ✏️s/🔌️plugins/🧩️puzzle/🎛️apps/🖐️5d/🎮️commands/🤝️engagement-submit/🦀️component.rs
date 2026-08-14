@@ -1,6 +1,5 @@
 //! 🤝️ `engagement-submit` command.
 
-use crate::apps::puzzle5d::config::puzzle5d_clear_selection;
 use crate::apps::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::apps::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_PLAY_WINDOWS};
 use serde_json::Value;
@@ -18,8 +17,9 @@ pub fn engagement_submit(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
                 ctx.app.drive_precompute(ctx.scene);
             }
         }
-        "clear" => puzzle5d_clear_selection(&mut ctx.scene.runtime.selection),
-        "rectangle" | "lasso" => ctx.scene.runtime.selection_method = value,
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: "clear"/"rectangle"/"lasso"
+        // dropped — selection/method are framework-owned now (`clearSelection`/`interactionSelect`'s
+        // `method` arg), unreachable from this app-level typed-command box.
         _ => {}
     }
     if PUZZLE5D_PLAY_WINDOWS.contains(&window.as_str()) {

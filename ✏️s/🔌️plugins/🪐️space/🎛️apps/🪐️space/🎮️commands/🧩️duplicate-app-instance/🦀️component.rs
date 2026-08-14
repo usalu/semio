@@ -2,7 +2,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️DuplicateAndPaste
 /// 🔁️ Shared body for `duplicate_app_instance` (sources = selection) and `paste_app_instance` (sources
@@ -30,6 +30,14 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "duplicate-app-instance")]
 pub struct DuplicateAppInstance {}
 
-pub fn handle(_payload: &DuplicateAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(duplicate_nodes(cfg.snapshot.selected_node_ids.clone(), doc.snapshot))
+/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg)` is framework-fixed at this exact 3-arg shape
+/// (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — reachable
+/// only through that macro-generated path (`SpaceApp::handle` always routes this command through
+/// `apply` below instead), so it degrades to treating the selection as empty (duplicates nothing).
+pub fn handle(_payload: &DuplicateAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    Ok(duplicate_nodes(Vec::new(), doc.snapshot))
+}
+
+pub fn apply(_payload: &DuplicateAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    Ok(duplicate_nodes(interaction.selection("graph").ids.clone(), doc.snapshot))
 }

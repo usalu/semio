@@ -20,7 +20,6 @@ pub struct WriterDiff {
     #[state(artifact)] pub language_id: Option<String>,
     #[state(artifact)] pub uri: Option<String>,
     #[state(artifact)] pub document: Option<WriterDocumentChild>,
-    #[state(presence)] pub selected_ast_ids: Option<WriterStringList>,
     #[state(presence)] pub editor_selection: Option<Option<WriterEditorSelection>>,
     #[state(presence)] pub editor_settings: Option<WriterEditorSettings>,
     #[state(config)] pub format_signal: Option<u32>,
@@ -31,16 +30,5 @@ pub struct WriterDiff {
     #[state(config)] pub camera_y: Option<f64>,
     #[state(config)] pub camera_zoom: Option<f64>,
     #[state(config)] pub locale: Option<String>,
-    #[state(artifact)] pub tree_hovered_ast_id: Option<Option<String>>,
-    #[state(artifact)] pub editor_hover_offset: Option<Option<usize>>,
 }
 //#endregion 🔖️Diff
-
-//#region 🔖️DeltaHelpers
-/// 📋 String-list wrapper for optional list diffs across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct WriterStringList {
-    pub values: Vec<String>,
-}
-//#endregion 🔖️DeltaHelpers

@@ -31,7 +31,9 @@ fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutConfig, sx: f64, sy: f64, wi
     let page = active_page(doc, config)?;
     let (wx, wy) = screen_to_world_for_surface(config, blueprint, sx, sy, width, height);
     let mut engine = LayoutEngine::new();
-    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
+    // 🕹️ `selected_ids`/`hovered_id` only feed `DisplayRect.selected`/`.hovered` chrome flags, never
+    // hit-test correctness — `&[]`/`None` here are harmless (selection/hover are framework-owned now).
+    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &[], None, blueprint);
     list.hit_test(wx as f32, wy as f32)
 }
 //#endregion 🔖️Shared
@@ -71,5 +73,6 @@ pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, LayoutSnapshot
     if !blueprint {
         return Ok(Emit::default());
     }
-    Ok(Emit::config(vec![LayoutConfigMutation::SetHover { id: hit_test_at(doc.snapshot, cfg.snapshot, payload.x, payload.y, payload.width, payload.height, blueprint) }]))
+    let hit = hit_test_at(doc.snapshot, cfg.snapshot, payload.x, payload.y, payload.width, payload.height, blueprint);
+    Ok(Emit::effect(crate::apps::layout::layout_hover_effect(hit.as_deref())))
 }

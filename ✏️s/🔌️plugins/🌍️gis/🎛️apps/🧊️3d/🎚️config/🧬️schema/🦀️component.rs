@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.gis.gis3d.config")]
 pub struct Gis3dConfig {
     #[state(config)] pub camera_json: String,
-    #[state(config)] pub selected_ids: Vec<String>,
     #[state(config)] pub locale: String,
 }
 

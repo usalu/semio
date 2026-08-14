@@ -30,9 +30,14 @@ pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> 
     }
 }
 
+/// 🕹️ `selection`/`hover` are left unset: `ArtifactApp::render` has no `InteractionView` (only
+/// `handle`/`copy_fragment`/`cut_operations` gained one — see `📌️panels/🔍️inspection`'s doc comment
+/// for the same framework-side gap), and this static scene isn't a `UiNode::Tree` the wrapper's
+/// `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host reads
+/// domain "ast"'s `DomainSelection`/`DomainHover` directly (`GraphHost::sync_interaction`), so the
+/// interactive surface stays correct even though this snapshot doesn't carry it.
 pub(crate) fn render(surface_id: &str, controller_id: &str, window_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiNode {
     let (nodes, edges, _) = crate::apps::jack::fixture_to_workflow(fixture);
     let viewport = NodeGraphViewport { x: cfg.camera.x, y: cfg.camera.y, zoom: cfg.camera.zoom };
-    let selection = cfg.selected_node_ids.clone();
-    build_node_graph_scene(surface_id, controller_id, NodeGraphScene { selection, lod_json: trinity_lod_json_for_window(cfg, window_id), ..NodeGraphScene::base(nodes, edges, viewport) })
+    build_node_graph_scene(surface_id, controller_id, NodeGraphScene { lod_json: trinity_lod_json_for_window(cfg, window_id), ..NodeGraphScene::base(nodes, edges, viewport) })
 }

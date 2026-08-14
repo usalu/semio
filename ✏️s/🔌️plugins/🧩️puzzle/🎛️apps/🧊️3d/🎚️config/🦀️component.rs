@@ -10,7 +10,7 @@
 //! distribution weights and overlap budget deliberately stay flat and shared — they drive the one
 //! document/precompute plan and split panes must never disagree about it.
 
-use semio_framework_plugin::{SelectionSet, WorldProjectionConfig, WorldSunConfig};
+use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
@@ -23,10 +23,6 @@ fn default_true() -> bool {
     true
 }
 
-fn default_selection_method() -> String {
-    "rectangle".into()
-}
-
 fn default_overlap_budget() -> f64 {
     0.02
 }
@@ -37,10 +33,6 @@ fn default_manual_lod() -> f64 {
 
 fn default_grid_spacing() -> f64 {
     10.0
-}
-
-fn default_selection_mode() -> String {
-    "default".into()
 }
 
 fn default_proximity_radius() -> f64 {
@@ -108,21 +100,6 @@ pub fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
 //#endregion 🔖️Camera
 
 //#region 🔖️Selection
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle3dSelection {
-    #[serde(default)]
-    pub object_ids: SelectionSet,
-    #[serde(default)]
-    pub vortex_ids: SelectionSet,
-    #[serde(default)]
-    pub attraction_ids: SelectionSet,
-    #[serde(default, rename = "targetVolumeIds")]
-    pub target_volume_ids: SelectionSet,
-    #[serde(default)]
-    pub reference_ids: SelectionSet,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dSelectableKinds {
@@ -148,6 +125,12 @@ pub struct Puzzle3dSuggestionMenu {
     pub y: f64,
     #[serde(default)]
     pub window_id: String,
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the target vortex full id this
+    /// popup was opened on — previously implicit via `runtime.selection.vortex_ids`/
+    /// `hovered_vortex_full_id`, now stored directly since selection is framework-owned and cannot be
+    /// read back from `render` (see `puzzle3d_brush_target_vortex`'s doc comment).
+    #[serde(default)]
+    pub vortex_full_id: String,
 }
 //#endregion 🔖️Selection
 
@@ -155,14 +138,6 @@ pub struct Puzzle3dSuggestionMenu {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dConfig {
-    #[serde(default)]
-    pub selection: Puzzle3dSelection,
-    #[serde(default = "default_selection_method")]
-    pub selection_method: String,
-    #[serde(default)]
-    pub hovered_object_id: Option<String>,
-    #[serde(default)]
-    pub hovered_vortex_full_id: Option<String>,
     #[serde(default)]
     pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
     #[serde(default = "default_overlap_budget")]
@@ -190,11 +165,7 @@ pub struct Puzzle3dConfig {
     #[serde(default)]
     pub selectable_kinds: Puzzle3dSelectableKinds,
     #[serde(default)]
-    pub hovered_kind_id: Option<String>,
-    #[serde(default)]
     pub engagement_input: String,
-    #[serde(default = "default_selection_mode")]
-    pub selection_mode_default: String,
     #[serde(default = "default_proximity_radius")]
     pub proximity_radius: f64,
     #[serde(default = "default_chunk_size")]
@@ -247,10 +218,6 @@ impl Default for Puzzle3dConfig {
     /// them and zero out fields like `overlap_budget`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
     fn default() -> Self {
         Self {
-            selection: Puzzle3dSelection::default(),
-            selection_method: default_selection_method(),
-            hovered_object_id: None,
-            hovered_vortex_full_id: None,
             suggestion_menu: None,
             overlap_budget: default_overlap_budget(),
             fill_count: 0,
@@ -264,9 +231,7 @@ impl Default for Puzzle3dConfig {
             grid_snap_enabled: false,
             grid_spacing: default_grid_spacing(),
             selectable_kinds: Puzzle3dSelectableKinds::default(),
-            hovered_kind_id: None,
             engagement_input: String::new(),
-            selection_mode_default: default_selection_mode(),
             proximity_radius: default_proximity_radius(),
             chunk_size: default_chunk_size(),
             voxel_dims: default_voxel_dims(),
@@ -327,7 +292,6 @@ store::impl_whole_record_config!(Puzzle3dConfig);
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dWindowOptions {
-    pub selection_method: String,
     pub lod_automatic: bool,
     pub lod_depth_variable: bool,
     pub grid_visible: bool,
@@ -336,7 +300,6 @@ pub struct Puzzle3dWindowOptions {
     pub grid_spacing: f64,
     pub selectable_kinds: Puzzle3dSelectableKinds,
     pub engagement_input: String,
-    pub selection_mode_default: String,
     pub proximity_radius: f64,
     pub chunk_size: f64,
     pub voxel_dims: [u32; 3],
@@ -351,7 +314,6 @@ pub struct Puzzle3dWindowOptions {
 impl Default for Puzzle3dWindowOptions {
     fn default() -> Self {
         Self {
-            selection_method: default_selection_method(),
             lod_automatic: default_true(),
             lod_depth_variable: false,
             grid_visible: default_true(),
@@ -360,7 +322,6 @@ impl Default for Puzzle3dWindowOptions {
             grid_spacing: default_grid_spacing(),
             selectable_kinds: Puzzle3dSelectableKinds::default(),
             engagement_input: String::new(),
-            selection_mode_default: default_selection_mode(),
             proximity_radius: default_proximity_radius(),
             chunk_size: default_chunk_size(),
             voxel_dims: default_voxel_dims(),
@@ -379,7 +340,6 @@ impl Puzzle3dConfig {
     /// [`Puzzle3dWindowOptions`] — the counterpart to `apply_window_options`.
     fn snapshot_window_options(&self) -> Puzzle3dWindowOptions {
         Puzzle3dWindowOptions {
-            selection_method: self.selection_method.clone(),
             lod_automatic: self.lod_automatic,
             lod_depth_variable: self.lod_depth_variable,
             grid_visible: self.grid_visible,
@@ -388,7 +348,6 @@ impl Puzzle3dConfig {
             grid_spacing: self.grid_spacing,
             selectable_kinds: self.selectable_kinds.clone(),
             engagement_input: self.engagement_input.clone(),
-            selection_mode_default: self.selection_mode_default.clone(),
             proximity_radius: self.proximity_radius,
             chunk_size: self.chunk_size,
             voxel_dims: self.voxel_dims,
@@ -405,7 +364,6 @@ impl Puzzle3dConfig {
     /// `snapshot_window_options`. Leaves fill count / distribution / overlap untouched so a pane
     /// switch cannot rewrite the shared fill scene.
     fn apply_window_options(&mut self, options: &Puzzle3dWindowOptions) {
-        self.selection_method = options.selection_method.clone();
         self.lod_automatic = options.lod_automatic;
         self.lod_depth_variable = options.lod_depth_variable;
         self.grid_visible = options.grid_visible;
@@ -414,7 +372,6 @@ impl Puzzle3dConfig {
         self.grid_spacing = options.grid_spacing;
         self.selectable_kinds = options.selectable_kinds.clone();
         self.engagement_input = options.engagement_input.clone();
-        self.selection_mode_default = options.selection_mode_default.clone();
         self.proximity_radius = options.proximity_radius;
         self.chunk_size = options.chunk_size;
         self.voxel_dims = options.voxel_dims;

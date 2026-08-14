@@ -309,8 +309,9 @@ pub mod toggle_smooth {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::apps::lowpoly::testkit::{app, dispatch, face_selection};
+    use crate::apps::lowpoly::testkit::{app, app_with_registry, dispatch, select_face};
     use crate::apps::lowpoly::LowpolyCommand;
+    use semio_framework_plugin::PluginApp;
 
     /// 🧪️ Rewritten (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law
     /// fix) to assert on the persisted `mesh` HANDLE rather than reconstructing a `LowpolyDocument`
@@ -319,12 +320,15 @@ mod tests {
     /// the app's own session-local `mesh_workspace` cache is never resynced by it — there is no
     /// honest way to rebuild real post-undo geometry from outside the live session any more. The
     /// handle still round-trips correctly through undo either way, which is what this test now checks.
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking a face is now the
+    /// framework's injected `interactionSelect`, so this needs `app_with_registry()` (the "mesh" domain
+    /// must be declared to select against).
     #[test]
     fn extrude_selected_face_grows_mesh_and_undo_restores() {
-        use semio_framework_plugin::PluginApp;
-        let mut a = app();
+        let mut a = app_with_registry();
+        let object_id = a.snapshot().expect("projection").objects[0].id.clone();
         let before_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
-        dispatch(&mut a, face_selection());
+        select_face(&mut a, &object_id, 0);
         dispatch(&mut a, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: None }));
         let after_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
         assert_ne!(after_mesh, before_mesh, "extrude must change the mesh handle");
@@ -336,11 +340,11 @@ mod tests {
     #[test]
     fn extrude_reads_staged_arg_distance_into_the_operation() {
         // 🧪️ Arg-form action: the staged `extrudeDistance` (not the config backing store) drives the edit.
-        let mut small = app();
-        let mut large = app();
-        dispatch(&mut small, face_selection());
-        dispatch(&mut large, face_selection());
+        let mut small = app_with_registry();
+        let mut large = app_with_registry();
         let object_id = small.snapshot().expect("projection").objects[0].id.clone();
+        select_face(&mut small, &object_id, 0);
+        select_face(&mut large, &object_id, 0);
         dispatch(&mut small, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: Some(0.1) }));
         dispatch(&mut large, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: Some(1.5) }));
         let small_handle = small.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh.clone();

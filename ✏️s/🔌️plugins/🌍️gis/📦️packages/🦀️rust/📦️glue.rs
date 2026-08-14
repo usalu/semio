@@ -828,8 +828,6 @@ pub mod apps {
             pub mod example;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🗺️features/🦀️component.rs"]
             pub mod features;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
             #[path = "../../🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs"]
             pub mod view;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs"]
@@ -862,8 +860,6 @@ pub mod apps {
                             pub mod vector_style;
                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🔽️lod-mode/🦀️component.rs"]
                             pub mod lod_mode;
-                            #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🖱️selection-method/🦀️component.rs"]
-                            pub mod selection_method;
                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/👁️layers/🦀️component.rs"]
                             pub mod layers;
                             #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/📏️layer-weights/🦀️component.rs"]
@@ -917,8 +913,6 @@ pub mod apps {
             pub mod exaggeration;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs"]
             pub mod view;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs"]
             pub mod locale;
         }

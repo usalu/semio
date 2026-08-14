@@ -27,6 +27,7 @@ fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfig
         dialect: None,
         migrated_from: None,
         owner: None,
+        lanes: Default::default(),
     };
     match store::print_document_pack(&envelope) {
         Ok(files) => Emit { effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() },
@@ -54,11 +55,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, DrawSnapshot>,
         None
     };
     match next {
-        Some(snapshot) => {
-            let mut emit = load_document_effect(snapshot);
-            emit.config_mutations = vec![DrawConfigMutation::SetSelection { ids: Vec::new() }];
-            Ok(emit)
-        }
+        Some(snapshot) => Ok(load_document_effect(snapshot)),
         None => Ok(Emit::default()),
     }
 }

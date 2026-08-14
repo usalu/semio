@@ -9,19 +9,21 @@
 //! `🎚️config/🦀️component.rs`, scratch (mid-gesture) state in `🖌️session/🦀️component.rs`, shared
 //! read-view/selection helpers in `🧭️view/🦀️component.rs`.
 
-use crate::apps::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv, world};
+use crate::apps::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv};
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::modes::{edit, paint as paint_mode};
 use crate::apps::lowpoly::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
-use crate::apps::lowpoly::view::{format_selection_targets_label, selection_targets_from_config, utility_param_f64, LowpolyView};
+use crate::apps::lowpoly::view::{resolve_active_object_id, selection_from_interaction, utility_param_f64, LowpolyView, MESH_INTERACTION_DOMAIN};
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::{artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -168,7 +170,6 @@ pub fn paint_utility_params_group(utility: &str, params: &Value, labels: &Lowpol
 /// windows — see this file's top-level doc comment.
 pub fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels) -> WindowEngagement {
     let config = view.config;
-    let selected_count = config.selection_ids.len();
     WindowEngagement {
         session_active: Some(true),
         // 🧰️ The move/rotate/scale transform switcher lives in the framework utility bar (declared via
@@ -197,7 +198,12 @@ pub fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, la
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: "lowpoly-status".into(), text: format!("{} · {} · {selected_count} {}", format_selection_targets_label(&selection_targets_from_config(config)), active_utility, labels.selected.as_str(),) }]),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the mesh domain's live selection
+        // count used to read off `LowpolyConfig`; it is framework-owned `InteractionState` now, and
+        // `ArtifactApp::window_engagements` (unlike `handle`/`copy_fragment`/`cut_operations`) is not
+        // threaded an `InteractionView` this wave — the status line drops the selection summary rather
+        // than reading stale app-local state. Peer/self selection is surfaced generically by the shell.
+        status: Some(vec![WindowEngagementStatus { id: "lowpoly-status".into(), text: active_utility.to_string() }]),
         possible_engagements: Some(vec![
             WindowEngagementPossible { id: "lowpoly.eng.extrude".into(), label: labels.extrude.into(), detail: None, action: Some(lowpoly_action("extrude", None)) },
             WindowEngagementPossible { id: "lowpoly.eng.triangulate".into(), label: labels.triangulate.into(), detail: None, action: Some(lowpoly_action("triangulate", None)) },
@@ -242,9 +248,6 @@ semio_framework_plugin::app_commands! {
         "setFixtureJson" as "set-fixture-json" => set_fixture_json::SetFixtureJson,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setActiveObject" as "set-active-object" => set_active_object::SetActiveObject,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "toggleSelectionKind" as "toggle-selection-kind" => toggle_selection_kind::ToggleSelectionKind,
-        "toggleSelectionTarget" as "toggle-selection-target" => toggle_selection_target::ToggleSelectionTarget,
         "setActivePaintLayer" as "set-active-paint-layer" => set_active_paint_layer::SetActivePaintLayer,
         "setUtilityParam" as "set-utility-param" => set_utility_param::SetUtilityParam,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
@@ -253,13 +256,7 @@ semio_framework_plugin::app_commands! {
         "setSunAzimuth" as "set-sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
         "setSunElevation" as "set-sun-elevation" => set_sun_elevation::SetSunElevation,
         "setSunIntensity" as "set-sun-intensity" => set_sun_intensity::SetSunIntensity,
-        "setSelectionMethod" as "set-selection-method" => set_selection_method::SetSelectionMethod,
-        "setSelectionModeDefault" as "set-selection-mode-default" => set_selection_mode_default::SetSelectionModeDefault,
         "setCamera" as "set-camera" => set_camera::SetCamera,
-        "worldSelect" as "world-select" => world_select::WorldSelect,
-        "worldHover" as "world-hover" => world_hover::WorldHover,
-        "setHover" as "set-hover" => set_hover::SetHover,
-        "worldPick" as "world-pick" => world_pick::WorldPick,
         "paintStrokeBegin" as "paint-stroke-begin" => paint_stroke_begin::PaintStrokeBegin,
         "paintSample" as "paint-sample" => paint_sample::PaintSample,
         "paintStroke" as "paint-stroke" => paint_stroke::PaintStroke,
@@ -273,14 +270,13 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name. `mesh_edit`/`uv`/`transform`/`paint`/
-// `selection`/`world`/`sun`/`utility`/`engagement`/`fixture` collide with their containing command-group
+// `selection`/`sun`/`utility`/`engagement`/`fixture` collide with their containing command-group
 // modules and are flattened via glob-free explicit `use`.
 use mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, toggle_smooth, triangulate};
 use uv::{clear_seam, mark_uv_seam, unwrap_active};
 use transform::{rotate_selection, scale_selection, transform_begin, transform_end, translate_selection};
 use paint::{add_paint_layer, canvas_pointer_down, canvas_pointer_move, fill_bucket, paint_at, paint_fill, paint_sample, paint_stroke, paint_stroke_begin, paint_stroke_end};
-use selection::{set_active_object, set_active_paint_layer, set_selection, set_selection_method, set_selection_mode_default, toggle_selection_kind, toggle_selection_target};
-use world::{set_hover, world_hover, world_pick, world_select};
+use selection::{set_active_object, set_active_paint_layer};
 use camera::set_camera;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use utility::{set_active_utility, set_utility_param};
@@ -384,8 +380,19 @@ impl ArtifactApp for LowpolyPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &LowpolyCommand, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
-        LOWPOLY_SCRATCH.with(|scratch| command.dispatch(doc, cfg, &mut scratch.borrow_mut()))
+    /// 🕹️ `interaction` is the mesh domain's current selection/hover/mode/granularity, resolved once per
+    /// dispatch into `LowpolyScratch::current_selection` — the `app_commands!`-generated `dispatch` calls
+    /// every leaf `🎮️commands/*::handle(payload, doc, cfg, ctx)` uniformly (no `interaction` parameter
+    /// of its own), so this is the one seam by which those handlers (via `view::build_doc`/
+    /// `session::mesh_edit`) see the framework-owned selection. See `🧭️view/🦀️component.rs`'s
+    /// `🔖️MeshDomain` region for the id scheme.
+    fn handle(command: &LowpolyCommand, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
+        let active = resolve_active_object_id(doc.snapshot, cfg.snapshot);
+        let selection = selection_from_interaction(&active, interaction);
+        LOWPOLY_SCRATCH.with(|scratch| {
+            scratch.borrow_mut().set_current_selection(selection);
+            command.dispatch(doc, cfg, &mut scratch.borrow_mut())
+        })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
@@ -514,9 +521,6 @@ pub fn create_lowpoly_app() -> App {
             // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no operations
             // mid-drag (paint ticks, gumball scratch, eyedropper sample).
             .view_action("setActiveObject", LocalizedLabel::native("Set Active Object", "Aktives Objekt festlegen"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .view_action("toggleSelectionKind", LocalizedLabel::native("Toggle Selection Kind", "Auswahlart umschalten"))
-            .view_action("toggleSelectionTarget", LocalizedLabel::native("Toggle Selection Target", "Auswahlziel umschalten"))
             .view_action("setActivePaintLayer", LocalizedLabel::native("Set Active Paint Layer", "Aktive Malebene festlegen"))
             .view_action("setUtilityParam", LocalizedLabel::native("Set Utility Param", "Werkzeugparameter festlegen"))
             .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
@@ -525,13 +529,7 @@ pub fn create_lowpoly_app() -> App {
             .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
             .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
             .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
-            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
-            .view_action("setSelectionModeDefault", LocalizedLabel::native("Set Selection Mode Default", "Standardauswahlmodus festlegen"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"))
-            .view_action("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"))
-            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
-            .view_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"))
             .view_action("paintStrokeBegin", LocalizedLabel::native("Paint Stroke Begin", "Malstrich beginnen"))
             .view_action("paintStroke", LocalizedLabel::native("Paint Stroke", "Malstrich"))
             .view_action("paintAt", LocalizedLabel::native("Paint At", "Malen bei"))
@@ -572,6 +570,31 @@ pub fn create_lowpoly_app() -> App {
             .utility(lowpoly_utility("eraser", LocalizedLabel::native("Eraser", "Radierer"), "eraser", "paint"))
             .utility(lowpoly_utility("fill", LocalizedLabel::native("Fill", "Füllen"), "paint-bucket", "paint"))
             .utility(lowpoly_utility("eyedropper", LocalizedLabel::native("Eyedropper", "Pipette"), "pipette", "paint"))
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" interaction domain —
+            // object/vertex/edge/face granularities (u32 component ids stringify at the `InteractionTarget`
+            // boundary, see `🧭️view/🦀️component.rs`'s `🔖️MeshDomain` region), Flat hierarchy (a mesh has no
+            // parent/child structure of its own to derive a topology from), all five merges + all three
+            // pick methods per the migration's acceptance bar. Scoped to the Model window only — the UV
+            // window paints textures, it never selects mesh components.
+            .interaction(InteractionDefinition {
+                id: MESH_INTERACTION_DOMAIN.into(),
+                label: LocalizedLabel::native("Mesh", "Netz"),
+                granularities: vec![
+                    GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() },
+                    GranularityDefinition { id: "vertex".into(), label: LocalizedLabel::native("Vertex", "Eckpunkt"), icon_id: "circle".into() },
+                    GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+                    GranularityDefinition { id: "face".into(), label: LocalizedLabel::native("Face", "Fläche"), icon_id: "square".into() },
+                ],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .config(LowpolyPlayApp::config_spec())
@@ -611,8 +634,15 @@ pub(crate) mod testkit {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub fn face_selection() -> LowpolyCommand {
-        LowpolyCommand::WorldPick(world_pick::WorldPick { granularity: "face".into(), merge: "replace".into(), id: Some(0) })
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
+    /// injected `interactionSelect` verb, dispatched against the "mesh" domain declared on this app —
+    /// requires `app_with_registry()` (a bare `app()` has no declared interaction domains to select
+    /// against). `object_id`/`face_id` address the same row id the Document panel tree renders (see
+    /// `🧭️view/🦀️component.rs`'s `🔖️MeshDomain` region).
+    pub fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32) {
+        let target_id = crate::apps::lowpoly::view::document_target_row_id(object_id, 0, "face", face_id);
+        let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "face", "id": target_id }])).expect("targets json");
+        app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": crate::apps::lowpoly::view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
     }
 }
 //#endregion 🧪️Testkit
@@ -635,7 +665,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 56, "every LowpolyCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 47, "every LowpolyCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -689,9 +719,6 @@ mod tests {
             LowpolyCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
             LowpolyCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("extrude".into()) }),
             LowpolyCommand::SetActiveObject(set_active_object::SetActiveObject { object_id: "obj-1".into() }),
-            LowpolyCommand::SetSelection(set_selection::SetSelection { mode: "face".into(), ids: vec![1, 2, 3] }),
-            LowpolyCommand::ToggleSelectionKind(toggle_selection_kind::ToggleSelectionKind { kind: "face".into() }),
-            LowpolyCommand::ToggleSelectionTarget(toggle_selection_target::ToggleSelectionTarget { object_id: "obj-1".into(), mode: "face".into(), id: 0, merge: "invertive".into() }),
             LowpolyCommand::SetActivePaintLayer(set_active_paint_layer::SetActivePaintLayer { layer_index: 0 }),
             LowpolyCommand::SetUtilityParam(set_utility_param::SetUtilityParam { key: "brushSize".into(), value_json: "20".into() }),
             LowpolyCommand::EngagementInput(engagement_input::EngagementInput { value: "ext".into() }),
@@ -700,13 +727,7 @@ mod tests {
             LowpolyCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 45.0 }),
             LowpolyCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 35.0 }),
             LowpolyCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 0.8 }),
-            LowpolyCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { value: "lasso".into() }),
-            LowpolyCommand::SetSelectionModeDefault(set_selection_mode_default::SetSelectionModeDefault { value: "additive".into() }),
             LowpolyCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }),
-            LowpolyCommand::WorldSelect(world_select::WorldSelect { ids: vec!["obj-1".into()], merge: "replace".into() }),
-            LowpolyCommand::WorldHover(world_hover::WorldHover { object_id: Some("obj-1".into()) }),
-            LowpolyCommand::SetHover(set_hover::SetHover { object_id: Some("obj-1".into()), mode: Some("mesh".into()), id: Some(0) }),
-            LowpolyCommand::WorldPick(world_pick::WorldPick { granularity: "face".into(), merge: "replace".into(), id: Some(0) }),
             LowpolyCommand::PaintStrokeBegin(paint_stroke_begin::PaintStrokeBegin {}),
             LowpolyCommand::PaintSample(paint_sample::PaintSample { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
             LowpolyCommand::PaintStroke(paint_stroke::PaintStroke { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }),
@@ -733,6 +754,24 @@ mod tests {
             assert!(json.contains(body), "panel body {body} missing from the manifest");
         }
         assert!(json.contains("3d.lowpoly"), "artifact kind missing from the manifest");
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" domain is declared and
+    /// scoped to the Model window, and the framework auto-injects its six interaction actions.
+    #[test]
+    fn the_mesh_interaction_domain_is_declared_and_scoped_to_the_model_window() {
+        let definition = create_lowpoly_app().definition;
+        let mesh = definition.interactions.iter().find(|interaction| interaction.id == MESH_INTERACTION_DOMAIN).expect("mesh domain declared");
+        assert_eq!(mesh.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec!["object", "vertex", "edge", "face"]);
+        assert!(matches!(mesh.hierarchy, HierarchyProvider::Flat));
+        let main_window = definition.window_kinds.iter().find(|window| window.id == edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN).expect("main window declared");
+        assert_eq!(main_window.interactions, vec![InteractionRef::new(MESH_INTERACTION_DOMAIN)]);
+        for injected in ["interactionSelect", "interactionHover", "clearSelection", "selectAll", "setSelectionMode", "setInteractionGranularity"] {
+            assert!(definition.actions.iter().any(|action| action.id == injected), "framework must auto-inject {injected}");
+        }
+        for deleted in ["setSelection", "toggleSelectionKind", "toggleSelectionTarget", "setSelectionMethod", "setSelectionModeDefault", "worldSelect", "worldHover", "setHover", "worldPick"] {
+            assert!(!definition.actions.iter().any(|action| action.id == deleted), "{deleted} must no longer be app-declared");
+        }
     }
     //#endregion 🔖️ManifestSanity
 

@@ -4,10 +4,6 @@ message ShootingPresence {
   // @state presence
   repeated string selected_shot_ids = 1;
   // @state presence
-  repeated string selected_asset_ids = 2;
-  // @state presence
-  optional string hovered_asset_id = 3;
-  // @state presence
   ShootingCamera camera = 4;
   // @state presence
   string active_utility_id = 5;

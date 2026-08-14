@@ -7,13 +7,14 @@ use std::collections::BTreeMap;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of jack view state (node selection, fixture, query draft, viewport camera, LOD).
+/// 👥️ Shareable live subset of jack view state (fixture, query draft, viewport camera, LOD) — node
+/// selection broadcasts automatically via the framework's typed `PresenceInteraction` (ticket
+/// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`), no longer mirrored here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.jack.presence")]
 #[dsl(layout = "lines")]
 pub struct JackPresence {
-    pub selected_node_ids: Vec<String>,
     pub active_fixture_id: String,
     pub jack_query: String,
     #[dsl(block)]
@@ -24,7 +25,6 @@ pub struct JackPresence {
 impl Default for JackPresence {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
             active_fixture_id: String::new(),
             jack_query: String::new(),
             camera: Camera::default(),

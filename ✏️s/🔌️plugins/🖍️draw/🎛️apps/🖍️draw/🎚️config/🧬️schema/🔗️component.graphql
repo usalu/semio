@@ -1,6 +1,4 @@
 type DrawConfig {
-  selectedIds: [String!]! @state(class: CONFIG)
-  hoveredId: String @state(class: CONFIG)
   engagementInput: String! @state(class: CONFIG)
   camera: DrawCamera! @state(class: CONFIG)
   activeUtilityId: String! @state(class: CONFIG)

@@ -23,7 +23,6 @@ pub struct JackArtifact {
     #[child(kind = "s.stdio.semio.graph")]
     pub content: JackContentChild,
     #[state(artifact)] pub root_node_id: Option<String>,
-    #[state(presence)] pub selected_node_ids: Vec<String>,
     #[state(presence)] pub active_fixture_id: String,
     #[state(presence)] pub jack_query: String,
     #[state(presence)] pub lod_mode_by_window: BTreeMap<String, String>,
@@ -60,7 +59,6 @@ impl Default for JackArtifact {
             camera: Camera::default(),
             content: crate::artifacts::jack::jack_content_child_handle_and_cache(Vec::new(), Vec::new()),
             root_node_id: None,
-            selected_node_ids: Vec::new(),
             active_fixture_id: String::new(),
             jack_query: String::new(),
             lod_mode_by_window: BTreeMap::new(),

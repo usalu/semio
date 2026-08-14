@@ -20,10 +20,13 @@ pub struct AddBlock {
     pub y: f64,
 }
 
-pub fn handle(payload: &AddBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new block used to also become the
+// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
+// framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
+// lowpoly's `add-primitive`).
+pub fn handle(payload: &AddBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let block = create_block_by_kind(&payload.kind, payload.x, payload.y);
-    let new_id = block_id(&block).to_string();
-    Ok(Emit { artifact_mutations: vec![crate::artifacts::note::schema::mutations::create_block(block, None, None)], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: vec![new_id] }], ..Default::default() })
+    Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::create_block(block, None, None)]))
 }
 
 //#region 🧪️Tests
@@ -69,11 +72,16 @@ mod tests {
         }
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the source block is selected via
+    /// the framework's injected `interactionSelect` verb now (`select_blocks`), not an app command —
+    /// requires `note_app_with_registry()` (see that helper's own doc comment).
     #[test]
-    fn duplicate_selection_clones_with_offset_and_selects_clones() {
-        let mut app = note_app();
+    fn duplicate_selection_clones_with_offset() {
+        use crate::apps::note::testkit::{note_app_with_registry, select_blocks};
+        let mut app = note_app_with_registry();
         dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 10.0, y: 10.0 }));
         let source_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
+        select_blocks(&mut app, &[&source_id]);
 
         let result = dispatch(&mut app, NoteCommand::DuplicateSelection(crate::apps::note::commands::duplicate_selection::DuplicateSelection {}));
         assert_eq!(result.mutations.len(), 1);

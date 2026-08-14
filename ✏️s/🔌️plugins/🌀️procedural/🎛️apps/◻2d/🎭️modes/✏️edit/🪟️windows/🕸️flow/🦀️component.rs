@@ -24,6 +24,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -38,8 +39,11 @@ pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, sess
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let selection = config.selected_ids.clone();
     let flow_extras = flow_backed_node_graph_extras(fixture, "", 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    // 🕹️ `render` carries no `InteractionView` and `NodeGraphScene` has no `interaction_domain` field
+    // for the wrapper to stamp post-render either (see the `🧊️3d` sibling window's identical note,
+    // ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `selection` is left at
+    // `NodeGraphScene::base`'s empty default until a future wave threads interaction into rendering.
     build_node_graph_scene(
         PROCEDURAL2D_PLAY_SURFACE_MAIN,
         PROCEDURAL2D_PLAY_APP_ID,
@@ -52,7 +56,6 @@ pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, sess
             fixture_json: flow_extras.fixture_json,
             eval_json: flow_extras.eval_json,
             status_json: flow_extras.status_json,
-            selection,
             ..NodeGraphScene::base(nodes, edges, viewport)
         },
     )

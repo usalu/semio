@@ -3,7 +3,7 @@
 
 use crate::apps::lowpoly::lowpoly_action;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
-use crate::apps::lowpoly::view::{document_target_row_id, highlighted_document_ids, resolve_active_object_id, selected_document_ids, LowpolyView};
+use crate::apps::lowpoly::view::{document_object_row_id, document_target_row_id, mesh_select_action, resolve_active_object_id, MESH_INTERACTION_DOMAIN, MESH_GRANULARITY_OBJECT, LowpolyView};
 use crate::apps::lowpoly::engine::LowpolyDocument;
 use semio_framework_plugin::{
     IconName, Label, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
@@ -29,8 +29,6 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> UiNode {
     let active_id = resolve_active_object_id(view.snapshot, view.config);
-    let selected_ids = selected_document_ids(view);
-    let highlighted_ids = highlighted_document_ids(view);
     let items: Vec<UiTreeItemNode> = view
         .snapshot
         .objects
@@ -46,11 +44,6 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
                 let leaves: Vec<UiTreeItemNode> = (0..count)
                     .map(|id| {
                         let row_id = document_target_row_id(&object.id, object_index, mode, id as u32);
-                        let hover_args = json!({
-                            "objectId": object.id,
-                            "mode": mode,
-                            "id": id,
-                        });
                         let mut actions = None;
                         if mode == "face" {
                             actions = Some(vec![UiTreeItemAction {
@@ -62,52 +55,32 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
                         }
                         UiTreeItemNode {
                             icon_id: IconName::from_str(icon),
-                            action: Some(lowpoly_action(
-                                "toggleSelectionTarget",
-                                Some(json!({
-                                    "objectId": object.id,
-                                    "mode": mode,
-                                    "id": id,
-                                    "merge": "invertive",
-                                })),
-                            )),
-                            hover_action: Some(lowpoly_action("setHover", Some(hover_args))),
-                            unhover_action: Some(lowpoly_action("setHover", None)),
+                            action: Some(mesh_select_action(mode, &row_id, "invertive")),
                             actions,
                             menu: None,
-                            ..UiTreeItemNode::base(row_id, Label::data(format!("{} {id}", label.as_str())))
+                            ..UiTreeItemNode::base(row_id.clone(), Label::data(format!("{} {id}", label.as_str())))
                         }
                     })
                     .collect();
                 UiTreeItemNode { icon_id: IconName::from_str(icon), items: Some(leaves), description: Some(format!("{count}")), menu: None, ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}.{mode}.group"), label) }
             };
+            let object_row_id = document_object_row_id(&object.id);
             UiTreeItemNode {
                 icon_id: Some("box".into()),
-                action: Some(lowpoly_action(
-                    "toggleSelectionTarget",
-                    Some(json!({
-                        "objectId": object.id,
-                        "mode": "mesh",
-                        "id": 0,
-                        "merge": "invertive",
-                    })),
-                )),
+                action: Some(mesh_select_action(MESH_GRANULARITY_OBJECT, &object_row_id, "invertive")),
                 items: Some(vec![component_group("vertex", labels.vertices, "circle", vertex_count), component_group("edge", labels.edges, "minus", edge_count), component_group("face", labels.faces, "square", face_count)]),
                 default_open: Some(object.id == active_id),
                 description: Some(object.id.clone()),
                 menu: None,
-                ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}"), Label::data(object.name.clone()))
+                ..UiTreeItemNode::base(object_row_id, Label::data(object.name.clone()))
             }
         })
         .collect();
-    let mut builder = PanelTreeBuilder::new("lowpoly-play-document").section("lowpoly-play-document.meshes", Some(labels.meshes.into()), true, items);
-    if !selected_ids.is_empty() {
-        builder = builder.selected(selected_ids);
-    }
-    if !highlighted_ids.is_empty() {
-        builder = builder.highlighted(highlighted_ids);
-    }
-    builder.build()
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `.interaction_domain` binds this tree
+    // to the "mesh" domain — the framework OVERWRITES every row's `presence.selected`/`.hovered` from the
+    // live `InteractionState` right after render, so this app never calls `.selected()`/`.highlighted()`
+    // again (dead code the wrapper would silently discard anyway).
+    PanelTreeBuilder::new("lowpoly-play-document").section("lowpoly-play-document.meshes", Some(labels.meshes.into()), true, items).interaction_domain(MESH_INTERACTION_DOMAIN).build()
 }
 //#endregion 🔖️Render
 

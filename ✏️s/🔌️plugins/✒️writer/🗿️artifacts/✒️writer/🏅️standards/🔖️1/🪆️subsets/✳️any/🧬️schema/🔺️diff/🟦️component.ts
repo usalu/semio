@@ -14,8 +14,6 @@ export interface WriterDiff {
   /** @state artifact */
   text?: WriterTextDelta;
   /** @state presence */
-  selectedAstIds?: WriterStringList;
-  /** @state presence */
   editorSelection?: WriterEditorSelection | null;
   /** @state presence */
   editorSettings?: WriterEditorSettings;
@@ -35,10 +33,6 @@ export interface WriterDiff {
   cameraZoom?: number;
   /** @state config */
   locale?: string;
-  /** @state artifact */
-  treeHoveredAstId?: string | null;
-  /** @state artifact */
-  editorHoverOffset?: number | null;
 }
 
 export interface WriterArtifact {
@@ -47,7 +41,6 @@ export interface WriterArtifact {
   languageId: string;
   uri: string;
   text: string;
-  selectedAstIds: string[];
   editorSelection?: WriterEditorSelection;
   editorSettings: WriterEditorSettings;
   formatSignal: number;
@@ -58,8 +51,6 @@ export interface WriterArtifact {
   cameraY: number;
   cameraZoom: number;
   locale: string;
-  treeHoveredAstId?: string;
-  editorHoverOffset?: number;
 }
 
 export interface WriterEditorSelection {
@@ -72,10 +63,6 @@ export interface WriterEditorSettings {
   fontPx: number;
   lineHeight: number;
   tabSize: number;
-}
-
-export interface WriterStringList {
-  values: string[];
 }
 
 export interface WriterTextRangeEdit {

@@ -11,6 +11,12 @@ use crate::artifacts::layout::{LayoutCamera, LayoutSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `dispatch_action` intercepts the six
+// framework interaction verbs BEFORE routing to `ArtifactApp::handle`, so `LayoutCommand::dispatch`
+// can no longer emit a selection mutation of its own; the hit test below is unchanged, only its
+// result now travels as a `crate::apps::layout::layout_select_effect`/`layout_clear_selection_effect`
+// redispatch instead of a `LayoutConfigMutation::SetSelection`.
+
 //#region 🔖️Shared
 /// 🖱️ A surface id names its blueprint/preview surface directly (`"layout.play.blueprint"` /
 /// `"layout.play.preview"`); an absent id defaults to blueprint (the interactive authoring surface).
@@ -31,7 +37,9 @@ fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutConfig, sx: f64, sy: f64, wi
     let page = active_page(doc, config)?;
     let (wx, wy) = screen_to_world_for_surface(config, blueprint, sx, sy, width, height);
     let mut engine = LayoutEngine::new();
-    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
+    // 🕹️ `selected_ids`/`hovered_id` only feed `DisplayRect.selected`/`.hovered` chrome flags, never
+    // hit-test correctness — `&[]`/`None` here are harmless (selection/hover are framework-owned now).
+    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &[], None, blueprint);
     list.hit_test(wx as f32, wy as f32)
 }
 //#endregion 🔖️Shared
@@ -75,28 +83,25 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LayoutSnapshot
         return Ok(Emit::default());
     }
     let hit = hit_test_at(doc.snapshot, cfg.snapshot, payload.x, payload.y, payload.width, payload.height, blueprint);
-    let ids = match hit {
-        Some(id) if payload.extend => {
-            let mut ids = cfg.snapshot.selected_ids.clone();
-            if let Some(position) = ids.iter().position(|existing| *existing == id) {
-                ids.remove(position);
-            } else {
-                ids.push(id);
-            }
-            ids
-        }
-        Some(id) => vec![id],
-        None => Vec::new(),
+    let effect = match hit {
+        // ⚖️ `Invertive` merge is the toggle-on-shift-click `extend` used to hand-roll (add if absent,
+        // remove if present); `Replace` is a plain click. Both now resolve against the CURRENT
+        // framework-owned selection inside `dispatch_interaction_action`, not a locally-read snapshot.
+        Some(id) => crate::apps::layout::layout_select_effect(std::slice::from_ref(&id), if payload.extend { "invertive" } else { "replace" }),
+        None => crate::apps::layout::layout_clear_selection_effect(),
     };
-    Ok(Emit::config(vec![LayoutConfigMutation::SetSelection { ids }]))
+    Ok(Emit::effect(effect))
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::layout::commands::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
     use crate::apps::layout::testkit::{dispatch, layout_app, render, test_screen_point};
-    use crate::apps::layout::{LayoutCommand, LAYOUT_PLAY_BODY_DOCUMENT, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
+    use crate::apps::layout::{LayoutCommand, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
+    use semio_framework::kernel::HostEffect;
+    use semio_framework_plugin::{CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
 
     #[test]
     fn set_camera_mutates_config_and_emits_no_operations() {
@@ -117,23 +122,53 @@ mod tests {
         assert!(blueprint_json.contains(r#""cameraX":0.0"#), "blueprint surface camera stays independent: {blueprint_json}");
     }
 
+    /// 🕹️ Selection is framework-owned now: a hit no longer mutates config synchronously, it asks the
+    /// host to redispatch `interactionSelect` (`dispatch_interaction_action` runs that on the SAME
+    /// instance next, out of band — the test harness doesn't simulate the round trip, so this only
+    /// asserts the requested effect is shaped correctly, not that selection state landed).
     #[test]
-    fn pointer_down_selects_frame_via_hit_test() {
+    fn pointer_down_requests_a_select_effect_for_the_hit_frame() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-        dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
-        let json = render(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
-        assert!(json.contains("layout-document.frame.frame-image-1"));
+        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
+        assert!(result.mutations.is_empty(), "pointer down never mutates the document directly");
+        let effect = result.requested_effects.iter().find(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
+        let HostEffect::DispatchAction { args, .. } = effect else { unreachable!() };
+        let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
+        assert_eq!(args["domainId"], "elements");
+        assert_eq!(args["merge"], "replace");
+        assert!(args["targets"].as_str().expect("targets json").contains("frame-image-1"));
     }
 
     #[test]
-    fn pointer_move_updates_hover_highlight() {
+    fn pointer_down_extend_click_requests_an_invertive_merge() {
+        let mut app = layout_app();
+        let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
+        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 }));
+        let effect = result.requested_effects.iter().find(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
+        let HostEffect::DispatchAction { args, .. } = effect else { unreachable!() };
+        let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
+        assert_eq!(args["merge"], "invertive");
+    }
+
+    #[test]
+    fn pointer_down_on_empty_space_requests_clear_selection() {
+        let mut app = layout_app();
+        let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 5.0, 5.0);
+        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
+        assert!(result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == CLEAR_SELECTION_ACTION_ID)));
+    }
+
+    #[test]
+    fn pointer_move_requests_a_hover_effect_for_the_hit_frame() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }));
-        assert!(result.mutations.is_empty(), "hover is a config action, not an operation");
-        let json = render(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
-        assert!(json.contains("layout-document.frame.frame-text-1"));
+        assert!(result.mutations.is_empty(), "hover never mutates the document directly");
+        let effect = result.requested_effects.iter().find(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_HOVER_ACTION_ID)).expect("interactionHover effect");
+        let HostEffect::DispatchAction { args, .. } = effect else { unreachable!() };
+        let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("hover args");
+        assert!(args["targets"].as_str().expect("targets json").contains("frame-text-1"));
     }
 
     #[test]

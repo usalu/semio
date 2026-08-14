@@ -1,8 +1,6 @@
 /** 🧬️ Procedural2dConfig */
 export interface Procedural2dConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
   camera: CameraJson;
   /** @state config */
   showMode: string;

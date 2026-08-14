@@ -1,14 +1,12 @@
 //! 🖱️ 🖱️ Draw play app commands command — `canvas-pointer-up`.
 
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
-use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
 use crate::artifacts::draw::op::DrawMutation;
-use crate::artifacts::draw::{DrawCamera, DrawSnapshot, DrawLayerNode, PathSegment};
+use crate::artifacts::draw::DrawSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
-use crate::apps::draw::commands::canvas_pointer_down::{canvas_point_to_world, draw_gesture, finish_gesture_emit, DrawSession};
+use crate::apps::draw::commands::canvas_pointer_down::{canvas_point_to_world, draw_gesture, DrawSession};
 use serde::{Deserialize, Serialize};
 
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "canvas-pointer-up")]
@@ -24,9 +22,9 @@ pub struct CanvasPointerUp {
 
 pub fn handle(payload: &CanvasPointerUp, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let mut config = cfg.snapshot.clone();
+    let config = cfg.snapshot;
     let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
     let active_utility = config.active_utility_id.clone();
-    let emit = session.step_gesture(draw_gesture::Event::PointerUp { utility: active_utility, world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, document, &mut config);
-    Ok(finish_gesture_emit(emit, cfg.snapshot, &config))
+    let emit = session.step_gesture(draw_gesture::Event::PointerUp { utility: active_utility, world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, document, config);
+    Ok(emit)
 }

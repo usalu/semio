@@ -4,35 +4,18 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedNodeIds",
     "camera",
     "previewCamera",
-    "selectionMethod",
     "activeUtilityId",
     "showMode"
   ],
   "properties": {
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "hoveredNodeId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "camera": {
       "$ref": "#/$defs/CameraJson",
       "x-semio-state": "presence"
     },
     "previewCamera": {
       "$ref": "#/$defs/Procedural3dPreviewCamera",
-      "x-semio-state": "presence"
-    },
-    "selectionMethod": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "activeUtilityId": {

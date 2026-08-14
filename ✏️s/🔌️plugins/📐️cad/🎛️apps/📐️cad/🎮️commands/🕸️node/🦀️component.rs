@@ -56,3 +56,24 @@ pub mod rename_node {
     }
 }
 //#endregion 🔖️RenameNode
+
+//#region 🔖️SetNodeSelection
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): document-tree node selection is
+/// app-owned (not a mesh-geometry granularity of the framework `"cad"` interaction domain) —
+/// relocated here (unchanged wire shape) from the deleted `🗂️selection` command directory.
+pub mod set_node_selection {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "set-node-selection")]
+    pub struct SetNodeSelection {
+        pub node_ids: Vec<String>,
+    }
+
+    pub fn handle(payload: &SetNodeSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let mut runtime = runtime_of(cfg);
+        runtime.selected_node_ids = payload.node_ids.clone();
+        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
+    }
+}
+//#endregion 🔖️SetNodeSelection

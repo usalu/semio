@@ -108,7 +108,6 @@ type CurateDiff {
   stockExtra: CurateStockExtraDelta @state(class: ARTIFACT)
   curated: CurateCuratedDelta @state(class: ARTIFACT)
   filters: Filters @state(class: CONFIG)
-  selectedObjectId: String @state(class: PRESENCE)
   locale: String @state(class: CONFIG)
   contributionsJson: String @state(class: CONFIG)
 }

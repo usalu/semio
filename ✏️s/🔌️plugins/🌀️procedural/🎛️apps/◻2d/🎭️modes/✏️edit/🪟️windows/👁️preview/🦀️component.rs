@@ -25,6 +25,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -50,20 +51,21 @@ pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, sess
             layers.extend(scene_layers_from_drawing_handle(&handle, prefix));
         }
     }
+    // 🕹️ `render` carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM),
+    // so the schematic wire overlay always shows every widget now (the pre-migration "nothing
+    // selected" fallback), rather than filtering to a selection it can no longer read.
     if config.show_mode == "wire" {
         for widget in &fixture.widgets {
             let id = crate::artifacts::procedural2d::widget_id(widget).to_string();
-            if config.selected_ids.is_empty() || config.selected_ids.iter().any(|selected| selected == &id) {
-                let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
-                layers.push(serde_json::json!({
-                    "id": format!("widget-{id}"),
-                    "kind": "node",
-                    "name": id,
-                    "x": x,
-                    "y": y,
-                    "width": 96.0,
-                    "height": 48.0}));
-            }
+            let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
+            layers.push(serde_json::json!({
+                "id": format!("widget-{id}"),
+                "kind": "node",
+                "name": id,
+                "x": x,
+                "y": y,
+                "width": 96.0,
+                "height": 48.0}));
         }
     }
     build_canvas_2d_scene(

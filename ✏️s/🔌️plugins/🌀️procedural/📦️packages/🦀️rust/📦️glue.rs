@@ -1151,18 +1151,10 @@ pub mod apps {
             pub mod reorganize;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️node-graph-select/🦀️component.rs"]
-            pub mod node_graph_select;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️node-graph-hover/🦀️component.rs"]
-            pub mod node_graph_hover;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🧩️add-widget/🦀️component.rs"]
             pub mod add_widget;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🧩️remove-widget/🦀️component.rs"]
             pub mod remove_widget;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️select-node/🦀️component.rs"]
-            pub mod select_node;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🧬️add-generation/🦀️component.rs"]
             pub mod add_generation;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🧬️remove-generation/🦀️component.rs"]
@@ -1282,10 +1274,6 @@ pub mod apps {
             pub mod reorganize;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-select/🦀️component.rs"]
-            pub mod node_graph_select;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-hover/🦀️component.rs"]
-            pub mod node_graph_hover;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️graph-pointer-down/🦀️component.rs"]
             pub mod graph_pointer_down;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧩️delete-selection/🦀️component.rs"]
@@ -1302,20 +1290,8 @@ pub mod apps {
             pub mod rotate_selection;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧭️scale-selection/🦀️component.rs"]
             pub mod scale_selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️select-node/🦀️component.rs"]
-            pub mod select_node;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-hover/🦀️component.rs"]
-            pub mod set_hover;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️world-pointer-down/🦀️component.rs"]
             pub mod world_pointer_down;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️world-select/🦀️component.rs"]
-            pub mod world_select;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️world-hover/🦀️component.rs"]
-            pub mod world_hover;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-selection-method/🦀️component.rs"]
-            pub mod set_selection_method;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧬️add-generation/🦀️component.rs"]
             pub mod add_generation;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧬️remove-generation/🦀️component.rs"]

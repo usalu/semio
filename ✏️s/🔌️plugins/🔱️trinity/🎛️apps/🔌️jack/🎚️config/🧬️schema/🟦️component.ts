@@ -1,8 +1,6 @@
 /** 🧬️ JackConfig */
 export interface JackConfig {
   /** @state config */
-  selectedNodeIds: string[];
-  /** @state config */
   camera: Camera;
   /** @state config */
   activeFixtureId: string;

@@ -1,0 +1,60 @@
+test artifacts::gismap::standards::v1::subsets::any::schema::mutations::binary::tests::gis_map_regions_op_lines_round_trip ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::mutations::binary::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::mutations::binary::tests::gis_map_routes_op_lines_round_trip ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::mutations::component::tests::positions_reorder_round_trips ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::mutations::component::tests::reorder_routes_obeys_the_inverse_law ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::mutations::component::tests::replace_region_data_obeys_the_inverse_and_diff_absorb_laws ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::text::tests::gis_map_document_dsl_round_trips_empty_document ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::binary::tests::gis_map_document_pack_agrees_with_dsl_for_synthetic_value_shapes ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::binary::tests::gis_map_document_pack_agrees_with_dsl_for_empty_document ... ok
+test artifacts::gisterrain::component::tests::the_terrain_snapshot_composes_a_content_addressed_mesh_child ... ok
+test artifacts::gisterrain::component::tests::the_terrain_snapshot_defaults_to_a_flat_unimported_terrain ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::text::tests::gis_map_document_dsl_round_trips_bundled_reuse_example ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::text::tests::gis_map_document_dsl_round_trips_synthetic_value_shapes ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::binary::tests::gis_map_document_pack_agrees_with_dsl_for_bundled_reuse_example ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::mutations::binary::tests::gis_map_document_text_round_trips_through_store ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::component::relocated_engine_tests::default_terrain_document_seeds_the_fixture_exaggeration ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::snapshot::text::tests::print_dsl_reproduces_the_bundled_example_text_verbatim ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::component::relocated_engine_tests::build_terrain_scene_json_roundtrips_descriptor_fields ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::component::relocated_engine_tests::terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::diff::text::tests::a_whole_artifact_diff_wins_over_every_field_diff ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::diff::text::tests::field_diffs_absorb_last_writer_wins_and_apply_onto_the_snapshot ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::component::relocated_engine_tests::terrain_position_data_omits_none_fields_when_serialized ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::component::tests::empty_overlay_has_no_bounds ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::component::tests::malformed_overlay_json_contributes_no_positions ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::component::tests::two_positions_produce_their_enclosing_box ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::component::tests::imported_map_features_render_as_extra_pins ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::component::tests::inference_determinism_law ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::component::tests::terrain_fixture_text_recovers_bundled_scenery_data ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::gis3d_terrain_change_imported_features_op_line_round_trips ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::gis3d_terrain_change_exaggeration_op_line_round_trips ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::component::tests::change_exaggeration_and_change_imported_features_invert_to_the_prior_field_value ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::component::tests::change_imported_features_obeys_the_inverse_law ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::component::tests::change_exaggeration_obeys_the_inverse_and_diff_absorb_laws ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::binary::tests::gis3d_terrain_document_pack_agrees_with_dsl_for_arbitrary_exaggeration ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::binary::tests::gis3d_terrain_document_pack_agrees_with_dsl_for_bundled_reuse_example ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::binary::tests::gis3d_terrain_document_pack_agrees_with_dsl_for_imported_features_json ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::text::tests::gis3d_terrain_document_dsl_round_trips_bundled_reuse_example ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::text::tests::gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration ... ok
+test examples::art_gismap_demo_tests::inference_default_law ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::text::tests::print_dsl_reparses_to_the_same_document ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::text::tests::gis3d_terrain_document_dsl_round_trips_imported_features_json ... ok
+test examples::art_gismap_demo_tests::primary_asset_is_nonempty ... ok
+test examples::art_gismap_demo_tests::inference_determinism_law ... ok
+test examples::art_gisterrain_demo_tests::inference_default_law ... ok
+test examples::art_gisterrain_demo_tests::inference_determinism_law ... ok
+test examples::art_gisterrain_demo_tests::primary_asset_is_nonempty ... ok
+test artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::binary::tests::gis3d_terrain_document_text_round_trips_through_store ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::component::relocated_engine_tests::svg_export_of_an_empty_document_still_renders_a_bare_canvas ... ok
+test artifacts::gismap::standards::v1::subsets::any::schema::component::relocated_engine_tests::svg_export_renders_real_svg_text_through_the_stdio_drawing_bridge ... ok
+
+test result: ok. 162 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests semio_s_plugin_gis
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

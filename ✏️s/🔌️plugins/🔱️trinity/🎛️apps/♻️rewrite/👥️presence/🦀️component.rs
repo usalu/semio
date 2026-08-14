@@ -7,15 +7,14 @@ use std::collections::BTreeMap;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of rewrite view state (node selection, hover/select vars, before-pane camera, LOD).
+/// 👥️ Shareable live subset of rewrite view state (before-pane camera, LOD) — node selection/hover
+/// broadcasts automatically via the framework's typed `PresenceInteraction` (ticket
+/// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`), no longer mirrored here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.rewrite.presence")]
 #[dsl(layout = "lines")]
 pub struct RewritePresence {
-    pub selected_node_ids: Vec<String>,
-    pub active_hover_var: String,
-    pub active_select_var: String,
     #[dsl(block)]
     pub before_pane_camera: Camera,
     pub lod_mode_by_window: BTreeMap<String, String>,
@@ -24,9 +23,6 @@ pub struct RewritePresence {
 impl Default for RewritePresence {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
-            active_hover_var: String::new(),
-            active_select_var: String::new(),
             before_pane_camera: Camera::default(),
             lod_mode_by_window: BTreeMap::new(),
         }

@@ -1,9 +1,6 @@
 type Procedural3dPresence {
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
-  hoveredNodeId: String @state(class: PRESENCE)
   camera: CameraJson! @state(class: PRESENCE)
   previewCamera: Procedural3dPreviewCamera! @state(class: PRESENCE)
-  selectionMethod: String! @state(class: PRESENCE)
   activeUtilityId: String! @state(class: PRESENCE)
   showMode: String! @state(class: PRESENCE)
 }

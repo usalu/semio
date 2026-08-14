@@ -21,30 +21,10 @@ use serde::{Deserialize, Serialize};
 pub struct LowpolyConfig {
     /// 👁️ Was `LowpolyPlayRuntime::active_object_id`.
     pub active_object_id: String,
-    /// 👁️ Was `LowpolyPlayRuntime::selection` (`LowpolySelection`), flattened.
-    pub selection_mode: String,
-    pub selection_ids: Vec<u32>,
-    pub selection_targets_mesh: bool,
-    pub selection_targets_vertex: bool,
-    pub selection_targets_edge: bool,
-    pub selection_targets_face: bool,
-    pub selection_keys: Vec<String>,
     /// 👁️ Was `LowpolyPlayRuntime::paint_utility`.
     pub paint_utility: String,
     /// 👁️ Was `LowpolyPlayRuntime::active_paint_layer`.
     pub active_paint_layer: u32,
-    /// 👁️ Was `LowpolyPlayRuntime::selection_method`.
-    pub selection_method: String,
-    /// 👁️ Was `LowpolyPlayRuntime::selection_mode_default`.
-    pub selection_mode_default: String,
-    /// 👁️ Was `LowpolyPlayRuntime::selected_object_ids` (`SelectionSet`), flattened to its ordered ids.
-    pub selected_object_ids: Vec<String>,
-    /// 👁️ Was `LowpolyPlayRuntime::hovered_object_id`.
-    pub hovered_object_id: Option<String>,
-    /// 👁️ Was `LowpolyPlayRuntime::hovered_target` (`LowpolyHoverTarget`), flattened.
-    pub hovered_target_object_id: Option<String>,
-    pub hovered_target_mode: Option<String>,
-    pub hovered_target_id: Option<u32>,
     /// 👁️ Was `LowpolyPlayRuntime::utility_params` (`serde_json::Value`) — carried as canonical JSON
     /// text since a raw `Value` field has no direct DSL binding.
     pub utility_params_json: String,
@@ -143,22 +123,8 @@ impl Default for LowpolyConfig {
     fn default() -> Self {
         Self {
             active_object_id: String::new(),
-            selection_mode: "mesh".into(),
-            selection_ids: Vec::new(),
-            selection_targets_mesh: true,
-            selection_targets_vertex: false,
-            selection_targets_edge: false,
-            selection_targets_face: false,
-            selection_keys: Vec::new(),
             paint_utility: "brush".into(),
             active_paint_layer: 0,
-            selection_method: "rectangle".into(),
-            selection_mode_default: "default".into(),
-            selected_object_ids: Vec::new(),
-            hovered_object_id: None,
-            hovered_target_object_id: None,
-            hovered_target_mode: None,
-            hovered_target_id: None,
             utility_params_json: default_utility_params_json(),
             paint_color_r: 255,
             paint_color_g: 64,
@@ -224,26 +190,10 @@ pub enum LowpolyConfigMutation {
     },
     #[dsl(key = "active-object")]
     SetActiveObject { object_id: String },
-    #[dsl(key = "selection")]
-    SetSelection { mode: String, ids: Vec<u32> },
-    #[dsl(key = "selection-targets")]
-    SetSelectionTargets { mesh: bool, vertex: bool, edge: bool, face: bool },
-    #[dsl(key = "selection-keys")]
-    SetSelectionKeys { keys: Vec<String> },
     #[dsl(key = "paint-utility")]
     SetPaintUtility { value: String },
     #[dsl(key = "active-paint-layer")]
     SetActivePaintLayer { value: u32 },
-    #[dsl(key = "selection-method")]
-    SetSelectionMethod { value: String },
-    #[dsl(key = "selection-mode-default")]
-    SetSelectionModeDefault { value: String },
-    #[dsl(key = "selected-objects")]
-    SetSelectedObjectIds { ids: Vec<String> },
-    #[dsl(key = "hovered-object")]
-    SetHoveredObject { object_id: Option<String> },
-    #[dsl(key = "hovered-target")]
-    SetHoveredTarget { object_id: Option<String>, mode: Option<String>, id: Option<u32> },
     #[dsl(key = "utility-params")]
     SetUtilityParams { json: String },
     #[dsl(key = "paint-color")]
@@ -348,28 +298,8 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
         match self {
             LowpolyConfigMutation::Snapshot { config } => return config.clone(),
             LowpolyConfigMutation::SetActiveObject { object_id } => next.active_object_id = object_id.clone(),
-            LowpolyConfigMutation::SetSelection { mode, ids } => {
-                next.selection_mode = mode.clone();
-                next.selection_ids = ids.clone();
-            }
-            LowpolyConfigMutation::SetSelectionTargets { mesh, vertex, edge, face } => {
-                next.selection_targets_mesh = *mesh;
-                next.selection_targets_vertex = *vertex;
-                next.selection_targets_edge = *edge;
-                next.selection_targets_face = *face;
-            }
-            LowpolyConfigMutation::SetSelectionKeys { keys } => next.selection_keys = keys.clone(),
             LowpolyConfigMutation::SetPaintUtility { value } => next.paint_utility = value.clone(),
             LowpolyConfigMutation::SetActivePaintLayer { value } => next.active_paint_layer = *value,
-            LowpolyConfigMutation::SetSelectionMethod { value } => next.selection_method = value.clone(),
-            LowpolyConfigMutation::SetSelectionModeDefault { value } => next.selection_mode_default = value.clone(),
-            LowpolyConfigMutation::SetSelectedObjectIds { ids } => next.selected_object_ids = ids.clone(),
-            LowpolyConfigMutation::SetHoveredObject { object_id } => next.hovered_object_id = object_id.clone(),
-            LowpolyConfigMutation::SetHoveredTarget { object_id, mode, id } => {
-                next.hovered_target_object_id = object_id.clone();
-                next.hovered_target_mode = mode.clone();
-                next.hovered_target_id = *id;
-            }
             LowpolyConfigMutation::SetUtilityParams { json } => next.utility_params_json = json.clone(),
             LowpolyConfigMutation::SetPaintColor { r, g, b, a } => {
                 next.paint_color_r = *r;
@@ -416,18 +346,7 @@ mod tests {
 
     #[test]
     fn lowpoly_config_dsl_round_trips_non_default() {
-        let config = LowpolyConfig {
-            active_object_id: "obj-2".into(),
-            selection_mode: "face".into(),
-            selection_ids: vec![1, 2, 3],
-            selected_object_ids: vec!["obj-2".into(), "obj-3".into()],
-            hovered_object_id: Some("obj-4".into()),
-            hovered_target_object_id: Some("obj-4".into()),
-            hovered_target_mode: Some("mesh".into()),
-            hovered_target_id: Some(7),
-            locale: "de-DE".into(),
-            ..LowpolyConfig::default()
-        };
+        let config = LowpolyConfig { active_object_id: "obj-2".into(), locale: "de-DE".into(), ..LowpolyConfig::default() };
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&config);
     }
 
@@ -451,8 +370,8 @@ mod tests {
     }
 
     #[test]
-    fn config_op_text_round_trip_set_selection() {
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&LowpolyConfigMutation::SetSelection { mode: "face".into(), ids: vec![1, 2, 3] });
+    fn config_op_text_round_trip_set_active_object() {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&LowpolyConfigMutation::SetActiveObject { object_id: "obj-2".into() });
     }
 
     #[test]
@@ -467,7 +386,7 @@ mod tests {
 
     #[test]
     fn config_op_binary_round_trips_and_agrees_with_text() {
-        let operation = LowpolyConfigMutation::SetHoveredTarget { object_id: Some("obj-1".into()), mode: Some("mesh".into()), id: Some(3) };
+        let operation = LowpolyConfigMutation::SetActivePaintLayer { value: 3 };
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     }
 }

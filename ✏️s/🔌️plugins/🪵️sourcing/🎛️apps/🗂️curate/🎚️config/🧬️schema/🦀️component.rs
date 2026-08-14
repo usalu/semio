@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.sourcing.curate.config")]
 pub struct SourcingCurateConfig {
     #[state(config)] pub filters: Filters,
-    #[state(config)] pub selected_object_id: Option<String>,
     #[state(config)] pub locale: String,
     #[state(config)] pub contributions_json: String,
 }

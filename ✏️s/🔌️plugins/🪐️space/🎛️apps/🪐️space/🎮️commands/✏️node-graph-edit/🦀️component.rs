@@ -2,7 +2,7 @@
 
 use crate::apps::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{apply_flow_fixture_to_os_workflow, OsWorkflowCamera, WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde_json::Value;
 
 use serde::{Deserialize, Serialize};
@@ -16,9 +16,7 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    let projection = doc.snapshot;
-    let config = cfg.snapshot;
+fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnapshot, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let edit_operations = serde_json::from_str::<Value>(&payload.operations_json).ok().and_then(|value| value.get("operations").and_then(Value::as_array).cloned()).unwrap_or_default();
     let mut artifact_mutations = Vec::new();
     let mut config_mutations = Vec::new();
@@ -49,14 +47,27 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>,
                 }
             }
             "deleteSelection" => {
-                for node_id in &config.selected_node_ids {
+                for node_id in selected {
                     artifact_mutations.push(WorkflowMutation::RemoveNode { node_id: node_id.clone() });
                 }
             }
             _ => {}
         }
     }
-    Ok(Emit { artifact_mutations, config_mutations, effects, ..Default::default() })
+    Emit { artifact_mutations, config_mutations, effects, ..Default::default() }
+}
+
+/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg)` is framework-fixed at this exact 3-arg shape
+/// (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — reachable
+/// only through that macro-generated path (`SpaceApp::handle` always routes this command through
+/// `apply` below instead), so its `"deleteSelection"` sub-operation degrades to treating the selection
+/// as empty; every other sub-operation (`setFixture`/`move`/`connect`) is unaffected.
+pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    Ok(edit_with_selection(payload, doc.snapshot, &[]))
+}
+
+pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    Ok(edit_with_selection(payload, doc.snapshot, &interaction.selection("graph").ids))
 }
 
 //#region 🧪️Tests

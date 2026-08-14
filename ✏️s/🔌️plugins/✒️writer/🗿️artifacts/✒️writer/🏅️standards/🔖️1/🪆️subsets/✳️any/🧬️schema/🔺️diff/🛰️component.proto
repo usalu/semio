@@ -2,13 +2,13 @@ syntax = "proto3";
 package semio.s.writer.writer;
 
 message WriterDiff {
+  reserved 7, 18, 19;
   optional WriterArtifact artifact = 1;
   optional string schema = 2;
   optional string id = 3;
   optional string language_id = 4;
   optional string uri = 5;
   optional WriterTextDelta text = 6;
-  optional WriterStringList selected_ast_ids = 7;
   optional WriterEditorSelection editor_selection = 8;
   optional WriterEditorSettings editor_settings = 9;
   optional uint32 format_signal = 10;
@@ -19,17 +19,15 @@ message WriterDiff {
   optional double camera_y = 15;
   optional double camera_zoom = 16;
   optional string locale = 17;
-  optional string tree_hovered_ast_id = 18;
-  optional uint32 editor_hover_offset = 19;
 }
 
 message WriterArtifact {
+  reserved 6, 17, 18;
   string schema = 1;
   string id = 2;
   string language_id = 3;
   string uri = 4;
   string text = 5;
-  repeated string selected_ast_ids = 6;
   optional WriterEditorSelection editor_selection = 7;
   WriterEditorSettings editor_settings = 8;
   uint32 format_signal = 9;
@@ -40,8 +38,6 @@ message WriterArtifact {
   double camera_y = 14;
   double camera_zoom = 15;
   string locale = 16;
-  optional string tree_hovered_ast_id = 17;
-  optional uint32 editor_hover_offset = 18;
 }
 
 message WriterEditorSelection {
@@ -54,10 +50,6 @@ message WriterEditorSettings {
   uint32 font_px = 2;
   uint32 line_height = 3;
   uint32 tab_size = 4;
-}
-
-message WriterStringList {
-  repeated string values = 1;
 }
 
 message WriterTextRangeEdit {

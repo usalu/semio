@@ -4,26 +4,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedNodeIds",
-    "activeHoverVar",
-    "activeSelectVar",
     "beforePaneCamera",
     "lodModeByWindow"
   ],
   "properties": {
-    "selectedNodeIds": {
-      "type": "array",
-      "items": { "type": "string" },
-      "x-semio-state": "presence"
-    },
-    "activeHoverVar": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "activeSelectVar": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "beforePaneCamera": {
       "$ref": "#/$defs/Camera",
       "x-semio-state": "presence"

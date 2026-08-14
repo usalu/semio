@@ -5,7 +5,6 @@
   "additionalProperties": false,
   "required": [
     "camera",
-    "selectedNodeIds",
     "collapsedNodeIds",
     "previewOffNodeIds",
     "clipboardNodeIds",
@@ -20,17 +19,6 @@
       "additionalProperties": {
         "$ref": "#/$defs/SpaceWindowCamera"
       },
-      "x-semio-state": "config"
-    },
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
-    "hoveredNodeId": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "collapsedNodeIds": {

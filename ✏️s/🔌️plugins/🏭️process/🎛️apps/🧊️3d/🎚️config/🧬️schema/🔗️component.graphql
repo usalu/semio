@@ -1,8 +1,4 @@
 type Process3dConfig {
-  selectedId: String @state(class: CONFIG)
-  hoveredId: String @state(class: CONFIG)
-  selectedFaceId: Int @state(class: CONFIG)
-  selectionMethod: String! @state(class: CONFIG)
   engagementInput: String! @state(class: CONFIG)
   cameraPosition: [Float!]! @state(class: CONFIG)
   cameraTarget: [Float!]! @state(class: CONFIG)

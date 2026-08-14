@@ -1,6 +1,10 @@
-//! 🎯️ Edit-mode window option — the selection group: the marquee method (rectangle/lasso), the
-//! default merge mode (selective/additive/subtractive/invertive) and which entity kinds
-//! (objects/vortices/attractions) a pick may even reach.
+//! 🎯️ Edit-mode window option — the selection group: which entity kinds
+//! (objects/vortices/attractions) a pick may even reach. 🕹️ ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the marquee method (rectangle/lasso) and
+//! default merge mode toggles moved into the framework's `vortex` interaction domain
+//! (`interactionSelect`'s `method`/`merge` args, `setSelectionMode`) — no longer app config, and no
+//! longer renderable here (`ArtifactApp::window_measures` never gained an `InteractionView`
+//! parameter; see `panels::inspection::render`'s doc comment for the same framework-level gap).
 
 use crate::apps::puzzle3d::config::Puzzle3dRuntime;
 use crate::apps::puzzle3d::terminology::Puzzle3dLabels;
@@ -23,54 +27,6 @@ pub fn measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeas
         waiting: None,
         on_change: None,
         children: vec![
-            WindowMeasure::Toggle {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"),
-                icon_id: "rectangle-tool".into(),
-                label: Some(labels.rectangle.into()),
-                pressed: runtime.selection_method == "rectangle",
-                text: None,
-                on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))),
-            },
-            WindowMeasure::Toggle {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"),
-                icon_id: "lasso".into(),
-                label: Some(labels.lasso.into()),
-                pressed: runtime.selection_method == "lasso",
-                text: None,
-                on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "lasso" }))),
-            },
-            WindowMeasure::Toggle {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-default"),
-                icon_id: "mouse-pointer".into(),
-                label: Some(labels.selective.into()),
-                pressed: runtime.selection_mode_default == "default",
-                text: None,
-                on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "default" }))),
-            },
-            WindowMeasure::Toggle {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-additive"),
-                icon_id: "plus".into(),
-                label: Some(labels.additive.into()),
-                pressed: runtime.selection_mode_default == "additive",
-                text: None,
-                on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "additive" }))),
-            },
-            WindowMeasure::Toggle {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-subtractive"),
-                icon_id: "minus".into(),
-                label: Some(labels.subtractive.into()),
-                pressed: runtime.selection_mode_default == "subtractive",
-                text: None,
-                on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "subtractive" }))),
-            },
-            WindowMeasure::Toggle {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-invertive"),
-                icon_id: "rotate-ccw".into(),
-                label: Some(labels.invertive.into()),
-                pressed: runtime.selection_mode_default == "invertive",
-                text: None,
-                on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "invertive" }))),
-            },
             WindowMeasure::Toggle {
                 id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-objects"),
                 icon_id: "box".into(),

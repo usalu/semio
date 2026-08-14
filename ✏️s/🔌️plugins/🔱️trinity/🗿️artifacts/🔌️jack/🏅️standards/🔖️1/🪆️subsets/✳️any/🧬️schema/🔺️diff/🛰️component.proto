@@ -23,8 +23,6 @@ message JackDiff {
   // @state artifact
   optional string root_node_id = 9;
   // @state presence
-  optional JackStringList selected_node_ids = 10;
-  // @state presence
   optional string active_fixture_id = 11;
   // @state presence
   optional string jack_query = 12;
@@ -48,10 +46,6 @@ message JackDiff {
   optional int64 revision = 21;
   // @state config
   optional string locale = 22;
-}
-
-message JackStringList {
-  repeated string values = 1;
 }
 
 message JackNodesDelta {

@@ -9,7 +9,7 @@ use crate::apps::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
 use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::schema::mesh_data_from_transfer;
 use semio_framework_plugin::{
-    build_world_3d_scene, world3d_camera_json, world3d_scene, world3d_selection_json, ActionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
+    build_world_3d_scene, world3d_camera_json, world3d_scene, ActionRef, InteractionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -47,6 +47,9 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
         actions: LOWPOLY_MAIN_ACTIONS.iter().map(|id| ActionRef::from(*id)).collect(),
         utilities: ["move", "rotate", "scale", "brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" interaction domain —
+        // only the Model window selects/hovers mesh components; the UV window paints textures.
+        interactions: vec![InteractionRef::new(crate::apps::lowpoly::view::MESH_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -63,46 +66,25 @@ pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<Wi
 //#endregion 🔖️Definition
 
 //#region 🔖️Scene
-fn gumball_target_world(doc: &LowpolyDocument, view: LowpolyView<'_>) -> Option<[f64; 3]> {
-    let pivot = doc.selection_transform_pivot().ok()?;
-    let active = resolve_active_object_id(view.snapshot, view.config);
-    let object = view.snapshot.objects.iter().find(|entry| entry.id == active)?;
-    let position = &object.transform.position;
-    Some([position[0] as f64 + pivot.x() as f64, position[1] as f64 + pivot.y() as f64, position[2] as f64 + pivot.z() as f64])
-}
-
-fn gumball_active(view: LowpolyView<'_>) -> bool {
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the mesh domain's selection/hover is
+/// framework-owned `InteractionState` now, never `LowpolyConfig` — and `ArtifactApp::render` (unlike
+/// `handle`/`copy_fragment`/`cut_operations`) is not threaded an `InteractionView` this wave, so this
+/// scene JSON can no longer embed a live selection/hover/gumball summary itself (deleted:
+/// `granularity`/`targets`/`componentIds`/`selectionMode`/`selectionMergeMode`/`hoveredComponent`/
+/// `gumballActive`/`gumballTarget`, plus the per-instance `selected`/`hovered` flags below). The shell
+/// renders every peer's (and the local) selection/hover generically off the SAME "mesh" domain this
+/// window declares via `.window_kind_interactions` — see `📋️master.md`'s UI section ("scene payloads
+/// fed from InteractionView") — so this app never needs to re-embed it.
+fn world_selection_json_for(view: LowpolyView<'_>, active_utility: &str) -> String {
     let config = view.config;
     let active = resolve_active_object_id(view.snapshot, config);
-    !config.selection_ids.is_empty() || (config.selection_targets_mesh && config.selected_object_ids.iter().any(|id| id == &active))
-}
-
-fn world_selection_json_for(view: LowpolyView<'_>, active_utility: &str, doc: Option<&LowpolyDocument>) -> String {
-    use crate::apps::lowpoly::view::selection_targets_from_config;
-    let config = view.config;
-    let active = resolve_active_object_id(view.snapshot, config);
-    let mut value: Value = serde_json::from_str(&world3d_selection_json(&config.selection_method, &config.selected_object_ids, config.hovered_object_id.as_deref())).unwrap_or_else(|_| json!({}));
-    if let Some(object) = value.as_object_mut() {
-        object.insert("granularity".into(), json!(config.selection_mode));
-        object.insert("targets".into(), json!(selection_targets_from_config(config)));
-        object.insert("transformMode".into(), json!(active_utility));
-        object.insert("interactionMode".into(), json!(if crate::apps::lowpoly::view::is_paint_utility(active_utility) { "paint" } else { "model" }));
-        object.insert("componentIds".into(), json!(config.selection_ids));
-        object.insert("selectionMode".into(), json!(config.selection_mode));
-        object.insert("selectionMergeMode".into(), json!(config.selection_mode_default));
-        object.insert("activeObjectId".into(), json!(active));
-        object.insert("gumballActive".into(), json!(gumball_active(view)));
-        object.insert("showEdges".into(), json!(config.show_edges));
-        if let Some(object_id) = config.hovered_target_object_id.clone() {
-            object.insert("hoveredComponent".into(), json!({ "objectId": object_id, "mode": config.hovered_target_mode, "id": config.hovered_target_id }));
-        }
-        if let Some(loaded) = doc {
-            if let Some(target) = gumball_target_world(loaded, view) {
-                object.insert("gumballTarget".into(), json!(target));
-            }
-        }
-    }
-    value.to_string()
+    json!({
+        "transformMode": active_utility,
+        "interactionMode": if crate::apps::lowpoly::view::is_paint_utility(active_utility) { "paint" } else { "model" },
+        "activeObjectId": active,
+        "showEdges": config.show_edges,
+    })
+    .to_string()
 }
 
 fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, String>) -> String {
@@ -122,20 +104,14 @@ fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, Stri
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
+/// 🕹️ `selected`/`hovered` per-instance flags are DELETED — see `world_selection_json_for`'s doc: the
+/// shell overlays the mesh domain's live selection/hover generically now.
 fn world_instances_json(view: LowpolyView<'_>) -> String {
-    let config = view.config;
     let instances: Vec<Value> = view
         .snapshot
         .objects
         .iter()
-        .enumerate()
-        .map(|(object_index, object)| {
-            let selected = config.selected_object_ids.iter().any(|id| id == &object.id) || (config.selection_mode == "mesh" && config.selection_ids.iter().any(|id| *id as usize == object_index));
-            let hovered = if config.hovered_target_object_id.is_some() {
-                config.hovered_target_mode.as_deref() == Some("mesh") && config.hovered_target_object_id.as_deref() == Some(object.id.as_str())
-            } else {
-                config.hovered_object_id.as_deref() == Some(object.id.as_str())
-            };
+        .map(|object| {
             let rotation = euler_degrees_to_quaternion(object.transform.rotation);
             json!({
                 "id": object.id,
@@ -152,8 +128,6 @@ fn world_instances_json(view: LowpolyView<'_>) -> String {
                     object.transform.scale[2] as f64,
                 ],
                 "label": object.name,
-                "selected": selected,
-                "hovered": hovered,
                 "smoothShading": object.smooth_shading,
             })
         })
@@ -167,7 +141,7 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
         Some(loaded) => build_world_3d_scene(
             LOWPOLY_PLAY_SURFACE_MAIN,
             crate::apps::lowpoly::LOWPOLY_PLAY_APP_ID,
-            world3d_scene(world3d_camera_json(config.world_camera_position, config.world_camera_target, config.world_camera_fov), world_meshes_json(loaded, texture_cache), world_instances_json(view), world_selection_json_for(view, active_utility, Some(loaded)), &crate::apps::lowpoly::config::lowpoly_sun_config(config)),
+            world3d_scene(world3d_camera_json(config.world_camera_position, config.world_camera_target, config.world_camera_fov), world_meshes_json(loaded, texture_cache), world_instances_json(view), world_selection_json_for(view, active_utility), &crate::apps::lowpoly::config::lowpoly_sun_config(config)),
         ),
         None => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data("Failed to load lowpoly document")),
     }

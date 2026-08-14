@@ -2,8 +2,6 @@ syntax = "proto3";
 package semio.app.trinity.jack;
 message JackConfig {
   // @state config
-  repeated string selected_node_ids = 1;
-  // @state config
   Camera camera = 2;
   // @state config
   string active_fixture_id = 3;

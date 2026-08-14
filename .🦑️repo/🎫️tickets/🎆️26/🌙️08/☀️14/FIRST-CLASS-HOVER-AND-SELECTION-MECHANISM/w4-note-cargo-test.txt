@@ -1,0 +1,25 @@
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::table_row_column_inverse_laws ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::root_scalar_inverse_and_absorb_laws ... ok
+test apps::note::component::tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::binary::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::component::round_trip_tests::absent_linked_artifact_round_trips_as_none ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::binary::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::binary::tests::command_envelope_round_trip_holds_for_an_applied_operation ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::component::round_trip_tests::linked_artifact_and_text_content_round_trip_through_text_and_binary ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::binary::tests::note_document_text_round_trips_store_with_applied_operation ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::binary::semio_protocol_conformance::verify_protocol_bytes_against_encoded_pack ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::binary::tests::pack_round_trips_representative_document ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::binary::tests::pack_round_trips_and_agrees_with_dsl ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::text::tests::semio_example_dsl_round_trips ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::text::semio_grammar_conformance::component_grammar_semio_is_grammar_dialect ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::text::tests::note_dsl_round_trips_representative_document ... ok
+test apps::note::commands::nudge_selection_up::tests::nudge_direction_actions_move_selection_without_args ... ok
+
+test result: ok. 93 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests semio_s_plugin_note
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

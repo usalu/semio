@@ -29,6 +29,7 @@ pub fn handle(payload: &ExportPng, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::layout::commands::{engagement_submit, export_package, export_pdf, export_svg};
     use crate::apps::layout::testkit::{dispatch, layout_app};
     use crate::apps::layout::LayoutCommand;
 

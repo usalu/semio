@@ -17,10 +17,6 @@ export interface RasterConfigViewportSize {
 
 export interface RasterConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
-  hoveredId?: string;
-  /** @state config */
   brushSize: number;
   /** @state config */
   brushOpacity: number;

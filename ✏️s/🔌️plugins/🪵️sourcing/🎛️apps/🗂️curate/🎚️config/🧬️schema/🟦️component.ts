@@ -18,8 +18,6 @@ export interface SourcingCurateConfig {
   /** @state config */
   filters: Filters;
   /** @state config */
-  selectedObjectId?: string;
-  /** @state config */
   locale: string;
   /** @state config */
   contributionsJson: string;

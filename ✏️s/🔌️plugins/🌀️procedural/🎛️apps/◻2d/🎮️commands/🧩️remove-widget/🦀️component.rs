@@ -16,7 +16,9 @@ use crate::artifacts::procedural2d::schema::host_operations;
 pub struct RemoveWidget {
     pub widget_id: String}
 
-pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+/// 🕹️ No longer prunes selection itself — the framework auto-prunes `graph`'s selection after any
+/// document mutation that deletes a selected id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let target_id = &payload.widget_id;
     let operations = host_operations(fixture, |host| {
@@ -25,6 +27,5 @@ pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural2dSnapsho
     if operations.is_empty() {
         return Ok(Emit::default());
     }
-    let remaining: Vec<String> = cfg.snapshot.selected_ids.iter().filter(|id| *id != target_id).cloned().collect();
-    Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural2dConfigMutation::SetSelection { ids: remaining }], ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, ..Default::default() })
 }

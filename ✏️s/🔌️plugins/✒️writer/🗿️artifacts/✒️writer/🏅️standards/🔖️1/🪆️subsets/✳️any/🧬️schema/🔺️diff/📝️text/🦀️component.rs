@@ -36,9 +36,6 @@ impl WriterDiff {
         if let Some(document) = &self.document {
             next.document = document.clone();
         }
-        if let Some(list) = &self.selected_ast_ids {
-            next.selected_ast_ids = list.values.clone();
-        }
         if let Some(selection) = &self.editor_selection {
             next.editor_selection = selection.clone();
         }
@@ -68,12 +65,6 @@ impl WriterDiff {
         }
         if let Some(value) = &self.locale {
             next.locale = value.clone();
-        }
-        if let Some(value) = &self.tree_hovered_ast_id {
-            next.tree_hovered_ast_id = value.clone();
-        }
-        if let Some(value) = &self.editor_hover_offset {
-            next.editor_hover_offset = value.clone();
         }
         next
     }
@@ -123,9 +114,6 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
         if other.document.is_some() {
             self.document = other.document;
         }
-        if other.selected_ast_ids.is_some() {
-            self.selected_ast_ids = other.selected_ast_ids;
-        }
         if other.editor_selection.is_some() {
             self.editor_selection = other.editor_selection;
         }
@@ -155,12 +143,6 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
         }
         if other.locale.is_some() {
             self.locale = other.locale;
-        }
-        if other.tree_hovered_ast_id.is_some() {
-            self.tree_hovered_ast_id = other.tree_hovered_ast_id;
-        }
-        if other.editor_hover_offset.is_some() {
-            self.editor_hover_offset = other.editor_hover_offset;
         }
     }
 }

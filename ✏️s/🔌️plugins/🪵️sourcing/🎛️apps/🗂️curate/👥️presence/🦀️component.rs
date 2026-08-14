@@ -5,13 +5,14 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of sourcing curate view state (table/world selection, grid camera).
+/// 👥️ Shareable live subset of sourcing curate view state (grid camera). Row selection now broadcasts
+/// automatically through the framework's typed `PresenceInteraction` field for the "rows" interaction
+/// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "sourcingcurate.presence")]
 #[dsl(layout = "lines")]
 pub struct SourcingCuratePresence {
-    pub selected_object_id: Option<String>,
     pub world_camera_position: [f64; 3],
     pub world_camera_target: [f64; 3],
     pub world_camera_fov: f64,
@@ -20,7 +21,6 @@ pub struct SourcingCuratePresence {
 impl Default for SourcingCuratePresence {
     fn default() -> Self {
         Self {
-            selected_object_id: None,
             world_camera_position: [2.5, 2.0, 2.5],
             world_camera_target: [0.0, 0.0, 0.0],
             world_camera_fov: 50.0,

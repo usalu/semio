@@ -12,7 +12,7 @@
 //! the new one.
 
 use crate::apps::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
-use crate::apps::puzzle2d::commands::{set_grid_snap_enabled, set_grid_factor, set_camera, focus_selection, apply_board_events, set_lod_mode_for_pane, lod_scale_json, add_node, patch_inspector, redraw_handles, force_layout, set_brush_kind_weights, set_brush_node_size, set_suggestion_offset, cycle_candidate, set_candidate_index, open_slot, commit_slot, cancel_slot, set_fill_count, fill_session_begin, fill_session_step, fill_session_clear, set_selection, select_all, clear_selection, select_same_kind, delete_selection, duplicate_selection, set_selection_flag, set_selection_method, set_locale, set_terminology, set_active_example, engagement_input, engagement_submit, engagement_abort, engagement_control_select, set_active_utility};
+use crate::apps::puzzle2d::commands::{set_grid_snap_enabled, set_grid_factor, set_camera, focus_selection, apply_board_events, set_lod_mode_for_pane, lod_scale_json, add_node, patch_inspector, redraw_handles, force_layout, set_brush_kind_weights, set_brush_node_size, set_suggestion_offset, cycle_candidate, set_candidate_index, open_slot, commit_slot, cancel_slot, set_fill_count, fill_session_begin, fill_session_step, fill_session_clear, select_same_kind, delete_selection, duplicate_selection, set_selection_flag, set_locale, set_terminology, set_active_example, engagement_input, engagement_submit, engagement_abort, engagement_control_select, set_active_utility};
 use crate::apps::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
 use crate::apps::puzzle2d::modes::edit;
 use crate::apps::puzzle2d::modes::edit::tools::fill;
@@ -27,10 +27,14 @@ use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactPresentation, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_SELECT_ACTION_ID,
 };
+// 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
+// `semio_framework_plugin`, flagged to the coordinator, not fixed here).
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -49,6 +53,12 @@ pub const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = crate::examples::puzzle2d::na
 /// `🎮️commands/🎲️apply-board-events`'s `PUZZLE2D_WINDOW_BODY_KEYS`): these key utilities, engagements and measures.
 pub const PUZZLE2D_PANES: [&str; 3] = [overview::WINDOW_KIND_ID, detail::WINDOW_KIND_ID, selection::WINDOW_KIND_ID];
 pub const PUZZLE2D_LOD_MODE_AUTOMATIC: &str = "automatic";
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the one interaction domain this app
+/// declares — the deleted `Puzzle2dConfig::selected_ids` flat bag (nodes and their nested handles
+/// alike) collapses into one framework-owned domain, one flat granularity (no real parent/child
+/// structure was ever modeled for it).
+pub const PUZZLE2D_INTERACTION_DOMAIN: &str = "vortex";
+pub const PUZZLE2D_GRANULARITY_NODE: &str = "node";
 
 const BOARD_DEFAULT_WIDTH: u32 = 1024;
 const BOARD_DEFAULT_HEIGHT: u32 = 768;
@@ -101,6 +111,34 @@ fn example_fixture(json_text: &str) -> Value {
 
 pub fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
+/// action targeting one `(granularity, id)` pair in the `vortex` domain — replaces the deleted
+/// `setSelection` action builders.
+pub fn puzzle2d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
+    let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
+    puzzle2d_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
+}
+
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain declaration —
+/// the deleted `Puzzle2dConfig::selected_ids` flat bag collapses into one framework-owned domain,
+/// `Flat` hierarchy (no parent/child structure was ever modeled for it).
+fn puzzle2d_interaction_definition() -> InteractionDefinition {
+    InteractionDefinition {
+        id: PUZZLE2D_INTERACTION_DOMAIN.into(),
+        label: LocalizedLabel::native("Vortex", "Vortex"),
+        granularities: vec![GranularityDefinition { id: PUZZLE2D_GRANULARITY_NODE.into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle-dot".into() }],
+        hierarchy: HierarchyProvider::Flat,
+        hover: HoverSpec { enabled: true, transitive: false, channels: vec!["pointer".into()], broadcast: true },
+        selection: SelectionSpec {
+            modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+            methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+            merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+            transitive: false,
+            broadcast: true,
+        },
+    }
 }
 
 /// 🪟️ B1: was host-pushed `view_state.window_instances` filtered by `window_kind_id`; puzzle2d has
@@ -541,9 +579,9 @@ fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 /// 🪶️ The cheap half of syncing `host` from `envelope`: plain setters mirroring ephemeral view state
 /// (selection/utility/grid/LOD/…) — must run on every action regardless of whether the fixture
 /// content changed, since this state itself changes every action.
-fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene) {
+fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, selected_ids: &[String]) {
     host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
-    host.set_selection_ids(&envelope.runtime.selected_ids);
+    host.set_selection_ids(selected_ids);
     host.set_active_utility(&envelope.active_utility);
     let overview_lod_mode = envelope.runtime.lod_mode_by_pane.get(overview::WINDOW_KIND_ID).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     if overview_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC {
@@ -561,22 +599,27 @@ fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene) {
     })) {
         host.set_brush_kind_weights(&weights_json);
     }
-    host.set_selection_options(&envelope.runtime.selection_method, "replace", true, true, true);
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the marquee method is
+    // framework-owned now (`interactionSelect`'s `method` arg) — the board engine still needs SOME
+    // default to hit-test with, so it keeps "rectangle" rather than reading a deleted config field.
+    host.set_selection_options("rectangle", "replace", true, true, true);
 }
 
 fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
     sync_host_fixture_content(host, envelope);
-    sync_host_runtime_state(host, envelope);
+    sync_host_runtime_state(host, envelope, &[]);
 }
 
-/// 🪞️ Re-syncs `envelope.runtime.selected_ids` from `host` for engine-driven selection changes (e.g.
-/// `delete_selection`, brush commit). Camera is deliberately NOT mirrored here: every action that
-/// moves the camera already writes the config's camera fields directly — re-deriving it from
-/// `host.camera` here used to blindly overwrite that write with the *pre-action* host camera.
+/// 🪞️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: used to re-sync
+/// `envelope.runtime.selected_ids` from `host.selection` for engine-driven selection changes (e.g.
+/// `delete_selection`, brush commit) — selection is framework-owned now and `handle` has no channel
+/// to write it back (see puzzle3d's `select-same-kind` doc comment for the identical limitation), so
+/// this no longer reconciles anything selection-shaped. Camera is deliberately NOT mirrored here:
+/// every action that moves the camera already writes the config's camera fields directly — re-deriving
+/// it from `host.camera` here used to blindly overwrite that write with the *pre-action* host camera.
 pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
     let events_raw = host.drain_events_json();
     apply_board_events::apply_board_events_from_json(&events_raw, envelope);
-    envelope.runtime.selected_ids = host.selection.iter().cloned().collect();
 }
 //#endregion 🔖️BoardHostSync
 
@@ -677,8 +720,6 @@ puzzle2d_command_variants! {
     DuplicateSelection = "duplicateSelection",
     ForceLayout = "forceLayout",
     FocusSelection = "focusSelection",
-    SelectAll = "selectAll",
-    ClearSelection = "clearSelection",
     SelectSameKind = "selectSameKind",
     SetSelectionFlag = "setSelectionFlag",
     PatchInspectorNodes = "patchInspectorNodes",
@@ -689,8 +730,6 @@ puzzle2d_command_variants! {
     BrushFillSessionStep = "brushFillSessionStep",
     BrushCommitSlot = "brushCommitSlot",
     SetCamera = "setCamera",
-    SetSelection = "setSelection",
-    DocumentSelect = "documentSelect",
     EngagementInput = "engagementInput",
     EngagementSubmit = "engagementSubmit",
     EngagementAbort = "engagementAbort",
@@ -698,7 +737,6 @@ puzzle2d_command_variants! {
     SetLodModeForPane = "setLodModeForPane",
     SetGridSnapEnabled = "setGridSnapEnabled",
     SetGridFactor = "setGridFactor",
-    SetSelectionMethod = "setSelectionMethod",
     SetBrushKindWeights = "setBrushKindWeights",
     SetBrushNodeSize = "setBrushNodeSize",
     SetSuggestionOffset = "setSuggestionOffset",
@@ -738,8 +776,18 @@ pub struct Puzzle2dActionCtx<'a> {
     pub window_id: Option<&'a str>,
     /// 🧰️ The active utility resolved for `window_id` BEFORE this action ran.
     pub active_utility: String,
+    /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — retained selection-acting verbs read
+    /// `.selected_ids()` here instead of the deleted `Puzzle2dConfig::selected_ids` field.
+    pub interaction: &'a InteractionView<'a>,
     pub effects: &'a mut Vec<HostEffect>,
     pub ui_scope: &'a mut UiDirtyScope,
+}
+
+impl<'a> Puzzle2dActionCtx<'a> {
+    pub fn selected_ids(&self) -> Vec<String> {
+        self.interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).ids.clone()
+    }
 }
 //#endregion 🔖️ActionContext
 
@@ -871,7 +919,7 @@ impl ArtifactApp for Puzzle2dPlayApp {
     /// 🎬️ Dispatch only: sync the board host, delegate to the owning `🎮️commands/*` arm, then replay
     /// the host's own events and turn the mutated scene into the granular operation delta plus a
     /// config snapshot. No behaviour lives in this match.
-    fn handle(command: &Puzzle2dCommand, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Puzzle2dCommand, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
         let config = cfg.snapshot;
         let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
         let before = doc.snapshot.0.clone();
@@ -888,23 +936,19 @@ impl ArtifactApp for Puzzle2dPlayApp {
             // change. Discard that parse-induced noise now so `apply_host_events` below only sees
             // events genuinely produced by *this* action's own engine calls.
             let _ = host_mut.drain_events_json();
-            sync_host_runtime_state(&mut host_mut, &scene);
+            sync_host_runtime_state(&mut host_mut, &scene, &interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).ids);
         }
         let mut effects: Vec<HostEffect> = Vec::new();
         // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
         // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
         let mut ui_scope = UiDirtyScope::Full;
         {
-            let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, active_utility, effects: &mut effects, ui_scope: &mut ui_scope };
+            let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, active_utility, interaction, effects: &mut effects, ui_scope: &mut ui_scope };
             match action {
-                "setSelection" | "documentSelect" => set_selection::set_selection(ctx, args),
-                "selectAll" => select_all::select_all(ctx),
-                "clearSelection" => clear_selection::clear_selection(ctx),
                 "selectSameKind" => select_same_kind::select_same_kind(ctx),
                 "deleteSelection" => delete_selection::delete_selection(ctx),
                 "duplicateSelection" => duplicate_selection::duplicate_selection(ctx),
                 "setSelectionFlag" => set_selection_flag::set_selection_flag(ctx, args),
-                "setSelectionMethod" => set_selection_method::set_selection_method(ctx, args),
                 "addNode" => add_node::add_node(ctx, args),
                 "patchInspectorNodes" => patch_inspector::patch_inspector(ctx, args),
                 "redrawHandles" => redraw_handles::redraw_handles(ctx),
@@ -1066,13 +1110,7 @@ impl ArtifactApp for Puzzle2dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let config = cfg.snapshot;
         let is_de = is_de_locale(config);
-        let mut selected = config.selected_ids.clone();
-        if let Some(surface) = request.surface.as_ref() {
-            let ids: Vec<String> = surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect();
-            if !ids.is_empty() {
-                selected = ids;
-            }
-        }
+        let selected: Vec<String> = request.surface.as_ref().map(|surface| surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
         puzzle2d_context_menu_items(registry, &doc.snapshot.0, &selected, is_de)
     }
 }
@@ -1109,6 +1147,10 @@ pub fn create_puzzle2d_app() -> App {
             .window_kind_def(overview::definition(&envelope, &host, labels))
             .window_kind_def(detail::definition(&envelope, &host, labels))
             .window_kind_def(selection::definition(&envelope, &host, labels))
+            .interaction(puzzle2d_interaction_definition())
+            .window_kind_interactions(overview::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE2D_INTERACTION_DOMAIN)])
+            .window_kind_interactions(detail::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE2D_INTERACTION_DOMAIN)])
+            .window_kind_interactions(selection::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE2D_INTERACTION_DOMAIN)])
             .panel_tab_def(document::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
@@ -1122,8 +1164,6 @@ pub fn create_puzzle2d_app() -> App {
             .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
             .action_with(ActionDefinition::new_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Mutation).with_category("view"))
             // 👁️ Palette-visible ephemeral view/selection commands.
-            .action_with(ActionDefinition::new_catalog("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::View).with_category("selection"))
-            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
             .action_with(ActionDefinition::new_catalog("selectSameKind", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
             // 🔧️ Internal content operations — inspector/panel/board/import-bound, not palette commands.
             .action_with(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
@@ -1137,8 +1177,6 @@ pub fn create_puzzle2d_app() -> App {
             // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
             // 🎥️ `setCamera` is session-only view state, so it belongs in this View-kind group.
             .action_with(puzzle2d_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("documentSelect", LocalizedLabel::native("Document Select", "Dokument auswählen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
             .action_with(puzzle2d_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View))
@@ -1146,7 +1184,6 @@ pub fn create_puzzle2d_app() -> App {
             .action_with(puzzle2d_internal_action("setLodModeForPane", LocalizedLabel::native("Set LOD Mode For Pane", "LOD-Modus für Bereich festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setBrushKindWeights", LocalizedLabel::native("Set Brush Kind Weights", "Pinsel-Artgewichte festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setBrushNodeSize", LocalizedLabel::native("Set Brush Node Size", "Pinsel-Knotengröße festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setSuggestionOffset", LocalizedLabel::native("Set Suggestion Offset", "Vorschlagsversatz festlegen"), ActionKind::View))
@@ -1430,11 +1467,26 @@ pub(crate) mod testkit {
     /// `Self::Command` channel). Reconstructs the `Puzzle2dCommand` from the same
     /// `(action, args, window_id)` triple every pre-B1 test already passed.
     pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
-        // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…) stay on `handle_action`.
-        if matches!(action, "undo" | "redo" | "commitCheckpoint" | "createAlternative" | "switchAlternative" | "checkoutCheckpoint" | "copy" | "cut" | "paste" | "revertToCommand" | "historyFilter" | "noteShellCommand") {
+        // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
+        // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
+        // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
+        // setInteractionGranularity to this reserved set.
+        if matches!(
+            action,
+            "undo" | "redo" | "commitCheckpoint" | "createAlternative" | "switchAlternative" | "checkoutCheckpoint" | "copy" | "cut" | "paste" | "revertToCommand" | "historyFilter" | "noteShellCommand"
+                | "interactionSelect" | "interactionHover" | "clearSelection" | "selectAll" | "setSelectionMode" | "setInteractionGranularity"
+        ) {
             return app.handle_action(action, args, &meta("local"));
         }
         app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &meta("local"))
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
+    /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
+    /// deleted `setSelection` action.
+    pub fn select_id(app: &mut Puzzle2dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
+        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
     }
 
     pub fn concrete_forest_app() -> Puzzle2dApp {
@@ -1518,10 +1570,10 @@ mod tests {
 
     #[test]
     fn select_then_delete_selection_removes_the_node() {
-        let mut app = app();
+        let mut app = app_with_registry();
         dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
         let node_id = first_node_id(&app);
-        dispatch(&mut app, "setSelection", Some(&json!({ "ids": [node_id] })), None).expect("select");
+        select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &node_id).expect("select");
         dispatch(&mut app, "deleteSelection", None, None).expect("delete");
         assert!(fixture_nodes(&fixture_of(&app)).is_empty());
     }
@@ -1824,13 +1876,10 @@ mod tests {
         let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
         let node_id = first_node_id(&app);
+        select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &node_id).expect("select");
         let view_dispatches: Vec<(&str, Value)> = vec![
-            ("setSelection", json!({ "ids": [node_id] })),
             ("setCamera", json!({ "camera": { "x": 7.0, "y": 8.0, "zoom": 1.5 } })),
-            ("selectAll", Value::Null),
             ("selectSameKind", Value::Null),
-            ("clearSelection", Value::Null),
-            ("setSelectionMethod", json!({ "method": "lasso" })),
             ("setGridSnapEnabled", json!({ "enabled": true })),
             ("setGridFactor", json!({ "value": 2.0 })),
             ("setLodModeForPane", json!({ "pane": overview::WINDOW_KIND_ID, "value": "detail" })),
@@ -1857,13 +1906,20 @@ mod tests {
     /// combined) and the known `deleteSelection` destructive row stays last.
     #[test]
     fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
-        use semio_framework_plugin::{ContextMenuRequest, UiMenuRef};
+        use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
         let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
         let node_id = first_node_id(&app);
-        dispatch(&mut app, "setSelection", Some(&json!({ "ids": [node_id] })), None).expect("select node");
-        let request = ContextMenuRequest { menu: UiMenuRef { id: "puzzle2d".into(), args: None }, surface: None, window_instance_id: None, point: None };
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `context_menu` reads the
+        // CLIENT-supplied `request.surface.selection` now (selection is framework-owned, no live
+        // config field to derive it from) — see `context_menu`'s own doc comment.
+        let request = ContextMenuRequest {
+            menu: UiMenuRef { id: "puzzle2d".into(), args: None },
+            surface: Some(ContextMenuSurfaceTarget { surface_id: "puzzle2d".into(), kind: "board".into(), hits: Vec::new(), selection: vec![ContextMenuSelectionGroup { domain: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec![node_id] }], text: None }),
+            window_instance_id: None,
+            point: None,
+        };
         let menu = app.context_menu(&request);
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");

@@ -5,7 +5,7 @@ use crate::artifacts::procedural2d::schema::host_operations;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::{CameraJson, FlowEvalSession, FlowFixture};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -14,13 +14,9 @@ use serde_json::Value;
 pub struct NodeGraphEdit {
     pub operations_json: String}
 
-pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.fixture;
-    let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
-    let selected = cfg.snapshot.selected_ids.clone();
-    let mut cleared = false;
+fn apply_operations(fixture: &FlowFixture, sub_operations: &[Value], selected: &[String]) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
     let operations = host_operations(fixture, |host| {
-        for operation in &sub_operations {
+        for operation in sub_operations {
             match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                 "setFixture" => {
                     if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<FlowFixture>(json).ok()) {
@@ -28,10 +24,8 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapsh
                     }
                 }
                 "deleteSelection" => {
-                    for id in &selected {
-                        if host.remove_widget(id).is_ok() {
-                            cleared = true;
-                        }
+                    for id in selected {
+                        let _ = host.remove_widget(id);
                     }
                 }
                 "connect" => {
@@ -47,6 +41,23 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapsh
             }
         }
     });
-    let config_mutations = if cleared { vec![Procedural2dConfigMutation::SetSelection { ids: Vec::new() }] } else { Vec::new() };
-    Ok(Emit { artifact_mutations: operations, config_mutations, ..Default::default() })
+    Emit { artifact_mutations: operations, ..Default::default() }
+}
+
+/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
+/// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
+/// reachable only through that macro-generated path (`Procedural2dPlayApp::handle` always routes this
+/// command through `apply` below instead), so `"deleteSelection"` sub-operations degrade to treating
+/// the selection as empty.
+pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
+    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &[]))
+}
+
+/// 🕹️ `"deleteSelection"` reads the `graph` domain's current selection instead of a deleted config
+/// field — no config mutation needed afterwards, the framework auto-prunes the deleted ids out of
+/// `graph`'s selection.
+pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
+    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &interaction.selection("graph").ids))
 }

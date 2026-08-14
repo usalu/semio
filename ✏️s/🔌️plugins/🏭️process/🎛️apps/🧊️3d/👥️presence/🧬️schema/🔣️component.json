@@ -4,7 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectionMethod",
     "engagementInput",
     "cameraPosition",
     "cameraTarget",
@@ -12,23 +11,6 @@
     "activeUtilityId"
   ],
   "properties": {
-    "selectedId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "hoveredId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "selectedFaceId": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "presence"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "engagementInput": {
       "type": "string",
       "x-semio-state": "presence"

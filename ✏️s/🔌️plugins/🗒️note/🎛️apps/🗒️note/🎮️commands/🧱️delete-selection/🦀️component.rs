@@ -16,10 +16,12 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
-pub fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    let config = cfg.snapshot;
-    if config.selected_block_ids.is_empty() {
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ctx.selected_block_ids` is the
+// "blocks" domain's current selection, resolved once by `ArtifactApp::handle` — clearing it back to
+// empty after the delete is the framework's job (pruned automatically once the ids no longer exist).
+pub fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    if ctx.selected_block_ids.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit { artifact_mutations: vec![delete_blocks_mutation(config.selected_block_ids.clone())], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
+    Ok(Emit::mutations(vec![delete_blocks_mutation(ctx.selected_block_ids.clone())]))
 }

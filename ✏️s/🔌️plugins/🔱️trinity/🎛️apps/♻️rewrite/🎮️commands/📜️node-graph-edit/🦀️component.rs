@@ -9,6 +9,18 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::Value;
 
+/// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
+/// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic
+/// node id by `parse_clause_ref`.
+enum RuleClauseRef {
+    LhsWhere,
+    RhsCreate(usize),
+    RhsMerge(usize),
+    RhsSet(usize),
+    RhsDelete(usize),
+    RhsParameter(usize),
+}
+
 fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
     JackSnapshot::from_json(json).ok()
 }
@@ -52,6 +64,43 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
     } else {
         false
     }
+}
+fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
+    let Some(clause_ref) = parse_clause_ref(node_id) else {
+        return false;
+    };
+    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
+        return false;
+    };
+    let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+        return false;
+    };
+    let changed = match clause_ref {
+        RuleClauseRef::LhsWhere => {
+            let had = lhs.where_clause.is_some();
+            lhs.where_clause = None;
+            had
+        }
+        RuleClauseRef::RhsCreate(index) => remove_at(&mut rhs.create, index),
+        RuleClauseRef::RhsMerge(index) => remove_at(&mut rhs.merge, index),
+        RuleClauseRef::RhsSet(index) => remove_at(&mut rhs.set, index),
+        RuleClauseRef::RhsDelete(index) => remove_at(&mut rhs.delete, index),
+        RuleClauseRef::RhsParameter(index) => {
+            if index < rhs.parameters.len() {
+                let removed = rhs.parameters.remove(index);
+                state.parameter_bindings.remove(&removed.name);
+                true
+            } else {
+                false
+            }
+        }
+    };
+    if changed {
+        state.lhs_json = serde_json::to_string(&lhs).unwrap_or_default();
+        state.rhs_json = serde_json::to_string(&rhs).unwrap_or_default();
+        state.rule_layout.remove(node_id);
+    }
+    changed
 }
 fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
     let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
@@ -100,9 +149,8 @@ fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
     }
     changed
 }
-fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> (bool, bool) {
+fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> bool {
     let mut changed = false;
-    let mut clear_selection = false;
     for operation in operations {
         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
             "setFixture" => {
@@ -140,7 +188,6 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
                         let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, edges, fixture.root_node_id.clone());
                         if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
                             state.before_fixture_json = json;
-                            clear_selection = true;
                             changed = true;
                         }
                     }
@@ -150,7 +197,6 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
                         deleted |= delete_rule_clause(state, id);
                     }
                     if deleted {
-                        clear_selection = true;
                         changed = true;
                     }
                 }
@@ -158,7 +204,7 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
             _ => {}
         }
     }
-    (changed, clear_selection)
+    changed
 }
 fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
     let fixture = JackSnapshot::from_json(fixture_json).ok()?;
@@ -177,13 +223,16 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
+/// 🕹️ `selected_node_ids` now comes from `interaction.selection("graph").ids` (framework-owned) —
+/// deleting a selected id here is enough on its own: the framework re-validates/prunes the "graph"
+/// domain's selection against the fresh `interaction_topology` right after this document dispatch
+/// lands, so no explicit selection-clearing mutation is emitted anymore.
 pub(crate) fn node_graph_edit(state: &RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let operations: Vec<Value> = serde_json::from_str(operations_json).unwrap_or_default();
     let mut next = state.clone();
-    let (changed, clear_selection) = apply_rewrite_node_graph_edit_operations(&mut next, selected_node_ids, surface_id, &operations);
+    let changed = apply_rewrite_node_graph_edit_operations(&mut next, selected_node_ids, surface_id, &operations);
     if !changed {
         return Ok(Emit::default());
     }
-    let config_mutations = if clear_selection { vec![RewriteConfigMutation::SetSelection { node_ids: Vec::new() }] } else { Vec::new() };
-    Ok(Emit { artifact_mutations: rewrite_snapshot_mutations(state, &next), config_mutations, ..Default::default() })
+    Ok(Emit { artifact_mutations: rewrite_snapshot_mutations(state, &next), ..Default::default() })
 }

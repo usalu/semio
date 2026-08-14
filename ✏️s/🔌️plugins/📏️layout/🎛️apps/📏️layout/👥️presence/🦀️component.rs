@@ -1,4 +1,8 @@
 //! 👥️ Layout presence — shareable live ephemeral state + mutations.
+//!
+//! Selection/hover moved OUT of this facet into the framework-owned "elements" interaction domain,
+//! which broadcasts automatically via the typed `PresencePeer.interaction` field (ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no app-mirrored field needed here anymore.
 
 use crate::artifacts::layout::{LayoutCamera, LayoutDropPreviewState};
 use protocol::Mutation;
@@ -6,15 +10,13 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of layout view state (active page, selection, hover, drop ghost, cameras).
+/// 👥️ Shareable live subset of layout view state (active page, drop ghost, cameras).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "layout.presence")]
 #[dsl(layout = "lines")]
 pub struct LayoutPresence {
     pub active_page_id: String,
-    pub selected_ids: Vec<String>,
-    pub hovered_id: Option<String>,
     #[dsl(block)]
     pub drop_preview: LayoutDropPreviewState,
     #[dsl(block)]
@@ -27,8 +29,6 @@ impl Default for LayoutPresence {
     fn default() -> Self {
         Self {
             active_page_id: "page-1".into(),
-            selected_ids: Vec::new(),
-            hovered_id: None,
             drop_preview: LayoutDropPreviewState::default(),
             camera: LayoutCamera::default(),
             preview_camera: LayoutCamera::default(),

@@ -28,8 +28,6 @@ pub mod set_active_utility {
         runtime.engagement_input.clear();
         runtime.engagement_session = None;
         runtime.engagement_step = "Idle".into();
-        runtime.hovered_object_id = None;
-        runtime.hovered_target = None;
         let mut config = cad_config_from_runtime(&runtime, cfg.snapshot);
         config.active_utility_id = payload.utility_id.clone();
         Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))

@@ -1,6 +1,4 @@
 type SpacePresence {
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
-  hoveredNodeId: String @state(class: PRESENCE)
   camera: [SpaceWindowCameraEntry!]! @state(class: PRESENCE)
   activeNodeId: String @state(class: PRESENCE)
   focusedNodeId: String @state(class: PRESENCE)

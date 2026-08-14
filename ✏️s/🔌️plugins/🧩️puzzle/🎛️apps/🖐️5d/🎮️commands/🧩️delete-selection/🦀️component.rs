@@ -1,15 +1,13 @@
 //! 🧩️ `delete-selection` command.
 
-use crate::apps::puzzle5d::config::Puzzle5dSelection;
-use crate::apps::puzzle5d::{add_palette_part, next_part_id, remove_grips, remove_parts, Puzzle5dActionCtx, Puzzle5dPart};
-use semio_framework_plugin::SelectionSet;
-use serde_json::{json, Value};
+use crate::apps::puzzle5d::{remove_grips, remove_parts, Puzzle5dActionCtx};
 
-/// 🗑️ Removes every selected part (and its fasteners), grip and fastener, then clears the selection.
+/// 🗑️ Removes every selected part (and its fasteners), grip and fastener.
 pub fn delete_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
-    let selection = ctx.scene.runtime.selection.clone();
-    remove_parts(&mut ctx.scene.document, selection.part_ids.as_slice());
-    remove_grips(&mut ctx.scene.document, selection.grip_ids.as_slice());
-    ctx.scene.document.fasteners.retain(|fastener| !selection.fastener_ids.contains(&fastener.id));
-    ctx.scene.runtime.selection = Puzzle5dSelection::default();
+    let part_ids = ctx.selected_part_ids();
+    let grip_ids = ctx.selected_grip_ids();
+    let fastener_ids = ctx.selected_fastener_ids();
+    remove_parts(&mut ctx.scene.document, &part_ids);
+    remove_grips(&mut ctx.scene.document, &grip_ids);
+    ctx.scene.document.fasteners.retain(|fastener| !fastener_ids.contains(&fastener.id));
 }

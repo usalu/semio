@@ -4,24 +4,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedBlockIds",
     "engagementInput",
     "camera",
     "activeUtilityId",
     "locale"
   ],
   "properties": {
-    "selectedBlockIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
-    "hoveredBlockId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "engagementInput": {
       "type": "string",
       "x-semio-state": "config"

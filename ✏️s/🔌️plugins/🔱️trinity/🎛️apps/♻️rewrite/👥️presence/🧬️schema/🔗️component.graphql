@@ -1,7 +1,4 @@
 type RewritePresence {
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
-  activeHoverVar: String! @state(class: PRESENCE)
-  activeSelectVar: String! @state(class: PRESENCE)
   beforePaneCamera: Camera! @state(class: PRESENCE)
   lodModeByWindow: [StringEntry!]! @state(class: PRESENCE)
 }

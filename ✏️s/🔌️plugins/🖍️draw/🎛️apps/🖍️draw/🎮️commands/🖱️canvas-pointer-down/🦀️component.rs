@@ -1,10 +1,11 @@
 //! 🖱️ 🖱️ Draw play app commands command — `canvas-pointer-down`.
 
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
+use crate::apps::draw::{DRAW_INTERACTION_DOMAIN, DRAW_INTERACTION_GRANULARITY};
 use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawCamera, DrawSnapshot, DrawLayerNode, PathSegment};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{kernel::HostEffect, ConfigView, ArtifactView, Emit, Fault};
 
 //#region 🔖️GestureContext
 /// 🎛️ Per-gesture scratch geometry threaded through the shared `fsm` statechart below — one flat
@@ -49,7 +50,10 @@ fn matrix_transform_point(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
     [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
 }
 
-/// 🎯️ Maps shift/ctrl/meta modifiers to a `SelectionMergeMode` (matches `@semio-tech/ui-react`'s `marqueeModeFromModifiers`).
+/// 🎯️ Maps shift/ctrl/meta modifiers to a framework `MergeMode` wire string (matches
+/// `@semio-tech/ui-react`'s `marqueeModeFromModifiers`) — the actual set algebra now runs inside
+/// the framework's `next_selection` machine (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM),
+/// not here; this crate only ever computes WHICH ids were hit and asks the framework to apply them.
 pub(crate) fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'static str {
     let ctrl_or_meta = ctrl || meta;
     if shift && ctrl_or_meta {
@@ -59,43 +63,34 @@ pub(crate) fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'sta
     } else if ctrl_or_meta {
         "subtractive"
     } else {
-        "default"
+        "replace"
     }
 }
 
-pub(crate) fn merge_selection(mode: &str, current: &[String], incoming: &[String]) -> Vec<String> {
-    match mode {
-        "default" => {
-            let mut out = Vec::new();
-            for id in incoming {
-                if !out.contains(id) {
-                    out.push(id.clone());
-                }
-            }
-            out
-        }
-        "additive" => {
-            let mut out = current.to_vec();
-            for id in incoming {
-                if !out.contains(id) {
-                    out.push(id.clone());
-                }
-            }
-            out
-        }
-        "subtractive" => current.iter().filter(|id| !incoming.contains(id)).cloned().collect(),
-        _ => {
-            let mut out = current.to_vec();
-            for id in incoming {
-                if let Some(position) = out.iter().position(|existing| existing == id) {
-                    out.remove(position);
-                } else {
-                    out.push(id.clone());
-                }
-            }
-            out
-        }
-    }
+/// 🕹️ JSON-encodes `ids` as the `Vec<InteractionTarget>` string the framework's `interactionSelect`/
+/// `interactionHover` actions require in their `targets` arg — every hit id shares the domain's one
+/// granularity.
+fn interaction_targets_json(ids: &[String]) -> String {
+    serde_json::to_string(&ids.iter().map(|id| serde_json::json!({ "granularity": DRAW_INTERACTION_GRANULARITY, "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
+}
+
+/// 🕹️ Requests the shell to redispatch a framework-owned interaction verb (`interactionSelect`/
+/// `interactionHover`) through its normal action funnel — the only way an `ArtifactApp::handle`
+/// (or its gesture machine) can drive selection/hover now that both are framework-owned state,
+/// never a `DrawConfigMutation` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub(crate) fn request_interaction_action(action_id: &str, args: serde_json::Value) -> HostEffect {
+    HostEffect::ReplayShellCommand { action_id: action_id.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+}
+
+pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> HostEffect {
+    request_interaction_action(
+        semio_framework::INTERACTION_SELECT_ACTION_ID,
+        serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }),
+    )
+}
+
+pub(crate) fn interaction_hover_effect(ids: &[String]) -> HostEffect {
+    request_interaction_action(semio_framework::INTERACTION_HOVER_ACTION_ID, serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "channel": "pointer", "targets": interaction_targets_json(ids) }))
 }
 
 pub(crate) const DRAW_MARQUEE_THRESHOLD_PX: f64 = 4.0;
@@ -188,16 +183,12 @@ pub(crate) fn best_pick_layer_id(targets: &[DrawPickTarget]) -> Option<String> {
     targets.iter().max_by_key(|target| target.generality).map(|target| target.layer_id.clone())
 }
 
-fn apply_point_pick(interaction: &mut DrawConfig, doc: &DrawSnapshot, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
-    let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
-    let targets = resolve_pick_targets_at(doc, world, tolerance, include_control_points);
-    let picked = best_pick_layer_id(&targets);
-    let mode = selection_merge_mode(shift, ctrl, meta);
-    interaction.selected_ids = match picked {
-        Some(id) => merge_selection(mode, &interaction.selected_ids, &[id]),
-        None if mode == "default" => Vec::new(),
-        None => interaction.selected_ids.clone(),
-    };
+/// 🎯️ Resolves the single best pick target under `world`, camera-zoom-scaled tolerance — a pure
+/// query now (selection itself is framework-owned; the caller turns the result into an
+/// `interactionSelect` request).
+pub(crate) fn resolve_point_pick(doc: &DrawSnapshot, camera: &DrawCamera, world: [f64; 2], include_control_points: bool) -> Option<String> {
+    let tolerance = DRAW_PICK_TOLERANCE_PX / camera.zoom.max(1e-6);
+    best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, include_control_points))
 }
 
 /// ⬚️ Marquee/lasso layer hits — reduces the lasso gesture to its bounding box, matching the premigration behaviour.
@@ -263,9 +254,9 @@ pub(crate) fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor:
     segments
 }
 
-/// 🔷️ Emits the operations that commit a shape drag (add the shape layer + return to direct-select) and
-/// records the new layer as the current selection; empty when the drag is too small to commit.
-fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawMutation> {
+/// 🔷️ Emits the operations that commit a shape drag (add the shape layer + return to direct-select);
+/// empty when the drag is too small to commit.
+fn commit_shape_drag(doc: &DrawSnapshot, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawMutation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -291,14 +282,12 @@ fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: 
         line: if utility == "shapeLine" { Some(crate::artifacts::draw::DrawLine { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }) } else { None },
         polygon: None,
     });
-    let select_id = layer_id(&layer).to_string();
-    interaction.selected_ids = vec![select_id];
     vec![crate::artifacts::draw::mutations::create_layer(None, Some(doc.layers.len()), layer)]
 }
 
-/// ✒️ Emits the operations that commit a freehand/polygon draft into a path or polygon layer and records it
-/// as the current selection; empty when the draft has too few points to form a shape.
-fn commit_draft(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: &str, points: &[[f64; 2]]) -> Vec<DrawMutation> {
+/// ✒️ Emits the operations that commit a freehand/polygon draft into a path or polygon layer; empty
+/// when the draft has too few points to form a shape.
+fn commit_draft(doc: &DrawSnapshot, utility: &str, points: &[[f64; 2]]) -> Vec<DrawMutation> {
     if points.len() < 2 {
         return Vec::new();
     }
@@ -319,16 +308,13 @@ fn commit_draft(interaction: &mut DrawConfig, doc: &DrawSnapshot, utility: &str,
             polygon: Some(crate::artifacts::draw::DrawPolygon { points: points.to_vec() }),
         })
     };
-    let select_id = layer_id(&layer).to_string();
-    interaction.selected_ids = vec![select_id];
     vec![crate::artifacts::draw::mutations::create_layer(None, Some(doc.layers.len()), layer)]
 }
 
-/// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset) and records it as
-/// the current selection; empty when no bitmap source is available.
-fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawSnapshot, world: [f64; 2]) -> Vec<DrawMutation> {
-    let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
-    let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, false));
+/// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset); empty
+/// when no bitmap source is available.
+fn commit_trace_at(doc: &DrawSnapshot, camera: &DrawCamera, world: [f64; 2]) -> Vec<DrawMutation> {
+    let hit_layer_id = resolve_point_pick(doc, camera, world, false);
     let source_key = hit_layer_id
         .and_then(|id| find_draw_layer(doc, &id).cloned())
         .and_then(|layer| match layer {
@@ -338,8 +324,6 @@ fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawSnapshot, world: [f64
         .or_else(|| doc.assets.keys().next().cloned());
     let Some(source_key) = source_key else { return Vec::new() };
     let layer = create_draw_trace_layer("Trace", &source_key);
-    let select_id = layer_id(&layer).to_string();
-    interaction.selected_ids = vec![select_id];
     vec![crate::artifacts::draw::mutations::create_layer(None, Some(doc.layers.len()), layer)]
 }
 
@@ -354,16 +338,6 @@ fn commit_with_utility_reset(operations: Vec<DrawMutation>, description: &str) -
     emit
 }
 
-/// 🧮️ B1: appends a `DrawConfigMutation::SetSelection` config edit to a gesture's document-side
-/// `Emit` iff the gesture actually changed the selection (`apply_point_pick`/`commit_shape_drag`/…
-/// mutate `config.selected_ids` in place) — keeps document operations (shape/draft/trace commits) and
-/// the selection change that rode along with them in exactly one dispatch's `Emit`.
-pub(crate) fn finish_gesture_emit(mut emit: Emit<DrawMutation, DrawConfigMutation>, before: &DrawConfig, after: &DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
-    if after.selected_ids != before.selected_ids {
-        emit.config_mutations.push(DrawConfigMutation::SetSelection { ids: after.selected_ids.clone() });
-    }
-    emit
-}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️GestureGuards
@@ -549,67 +523,85 @@ fsm::statechart! {
 //#endregion 🔖️GestureStatechart
 
 //#region 🔖️DrawSession
-/// 🧪️ `app_commands!` dispatch context — the live gesture snapshot plus the preview tick counter.
+/// 🕹️ Owned snapshot of `InteractionView::selection(DRAW_INTERACTION_DOMAIN)`, read once per
+/// dispatch by `ArtifactApp::handle` and threaded through `DrawSession` to every command handler —
+/// decouples handlers from `semio_framework_plugin::app::InteractionView` itself (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct DrawInteractionSnapshot {
+    pub ids: Vec<String>,
+}
+
+/// 🧪️ `app_commands!` dispatch context — the live gesture snapshot, the preview tick counter, and
+/// the current `"strokes"` interaction selection.
 pub struct DrawSession {
     /// 🎭️ Live `fsm` snapshot driving pointer gestures.
     pub(crate) gesture: draw_gesture::Snapshot,
     /// 👻️ Per-`key` monotone counter for `gesture_preview`.
     preview_seq: u64,
+    /// 🕹️ Current `"strokes"` selection — set by `ArtifactApp::handle` before every dispatch.
+    pub(crate) interaction: DrawInteractionSnapshot,
 }
 
 impl Default for DrawSession {
     fn default() -> Self {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
-        Self { gesture: fsm::init::<draw_gesture::DrawGesture>((), &mut sink), preview_seq: 0 }
+        Self { gesture: fsm::init::<draw_gesture::DrawGesture>((), &mut sink), preview_seq: 0, interaction: DrawInteractionSnapshot::default() }
     }
 }
 
 impl DrawSession {
     /// 🎭️ Feeds one gesture event through the shared `fsm` statechart, then drains and executes any
     /// requested `GestureEffect`s against the live document — the only place gesture control-flow
-    /// (owned by `fsm`) meets document-mutating logic (owned by `draw`). `config` is the caller's
-    /// working copy (mutated in place for selection changes the gesture makes); the returned `Emit`
-    /// carries only DOCUMENT operations (shape/draft/trace commits) — the caller diffs `config`
-    /// before/after via `finish_gesture_emit` to fold in any selection change.
-    pub(crate) fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawSnapshot, config: &mut DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
+    /// (owned by `fsm`) meets document-mutating logic (owned by `draw`). `config` is read-only (camera
+    /// zoom for hit-test tolerance); a pick/marquee hit becomes an `interactionSelect` request riding
+    /// as a `HostEffect` on the returned `Emit` — selection itself is framework-owned now, never
+    /// written back into `config`.
+    pub(crate) fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawSnapshot, config: &DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);
         let mut operations = Vec::new();
         let mut commit_description: Option<&'static str> = None;
+        let mut select_request: Option<(Vec<String>, String)> = None;
         for command in sink {
             let fsm::Command::Effect(effect) = command else { continue };
             match effect {
                 GestureEffect::CommitMarquee { start, end, active, merge, shift, ctrl, meta } => {
                     if active {
                         let crossing = end[0] < start[0];
-                        let hits = marquee_layer_hits(document, start, end, crossing);
-                        config.selected_ids = merge_selection(&merge, &config.selected_ids, &hits);
+                        select_request = Some((marquee_layer_hits(document, start, end, crossing), merge));
                     } else {
-                        apply_point_pick(config, document, end, shift, ctrl, meta, false);
+                        let picked = resolve_point_pick(document, &config.camera, end, false);
+                        select_request = Some((picked.into_iter().collect(), selection_merge_mode(shift, ctrl, meta).to_string()));
                     }
                 }
                 GestureEffect::CommitShape { utility, start, end } => {
-                    operations.extend(commit_shape_drag(config, document, &utility, start, end));
+                    operations.extend(commit_shape_drag(document, &utility, start, end));
                     commit_description = Some("Add shape");
                 }
                 GestureEffect::CommitDraft { utility, points } => {
-                    operations.extend(commit_draft(config, document, &utility, &points));
+                    operations.extend(commit_draft(document, &utility, &points));
                     commit_description = Some("Commit draft");
                 }
                 GestureEffect::CommitTrace { world } => {
-                    operations.extend(commit_trace_at(config, document, world));
+                    operations.extend(commit_trace_at(document, &config.camera, world));
                     commit_description = Some("Trace image");
                 }
                 GestureEffect::PickPoint { world, shift, ctrl, meta } => {
-                    apply_point_pick(config, document, world, shift, ctrl, meta, true);
+                    let picked = resolve_point_pick(document, &config.camera, world, true);
+                    select_request = Some((picked.into_iter().collect(), selection_merge_mode(shift, ctrl, meta).to_string()));
                 }
             }
         }
-        match commit_description {
+        let mut emit = match commit_description {
             Some(description) => commit_with_utility_reset(operations, description),
             None => Emit::default(),
+        };
+        if let Some((ids, merge)) = select_request {
+            emit.effects.push(interaction_select_effect(&ids, &merge));
         }
+        emit
     }
 
     /// 👻️ A `(key, seq, payload)` tuple already shaped as `SyncSession::publish_preview`'s exact
@@ -663,9 +655,9 @@ pub struct CanvasPointerDown {
 
 pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let mut config = cfg.snapshot.clone();
+    let config = cfg.snapshot;
     let (world_x, world_y) = canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
     let active_utility = config.active_utility_id.clone();
-    let emit = session.step_gesture(draw_gesture::Event::PointerDown { utility: active_utility, world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, document, &mut config);
-    Ok(finish_gesture_emit(emit, cfg.snapshot, &config))
+    let emit = session.step_gesture(draw_gesture::Event::PointerDown { utility: active_utility, world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta }, document, config);
+    Ok(emit)
 }

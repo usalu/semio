@@ -3,12 +3,6 @@ use artifact_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SelectionSet {
-    pub ids: Vec<String>,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldSunConfig {
@@ -35,23 +29,12 @@ pub struct Puzzle5dCamera3d {
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle5dSelection {
-    pub part_ids: SelectionSet,
-    pub grip_ids: SelectionSet,
-    pub fastener_ids: SelectionSet,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d.config")]
 pub struct Puzzle5dConfig {
     #[state(config)] pub camera2d: Puzzle5dCamera2d,
     #[state(config)] pub camera3d: Puzzle5dCamera3d,
-    #[state(config)] pub selection: Puzzle5dSelection,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub hovered_part_id: Option<String>,
     #[state(config)] pub fill_count: u32,
     #[state(config)] pub brush_candidate_index: usize,
     #[state(config)] pub overlap_budget: f64,

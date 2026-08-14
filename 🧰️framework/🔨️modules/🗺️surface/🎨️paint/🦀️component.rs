@@ -353,9 +353,12 @@ pub struct RasterHost {
     brush_size: f32,
     /// 🖌️ (c) Preview/Effect — brush opacity. Mirrors `RasterConfig.brush_opacity`, plugin-owned.
     brush_opacity: f32,
-    /// 🖱️ (c) Preview/Effect — hover feedback id, mirrors `RasterConfig.hovered_id`.
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3c: (c) Preview/Effect — hover
+    /// feedback id, read from the framework's `DomainHover` via [`RasterHost::sync_interaction`], not
+    /// pushed by the app anymore.
     hovered_id: Option<String>,
-    /// 🖱️ (c) Preview/Effect — selection ids, mirrors `RasterConfig.selected_ids`.
+    /// 🕹️ (c) Preview/Effect — selection ids, read from the framework's `DomainSelection` via
+    /// [`RasterHost::sync_interaction`].
     selected_ids: Vec<String>,
     /// 🖐️ (c) Preview/Effect — pan-gesture-in-progress flag, discarded on release.
     panning: bool,
@@ -585,14 +588,12 @@ impl RasterHost {
         self.brush_opacity = opacity.clamp(0.0, 1.0);
     }
 
-    pub fn set_hovered_id(&mut self, id: Option<String>) {
-        self.hovered_id = id;
-    }
-
-    pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
-        let ids: Vec<String> = serde_json::from_str(json)?;
-        self.selected_ids = ids;
-        Ok(())
+    /// 🕹️ Replaces the deleted `set_hovered_id`/`set_selection_ids_json` push-setters — reads the
+    /// framework's current `DomainSelection.ids`/`DomainHover.ids.first()` for this domain, called at
+    /// render time instead of pushed arbitrarily by app code.
+    pub fn sync_interaction(&mut self, selected_ids: &[String], hovered_id: Option<&str>) {
+        self.selected_ids = selected_ids.to_vec();
+        self.hovered_id = hovered_id.map(str::to_string);
     }
 
     pub fn camera_json(&self) -> String {
@@ -1140,14 +1141,14 @@ impl RasterSession {
         self.state.borrow_mut().host.set_brush_opacity(opacity);
     }
 
-    #[wasm_bindgen(js_name = setHoveredIdSilent)]
-    pub fn set_hovered_id_silent(&mut self, id: Option<String>) {
-        self.state.borrow_mut().host.set_hovered_id(id);
-    }
-
-    #[wasm_bindgen(js_name = setSelectionIdsJson)]
-    pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_selection_ids_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+    /// 🕹️ Replaces the deleted `setHoveredIdSilent`/`setSelectionIdsJson` — `selectedIdsJson`/
+    /// `hoveredId` are the caller's resolved `DomainSelection.ids`/`DomainHover.ids.first()`, read from
+    /// the framework's `InteractionState` at render time.
+    #[wasm_bindgen(js_name = syncInteraction)]
+    pub fn sync_interaction(&mut self, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
+        let ids: Vec<String> = if selected_ids_json.trim().is_empty() { Vec::new() } else { serde_json::from_str(selected_ids_json).map_err(|e| JsValue::from_str(&e.to_string()))? };
+        self.state.borrow_mut().host.sync_interaction(&ids, hovered_id.as_deref());
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
@@ -1559,7 +1560,7 @@ mod tests {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         host.set_active_utility("paintBrush");
-        host.set_selection_ids_json(r#"["back"]"#).expect("selection");
+        host.sync_interaction(&["back".to_string()], None);
         host.pointer_down_screen(400.0, 400.0, 0);
         assert!(host.painting);
         let key = RasterHost::layer_pixel_buffer_key("back");
@@ -1573,7 +1574,7 @@ mod tests {
         let mut host = RasterHost::new();
         host.set_size(400, 400, 1.0);
         host.set_active_utility("paintBrush");
-        host.set_selection_ids_json(r#"["back"]"#).expect("selection");
+        host.sync_interaction(&["back".to_string()], None);
         host.pointer_down_screen(350.0, 400.0, 0);
         host.pointer_move_screen(450.0, 400.0);
         let key = RasterHost::layer_pixel_buffer_key("back");
@@ -1588,7 +1589,7 @@ mod tests {
         host.set_size(400, 400, 1.0);
         host.set_active_utility("paintEraser");
         host.set_brush_opacity(1.0);
-        host.set_selection_ids_json(r#"["back"]"#).expect("selection");
+        host.sync_interaction(&["back".to_string()], None);
         host.pointer_down_screen(400.0, 400.0, 0);
         let key = RasterHost::layer_pixel_buffer_key("back");
         let buf = host.buffers.paint.get(&key).expect("buffer created");
@@ -1645,19 +1646,14 @@ mod tests {
     }
 
     #[test]
-    fn set_hovered_id_updates_state() {
+    fn sync_interaction_updates_hovered_and_selected_state() {
         let mut host = RasterHost::new();
-        host.set_hovered_id(Some("x".into()));
+        host.sync_interaction(&[], Some("x"));
         assert_eq!(host.hovered_id.as_deref(), Some("x"));
-        host.set_hovered_id(None);
+        assert!(host.selected_ids.is_empty());
+        host.sync_interaction(&["p".to_string()], None);
         assert!(host.hovered_id.is_none());
-    }
-
-    #[test]
-    fn set_selection_ids_json_invalid_json_errors() {
-        let mut host = RasterHost::new();
-        let err = host.set_selection_ids_json("not json").unwrap_err();
-        assert!(matches!(err, FrameworkSurfacePaintError::Json(_)));
+        assert_eq!(host.selected_ids, vec!["p".to_string()]);
     }
 
     #[test]
@@ -1711,7 +1707,7 @@ mod tests {
         host.sync_document_json(json).expect("sync");
         let base_count = host.build_vector_scene().path_count();
 
-        host.set_selection_ids_json(r#"["p"]"#).expect("selection");
+        host.sync_interaction(&["p".to_string()], None);
         let selected_count = host.build_vector_scene().path_count();
         assert!(selected_count > base_count, "selection chrome should add an extra stroke path");
 

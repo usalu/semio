@@ -599,8 +599,6 @@ pub mod apps {
             pub mod engagement;
             #[path = "../../🎛️apps/📐️cad/🎮️commands/🎥️camera/🦀️component.rs"]
             pub mod camera;
-            #[path = "../../🎛️apps/📐️cad/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
             #[path = "../../🎛️apps/📐️cad/🎮️commands/🌞️sun/🦀️component.rs"]
             pub mod sun;
             #[path = "../../🎛️apps/📐️cad/🎮️commands/🧰️utility/🦀️component.rs"]

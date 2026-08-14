@@ -2,8 +2,6 @@ syntax = "proto3";
 package semio.app.sourcing.curate;
 message SourcingCuratePresence {
   // @state presence
-  optional string selected_object_id = 1;
-  // @state presence
   repeated double world_camera_position = 2;
   // @state presence
   repeated double world_camera_target = 3;

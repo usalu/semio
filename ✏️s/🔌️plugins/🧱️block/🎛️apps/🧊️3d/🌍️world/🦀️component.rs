@@ -121,16 +121,19 @@ pub fn world_camera_json(definition: &Block3dSnapshot, config: &Block3dConfig) -
     world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &WorldProjectionConfig::default())
 }
 
-pub fn world_selection_json(config: &Block3dConfig) -> String {
-    let vortex_ids: Vec<String> = config.selected_ids.iter().filter(|id| id.starts_with("vortex:")).map(|id| id.strip_prefix("vortex:").unwrap_or(id).to_string()).collect();
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_ids`/`hovered_vortex_full_id`
+/// used to live on `Block3dConfig`; both are now framework-owned (`vortex` domain,
+/// `Block3dPlayApp::interaction_topology`). `ArtifactApp::render` is not handed an `InteractionView`
+/// (only `handle`/`copy_fragment`/`cut_operations`/`interaction_topology` are — see the SDK's
+/// `ArtifactApp` trait), so this can no longer embed the CURRENT selection/hover into the scene at
+/// render time; it still declares the domain/granularity/mode the client uses to interpret picks.
+/// Flagged as a known gap for a follow-up wave, mirroring the SDK's own `dispatch_emit_group` gap note.
+pub fn world_selection_json(_config: &Block3dConfig) -> String {
     let mut value: serde_json::Value = serde_json::from_str(&world3d_selection_json("replace", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
-        object.insert("vortexIds".into(), json!(vortex_ids));
-        if let Some(hover) = config.hovered_vortex_full_id.as_deref() {
-            object.insert("hoveredVortexFullId".into(), json!(hover));
-        }
+        object.insert("vortexIds".into(), json!(Vec::<String>::new()));
     }
     value.to_string()
 }

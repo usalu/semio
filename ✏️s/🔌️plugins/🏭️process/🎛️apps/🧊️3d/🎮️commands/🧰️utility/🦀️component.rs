@@ -15,8 +15,8 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        Ok(Emit::config(vec![Process3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }, Process3dConfigMutation::SetSelectedFaceId { value: None }]))
+    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        Ok(Emit::config(vec![Process3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
     }
 }
 //#endregion 🔖️SetActiveUtility

@@ -9,7 +9,6 @@ type JackDiff {
   nodes: JackNodesDelta @state(class: ARTIFACT)
   edges: JackEdgesDelta @state(class: ARTIFACT)
   rootNodeId: String @state(class: ARTIFACT)
-  selectedNodeIds: JackStringList @state(class: PRESENCE)
   activeFixtureId: String @state(class: PRESENCE)
   jackQuery: String @state(class: PRESENCE)
   lodModeByWindow: [StringOptEntry!] @state(class: PRESENCE)
@@ -22,10 +21,6 @@ type JackDiff {
   editorSelection: JackEditorSelection @state(class: CONFIG)
   revision: Int @state(class: CONFIG)
   locale: String @state(class: CONFIG)
-}
-
-type JackStringList {
-  values: [String!]!
 }
 
 type JackNodesDelta {

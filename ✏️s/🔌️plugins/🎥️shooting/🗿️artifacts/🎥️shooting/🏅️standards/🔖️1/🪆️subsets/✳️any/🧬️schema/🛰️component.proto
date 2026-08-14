@@ -21,8 +21,6 @@ message ShootingArtifact {
   // @state presence
   repeated string selected_shot_ids = 8;
   // @state presence
-  repeated string selected_asset_ids = 9;
-  // @state presence
   string active_utility_id = 10;
   // @state config
   string default_shot_format = 11;
@@ -30,8 +28,6 @@ message ShootingArtifact {
   string default_shot_shape = 12;
   // @state config
   string default_asset_format = 13;
-  // @state config
-  string selection_method = 14;
   // @state config
   bool center_model = 15;
   // @state config
@@ -42,8 +38,6 @@ message ShootingArtifact {
   ShootingCamera camera = 18;
   // @state config
   string locale = 19;
-  // @state artifact
-  optional string hovered_asset_id = 20;
 }
 
 message ShootingCamera {

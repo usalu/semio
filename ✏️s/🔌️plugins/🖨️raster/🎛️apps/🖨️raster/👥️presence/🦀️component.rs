@@ -6,14 +6,14 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live raster view state (selection, hover, brush, camera, active utility).
+/// 👥️ Shareable live raster view state (brush, camera, active utility). Layer selection/hover
+/// deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `"layers"` interaction
+/// domain broadcasts automatically via the framework's typed `PresenceInteraction` field now.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "raster.presence")]
 #[dsl(layout = "lines")]
 pub struct RasterPresence {
-    pub selected_ids: Vec<String>,
-    pub hovered_id: Option<String>,
     pub brush_size: f64,
     pub brush_opacity: f64,
     pub camera: RasterCamera,
@@ -23,8 +23,6 @@ pub struct RasterPresence {
 impl Default for RasterPresence {
     fn default() -> Self {
         Self {
-            selected_ids: Vec::new(),
-            hovered_id: None,
             brush_size: 24.0,
             brush_opacity: 1.0,
             camera: RasterCamera::default(),

@@ -9,6 +9,18 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::Value;
 
+/// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
+/// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic
+/// node id by `parse_clause_ref`.
+enum RuleClauseRef {
+    LhsWhere,
+    RhsCreate(usize),
+    RhsMerge(usize),
+    RhsSet(usize),
+    RhsDelete(usize),
+    RhsParameter(usize),
+}
+
 fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
     JackSnapshot::from_json(json).ok()
 }
@@ -100,9 +112,8 @@ fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
     }
     changed
 }
-fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> (bool, bool) {
+fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> bool {
     let mut changed = false;
-    let mut clear_selection = false;
     for operation in operations {
         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
             "setFixture" => {
@@ -140,7 +151,6 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
                         let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, edges, fixture.root_node_id.clone());
                         if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
                             state.before_fixture_json = json;
-                            clear_selection = true;
                             changed = true;
                         }
                     }
@@ -150,7 +160,6 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
                         deleted |= delete_rule_clause(state, id);
                     }
                     if deleted {
-                        clear_selection = true;
                         changed = true;
                     }
                 }
@@ -158,7 +167,7 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
             _ => {}
         }
     }
-    (changed, clear_selection)
+    changed
 }
 fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
     let fixture = JackSnapshot::from_json(fixture_json).ok()?;

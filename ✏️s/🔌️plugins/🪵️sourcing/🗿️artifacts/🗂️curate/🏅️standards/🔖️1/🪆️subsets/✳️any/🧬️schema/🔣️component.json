@@ -35,10 +35,6 @@
       "$ref": "#/$defs/Filters",
       "x-semio-state": "config"
     },
-    "selectedObjectId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "locale": {
       "type": "string",
       "x-semio-state": "config"

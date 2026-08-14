@@ -55,10 +55,6 @@ impl From<SpaceWindowCamera> for OsWorkflowCamera {
 pub struct SpaceConfig {
     /// 🎥️ Workflow-canvas camera, keyed by window id.
     pub camera: BTreeMap<String, SpaceWindowCamera>,
-    /// 👁️ Selected workflow-node ids.
-    pub selected_node_ids: Vec<String>,
-    /// 👁️ Hovered workflow-node id.
-    pub hovered_node_id: Option<String>,
     /// 🗂️ Collapsed workflow nodes — node-preview UI state, not yet driven by any command.
     pub collapsed_node_ids: Vec<String>,
     /// 🖼️ Workflow nodes with their live preview thumbnail turned off — node-preview UI state, not yet
@@ -153,8 +149,6 @@ impl Default for SpaceConfig {
     fn default() -> Self {
         Self {
             camera: BTreeMap::new(),
-            selected_node_ids: Vec::new(),
-            hovered_node_id: None,
             collapsed_node_ids: Vec::new(),
             preview_off_node_ids: Vec::new(),
             active_node_id: None,
@@ -195,10 +189,6 @@ pub enum SpaceConfigMutation {
         #[dsl(block)]
         config: SpaceConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { node_ids: Vec<String> },
-    #[dsl(key = "hover")]
-    SetHover { node_id: Option<String> },
     #[dsl(key = "active-node")]
     SetActiveNode { node_id: Option<String> },
     #[dsl(key = "focused-node")]
@@ -311,8 +301,6 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
         let mut next = base.clone();
         match self {
             SpaceConfigMutation::Snapshot { config } => return config.clone(),
-            SpaceConfigMutation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
-            SpaceConfigMutation::SetHover { node_id } => next.hovered_node_id = node_id.clone(),
             SpaceConfigMutation::SetActiveNode { node_id } => next.active_node_id = node_id.clone(),
             SpaceConfigMutation::SetFocusedNode { node_id } => next.focused_node_id = node_id.clone(),
             SpaceConfigMutation::SetClipboard { node_ids } => next.clipboard_node_ids = node_ids.clone(),
@@ -369,20 +357,11 @@ mod tests {
         assert_eq!(config.active_panel_tab, S_PLAY_CATALOGUE_TAB_ID);
         assert_eq!(config.locale, "en-US");
         assert!(config.camera.is_empty());
-        assert!(config.selected_node_ids.is_empty());
     }
 
     #[test]
     fn space_config_dsl_text_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&SpaceConfig::default());
-    }
-
-    #[test]
-    fn set_selection_round_trips() {
-        let config = SpaceConfig::default();
-        let operation = SpaceConfigMutation::SetSelection { node_ids: vec!["node-1".into(), "node-2".into()] };
-        let next = round_trip(&config, &operation);
-        assert_eq!(next.selected_node_ids, vec!["node-1".to_string(), "node-2".to_string()]);
     }
 
     #[test]
@@ -405,9 +384,6 @@ mod tests {
     #[test]
     fn space_config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::Snapshot { config: SpaceConfig::default() });
-        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
-        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetHover { node_id: Some("a".into()) });
-        store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetHover { node_id: None });
         store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActiveNode { node_id: Some("a".into()) });
         store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetFocusedNode { node_id: None });
         store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClipboard { node_ids: vec!["a".into()] });

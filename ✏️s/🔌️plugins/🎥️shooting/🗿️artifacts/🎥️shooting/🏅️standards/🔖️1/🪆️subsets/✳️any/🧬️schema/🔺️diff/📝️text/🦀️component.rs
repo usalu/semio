@@ -169,9 +169,6 @@ impl ShootingDiff {
         if let Some(list) = &self.selected_shot_ids {
             next.selected_shot_ids = list.values.clone();
         }
-        if let Some(list) = &self.selected_asset_ids {
-            next.selected_asset_ids = list.values.clone();
-        }
         if let Some(value) = &self.active_utility_id {
             next.active_utility_id = value.clone();
         }
@@ -183,9 +180,6 @@ impl ShootingDiff {
         }
         if let Some(value) = &self.default_asset_format {
             next.default_asset_format = value.clone();
-        }
-        if let Some(value) = &self.selection_method {
-            next.selection_method = value.clone();
         }
         if let Some(value) = self.center_model {
             next.center_model = value;
@@ -201,9 +195,6 @@ impl ShootingDiff {
         }
         if let Some(value) = &self.locale {
             next.locale = value.clone();
-        }
-        if let Some(value) = &self.hovered_asset_id {
-            next.hovered_asset_id = value.clone();
         }
         next
     }
@@ -263,18 +254,15 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
         take!(active_asset_id);
         take!(emblem);
         take!(selected_shot_ids);
-        take!(selected_asset_ids);
         take!(active_utility_id);
         take!(default_shot_format);
         take!(default_shot_shape);
         take!(default_asset_format);
-        take!(selection_method);
         take!(center_model);
         take!(fit_revision);
         take!(camera_draft_label);
         take!(camera);
         take!(locale);
-        take!(hovered_asset_id);
     }
 }
 //#endregion 🔖️Apply

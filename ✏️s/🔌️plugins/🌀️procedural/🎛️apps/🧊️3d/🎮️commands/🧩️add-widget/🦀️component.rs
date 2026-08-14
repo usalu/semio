@@ -16,6 +16,8 @@ pub struct AddWidget {
     pub x: Option<f64>,
     pub y: Option<f64>}
 
+/// 🕹️ No longer auto-selects the newly-added widget — no `Emit` channel writes `graph`'s selection
+/// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let descriptor = if let Some((base, neuron)) = payload.kind.split_once('|') {
@@ -30,9 +32,9 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>,
     let x = payload.x.unwrap_or(120.0);
     let y = payload.y.unwrap_or(120.0);
     let mut host = host_from_fixture(fixture);
-    if let Ok(id) = host.add_widget(&descriptor, x, y) {
+    if host.add_widget(&descriptor, x, y).is_ok() {
         let operations = commit_fixture(fixture, &host.fixture);
-        Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: vec![id] }], ..Default::default() })
+        Ok(Emit { artifact_mutations: operations, ..Default::default() })
     } else {
         Ok(Emit::default())
     }

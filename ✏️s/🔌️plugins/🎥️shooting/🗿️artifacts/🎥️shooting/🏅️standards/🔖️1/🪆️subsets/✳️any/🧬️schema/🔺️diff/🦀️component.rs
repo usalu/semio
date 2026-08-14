@@ -38,8 +38,6 @@ pub struct ShootingDiff {
     #[state(presence)]
     pub selected_shot_ids: Option<ShootingStringList>,
     #[state(presence)]
-    pub selected_asset_ids: Option<ShootingStringList>,
-    #[state(presence)]
     pub active_utility_id: Option<String>,
     #[state(config)]
     pub default_shot_format: Option<String>,
@@ -47,8 +45,6 @@ pub struct ShootingDiff {
     pub default_shot_shape: Option<String>,
     #[state(config)]
     pub default_asset_format: Option<String>,
-    #[state(config)]
-    pub selection_method: Option<String>,
     #[state(config)]
     pub center_model: Option<bool>,
     #[state(config)]
@@ -59,8 +55,6 @@ pub struct ShootingDiff {
     pub camera: Option<ShootingCamera>,
     #[state(config)]
     pub locale: Option<String>,
-    #[state(artifact)]
-    pub hovered_asset_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 

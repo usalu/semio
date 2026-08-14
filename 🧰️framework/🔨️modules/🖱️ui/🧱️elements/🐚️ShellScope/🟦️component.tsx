@@ -10,24 +10,26 @@ import * as React from "react";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { type StoragePort, createBrowserStoragePort, ephemeralBox, ephemeralSet } from "@semio-tech/framework";
-import { type SelectionMergeMode, type UiLocale, createShellI18nInstance } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type UiLocale, createShellI18nInstance } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { type MergeMode } from "../../../🕹️interaction/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 // #region 🐚️ShellScope
 /** @emoji 🐚️ Per-shell replacement for the old `(globalThis).__selectionMode` global plus its
  * `window`-wide `"semio:selectionOptionsChanged"` broadcast — those meant one shell's selection-mode
  * change silently reconfigured every other mounted shell's WASM session too. Keyed by the same
- * {@link SelectionMergeMode} union `marqueeModeFromModifiers`/`selectionMergeIds` already use (declared
- * further down in this file — a `type` reference resolves module-wide, so the forward reference is fine). */
+ * {@link MergeMode} union `marqueeModeFromModifiers`/`selectionMergeIds` already use (declared in
+ * `📦️index.tsx` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a unified the old
+ * bespoke `SelectionMergeMode` onto the `🕹️interaction` module's `MergeMode`). */
 export interface SelectionModeStore {
-  get(): SelectionMergeMode;
-  set(mode: SelectionMergeMode): void;
+  get(): MergeMode;
+  set(mode: MergeMode): void;
   /** Registers a callback invoked whenever `set` changes the mode. Returns an unsubscribe function. */
   subscribe(callback: () => void): () => void;
 }
 
 function createSelectionModeStore(): SelectionModeStore {
-  let mode: SelectionMergeMode = "default";
+  let mode: MergeMode = "replace";
   const subscribers = new Set<() => void>();
   return {
     get: () => mode,

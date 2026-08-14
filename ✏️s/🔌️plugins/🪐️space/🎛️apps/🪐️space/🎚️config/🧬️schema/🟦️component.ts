@@ -3,10 +3,6 @@ export interface SpaceConfig {
   /** @state config */
   camera: Record<string, SpaceWindowCamera>;
   /** @state config */
-  selectedNodeIds: string[];
-  /** @state config */
-  hoveredNodeId?: string;
-  /** @state config */
   collapsedNodeIds: string[];
   /** @state config */
   previewOffNodeIds: string[];

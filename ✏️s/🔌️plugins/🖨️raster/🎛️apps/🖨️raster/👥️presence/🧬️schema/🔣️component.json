@@ -4,24 +4,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "brushSize",
     "brushOpacity",
     "camera",
     "activeUtilityId"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "hoveredId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "brushSize": {
       "type": "number",
       "format": "double",

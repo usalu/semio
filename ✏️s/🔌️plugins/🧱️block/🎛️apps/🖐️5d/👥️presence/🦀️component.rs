@@ -5,20 +5,16 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live selection for the block 5d surface (peers see selected row ids).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+/// 👥️ Shareable live presence for the block 5d surface. 🕹️ ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_ids` used to live here — it now
+/// broadcasts automatically via the framework's typed `PresenceInteraction` for the declared `grip`
+/// domain (see `crate::apps::block5d::create_block5d_app`), so this facet is empty until block5d
+/// grows genuinely app-specific live state.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "block5d.presence")]
 #[dsl(layout = "lines")]
-pub struct Block5dPresence {
-    pub selected_ids: Vec<String>,
-}
-
-impl Default for Block5dPresence {
-    fn default() -> Self {
-        Self { selected_ids: Vec::new() }
-    }
-}
+pub struct Block5dPresence {}
 
 impl protocol::MutationDiff<Block5dPresence> for Block5dPresence {
     fn apply(&self, _base: &Block5dPresence) -> Block5dPresence {

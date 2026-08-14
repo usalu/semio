@@ -3,10 +3,8 @@
 //! hide/lock actions. The rendered sections are memoized by `Puzzle3dPlayApp` against the fixture's
 //! geometry fingerprint, so this builder only reruns when the document actually changes.
 
-use crate::apps::puzzle3d::config::Puzzle3dSelection;
-use crate::apps::puzzle3d::modes::edit::windows::main;
 use crate::apps::puzzle3d::terminology::Puzzle3dLabels;
-use crate::apps::puzzle3d::{puzzle3d_action, puzzle3d_vortex_full_id, Puzzle3dFixture};
+use crate::apps::puzzle3d::{puzzle3d_action, puzzle3d_interaction_select, puzzle3d_vortex_full_id, Puzzle3dFixture, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN};
 use semio_framework_plugin::{
     ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
     FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
@@ -39,8 +37,6 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_i
         icon_id: icon_id.map(IconName::from),
         default_open: None,
         action: Some(action),
-        hover_action: None,
-        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -82,10 +78,10 @@ pub fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTre
                 .map(|vortex| {
                     let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
                     tree_item_with_action(
-                        format!("puzzle3d-vortex:{full_id}"),
+                        full_id.clone(),
                         vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()),
                         Some("circle-dot"),
-                        puzzle3d_action("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [full_id], "attractionIds": [] } }))),
+                        puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_VORTEX, &full_id),
                     )
                 })
                 .collect();
@@ -95,14 +91,12 @@ pub fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTre
             };
             UiTreeItemNode {
                 presence: UiPresence::default(),
-                id: format!("puzzle3d-object:{}", object.id),
+                id: object.id.clone(),
                 label: Label::data(object.object_kind.clone().unwrap_or_else(|| object.id.clone())),
                 description: None,
                 icon_id: Some("box".into()),
                 default_open: Some(false),
-                action: Some(puzzle3d_action("setSelection", Some(json!({ "selection": { "objectIds": [object.id], "vortexIds": [], "attractionIds": [] } })))),
-                hover_action: Some(puzzle3d_action("setHover", Some(json!({ "objectId": object.id })))),
-                unhover_action: Some(puzzle3d_action("setHover", None)),
+                action: Some(puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_OBJECT, &object.id)),
                 actions: Some(hide_lock_actions(object.hidden, object.locked, labels, flag_args)),
                 draggable: None,
                 drag_data: None,
@@ -123,14 +117,12 @@ pub fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTre
             };
             UiTreeItemNode {
                 presence: UiPresence::default(),
-                id: format!("puzzle3d-reference:{}", reference.id),
+                id: reference.id.clone(),
                 label: Label::data(reference.id.clone()),
                 description: Some(reference.source.url.clone()),
                 icon_id: Some("globe".into()),
                 default_open: None,
-                action: Some(puzzle3d_action("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [], "referenceIds": [reference.id] } })))),
-                hover_action: None,
-                unhover_action: None,
+                action: Some(puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id)),
                 actions: Some(hide_lock_actions(reference.hidden, reference.locked, labels, flag_args)),
                 draggable: None,
                 drag_data: None,
@@ -151,14 +143,12 @@ pub fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTre
             };
             UiTreeItemNode {
                 presence: UiPresence::default(),
-                id: format!("puzzle3d-target-volume:{}", volume.id),
+                id: volume.id.clone(),
                 label: Label::data(volume.id.clone()),
                 description: None,
                 icon_id: Some("cylinder".into()),
                 default_open: None,
-                action: Some(puzzle3d_action("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [], "targetVolumeIds": [volume.id] } })))),
-                hover_action: None,
-                unhover_action: None,
+                action: Some(puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id)),
                 actions: Some(hide_lock_actions(volume.hidden, volume.locked, labels, flag_args)),
                 draggable: None,
                 drag_data: None,
@@ -174,10 +164,10 @@ pub fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTre
         .iter()
         .map(|attraction| {
             tree_item_with_action(
-                format!("puzzle3d-attraction:{}", attraction.id),
+                attraction.id.clone(),
                 format!("{} → {}", attraction.attracting, attraction.attracted),
                 Some("link"),
-                puzzle3d_action("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [attraction.id] } }))),
+                puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id),
             )
         })
         .collect();
@@ -189,16 +179,11 @@ pub fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTre
     ]
 }
 
-/// 🌳️ Wraps memoized `sections` into the selection-aware tree node the panel body renders.
-pub fn render(sections: Vec<UiTreeSectionNode>, selection: &Puzzle3dSelection) -> UiNode {
-    UiNode::Tree(UiTreeNode {
-        sections,
-        presence: UiPresence::default(),
-        selected_ids: Some(main::document_selected_ids(selection)),
-        highlighted_ids: None,
-        selection_change: Some(puzzle3d_action("setSelection", None)),
-        drop_action: None,
-        menu: None,
-    })
+/// 🌳️ Wraps memoized `sections` into the tree node the panel body renders — bound to the `vortex`
+/// interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so the framework
+/// stamps every row's `selected`/`hovered` presence from `InteractionState` after render, replacing
+/// the deleted `selected_ids`/`highlighted_ids`/`selection_change` wire surface.
+pub fn render(sections: Vec<UiTreeSectionNode>) -> UiNode {
+    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: Some(PUZZLE3D_INTERACTION_DOMAIN.into()) })
 }
 //#endregion 🔖️Render

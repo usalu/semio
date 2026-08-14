@@ -23,6 +23,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: ["select", "gcpPlace"].iter().map(|id| UtilityRef::from(*id)).collect(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

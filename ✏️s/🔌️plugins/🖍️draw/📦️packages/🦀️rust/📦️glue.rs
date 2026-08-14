@@ -500,14 +500,6 @@ pub mod apps {
             pub mod set_camera;
             #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-camera-zoom/🦀️component.rs"]
             pub mod set_camera_zoom;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-hover/🦀️component.rs"]
-            pub mod set_hover;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️select-all/🦀️component.rs"]
-            pub mod select_all;
-            #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️clear-selection/🦀️component.rs"]
-            pub mod clear_selection;
             #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️engagement-input/🦀️component.rs"]
             pub mod engagement_input;
             #[path = "../../🎛️apps/🖍️draw/🎮️commands/👁️set-locale/🦀️component.rs"]

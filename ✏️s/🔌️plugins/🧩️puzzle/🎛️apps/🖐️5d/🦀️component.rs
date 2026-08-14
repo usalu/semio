@@ -13,8 +13,8 @@
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
 use crate::apps::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
-use crate::apps::puzzle5d::commands::{apply_sun, patch_part, patch_grip, patch_fastener, set_grid_snap_enabled, set_grid_factor, set_camera, set_camera_2d, set_camera_3d, zoom_to_selection, apply_board_events, world_hover, set_hover, world_vortex_hover, world_vortex_select, translate_selection, rotate_selection, scale_selection, world_relocate, create_fastener, delete_fastener, retarget_fastener, edit_fastener, proximity_connect, set_lod_mode, add_brush_part, cycle_brush_candidate, register_brush_mesh, set_brush_placement_overlap_budget, set_kind_weight, engagement_control_select, set_suggestion_offset, set_selection, clear_selection, select_all, select_same_kind, set_selection_method, world_select, world_pick, set_fixture_json, set_active_example, engagement_input, engagement_submit, engagement_abort, add_node, add_part_kind, delete_selection, duplicate_selection, set_selection_flag, set_active, set_fill_count};
-use crate::apps::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime, Puzzle5dSelection};
+use crate::apps::puzzle5d::commands::{apply_sun, patch_part, patch_grip, patch_fastener, set_grid_snap_enabled, set_grid_factor, set_camera, set_camera_2d, set_camera_3d, zoom_to_selection, apply_board_events, translate_selection, rotate_selection, scale_selection, world_relocate, create_fastener, delete_fastener, retarget_fastener, edit_fastener, proximity_connect, set_lod_mode, add_brush_part, cycle_brush_candidate, register_brush_mesh, set_brush_placement_overlap_budget, set_kind_weight, engagement_control_select, set_suggestion_offset, select_same_kind, set_fixture_json, set_active_example, engagement_input, engagement_submit, engagement_abort, add_node, add_part_kind, delete_selection, duplicate_selection, set_selection_flag, set_active, set_fill_count};
+use crate::apps::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
 use crate::apps::puzzle5d::modes::edit;
 use crate::apps::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::apps::puzzle5d::panels::{catalogue, document as document_panel, inspection};
@@ -26,7 +26,11 @@ use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffe
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ArtifactPresentation, ConfigView, ArtifactApp, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, SelectionSet, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_SELECT_ACTION_ID,
 };
+// 🕹️ `InteractionView` — see 🧊️3d/🦀️component.rs's identical import comment (missing top-level
+// re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
+use semio_framework_plugin::app::InteractionView;
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 use serde_json::{json, Value};
@@ -57,6 +61,13 @@ pub const PUZZLE5D_DEFAULT_SUGGESTION_OFFSET: f64 = 80.0;
 pub const PUZZLE5D_DEFAULT_PART_RADIUS: f64 = 20.0;
 pub const PUZZLE5D_BOARD_PLACEMENT_GAP: f64 = 16.0;
 pub const PUZZLE5D_PROXIMITY_RADIUS: f64 = 0.75;
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the one interaction domain this app
+/// declares — the previously-separate `Puzzle5dSelection` bags (part/grip/fastener) collapse into
+/// one framework-owned domain, distinguished by `DomainSelection.granularity`.
+pub const PUZZLE5D_INTERACTION_DOMAIN: &str = "vortex";
+pub const PUZZLE5D_GRANULARITY_PART: &str = "part";
+pub const PUZZLE5D_GRANULARITY_GRIP: &str = "grip";
+pub const PUZZLE5D_GRANULARITY_FASTENER: &str = "fastener";
 
 /// 🌉️ This app's own scratch fixture stays a local structural-twin mirror (`Puzzle5dDocument`) of
 /// `crate::artifacts::puzzle5d::Puzzle5dSnapshot` — see that artifact's `🔖️ValueBridge` region — so
@@ -75,6 +86,14 @@ static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
+/// action targeting one `(granularity, id)` pair in the `vortex` domain — replaces the deleted
+/// `setSelection` action builders every document tree row used to construct by hand.
+pub fn puzzle5d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
+    let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
+    puzzle5d_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
 
 pub fn next_part_id() -> String {
@@ -412,37 +431,6 @@ pub fn find_part_by_grip_full_id<'a>(document: &'a Puzzle5dDocument, full_id: &s
     None
 }
 
-fn strip_tree_prefix(id: &str) -> &str {
-    for prefix in ["puzzle5d-play-document.part.", "puzzle5d-play-document.grip.", "puzzle5d-play-document.fastener."] {
-        if let Some(rest) = id.strip_prefix(prefix) {
-            return rest;
-        }
-    }
-    id
-}
-
-pub fn classify_selection(document: &Puzzle5dDocument, ids: &[String]) -> Puzzle5dSelection {
-    let part_ids: HashSet<&str> = document.parts.iter().map(|part| part.id.as_str()).collect();
-    let fastener_ids: HashSet<&str> = document.fasteners.iter().map(|fastener| fastener.id.as_str()).collect();
-    let grip_ids: HashSet<String> = document.parts.iter().flat_map(|part| part.grips.iter().map(|grip| puzzle5d_grip_full_id(&part.id, &grip.id))).collect();
-    let mut selection = Puzzle5dSelection::default();
-    for raw in ids {
-        let id = strip_tree_prefix(raw);
-        if part_ids.contains(id) {
-            selection.part_ids.push_unique(id.to_string());
-        } else if fastener_ids.contains(id) {
-            selection.fastener_ids.push_unique(id.to_string());
-        } else if grip_ids.contains(id) {
-            selection.grip_ids.push_unique(id.to_string());
-        }
-    }
-    selection
-}
-
-pub fn selection_flat_ids(selection: &Puzzle5dSelection) -> Vec<String> {
-    selection.part_ids.iter().chain(selection.grip_ids.iter()).chain(selection.fastener_ids.iter()).cloned().collect()
-}
-
 pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
     args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()).filter(|ids| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
 }
@@ -503,7 +491,7 @@ pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y
         part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
         grips,
     });
-    envelope.runtime.selection = Puzzle5dSelection { part_ids: SelectionSet::from_ids(vec![id]), grip_ids: SelectionSet::default(), fastener_ids: SelectionSet::default() };
+    let _ = id;
 }
 //#endregion 🔖️Document
 
@@ -564,12 +552,15 @@ pub fn puzzle5d_transform_utility_active(active_utility: &str) -> bool {
 }
 
 /// 🕹️ Whether the world gumball should render for the current selection and utility.
-pub fn puzzle5d_gumball_active(runtime: &Puzzle5dRuntime, active_utility: &str) -> bool {
-    !runtime.selection.part_ids.is_empty() && puzzle5d_transform_utility_active(active_utility)
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: `render` never gained an
+/// `InteractionView` parameter — see `puzzle3d`'s `gumball_active` doc comment for the identical
+/// framework-level gap. Defaults to "never render an unattached gumball".
+pub fn puzzle5d_gumball_active(_runtime: &Puzzle5dRuntime, _active_utility: &str) -> bool {
+    false
 }
 
-pub fn gumball_target_world(envelope: &Puzzle5dScene) -> Option<[f64; 3]> {
-    let selected: Vec<&Puzzle5dPart> = envelope.document.parts.iter().filter(|part| envelope.runtime.selection.part_ids.contains(&part.id)).collect();
+pub fn gumball_target_world(envelope: &Puzzle5dScene, selected_part_ids: &[String]) -> Option<[f64; 3]> {
+    let selected: Vec<&Puzzle5dPart> = envelope.document.parts.iter().filter(|part| selected_part_ids.contains(&part.id)).collect();
     if selected.is_empty() {
         return None;
     }
@@ -802,13 +793,14 @@ fn synthesize_flat_for_new_parts(document: &mut Puzzle5dDocument, new_ids: &[Str
 //#endregion 🔖️Engine
 
 //#region 🔖️Brush
-pub fn puzzle5d_brush_target_grip(envelope: &Puzzle5dScene) -> Option<String> {
-    envelope.runtime.selection.grip_ids.first().map(str::to_string).or_else(|| {
-        let part_id = envelope.runtime.hovered_part_id.as_deref().or_else(|| envelope.runtime.selection.part_ids.first())?;
-        let part = envelope.document.parts.iter().find(|part| part.id == part_id)?;
-        let grip = part.grips.first()?;
-        Some(puzzle5d_grip_full_id(&part.id, &grip.id))
-    })
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: this used to fall back to
+/// `runtime.selection.grip_ids`/`selection.part_ids`/`hovered_part_id`, all dissolved into the
+/// framework-owned `vortex` interaction domain — see `puzzle3d_brush_target_vortex`'s doc comment for
+/// the identical framework-level gap (`ArtifactApp::render` never gained an `InteractionView`).
+/// Callers holding a `Puzzle5dActionCtx` should prefer `ctx.selected_grip_ids().first()` before
+/// reaching for this.
+pub fn puzzle5d_brush_target_grip(_envelope: &Puzzle5dScene) -> Option<String> {
+    None
 }
 
 pub fn parse_brush_candidates_free(raw: &str) -> Vec<Value> {
@@ -1099,15 +1091,15 @@ fn puzzle5d_upsert_kind_compatibility(existing: &mut Vec<crate::artifacts::puzzl
 /// `settings` group; `deleteSelection` (bespoke label carrying the selection-count phrase) stays the
 /// trailing destructive row. `organize_context_menu`, run automatically at the `VcsArtifactApp::context_menu`
 /// funnel, handles taxonomy ordering/separator placement — this function only needs to emit the rows.
-fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, is_de: bool, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, part_ids: &[String], labels: &Puzzle5dLabels, is_de: bool, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
-    if envelope.runtime.selection.part_ids.is_empty() {
+    if part_ids.is_empty() {
         return Vec::new();
     }
-    let selected: Vec<&Puzzle5dPart> = envelope.document.parts.iter().filter(|part| envelope.runtime.selection.part_ids.contains(&part.id)).collect();
+    let selected: Vec<&Puzzle5dPart> = envelope.document.parts.iter().filter(|part| part_ids.contains(&part.id)).collect();
     let all_hidden = !selected.is_empty() && selected.iter().all(|part| part.part_2d.hidden.unwrap_or(false));
     let all_locked = !selected.is_empty() && selected.iter().all(|part| part.part_2d.locked.unwrap_or(false));
-    let phrase = selection_count_phrase(is_de, &[(envelope.runtime.selection.part_ids.len(), if is_de { "Teil" } else { "part" }, if is_de { "Teile" } else { "parts" })]);
+    let phrase = selection_count_phrase(is_de, &[(part_ids.len(), if is_de { "Teil" } else { "part" }, if is_de { "Teile" } else { "parts" })]);
     let bespoke = |id: &str, label: String, icon: &str, action: &str, args: Option<Value>, destructive: bool| ContextMenuItemSpec {
         id: id.into(),
         label: Some(label),
@@ -1223,10 +1215,6 @@ puzzle5d_command_variants! {
     SetCamera = "setCamera",
     SetCamera2d = "setCamera2d",
     SetCamera3d = "setCamera3d",
-    SetSelection = "setSelection",
-    DocumentSelect = "documentSelect",
-    ClearSelection = "clearSelection",
-    SelectAll = "selectAll",
     SelectSameKindSelection = "selectSameKindSelection",
     SelectSameKind = "selectSameKind",
     ToggleSun = "toggleSun",
@@ -1241,13 +1229,6 @@ puzzle5d_command_variants! {
     SetBrushPlacementOverlapBudget = "setBrushPlacementOverlapBudget",
     SetObjectKindWeight = "setObjectKindWeight",
     SetVortexKindWeight = "setVortexKindWeight",
-    WorldSelect = "worldSelect",
-    WorldPick = "worldPick",
-    WorldHover = "worldHover",
-    SetHover = "setHover",
-    WorldVortexHover = "worldVortexHover",
-    WorldVortexSelect = "worldVortexSelect",
-    SetSelectionMethod = "setSelectionMethod",
     SetLodMode = "setLodMode",
     SetSuggestionOffset = "setSuggestionOffset",
     SetGridSnapEnabled = "setGridSnapEnabled",
@@ -1278,9 +1259,45 @@ pub struct Puzzle5dActionCtx<'a> {
     pub scene: &'a mut Puzzle5dScene,
     /// 🪟️ The window this action targets (already defaulted to the 3D window).
     pub window_id: &'a str,
+    /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — retained selection-acting verbs read
+    /// `.selected_part_ids()`/etc. here instead of the deleted `Puzzle5dConfig` selection fields.
+    pub interaction: &'a InteractionView<'a>,
     /// 🛑️ Set by an arm that must skip the whole epilogue (delta, effects, config snapshot) — the
     /// direct replacement for the pre-migration `return Emit::default()` early exits.
     pub abort: bool,
+}
+
+impl<'a> Puzzle5dActionCtx<'a> {
+    fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
+        let selection = self.interaction.selection(PUZZLE5D_INTERACTION_DOMAIN);
+        if selection.granularity == granularity_id {
+            selection.ids.clone()
+        } else {
+            Vec::new()
+        }
+    }
+    pub fn selected_part_ids(&self) -> Vec<String> {
+        self.selected_ids(PUZZLE5D_GRANULARITY_PART)
+    }
+    pub fn selected_grip_ids(&self) -> Vec<String> {
+        self.selected_ids(PUZZLE5D_GRANULARITY_GRIP)
+    }
+    pub fn selected_fastener_ids(&self) -> Vec<String> {
+        self.selected_ids(PUZZLE5D_GRANULARITY_FASTENER)
+    }
+}
+
+/// 🕹️ `copy_fragment`/`cut_operations` have no `Puzzle5dActionCtx` (only `doc`/`cfg`/`interaction`
+/// per `ArtifactApp`'s signature) — a free-function twin of `Puzzle5dActionCtx::selected_part_ids`/
+/// `selected_fastener_ids` for those two call sites.
+fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<'_>) -> (Vec<String>, Vec<String>) {
+    let selection = interaction.selection(PUZZLE5D_INTERACTION_DOMAIN);
+    match selection.granularity.as_str() {
+        PUZZLE5D_GRANULARITY_PART => (selection.ids.clone(), Vec::new()),
+        PUZZLE5D_GRANULARITY_FASTENER => (Vec::new(), selection.ids.clone()),
+        _ => (Vec::new(), Vec::new()),
+    }
 }
 //#endregion 🔖️ActionContext
 
@@ -1355,7 +1372,6 @@ impl Puzzle5dPlayApp {
                     let x = payload.get("x").and_then(|value| value.as_f64());
                     let y = payload.get("y").and_then(|value| value.as_f64());
                     set_part_2d_position(&mut next.document, &new_id, x, y);
-                    next.runtime.selection = Puzzle5dSelection { part_ids: SelectionSet::from_ids(vec![new_id]), grip_ids: SelectionSet::default(), fastener_ids: SelectionSet::default() };
                 }
                 *envelope = next;
                 return;
@@ -1395,7 +1411,6 @@ impl Puzzle5dPlayApp {
                 });
             }
         }
-        envelope.runtime.selection = Puzzle5dSelection { part_ids: SelectionSet::from_ids(vec![id]), grip_ids: SelectionSet::default(), fastener_ids: SelectionSet::default() };
     }
 
     pub fn apply_board_events_from_json(&self, events_json: &str, envelope: &mut Puzzle5dScene) {
@@ -1413,11 +1428,10 @@ impl Puzzle5dPlayApp {
                         envelope.runtime.camera2d = camera;
                     }
                 }
-                "select" => {
-                    if let Some(ids) = payload.get("ids").and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
-                        envelope.runtime.selection = classify_selection(&envelope.document, &ids);
-                    }
-                }
+                // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: "select"
+                // board events used to write `envelope.runtime.selection` directly; selection is
+                // framework-owned now and `handle` has no channel to write it (see puzzle3d's
+                // `select-same-kind` doc comment for the identical limitation) — dropped.
                 "nodeDragEnd" => {
                     for entry in payload.get("moves").and_then(|value| value.as_array()).into_iter().flatten() {
                         if let Some(id) = entry.get("id").and_then(|value| value.as_str()) {
@@ -1456,7 +1470,6 @@ impl Puzzle5dPlayApp {
                 "nodeDelete" => {
                     if let Some(id) = payload.get("id").and_then(|value| value.as_str()) {
                         remove_parts(&mut envelope.document, &[id.to_string()]);
-                        envelope.runtime.selection = Puzzle5dSelection::default();
                     }
                 }
                 "edgeDelete" => {
@@ -1473,12 +1486,12 @@ impl Puzzle5dPlayApp {
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle5dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, config: &Puzzle5dConfig) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, config: &Puzzle5dConfig, interaction: &InteractionView<'_>) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
         let before = doc.snapshot.0.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
         let mut scene = scene_from_projection(&before, config.clone(), &active_utility_initial);
-        let mut ctx = Puzzle5dActionCtx { app: self, scene: &mut scene, window_id: &wid, abort: false };
+        let mut ctx = Puzzle5dActionCtx { app: self, scene: &mut scene, window_id: &wid, interaction, abort: false };
         dispatch_puzzle5d_action(&mut ctx, action, args);
         if ctx.abort {
             return Emit::default();
@@ -1517,13 +1530,7 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
     match action {
         "setFixtureJson" => set_fixture_json::set_fixture_json(ctx, args),
         "setActiveExample" => set_active_example::set_active_example(ctx, args),
-        "setSelection" | "documentSelect" => set_selection::set_selection(ctx, args),
-        "clearSelection" => clear_selection::clear_selection(ctx),
-        "selectAll" => select_all::select_all(ctx),
         "selectSameKindSelection" | "selectSameKind" => select_same_kind::select_same_kind(ctx),
-        "setSelectionMethod" => set_selection_method::set_selection_method(ctx, args),
-        "worldSelect" => world_select::world_select(ctx, args),
-        "worldPick" => world_pick::world_pick(ctx, args),
         "addNode" => add_node::add_node(ctx, args),
         "addPartKind" => add_part_kind::add_part_kind(ctx, args),
         "deleteSelection" => delete_selection::delete_selection(ctx),
@@ -1537,10 +1544,6 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
         "retargetFastener" => retarget_fastener::retarget_fastener(ctx, args),
         "editFastener" => edit_fastener::edit_fastener(ctx, args),
         "proximityConnect" => proximity_connect::proximity_connect(ctx, args),
-        "worldHover" => world_hover::world_hover(ctx, args),
-        "setHover" => set_hover::set_hover(ctx, args),
-        "worldVortexHover" => world_vortex_hover::world_vortex_hover(ctx, args),
-        "worldVortexSelect" => world_vortex_select::world_vortex_select(ctx, args),
         "setCamera" => set_camera::set_camera(ctx, args),
         "setCamera2d" => set_camera_2d::set_camera_2d(ctx, args),
         "setCamera3d" => set_camera_3d::set_camera_3d(ctx, args),
@@ -1605,10 +1608,10 @@ impl ArtifactApp for Puzzle5dPlayApp {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
     }
 
-    fn copy_fragment( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
+    fn copy_fragment( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
         let document: Puzzle5dDocument = serde_json::from_value(doc.snapshot.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
-        let selection = &cfg.snapshot.selection;
-        let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
+        let (part_ids, fastener_ids) = puzzle5d_interaction_part_and_fastener_ids(interaction);
+        let (parts, fasteners) = copy_selection_local(&document, &part_ids, &fastener_ids);
         if parts.is_empty() {
             return Err(ClipboardError::EmptySelection);
         }
@@ -1628,13 +1631,13 @@ impl ArtifactApp for Puzzle5dPlayApp {
     /// removal; clearing the selection is left to the framework's own post-cut selection reconciliation
     /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
     /// them is inert until the next real selection action overwrites it).
-    fn cut_operations( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dMutation> {
+    fn cut_operations( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>) -> Vec<Puzzle5dMutation> {
         let before = doc.snapshot.0.clone();
         let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
             return Vec::new();
         };
-        let selection = &cfg.snapshot.selection;
-        let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
+        let (part_ids, fastener_ids) = puzzle5d_interaction_part_and_fastener_ids(interaction);
+        let (parts, fasteners) = copy_selection_local(&document, &part_ids, &fastener_ids);
         if parts.is_empty() {
             return Vec::new();
         }
@@ -1675,8 +1678,28 @@ impl ArtifactApp for Puzzle5dPlayApp {
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
-    fn handle(command: &Puzzle5dCommand, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
-        with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot)))
+    fn handle(command: &Puzzle5dCommand, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
+        with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot, interaction)))
+    }
+
+    /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+    /// parts and fasteners as flat roots, grips nested under their owning part (mirrors puzzle3d's
+    /// object→vortex-marker nesting).
+    fn interaction_topology(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::InteractionTopology {
+        let document: Puzzle5dDocument = serde_json::from_value(doc.snapshot.0.clone()).unwrap_or_else(|_| empty_document());
+        let mut ordered = Vec::new();
+        for part in &document.parts {
+            ordered.push(semio_framework_plugin::TopologyNode { id: part.id.clone(), granularity: PUZZLE5D_GRANULARITY_PART.into(), parent: None });
+            for grip in &part.grips {
+                ordered.push(semio_framework_plugin::TopologyNode { id: puzzle5d_grip_full_id(&part.id, &grip.id), granularity: PUZZLE5D_GRANULARITY_GRIP.into(), parent: Some(part.id.clone()) });
+            }
+        }
+        for fastener in &document.fasteners {
+            ordered.push(semio_framework_plugin::TopologyNode { id: fastener.id.clone(), granularity: PUZZLE5D_GRANULARITY_FASTENER.into(), parent: None });
+        }
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(PUZZLE5D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered });
+        semio_framework_plugin::InteractionTopology { domains }
     }
 
     /// 🔌️ Declares puzzle5d's typed media I/O surface: the implicit document ports (from
@@ -1872,19 +1895,43 @@ impl ArtifactApp for Puzzle5dPlayApp {
         let labels = puzzle5d_labels(config);
         let is_de = puzzle5d_is_de_locale(config);
         let active_utility = puzzle5d_scene_active_utility(config, Some(world3d::WINDOW_KIND_ID));
-        let mut envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
-        if let Some(surface) = request.surface.as_ref() {
-            let part_ids: Vec<String> = surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node" || g.domain == "part").flat_map(|g| g.ids.iter().cloned()).collect();
-            if !part_ids.is_empty() {
-                envelope.runtime.selection.part_ids = part_ids.into();
-            }
-        }
-        puzzle5d_context_menu_items(&envelope, labels, is_de, registry)
+        let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
+        let part_ids: Vec<String> = request
+            .surface
+            .as_ref()
+            .map(|surface| surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node" || g.domain == PUZZLE5D_GRANULARITY_PART).flat_map(|g| g.ids.iter().cloned()).collect())
+            .unwrap_or_default();
+        puzzle5d_context_menu_items(&envelope, &part_ids, labels, is_de, registry)
     }
 }
 //#endregion 🔖️PlayApp
 
 //#region 🔖️Manifest
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain declaration —
+/// one granularity per previously-distinct `Puzzle5dSelection` bag (part/grip/fastener). `Topology`
+/// hierarchy (see `Puzzle5dPlayApp::interaction_topology`) exposes the part→grip nesting.
+fn puzzle5d_interaction_definition() -> InteractionDefinition {
+    let granularity = |id: &str, label: LocalizedLabel, icon: &str| GranularityDefinition { id: id.into(), label, icon_id: icon.into() };
+    InteractionDefinition {
+        id: PUZZLE5D_INTERACTION_DOMAIN.into(),
+        label: LocalizedLabel::native("Vortex", "Vortex"),
+        granularities: vec![
+            granularity(PUZZLE5D_GRANULARITY_PART, puzzle5d_localized(|l| l.part), "box"),
+            granularity(PUZZLE5D_GRANULARITY_GRIP, puzzle5d_localized(|l| l.grip), "circle-dot"),
+            granularity(PUZZLE5D_GRANULARITY_FASTENER, LocalizedLabel::native("Fastener", "Verbinder"), "link"),
+        ],
+        hierarchy: HierarchyProvider::Topology,
+        hover: HoverSpec { enabled: true, transitive: false, channels: vec!["pointer".into()], broadcast: true },
+        selection: SelectionSpec {
+            modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+            methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+            merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+            transitive: false,
+            broadcast: true,
+        },
+    }
+}
+
 pub fn create_puzzle5d_app() -> App {
     let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: PUZZLE5D_DEFAULT_UTILITY.into() };
     let precompute = Puzzle5dPrecomputeSession::new();
@@ -1900,6 +1947,9 @@ pub fn create_puzzle5d_app() -> App {
             .default_mode_id(edit::PUZZLE5D_PLAY_MODE_EDIT)
             .window_kind_def(board2d::definition(&envelope, &precompute, manifest_labels))
             .window_kind_def(world3d::definition(&envelope, &precompute, manifest_labels))
+            .interaction(puzzle5d_interaction_definition())
+            .window_kind_interactions(board2d::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)])
+            .window_kind_interactions(world3d::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)])
             // 🏗️ 3D-first 60/40 split — mirrors semio_compose_rs's design app (scene 60% / diagram 40%,
             // `semio_compose_rs/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
             // this app replaces.
@@ -1938,10 +1988,6 @@ pub fn create_puzzle5d_app() -> App {
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("setCamera2d", LocalizedLabel::native("Set Camera 2D", "Kamera 2D festlegen"))
             .view_action("setCamera3d", LocalizedLabel::native("Set Camera 3D", "Kamera 3D festlegen"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .view_action("documentSelect", LocalizedLabel::native("Document Select", "Dokument auswählen"))
-            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
-            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
             .action_with(ActionDefinition::new_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
             .view_action("selectSameKind", LocalizedLabel::native("Select Same Kind (alias)", "Gleiche Art auswählen (Alias)"))
             .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
@@ -1956,13 +2002,6 @@ pub fn create_puzzle5d_app() -> App {
             .view_action("setBrushPlacementOverlapBudget", LocalizedLabel::native("Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"))
             .view_action("setObjectKindWeight", LocalizedLabel::native("Set Object Kind Weight", "Objektart-Gewicht festlegen"))
             .view_action("setVortexKindWeight", LocalizedLabel::native("Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"))
-            .view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"))
-            .view_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"))
-            .view_action("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"))
-            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
-            .view_action("worldVortexHover", LocalizedLabel::native("World Vortex Hover", "Welt-Vortex-Hover"))
-            .view_action("worldVortexSelect", LocalizedLabel::native("World Vortex Select", "Welt-Vortex auswählen"))
-            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
             .view_action("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"))
             .view_action("setSuggestionOffset", LocalizedLabel::native("Set Suggestion Offset", "Vorschlagsversatz festlegen"))
             .view_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"))
@@ -2074,11 +2113,26 @@ pub(crate) mod testkit {
     /// `Self::Command` channel). Reconstructs the `Puzzle5dCommand` from the same
     /// `(action, args, window_id)` triple every pre-migration test already passed.
     pub fn dispatch(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
-        // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…) stay on `handle_action`.
-        if matches!(action, "undo" | "redo" | "checkpoint" | "alternative" | "revertToCommand" | "historyFilter" | "noteShellCommand" | "copy" | "cut" | "paste") {
+        // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
+        // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
+        // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
+        // setInteractionGranularity to this reserved set.
+        if matches!(
+            action,
+            "undo" | "redo" | "checkpoint" | "alternative" | "revertToCommand" | "historyFilter" | "noteShellCommand" | "copy" | "cut" | "paste"
+                | "interactionSelect" | "interactionHover" | "clearSelection" | "selectAll" | "setSelectionMode" | "setInteractionGranularity"
+        ) {
             return app.handle_action(action, args, &meta("local"));
         }
         app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &meta("local"))
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
+    /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
+    /// deleted `setSelection` action.
+    pub fn select_id(app: &mut Puzzle5dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
+        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
     }
 
     /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
@@ -2155,7 +2209,7 @@ mod tests {
     fn context_menu_is_grouped_and_keeps_delete_selection_last() {
         let mut app = app_with_registry();
         let part_id = first_part_id(&app);
-        dispatch(&mut app, "setSelection", Some(&json!({ "partIds": [part_id] })), None).expect("select part");
+        select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &part_id).expect("select part");
         let request = ContextMenuRequest {
             menu: UiMenuRef { id: "world3d".into(), args: None },
             surface: Some(ContextMenuSurfaceTarget { surface_id: world3d::WINDOW_KIND_ID.into(), kind: "world3d".into(), hits: vec![], selection: vec![ContextMenuSelectionGroup { domain: "part".into(), ids: vec![part_id] }], text: None }),
@@ -2245,10 +2299,10 @@ mod tests {
     //#region 🔖️Clipboard
     #[test]
     fn copy_emits_clipboard_fragment_for_the_closed_selection() {
-        let mut app = app();
+        let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
         let first_part_id = first_part_id(&app);
-        dispatch(&mut app, "setSelection", Some(&json!({ "partIds": [first_part_id] })), None).expect("select");
+        select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
         let result = app.handle_action("copy", None, &meta("local")).expect("copy");
         assert!(result.mutations.is_empty(), "copy must not record an undo entry");
         assert_eq!(result.requested_effects.len(), 1);
@@ -2268,11 +2322,11 @@ mod tests {
 
     #[test]
     fn cut_removes_selected_part_and_undo_restores_it() {
-        let mut app = app();
+        let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
         let before_count = part_count(&app);
         let first_part_id = first_part_id(&app);
-        dispatch(&mut app, "setSelection", Some(&json!({ "partIds": [first_part_id] })), None).expect("select");
+        select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
         let result = app.handle_action("cut", None, &meta("local")).expect("cut");
         assert_eq!(result.requested_effects.len(), 1, "cut must also copy to the clipboard");
         assert_eq!(part_count(&app), before_count - 1);
@@ -2284,11 +2338,11 @@ mod tests {
 
     #[test]
     fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
-        let mut app = app();
+        let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
         let projection = projection_of(&app);
         let first_part_id = first_part_id(&app);
-        dispatch(&mut app, "setSelection", Some(&json!({ "partIds": [first_part_id] })), None).expect("select");
+        select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
         let copy_result = app.handle_action("copy", None, &meta("local")).expect("copy");
         let HostEffect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         let before_count = part_count(&app);
@@ -2375,15 +2429,8 @@ mod tests {
             "setFixtureJson",
             "setActiveExample",
             "importComposeKit",
-            "setSelection",
-            "documentSelect",
-            "clearSelection",
-            "selectAll",
             "selectSameKindSelection",
             "selectSameKind",
-            "setSelectionMethod",
-            "worldSelect",
-            "worldPick",
             "addNode",
             "addPartKind",
             "deleteSelection",
@@ -2392,10 +2439,6 @@ mod tests {
             "patchPart",
             "patchGrip",
             "patchFastener",
-            "worldHover",
-            "setHover",
-            "worldVortexHover",
-            "worldVortexSelect",
             "setCamera",
             "setCamera2d",
             "setCamera3d",

@@ -18,3 +18,17 @@ pub struct SetLocale {
 pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     Ok(Emit::config(vec![LayoutConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::apps::layout::LayoutCommand;
+
+    #[test]
+    fn set_locale_is_host_pushed_with_bare_wire_keyword() {
+        let command = LayoutCommand::SetLocale(SetLocale { value: "de-DE".into() });
+        assert!(protocol::OpText::print_op(&command).starts_with("locale "), "wire keyword must stay bare 'locale'");
+    }
+}
+//#endregion 🧪️Tests

@@ -13,14 +13,6 @@ pub struct RemodelWorldCamera {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
-#[artifact_schema(id = "s.remodel.remodel.remodelselection")]
-pub struct RemodelSelection {
-    #[state(config)] pub mode: String,
-    #[state(config)] pub ids: Vec<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel.remodellayervisibility")]
 pub struct RemodelLayerVisibility {
     #[state(config)] pub mesh: bool,
@@ -43,7 +35,6 @@ pub struct RemodelFrameCursor {
 #[artifact_schema(id = "s.remodel.remodel.config")]
 pub struct RemodelConfig {
     #[state(config)] pub camera: RemodelWorldCamera,
-    #[state(config)] pub selection: RemodelSelection,
     #[state(config)] pub layers: RemodelLayerVisibility,
     #[state(config)] pub frame_cursor: RemodelFrameCursor,
     #[state(config)] pub report_table: String,

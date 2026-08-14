@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.3d.config")]
 pub struct Block3dConfig {
-    #[state(config)] pub selected_ids: Vec<String>,
     #[state(config)] pub active_representation_id: Option<String>,
     #[state(config)] pub wanted_tags: Vec<String>,
     #[state(config)] pub locale: String,
@@ -18,7 +17,6 @@ pub struct Block3dConfig {
     #[state(config)] pub brush_flip: bool,
     #[state(config)] pub brush_preview: Option<Block3dBrushPreview>,
     #[state(config)] pub camera: Option<BlockCamera3d>,
-    #[state(config)] pub hovered_vortex_full_id: Option<String>,
 }
 
 //region 📎 App-schema descriptor

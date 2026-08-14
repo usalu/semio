@@ -15,7 +15,7 @@ pub struct SetCamera {
     pub camera: NoteCamera,
 }
 
-pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::config(vec![NoteConfigMutation::SetCamera { camera: payload.camera.clone() }]))
 }
 
@@ -23,6 +23,7 @@ pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::note::commands::set_camera_zoom;
     use crate::apps::note::testkit::{dispatch, note_app, render};
     use crate::apps::note::{NoteCommand, NOTE_PLAY_BODY_COMPOSITE};
     use crate::artifacts::note::NoteCamera;

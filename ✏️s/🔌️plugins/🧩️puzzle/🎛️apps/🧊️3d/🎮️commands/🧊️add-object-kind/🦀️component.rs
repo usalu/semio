@@ -1,8 +1,6 @@
 //! 🧊️ `add-object-kind` command.
 
 use crate::apps::puzzle3d::panels::inspection;
-use crate::apps::puzzle3d::config::Puzzle3dSelection;
-use semio_framework_plugin::SelectionSet;
 use serde_json::Value;
 use std::collections::HashSet;
 use crate::apps::puzzle3d::Puzzle3dActionCtx;
@@ -22,7 +20,7 @@ pub fn add_object_kind(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
         .and_then(|value| value.as_array())
         .map_or([0.0, 0.0, 0.0], |values| [values.first().and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(2).and_then(|v| v.as_f64()).unwrap_or(0.0)]);
     ctx.scene.fixture.objects.push(Puzzle3dObject {
-        id: id.clone(),
+        id,
         label: Some(object_kind.into()),
         object_kind: Some(object_kind.into()),
         origin,
@@ -34,6 +32,5 @@ pub fn add_object_kind(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
         locked: false,
         reveal_index: None,
     });
-    ctx.scene.runtime.selection.object_ids = SelectionSet::from(vec![id]);
     resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
 }

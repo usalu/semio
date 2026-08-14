@@ -56,10 +56,6 @@
       ],
       "x-semio-state": "artifact"
     },
-    "selectedNodeIds": {
-      "$ref": "#/$defs/JackStringList",
-      "x-semio-state": "presence"
-    },
     "activeFixtureId": {
       "type": "string",
       "x-semio-state": "presence"
@@ -129,22 +125,6 @@
     }
   },
   "$defs": {
-    "JackStringList": {
-      "title": "JackStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "JackNodesDelta": {
       "title": "JackNodesDelta",
       "type": "object",

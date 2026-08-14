@@ -20,6 +20,7 @@ pub fn handle(_payload: &ToggleLineNumbers, _doc: &ArtifactView<'_, WriterSnapsh
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use super::ToggleLineNumbers;
         use crate::apps::writer::testkit::new_app;
     use crate::apps::writer::WriterCommand;
 

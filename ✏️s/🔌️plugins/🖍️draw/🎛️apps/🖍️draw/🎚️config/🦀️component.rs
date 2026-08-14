@@ -19,10 +19,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "draw.config")]
 #[dsl(layout = "lines")]
 pub struct DrawConfig {
-    /// 👁️ Selected layer ids — was `DrawInteractionState::selected_ids`.
-    pub selected_ids: Vec<String>,
-    /// 👁️ Hovered layer id — was `DrawInteractionState::hovered_id`.
-    pub hovered_id: Option<String>,
     /// 👁️ In-progress rename/engagement input text — was `DrawInteractionState::engagement_input`.
     pub engagement_input: String,
     /// 🎥️ The free/live canvas camera — session-only, never a document field. Was
@@ -102,7 +98,7 @@ impl store::ArtifactPack for DrawConfig {
 
 impl Default for DrawConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), hovered_id: None, engagement_input: String::new(), camera: DrawCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
+        Self { engagement_input: String::new(), camera: DrawCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
     }
 }
 
@@ -123,10 +119,6 @@ pub enum DrawConfigMutation {
         #[dsl(block)]
         config: DrawConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
-    #[dsl(key = "hover")]
-    SetHovered { id: Option<String> },
     #[dsl(key = "engagement-input")]
     SetEngagementInput { value: String },
     #[dsl(key = "camera")]
@@ -219,8 +211,6 @@ impl Mutation<DrawConfig> for DrawConfigMutation {
         let mut next = base.clone();
         match self {
             DrawConfigMutation::Snapshot { config } => return config.clone(),
-            DrawConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            DrawConfigMutation::SetHovered { id } => next.hovered_id = id.clone(),
             DrawConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             DrawConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             DrawConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
@@ -245,14 +235,11 @@ mod tests {
         let config = DrawConfig::default();
         assert_eq!(config.active_utility_id, "selectDirect");
         assert_eq!(config.locale, "en-US");
-        assert!(config.selected_ids.is_empty());
     }
 
     #[test]
     fn draw_config_dsl_round_trips() {
         let config = DrawConfig {
-            selected_ids: vec!["layer-1".into(), "layer-2".into()],
-            hovered_id: Some("layer-3".into()),
             engagement_input: "Renaming \"layer\"".into(),
             camera: DrawCamera { x: 12.0, y: -4.0, zoom: 1.5 },
             active_utility_id: "pen".into(),
@@ -263,10 +250,10 @@ mod tests {
 
     #[test]
     fn draw_config_operation_round_trips_and_backwards_restores_snapshot() {
-        let base = DrawConfig { selected_ids: vec!["a".into()], active_utility_id: "selectDirect".into(), ..Default::default() };
-        let operation = DrawConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] };
+        let base = DrawConfig { active_utility_id: "selectDirect".into(), ..Default::default() };
+        let operation = DrawConfigMutation::SetActiveUtility { utility_id: "pen".into() };
         let forward = operation.diff(&base);
-        assert_eq!(forward.selected_ids, vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(forward.active_utility_id, "pen");
         let backwards = operation.inverse(&base);
         assert_eq!(backwards, vec![DrawConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);
@@ -276,9 +263,6 @@ mod tests {
     #[test]
     fn draw_config_operation_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::Snapshot { config: DrawConfig::default() });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetHovered { id: Some("a".into()) });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetHovered { id: None });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetEngagementInput { value: "New \"Name\"".into() });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetCamera { camera: DrawCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetActiveUtility { utility_id: "pen".into() });

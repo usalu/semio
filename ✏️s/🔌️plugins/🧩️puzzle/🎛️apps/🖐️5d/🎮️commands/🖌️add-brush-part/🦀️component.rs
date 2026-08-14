@@ -15,7 +15,7 @@ pub fn add_brush_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
                 object.insert("objectKindId".to_string(), part_kind);
             }
             if object.get("targetVortexFullId").is_none() {
-                if let Some(grip_id) = puzzle5d_brush_target_grip(ctx.scene) {
+                if let Some(grip_id) = ctx.selected_grip_ids().first().cloned().or_else(|| puzzle5d_brush_target_grip(ctx.scene)) {
                     object.insert("targetVortexFullId".to_string(), json!(grip_id));
                 }
             }

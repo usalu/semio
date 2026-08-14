@@ -1,10 +1,6 @@
 /** 🧬️ SpacePresence */
 export interface SpacePresence {
   /** @state presence */
-  selectedNodeIds: string[];
-  /** @state presence */
-  hoveredNodeId?: string;
-  /** @state presence */
   camera: Record<string, SpaceWindowCamera>;
   /** @state presence */
   activeNodeId?: string;

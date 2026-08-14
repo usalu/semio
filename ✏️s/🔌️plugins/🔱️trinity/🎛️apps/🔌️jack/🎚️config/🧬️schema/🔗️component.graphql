@@ -1,5 +1,4 @@
 type JackConfig {
-  selectedNodeIds: [String!]! @state(class: CONFIG)
   camera: Camera! @state(class: CONFIG)
   activeFixtureId: String! @state(class: CONFIG)
   jackQuery: String! @state(class: CONFIG)

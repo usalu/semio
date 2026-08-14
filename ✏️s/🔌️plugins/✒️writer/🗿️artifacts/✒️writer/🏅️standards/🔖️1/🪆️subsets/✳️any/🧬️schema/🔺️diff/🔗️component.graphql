@@ -7,7 +7,6 @@ type WriterDiff {
   languageId: String @state(class: ARTIFACT)
   uri: String @state(class: ARTIFACT)
   text: WriterTextDelta @state(class: ARTIFACT)
-  selectedAstIds: WriterStringList @state(class: PRESENCE)
   editorSelection: WriterEditorSelection @state(class: PRESENCE)
   editorSettings: WriterEditorSettings @state(class: PRESENCE)
   formatSignal: Int @state(class: CONFIG)
@@ -18,8 +17,6 @@ type WriterDiff {
   cameraY: Float @state(class: CONFIG)
   cameraZoom: Float @state(class: CONFIG)
   locale: String @state(class: CONFIG)
-  treeHoveredAstId: String @state(class: ARTIFACT)
-  editorHoverOffset: Int @state(class: ARTIFACT)
 }
 
 type WriterArtifact {
@@ -28,7 +25,6 @@ type WriterArtifact {
   languageId: String!
   uri: String!
   text: String!
-  selectedAstIds: [String!]!
   editorSelection: WriterEditorSelection
   editorSettings: WriterEditorSettings!
   formatSignal: Int!
@@ -39,8 +35,6 @@ type WriterArtifact {
   cameraY: Float!
   cameraZoom: Float!
   locale: String!
-  treeHoveredAstId: String
-  editorHoverOffset: Int
 }
 
 type WriterEditorSelection {
@@ -53,10 +47,6 @@ type WriterEditorSettings {
   fontPx: Int!
   lineHeight: Int!
   tabSize: Int!
-}
-
-type WriterStringList {
-  values: [String!]!
 }
 
 type WriterTextDelta {

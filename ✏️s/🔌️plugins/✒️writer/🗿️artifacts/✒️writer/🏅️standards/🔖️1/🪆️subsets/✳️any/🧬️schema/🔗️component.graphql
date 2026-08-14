@@ -6,7 +6,6 @@ type WriterArtifact {
   languageId: String!
   uri: String!
   text: String!
-  selectedAstIds: [String!]!
   editorSelection: WriterEditorSelection
   editorSettings: WriterEditorSettings!
   formatSignal: Int!
@@ -17,8 +16,6 @@ type WriterArtifact {
   cameraY: Float!
   cameraZoom: Float!
   locale: String!
-  treeHoveredAstId: String
-  editorHoverOffset: Int
 }
 
 type WriterEditorSelection {

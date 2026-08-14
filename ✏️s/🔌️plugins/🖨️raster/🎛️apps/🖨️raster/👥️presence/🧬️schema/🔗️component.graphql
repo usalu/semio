@@ -5,8 +5,6 @@ type RasterPresenceCamera {
 }
 
 type RasterPresence {
-  selectedIds: [String!]! @state(class: PRESENCE)
-  hoveredId: String @state(class: PRESENCE)
   brushSize: Float! @state(class: PRESENCE)
   brushOpacity: Float! @state(class: PRESENCE)
   camera: RasterPresenceCamera! @state(class: PRESENCE)

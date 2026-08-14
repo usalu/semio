@@ -20,14 +20,9 @@ pub struct RewriteArtifact {
     #[state(artifact)] pub rhs_json: String,
     #[state(artifact)] pub parameter_bindings: BTreeMap<String, PropertyValue>,
     #[state(artifact)] pub rule_layout: BTreeMap<String, LayoutPoint>,
-    #[state(presence)] pub selected_node_ids: Vec<String>,
-    #[state(presence)] pub active_hover_var: String,
-    #[state(presence)] pub active_select_var: String,
     #[state(presence)] pub lod_mode_by_window: BTreeMap<String, String>,
     #[state(config)] pub before_pane_camera: Camera,
     #[state(config)] pub reorganize_epoch: u64,
-    #[state(config)] pub hover_epoch: u64,
-    #[state(config)] pub select_epoch: u64,
     #[state(config)] pub locale: String,
 }
 //#endregion 🔖️Artifact
@@ -41,14 +36,9 @@ impl Default for RewriteArtifact {
             rhs_json: String::new(),
             parameter_bindings: BTreeMap::new(),
             rule_layout: BTreeMap::new(),
-            selected_node_ids: Vec::new(),
-            active_hover_var: String::new(),
-            active_select_var: String::new(),
             lod_mode_by_window: BTreeMap::new(),
             before_pane_camera: Camera::default(),
             reorganize_epoch: 0,
-            hover_epoch: 0,
-            select_epoch: 0,
             locale: "en-US".into(),
         }
     }

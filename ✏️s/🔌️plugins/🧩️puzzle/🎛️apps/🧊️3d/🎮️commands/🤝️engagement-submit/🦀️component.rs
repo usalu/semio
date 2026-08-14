@@ -1,7 +1,7 @@
 //! 🤝️ `engagement-submit` command.
 
 use crate::apps::puzzle3d::modes::edit::windows::main::utilities;
-use crate::apps::puzzle3d::{apply_puzzle3d_fill_count, apply_puzzle3d_focus_selection, drive_precompute, puzzle3d_clear_selection, Puzzle3dActionCtx, PUZZLE3D_DEFAULT_UTILITY, PUZZLE3D_FILL_COUNT_MAX};
+use crate::apps::puzzle3d::{apply_puzzle3d_fill_count, apply_puzzle3d_focus_selection, drive_precompute, Puzzle3dActionCtx, PUZZLE3D_DEFAULT_UTILITY, PUZZLE3D_FILL_COUNT_MAX};
 use semio_framework_plugin::strip_engagement_prefix;
 use serde_json::Value;
 
@@ -18,10 +18,13 @@ pub fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
                 ctx.scene.active_utility = utilities::brush::UTILITY_ID.into();
                 drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
             }
-            "zoom" => apply_puzzle3d_focus_selection(ctx.scene),
-            "clear" => puzzle3d_clear_selection(&mut ctx.scene.runtime.selection),
-            "rectangle" => ctx.scene.runtime.selection_method = "rectangle".into(),
-            "lasso" => ctx.scene.runtime.selection_method = "lasso".into(),
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: "clear"/"rectangle"/"lasso"
+            // dropped — selection/method are framework-owned now (`clearSelection`/`interactionSelect`'s
+            // `method` arg), unreachable from this app-level typed-command box.
+            "zoom" => {
+                let object_ids = ctx.selected_object_ids();
+                apply_puzzle3d_focus_selection(ctx.scene, &object_ids);
+            }
             _ => {}
         }
     }

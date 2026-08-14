@@ -22,7 +22,6 @@ pub struct JackEditorSelection {
 #[dsl(extension = "trinity.jackcfg")]
 #[dsl(layout = "lines")]
 pub struct JackConfig {
-    pub selected_node_ids: Vec<String>,
     #[dsl(block)]
     pub camera: Camera,
     pub active_fixture_id: String,
@@ -105,7 +104,6 @@ impl store::ArtifactPack for JackConfig {
 impl Default for JackConfig {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
             camera: Camera::default(),
             active_fixture_id: String::new(),
             jack_query: String::new(),
@@ -137,8 +135,6 @@ pub enum JackConfigMutation {
         #[dsl(block)]
         config: JackConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { node_ids: Vec<String> },
     #[dsl(key = "camera")]
     SetCamera {
         #[dsl(block)]
@@ -250,7 +246,6 @@ impl protocol::Mutation<JackConfig> for JackConfigMutation {
         let mut next = base.clone();
         match self {
             JackConfigMutation::Snapshot { config } => return config.clone(),
-            JackConfigMutation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
             JackConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             JackConfigMutation::SetActiveFixture { value } => next.active_fixture_id = value.clone(),
             JackConfigMutation::SetQuery { value } => next.jack_query = value.clone(),
@@ -281,9 +276,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn jack_config_default_has_empty_selection_and_default_locale() {
+    fn jack_config_default_has_default_locale() {
         let config = JackConfig::default();
-        assert!(config.selected_node_ids.is_empty());
         assert_eq!(config.locale, "en-US");
         assert_eq!(config.camera, Camera::default());
     }
@@ -291,7 +285,6 @@ mod tests {
     #[test]
     fn jack_config_dsl_round_trips() {
         let mut config = JackConfig {
-            selected_node_ids: vec!["n1".into(), "n2".into()],
             jack_query: "MATCH (a:Piece) RETURN a".into(),
             editor_selection: Some(JackEditorSelection { start: 3, end: 9 }),
             ..JackConfig::default()
@@ -304,9 +297,9 @@ mod tests {
     #[test]
     fn jack_config_operation_backwards_restores_prior_snapshot() {
         let base = JackConfig::default();
-        let operation = JackConfigMutation::SetSelection { node_ids: vec!["n1".into()] };
+        let operation = JackConfigMutation::SetActiveFixture { value: "nakagin".into() };
         let next = operation.diff(&base);
-        assert_eq!(next.selected_node_ids, vec!["n1".to_string()]);
+        assert_eq!(next.active_fixture_id, "nakagin".to_string());
         let backwards = operation.inverse(&base);
         let restored = backwards[0].diff(&next);
         assert_eq!(restored, base);
@@ -315,7 +308,7 @@ mod tests {
     #[test]
     fn jack_config_operation_text_round_trips() {
         ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() });
-        ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetActiveFixture { value: "nakagin".into() });
     }
 }
 //#endregion 🧪️Tests

@@ -18,8 +18,6 @@ export interface JackArtifact {
   /** @state artifact */
   rootNodeId?: string;
   /** @state presence */
-  selectedNodeIds: string[];
-  /** @state presence */
   activeFixtureId: string;
   /** @state presence */
   jackQuery: string;

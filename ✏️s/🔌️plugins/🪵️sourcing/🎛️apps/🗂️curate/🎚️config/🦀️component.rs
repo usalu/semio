@@ -1,10 +1,13 @@
 //! 🧮️ Sourcing curate app — view state (`SourcingCurateConfig`) and its operation enum
 //! (`SourcingCurateConfigMutation`).
 //!
-//! This is APP state, not document state: `filters` (search/sort) and the selected-object runtime
-//! pointer used to live on `CurateSnapshot` itself (`Filters`/`CurateRuntime`) but are session-only view
-//! state, not VCS'd content — both moved here so they round-trip through their own real `ArtifactStore`
-//! (with a real `backwards`) instead of polluting the VCS'd document. `locale` is the config-derived
+//! This is APP state, not document state: `filters` (search/sort) used to live on `CurateSnapshot`
+//! itself (`Filters`/`CurateRuntime`) but is session-only view state, not VCS'd content — moved here so
+//! it round-trips through its own real `ArtifactStore` (with a real `backwards`) instead of polluting
+//! the VCS'd document. The former `selected_object_id` field/`SetSelectedObject` mutation dissolved
+//! into the framework-owned "rows" interaction domain (ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `SourcingCurateApp::create_sourcing_curate_app`'s
+//! `.interaction(...)` declaration. `locale` is the config-derived
 //! counterpart to a host-pushed `ViewModel.locale` — `ArtifactApp::render`/`handle` no longer receive a
 //! `ViewModel` at all, so locale-aware label resolution reads it off here (see
 //! `crate::apps::curate::terminology::sourcing_curate_labels`).
@@ -23,8 +26,6 @@ pub struct SourcingCurateConfig {
     /// 🔍️ The pool table's active filter/search/sort state.
     #[dsl(block)]
     pub filters: Filters,
-    /// 👁️ The single object selected for the preview/grid windows.
-    pub selected_object_id: Option<String>,
     /// 🗣️ BCP-47 locale tag.
     pub locale: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `sourcing.module` hot-swap installs.
@@ -101,28 +102,16 @@ fn default_contributions_json() -> String {
 
 impl Default for SourcingCurateConfig {
     fn default() -> Self {
-        Self { filters: Filters::default(), selected_object_id: None, locale: "en-US".into(), contributions_json: default_contributions_json() }
+        Self { filters: Filters::default(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
 
 store::impl_whole_record_config!(SourcingCurateConfig);
-
-/// 👁️ The single selected object, as a 0-or-1 id list — the shape `world3d_selection_json` wants.
-/// Shared by the grid window's selection highlighting.
-pub fn selected_ids(cfg: &SourcingCurateConfig) -> Vec<String> {
-    cfg.selected_object_id.clone().into_iter().collect()
-}
-
-/// 👁️ `selected_ids` wrapped as the `{"selectedIds": […]}` JSON the table scenes' `selection_json`
-/// slot wants. Shared by the pool and curated windows.
-pub fn selection_json_for(cfg: &SourcingCurateConfig) -> String {
-    serde_json::json!({ "selectedIds": selected_ids(cfg) }).to_string()
-}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
 /// 🧮️ [`SourcingCurateConfig`]'s operation enum — one variant per settled interaction (search query,
-/// module/typology/availability filters, sort, selection, locale), plus a generic `Snapshot` every
+/// module/typology/availability filters, sort, locale), plus a generic `Snapshot` every
 /// variant's `backwards()` returns. Since a config-only dispatch is a plain `Apply` (never an
 /// `AmendLast`), each tick is its own distinct, real config edit, and "undo this tick" is exactly
 /// "restore the whole-config snapshot from just before it" — no per-field reverse-patch bookkeeping
@@ -149,8 +138,6 @@ pub enum SourcingCurateConfigMutation {
         #[dsl(block)]
         sort: Option<TableSort>,
     },
-    #[dsl(key = "selected-object")]
-    SetSelectedObject { object_id: Option<String> },
     #[dsl(key = "locale")]
     SetLocale { value: String },
     #[dsl(key = "contributions")]
@@ -241,7 +228,6 @@ impl Mutation<SourcingCurateConfig> for SourcingCurateConfigMutation {
             SourcingCurateConfigMutation::SetFilterTypology { path } => next.filters.typology_path = path.clone(),
             SourcingCurateConfigMutation::SetFilterMinAvailability { value } => next.filters.min_availability = *value,
             SourcingCurateConfigMutation::SetSort { sort } => next.filters.sort = sort.clone(),
-            SourcingCurateConfigMutation::SetSelectedObject { object_id } => next.selected_object_id = object_id.clone(),
             SourcingCurateConfigMutation::SetLocale { value } => next.locale = value.clone(),
             SourcingCurateConfigMutation::SetContributions { json } => {
                 next.contributions_json = json.clone();
@@ -267,7 +253,6 @@ mod tests {
     fn sourcing_curate_config_default_matches_the_prior_document_defaults() {
         let config = SourcingCurateConfig::default();
         assert_eq!(config.filters, Filters::default());
-        assert_eq!(config.selected_object_id, None);
         assert_eq!(config.locale, "en-US");
     }
 
@@ -280,7 +265,6 @@ mod tests {
                 min_availability: 5,
                 sort: Some(TableSort { column_id: "availability".into(), direction: SortDirection::Desc }),
             },
-            selected_object_id: Some("beam-glulam-gl24h".into()),
             locale: "de-DE".into(),
             contributions_json: "[]".into(),
         }
@@ -306,7 +290,6 @@ mod tests {
         round_trip(&config, &SourcingCurateConfigMutation::SetFilterTypology { path: vec!["slabs".into()] });
         round_trip(&config, &SourcingCurateConfigMutation::SetFilterMinAvailability { value: 12 });
         round_trip(&config, &SourcingCurateConfigMutation::SetSort { sort: None });
-        round_trip(&config, &SourcingCurateConfigMutation::SetSelectedObject { object_id: None });
         round_trip(&config, &SourcingCurateConfigMutation::SetLocale { value: "en-US".into() });
         round_trip(&config, &SourcingCurateConfigMutation::SetContributions { json: "[]".into() });
         let snapshot = round_trip(&config, &SourcingCurateConfigMutation::Snapshot { config: SourcingCurateConfig::default() });
@@ -322,8 +305,6 @@ mod tests {
         store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterMinAvailability { value: 7 });
         store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSort { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) });
         store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSort { sort: None });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSelectedObject { object_id: Some("beam-glulam-gl24h".into()) });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetSelectedObject { object_id: None });
         store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }

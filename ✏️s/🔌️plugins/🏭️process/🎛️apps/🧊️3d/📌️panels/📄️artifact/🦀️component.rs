@@ -1,11 +1,11 @@
 //! 📄️ Process 3d play app panel — the document tree: stock + ordered process steps.
 
-use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::{process3d_measure_icon, Process3dLabels};
+use crate::apps::process3d::PROCESS3D_INTERACTION_DOMAIN;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_plugin::{
-    Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use serde_json::json;
 
@@ -30,14 +30,14 @@ pub fn definition() -> PanelTabDefinition {
 /// `s.stdio.semio.flow` CHILD HANDLE now, with no resolvable content without a `LinkResolver` (see
 /// `ProcessWorkingScene`'s doc comment) — the steps section renders empty, a documented gap
 /// matching `📐️cad`'s own per-pane panels.
-pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
-    let stock_item = UiTreeItemNode {
-        icon_id: Some("box".into()),
-        presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(fixture.stock_id.as_str())),
-        action: Some(process3d_action("setSelection", Some(json!({ "id": fixture.stock_id })))),
-        menu: None,
-        ..UiTreeItemNode::base(fixture.stock_id.clone(), Label::data(fixture.stock_label.clone()))
-    };
+///
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): item ids (`fixture.stock_id`, each
+/// step id) are the SAME canonical targets the framework-owned `"geometry"` interaction domain
+/// selects — the tree binds `.interaction_domain` and stamps no `.selected()`/`.highlighted()`
+/// itself; the framework's post-render pass overwrites item presence from live selection/hover, and
+/// clicks translate into `interactionSelect` generically (mirrors `🧱️block`'s `📌️panels/📄️artifact`).
+pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
+    let stock_item = UiTreeItemNode { icon_id: Some("box".into()), menu: None, ..UiTreeItemNode::base(fixture.stock_id.clone(), Label::data(fixture.stock_label.clone())) };
     let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
     let cursor = fixture.resolved_up_to.unwrap_or(scene.steps.len());
     let step_items: Vec<UiTreeItemNode> = scene
@@ -47,10 +47,6 @@ pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Proce
         .map(|(index, step)| UiTreeItemNode {
             description: if index >= cursor { Some("pending".into()) } else { None },
             icon_id: Some(process3d_measure_icon(&step.measure).into()),
-            presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(step.id.as_str())),
-            action: Some(process3d_action("setSelection", Some(json!({ "id": step.id })))),
-            hover_action: Some(process3d_action("setHover", Some(json!({ "id": step.id })))),
-            unhover_action: Some(process3d_action("setHover", None)),
             actions: Some(vec![
                 UiTreeItemAction {
                     icon_id: if step.enabled { "eye".into() } else { "eye-off".into() },
@@ -65,7 +61,11 @@ pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Proce
             ..UiTreeItemNode::base(step.id.clone(), Label::data(step.label.clone()))
         })
         .collect();
-    PanelTreeBuilder::new("process3d-play-document").section("process3d-play-document.stock", Some(labels.stock.into()), true, vec![stock_item]).section("process3d-play-document.steps", Some(labels.steps.into()), true, step_items).build()
+    PanelTreeBuilder::new("process3d-play-document")
+        .section("process3d-play-document.stock", Some(labels.stock.into()), true, vec![stock_item])
+        .section("process3d-play-document.steps", Some(labels.steps.into()), true, step_items)
+        .interaction_domain(PROCESS3D_INTERACTION_DOMAIN)
+        .build()
 }
 //#endregion 🔖️Render
 

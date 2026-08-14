@@ -1,6 +1,9 @@
 //! 👥️ Procedural3dPresence — shareable live ephemeral state + mutations.
 //!
-//! Shareable live subset of the 3d procedural surface: selection, hover, cameras, utility, show-mode.
+//! Shareable live subset of the 3d procedural surface: cameras, utility, show-mode. Selection/hover
+//! broadcast automatically via the framework's typed `PresenceInteraction` (ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_procedural3d_app`'s
+//! `.interaction(...)` declaration.
 
 use flow::CameraJson;
 use protocol::Mutation;
@@ -16,18 +19,12 @@ use crate::apps::procedural3d::config::Procedural3dPreviewCamera;
 #[dsl(extension = "procedural3d.presence")]
 #[dsl(layout = "lines")]
 pub struct Procedural3dPresence {
-    /// 👁️ Selected flow-graph widget ids.
-    pub selected_node_ids: Vec<String>,
-    /// 👁️ Hovered flow-graph widget id.
-    pub hovered_node_id: Option<String>,
     /// 📷️ The flow-graph node canvas camera.
     #[dsl(block)]
     pub camera: CameraJson,
     /// 📷️ The 3D preview viewport camera.
     #[dsl(block)]
     pub preview_camera: Procedural3dPreviewCamera,
-    /// 🖱️ Marquee selection method.
-    pub selection_method: String,
     /// 🧰 Active utility id.
     pub active_utility_id: String,
     /// 👁️ Preview shading mode.
@@ -37,11 +34,8 @@ pub struct Procedural3dPresence {
 impl Default for Procedural3dPresence {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
-            hovered_node_id: None,
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             preview_camera: Procedural3dPreviewCamera::default(),
-            selection_method: "rectangle".into(),
             active_utility_id: String::new(),
             show_mode: "shaded".into(),
         }

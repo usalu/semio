@@ -1,6 +1,6 @@
 //! 🏊️ Sourcing curate app — the pool window: the full stock catalogue with filter chrome + drag source.
 
-use crate::apps::curate::config::{selection_json_for, SourcingCurateConfig};
+use crate::apps::curate::config::SourcingCurateConfig;
 use crate::apps::curate::terminology::SourcingLabels;
 use crate::apps::curate::{sourcing_action, SOURCING_CONTROLLER_ID, SOURCING_DRAG_MIME};
 use crate::artifacts::curate::schema::{available_modules, curated_count, typology_flatten, ModuleCatalogue};
@@ -26,6 +26,7 @@ pub fn definition() -> WindowKindDefinition {
         icon_id: "library".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
+        interactions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -137,7 +138,9 @@ fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig, label
         })
         .collect();
     let mut scene = TableScene::base(pool_columns_json(labels), serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()));
-    scene.selection_json = Some(selection_json_for(cfg));
+    // 🕹️ Row selection is the framework-owned "rows" interaction domain now (ticket
+    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactApp::render` carries no
+    // `InteractionView`, so `scene.selection_json` stays at its default (unset) here.
     scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
     scene.drop_action = Some(sourcing_action("dropOnPool", None));
     scene.sort_json = cfg.filters.sort.as_ref().and_then(|sort| serde_json::to_string(sort).ok());

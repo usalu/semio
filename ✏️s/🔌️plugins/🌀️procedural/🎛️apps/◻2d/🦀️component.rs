@@ -9,8 +9,8 @@
 
 use crate::apps::procedural2d::commands::{
     add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_tick, move_media_node,
-    node_graph_edit, node_graph_hover, node_graph_select, node_graph_viewport, remove_generation, remove_widget, rename_generation, reorganize, select_generation, select_node,
-    set_eval_outputs, set_locale, set_selection, set_show_mode, update_generation_values,
+    node_graph_edit, node_graph_viewport, remove_generation, remove_widget, rename_generation, reorganize, select_generation, set_eval_outputs, set_locale, set_show_mode,
+    update_generation_values,
 };
 use crate::apps::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::apps::procedural2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -21,7 +21,11 @@ use crate::apps::procedural2d::terminology::{procedural2d_labels, Procedural2dLa
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::{artifact_kind, Procedural2dSnapshot, PROCEDURAL_2D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, UiNode};
+use semio_framework_plugin::{
+    app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView,
+    DomainTopology, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
+    MediaClass, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+};
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -86,10 +90,6 @@ semio_framework_plugin::app_commands! {
         "renameGeneration" as "rename-generation" => rename_generation::RenameGeneration,
         "updateGenerationValues" as "update-generation-values" => update_generation_values::UpdateGenerationValues,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "selectNode" as "select-node" => select_node::SelectNode,
-        "nodeGraphSelect" as "node-graph-select" => node_graph_select::NodeGraphSelect,
-        "nodeGraphHover" as "node-graph-hover" => node_graph_hover::NodeGraphHover,
         "setShowMode" as "set-show-mode" => set_show_mode::SetShowMode,
         "generate" as "generate" => enter_generate::Generate,
         "setEvalOutputs" as "set-eval-outputs" => set_eval_outputs::SetEvalOutputs,
@@ -149,7 +149,6 @@ impl ArtifactApp for Procedural2dPlayApp {
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
-        let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         match action {
             "nodeGraphEdit" => Ok(Procedural2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
@@ -186,10 +185,6 @@ impl ArtifactApp for Procedural2dPlayApp {
                     .unwrap_or_else(|| "{}".into());
                 Ok(Procedural2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json }))
             }
-            "setSelection" => Ok(Procedural2dCommand::SetSelection(set_selection::SetSelection { ids: string_list("ids") })),
-            "selectNode" => Ok(Procedural2dCommand::SelectNode(select_node::SelectNode { ids: string_list("ids") })),
-            "nodeGraphSelect" => Ok(Procedural2dCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { ids: string_list("ids") })),
-            "nodeGraphHover" => Ok(Procedural2dCommand::NodeGraphHover(node_graph_hover::NodeGraphHover {})),
             "setShowMode" => Ok(Procedural2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
             "generate" => Ok(Procedural2dCommand::Generate(enter_generate::Generate {})),
             "setEvalOutputs" => Ok(Procedural2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs {
@@ -207,8 +202,48 @@ impl ArtifactApp for Procedural2dPlayApp {
             )))}
     }
 
-    fn handle(command: &Procedural2dCommand, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
-        with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
+    /// 🕹️ `nodeGraphEdit` reads the `graph` interaction domain directly (bypassing the
+    /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg, ctx)`
+    /// signature is framework-fixed and has no `interaction` slot) — ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+    fn handle(command: &Procedural2dCommand, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
+        with_process_flow_eval_session(|session| match command {
+            Procedural2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
+            _ => command.dispatch(doc, cfg, session),
+        })
+    }
+
+    /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every top-level widget is a "node" (root unless
+    /// nested in a `Widget::Cluster`'s own `tree.neurons`, where each nested `Neuron` becomes a "node"
+    /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
+    /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
+    /// "edge" targets, parented to nothing (edges are leaves, not containers).
+    fn interaction_topology(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> InteractionTopology {
+        fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
+            ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
+            if let Some(tree) = &neuron.tree {
+                for child in &tree.neurons {
+                    walk_neuron(child, neuron.id.clone(), ordered);
+                }
+            }
+        }
+        let fixture = &doc.snapshot.fixture;
+        let mut ordered = Vec::new();
+        for widget in &fixture.widgets {
+            let id = crate::artifacts::procedural2d::widget_id(widget).to_string();
+            ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
+            if let flow::Widget::Cluster { tree, .. } = widget {
+                for child in &tree.neurons {
+                    walk_neuron(child, id.clone(), &mut ordered);
+                }
+            }
+        }
+        for synapse in &fixture.synapses {
+            ordered.push(TopologyNode { id: synapse.id.clone(), granularity: "edge".into(), parent: None });
+        }
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert("graph".to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
@@ -244,13 +279,17 @@ impl ArtifactApp for Procedural2dPlayApp {
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
     /// toggle, generation authoring, and generation selection each fold into their own taxonomy group;
     /// the delete-selection item stays a direct destructive item last.
+    ///
+    /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render` — see ticket
+    /// 26/08/14's w3b-summary.md), so the selection-dependent delete row below always takes the
+    /// "nothing selected" branch rather than reading a stale/wrong selection.
     fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<Procedural2dLabels>(&config.locale);
         let is_de = config.locale.starts_with("de");
-        let selected = config.selected_ids.clone();
+        let selected: Vec<String> = Vec::new();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate").group("mode", |m| m.action("setShowMode")).group("create", |m| m.action("addGeneration")).group("methods", |m| m.action("selectGeneration"));
         if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
@@ -335,12 +374,10 @@ pub fn create_procedural2d_app() -> App {
             .mutation("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"))
             .mutation("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"))
             .mutation("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"))
-            // 👁️ Ephemeral view actions — selection, hover, camera, the show-mode display toggle, and evaluation scratch (emit no operations).
+            // 👁️ Ephemeral view actions — camera, the show-mode display toggle, and evaluation scratch
+            // (emit no operations). Selection/hover are the framework's `graph` interaction domain now
+            // (`.interaction(...)` below) — the six framework verbs auto-inject.
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .view_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"))
-            .view_action("nodeGraphSelect", LocalizedLabel::native("Node Graph Select", "Graph-Auswahl"))
-            .view_action("nodeGraphHover", LocalizedLabel::native("Node Graph Hover", "Graph-Hover"))
             .action_with(ActionDefinition::new_catalog("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View).with_category("mode"))
             .action_with(ActionDefinition::new_catalog("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View).with_category("actions"))
             .view_action("setEvalOutputs", LocalizedLabel::native("Set Eval Outputs", "Auswertungsausgaben festlegen"))
@@ -359,6 +396,32 @@ pub fn create_procedural2d_app() -> App {
                     ActionArgOption::new("outputExport", LocalizedLabel::native("Export", "Export")),
                 ]).default_value("inputSlider"),
             ])
+            // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+            // one domain over the flow-graph widget DAG, node/edge/handle granularities,
+            // `HierarchyProvider::Topology` (see `Procedural2dPlayApp::interaction_topology` below) —
+            // transitive hover is the headline feature: hovering a Cluster group node highlights every
+            // widget nested in its tree.
+            .interaction(InteractionDefinition {
+                id: "graph".into(),
+                label: LocalizedLabel::native("Graph", "Graph"),
+                granularities: vec![
+                    GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() },
+                    GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+                    GranularityDefinition { id: "handle".into(), label: LocalizedLabel::native("Handle", "Griff"), icon_id: "move".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(flow_window::PROCEDURAL2D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("graph")])
+            .window_kind_interactions(edit_preview::PROCEDURAL2D_PLAY_WINDOW_PREVIEW, vec![InteractionRef::new("graph")])
+            .window_kind_interactions(generate_preview::PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW, vec![InteractionRef::new("graph")])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .config(Procedural2dPlayApp::config_spec())
@@ -417,7 +480,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 25, "every Procedural2dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 21, "every Procedural2dCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -445,10 +508,6 @@ mod tests {
             "rename-generation",
             "update-generation-values",
             "node-graph-viewport",
-            "set-selection",
-            "select-node",
-            "node-graph-select",
-            "node-graph-hover",
             "set-show-mode",
             "generate",
             "set-eval-outputs",
@@ -482,10 +541,6 @@ mod tests {
             Procedural2dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
             Procedural2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::Number(5.0) }),
             Procedural2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: "{}".into() }),
-            Procedural2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["n1".into()] }),
-            Procedural2dCommand::SelectNode(select_node::SelectNode { ids: vec!["n1".into()] }),
-            Procedural2dCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { ids: vec!["n1".into(), "n2".into()] }),
-            Procedural2dCommand::NodeGraphHover(node_graph_hover::NodeGraphHover {}),
             Procedural2dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wire".into() }),
             Procedural2dCommand::Generate(enter_generate::Generate {}),
             Procedural2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: "{}".into() }),
@@ -563,15 +618,19 @@ mod tests {
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️ContextMenuTests
+    /// 🕹️ `context_menu` no longer has anything to dispatch a selection command WITH (`setSelection`
+    /// is deleted — selection is the framework's `graph` interaction domain now) and `context_menu`
+    /// itself carries no `InteractionView` to read it back even if it did (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, same discovered gap as `render`), so the
+    /// destructive `delete-selection` row — conditioned on a real selection — never appears; this test
+    /// now only pins the disclosure budget.
     #[test]
-    fn context_menu_stays_within_disclosure_budget_with_destructive_last() {
+    fn context_menu_stays_within_disclosure_budget() {
         let mut app = app_with_registry();
-        dispatch(&mut app, Procedural2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["rect".into()] }));
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let items = app.context_menu(&request);
         assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
-        assert_eq!(items.last().map(|item| item.id.as_str()), Some("delete-selection"), "the destructive delete row must be last");
-        assert_eq!(items.last().and_then(|item| item.destructive), Some(true));
+        assert!(items.iter().all(|item| item.id != "delete-selection"), "no interaction data at context_menu time means delete-selection cannot appear");
     }
     //#endregion 🔖️ContextMenuTests
 

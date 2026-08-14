@@ -6,8 +6,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster.config")]
 pub struct RasterConfig {
-    #[state(config)] pub selected_ids: Vec<String>,
-    #[state(config)] pub hovered_id: Option<String>,
     #[state(config)] pub brush_size: f64,
     #[state(config)] pub brush_opacity: f64,
     #[state(config)] pub composite_viewport: Option<RasterConfigViewportSize>,

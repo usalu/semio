@@ -12,12 +12,10 @@
     "activeShotId",
     "activeAssetId",
     "selectedShotIds",
-    "selectedAssetIds",
     "activeUtilityId",
     "defaultShotFormat",
     "defaultShotShape",
     "defaultAssetFormat",
-    "selectionMethod",
     "centerModel",
     "fitRevision",
     "cameraDraftLabel",
@@ -69,13 +67,6 @@
       },
       "x-semio-state": "presence"
     },
-    "selectedAssetIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
     "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
@@ -89,10 +80,6 @@
       "x-semio-state": "config"
     },
     "defaultAssetFormat": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
       "type": "string",
       "x-semio-state": "config"
     },
@@ -117,10 +104,6 @@
     "locale": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "hoveredAssetId": {
-      "type": "string",
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {

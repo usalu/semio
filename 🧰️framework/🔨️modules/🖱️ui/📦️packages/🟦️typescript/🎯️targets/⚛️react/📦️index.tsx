@@ -107,6 +107,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { useHotkeys } from "react-hotkeys-hook";
 import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
+// 🕹️wave-0: imported directly from the module's own source (not via `@semio-tech/framework`) — the
+// `🛂️manifest` module already re-exports a same-named, ts-rs-generated `MergeMode`/`SelectionMode`
+// family through that barrel, so a second barrel export of the hand-written mirror would collide.
+import { type MergeMode } from "../../../../../🕹️interaction/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 // #region 🔌️Ports
@@ -731,8 +735,6 @@ export function SelectionMarquee(props: SelectionMarqueeProps): React.ReactEleme
   );
 }
 
-export type SelectionMergeMode = "default" | "additive" | "subtractive" | "invertive";
-
 export const SELECTION_DRAG_DIRECTION_THRESHOLD_PX = 2;
 
 export type SelectionMarqueeMethod = "lasso" | "rectangle";
@@ -775,14 +777,18 @@ export function marqueeCoverageFromGesture(input: { readonly method: SelectionMa
   return marqueeCoverageFromDrag(input.startX, input.endX);
 }
 
-/** @emoji 🎯️ Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive). `persistentMode`
- * — a shell's own {@link SelectionModeStore} value, e.g. `useShellScope().selection.get()` — takes
- * precedence when set to something other than "default", mirroring the toolbar toggle in
- * `SelectionUtilityOptions`; omitted, behaves as if the toolbar is at its "default" setting (was: read a
+/** @emoji 🎯️ Maps shift/ctrl modifiers to a marquee-drag `MergeMode` (ctrl+shift → invertive).
+ * `persistentMode` — a shell's own {@link SelectionModeStore} value, e.g. `useShellScope().selection.get()`
+ * — takes precedence when set to something other than `"replace"`, mirroring the toolbar toggle in
+ * `SelectionUtilityOptions`; omitted, behaves as if the toolbar is at its `"replace"` setting (was: read a
  * page-global `(globalThis).__selectionMode`, so one shell's toolbar choice silently applied to every
- * other mounted shell's marquee gestures too). */
-export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }, persistentMode?: SelectionMergeMode): SelectionMergeMode {
-  if (persistentMode && persistentMode !== "default") {
+ * other mounted shell's marquee gestures too). ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM
+ * W3a: unified onto the `🕹️interaction` module's `MergeMode` (was a bespoke `SelectionMergeMode` union
+ * with `"default"` instead of `"replace"`) — never produces `"range"`, since a marquee drag has no
+ * ordered/anchored topology to range over (unlike `interactionMergeFromModifiers`'s click-select shift
+ * mapping below). */
+export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }, persistentMode?: MergeMode): MergeMode {
+  if (persistentMode && persistentMode !== "replace") {
     return persistentMode;
   }
   const shift = modifiers.shiftKey === true;
@@ -790,14 +796,15 @@ export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolea
   if (shift && ctrl) return "invertive";
   if (shift) return "additive";
   if (ctrl) return "subtractive";
-  return "default";
+  return "replace";
 }
 
-/** @emoji 🎯️ Applies selection mode when committing ids. */
-export function selectionMergeIds(mode: SelectionMergeMode, current: readonly string[], incoming: readonly string[]): string[] {
+/** @emoji 🎯️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
+ * an ordered topology here (see `marqueeModeFromModifiers`'s doc), so it falls back to `"replace"`. */
+export function selectionMergeIds(mode: MergeMode, current: readonly string[], incoming: readonly string[]): string[] {
   const currentSet = new Set(current);
   const incomingSet = new Set(incoming);
-  if (mode === "default") return [...incomingSet];
+  if (mode === "replace" || mode === "range") return [...incomingSet];
   if (mode === "additive") {
     for (const id of incomingSet) currentSet.add(id);
     return [...currentSet];
@@ -811,6 +818,25 @@ export function selectionMergeIds(mode: SelectionMergeMode, current: readonly st
     else currentSet.add(id);
   }
   return [...currentSet];
+}
+
+/**
+ * 🎯️ The ONE modifier→merge policy for `🕹️interaction`'s `nextSelection`/`nextHover` picks — every
+ * surface (Tree rows, the Shell, canvas/world hosts) routes its raw pointer/keyboard modifiers through
+ * this single mapping instead of hand-rolling shift/ctrl/alt checks per surface: shift → `"range"`,
+ * mod/ctrl/cmd → `"invertive"`, alt → `"subtractive"`, no modifier → `"replace"`. Priority is shift, then
+ * ctrl/meta, then alt — a chord that holds more than one of these picks the first that matches, so shift
+ * always wins a range pick even with ctrl also held. Shares its `MergeMode` vocabulary with
+ * `marqueeModeFromModifiers` above (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a
+ * collapsed the old, differently-prioritized `SelectionMergeMode` duplicate into this one) — the two
+ * functions differ only in priority/never-range, matching their different gestures (marquee drag vs.
+ * click-select).
+ */
+export function interactionMergeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean; readonly altKey?: boolean }): MergeMode {
+  if (modifiers.shiftKey === true) return "range";
+  if (modifiers.ctrlKey === true || modifiers.metaKey === true) return "invertive";
+  if (modifiers.altKey === true) return "subtractive";
+  return "replace";
 }
 
 export type ScreenRect = { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
@@ -17666,6 +17692,54 @@ if (treeVitest) {
           rangeKey: false,
         }),
       ).toEqual({ selectedIds: ["a", "c"], anchorId: "c" });
+    });
+
+    // 🕹️wave-2b: `getTreeNextSelectionState`/`normalizeTreeSelectedIds` now delegate to `🕹️interaction`'s
+    // `nextSelection`/`validateState` (wave 0) — these extend the same two `it` blocks above rather than
+    // adding new files, asserting the delegation preserves exact prior behavior for single mode (LAST
+    // target wins, ignores modifiers), additive toggle-off, and `normalizeTreeSelectedIds`'s FIRST-id
+    // clamp for externally-supplied ids (the two deliberately different clamps — see the functions' docs).
+    it("single-selection-mode picks ignore additive/range keys, keeping the LAST target (nextSelection delegation)", () => {
+      expect(
+        getTreeNextSelectionState({
+          selectionMode: "single",
+          selectedIds: ["a"],
+          orderedIds: ["a", "b", "c", "d"],
+          targetId: "c",
+          anchorId: "a",
+          additiveKey: true,
+          rangeKey: true,
+        }),
+      ).toEqual({ selectedIds: ["c"], anchorId: "c" });
+    });
+
+    it("additive key toggles an already-selected id back off (nextSelection invertive delegation)", () => {
+      expect(
+        getTreeNextSelectionState({
+          selectionMode: "multiple",
+          selectedIds: ["a", "c"],
+          orderedIds: ["a", "b", "c", "d"],
+          targetId: "c",
+          anchorId: "c",
+          additiveKey: true,
+          rangeKey: false,
+        }),
+      ).toEqual({ selectedIds: ["a"], anchorId: "c" });
+    });
+
+    it("normalizeTreeSelectedIds clamps to the FIRST id in single mode (validateState delegation, distinct from the picks above's LAST-target clamp)", () => {
+      expect(normalizeTreeSelectedIds(["c", "a", "c", "", "b"], "single")).toEqual(["c"]);
+      expect(normalizeTreeSelectedIds(["c", "a", "c", "", "b"], "multiple")).toEqual(["c", "a", "b"]);
+    });
+
+    it("interactionMergeFromModifiers: shift wins Range even with ctrl/meta also held; alt is Subtractive; no modifier is Replace", () => {
+      expect(interactionMergeFromModifiers({})).toBe("replace");
+      expect(interactionMergeFromModifiers({ shiftKey: true })).toBe("range");
+      expect(interactionMergeFromModifiers({ ctrlKey: true })).toBe("invertive");
+      expect(interactionMergeFromModifiers({ metaKey: true })).toBe("invertive");
+      expect(interactionMergeFromModifiers({ altKey: true })).toBe("subtractive");
+      expect(interactionMergeFromModifiers({ shiftKey: true, ctrlKey: true })).toBe("range");
+      expect(interactionMergeFromModifiers({ ctrlKey: true, altKey: true })).toBe("invertive");
     });
 
     it("orders nested tree items across sections", () => {

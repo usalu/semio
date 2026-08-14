@@ -33,17 +33,12 @@ pub struct GisMapArtifact {
     #[child(kind = "s.stdio.semio.image")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(presence)] pub feature_selection_json: String,
     #[state(presence)] pub layer_visibility: BTreeMap<String, bool>,
     #[state(presence)] pub layer_stroke_scale: BTreeMap<String, f64>,
     #[state(config)] pub camera_json: String,
     #[state(config)] pub render_mode: String,
     #[state(config)] pub vector_style: String,
     #[state(config)] pub lod_mode: String,
-    #[state(config)] pub hover_json: String,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub selection_mode: String,
     #[state(config)] pub locale: String,
 }
 //#endregion 🔹Artifact
@@ -56,17 +51,12 @@ impl Default for GisMapArtifact {
             routes: Vec::new(),
             regions: Vec::new(),
             image: None,
-            selected_ids: Vec::new(),
-            feature_selection_json: r#"{"positions":[],"routes":[]}"#.into(),
             layer_visibility: BTreeMap::new(),
             layer_stroke_scale: BTreeMap::new(),
             camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into(),
             render_mode: "combined".into(),
             vector_style: "colored".into(),
             lod_mode: "automatic".into(),
-            hover_json: "null".into(),
-            selection_method: "rectangle".into(),
-            selection_mode: "default".into(),
             locale: "en-US".into(),
         }
     }

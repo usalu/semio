@@ -70,13 +70,21 @@ pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
             stroke: None,
         },
     };
-    Ok(Emit { artifact_mutations: vec![LayoutMutation::CreateFrame(CreateFrame { page_id, frame, index: Some(index), layer_id: Some(layer_id) })], config_mutations: vec![LayoutConfigMutation::SetSelection { ids: vec![frame_id] }], ..Default::default() })
+    // 🕹️ Used to also `SetSelection { ids: vec![frame_id] }`; selecting the just-created frame is
+    // framework-owned now — ask the host to redispatch `interactionSelect` instead (ticket
+    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    Ok(Emit {
+        artifact_mutations: vec![LayoutMutation::CreateFrame(CreateFrame { page_id, frame, index: Some(index), layer_id: Some(layer_id) })],
+        effects: vec![crate::apps::layout::layout_select_effect(std::slice::from_ref(&frame_id), "replace")],
+        ..Default::default()
+    })
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::layout::commands::{patch_frame, patch_page};
     use crate::apps::layout::testkit::{dispatch, layout_app};
     use crate::apps::layout::LayoutCommand;
 

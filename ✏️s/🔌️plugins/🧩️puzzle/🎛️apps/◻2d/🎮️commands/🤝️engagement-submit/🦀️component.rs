@@ -25,21 +25,9 @@ pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
             ctx.effects.push(HostEffect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
             true
         }
-        "clear" => {
-            ctx.scene.runtime.selected_ids.clear();
-            ctx.host.borrow_mut().set_selection_ids(&[]);
-            true
-        }
-        "rectangle" => {
-            ctx.scene.runtime.selection_method = "rectangle".into();
-            ctx.host.borrow_mut().set_selection_options("rectangle", "replace", true, true, true);
-            true
-        }
-        "lasso" => {
-            ctx.scene.runtime.selection_method = "lasso".into();
-            ctx.host.borrow_mut().set_selection_options("lasso", "replace", true, true, true);
-            true
-        }
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: "clear"/"rectangle"/"lasso"
+        // dropped — selection/method are framework-owned now (`clearSelection`/`interactionSelect`'s
+        // `method` arg), unreachable from this app-level typed-command box.
         _ => false,
     };
     if applied && PUZZLE2D_PANES.contains(&pane.as_str()) {

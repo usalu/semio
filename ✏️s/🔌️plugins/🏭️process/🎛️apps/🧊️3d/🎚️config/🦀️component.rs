@@ -25,14 +25,6 @@ pub const PROCESS3D_DEFAULT_UTILITY: &str = "select";
 #[dsl(id = "process3d.config")]
 #[dsl(layout = "lines")]
 pub struct Process3dConfig {
-    /// 👁️ Was `Process3dRuntime::selected_id`.
-    pub selected_id: Option<String>,
-    /// 👁️ Was `Process3dRuntime::hovered_id`.
-    pub hovered_id: Option<String>,
-    /// 🖱️ Was `Process3dRuntime::selected_face_id`.
-    pub selected_face_id: Option<u32>,
-    /// 👁️ Was `Process3dRuntime::selection_method`.
-    pub selection_method: String,
     /// 👁️ Was `Process3dRuntime::engagement_input`.
     pub engagement_input: String,
     /// 🎥️ Was `Process3dRuntime::camera` (`Process3dCamera`), flattened.
@@ -126,10 +118,6 @@ fn default_contributions_json() -> String {
 impl Default for Process3dConfig {
     fn default() -> Self {
         Self {
-            selected_id: None,
-            hovered_id: None,
-            selected_face_id: None,
-            selection_method: "rectangle".into(),
             engagement_input: String::new(),
             camera_position: [3.0, -3.0, 2.0],
             camera_target: [0.0, 0.0, 0.0],
@@ -168,12 +156,6 @@ store::impl_whole_record_config!(Process3dConfig);
 /// this ticket's ban on whole-record replace, rather than a generic whole-config snapshot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Process3dConfigMutation {
-    #[dsl(key = "selected-id")]
-    SetSelectedId { value: Option<String> },
-    #[dsl(key = "hovered-id")]
-    SetHoveredId { value: Option<String> },
-    #[dsl(key = "selected-face-id")]
-    SetSelectedFaceId { value: Option<u32> },
     #[dsl(key = "engagement-input")]
     SetEngagementInput { value: String },
     #[dsl(key = "camera")]
@@ -272,9 +254,6 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
     fn diff(&self, base: &Process3dConfig) -> Process3dConfig {
         let mut next = base.clone();
         match self {
-            Process3dConfigMutation::SetSelectedId { value } => next.selected_id = value.clone(),
-            Process3dConfigMutation::SetHoveredId { value } => next.hovered_id = value.clone(),
-            Process3dConfigMutation::SetSelectedFaceId { value } => next.selected_face_id = *value,
             Process3dConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             Process3dConfigMutation::SetCamera { position, target, fov } => {
                 next.camera_position = *position;
@@ -300,9 +279,6 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
 
     fn inverse(&self, base: &Process3dConfig) -> Vec<Self> {
         match self {
-            Process3dConfigMutation::SetSelectedId { .. } => vec![Process3dConfigMutation::SetSelectedId { value: base.selected_id.clone() }],
-            Process3dConfigMutation::SetHoveredId { .. } => vec![Process3dConfigMutation::SetHoveredId { value: base.hovered_id.clone() }],
-            Process3dConfigMutation::SetSelectedFaceId { .. } => vec![Process3dConfigMutation::SetSelectedFaceId { value: base.selected_face_id }],
             Process3dConfigMutation::SetEngagementInput { .. } => vec![Process3dConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
             Process3dConfigMutation::SetCamera { .. } => {
                 vec![Process3dConfigMutation::SetCamera { position: base.camera_position, target: base.camera_target, fov: base.camera_fov }]
@@ -330,7 +306,7 @@ mod tests {
     #[test]
     fn process3d_config_dsl_and_pack_round_trip() {
         use store::ArtifactPack;
-        let config = Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(3), sun_enabled: true, active_utility_id: "cut".into(), ..Process3dConfig::default() };
+        let config = Process3dConfig { sun_enabled: true, active_utility_id: "cut".into(), ..Process3dConfig::default() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
         let bytes = config.encode_pack();
         assert_eq!(Process3dConfig::decode_pack(&bytes).expect("decode"), config);
@@ -339,9 +315,9 @@ mod tests {
     #[test]
     fn process3d_config_operation_backwards_restores_the_same_field_from_base() {
         let base = Process3dConfig::default();
-        let operation = Process3dConfigMutation::SetSelectedId { value: Some("step-0".into()) };
+        let operation = Process3dConfigMutation::SetLocale { value: "de-DE".into() };
         let inverse = operation.inverse(&base);
-        assert_eq!(inverse, vec![Process3dConfigMutation::SetSelectedId { value: base.selected_id }]);
+        assert_eq!(inverse, vec![Process3dConfigMutation::SetLocale { value: base.locale }]);
     }
 
     #[test]
@@ -362,11 +338,6 @@ mod tests {
 
     #[test]
     fn process3d_config_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: Some("stock".into()) });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedId { value: None });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetHoveredId { value: Some("step-0".into()) });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedFaceId { value: Some(3) });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSelectedFaceId { value: None });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetEngagementInput { value: "cut".into() });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
@@ -378,7 +349,6 @@ mod tests {
     #[test]
     fn process3d_config_default_matches_the_existing_runtime_defaults() {
         let config = Process3dConfig::default();
-        assert_eq!(config.selection_method, "rectangle");
         assert_eq!(config.camera_position, [3.0, -3.0, 2.0]);
         assert_eq!(config.camera_target, [0.0, 0.0, 0.0]);
         assert_eq!(config.camera_fov, 45.0);

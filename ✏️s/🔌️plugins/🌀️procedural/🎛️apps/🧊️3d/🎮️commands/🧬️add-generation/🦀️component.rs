@@ -65,6 +65,7 @@ mod tests {
     use super::*;
     use crate::apps::procedural3d::testkit::{app, dispatch};
     use crate::apps::procedural3d::Procedural3dCommand;
+    use crate::apps::procedural3d::commands::select_generation;
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
 
     #[test]

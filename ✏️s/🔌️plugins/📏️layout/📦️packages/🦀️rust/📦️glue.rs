@@ -564,12 +564,8 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️set-selection/🦀️component.rs"]
-            pub mod set_selection;
             #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️set-active-page/🦀️component.rs"]
             pub mod set_active_page;
-            #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️set-hover/🦀️component.rs"]
-            pub mod set_hover;
             #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️focus-preflight-issue/🦀️component.rs"]
             pub mod focus_preflight_issue;
             #[path = "../../🎛️apps/📏️layout/🎮️commands/👁️engagement-input/🦀️component.rs"]

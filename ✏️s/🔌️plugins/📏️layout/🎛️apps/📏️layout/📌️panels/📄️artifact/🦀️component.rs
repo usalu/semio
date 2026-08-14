@@ -2,11 +2,12 @@
 //! stories, links and styles of the current layout document.
 
 use crate::apps::layout::config::LayoutConfig;
-use crate::apps::layout::layout_action;
 use crate::apps::layout::terminology::LayoutLabels;
+use crate::apps::layout::{layout_action, layout_select_action_args, LAYOUT_INTERACTION_ELEMENTS};
 use crate::artifacts::layout::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action, ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::json;
 
@@ -38,10 +39,6 @@ fn frame_icon(kind: &str) -> &str {
 
 fn page_row_id(page_id: &str) -> String {
     format!("layout-document.page.{page_id}")
-}
-
-fn frame_row_id(frame_id: &str) -> String {
-    format!("layout-document.frame.{frame_id}")
 }
 
 fn layer_row_id(page_id: &str, layer_id: &str) -> String {
@@ -82,45 +79,48 @@ fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description:
     item
 }
 
-/// 🌳️ A `layout_tree_item` that additionally dispatches `setHover`/clear-hover on hover/unhover — used
-/// by the document tree's page and frame rows to drive canvas hover highlighting.
-fn layout_tree_item_hoverable(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<ActionDescriptor>, hover_id: &str) -> UiTreeItemNode {
-    let mut item = layout_tree_item(id, label, description, icon_id, action);
-    item.hover_action = Some(layout_action("setHover", Some(json!({ "id": hover_id }))));
-    item.unhover_action = Some(layout_action("setHover", Some(json!({ "id": serde_json::Value::Null }))));
-    item
-}
+/// 🕹️ Used to build a `layout_tree_item` that additionally dispatched `setHover`/clear-hover on
+/// hover/unhover — deleted along with the framework-owned "elements" domain's presence stamping,
+/// which now highlights any `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)` row on hover
+/// automatically (matching hover-source id against the row's own `id`), no per-row wiring needed
+/// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 
-pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
+/// 🕹️ `_config` is unused now — page/frame selection moved into the framework-owned "elements"
+/// interaction domain; `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)` below has the framework's
+/// renderer translate row hover into `interactionHover` and stamp presence from `InteractionState`,
+/// replacing the deleted `.selected()`/`.highlighted()`/`.selection_change()` calls.
+pub fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
     let spread_items: Vec<UiTreeItemNode> = doc.spreads.iter().map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None)).collect();
 
     let page_items: Vec<UiTreeItemNode> = doc
         .pages
         .iter()
         .map(|page| {
-            layout_tree_item_hoverable(
+            layout_tree_item(
                 page_row_id(&page.id),
                 Label::data(page.name.clone()),
                 page.parent_page_id.as_ref().map(|parent_id| format!("{}: {parent_id}", labels.parent.as_str())),
                 Some("file".into()),
                 Some(layout_action("setActivePage", Some(json!({ "pageId": page.id })))),
-                &page.id,
             )
         })
         .collect();
 
+    // 🕹️ Row `id` is the BARE frame id (not a `frame_row_id(...)`-prefixed row id) — the framework's
+    // `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)` presence stamping matches `state.selection`/
+    // `.hover` ids against a row's own `id` verbatim, and canvas hit-testing (`DisplayList::hit_test`)
+    // resolves those exact bare ids too; a prefixed row id would desync tree/canvas cross-highlighting.
     let frame_items: Vec<UiTreeItemNode> = doc
         .pages
         .iter()
         .flat_map(|page| {
             page.frames.iter().map(move |frame| {
-                layout_tree_item_hoverable(
-                    frame_row_id(frame.id()),
+                layout_tree_item(
+                    frame.id(),
                     Label::data(frame.id()),
                     Some(format!("{} · {}", page.name, frame.kind_str())),
                     Some(frame_icon(frame.kind_str()).into()),
-                    Some(layout_action("setSelection", Some(json!({ "ids": [frame.id()] })))),
-                    frame.id(),
+                    Some(layout_action(INTERACTION_SELECT_ACTION_ID, Some(layout_select_action_args(&[frame.id().to_string()], "replace")))),
                 )
             })
         })
@@ -161,7 +161,7 @@ pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels
                 Label::data(link.path.clone()),
                 Some(link.state.clone().unwrap_or_else(|| "ok".into())),
                 Some("link".into()),
-                (!referencing_ids.is_empty()).then(|| layout_action("setSelection", Some(json!({ "ids": referencing_ids })))),
+                (!referencing_ids.is_empty()).then(|| layout_action(INTERACTION_SELECT_ACTION_ID, Some(layout_select_action_args(&referencing_ids, "replace")))),
             )
         })
         .collect();
@@ -178,8 +178,10 @@ pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels
         layout_tree_item(style_row_id(&style.id), Label::data(name), Some(description), Some("type".into()), None)
     }));
 
-    let highlighted_ids: Vec<String> = config.hovered_id.as_ref().map(|id| vec![page_row_id(id), frame_row_id(id)]).unwrap_or_default();
-    let mut builder = PanelTreeBuilder::new("layout-document")
+    // 🕹️ `.selected()`/`.highlighted()`/`.selection_change()` deleted — the framework stamps this
+    // tree's presence from the "elements" `InteractionState` post-render and would overwrite
+    // whatever this function stamped anyway (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    PanelTreeBuilder::new("layout-document")
         .section("layout-document.document", Some(labels.document.into()), true, vec![layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None)])
         .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)
         .section("layout-document.pages", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, page_items)
@@ -189,12 +191,8 @@ pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels
         .section("layout-document.stories", Some(labels.stories.into()), false, story_items)
         .section("layout-document.links", Some(labels.links.into()), false, link_items)
         .section("layout-document.styles", Some(labels.styles.into()), false, style_items)
-        .selected(config.selected_ids.iter().flat_map(|id| vec![page_row_id(id), frame_row_id(id), layer_row_id(&config.active_page_id, id)]).collect())
-        .selection_change(layout_action("setSelection", None));
-    if !highlighted_ids.is_empty() {
-        builder = builder.highlighted(highlighted_ids);
-    }
-    builder.build()
+        .interaction_domain(LAYOUT_INTERACTION_ELEMENTS)
+        .build()
 }
 //#endregion 🔖️Render
 

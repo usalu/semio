@@ -92,9 +92,6 @@ impl CurateDiff {
         if let Some(filters) = &self.filters {
             next.filters = filters.clone();
         }
-        if let Some(value) = &self.selected_object_id {
-            next.selected_object_id = value.clone();
-        }
         if let Some(value) = &self.locale {
             next.locale = value.clone();
         }
@@ -145,7 +142,6 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
         }
         take!(catalog);
         take!(filters);
-        take!(selected_object_id);
         take!(locale);
         take!(contributions_json);
         match (&mut self.stock_extra, other.stock_extra) {

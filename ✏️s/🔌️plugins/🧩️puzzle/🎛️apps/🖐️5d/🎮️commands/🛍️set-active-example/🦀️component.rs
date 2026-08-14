@@ -1,6 +1,6 @@
 //! 🛍️ `set-active-example` command.
 
-use crate::apps::puzzle5d::config::{Puzzle5dRuntime, Puzzle5dSelection};
+use crate::apps::puzzle5d::config::Puzzle5dRuntime;
 use serde_json::Value;
 use crate::apps::puzzle5d::CAPSULE_DREAM_EXAMPLE_JSON;
 use crate::apps::puzzle5d::CONCRETE_FOREST_EXAMPLE_JSON;

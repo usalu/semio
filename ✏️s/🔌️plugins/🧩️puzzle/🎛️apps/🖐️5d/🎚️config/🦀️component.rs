@@ -8,17 +8,13 @@
 //! two windows except the explicitly window-keyed `engagement_input_by_window`/
 //! `active_utility_by_window_id` maps.
 
-use semio_framework_plugin::{SelectionSet, WorldSunConfig};
+use semio_framework_plugin::WorldSunConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Defaults
 fn one_f64() -> f64 {
     1.0
-}
-
-fn default_selection_method() -> String {
-    "rectangle".into()
 }
 
 fn default_overlap_budget() -> f64 {
@@ -70,36 +66,6 @@ pub struct Puzzle5dCamera3d {
 }
 //#endregion 🔖️Cameras
 
-//#region 🔖️Selection
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle5dSelection {
-    #[serde(default)]
-    pub part_ids: SelectionSet,
-    #[serde(default)]
-    pub grip_ids: SelectionSet,
-    #[serde(default)]
-    pub fastener_ids: SelectionSet,
-}
-
-/// 🧹️ Clears every selection bag.
-pub fn puzzle5d_clear_selection(selection: &mut Puzzle5dSelection) {
-    *selection = Puzzle5dSelection::default();
-}
-
-/// 🧹️ Clears every selection bag except part ids.
-pub fn puzzle5d_clear_non_part_selection(selection: &mut Puzzle5dSelection) {
-    selection.grip_ids.clear();
-    selection.fastener_ids.clear();
-}
-
-/// 🧹️ Clears every selection bag except grip ids.
-pub fn puzzle5d_clear_non_grip_selection(selection: &mut Puzzle5dSelection) {
-    selection.part_ids.clear();
-    selection.fastener_ids.clear();
-}
-//#endregion 🔖️Selection
-
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -110,12 +76,6 @@ pub struct Puzzle5dConfig {
     pub camera2d: Puzzle5dCamera2d,
     #[serde(default)]
     pub camera3d: Puzzle5dCamera3d,
-    #[serde(default)]
-    pub selection: Puzzle5dSelection,
-    #[serde(default = "default_selection_method")]
-    pub selection_method: String,
-    #[serde(default)]
-    pub hovered_part_id: Option<String>,
     #[serde(default)]
     pub fill_count: u32,
     #[serde(default)]
@@ -157,9 +117,6 @@ impl Default for Puzzle5dConfig {
         Self {
             camera2d: Puzzle5dCamera2d { x: 0.0, y: 0.0, zoom: 1.0 },
             camera3d: Puzzle5dCamera3d { position: [8.0, -8.0, 8.0], target: [0.0, 0.0, 0.0], zoom: 1.0 },
-            selection: Puzzle5dSelection::default(),
-            selection_method: default_selection_method(),
-            hovered_part_id: None,
             fill_count: 0,
             brush_candidate_index: 0,
             overlap_budget: default_overlap_budget(),

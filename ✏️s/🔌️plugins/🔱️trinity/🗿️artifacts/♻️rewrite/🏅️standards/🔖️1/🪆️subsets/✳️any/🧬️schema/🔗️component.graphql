@@ -6,14 +6,9 @@ type RewriteArtifact {
   rhsJson: String! @state(class: ARTIFACT)
   parameterBindings: [PropertyValueEntry!]! @state(class: ARTIFACT)
   ruleLayout: [LayoutPointEntry!]! @state(class: ARTIFACT)
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
-  activeHoverVar: String! @state(class: PRESENCE)
-  activeSelectVar: String! @state(class: PRESENCE)
   lodModeByWindow: [StringEntry!]! @state(class: PRESENCE)
   beforePaneCamera: Camera! @state(class: CONFIG)
   reorganizeEpoch: Int! @state(class: CONFIG)
-  hoverEpoch: Int! @state(class: CONFIG)
-  selectEpoch: Int! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
 }
 

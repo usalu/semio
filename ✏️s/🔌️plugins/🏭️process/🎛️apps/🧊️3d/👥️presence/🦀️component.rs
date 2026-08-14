@@ -11,10 +11,6 @@ use store::ArtifactPack;
 #[dsl(extension = "process3d.presence")]
 #[dsl(layout = "lines")]
 pub struct Process3dPresence {
-    pub selected_id: Option<String>,
-    pub hovered_id: Option<String>,
-    pub selected_face_id: Option<u32>,
-    pub selection_method: String,
     pub engagement_input: String,
     #[dsl(coord)]
     pub camera_position: [f64; 3],
@@ -27,10 +23,6 @@ pub struct Process3dPresence {
 impl Default for Process3dPresence {
     fn default() -> Self {
         Self {
-            selected_id: None,
-            hovered_id: None,
-            selected_face_id: None,
-            selection_method: "rectangle".into(),
             engagement_input: String::new(),
             camera_position: [3.0, -3.0, 2.0],
             camera_target: [0.0, 0.0, 0.0],

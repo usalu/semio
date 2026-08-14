@@ -14,15 +14,16 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let next_document = if payload.example_id == "semio" { semio_example_snapshot() } else { empty_note_snapshot() };
-    Ok(Emit { effects: vec![crate::apps::note::reset_document_effect(&next_document)], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
+    Ok(Emit { effects: vec![crate::apps::note::reset_document_effect(&next_document)], ..Default::default() })
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::note::commands::set_fixture_json;
     use semio_framework::kernel::HostEffect;
 
     /// 🧬️ Driven directly through `handle` (not `dispatch`, which routes through `VcsArtifactApp` and
@@ -39,12 +40,13 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = NoteConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let emit = set_fixture_json::handle(&set_fixture_json::SetFixtureJson { json: crate::artifacts::note::schema::semio_example_json() }, &doc, &cfg).expect("handle");
+        let mut ctx = crate::apps::note::NoteDispatchCtx { selected_block_ids: Vec::new() };
+        let emit = set_fixture_json::handle(&set_fixture_json::SetFixtureJson { json: crate::artifacts::note::schema::semio_example_json() }, &doc, &cfg, &mut ctx).expect("handle");
         assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
         let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setFixtureJson must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
-        let loaded = <NoteSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        let loaded = <NoteSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
         assert_eq!(loaded.blocks.len(), 1);
     }
 
@@ -54,15 +56,16 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = NoteConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let mut ctx = crate::apps::note::NoteDispatchCtx { selected_block_ids: Vec::new() };
 
-        let emit = handle(&SetActiveExample { example_id: "semio".into() }, &doc, &cfg).expect("handle");
+        let emit = handle(&SetActiveExample { example_id: "semio".into() }, &doc, &cfg, &mut ctx).expect("handle");
         let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <NoteSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
         assert_eq!(loaded.blocks.len(), 1);
 
-        let emit = handle(&SetActiveExample { example_id: String::new() }, &doc, &cfg).expect("handle");
+        let emit = handle(&SetActiveExample { example_id: String::new() }, &doc, &cfg, &mut ctx).expect("handle");
         let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };

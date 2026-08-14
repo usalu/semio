@@ -6,17 +6,17 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of writer view state (AST selection, editor selection, hover, viewport).
+/// 👥️ Shareable live subset of writer view state (editor caret/range, viewport) — genuinely app-specific
+/// state only. AST selection/hover no longer live here: the framework broadcasts every declared
+/// interaction domain's selection/hover automatically via its own typed `PresencePeer.interaction`
+/// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "writer.presence")]
 #[dsl(layout = "lines")]
 pub struct WriterPresence {
-    pub selected_ast_ids: Vec<String>,
     #[dsl(block)]
     pub editor_selection: Option<WriterEditorSelection>,
-    pub tree_hovered_ast_id: Option<String>,
-    pub editor_hover_offset: Option<usize>,
     #[dsl(block)]
     pub camera: WriterCamera,
 }
@@ -24,10 +24,7 @@ pub struct WriterPresence {
 impl Default for WriterPresence {
     fn default() -> Self {
         Self {
-            selected_ast_ids: Vec::new(),
             editor_selection: None,
-            tree_hovered_ast_id: None,
-            editor_hover_offset: None,
             camera: WriterCamera::default(),
         }
     }

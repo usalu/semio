@@ -431,18 +431,6 @@ pub mod apps {
             pub mod connect_media_ports;
             #[path = "../../🎛️apps/🪐️space/🎮️commands/🔗️disconnect-media-edge/🦀️component.rs"]
             pub mod disconnect_media_edge;
-            #[path = "../../🎛️apps/🪐️space/🎮️commands/🗂️select-instance/🦀️component.rs"]
-            pub mod select_instance;
-            #[path = "../../🎛️apps/🪐️space/🎮️commands/🗂️node-graph-select/🦀️component.rs"]
-            pub mod node_graph_select;
-            #[path = "../../🎛️apps/🪐️space/🎮️commands/🗂️set-media-node-selection/🦀️component.rs"]
-            pub mod set_media_node_selection;
-            #[path = "../../🎛️apps/🪐️space/🎮️commands/🗂️set-app-instance-selection/🦀️component.rs"]
-            pub mod set_app_instance_selection;
-            #[path = "../../🎛️apps/🪐️space/🎮️commands/🖱️node-graph-hover/🦀️component.rs"]
-            pub mod node_graph_hover;
-            #[path = "../../🎛️apps/🪐️space/🎮️commands/🖱️text-hover/🦀️component.rs"]
-            pub mod text_hover;
             #[path = "../../🎛️apps/🪐️space/🎮️commands/🖱️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
             #[path = "../../🎛️apps/🪐️space/🎮️commands/💬️workflow-engagement-submit/🦀️component.rs"]

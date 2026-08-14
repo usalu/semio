@@ -1,11 +1,14 @@
-//! 🗂️ Lowpoly play app commands — selection view state: active object, granularity/ids, component
-//! toggles, active paint layer, and the selection method/merge-mode defaults. All config-only (never a
-//! document operation).
+//! 🗂️ Lowpoly play app commands — view state genuinely outside the "mesh" interaction domain: active
+//! object and active paint layer. All config-only (never a document operation).
+//!
+//! 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `SetSelection`/`ToggleSelectionKind`/
+//! `ToggleSelectionTarget`/`SetSelectionMethod`/`SetSelectionModeDefault` are DELETED — the framework's
+//! injected `interactionSelect`/`setSelectionMode`/`setInteractionGranularity` verbs (declared via
+//! `AppBuilder::interaction`) now own the mesh domain's selection/granularity/mode entirely; see
+//! `🧭️view/🦀️component.rs`'s `🔖️MeshDomain` region for the target-id/selection-resolution boundary.
 
 use crate::apps::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::apps::lowpoly::session::LowpolyScratch;
-use crate::apps::lowpoly::view::{apply_component_selection, selection_keys_for, selection_targets_from_config};
-use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -31,96 +34,6 @@ pub mod set_active_object {
 }
 //#endregion 🔖️SetActiveObject
 
-//#region 🔖️SetSelection
-pub mod set_selection {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "set-selection")]
-    pub struct SetSelection {
-        pub mode: String,
-        pub ids: Vec<u32>,
-    }
-
-    pub fn handle(payload: &SetSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let normalized = LowpolyDocument::normalize_selection_mode(&payload.mode);
-        let keys = selection_keys_for(doc.snapshot, cfg.snapshot, &normalized, &payload.ids);
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetSelection { mode: normalized, ids: payload.ids.clone() }, LowpolyConfigMutation::SetSelectionKeys { keys }]))
-    }
-}
-//#endregion 🔖️SetSelection
-
-//#region 🔖️ToggleSelectionKind
-pub mod toggle_selection_kind {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "toggle-selection-kind")]
-    pub struct ToggleSelectionKind {
-        pub kind: String,
-    }
-
-    pub fn handle(payload: &ToggleSelectionKind, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let config = cfg.snapshot;
-        let mut targets = selection_targets_from_config(config);
-        let enabled = match payload.kind.as_str() {
-            "vertex" => {
-                targets.vertex = !targets.vertex;
-                targets.vertex
-            }
-            "edge" => {
-                targets.edge = !targets.edge;
-                targets.edge
-            }
-            "face" => {
-                targets.face = !targets.face;
-                targets.face
-            }
-            _ => {
-                targets.mesh = !targets.mesh;
-                targets.mesh
-            }
-        };
-        let mut config_mutations = vec![LowpolyConfigMutation::SetSelectionTargets { mesh: targets.mesh, vertex: targets.vertex, edge: targets.edge, face: targets.face }];
-        if enabled {
-            config_mutations.push(LowpolyConfigMutation::SetSelection { mode: LowpolyDocument::normalize_selection_mode(&payload.kind), ids: config.selection_ids.clone() });
-            config_mutations.push(LowpolyConfigMutation::SetHoveredTarget { object_id: None, mode: None, id: None });
-            config_mutations.push(LowpolyConfigMutation::SetHoveredObject { object_id: None });
-        }
-        Ok(Emit::config(config_mutations))
-    }
-}
-//#endregion 🔖️ToggleSelectionKind
-
-//#region 🔖️ToggleSelectionTarget
-pub mod toggle_selection_target {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "toggle-selection-target")]
-    pub struct ToggleSelectionTarget {
-        pub object_id: String,
-        pub mode: String,
-        pub id: u32,
-        pub merge: String,
-    }
-
-    pub fn handle(payload: &ToggleSelectionTarget, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let (projection, config) = (doc.snapshot, cfg.snapshot);
-        if !projection.objects.iter().any(|object| object.id == payload.object_id) {
-            return Ok(Emit::default());
-        }
-        let (new_mode, ids, keys, targets) = apply_component_selection(config, projection, &payload.mode, &[payload.id], &payload.merge);
-        Ok(Emit::config(vec![
-            LowpolyConfigMutation::SetActiveObject { object_id: payload.object_id.clone() },
-            LowpolyConfigMutation::SetSelectionTargets { mesh: targets.mesh, vertex: targets.vertex, edge: targets.edge, face: targets.face },
-            LowpolyConfigMutation::SetSelection { mode: new_mode, ids },
-            LowpolyConfigMutation::SetSelectionKeys { keys },
-        ]))
-    }
-}
-//#endregion 🔖️ToggleSelectionTarget
-
 //#region 🔖️SetActivePaintLayer
 pub mod set_active_paint_layer {
     use super::*;
@@ -137,53 +50,26 @@ pub mod set_active_paint_layer {
 }
 //#endregion 🔖️SetActivePaintLayer
 
-//#region 🔖️SetSelectionMethod
-pub mod set_selection_method {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "set-selection-method")]
-    pub struct SetSelectionMethod {
-        pub value: String,
-    }
-
-    pub fn handle(payload: &SetSelectionMethod, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetSelectionMethod { value: payload.value.clone() }]))
-    }
-}
-//#endregion 🔖️SetSelectionMethod
-
-//#region 🔖️SetSelectionModeDefault
-pub mod set_selection_mode_default {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "set-selection-mode-default")]
-    pub struct SetSelectionModeDefault {
-        pub value: String,
-    }
-
-    pub fn handle(payload: &SetSelectionModeDefault, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        let next = match payload.value.as_str() {
-            "additive" | "subtractive" | "invertive" | "default" => payload.value.clone(),
-            _ => cfg.snapshot.selection_mode_default.clone(),
-        };
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetSelectionModeDefault { value: next }]))
-    }
-}
-//#endregion 🔖️SetSelectionModeDefault
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use crate::apps::lowpoly::testkit::{app, dispatch};
     use crate::apps::lowpoly::LowpolyCommand;
+    use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn selection_is_view_state_and_emits_no_operations() {
+    fn set_active_object_is_view_state_and_emits_no_operations() {
         let mut a = app();
-        let result = dispatch(&mut a, LowpolyCommand::WorldPick(crate::apps::lowpoly::commands::world::world_pick::WorldPick { granularity: "face".into(), merge: "replace".into(), id: Some(0) }));
-        assert!(result.mutations.is_empty(), "picking must not create an undoable operation");
+        let object_id = a.snapshot().expect("projection").objects[0].id.clone();
+        let result = dispatch(&mut a, LowpolyCommand::SetActiveObject(super::set_active_object::SetActiveObject { object_id }));
+        assert!(result.mutations.is_empty(), "setting the active object must not create an undoable operation");
+    }
+
+    #[test]
+    fn set_active_paint_layer_is_view_state_and_emits_no_operations() {
+        let mut a = app();
+        let result = dispatch(&mut a, LowpolyCommand::SetActivePaintLayer(super::set_active_paint_layer::SetActivePaintLayer { layer_index: 0 }));
+        assert!(result.mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

@@ -12,7 +12,7 @@ pub struct SetCameraZoom {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let mut camera = cfg.snapshot.camera.clone();
     camera.zoom = payload.value;
     Ok(Emit::config(vec![NoteConfigMutation::SetCamera { camera }]))

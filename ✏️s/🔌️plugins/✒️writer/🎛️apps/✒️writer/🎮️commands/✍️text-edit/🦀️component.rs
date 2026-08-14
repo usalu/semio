@@ -25,7 +25,7 @@ pub fn handle(payload: &TextEdit, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg:
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::apps::writer::commands::{commit_rename, format_document, set_active_example};
+    use crate::apps::writer::commands::{commit_rename, format_document, set_active_example, set_text};
     use crate::apps::writer::testkit::{app_with_jack, dispatch, new_app};
     use crate::apps::writer::WriterCommand;
     use crate::artifacts::writer::schema::jack_variable_occurrences;
@@ -62,7 +62,7 @@ mod tests {
     #[test]
     fn format_artifact_reformats_jack_query() {
         let mut app = app_with_jack();
-        dispatch(&mut app, WriterCommand::SetText(super::set_text::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() }));
+        dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() }));
         let result = app.dispatch_typed(WriterCommand::FormatDocument(format_document::FormatDocument {}), &semio_framework_plugin::testkit::meta("local")).expect("format");
         assert_eq!(result.mutations.len(), 1);
         assert!(writer_text(&app.snapshot().expect("projection")).contains('\n'));
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn set_text_action_updates_projection() {
         let mut app = new_app();
-        let result = app.dispatch_typed(WriterCommand::SetText(super::set_text::SetText { text: "MATCH (a) RETURN a".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set text");
+        let result = app.dispatch_typed(WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set text");
         assert_eq!(result.mutations.len(), 1);
         assert_eq!(writer_text(&app.snapshot().expect("projection")), "MATCH (a) RETURN a");
     }
@@ -88,8 +88,8 @@ mod tests {
     #[test]
     fn set_text_undo_redo_round_trips_through_the_wrapper() {
         let mut app = new_app();
-        dispatch(&mut app, WriterCommand::SetText(super::set_text::SetText { text: "first".into() }));
-        dispatch(&mut app, WriterCommand::SetText(super::set_text::SetText { text: "second".into() }));
+        dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "first".into() }));
+        dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "second".into() }));
         assert_eq!(writer_text(&app.snapshot().expect("projection")), "second");
         let undo = app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         assert!(undo.mutations.is_empty());

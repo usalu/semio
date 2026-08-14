@@ -15,11 +15,16 @@ use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::{LayoutPoint, RewriteSnapshot, REWRITE_RULE_SCHEMA};
 use crate::apps::rewrite::config::{RewriteConfig, RewriteConfigMutation};
 use crate::apps::rewrite::presence::{RewritePresence, RewritePresenceMutation};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
     MediaType, NodeGraphViewport, PanelGroup, SurfaceKind, UiNode, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, DomainTopology, TopologyNode, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
 };
+// 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
+// `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
+// (itself `pub mod`). Flagged as a likely framework oversight, not fixed here (framework file).
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use std::collections::{BTreeMap, HashMap};
 use store::{ArtifactDsl, ArtifactPack};
@@ -157,26 +162,6 @@ pub(crate) fn after_fixture_json(state: &RewriteSnapshot) -> String {
     apply_rewrite_to_fixture(&state.before_fixture_json, state)
 }
 
-pub(crate) fn sync_select_var_from_node(fixture_json: &str, node_id: &str) -> Option<String> {
-    let fixture = parse_fixture_json(fixture_json)?;
-    let nodes = fixture.nodes();
-    let node = nodes.iter().find(|node| node.id == node_id)?;
-    var_from_node_name(&node.name)
-}
-
-/// 🧭️ Resolves which fixture backs a given rewrite graph surface (Before/After/LHS/RHS), for hover/select var lookup.
-pub(crate) fn fixture_json_for_surface(surface_id: &str, state: &RewriteSnapshot) -> String {
-    if surface_id == TRINITY_REWRITE_PLAY_SURFACE_AFTER {
-        after_fixture_json(state)
-    } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_LHS {
-        lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout)
-    } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_RHS {
-        rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout)
-    } else {
-        state.before_fixture_json.clone()
-    }
-}
-
 fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_layout: &BTreeMap<String, LayoutPoint>) -> Node {
     let (x, y) = rule_layout.get(id).map_or((x, y), |point| (point.x, point.y));
     Node { id: id.into(), name: name.into(), kind: kind.into(), x, y, width: 160.0, height: 56.0, ports: vec![], properties: Default::default() }
@@ -263,26 +248,8 @@ pub(crate) fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<Stri
     crate::artifacts::jack::Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
-fn node_id_for_var(fixture_json: &str, var: &str) -> Option<String> {
-    if var.is_empty() {
-        return None;
-    }
-    let fixture = JackSnapshot::from_json(fixture_json).ok()?;
-    fixture.nodes().iter().find(|node| node.name.starts_with(&format!("{var}:")) || node.name == var || var_from_node_name(&node.name).as_deref() == Some(var)).map(|node| node.id.clone())
-}
-
-fn graph_hover(fixture_json: &str, hover_var: &str, hover_node_id: &str) -> Option<semio_framework_plugin::NodeGraphHover> {
-    let node_id = if !hover_node_id.is_empty() { Some(hover_node_id.to_string()) } else { node_id_for_var(fixture_json, hover_var) }?;
-    Some(semio_framework_plugin::NodeGraphHover { node_id: Some(node_id) })
-}
-
-fn graph_selection(fixture_json: &str, select_var: &str, selected_ids: &[String]) -> Vec<String> {
-    if !selected_ids.is_empty() {
-        return selected_ids.to_vec();
-    }
-    node_id_for_var(fixture_json, select_var).into_iter().collect()
-}
-
+/// 🕹️ Used by `interaction_topology` to hang a var-reference `TopologyNode` off its graph node
+/// (domain "graph" — "AST parents + variable references").
 fn var_from_node_name(name: &str) -> Option<String> {
     let trimmed = name.trim();
     if let Some((var, _)) = trimmed.split_once(':') {
@@ -352,21 +319,21 @@ fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMea
     WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: rewrite_action("setLodMode", Some(serde_json::json!({ "windowId": window_id }))) }
 }
 
-pub(crate) fn render_rule_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewriteConfig, hover_node_id: &str, editable: bool, camera_override: Option<&Camera>) -> UiNode {
+/// 🕹️ `selection`/`hover` are left unset: `ArtifactApp::render` has no `InteractionView` (only
+/// `handle`/`copy_fragment`/`cut_operations` gained one — see `📌️panels/🔍️inspection`'s doc comment
+/// on `apps::jack` for the same framework-side gap) and this static scene isn't a `UiNode::Tree` the
+/// wrapper's `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host
+/// reads domain "graph"'s `DomainSelection`/`DomainHover` directly, so the interactive surface stays
+/// correct even though this snapshot doesn't carry it.
+pub(crate) fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewriteConfig, editable: bool, camera_override: Option<&Camera>) -> UiNode {
     let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
     let (nodes, edges, fixture_viewport) = crate::apps::jack::fixture_to_workflow(&fixture);
     let viewport = camera_override.map_or(fixture_viewport, |camera| NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom });
-    let hover = graph_hover(fixture_json, &cfg.active_hover_var, hover_node_id);
-    let selection = graph_selection(fixture_json, &cfg.active_select_var, &cfg.selected_node_ids);
     semio_framework_plugin::build_node_graph_scene(
         surface_id,
         TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        semio_framework_plugin::NodeGraphScene { hover, selection, lod_json: rewrite_lod_json_for_window(cfg, window_id), editable: editable.then_some(true), ..semio_framework_plugin::NodeGraphScene::base(nodes, edges, viewport) },
+        semio_framework_plugin::NodeGraphScene { lod_json: rewrite_lod_json_for_window(cfg, window_id), editable: editable.then_some(true), ..semio_framework_plugin::NodeGraphScene::base(nodes, edges, viewport) },
     )
-}
-
-pub(crate) fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewriteConfig, editable: bool, camera_override: Option<&Camera>) -> UiNode {
-    render_rule_graph(surface_id, window_id, fixture_json, cfg, "", editable, camera_override)
 }
 //#endregion 🔖️Render
 
@@ -395,18 +362,8 @@ pub enum TrinityRewriteCommand {
     PatchNodes { node_ids: Vec<String>, field: String, value: String },
 
     // 👁️ Config-only — was ephemeral `RewritePlayRuntime` state, now emits `config_mutations`.
-    #[dsl(key = "set-selection")]
-    SetSelection { ids: Vec<String>, surface_id: Option<String> },
-    #[dsl(key = "node-graph-hover")]
-    NodeGraphHover { surface_id: Option<String>, node_id: Option<String> },
     #[dsl(key = "set-viewport")]
     SetViewport { surface_id: Option<String>, viewport_json: String },
-    #[dsl(key = "graph-pointer-down")]
-    GraphPointerDown { node_id: Option<String> },
-    #[dsl(key = "text-select")]
-    TextSelect { var: Option<String>, start: Option<u64> },
-    #[dsl(key = "text-hover")]
-    TextHover { var: Option<String>, offset: Option<u64> },
     #[dsl(key = "reorganize")]
     Reorganize,
     #[dsl(key = "set-lod-mode")]
@@ -580,35 +537,25 @@ impl ArtifactApp for TrinityRewritePlayApp {
             TrinityRewriteCommand::AddRuleClause { .. } => "addRuleClause",
             TrinityRewriteCommand::ResetRule => "resetRule",
             TrinityRewriteCommand::PatchNodes { .. } => "patchNodes",
-            TrinityRewriteCommand::SetSelection { .. } => "setSelection",
-            TrinityRewriteCommand::NodeGraphHover { .. } => "nodeGraphHover",
             TrinityRewriteCommand::SetViewport { .. } => "setViewport",
-            TrinityRewriteCommand::GraphPointerDown { .. } => "graphPointerDown",
-            TrinityRewriteCommand::TextSelect { .. } => "textSelect",
-            TrinityRewriteCommand::TextHover { .. } => "textHover",
             TrinityRewriteCommand::Reorganize => "reorganize",
             TrinityRewriteCommand::SetLodMode { .. } => "setLodMode",
             TrinityRewriteCommand::SetLocale { .. } => "setLocale",
         }
     }
 
-    fn handle(command: &TrinityRewriteCommand, doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &TrinityRewriteCommand, doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
         let state = doc.snapshot;
         let config = cfg.snapshot;
         match command {
-            TrinityRewriteCommand::NodeGraphEdit { surface_id, operations_json } => crate::apps::rewrite::commands::node_graph_edit(state, &config.selected_node_ids, surface_id, operations_json),
+            TrinityRewriteCommand::NodeGraphEdit { surface_id, operations_json } => crate::apps::rewrite::commands::node_graph_edit(state, &interaction.selection("graph").ids, surface_id, operations_json),
             TrinityRewriteCommand::SetLhsJson { value } => crate::apps::rewrite::commands::set_lhs_json(state, value),
             TrinityRewriteCommand::SetRhsJson { value } => crate::apps::rewrite::commands::set_rhs_json(state, value),
             TrinityRewriteCommand::SetParameter { name, value } => crate::apps::rewrite::commands::set_parameter(state, name, value),
             TrinityRewriteCommand::AddRuleClause { kind } => crate::apps::rewrite::commands::add_rule_clause_command(state, kind),
             TrinityRewriteCommand::ResetRule => crate::apps::rewrite::commands::reset_rule(state),
             TrinityRewriteCommand::PatchNodes { node_ids, field, value } => crate::apps::rewrite::commands::patch_nodes(state, node_ids, field, value),
-            TrinityRewriteCommand::SetSelection { ids, surface_id } => crate::apps::rewrite::commands::set_selection(state, ids, surface_id, config.select_epoch),
-            TrinityRewriteCommand::NodeGraphHover { surface_id, node_id } => crate::apps::rewrite::commands::node_graph_hover(state, surface_id, node_id, config.hover_epoch),
             TrinityRewriteCommand::SetViewport { surface_id, viewport_json } => crate::apps::rewrite::commands::set_viewport(surface_id, viewport_json),
-            TrinityRewriteCommand::GraphPointerDown { node_id } => crate::apps::rewrite::commands::graph_pointer_down(node_id),
-            TrinityRewriteCommand::TextSelect { var, start } => crate::apps::rewrite::commands::text_select(state, var, start, config.select_epoch),
-            TrinityRewriteCommand::TextHover { var, offset } => crate::apps::rewrite::commands::text_hover(state, var, offset, config.hover_epoch),
             TrinityRewriteCommand::Reorganize => crate::apps::rewrite::commands::reorganize(config.reorganize_epoch),
             TrinityRewriteCommand::SetLodMode { window_id, value } => crate::apps::rewrite::commands::set_lod_mode(window_id, value),
             TrinityRewriteCommand::SetLocale { value } => crate::apps::rewrite::commands::set_locale(value),
@@ -628,7 +575,7 @@ impl ArtifactApp for TrinityRewritePlayApp {
             TRINITY_REWRITE_PLAY_BODY_PARAMETERS => crate::apps::rewrite::windows::parameters::render(state, labels),
             TRINITY_REWRITE_PLAY_BODY_DOCUMENT => crate::apps::rewrite::panels::document::render(state, config, labels),
             TRINITY_REWRITE_PLAY_BODY_CATALOGUE => crate::apps::rewrite::panels::catalogue::render(labels),
-            TRINITY_REWRITE_PLAY_BODY_INSPECTION => crate::apps::rewrite::panels::inspection::render(state, config, labels),
+            TRINITY_REWRITE_PLAY_BODY_INSPECTION => crate::apps::rewrite::panels::inspection::render(),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -648,8 +595,9 @@ impl ArtifactApp for TrinityRewritePlayApp {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.snapshot.locale.starts_with("de");
-        let selected = cfg.snapshot.selected_node_ids.clone();
-        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        // 🕹️ Selection is framework-owned now (domain "graph") — `context_menu` has no `InteractionView`,
+        // so the request's own surface-carried selection groups are the only source; no config fallback.
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
 
         // 🩹️ `nodeGraphEdit` folds into the `transform` group alongside `patchNodes` (both are
         // mechanical graph-mutation actions, not primary verbs) — keeping it top-level alongside
@@ -667,6 +615,60 @@ impl ArtifactApp for TrinityRewritePlayApp {
             menu = menu.item(spec);
         }
         menu.build()
+    }
+
+    /// 🕹️ Domain "graph" topology: unions three node universes under one "node" granularity —
+    /// (1) the Before fixture's own nodes, parented by the source node of their first incoming
+    /// connection, each with a variable-reference child when its name resolves one (`var_from_node_name`
+    /// — "AST parents + variable references"); (2) the LHS semantic graph (`lhs-where` parented by
+    /// `lhs-match` via their one edge); (3) the RHS semantic graph (its clause nodes have no inherent
+    /// parent order, so they're roots). `MergeMode::Range` is not declared for this domain, so
+    /// `ordered`'s sequence need not be a strict pre-order.
+    fn interaction_topology(doc: &ArtifactView<'_, RewriteSnapshot>, _cfg: &ConfigView<'_, RewriteConfig>) -> InteractionTopology {
+        let state = doc.snapshot;
+        let mut ordered = Vec::new();
+
+        if let Some(fixture) = parse_fixture_json(&state.before_fixture_json) {
+            let mut parent_of: BTreeMap<String, String> = BTreeMap::new();
+            for edge in fixture.edges() {
+                let source = crate::artifacts::jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
+                let target = crate::artifacts::jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
+                parent_of.entry(target).or_insert(source);
+            }
+            for node in fixture.nodes() {
+                ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() });
+                if let Some(var) = var_from_node_name(&node.name) {
+                    ordered.push(TopologyNode { id: var, granularity: "node".into(), parent: Some(node.id.clone()) });
+                }
+            }
+        }
+        // 🩹️ Reads the semantic rule graphs directly (`lhs_semantic_graph_fixture`/
+        // `rhs_semantic_graph_fixture`), NOT via `lhs_graph_fixture_json`/`rhs_graph_fixture_json`:
+        // those round-trip through `Graph::from_fixture`, which validates node kinds against the
+        // "nakagin" manifest — the synthetic `rewrite.*` clause kinds fail that validation and the
+        // wrapper silently falls back to the nakagin fixture, which would leave the "graph" domain's
+        // topology missing every `lhs-*`/`rhs-*` id entirely.
+        if let Ok(lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) {
+            let lhs_fixture = lhs_semantic_graph_fixture(&lhs, &state.rule_layout);
+            let mut parent_of: BTreeMap<String, String> = BTreeMap::new();
+            for edge in lhs_fixture.edges() {
+                let source = crate::artifacts::jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
+                let target = crate::artifacts::jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
+                parent_of.entry(target).or_insert(source);
+            }
+            for node in lhs_fixture.nodes() {
+                ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() });
+            }
+        }
+        if let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) {
+            for node in rhs_semantic_graph_fixture(&rhs, &state.rule_layout).nodes() {
+                ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: None });
+            }
+        }
+
+        let mut domains = BTreeMap::new();
+        domains.insert("graph".to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 }
 //#endregion 🔖️TrinityRewritePlayApp
@@ -756,15 +758,28 @@ pub fn create_rewrite_app() -> App {
             // 🛠️ Dev-only raw rule editors — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setLhsJson", LocalizedLabel::native("Set LHS Json", "LHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
-            // 👁️ Ephemeral view state — selection, hover, text cursor, recompute/layout, LOD.
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View).with_category("selection"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphHover", LocalizedLabel::native("Hover Graph Node", "Graph-Knoten hovern"), ActionKind::View).with_category("hand"))
+            // 👁️ Ephemeral view state — viewport, recompute/layout, LOD. Selection/hover/text-cursor
+            // cross-highlighting is framework-owned now (domain "graph") — no app-declared verbs.
             .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View).with_category("hand"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("textSelect", LocalizedLabel::native("Select Text", "Text auswählen"), ActionKind::View).with_category("selection"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("textHover", LocalizedLabel::native("Hover Text", "Text hovern"), ActionKind::View).with_category("hand"))
             .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::View).with_category("view"))
             .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View).with_category("mode"))
+            // 🕹️ Domain "graph": before/after/lhs/rhs graph nodes plus rule-clause nodes plus variable
+            // references, transitive over each node's first incoming connection / variable binding
+            // (see `interaction_topology`). Selection/hover, modes and merges are ALL
+            // framework-injected now — no app-declared setSelection/nodeGraphHover/textSelect/
+            // textHover/graphPointerDown verbs.
+            .interaction(InteractionDefinition {
+                id: "graph".into(),
+                label: LocalizedLabel::native("Nodes", "Knoten"),
+                granularities: vec![GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() }],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
+            })
+            .window_kind_interactions(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, vec![InteractionRef::new("graph")])
+            .window_kind_interactions(TRINITY_REWRITE_PLAY_WINDOW_AFTER, vec![InteractionRef::new("graph")])
+            .window_kind_interactions(TRINITY_REWRITE_PLAY_WINDOW_LHS, vec![InteractionRef::new("graph")])
+            .window_kind_interactions(TRINITY_REWRITE_PLAY_WINDOW_RHS, vec![InteractionRef::new("graph")])
             // 📝️ Staged argument forms.
             .action_args("addRuleClause", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Clause", "Klausel"), vec![
@@ -812,12 +827,7 @@ mod tests {
             TrinityRewriteCommand::AddRuleClause { kind: "where".into() },
             TrinityRewriteCommand::ResetRule,
             TrinityRewriteCommand::PatchNodes { node_ids: vec!["a".into()], field: "name".into(), value: "Renamed".into() },
-            TrinityRewriteCommand::SetSelection { ids: vec!["n1".into()], surface_id: Some("trinity.rewrite.before".into()) },
-            TrinityRewriteCommand::NodeGraphHover { surface_id: Some("trinity.rewrite.before".into()), node_id: Some("n1".into()) },
             TrinityRewriteCommand::SetViewport { surface_id: Some("trinity.rewrite.before".into()), viewport_json: "{\"x\":1.0,\"y\":2.0,\"zoom\":1.0}".into() },
-            TrinityRewriteCommand::GraphPointerDown { node_id: Some("n1".into()) },
-            TrinityRewriteCommand::TextSelect { var: Some("a".into()), start: None },
-            TrinityRewriteCommand::TextHover { var: None, offset: Some(3) },
             TrinityRewriteCommand::Reorganize,
             TrinityRewriteCommand::SetLodMode { window_id: "trinity-rewrite-before".into(), value: "compact".into() },
             TrinityRewriteCommand::SetLocale { value: "de-DE".into() },
@@ -830,15 +840,36 @@ mod tests {
         }
     }
 
+    /// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
+    /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
+    /// domain "graph" selection needs the real manifest's `.interaction(...)` declaration present.
     fn new_app() -> VcsArtifactApp<TrinityRewritePlayApp> {
-        testkit::new_app::<TrinityRewritePlayApp>()
+        testkit::new_app_with_registry::<TrinityRewritePlayApp>(create_rewrite_app)
+    }
+
+    /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "graph" — the
+    /// replacement for the deleted `TrinityRewriteCommand::SetSelection`.
+    fn select_graph(app: &mut VcsArtifactApp<TrinityRewritePlayApp>, ids: &[&str]) {
+        let targets: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": id })).collect();
+        let args = serde_json::json!({ "domainId": "graph", "targets": serde_json::to_string(&targets).unwrap() });
+        app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
     }
 
     #[test]
     fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         let mut app = testkit::new_app_with_registry::<TrinityRewritePlayApp>(create_rewrite_app);
-        app.dispatch_typed(TrinityRewriteCommand::SetSelection { ids: vec!["n1".into(), "n2".into()], surface_id: None }, &meta("local")).expect("select");
-        let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
+        let request = ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+                surface_id: TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into(),
+                kind: "nodeGraph".into(),
+                hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
+                selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["n1".into(), "n2".into()] }],
+                text: None,
+            }),
+            window_instance_id: None,
+            point: None,
+        };
         let menu = app.context_menu(&request);
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
@@ -907,7 +938,7 @@ mod tests {
         app.dispatch_typed(TrinityRewriteCommand::AddRuleClause { kind: "set".into() }, &meta("local")).expect("add clause");
         let rhs: Rhs = serde_json::from_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 2);
-        app.dispatch_typed(TrinityRewriteCommand::SetSelection { ids: vec!["rhs-set-1".into()], surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_RHS.into()) }, &meta("local")).expect("select");
+        select_graph(&mut app, &["rhs-set-1"]);
         let result =
             app.dispatch_typed(TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: serde_json::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local")).expect("delete selection");
         assert!(!result.mutations.is_empty());
@@ -916,12 +947,10 @@ mod tests {
     }
 
     #[test]
-    fn jack_view_has_occurrences_after_select() {
+    fn jack_view_renders_compiled_query_tokens() {
         let mut app = new_app();
-        let result = app.dispatch_typed(TrinityRewriteCommand::TextSelect { var: Some("a".into()), start: None }, &meta("local")).expect("text select");
-        assert!(result.mutations.is_empty(), "text selection is a config-only command, no document operations");
         let node = app.render(TRINITY_REWRITE_PLAY_BODY_JACK, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("occurrencesJson"));
+        assert!(serde_json::to_string(&node).unwrap().contains("tokensJson"));
     }
 
     #[test]

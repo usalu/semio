@@ -14,7 +14,6 @@ use crate::apps::block3d::commands::set_camera;
 use crate::apps::block3d::commands::{edit, set_active_example};
 use crate::apps::block3d::commands::patch_object_kind;
 use crate::apps::block3d::commands::{add_representation, patch_representation, remove_representation};
-use crate::apps::block3d::commands::{hover_vortex, select_vortex, set_selection};
 use crate::apps::block3d::commands::{add_vortex, remove_vortex};
 use crate::apps::block3d::commands::{add_vortex_kind, remove_vortex_kind};
 use crate::apps::block3d::commands::{set_active_representation, set_active_utility, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
@@ -26,13 +25,15 @@ use crate::apps::block3d::terminology::block3d_labels;
 use crate::artifacts::block3d::op::Block3dMutation;
 use crate::artifacts::block3d::{artifact_kind, Block3dSnapshot, BLOCK_3D_SCHEMA};
 use crate::BlockCamera3d;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     UiNode, UtilityDefinition,
 };
+use semio_framework_plugin::app::InteractionView;
+use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 use store::EngineHandles;
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Constants
 pub const BLOCK3D_PLAY_APP_ID: &str = "block3d-play";
@@ -41,6 +42,12 @@ pub const BLOCK3D_DEFAULT_WINDOW_ID: &str = "block3d-world";
 pub const BLOCK3D_WORLD_OBJECT_ID: &str = "block3d-object";
 pub const BLOCK3D_UTILITY_SELECT: &str = "select";
 pub const BLOCK3D_UTILITY_SURFACE_BRUSH: &str = "surfaceBrush";
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the framework-owned hover/selection
+/// domain over this app's representations ("surface" granularity) and rim-vortex templates ("vortex"
+/// granularity, the default) — replaces the deleted `Block3dConfig.selected_ids`/`hovered_vortex_full_id`.
+pub const BLOCK3D_INTERACTION_VORTEX: &str = "vortex";
+pub const BLOCK3D_GRANULARITY_VORTEX: &str = "vortex";
+pub const BLOCK3D_GRANULARITY_SURFACE: &str = "surface";
 /// 🗂️ The `s/plugin/puzzle` 3d catalog artifact kind block3d's `"catalog:out"` port produces — see
 /// `block3d_io` and `Block3dPlayApp::export_media`.
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
@@ -115,7 +122,6 @@ semio_framework_plugin::app_commands! {
         "removeVortex" as "removeVortex" => remove_vortex::RemoveVortex,
         "setActiveExample" as "setActiveExample" => set_active_example::SetActiveExample,
         "edit" as "edit" => edit::Edit,
-        "setSelection" as "setSelection" => set_selection::SetSelection,
         "setActiveRepresentation" as "setActiveRepresentation" => set_active_representation::SetActiveRepresentation,
         "setWindowRepresentations" as "setWindowRepresentations" => set_window_representations::SetWindowRepresentations,
         "toggleWindowRepresentation" as "toggleWindowRepresentation" => toggle_window_representation::ToggleWindowRepresentation,
@@ -129,8 +135,6 @@ semio_framework_plugin::app_commands! {
         "worldSurfaceLeave" as "leaveSurface" => leave_surface::LeaveSurface,
         "worldSurfacePlace" as "placeVortex" => place_vortex::PlaceVortex,
         "setCamera" as "setCamera" => set_camera::SetCamera,
-        "selectVortex" as "selectVortex" => select_vortex::SelectVortex,
-        "hoverVortex" as "hoverVortex" => hover_vortex::HoverVortex,
         "patchRepresentation" as "patchRepresentation" => patch_representation::PatchRepresentation,
     }
 }
@@ -180,12 +184,6 @@ impl ArtifactApp for Block3dPlayApp {
     /// bytes directly.
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
-        let str_vec_field = |key: &str| -> Vec<String> {
-            args.and_then(|value| value.get(key))
-                .and_then(|value| value.as_array())
-                .map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect())
-                .unwrap_or_default()
-        };
         match action {
             "patchObjectKind" => Ok(Block3dCommand::PatchObjectKind(patch_object_kind::PatchObjectKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
             "addRepresentation" => Ok(Block3dCommand::AddRepresentation(add_representation::AddRepresentation {})),
@@ -196,7 +194,6 @@ impl ArtifactApp for Block3dPlayApp {
             "removeVortex" => Ok(Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: str_field("id").unwrap_or_default() })),
             "setActiveExample" => Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: str_field("exampleId").or_else(|| str_field("id")).unwrap_or_default() })),
             "edit" => Ok(Block3dCommand::Edit(edit::Edit { text: str_field("text").unwrap_or_default() })),
-            "setSelection" => Ok(Block3dCommand::SetSelection(set_selection::SetSelection { ids: str_vec_field("ids") })),
             "setActiveRepresentation" => Ok(Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: str_field("representationId").or_else(|| str_field("representation_id")) })),
             "setWindowRepresentations" => {
                 let rep = str_field("value").or_else(|| str_field("representationId"));
@@ -233,8 +230,6 @@ impl ArtifactApp for Block3dPlayApp {
                 position: f64_vec3_field(args, "position").unwrap_or([0.0, 0.0, 0.0]),
                 normal: f64_vec3_field(args, "normal").unwrap_or([0.0, 0.0, 1.0]),
             })),
-            "selectVortex" => Ok(Block3dCommand::SelectVortex(select_vortex::SelectVortex { full_id: str_field("fullId").unwrap_or_default(), merge: args.and_then(|value| value.get("merge")).and_then(Value::as_bool).unwrap_or(false) })),
-            "hoverVortex" => Ok(Block3dCommand::HoverVortex(hover_vortex::HoverVortex { full_id: str_field("fullId") })),
             "patchRepresentation" => Ok(Block3dCommand::PatchRepresentation(patch_representation::PatchRepresentation { id: str_field("id").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
             // 🩹️ Forward-fix, not a preserved behavior: pre-migration `command_from_action` had NO arm
             // for the manifest-declared `setCamera` view action at all (fell through to the reserved-
@@ -257,8 +252,27 @@ impl ArtifactApp for Block3dPlayApp {
         }
     }
 
-    fn handle(command: &Block3dCommand, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block3dCommand, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain's
+    /// `HierarchyProvider::Topology` — representations (`surface` granularity) and rim-vortex
+    /// templates (`vortex` granularity) as a flat forest (no real structural parent between them, but
+    /// declaring `Topology` rather than `Flat` lets `validate_state` prune stale selection/hover ids
+    /// the moment a representation or vortex is removed — see `HierarchyProvider::Flat`'s doc comment
+    /// on why `Flat` domains are never auto-pruned).
+    fn interaction_topology(doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> InteractionTopology {
+        let mut ordered: Vec<TopologyNode> = Vec::new();
+        for representation in &doc.snapshot.representations {
+            ordered.push(TopologyNode { id: format!("surface:{}", representation.id), granularity: BLOCK3D_GRANULARITY_SURFACE.into(), parent: None });
+        }
+        for vortex in &doc.snapshot.vortices {
+            ordered.push(TopologyNode { id: format!("vortex:{}", vortex.id), granularity: BLOCK3D_GRANULARITY_VORTEX.into(), parent: None });
+        }
+        let mut domains = BTreeMap::new();
+        domains.insert(BLOCK3D_INTERACTION_VORTEX.to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 
     fn window_measures(doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
@@ -274,7 +288,7 @@ impl ArtifactApp for Block3dPlayApp {
         let (base_body, window_id) = block3d_resolve_world_body(body_key);
         match base_body {
             world::BLOCK3D_BODY_WORLD => world::render(doc.snapshot, cfg.snapshot, &window_id),
-            document_panel::BLOCK3D_BODY_DOCUMENT => document_panel::render(doc.snapshot, &cfg.snapshot.selected_ids, labels),
+            document_panel::BLOCK3D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
             inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -335,6 +349,22 @@ pub fn create_block3d_app() -> App {
             .utility(UtilityDefinition::new(BLOCK3D_UTILITY_SELECT, LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer"))
             .utility(UtilityDefinition::new(BLOCK3D_UTILITY_SURFACE_BRUSH, LocalizedLabel::native("Surface brush", "Flächenpinsel"), "paintbrush"))
             .window_kind_utilities(world::BLOCK3D_WINDOW_WORLD, vec![BLOCK3D_UTILITY_SELECT.into(), BLOCK3D_UTILITY_SURFACE_BRUSH.into()])
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain
+            // replaces the deleted `setSelection`/`selectVortex`/`hoverVortex` view actions — the
+            // framework auto-injects `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/
+            // `setSelectionMode`/`setInteractionGranularity` for it.
+            .interaction(InteractionDefinition {
+                id: BLOCK3D_INTERACTION_VORTEX.into(),
+                label: LocalizedLabel::native("Vortices", "Wirbel"),
+                granularities: vec![
+                    GranularityDefinition { id: BLOCK3D_GRANULARITY_VORTEX.into(), label: LocalizedLabel::native("Vortex", "Wirbel"), icon_id: "circle-dot".into() },
+                    GranularityDefinition { id: BLOCK3D_GRANULARITY_SURFACE.into(), label: LocalizedLabel::native("Surface", "Fläche"), icon_id: "box".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace, MergeMode::Additive], transitive: false, broadcast: true },
+            })
+            .window_kind_interactions(world::BLOCK3D_WINDOW_WORLD, vec![InteractionRef::new(BLOCK3D_INTERACTION_VORTEX)])
             .default_layout(edit_mode::layout())
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
@@ -347,7 +377,6 @@ pub fn create_block3d_app() -> App {
             .mutation("removeVortex", LocalizedLabel::native("Remove Vortex", "Wirbel entfernen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("setActiveRepresentation", LocalizedLabel::native("Set Active Representation", "Aktive Darstellung festlegen"))
             .view_action("setWindowRepresentations", LocalizedLabel::native("Set Window Representations", "Fensterdarstellungen festlegen"))
             .view_action("toggleWindowRepresentation", LocalizedLabel::native("Toggle Representation", "Darstellung umschalten"))
@@ -359,8 +388,6 @@ pub fn create_block3d_app() -> App {
             .view_action("worldSurfaceHover", LocalizedLabel::native("Surface Hover", "Flächenhover"))
             .view_action("worldSurfaceLeave", LocalizedLabel::native("Surface Leave", "Fläche verlassen"))
             .mutation("worldSurfacePlace", LocalizedLabel::native("Place Vortex", "Wirbel platzieren"))
-            .view_action("selectVortex", LocalizedLabel::native("Select Vortex", "Wirbel auswählen"))
-            .view_action("hoverVortex", LocalizedLabel::native("Hover Vortex", "Wirbel hovern"))
             .mutation("patchRepresentation", LocalizedLabel::native("Patch Representation", "Darstellung bearbeiten"))
             .io(block3d_io()),
     )
@@ -431,7 +458,6 @@ mod tests {
             Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: "v0".into() }),
             Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: "capsule".into() }),
             Block3dCommand::Edit(edit::Edit { text: "{}".into() }),
-            Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["r0".into()] }),
             Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }),
             Block3dCommand::SetWindowRepresentations(set_window_representations::SetWindowRepresentations { window_id: "w0".into(), representation_ids: vec!["r0".into()] }),
             Block3dCommand::ToggleWindowRepresentation(toggle_window_representation::ToggleWindowRepresentation { window_id: "w0".into(), representation_id: "r0".into(), visible: true }),
@@ -445,8 +471,6 @@ mod tests {
             Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {}),
             Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: "w0".into(), object_id: "r0".into(), position: [0.0, 0.0, 0.0], normal: [0.0, 1.0, 0.0] }),
             Block3dCommand::SetCamera(set_camera::SetCamera { camera: BlockCamera3d::default() }),
-            Block3dCommand::SelectVortex(select_vortex::SelectVortex { full_id: "r0:v0".into(), merge: true }),
-            Block3dCommand::HoverVortex(hover_vortex::HoverVortex { full_id: Some("r0:v0".into()) }),
             Block3dCommand::PatchRepresentation(patch_representation::PatchRepresentation { id: "r0".into(), field: "name".into(), value: "x".into() }),
         ]
     }
@@ -459,7 +483,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 26, "every Block3dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 23, "every Block3dCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -471,13 +495,19 @@ mod tests {
 
     /// 🧷️ Pins the exact pre-migration bytes for the three divergent-key rows plus a handful of
     /// `Option`/`Vec` rows — copied verbatim from the ticket's `🧪️wire-baseline-3d-before.txt`.
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: deleting `setSelection` (which
+    /// sat BEFORE `LeaveSurface` in the row order) shifts every later row's binary ordinal down by
+    /// one — an intentional, greenfield wire-format break (row order IS the ordinal, per this enum's
+    /// own doc comment), not a preserved-bytes regression. `LeaveSurface`'s ordinal moves 0x14 -> 0x13.
     #[test]
     fn divergent_key_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Block3dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(protocol::OpText::print_op(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "leaveSurface");
-        assert_eq!(hex(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "01140000");
+        assert_eq!(hex(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "01130000");
     }
 
+    /// 🌉️ Every app-declared action must bridge through `command_from_action` and round-trip
+    /// `command_id`.
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Block3dPlayApp>(create_block3d_app);
@@ -495,6 +525,42 @@ mod tests {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain is declared
+    /// once, with both granularities, a `Topology` hierarchy, and scoped to the world window kind —
+    /// the framework auto-injects the six interaction actions for it (asserted separately below via
+    /// `assert_declared_actions_bridge_to_commands`'s injected-action allowance).
+    #[test]
+    fn declares_the_vortex_interaction_domain_scoped_to_the_world_window() {
+        let definition = create_block3d_app().definition;
+        let interaction = definition.interactions.iter().find(|def| def.id == BLOCK3D_INTERACTION_VORTEX).expect("vortex domain declared");
+        assert_eq!(interaction.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec![BLOCK3D_GRANULARITY_VORTEX, BLOCK3D_GRANULARITY_SURFACE]);
+        assert!(matches!(interaction.hierarchy, HierarchyProvider::Topology));
+        let world_window = definition.window_kinds.iter().find(|window| window.id == world::BLOCK3D_WINDOW_WORLD).expect("world window declared");
+        assert!(world_window.interactions.contains(&InteractionRef::new(BLOCK3D_INTERACTION_VORTEX)));
+    }
+
+    /// 🕹️ `interaction_topology` returns one flat root per representation (`surface` granularity) and
+    /// per vortex template (`vortex` granularity) — enough structure for `validate_state` to prune a
+    /// stale selection the moment `removeRepresentation`/`removeVortex` deletes its target.
+    #[test]
+    fn interaction_topology_covers_every_representation_and_vortex() {
+        let mut app: Block3dApp = new_app();
+        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
+        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
+        testkit::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {}));
+        let snapshot = app.snapshot().expect("snapshot");
+        let representation_id = snapshot.representations[0].id.clone();
+        let vortex_id = snapshot.vortices[0].id.clone();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
+        let cfg_snapshot = Block3dConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let topology = Block3dPlayApp::interaction_topology(&doc, &cfg);
+        let domain = topology.domains.get(BLOCK3D_INTERACTION_VORTEX).expect("vortex domain topology present");
+        assert!(domain.contains(&format!("surface:{representation_id}")));
+        assert!(domain.contains(&format!("vortex:{vortex_id}")));
     }
 
     #[test]
@@ -565,11 +631,16 @@ mod tests {
         assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len(), 1);
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `setSelection`/`selectVortex`/
+    /// `hoverVortex` are gone — the still-config-only `setActiveRepresentation` view action now
+    /// exercises the "view action never touches the document" contract this test used to cover.
     #[test]
-    fn set_selection_writes_config_not_document() {
+    fn set_active_representation_writes_config_not_document() {
         let mut app: Block3dApp = new_app();
-        let result = app.dispatch_typed(Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["representation:r0".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
-        assert!(result.mutations.is_empty(), "setSelection is config-only and must emit no document operations");
+        let result = app
+            .dispatch_typed(Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }), &semio_framework_plugin::testkit::meta("local"))
+            .expect("set active representation");
+        assert!(result.mutations.is_empty(), "setActiveRepresentation is config-only and must emit no document operations");
     }
 
     #[test]
@@ -615,8 +686,8 @@ mod tests {
     #[test]
     fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
-        let result = testkit::dispatch(&mut app, Block3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["r0".into()] }));
-        assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+        let result = testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }));
+        assert!(result.mutations.is_empty(), "setActiveRepresentation is a view action and must never reach document operations under kind discipline");
     }
 
     /// 🎚️ The world window collects its five option measures (representations/quick-pick/arrangement/

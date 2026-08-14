@@ -113,27 +113,6 @@ pub fn take_find_items() -> Vec<ShellFindItem> {
     FIND_ITEM_SINK.with(|cell| std::mem::take(&mut *cell.borrow_mut()))
 }
 
-/// 🖱️ Best-effort `ContextMenuSurfaceTarget.selection` groups from the session's already-tracked (opaque,
-/// app-owned) `ViewModel.selectionJson` — tries the common `{selectedIds: [...]}` shape, then a bare id
-/// array, and yields nothing rather than guessing at an unrecognized shape.
-fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<serde_json::Value> {
-    #[derive(Deserialize, Default)]
-    #[serde(rename_all = "camelCase")]
-    struct SelectedIdsShape {
-        #[serde(default)]
-        selected_ids: Vec<String>,
-    }
-    let Some(json) = selection_json else {
-        return Vec::new();
-    };
-    let ids = serde_json::from_str::<SelectedIdsShape>(json).map(|shape| shape.selected_ids).ok().filter(|ids| !ids.is_empty()).or_else(|| serde_json::from_str::<Vec<String>>(json).ok()).unwrap_or_default();
-    if ids.is_empty() {
-        Vec::new()
-    } else {
-        vec![serde_json::json!({ "domain": "node", "ids": ids })]
-    }
-}
-
 /// 🗂️ `ui_wgpu::wgpu::ShellMenuAction.kind` wire string for an `ActionDefinition.kind` — host-side styling
 /// parity only, unused by `build_shell_context_menu_specs` itself.
 fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String {
@@ -876,7 +855,6 @@ impl ShellState {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
                 active_utility_id: None,
-                selection_json: None,
                 panel_json: Some(Self::panel_json(&panel_state)),
                 contributions_json: None,
                 locale: self.active_locale(),
@@ -900,7 +878,6 @@ impl ShellState {
                     active_mode_id: Some(app.default_mode_id.clone()),
                     active_window_kind_id: self.active_window_id.clone(),
                     active_utility_id: None,
-                    selection_json: None,
                     panel_json: None,
                     contributions_json: None,
                     locale: self.active_locale(),
@@ -1068,7 +1045,6 @@ impl ShellState {
                                 active_mode_id: Some(app.default_mode_id.clone()),
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
                                 active_utility_id: None,
-                                selection_json: None,
                                 panel_json: None,
                                 contributions_json: None,
                                 locale: self.active_locale(),
@@ -2149,7 +2125,6 @@ impl ShellState {
             active_mode_id: Some(app.default_mode_id.clone()),
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             active_utility_id: None,
-            selection_json: None,
             panel_json: Some(Self::panel_json(&panel_state)),
             contributions_json: None,
             locale: self.active_locale(),
@@ -3237,7 +3212,11 @@ impl ShellState {
             let shortcut_by_action: std::collections::HashMap<String, String> = session.app.keybindings.iter().map(|binding| (binding.action.action.clone(), binding.keys.clone())).collect();
             // 🖱️ `viewState` deliberately omitted — `ui_wgpu::wgpu::ContextMenuRequest` never carries it (see
             // that type's own doc comment); `selection`/`text` are the typed slices plugins actually need.
-            let selection = context_menu_selection_groups(session.view_state.selection_json.as_deref());
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: the opaque per-app
+            // `ViewModel.selectionJson` this used to read is deleted — the framework now owns selection
+            // via `InteractionState`/`PresenceInteraction`, not yet threaded into this request. Empty
+            // until a follow-up wires the active domain's `DomainSelection` through here.
+            let selection: Vec<serde_json::Value> = Vec::new();
             let text: Option<serde_json::Value> = None;
             let request = serde_json::json!({
                 "menu": { "id": kind.clone() },
@@ -6275,7 +6254,11 @@ fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework::Tutorial
         layout: Some(state.dock.to_window_layout()),
         active_panel_tab_by_group,
         panel_json: state.session.as_ref().and_then(|s| s.view_state.panel_json.clone()),
-        selection_json: state.session.as_ref().and_then(|s| s.view_state.selection_json.clone()),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: the deleted opaque
+        // `ViewModel.selectionJson` this used to mirror had no `ShellState` home either — the framework
+        // now owns selection via `InteractionState`, not yet threaded through `ShellState`. Left
+        // unmapped (best-effort no-op) rather than inventing new cross-cutting state.
+        interaction_selection: HashMap::new(),
         open_dialog_id: chrome_dialog_top_id(),
         // 🚧️ No generic hierarchical "expanded tree ids" state exists on `ShellState` today — the closest
         // analog (`collapsed_sections`) is a flat per-accordion-id map with inverted (collapsed, not
@@ -6293,7 +6276,6 @@ fn tutorial_apply_ui_snapshot(state: &mut ShellState, snapshot: &semio_framework
         session.view_state.active_mode_id = snapshot.active_mode_id.clone();
         session.view_state.active_tool_id = snapshot.active_tool_id.clone();
         session.view_state.panel_json = snapshot.panel_json.clone();
-        session.view_state.selection_json = snapshot.selection_json.clone();
     }
     state.active_window_id = snapshot.focused_window_id.clone();
     state.active_utility_by_window = snapshot.active_utility_by_window_id.clone();

@@ -11,8 +11,6 @@ use store::ArtifactPack;
 #[dsl(extension = "remodel.presence")]
 #[dsl(layout = "lines")]
 pub struct RemodelPresence {
-    pub selection_mode: String,
-    pub selection_ids: Vec<String>,
     pub world_camera_position: [f64; 3],
     pub world_camera_target: [f64; 3],
     pub world_camera_fov: f64,
@@ -25,8 +23,6 @@ pub struct RemodelPresence {
 impl Default for RemodelPresence {
     fn default() -> Self {
         Self {
-            selection_mode: String::new(),
-            selection_ids: Vec::new(),
             world_camera_position: [4.0, -4.0, 3.0],
             world_camera_target: [0.0, 0.0, 0.0],
             world_camera_fov: 45.0,

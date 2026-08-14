@@ -1,14 +1,11 @@
 //! 📄️ Puzzle 5d play app panel — the document tree: parts (with their grips nested) and fasteners,
-//! each row selecting its entity through `setSelection`.
+//! each row selecting its entity — bound to the `vortex` interaction domain (ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so the framework paints selected/hovered
+//! presence after render.
 
-use crate::apps::puzzle5d::config::Puzzle5dSelection;
 use crate::apps::puzzle5d::terminology::Puzzle5dLabels;
-use crate::apps::puzzle5d::{find_part_by_grip_full_id, puzzle5d_action, puzzle5d_grip_full_id, tree_info_item, tree_item_with_action, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dScene};
-use semio_framework_plugin::{
-    ui_tree_stamp_presence, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
-use serde_json::json;
-use std::collections::HashSet;
+use crate::apps::puzzle5d::{find_part_by_grip_full_id, puzzle5d_grip_full_id, puzzle5d_interaction_select, tree_info_item, tree_item_with_action, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_INTERACTION_DOMAIN};
+use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.document";
@@ -40,16 +37,6 @@ fn fastener_label(document: &Puzzle5dDocument, fastener: &Puzzle5dFastener) -> S
     format!("{} → {}", side(&fastener.source), side(&fastener.target))
 }
 
-/// 🎯️ Every document-tree row id currently selected — stamped onto the sections as presence.
-fn document_tree_selected_ids(selection: &Puzzle5dSelection) -> Vec<String> {
-    selection
-        .part_ids
-        .iter()
-        .map(|id| format!("puzzle5d-play-document.part.{id}"))
-        .chain(selection.grip_ids.iter().map(|id| format!("puzzle5d-play-document.grip.{id}")))
-        .chain(selection.fastener_ids.iter().map(|id| format!("puzzle5d-play-document.fastener.{id}")))
-        .collect()
-}
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
@@ -64,10 +51,10 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
                 .iter()
                 .map(|grip| {
                     let full_id = puzzle5d_grip_full_id(&part.id, &grip.id);
-                    tree_item_with_action(format!("puzzle5d-play-document.grip.{full_id}"), format!("{} ({})", grip.id, grip.grip_kind), Some("circle-dot"), puzzle5d_action("setSelection", Some(json!({ "gripIds": [full_id] }))))
+                    tree_item_with_action(full_id.clone(), format!("{} ({})", grip.id, grip.grip_kind), Some("circle-dot"), puzzle5d_interaction_select(PUZZLE5D_GRANULARITY_GRIP, &full_id))
                 })
                 .collect();
-            let mut item = tree_item_with_action(format!("puzzle5d-play-document.part.{}", part.id), part_label(part), Some("box"), puzzle5d_action("setSelection", Some(json!({ "partIds": [part.id] }))));
+            let mut item = tree_item_with_action(part.id.clone(), part_label(part), Some("box"), puzzle5d_interaction_select(PUZZLE5D_GRANULARITY_PART, &part.id));
             item.description = Some(part.part_kind.clone());
             if !grip_items.is_empty() {
                 item.items = Some(grip_items);
@@ -79,7 +66,7 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
         .document
         .fasteners
         .iter()
-        .map(|fastener| tree_item_with_action(format!("puzzle5d-play-document.fastener.{}", fastener.id), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_action("setSelection", Some(json!({ "fastenerIds": [fastener.id] })))))
+        .map(|fastener| tree_item_with_action(fastener.id.clone(), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_interaction_select(PUZZLE5D_GRANULARITY_FASTENER, &fastener.id)))
         .collect();
     let mut sections = vec![
         UiTreeSectionNode {
@@ -97,9 +84,7 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
             items: if fastener_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.fasteners.empty", labels.none, None)] } else { fastener_items },
         },
     ];
-    let selected: HashSet<String> = document_tree_selected_ids(&envelope.runtime.selection).into_iter().collect();
-    ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new());
-    UiNode::Tree(UiTreeNode { presence: UiPresence::default(), sections, selected_ids: None, highlighted_ids: None, selection_change: Some(puzzle5d_action("setSelection", None)), drop_action: None, menu: None })
+    UiNode::Tree(UiTreeNode { presence: UiPresence::default(), sections, drop_action: None, menu: None, interaction_domain: Some(PUZZLE5D_INTERACTION_DOMAIN.into()) })
 }
 //#endregion 🔖️Render
 

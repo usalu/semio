@@ -6,7 +6,7 @@ use crate::apps::space::terminology::SStudioLabels;
 use crate::demo_space_projection;
 use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
 use semio_framework_plugin::{
-    build_node_graph_scene, resolve_labels_for_locale, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowEngagement,
+    build_node_graph_scene, resolve_labels_for_locale, InteractionRef, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowEngagement,
     WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions,
 };
 use serde::Serialize;
@@ -56,6 +56,11 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
         actions: Vec::new(),
         utilities: Vec::new(),
+        // 🕹️ The primary node-graph canvas — hosts the `graph` domain (ticket
+        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); `create_space_app`'s
+        // `.window_kind_interactions(...)` call re-asserts the same ref, this literal just keeps
+        // `definition()` honest on its own.
+        interactions: vec![InteractionRef::new(crate::apps::space::S_PLAY_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -97,8 +102,13 @@ pub fn render(app: &crate::apps::space::SpaceApp, projection: &WorkflowSnapshot,
     let camera = workflow_camera(config);
     let fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
     let operators = build_os_workflow_operator_infos(&projection.graph, &projection.parameters);
-    let selection = config.selected_node_ids.clone();
-    let hover = config.hovered_node_id.as_ref().map(|id| NodeGraphHover { node_id: Some(id.clone()) });
+    // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
+    // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and
+    // `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
+    // (unlike `UiNode::Tree` — see `stamp_and_cache_interaction_ui`), so `selection`/`hover` are left
+    // at `NodeGraphScene::base`'s defaults (empty/none) — the canvas no longer paints a live
+    // highlight until a future wave threads interaction into scene rendering. Flagged as a
+    // discovered framework gap, not worked around here.
     build_node_graph_scene(
         S_PLAY_SURFACE_WORKFLOW,
         crate::apps::space::S_PLAY_CONTROLLER_ID,
@@ -106,8 +116,6 @@ pub fn render(app: &crate::apps::space::SpaceApp, projection: &WorkflowSnapshot,
             editable: Some(true),
             operators: json_array_to_node_graph_operators(&operators),
             find_items: json_array_to_node_graph_find_items(&graph_payload.find_items_json),
-            selection,
-            hover,
             capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
             fixture_json: Some(fixture.to_string()),
             presence_peers_json: Some(crate::apps::space::presence_peers_json(app, config)),

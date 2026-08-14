@@ -13,19 +13,21 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::writer::{WriterEditorSelection, WriterEditorSettings};
 /// 🧮️ B1: writer's real `ArtifactApp::Config` — absorbs every former `WriterPlayRuntime` app-struct
-/// field (selection, editor selection, format/lint signals, revision, editor settings, AST hover,
-/// engagement draft, and the session-only viewport camera — see `WriterCamera`'s doc comment) plus
-/// `locale`, the one `ViewModel` field the writer UI actually reads (`resolve_labels`/`is_de_locale`
-/// — see `crate::apps::writer::WriterPlayApp::render`), mirroring `shooting_engine::ShootingConfig`'s
-/// B1 shape.
+/// field that is genuinely app-specific (editor selection, format/lint signals, revision, editor
+/// settings, engagement draft, and the session-only viewport camera — see `WriterCamera`'s doc
+/// comment) plus `locale`, the one `ViewModel` field the writer UI actually reads
+/// (`resolve_labels`/`is_de_locale` — see `crate::apps::writer::WriterPlayApp::render`), mirroring
+/// `shooting_engine::ShootingConfig`'s B1 shape. AST selection/hover moved OUT (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the framework now owns them as the `ast`
+/// interaction domain.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "writer.config")]
 #[dsl(layout = "lines")]
 pub struct WriterConfig {
-    /// 👁️ Selected AST node ids — was `WriterPlayRuntime::selected_ast_ids`.
-    pub selected_ast_ids: Vec<String>,
-    /// 👁️ Editor text selection range — was `WriterPlayRuntime::editor_selection`.
+    /// 👁️ Editor text selection range — was `WriterPlayRuntime::editor_selection`. Editor-intrinsic
+    /// (raw caret/range), NOT the `ast` interaction domain — kept here, undeleted, per ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
     #[dsl(block)]
     pub editor_selection: Option<WriterEditorSelection>,
     /// 🔔️ Bumped on every format pass — was `WriterPlayRuntime::format_signal`.
@@ -37,10 +39,6 @@ pub struct WriterConfig {
     /// ⚙️ Editor chrome settings (line numbers, font/line/tab size) — was `WriterPlayRuntime::editor_settings`.
     #[dsl(block)]
     pub editor_settings: WriterEditorSettings,
-    /// 🐁️ AST node id whose tree row is hovered — was `WriterPlayRuntime::tree_hovered_ast_id`.
-    pub tree_hovered_ast_id: Option<String>,
-    /// 🐁️ Byte offset last reported as hovered by the editor surface — was `WriterPlayRuntime::editor_hover_offset`.
-    pub editor_hover_offset: Option<usize>,
     /// 💬️ In-progress engagement-bar input draft — was `WriterPlayRuntime::engagement_input`.
     pub engagement_input: String,
     /// 🎥️ Editor viewport pan/zoom — session-only, never a document field. Was `WriterPlayRuntime::camera`.
@@ -116,14 +114,11 @@ impl store::ArtifactPack for WriterConfig {
 impl Default for WriterConfig {
     fn default() -> Self {
         Self {
-            selected_ast_ids: Vec::new(),
             editor_selection: None,
             format_signal: 0,
             lint_signal: 0,
             revision: 0,
             editor_settings: WriterEditorSettings::default(),
-            tree_hovered_ast_id: None,
-            editor_hover_offset: None,
             engagement_input: String::new(),
             camera: WriterCamera::default(),
             locale: "en-US".into(),
@@ -146,8 +141,6 @@ pub enum WriterConfigMutation {
         #[dsl(block)]
         config: WriterConfig,
     },
-    #[dsl(key = "selected-ast-ids")]
-    SetSelectedAstIds { ids: Vec<String> },
     #[dsl(key = "editor-selection")]
     SetEditorSelection {
         #[dsl(block)]
@@ -164,10 +157,6 @@ pub enum WriterConfigMutation {
         #[dsl(block)]
         settings: WriterEditorSettings,
     },
-    #[dsl(key = "tree-hovered-ast-id")]
-    SetTreeHoveredAstId { id: Option<String> },
-    #[dsl(key = "editor-hover-offset")]
-    SetEditorHoverOffset { offset: Option<usize> },
     #[dsl(key = "engagement-input")]
     SetEngagementInput { value: String },
     #[dsl(key = "camera")]
@@ -258,14 +247,11 @@ impl Mutation<WriterConfig> for WriterConfigMutation {
         let mut next = base.clone();
         match self {
             WriterConfigMutation::Snapshot { config } => return config.clone(),
-            WriterConfigMutation::SetSelectedAstIds { ids } => next.selected_ast_ids = ids.clone(),
             WriterConfigMutation::SetEditorSelection { selection } => next.editor_selection = selection.clone(),
             WriterConfigMutation::SetFormatSignal { value } => next.format_signal = *value,
             WriterConfigMutation::SetLintSignal { value } => next.lint_signal = *value,
             WriterConfigMutation::SetRevision { value } => next.revision = *value,
             WriterConfigMutation::SetEditorSettings { settings } => next.editor_settings = settings.clone(),
-            WriterConfigMutation::SetTreeHoveredAstId { id } => next.tree_hovered_ast_id = id.clone(),
-            WriterConfigMutation::SetEditorHoverOffset { offset } => next.editor_hover_offset = *offset,
             WriterConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             WriterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             WriterConfigMutation::SetLocale { value } => next.locale = value.clone(),
@@ -288,7 +274,6 @@ mod tests {
     fn writer_config_dsl_round_trips_default_and_populated() {
         store::os_store::test_support::assert_config_round_trip(&WriterConfig::default());
         let populated = WriterConfig {
-            selected_ast_ids: vec!["jack-ast-1".into()],
             editor_selection: Some(WriterEditorSelection { start: 3, end: 7 }),
             format_signal: 2,
             lint_signal: 1,
@@ -304,7 +289,7 @@ mod tests {
     fn writer_config_operation_backwards_restores_pre_state() {
         let pre = WriterConfig::default();
         store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetLocale { value: "de-DE".into() });
-        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetSelectedAstIds { ids: vec!["a".into()] });
+        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetEditorSelection { selection: Some(WriterEditorSelection { start: 1, end: 2 }) });
         store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } });
     }
 

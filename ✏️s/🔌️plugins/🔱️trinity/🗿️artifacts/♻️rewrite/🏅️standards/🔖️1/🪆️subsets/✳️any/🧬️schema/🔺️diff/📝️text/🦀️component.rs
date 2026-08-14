@@ -36,15 +36,6 @@ impl RewriteDiff {
         if let Some(layout) = &self.rule_layout {
             apply_map_delta(&mut next.rule_layout, layout);
         }
-        if let Some(list) = &self.selected_node_ids {
-            next.selected_node_ids = list.values.clone();
-        }
-        if let Some(value) = &self.active_hover_var {
-            next.active_hover_var = value.clone();
-        }
-        if let Some(value) = &self.active_select_var {
-            next.active_select_var = value.clone();
-        }
         if let Some(modes) = &self.lod_mode_by_window {
             apply_map_delta(&mut next.lod_mode_by_window, modes);
         }
@@ -53,12 +44,6 @@ impl RewriteDiff {
         }
         if let Some(value) = self.reorganize_epoch {
             next.reorganize_epoch = value;
-        }
-        if let Some(value) = self.hover_epoch {
-            next.hover_epoch = value;
-        }
-        if let Some(value) = self.select_epoch {
-            next.select_epoch = value;
         }
         if let Some(value) = &self.locale {
             next.locale = value.clone();
@@ -125,14 +110,9 @@ impl MutationDiff<RewriteSnapshot> for RewriteDiff {
         take!(rhs_json);
         merge_map_delta(&mut self.parameter_bindings, other.parameter_bindings);
         merge_map_delta(&mut self.rule_layout, other.rule_layout);
-        take!(selected_node_ids);
-        take!(active_hover_var);
-        take!(active_select_var);
         merge_map_delta(&mut self.lod_mode_by_window, other.lod_mode_by_window);
         take!(before_pane_camera);
         take!(reorganize_epoch);
-        take!(hover_epoch);
-        take!(select_epoch);
         take!(locale);
     }
 }

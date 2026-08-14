@@ -34,6 +34,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -122,14 +123,20 @@ fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
     urls.into_iter().collect()
 }
 
-fn world_instances_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> String {
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: asset selection AND hover are the
+/// framework-owned `"assets"` interaction domain now, unreachable at this render boundary
+/// (`ArtifactApp::render` has no `InteractionView` parameter, unlike `handle`/`copy_fragment`/
+/// `cut_operations`) — `selected` only reflects `active_asset_id` (a real document field) and `hovered`
+/// is always `false`. Documented reduced-fidelity gap, matching this wave's other apps (e.g. `cad`'s
+/// `instance_is_component_hovered`/`gumball_active`).
+fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
     let instances: Vec<Value> = snapshot
         .assets
         .iter()
         .map(|asset| {
             let active = snapshot.active_asset_id == asset.id || (snapshot.active_asset_id.is_empty() && snapshot.assets.first().map(|entry| &entry.id) == Some(&asset.id));
-            let selected = cfg.selected_asset_ids.contains(&asset.id) || active;
-            let hovered = cfg.hovered_asset_id.as_deref() == Some(asset.id.as_str());
+            let selected = active;
+            let hovered = false;
             let mesh_id = resolve_asset_mesh_url(asset).map_or_else(|| SHOOTING_FALLBACK_MESH_KIND.into(), |url| world3d_mesh_id_from_url(&url));
             json!({
                 "id": asset.id,
@@ -155,28 +162,18 @@ fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
     world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(snapshot))
 }
 
-fn selection_centroid(snapshot: &ShootingSnapshot, selected_ids: &[String]) -> Option<[f64; 3]> {
-    let selected: Vec<&ShootingAsset> = snapshot.assets.iter().filter(|asset| selected_ids.contains(&asset.id)).collect();
-    if selected.is_empty() {
-        return None;
-    }
-    let count = selected.len() as f64;
-    let sum = selected.iter().fold([0.0f64; 3], |acc, asset| [acc[0] + asset.origin[0], acc[1] + asset.origin[1], acc[2] + asset.origin[2]]);
-    Some([sum[0] / count, sum[1] / count, sum[2] / count])
-}
-
+/// 🕹️ Same render-has-no-`InteractionView` gap as `world_instances_json` above: `gumballActive` is
+/// always `false` and no `gumballTarget` is emitted, since the current asset selection (and thus
+/// whether the gumball should show, and where) is unreachable here. The world-3d client dispatches
+/// `interactionSelect`/`interactionHover` directly against the `"assets"` domain declared on this
+/// window kind (client-side hit-testing against the mesh instance ids already in this payload) — it no
+/// longer needs `selectionMethod`/`selectionMode`/`targets` from this payload either.
 fn world_selection_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> String {
-    let mut value: Value = serde_json::from_str(&world3d_selection_json(&cfg.selection_method, &cfg.selected_asset_ids, cfg.hovered_asset_id.as_deref())).unwrap_or_else(|_| json!({}));
+    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("granularity".into(), json!("mesh"));
-        object.insert("selectionMode".into(), json!("mesh"));
-        object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
         object.insert("transformMode".into(), json!(cfg.active_utility_id));
         object.insert("activeObjectId".into(), json!(snapshot.active_asset_id));
-        object.insert("gumballActive".into(), json!(!cfg.selected_asset_ids.is_empty()));
-        if let Some(target) = selection_centroid(snapshot, &cfg.selected_asset_ids) {
-            object.insert("gumballTarget".into(), json!(target));
-        }
+        object.insert("gumballActive".into(), json!(false));
     }
     value.to_string()
 }
@@ -213,7 +210,7 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
             environment_json: Some(shooting_environment_json(snapshot)),
             frame_json: crate::artifacts::shooting::schema::active_shot(snapshot).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(cfg)),
-            ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot, cfg), world_selection_json(snapshot, cfg), &WorldSunConfig::default())
+            ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot), world_selection_json(snapshot, cfg), &WorldSunConfig::default())
         },
     )
 }

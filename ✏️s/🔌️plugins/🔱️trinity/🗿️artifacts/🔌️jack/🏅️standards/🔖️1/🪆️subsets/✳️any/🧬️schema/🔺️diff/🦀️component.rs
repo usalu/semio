@@ -27,7 +27,6 @@ pub struct JackDiff {
     #[state(artifact)] pub camera: Option<Camera>,
     #[state(artifact)] pub content: Option<JackContentChild>,
     #[state(artifact)] pub root_node_id: Option<Option<String>>,
-    #[state(presence)] pub selected_node_ids: Option<JackStringList>,
     #[state(presence)] pub active_fixture_id: Option<String>,
     #[state(presence)] pub jack_query: Option<String>,
     #[state(presence)] pub lod_mode_by_window: Option<BTreeMap<String, Option<String>>>,
@@ -42,12 +41,3 @@ pub struct JackDiff {
     #[state(config)] pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
-
-//#region 🔖️DeltaHelpers
-/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct JackStringList {
-    pub values: Vec<String>,
-}
-//#endregion 🔖️DeltaHelpers

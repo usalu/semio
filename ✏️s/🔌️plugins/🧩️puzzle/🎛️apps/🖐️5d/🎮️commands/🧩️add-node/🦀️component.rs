@@ -1,9 +1,7 @@
 //! 🧩️ `add-node` command.
 
-use crate::apps::puzzle5d::config::Puzzle5dSelection;
-use crate::apps::puzzle5d::{add_palette_part, next_part_id, remove_grips, remove_parts, Puzzle5dActionCtx, Puzzle5dPart};
-use semio_framework_plugin::SelectionSet;
-use serde_json::{json, Value};
+use crate::apps::puzzle5d::{add_palette_part, Puzzle5dActionCtx};
+use serde_json::Value;
 
 /// 🎨️ Palette drop at a flat point — the volume origin is derived from the nearest peer part.
 pub fn add_node(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

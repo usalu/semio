@@ -1,7 +1,6 @@
 //! 📄️ Remodel play app panel — the framework Document tab: reconstruction job status/progress plus the
 //! live viewport session state.
 
-use crate::apps::remodel::config::RemodelConfig;
 use crate::apps::remodel::terminology::RemodelLabels;
 use crate::artifacts::remodel::schema::stage_display;
 use crate::artifacts::remodel::{ReconstructionStage, RemodelSnapshot};
@@ -27,12 +26,15 @@ pub fn definition() -> PanelTabDefinition {
 /// 🚦️ `running` is derived from the persisted job stage (not a live engine handle): a synchronous run
 /// never leaves the document in a non-terminal stage, so this is effectively always "Idle" once a run
 /// finishes — the documented, accepted trade-off of the pure-trait conversion.
-pub fn render(scene: &RemodelSnapshot, config: &RemodelConfig, active_utility: &str, labels: &RemodelLabels) -> UiNode {
+pub fn render(scene: &RemodelSnapshot, active_utility: &str, labels: &RemodelLabels) -> UiNode {
     let job = &scene.job;
     let job_label = format!("{}: {} ({:.0}%){}", labels.reconstruction.as_str(), stage_display(job.stage), job.progress_0_1 * 100.0, job.error.as_ref().map(|error| format!(" - {}: {error}", labels.error.as_str())).unwrap_or_default());
     let running = !matches!(job.stage, ReconstructionStage::Idle | ReconstructionStage::Done | ReconstructionStage::Failed);
     let running_label = format!("{}: {}", labels.status.as_str(), if running { labels.running.as_str() } else { labels.idle.as_str() });
-    let utility_label = format!("{}: {} - {}: {} ({})", labels.utility.as_str(), active_utility, labels.selection.as_str(), config.selection.mode, config.selection.ids.len());
+    // 🕹️ Selection now lives in the framework-owned "assets" interaction domain (ticket
+    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); `ArtifactApp::render` carries no
+    // `InteractionView`, so this panel can no longer embed a live selection count in its text.
+    let utility_label = format!("{}: {}", labels.utility.as_str(), active_utility);
     ui_stack_vertical(vec![ui_text(Label::data(job_label)), ui_text(Label::data(running_label)), ui_text(Label::data(utility_label))])
 }
 //#endregion 🔖️Render

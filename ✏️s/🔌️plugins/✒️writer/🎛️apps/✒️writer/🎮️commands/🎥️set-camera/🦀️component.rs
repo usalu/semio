@@ -20,6 +20,7 @@ pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use super::SetCamera;
         use crate::apps::writer::testkit::new_app;
     use crate::apps::writer::{WriterCommand, WRITER_PLAY_BODY_MAIN};
     use crate::artifacts::writer::WriterCamera;

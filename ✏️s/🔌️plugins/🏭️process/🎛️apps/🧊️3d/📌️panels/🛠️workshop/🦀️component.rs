@@ -1,13 +1,13 @@
 //! 🛠️ Process 3d play app panel — the workshop configurator: installed machines (select, remove) plus
 //! one section per installed catalog (add if not yet installed).
 
-use crate::apps::process3d::config::Process3dConfig;
 use crate::apps::process3d::iconed_tree_item_with_action;
 use crate::apps::process3d::process3d_action;
 use crate::apps::process3d::terminology::Process3dLabels;
 use crate::apps::process3d::installed_catalogs;
+use crate::apps::process3d::PROCESS3D_INTERACTION_DOMAIN;
 use crate::artifacts::process3d::Process3dSnapshot;
-use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode};
+use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode};
 use serde_json::json;
 
 //#region 🔖️Constants
@@ -22,30 +22,29 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): installed-machine item ids are
+/// `"machine:{id}"` — the SAME canonical `"geometry"` domain target the old `selected_id` used for a
+/// machine pick — so `.interaction_domain` binding stamps/prunes this section correctly; the catalog
+/// sections stay un-bound (their items are install actions, not domain targets).
+pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
     let mut builder = PanelTreeBuilder::new("process3d-play-workshop");
     let machine_items: Vec<UiTreeItemNode> = fixture
         .workshop
         .machines
         .iter()
-        .map(|machine| {
-            let target = format!("machine:{}", machine.id);
-            UiTreeItemNode {
-                icon_id: Some(machine.icon_id.as_str().into()),
-                presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(target.as_str())),
-                action: Some(process3d_action("setSelection", Some(json!({ "id": target })))),
-                actions: Some(vec![UiTreeItemAction {
-                    icon_id: "trash".into(),
-                    label: Some(labels.remove_machine.into()),
-                    action: process3d_action("removeWorkshopMachine", Some(json!({ "id": machine.id }))),
-                    placement: Some(UiTreeActionPlacement::Menu),
-                }]),
-                menu: None,
-                ..UiTreeItemNode::base(format!("process3d-workshop.machine.{}", machine.id), Label::data(machine.label.clone()))
-            }
+        .map(|machine| UiTreeItemNode {
+            icon_id: Some(machine.icon_id.as_str().into()),
+            actions: Some(vec![UiTreeItemAction {
+                icon_id: "trash".into(),
+                label: Some(labels.remove_machine.into()),
+                action: process3d_action("removeWorkshopMachine", Some(json!({ "id": machine.id }))),
+                placement: Some(UiTreeActionPlacement::Menu),
+            }]),
+            menu: None,
+            ..UiTreeItemNode::base(format!("machine:{}", machine.id), Label::data(machine.label.clone()))
         })
         .collect();
-    builder = builder.section("process3d-play-workshop.machines", Some(labels.machines.into()), true, machine_items);
+    builder = builder.section("process3d-play-workshop.machines", Some(labels.machines.into()), true, machine_items).interaction_domain(PROCESS3D_INTERACTION_DOMAIN);
     for catalog in installed_catalogs() {
         let catalog_id = catalog.catalog_id();
         let items: Vec<UiTreeItemNode> = catalog
@@ -72,7 +71,7 @@ pub fn render(fixture: &Process3dSnapshot, cfg: &Process3dConfig, labels: &Proce
 mod tests {
     use super::*;
     use crate::apps::process3d::commands::workshop::{add_workshop_machine, remove_workshop_machine};
-    use crate::apps::process3d::panels::{catalogue, inspection};
+    use crate::apps::process3d::panels::catalogue;
     use crate::apps::process3d::testkit;
     use crate::apps::process3d::Process3dCommand;
 
@@ -82,15 +81,19 @@ mod tests {
         assert_eq!(definition.body_key.as_deref(), Some(PROCESS_3D_PLAY_BODY_WORKSHOP));
     }
 
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): installing a machine no longer
+    /// auto-selects it (selection is framework-owned now, unreachable from `Emit` — see this file's
+    /// `render` doc comment); this asserts the still-real document mutation and its `"machine:{id}"`
+    /// tree item.
     #[test]
-    fn add_workshop_machine_action_installs_and_selects() {
+    fn add_workshop_machine_action_installs() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         assert!(!result.mutations.is_empty(), "adding an uninstalled catalog machine must emit an operation");
         let document = app.snapshot().expect("snapshot");
         assert!(document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"), "chopSaw should now be in the workshop");
-        let rendered = testkit::render(&mut app, inspection::PROCESS_3D_PLAY_BODY_INSPECTION);
-        assert!(!rendered.contains("No selection"), "expected the newly added machine to be selected: {rendered}");
+        let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_WORKSHOP);
+        assert!(rendered.contains("machine:chopSaw"), "expected the newly installed machine's canonical target id in the tree: {rendered}");
     }
 
     #[test]
@@ -104,15 +107,15 @@ mod tests {
     }
 
     #[test]
-    fn remove_workshop_machine_action_removes_and_clears_selection() {
+    fn remove_workshop_machine_action_removes_the_machine() {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
         let result = testkit::dispatch(&mut app, Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "chopSaw".into() }));
         assert!(!result.mutations.is_empty());
         let document = app.snapshot().expect("snapshot");
         assert!(!document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"));
-        let rendered = testkit::render(&mut app, inspection::PROCESS_3D_PLAY_BODY_INSPECTION);
-        assert!(rendered.contains("No selection"), "removing the selected machine must clear the selection: {rendered}");
+        let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_WORKSHOP);
+        assert!(!rendered.contains("machine:chopSaw"), "removing the machine must drop its tree item: {rendered}");
     }
 
     #[test]

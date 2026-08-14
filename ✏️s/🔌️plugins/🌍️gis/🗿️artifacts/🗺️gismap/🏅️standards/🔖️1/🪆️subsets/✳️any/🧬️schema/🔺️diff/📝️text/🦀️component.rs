@@ -73,12 +73,6 @@ impl GisMapDiff {
         if let Some(delta) = &self.regions {
             next.regions = apply_features_delta(&next.regions, delta);
         }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
-        if let Some(value) = &self.feature_selection_json {
-            next.feature_selection_json = value.clone();
-        }
         if let Some(delta) = &self.layer_visibility {
             for (key, value) in &delta.entries {
                 match value {
@@ -99,9 +93,6 @@ impl GisMapDiff {
         if let Some(value) = &self.render_mode { next.render_mode = value.clone(); }
         if let Some(value) = &self.vector_style { next.vector_style = value.clone(); }
         if let Some(value) = &self.lod_mode { next.lod_mode = value.clone(); }
-        if let Some(value) = &self.hover_json { next.hover_json = value.clone(); }
-        if let Some(value) = &self.selection_method { next.selection_method = value.clone(); }
-        if let Some(value) = &self.selection_mode { next.selection_mode = value.clone(); }
         if let Some(value) = &self.locale { next.locale = value.clone(); }
         next
     }
@@ -143,15 +134,10 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
                 }
             };
         }
-        take!(selected_ids);
-        take!(feature_selection_json);
         take!(camera_json);
         take!(render_mode);
         take!(vector_style);
         take!(lod_mode);
-        take!(hover_json);
-        take!(selection_method);
-        take!(selection_mode);
         take!(locale);
         match (&mut self.layer_visibility, other.layer_visibility) {
             (Some(dst), Some(src)) => dst.entries.extend(src.entries),

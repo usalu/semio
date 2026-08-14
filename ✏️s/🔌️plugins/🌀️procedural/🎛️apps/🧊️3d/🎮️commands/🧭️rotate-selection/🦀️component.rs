@@ -4,7 +4,7 @@ use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMu
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{FlowEvalSession, FlowFixture, FlowHost};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 use crate::artifacts::procedural3d::schema::{
@@ -62,14 +62,27 @@ pub struct RotateSelection {
     pub az: f64,
     pub angle: f64}
 
-pub fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.fixture;
-    let ids = mesh_selection_ids_typed(&payload.node_ids, &cfg.snapshot.selected_node_ids);
-    let (ax, ay, az, angle) = (payload.ax, payload.ay, payload.az, payload.angle);
-    match gumball_transform(fixture, &ids, "rotate", move |host, transform_id| {
+fn rotate_ids(fixture: &FlowFixture, ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
+    match gumball_transform(fixture, ids, "rotate", move |host, transform_id| {
         let current_angle = gumball_widget_number_param(host, transform_id, "angle", 0.0);
         host.set_neuron_params(transform_id, &gumball_rotate_params_json([ax, ay, az], current_angle + angle)).is_ok()
     }) {
-        Some((operations, new_selection)) => Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-rotate".into()), ..Default::default() }),
-        None => Ok(Emit::default())}
+        Some((operations, _new_selection)) => Emit { artifact_mutations: operations, coalesce_key: Some("gumball-rotate".into()), ..Default::default() },
+        None => Emit::default()}
+}
+
+/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
+/// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
+/// reachable only through that macro-generated path (`Procedural3dPlayApp::handle` always routes this
+/// command through `apply` below instead), so an ids-less payload degrades to a no-op transform.
+pub fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    let ids = mesh_selection_ids_typed(&payload.node_ids, &[]);
+    Ok(rotate_ids(&doc.snapshot.fixture, &ids, payload.ax, payload.ay, payload.az, payload.angle))
+}
+
+/// 🕹️ Falls back to the `graph` domain's current selection instead of a deleted config field when the
+/// command carries no explicit ids.
+pub fn apply(payload: &RotateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
+    Ok(rotate_ids(&doc.snapshot.fixture, &ids, payload.ax, payload.ay, payload.az, payload.angle))
 }

@@ -12,7 +12,6 @@ use crate::apps::block5d::commands::{edit, set_active_example};
 use crate::apps::block5d::commands::{add_grip, remove_grip};
 use crate::apps::block5d::commands::{add_grip_kind, remove_grip_kind};
 use crate::apps::block5d::commands::patch_part_kind;
-use crate::apps::block5d::commands::set_selection;
 use crate::apps::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use crate::apps::block5d::modes::edit as edit_mode;
 use crate::apps::block5d::modes::edit::windows::{board, world};
@@ -20,14 +19,23 @@ use crate::apps::block5d::panels::{document as document_panel, inspection as ins
 use crate::apps::block5d::terminology::block5d_labels;
 use crate::artifacts::block5d::op::Block5dMutation;
 use crate::artifacts::block5d::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionDescriptor, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
+use semio_framework_plugin::app::InteractionView;
+use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 use store::EngineHandles;
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 //#region 🔖️Constants
 pub const BLOCK5D_PLAY_APP_ID: &str = "block5d-play";
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the framework-owned hover/selection
+/// domain over this app's rim-grip templates ("grip" granularity, the default) and grip-kind catalog
+/// ("gripKind" granularity) — replaces the deleted `Block5dConfig.selected_ids`.
+pub const BLOCK5D_INTERACTION_GRIP: &str = "grip";
+pub const BLOCK5D_GRANULARITY_GRIP: &str = "grip";
+pub const BLOCK5D_GRANULARITY_GRIP_KIND: &str = "gripKind";
 /// 🗂️ The `s/plugin/puzzle` 5d catalog artifact kind block5d's `"catalog:out"` port produces — see
 /// `block5d_io` and `Block5dPlayApp::export_media`.
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
@@ -75,7 +83,6 @@ semio_framework_plugin::app_commands! {
         "removeGrip" as "removeGrip" => remove_grip::RemoveGrip,
         "setActiveExample" as "setActiveExample" => set_active_example::SetActiveExample,
         "edit" as "edit" => edit::Edit,
-        "setSelection" as "setSelection" => set_selection::SetSelection,
     }
 }
 //#endregion 🔖️Commands
@@ -124,12 +131,6 @@ impl ArtifactApp for Block5dPlayApp {
     /// bytes directly.
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
-        let str_vec_field = |key: &str| -> Vec<String> {
-            args.and_then(|value| value.get(key))
-                .and_then(|value| value.as_array())
-                .map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect())
-                .unwrap_or_default()
-        };
         match action {
             "patchPartKind" => Ok(Block5dCommand::PatchPartKind(patch_part_kind::PatchPartKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
             "addGripKind" => Ok(Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})),
@@ -138,7 +139,6 @@ impl ArtifactApp for Block5dPlayApp {
             "removeGrip" => Ok(Block5dCommand::RemoveGrip(remove_grip::RemoveGrip { id: str_field("id").unwrap_or_default() })),
             "setActiveExample" => Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: str_field("exampleId").or_else(|| str_field("id")).unwrap_or_default() })),
             "edit" => Ok(Block5dCommand::Edit(edit::Edit { text: str_field("text").unwrap_or_default() })),
-            "setSelection" => Ok(Block5dCommand::SetSelection(set_selection::SetSelection { ids: str_vec_field("ids") })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -146,8 +146,26 @@ impl ArtifactApp for Block5dPlayApp {
         }
     }
 
-    fn handle(command: &Block5dCommand, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block5dCommand, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `grip` domain's
+    /// `HierarchyProvider::Topology` — every grip-kind is a root (`gripKind` granularity), every grip
+    /// nests under its own `grip_kind` (`grip` granularity), so a stale selection is pruned the moment
+    /// `removeGripKind`/`removeGrip` deletes its target, and hovering/selecting a kind can transitively
+    /// reach its grips.
+    fn interaction_topology(doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> InteractionTopology {
+        let mut ordered: Vec<TopologyNode> = Vec::new();
+        for kind in &doc.snapshot.grip_kinds {
+            ordered.push(TopologyNode { id: format!("gripKind:{}", kind.id), granularity: BLOCK5D_GRANULARITY_GRIP_KIND.into(), parent: None });
+        }
+        for grip in &doc.snapshot.grips {
+            ordered.push(TopologyNode { id: format!("grip:{}", grip.id), granularity: BLOCK5D_GRANULARITY_GRIP.into(), parent: Some(format!("gripKind:{}", grip.grip_kind)) });
+        }
+        let mut domains = BTreeMap::new();
+        domains.insert(BLOCK5D_INTERACTION_GRIP.to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
@@ -155,7 +173,7 @@ impl ArtifactApp for Block5dPlayApp {
         match body_key {
             board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels),
             world::BLOCK5D_BODY_WORLD => world::render(doc.snapshot, labels),
-            document_panel::BLOCK5D_BODY_DOCUMENT => document_panel::render(doc.snapshot, &cfg.snapshot.selected_ids, labels),
+            document_panel::BLOCK5D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
             inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -212,6 +230,23 @@ pub fn create_block5d_app() -> App {
             .default_mode_id(edit_mode::BLOCK5D_PLAY_MODE_EDIT)
             .window_kind_def(board::definition())
             .window_kind_def(world::definition())
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `grip` domain
+            // replaces the deleted `setSelection` view action — the framework auto-injects
+            // `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/`setSelectionMode`/
+            // `setInteractionGranularity` for it.
+            .interaction(InteractionDefinition {
+                id: BLOCK5D_INTERACTION_GRIP.into(),
+                label: LocalizedLabel::native("Grips", "Griffe"),
+                granularities: vec![
+                    GranularityDefinition { id: BLOCK5D_GRANULARITY_GRIP.into(), label: LocalizedLabel::native("Grip", "Griff"), icon_id: "circle-dot".into() },
+                    GranularityDefinition { id: BLOCK5D_GRANULARITY_GRIP_KIND.into(), label: LocalizedLabel::native("Grip Kind", "Griffart"), icon_id: "circle".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace, MergeMode::Additive], transitive: false, broadcast: true },
+            })
+            .window_kind_interactions(board::BLOCK5D_WINDOW_BOARD, vec![InteractionRef::new(BLOCK5D_INTERACTION_GRIP)])
+            .window_kind_interactions(world::BLOCK5D_WINDOW_WORLD, vec![InteractionRef::new(BLOCK5D_INTERACTION_GRIP)])
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             .mutation("patchPartKind", LocalizedLabel::native("Patch Part Kind", "Teilart bearbeiten"))
@@ -221,7 +256,6 @@ pub fn create_block5d_app() -> App {
             .mutation("removeGrip", LocalizedLabel::native("Remove Grip", "Griff entfernen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .default_layout(edit_mode::layout())
             .io(block5d_io()),
     )
@@ -287,7 +321,6 @@ mod tests {
             Block5dCommand::RemoveGrip(remove_grip::RemoveGrip { id: "g0".into() }),
             Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: "forest".into() }),
             Block5dCommand::Edit(edit::Edit { text: "{}".into() }),
-            Block5dCommand::SetSelection(set_selection::SetSelection { ids: vec!["g0".into()] }),
         ]
     }
 
@@ -299,7 +332,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 8, "every Block5dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 7, "every Block5dCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -318,9 +351,10 @@ mod tests {
         let hex = |command: &Block5dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(hex(&Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})), "01010000");
         assert_eq!(hex(&Block5dCommand::AddGrip(add_grip::AddGrip {})), "01030000");
-        assert_eq!(hex(&Block5dCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() })), "01070001000c00");
     }
 
+    /// 🌉️ Every app-declared action must bridge through `command_from_action` and round-trip
+    /// `command_id`.
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<Block5dPlayApp>(create_block5d_app);
@@ -338,6 +372,40 @@ mod tests {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `grip` domain is declared
+    /// once, with both granularities, a `Topology` hierarchy, and scoped to both window kinds.
+    #[test]
+    fn declares_the_grip_interaction_domain_scoped_to_both_windows() {
+        let definition = create_block5d_app().definition;
+        let interaction = definition.interactions.iter().find(|def| def.id == BLOCK5D_INTERACTION_GRIP).expect("grip domain declared");
+        assert_eq!(interaction.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec![BLOCK5D_GRANULARITY_GRIP, BLOCK5D_GRANULARITY_GRIP_KIND]);
+        assert!(matches!(interaction.hierarchy, HierarchyProvider::Topology));
+        for window_id in [board::BLOCK5D_WINDOW_BOARD, world::BLOCK5D_WINDOW_WORLD] {
+            let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap_or_else(|| panic!("window {window_id} declared"));
+            assert!(window.interactions.contains(&InteractionRef::new(BLOCK5D_INTERACTION_GRIP)), "window {window_id} scoped to the grip domain");
+        }
+    }
+
+    /// 🕹️ `interaction_topology` nests every grip under its own grip-kind, enabling both pruning
+    /// (`removeGripKind`/`removeGrip`) and transitive hover from a kind to its grips.
+    #[test]
+    fn interaction_topology_nests_grips_under_their_grip_kind() {
+        let mut app: Block5dApp = new_app();
+        testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
+        testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {}));
+        let snapshot = app.snapshot().expect("snapshot");
+        let kind_id = snapshot.grip_kinds[0].id.clone();
+        let grip_id = snapshot.grips[0].id.clone();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let cfg_snapshot = Block5dConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let topology = Block5dPlayApp::interaction_topology(&doc, &cfg);
+        let domain = topology.domains.get(BLOCK5D_INTERACTION_GRIP).expect("grip domain topology present");
+        let grip_node = domain.ordered.iter().find(|node| node.id == format!("grip:{grip_id}")).expect("grip node present");
+        assert_eq!(grip_node.parent.as_deref(), Some(format!("gripKind:{kind_id}").as_str()));
     }
 
     #[test]
@@ -398,13 +466,6 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), 1);
     }
 
-    #[test]
-    fn set_selection_writes_config_not_document() {
-        let mut app: Block5dApp = new_app();
-        let result = app.dispatch_typed(Block5dCommand::SetSelection(set_selection::SetSelection { ids: vec!["grip-kind:b-l".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
-        assert!(result.mutations.is_empty(), "setSelection is config-only and must emit no document operations");
-    }
-
     /// 🌉️ `puzzle5d_catalog_fragment`'s new caller round-trips through the `"catalog:out"` media port.
     #[test]
     fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
@@ -428,14 +489,18 @@ mod tests {
         assert!(matches!(Block5dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest"));
     }
 
-    /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document
-    /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
-    /// `testkit::app_with_registry` exists.
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the old `setSelection` view
+    /// action this test exercised is gone — 5d now declares zero app-level view actions (selection
+    /// moved to the framework-owned `grip` domain, an `ActionKind::Interaction` verb entirely outside
+    /// `Block5dCommand`/kind-discipline dispatch; that domain declaration itself is asserted by
+    /// `declares_the_grip_interaction_domain_scoped_to_both_windows` above). `app_with_registry`
+    /// still earns its keep here: a genuine `Mutation`-kind command must still emit document
+    /// operations under the real, kind-discipline-enforcing registry.
     #[test]
-    fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
+    fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
-        let result = testkit::dispatch(&mut app, Block5dCommand::SetSelection(set_selection::SetSelection { ids: vec!["g0".into()] }));
-        assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+        let result = testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
+        assert!(!result.mutations.is_empty(), "addGripKind is a mutation and must reach document operations under kind discipline");
     }
     //#endregion 🔖️Behavior
 }

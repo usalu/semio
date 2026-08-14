@@ -22,6 +22,7 @@ use semio_framework_os::{
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::{document_backbone_ref, VcsError};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_tab_stack_layout, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -392,7 +393,14 @@ impl ArtifactApp for HomeApp {
         }
     }
 
-    fn handle(command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::apps::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
+    /// 🕹️ Home declares NO interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+    /// its VFS rows (`🏠️main` window) render through `build_virtual_file_system_scene`, a
+    /// `UiNode::ComponentScene` the framework's `stamp_and_cache_interaction_ui` post-pass never walks
+    /// (that pass only stamps `UiNode::Tree`), and every row-scoped command (`navigateVirtualFileSystemNode`,
+    /// `deleteVirtualFileSystemNode`) already takes an explicit `node_id` argument from the click event
+    /// rather than reading a stored selection — there was no bespoke selection/hover config, mutation, or
+    /// command here to delete. `_interaction` is accepted (trait-required) and unused.
+    fn handle(command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::apps::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

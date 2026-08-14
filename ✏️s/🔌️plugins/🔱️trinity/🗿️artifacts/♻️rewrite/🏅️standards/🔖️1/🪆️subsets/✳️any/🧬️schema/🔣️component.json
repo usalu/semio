@@ -9,14 +9,9 @@
     "rhsJson",
     "parameterBindings",
     "ruleLayout",
-    "selectedNodeIds",
-    "activeHoverVar",
-    "activeSelectVar",
     "lodModeByWindow",
     "beforePaneCamera",
     "reorganizeEpoch",
-    "hoverEpoch",
-    "selectEpoch",
     "locale"
   ],
   "properties": {
@@ -49,21 +44,6 @@
       },
       "x-semio-state": "artifact"
     },
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "activeHoverVar": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "activeSelectVar": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "lodModeByWindow": {
       "type": "object",
       "additionalProperties": {
@@ -76,16 +56,6 @@
       "x-semio-state": "config"
     },
     "reorganizeEpoch": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
-    "hoverEpoch": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
-    "selectEpoch": {
       "type": "integer",
       "format": "int64",
       "x-semio-state": "config"

@@ -22,7 +22,8 @@ pub use infinite_canvas::board::ports::directed_dag as dag;
 pub use infinite_canvas as canvas;
 
 use dag::{dag_screen_to_world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec};
-use serde::Deserialize;
+use semio_framework_os_kernel::{DomainHover, DomainSelection, SelectionMethod};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️ScenePayload
@@ -93,14 +94,6 @@ pub struct GraphViewport {
 
 fn default_zoom() -> f64 {
     1.0
-}
-
-/// 🖱️ Hovered node id, mirrors `ui_wgpu::wgpu::NodeGraphHover`'s wire shape.
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GraphHoverRecord {
-    #[serde(default)]
-    node_id: Option<String>,
 }
 
 //#region ⚠️ Errors
@@ -191,13 +184,16 @@ pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[Graph
     }
 }
 
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3c: `selection`/`hover` deleted —
+/// they used to mirror whatever an app pushed in, duplicating the framework's own `InteractionState`.
+/// [`GraphHost::sync_interaction`] reads the framework's `DomainSelection`/`DomainHover` for this
+/// domain instead, kept as a call separate from geometry sync since interaction state changes far
+/// more often than the node/edge content this payload still carries.
 #[derive(Clone, Debug, Default)]
 pub struct NodeGraphScenePayload {
     pub nodes: Vec<GraphNodeRecord>,
     pub edges: Vec<GraphEdgeRecord>,
     pub viewport: Option<GraphViewport>,
-    pub selection: Vec<String>,
-    pub hover: Option<GraphHoverRecord>,
     pub preview_off_json: Option<String>,
     pub lod_json: Option<String>,
     pub catalogue_json: Option<String>,
@@ -246,8 +242,6 @@ impl NodeGraphScenePayload {
             nodes: value.get("nodes").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
             edges: value.get("edges").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
             viewport: value.get("viewport").cloned().and_then(|v| serde_json::from_value(v).ok()),
-            selection: value.get("selection").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
-            hover: value.get("hover").cloned().and_then(|v| serde_json::from_value(v).ok()),
             preview_off_json: value.get("previewOffJson").and_then(|v| v.as_str()).map(str::to_string),
             lod_json: value.get("lodJson").and_then(|v| v.as_str()).map(str::to_string),
             catalogue_json: value.get("catalogueJson").and_then(|v| v.as_str()).map(str::to_string),
@@ -261,6 +255,25 @@ impl NodeGraphScenePayload {
     }
 }
 //#endregion 🔖️ScenePayload
+
+/// 🎯️ Raw geometric hit-test result of one completed pick/marquee gesture — see
+/// [`GraphHost::take_selection_gather`]. No merge/mode algebra lives on this type; the caller pairs it
+/// with the active modifier→merge policy and dispatches ONE `interactionSelect`.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectionGather {
+    pub target_ids: Vec<String>,
+    pub method: SelectionMethod,
+}
+
+/// 🔤️ `DagHost::selection_preview_method` returns its own lowercase label vocabulary (not the
+/// framework `SelectionMethod` wire enum) — this is the one narrow translation point.
+fn selection_method_from_dag_label(label: &str) -> SelectionMethod {
+    match label {
+        "lasso" => SelectionMethod::Lasso,
+        _ => SelectionMethod::Rectangle,
+    }
+}
 
 //#region 🔖️GraphHost
 /// 🕸️ Retained generic node-graph host wrapping the DAG canvas engine.
@@ -280,6 +293,10 @@ pub struct GraphHost {
     /// 🔗️ (d) runtime wiring — content-hash of the last-applied payload, so [`GraphHost::sync_from_payload`]
     /// only rebuilds `dag` when the upstream content actually changed. A change-detection cache, not state.
     last_payload_signature: u64,
+    /// 🎯️ (c) Preview/Effect — the raw geometric hit-test result of the last completed pick/marquee
+    /// gesture, read once by [`GraphHost::take_selection_gather`] so the caller can dispatch it as ONE
+    /// batched `interactionSelect` — no merge algebra lives here, `next_selection` owns that.
+    pending_gather: Option<SelectionGather>,
 }
 
 impl Default for GraphHost {
@@ -290,7 +307,7 @@ impl Default for GraphHost {
 
 impl GraphHost {
     pub fn from_fixture(fixture: DagFixture) -> Self {
-        Self { dag: DagHost::from_fixture_without_layout(fixture), catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: 0 }
+        Self { dag: DagHost::from_fixture_without_layout(fixture), catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: 0, pending_gather: None }
     }
 
     fn payload_signature(payload: &NodeGraphScenePayload) -> u64 {
@@ -300,8 +317,6 @@ impl GraphHost {
         format!("{:?}", payload.nodes).hash(&mut hasher);
         format!("{:?}", payload.edges).hash(&mut hasher);
         format!("{:?}", payload.viewport).hash(&mut hasher);
-        payload.selection.hash(&mut hasher);
-        format!("{:?}", payload.hover).hash(&mut hasher);
         payload.preview_off_json.hash(&mut hasher);
         payload.lod_json.hash(&mut hasher);
         payload.computing_json.hash(&mut hasher);
@@ -316,8 +331,6 @@ impl GraphHost {
             self.dag = DagHost::from_fixture_without_layout(fixture);
             self.last_payload_signature = signature;
         }
-        self.dag.set_selection(&payload.selection);
-        self.dag.set_hover(payload.hover.as_ref().and_then(|hover| hover.node_id.as_deref()));
         if let Some(preview_off_json) = &payload.preview_off_json {
             if let Ok(ids) = serde_json::from_str::<Vec<String>>(preview_off_json) {
                 self.dag.set_dimmed(&ids);
@@ -434,8 +447,36 @@ impl GraphHost {
         self.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3c: the DAG engine still owns
+    /// geometric hit-testing (plain pick, rectangle/lasso marquee) — that stays here, it is not
+    /// selection algebra. What changed: the resulting hit ids no longer become this host's committed
+    /// selection by themselves. They are captured into `pending_gather` for the caller to read via
+    /// [`GraphHost::take_selection_gather`] and dispatch as ONE batched `interactionSelect`; the
+    /// os-kernel `next_selection` machine (not this file) applies merge/mode algebra, and the result
+    /// flows back down through [`GraphHost::sync_interaction`] to become what actually paints.
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        let was_marquee = !self.dag.preselect_widget_ids().is_empty();
+        let method = if was_marquee { selection_method_from_dag_label(self.dag.selection_preview_method()) } else { SelectionMethod::Pick };
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
+        let target_ids = self.dag.selected_node_ids();
+        self.pending_gather = if target_ids.is_empty() { None } else { Some(SelectionGather { target_ids, method }) };
+    }
+
+    /// 🎯️ Reads (and clears) the batch of node ids the last completed pick/marquee gesture hit — the
+    /// caller turns this into ONE `interactionSelect{targets,method,merge}` dispatch, applying the
+    /// modifier→merge policy itself (this host receives no merge concept, only raw geometry).
+    pub fn take_selection_gather(&mut self) -> Option<SelectionGather> {
+        self.pending_gather.take()
+    }
+
+    /// 🕹️ Reads the framework's current selection/hover for this domain and applies it to the paint
+    /// backend — replaces the deleted `set_hover`/`set_hover_channel`/scene-payload push path. Called
+    /// at render time, independent of geometry sync (interaction state changes far more often).
+    pub fn sync_interaction(&mut self, selection: Option<&DomainSelection>, hover: Option<&DomainHover>) {
+        let ids: Vec<String> = selection.map(|selection| selection.ids.clone()).unwrap_or_default();
+        self.dag.set_selection(&ids);
+        let hover_id = hover.and_then(|hover| hover.ids.first()).map(String::as_str);
+        self.dag.set_hover(hover_id);
     }
 
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
@@ -446,14 +487,6 @@ impl GraphHost {
     /// see `DagHost::entity_screen_json`. Powers introduction-demonstration semantic targeting.
     pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
         self.dag.entity_screen_json(domain, id)
-    }
-
-    pub fn set_hover(&mut self, node_id: Option<&str>) {
-        self.dag.set_hover(node_id);
-    }
-
-    pub fn set_hover_channel(&mut self, node_id: Option<&str>, port_id: Option<&str>) {
-        self.dag.set_hover_channel(node_id, port_id);
     }
 
     pub fn align_selection(&mut self, mode: &str) -> Result<(), NodeGraphError> {
@@ -575,7 +608,9 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = pointerUpScreen)]
         pub fn pointer_up_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
-            self.state.borrow_mut().host.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
+            // 🕹️ Routed through the `GraphHost` wrapper (not straight to `dag`) so a completed
+            // pick/marquee gesture is captured into `pending_gather` — see `take_selection_gather_json`.
+            self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         }
 
         #[wasm_bindgen(js_name = wheelScreen)]
@@ -679,14 +714,24 @@ mod wasm_session {
             self.state.borrow().host.dag.entity_screen_json(domain, id)
         }
 
-        #[wasm_bindgen(js_name = setHover)]
-        pub fn set_hover(&self, widget_id: Option<String>) {
-            self.state.borrow_mut().host.set_hover(widget_id.as_deref());
+        /// 🕹️ Replaces the deleted `setHover`/`setHoverChannel` push-setters — `selectedIdsJson`/
+        /// `hoveredId` are the caller's resolved `DomainSelection.ids`/`DomainHover.ids.first()` for
+        /// this domain, read from the framework's `InteractionState` at render time, not pushed
+        /// arbitrarily from app code.
+        #[wasm_bindgen(js_name = syncInteraction)]
+        pub fn sync_interaction(&self, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
+            let ids: Vec<String> = if selected_ids_json.trim().is_empty() { Vec::new() } else { serde_json::from_str(selected_ids_json).map_err(|e| JsValue::from_str(&e.to_string()))? };
+            let selection = DomainSelection { granularity: String::new(), ids, anchor_id: None };
+            let hover = hovered_id.map(|id| DomainHover { channel: "pointer".into(), ids: vec![id] });
+            self.state.borrow_mut().host.sync_interaction(Some(&selection), hover.as_ref());
+            Ok(())
         }
 
-        #[wasm_bindgen(js_name = setHoverChannel)]
-        pub fn set_hover_channel(&self, widget_id: Option<String>, port: Option<String>) {
-            self.state.borrow_mut().host.set_hover_channel(widget_id.as_deref(), port.as_deref());
+        /// 🎯️ Drains the last completed pick/marquee gesture's raw hit targets — the JS host pairs
+        /// this with its own modifier→merge policy and dispatches ONE `interactionSelect`.
+        #[wasm_bindgen(js_name = takeSelectionGatherJson)]
+        pub fn take_selection_gather_json(&self) -> Option<String> {
+            self.state.borrow_mut().host.take_selection_gather().map(|gather| serde_json::to_string(&gather).unwrap_or_else(|_| "null".into()))
         }
 
         #[wasm_bindgen(js_name = alignSelection)]
@@ -760,17 +805,32 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_syncs_selection() {
+    fn graph_host_syncs_selection_from_framework_interaction_state() {
         let mut host = GraphHost::default();
         let payload = NodeGraphScenePayload {
             nodes: vec![GraphNodeRecord { id: "a".into(), label: Some("A".into()), outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]), ..Default::default() }],
             edges: Vec::new(),
             viewport: Some(GraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
-            selection: vec!["a".into()],
             ..Default::default()
         };
         host.sync_from_payload(&payload).expect("sync");
+        let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
+        host.sync_interaction(Some(&selection), None);
         assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
+    }
+
+    #[test]
+    fn graph_host_pointer_up_after_plain_click_gathers_one_pick_target() {
+        let mut host = GraphHost::default();
+        let payload = payload_with_node("a");
+        host.sync_from_payload(&payload).expect("sync");
+        host.set_viewport(400, 400, 1.0);
+        host.pointer_down_screen(200.0, 200.0, 0, false, false, false, false);
+        host.pointer_up_screen(200.0, 200.0, false, false, false);
+        let gather = host.take_selection_gather().expect("gather");
+        assert_eq!(gather.target_ids, vec!["a".to_string()]);
+        assert_eq!(gather.method, SelectionMethod::Pick);
+        assert!(host.take_selection_gather().is_none(), "gather is take-once");
     }
 
     #[test]
@@ -909,8 +969,6 @@ mod tests {
         assert!(payload.nodes.is_empty());
         assert!(payload.edges.is_empty());
         assert!(payload.viewport.is_none());
-        assert!(payload.selection.is_empty());
-        assert!(payload.hover.is_none());
         assert!(payload.catalogue_json.is_none());
     }
 
@@ -920,8 +978,6 @@ mod tests {
             "nodes": [{"id": "1", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}],
             "edges": [{"id": "2", "sourceNodeId": "a", "sourcePortId": "out", "targetNodeId": "b", "targetPortId": "in"}],
             "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0},
-            "selection": ["a"],
-            "hover": {"nodeId": "a"},
             "previewOffJson": "[]",
             "lodJson": "{}",
             "catalogueJson": "cat",
@@ -934,7 +990,6 @@ mod tests {
         let payload = NodeGraphScenePayload::from_json(&value);
         assert_eq!(payload.nodes.len(), 1);
         assert_eq!(payload.edges.len(), 1);
-        assert_eq!(payload.selection, vec!["a".to_string()]);
         assert_eq!(payload.catalogue_json.as_deref(), Some("cat"));
         assert_eq!(payload.controls_json.as_deref(), Some("ctl"));
         assert_eq!(payload.clusters_json.as_deref(), Some("clu"));
@@ -974,24 +1029,25 @@ mod tests {
     }
 
     #[test]
-    fn graph_host_sync_from_payload_sets_hover_node_only() {
+    fn graph_host_sync_interaction_sets_hover_node_only() {
         let mut host = GraphHost::default();
-        let mut payload = payload_with_node("a");
-        payload.hover = Some(GraphHoverRecord { node_id: Some("a".into()) });
+        let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
+        let hover = DomainHover { channel: "pointer".into(), ids: vec!["a".into()] };
+        host.sync_interaction(None, Some(&hover));
         assert_eq!(host.hovered_node_id().as_deref(), Some("a"));
         assert_eq!(host.hovered_channel_json(), "null");
     }
 
     #[test]
-    fn graph_host_sync_from_payload_clears_hover_when_absent() {
+    fn graph_host_sync_interaction_clears_hover_when_absent() {
         let mut host = GraphHost::default();
-        let mut payload = payload_with_node("a");
-        payload.hover = Some(GraphHoverRecord { node_id: Some("a".into()) });
+        let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
+        let hover = DomainHover { channel: "pointer".into(), ids: vec!["a".into()] };
+        host.sync_interaction(None, Some(&hover));
         assert_eq!(host.hovered_node_id().as_deref(), Some("a"));
-        payload.hover = None;
-        host.sync_from_payload(&payload).expect("sync");
+        host.sync_interaction(None, None);
         assert_eq!(host.hovered_node_id(), None);
     }
 
@@ -1066,9 +1122,10 @@ mod tests {
     #[test]
     fn graph_host_selected_node_ids_json_matches_selection() {
         let mut host = GraphHost::default();
-        let mut payload = payload_with_node("a");
-        payload.selection = vec!["a".into()];
+        let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
+        let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
+        host.sync_interaction(Some(&selection), None);
         assert_eq!(host.selected_node_ids_json(), r#"["a"]"#);
     }
 
@@ -1131,9 +1188,10 @@ mod tests {
     #[test]
     fn graph_host_align_selection_errors_on_unknown_mode() {
         let mut host = GraphHost::default();
-        let mut payload = payload_with_node("a");
-        payload.selection = vec!["a".into()];
+        let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
+        let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
+        host.sync_interaction(Some(&selection), None);
         let err = host.align_selection("bogusMode").unwrap_err();
         assert!(matches!(err, NodeGraphError::Dag(_)));
     }
@@ -1141,9 +1199,10 @@ mod tests {
     #[test]
     fn graph_host_align_selection_ok_for_single_node() {
         let mut host = GraphHost::default();
-        let mut payload = payload_with_node("a");
-        payload.selection = vec!["a".into()];
+        let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
+        let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
+        host.sync_interaction(Some(&selection), None);
         host.align_selection("alignLeft").expect("align");
     }
 

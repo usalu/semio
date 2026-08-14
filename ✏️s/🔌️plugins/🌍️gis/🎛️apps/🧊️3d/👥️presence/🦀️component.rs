@@ -5,14 +5,15 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of gis3d view state (camera, pin selection).
+/// 👥️ Shareable live subset of gis3d view state — just the camera now; pin selection broadcasts
+/// automatically via the framework's typed `PresenceInteraction` (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "gis3d.presence")]
 #[dsl(layout = "lines")]
 pub struct Gis3dPresence {
     pub camera_json: String,
-    pub selected_ids: Vec<String>,
 }
 
 impl Default for Gis3dPresence {
@@ -25,7 +26,6 @@ impl Default for Gis3dPresence {
                 "fov": 45.0
             })
             .to_string(),
-            selected_ids: Vec::new(),
         }
     }
 }

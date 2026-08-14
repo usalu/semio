@@ -71,8 +71,6 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: impl Into<Label>, 
                 icon_id: None,
                 default_open: None,
                 action: Some(puzzle2d_action("addNode", Some(json!({ "kind": kind_id })))),
-                hover_action: None,
-                unhover_action: None,
                 actions: None,
                 draggable: draggable.then_some(true),
                 drag_data: draggable.then(|| puzzle2d_catalog_item_drag_data(slice, kind_id, entry)),
@@ -100,11 +98,9 @@ pub fn render(fixture: &Value, labels: &Puzzle2dLabels) -> UiNode {
             kind_catalog_section("puzzle2d-play-kinds.handles", "handles", labels.handles, handle_entries, labels),
             kind_catalog_section("puzzle2d-play-kinds.edges", "edges", labels.edges, edge_entries, labels),
         ],
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
         drop_action: None,
         menu: None,
+        interaction_domain: None,
     })
 }
 //#endregion 🔖️Render

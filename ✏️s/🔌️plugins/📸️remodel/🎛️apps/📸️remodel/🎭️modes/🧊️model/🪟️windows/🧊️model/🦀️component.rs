@@ -29,6 +29,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: ["select", "measure", "sculpt"].iter().map(|id| UtilityRef::from(*id)).collect(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -134,11 +135,16 @@ fn world_points_json(scene: &RemodelSnapshot, config: &RemodelConfig) -> Option<
 }
 
 pub fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
+    // 🕹️ The "assets" selection now lives in the framework-owned interaction domain (ticket
+    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactApp::render` carries no
+    // `InteractionView`, so this scene payload can no longer embed a live selection; every
+    // not-yet-migrated `world3d_selection_json` call site in this repo already passes an empty
+    // selection for the same reason.
     let mut world_scene = world3d_scene(
         world3d_camera_json(config.camera.position, config.camera.target, config.camera.fov),
         world_meshes_json(scene),
         world_instances_json(config),
-        world3d_selection_json(&config.selection.mode, &[], None),
+        world3d_selection_json("rectangle", &[], None),
         &WorldSunConfig::default(),
     );
     world_scene.points_json = world_points_json(scene, config);

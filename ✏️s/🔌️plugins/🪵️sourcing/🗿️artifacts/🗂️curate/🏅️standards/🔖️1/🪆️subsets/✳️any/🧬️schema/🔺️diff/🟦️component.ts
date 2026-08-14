@@ -85,8 +85,6 @@ export interface CurateDiff {
   curated?: CurateCuratedDelta | null;
   /** @state config */
   filters?: Filters | null;
-  /** @state presence */
-  selectedObjectId?: string | null;
   /** @state config */
   locale?: string | null;
   /** @state config */

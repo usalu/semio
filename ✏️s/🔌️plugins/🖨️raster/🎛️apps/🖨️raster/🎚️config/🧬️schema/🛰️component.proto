@@ -18,10 +18,7 @@ message RasterConfigViewportSize {
 }
 
 message RasterConfig {
-  // @state config
-  repeated string selected_ids = 1;
-  // @state config
-  optional string hovered_id = 2;
+  reserved 1, 2;
   // @state config
   double brush_size = 3;
   // @state config

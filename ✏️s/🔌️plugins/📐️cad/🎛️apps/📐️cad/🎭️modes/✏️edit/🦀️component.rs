@@ -4,7 +4,7 @@
 
 use crate::apps::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::apps::cad::terminology::CadLabels;
-use crate::apps::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, camera_json, resolve_active_object_id, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_PLAY_APP_ID};
+use crate::apps::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_PLAY_APP_ID};
 use crate::apps::cad::config::CadDislocateOptions;
 use crate::apps::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
@@ -54,30 +54,33 @@ pub fn layout() -> WindowLayout {
 //#endregion 🔖️Definition
 
 //#region 🔖️WorldScene
-pub fn instance_is_component_hovered(runtime: &CadPlayRuntime, object_id: &str) -> bool {
-    runtime.hovered_target.as_ref().map_or_else(|| runtime.hovered_object_id.as_deref() == Some(object_id), |target| target.mode.as_deref() == Some("mesh") && target.object_id.as_deref() == Some(object_id))
+/// 🐁️ ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh hover is the framework-owned
+/// `"cad"` interaction domain now, and `ArtifactApp::render` (unlike `handle`/`copy_fragment`/
+/// `cut_operations`) has NO `InteractionView` parameter — a per-object hover tint in the World3d
+/// scene payload is unreachable at this render boundary. Documented reduced-fidelity gap, matching
+/// this file's own pre-existing `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` gap notes; always `false` until
+/// a future wave threads render-time interaction state through.
+pub fn instance_is_component_hovered(_runtime: &CadPlayRuntime, _object_id: &str) -> bool {
+    false
 }
 
 /// @emoji 🕹️ Whether this window's active Dislocate utility has a visible handle for the selection.
-pub fn gumball_active(runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> bool {
-    active_utility == Some(CAD_DISLOCATE_UTILITY_ID) && (options.move_enabled || options.rotate_enabled) && (!runtime.selected_object_ids.is_empty() || !runtime.component_selection.ids.is_empty())
+/// ⚠️ Same `render`-has-no-`InteractionView` gap as `instance_is_component_hovered` — the gumball
+/// cannot know the current mesh selection here, so it never shows. Documented gap.
+pub fn gumball_active(_runtime: &CadPlayRuntime, _active_utility: Option<&str>, _options: CadDislocateOptions) -> bool {
+    false
 }
 
-/// @emoji 🎯️ World-space pivot for the gumball: centroid of selected objects across all panes.
-/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the gumball pivot used to scan
-/// `CadSnapshot`'s inline object list, which no longer exists (composed `s.stdio.semio.model`
-/// CHILD documents now, unresolved at this render boundary). Documented reduced-fidelity gap.
-pub fn gumball_target_for(_document: &CadSnapshot, _selected_ids: &[String]) -> Option<[f64; 3]> {
-    None
-}
-
+/// ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `selected` is always `false` here — see
+/// `instance_is_component_hovered`'s doc comment for why `render` cannot know the current mesh
+/// selection. Documented reduced-fidelity gap.
 pub fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
     let instances: Vec<Value> = objects
         .iter()
         .filter(|object| object.visible)
         .map(|object| {
             let mesh_id = resolve_object_mesh_url(object).map_or_else(|| object.id.clone(), |url| world3d_mesh_id_from_url(&url));
-            let selected = runtime.selected_object_ids.contains(&object.id);
+            let selected = false;
             let hovered = instance_is_component_hovered(runtime, &object.id);
             json!({
                 "id": object.id,
@@ -119,8 +122,15 @@ pub fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) 
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn world_selection_json(document: &CadSnapshot, runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> String {
-    let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, runtime.selected_object_ids.as_slice(), runtime.hovered_object_id.as_deref())).unwrap_or_else(|_| json!({}));
+/// ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object/vertex/edge/face
+/// selection AND hover are the framework-owned `"cad"` interaction domain now, unreachable at this
+/// render boundary (see `instance_is_component_hovered`'s doc comment) — `selectionMode`/
+/// `granularity`/`targets`/`componentIds`/`activeObjectId`/`hoveredComponent` are no longer emitted
+/// here (the client no longer needs them from this payload either: `interaction_domain`-bound UI
+/// gets its presence stamped by the framework wrapper post-render). `gumball_active` is always
+/// `false` for the same reason.
+pub fn world_selection_json(_document: &CadSnapshot, runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> String {
+    let mut value: Value = serde_json::from_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         let active = gumball_active(runtime, active_utility, options);
         if active_utility == Some(CAD_DISLOCATE_UTILITY_ID) {
@@ -140,23 +150,8 @@ pub fn world_selection_json(document: &CadSnapshot, runtime: &CadPlayRuntime, ac
         object.insert("gumballActive".into(), json!(active));
         object.insert("engagementSessionActive".into(), json!(runtime.engagement_session.is_some()));
         object.insert("showEdges".into(), json!(true));
-        object.insert("selectionMode".into(), json!(runtime.component_selection.mode));
-        object.insert("granularity".into(), json!(runtime.component_selection.mode));
-        object.insert("targets".into(), json!(runtime.component_selection.targets));
-        object.insert("componentIds".into(), json!(runtime.component_selection.ids));
-        if let Some(active) = resolve_active_object_id(runtime) {
-            object.insert("activeObjectId".into(), json!(active));
-        }
-        if let Some(target) = runtime.hovered_target.as_ref() {
-            object.insert("hoveredComponent".into(), json!(target));
-        }
         if let Some(reference_id) = runtime.selected_reference_id.as_deref() {
             object.insert("referenceSelectedId".into(), json!(reference_id));
-        }
-        if active {
-            if let Some(target) = gumball_target_for(document, runtime.selected_object_ids.as_slice()) {
-                object.insert("gumballTarget".into(), json!(target));
-            }
         }
     }
     value.to_string()
@@ -224,7 +219,10 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
 
 //#region 🔖️Engagement
 pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
-    let selected_count = envelope.runtime.selected_object_ids.len();
+    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is framework-owned
+    // now and unreachable at this render boundary (see `instance_is_component_hovered`'s doc
+    // comment) — the status HUD can no longer report a live selected-object count. Documented gap.
+    let selected_count = 0;
     let model_definition_id = pane.model_definition_id();
     let session_active = envelope.runtime.engagement_session.is_some();
     let possible_engagements: Vec<WindowEngagementPossible> = if let Some(session) = envelope.runtime.engagement_session.as_ref() {

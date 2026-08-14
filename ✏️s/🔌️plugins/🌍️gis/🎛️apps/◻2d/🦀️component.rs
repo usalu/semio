@@ -9,7 +9,7 @@
 //! relocated from the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES),
 //! since an `AppIo` surface is app behaviour, not artifact data.
 
-use crate::apps::gis2d::commands::{example, features, locale, selection, shell, view};
+use crate::apps::gis2d::commands::{example, features, locale, shell, view};
 use crate::apps::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::apps::gis2d::modes::edit;
 use crate::apps::gis2d::modes::edit::windows::map;
@@ -18,10 +18,12 @@ use crate::apps::gis2d::terminology::gis2d_labels;
 use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass,
-    MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UiTreeItemNode, WindowMeasure,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    tree_item, tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowMeasure,
+    INTERACTION_SELECT_ACTION_ID,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -52,11 +54,17 @@ pub fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(GIS2D_PLAY_APP_ID).action(action, args)
 }
 
-/// 🌳️ A layer tree item — `tree_item_with_action` plus the icon that identifies each map layer, since
-/// the SDK's `PanelKit` family has no icon-carrying constructor. Shared by the document and catalogue
-/// panels, which render the same layer stack under different actions.
-pub fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..tree_item_with_action(id, label, description, action) }
+/// 🌳️ A layer tree item — `tree_item_with_action`/`tree_item` plus the icon that identifies each map
+/// layer, since the SDK's `PanelKit` family has no icon-carrying constructor. Shared by the document
+/// panel (`action: None` — the tree is `interaction_domain`-bound now, so the framework's renderer
+/// translates clicks into injected `interactionSelect`) and the catalogue panel (`action: Some(..)` —
+/// a real, non-selection click that toggles layer visibility).
+pub fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: Option<ActionDescriptor>) -> UiTreeItemNode {
+    let base = match action {
+        Some(action) => tree_item_with_action(id, label, description, action),
+        None => UiTreeItemNode { description, menu: None, ..tree_item(id, label) },
+    };
+    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..base }
 }
 //#endregion 🔖️Constants
 
@@ -135,20 +143,12 @@ semio_framework_plugin::app_commands! {
         "patchPositions" as "patch-positions" => patch_positions::PatchPositions,
         "patchRoutes" as "patch-routes" => patch_routes::PatchRoutes,
         "patchRoute" as "patch-route" => patch_route::PatchRoute,
-        "setSelection" as "selection" => set_selection::SetSelection,
         "toggleLayerVisibility" as "toggle-layer-visibility" => toggle_layer_visibility::ToggleLayerVisibility,
         "fitWorld" as "fit-world" => fit_world::FitWorld,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setRenderMode" as "render-mode" => set_render_mode::SetRenderMode,
         "setVectorStyle" as "vector-style" => set_vector_style::SetVectorStyle,
         "setLodMode" as "lod-mode" => set_lod_mode::SetLodMode,
-        "setFeatureSelection" as "feature-selection" => set_feature_selection::SetFeatureSelection,
-        "setHover" as "hover" => set_hover::SetHover,
-        "setSelectionMethod" as "selection-method" => set_selection_method::SetSelectionMethod,
-        "setSelectionMode" as "selection-mode" => set_selection_mode::SetSelectionMode,
-        "clearSelection" as "clear-selection" => clear_selection::ClearSelection,
-        "selectAll" as "select-all" => select_all::SelectAll,
-        "deselect" as "deselect" => deselect::Deselect,
         "focusFeature" as "focus-feature" => focus_feature::FocusFeature,
         "setLayerStrokeScale" as "layer-stroke-scale" => set_layer_stroke_scale::SetLayerStrokeScale,
         "setLocale" as "locale" => set_locale::SetLocale,
@@ -160,39 +160,45 @@ semio_framework_plugin::app_commands! {
 use example::set_active_example;
 use features::{patch_positions, patch_route, patch_routes};
 use locale::set_locale;
-use selection::{clear_selection, deselect, focus_feature, select_all, set_feature_selection, set_selection, set_selection_method, set_selection_mode};
 use shell::open_source;
-use view::{fit_world, set_camera, set_hover, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
+use view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
 //#endregion 🔖️Commands
 
 //#region 🔖️Gis2dPlayApp
 /// 🗺️ GIS 2D map play app. The document holds positions/routes/regions; everything else (camera,
-/// render mode, style, LOD, selection, hover, layer visibility, stroke weights, locale) is
-/// [`Gis2dConfig`] — a session-only but real, undoable config artifact.
+/// render mode, style, LOD, layer visibility, stroke weights, locale) is [`Gis2dConfig`] — a
+/// session-only but real, undoable config artifact. Layer AND feature selection/hover now live in
+/// the framework-owned `"features"` interaction domain (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 #[derive(Default)]
 pub struct Gis2dPlayApp;
+
+/// 🕹️ `interactionSelect` args for a single-feature pick against the `"features"` domain's
+/// `"feature"` granularity — the generic replacement for the deleted bespoke `setFeatureSelection`
+/// action (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+fn select_feature_action_args(feature_id: &str) -> Value {
+    let targets = json!([{ "granularity": "feature", "id": feature_id }]).to_string();
+    json!({ "domainId": "features", "targets": targets, "merge": "replace", "method": "pick" })
+}
 
 /// 🖱️ On-demand GIS tiled-map context menu from feature hit-test and selection — grouped
 /// disclosure via `Menu::of(registry)`; `organize_context_menu` (run automatically at the
 /// `VcsArtifactApp::context_menu` funnel) sorts the declared `.group(...)` rows into
 /// `RIBBON_PARENT_CATEGORIES` taxonomy order and inserts the pre-destructive separator itself.
+///
+/// 🕳️ `selected_ids` is always empty for now: `ArtifactApp::context_menu` carries no
+/// `InteractionView` (the SDK's B1 breaking pass threaded it only into `handle`/`copy_fragment`/
+/// `cut_operations` — see `w3c-summary.md`'s own flagged gap on `open_context_menu`'s `selection`
+/// field), so the "already selected" branch can never fire and `clearSelection` always renders
+/// disabled until a future wave wires interaction state through here too.
 fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     let hits = surface.map_or(&[][..], |s| s.hits.as_slice());
     let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
     if let Some(feature) = feature {
         let kind = if feature.domain == "route" { "route" } else { "position" };
-        let selected = selected_ids.iter().any(|id| id == &feature.id);
         return Menu::of(registry)
-            .action_args(
-                "setFeatureSelection",
-                json!({
-                    "positions": if kind == "position" { vec![&feature.id] } else { Vec::<&String>::new() },
-                    "routes": if kind == "route" { vec![&feature.id] } else { Vec::<&String>::new() },
-                    "mode": "default",
-                }),
-            )
+            .action_args(INTERACTION_SELECT_ACTION_ID, select_feature_action_args(&feature.id))
             .action_args("focusFeature", json!({ "featureId": feature.id, "featureKind": kind }))
-            .when(selected, |m| m.group("selection", |m| m.action_args("deselect", json!({ "featureId": feature.id, "featureKind": kind }))))
             .when(kind == "position", |m| m.group("open", |m| m.action_args("openSource", json!({ "featureId": feature.id }))))
             .build();
     }
@@ -320,7 +326,6 @@ impl ArtifactApp for Gis2dPlayApp {
                 field: str_arg(&["field"]).unwrap_or_default(),
                 value: str_arg(&["value"]).unwrap_or_default(),
             })),
-            "setSelection" => Ok(Gis2dCommand::SetSelection(set_selection::SetSelection { ids: string_list("ids") })),
             "toggleLayerVisibility" => Ok(Gis2dCommand::ToggleLayerVisibility(toggle_layer_visibility::ToggleLayerVisibility { layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default() })),
             "fitWorld" => Ok(Gis2dCommand::FitWorld(fit_world::FitWorld {})),
             "setCamera" => {
@@ -332,33 +337,6 @@ impl ArtifactApp for Gis2dPlayApp {
             "setRenderMode" => Ok(Gis2dCommand::SetRenderMode(set_render_mode::SetRenderMode { value: str_arg(&["value", "renderMode", "render_mode"]).unwrap_or_default() })),
             "setVectorStyle" => Ok(Gis2dCommand::SetVectorStyle(set_vector_style::SetVectorStyle { value: str_arg(&["value", "vectorStyle", "vector_style"]).unwrap_or_default() })),
             "setLodMode" => Ok(Gis2dCommand::SetLodMode(set_lod_mode::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() })),
-            "setFeatureSelection" => Ok(Gis2dCommand::SetFeatureSelection(set_feature_selection::SetFeatureSelection {
-                positions: string_list("positions"),
-                routes: string_list("routes"),
-                mode: str_arg(&["mode"]).unwrap_or_else(|| "default".into()),
-            })),
-            "setHover" => {
-                let hover_json = str_arg(&["hoverJson", "hover_json"])
-                    .or_else(|| args.get("hover").map(ToString::to_string))
-                    .or_else(|| {
-                        let object = args.as_object()?;
-                        if object.is_empty() || object.keys().all(|key| key == "surfaceId") {
-                            Some("null".into())
-                        } else {
-                            Some(args.to_string())
-                        }
-                    })
-                    .unwrap_or_else(|| "null".into());
-                Ok(Gis2dCommand::SetHover(set_hover::SetHover { hover_json }))
-            }
-            "setSelectionMethod" => Ok(Gis2dCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { value: str_arg(&["value", "selectionMethod", "selection_method"]).unwrap_or_default() })),
-            "setSelectionMode" => Ok(Gis2dCommand::SetSelectionMode(set_selection_mode::SetSelectionMode { value: str_arg(&["value", "selectionMode", "selection_mode"]).unwrap_or_default() })),
-            "clearSelection" => Ok(Gis2dCommand::ClearSelection(clear_selection::ClearSelection {})),
-            "selectAll" => Ok(Gis2dCommand::SelectAll(select_all::SelectAll {})),
-            "deselect" => Ok(Gis2dCommand::Deselect(deselect::Deselect {
-                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
-                feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()),
-            })),
             "focusFeature" => Ok(Gis2dCommand::FocusFeature(focus_feature::FocusFeature {
                 feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
                 feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()),
@@ -373,11 +351,11 @@ impl ArtifactApp for Gis2dPlayApp {
         }
     }
 
-    fn handle(command: &Gis2dCommand, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Gis2dCommand, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    /// 🧮️ Empty — gis2d's `Config` is session view state (camera/selection/layer visibility/…), not a
+    /// 🧮️ Empty — gis2d's `Config` is session view state (camera/render/layer visibility/…), not a
     /// user-facing settings record; `ConfigSpec::empty()` (the trait default) is correct as-is.
     fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
@@ -403,10 +381,10 @@ impl ArtifactApp for Gis2dPlayApp {
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
-        cfg: &ConfigView<'_, Gis2dConfig>,
+        _cfg: &ConfigView<'_, Gis2dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        gis2d_context_menu_items(registry, request.surface.as_ref(), &cfg.snapshot.selected_ids)
+        gis2d_context_menu_items(registry, request.surface.as_ref(), &[])
     }
 }
 //#endregion 🔖️Gis2dPlayApp
@@ -429,6 +407,31 @@ pub fn create_gis2d_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
+            // 🕹️ The framework-owned "features" interaction domain (ticket
+            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document tree's
+            // layer selection (granularity "layer") and the map's feature pick/marquee selection
+            // (granularity "feature"); auto-injects interactionSelect/interactionHover/clearSelection/
+            // selectAll/setSelectionMode/setInteractionGranularity, replacing every deleted bespoke
+            // setSelection/setFeatureSelection/setHover/setSelectionMethod/setSelectionMode/
+            // clearSelection/selectAll action below.
+            .interaction(InteractionDefinition {
+                id: "features".into(),
+                label: LocalizedLabel::native("Features", "Objekte"),
+                granularities: vec![
+                    GranularityDefinition { id: "layer".into(), label: LocalizedLabel::native("Layer", "Ebene"), icon_id: "layers".into() },
+                    GranularityDefinition { id: "feature".into(), label: LocalizedLabel::native("Feature", "Objekt"), icon_id: "crosshair".into() },
+                ],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(map::GIS2D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
             // ✏️ Mutation actions — flow through the document store with true inverses. `setActiveExample`
             // replaces document content by diffing every collection into batched create/delete/
             // replace-data operations (never a whole-document snapshot swap — that vocabulary is
@@ -437,22 +440,14 @@ pub fn create_gis2d_app() -> App {
             .mutation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
             .mutation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))
             .mutation("patchRoute", LocalizedLabel::native("Patch Route", "Route aktualisieren"))
-            // 👁️ View actions — mutate ephemeral config state (selection, camera, render config,
-            // hover, layer visibility, stroke weights), never the document.
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            // 👁️ View actions — mutate ephemeral config state (camera, render config, layer
+            // visibility, stroke weights), never the document.
             .view_action("toggleLayerVisibility", LocalizedLabel::native("Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"))
             .action_with(ActionDefinition::new_catalog("fitWorld", LocalizedLabel::native("Fit World", "Welt einpassen"), ActionKind::View).with_category("view"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("setRenderMode", LocalizedLabel::native("Set Render Mode", "Darstellungsmodus festlegen"))
             .view_action("setVectorStyle", LocalizedLabel::native("Set Vector Style", "Vektorstil festlegen"))
             .view_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"))
-            .action_with(ActionDefinition::new_catalog("setFeatureSelection", LocalizedLabel::native("Set Feature Selection", "Objektauswahl festlegen"), ActionKind::View).with_category("selection"))
-            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
-            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
-            .view_action("setSelectionMode", LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"))
-            .action_with(ActionDefinition::new_catalog("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::View).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::View).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("deselect", LocalizedLabel::native("Deselect", "Abwählen"), ActionKind::View).with_category("selection"))
             .action_with(ActionDefinition::new_catalog("focusFeature", LocalizedLabel::native("Focus Feature", "Objekt fokussieren"), ActionKind::View).with_category("view"))
             .view_action("setLayerStrokeScale", LocalizedLabel::native("Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"))
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
@@ -480,12 +475,6 @@ pub fn create_gis2d_app() -> App {
             ])
             .action_args("setLodMode", vec![
                 ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC),
-            ])
-            .action_args("setSelectionMethod", vec![
-                ActionArgDef::select("value", LocalizedLabel::native("Selection Method", "Auswahlmethode"), vec![
-                    ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")),
-                    ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso")),
-                ]).default_value("rectangle"),
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -532,7 +521,6 @@ pub(crate) mod testkit {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use semio_framework_plugin::ArtifactApp;
     use super::*;
     use crate::apps::gis2d::testkit::{app, app_with_registry, render};
     use semio_framework_plugin::{ContextMenuRequest, PluginApp};
@@ -547,20 +535,12 @@ mod tests {
             Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"p1","lon":1.0,"lat":2.0}]"#.into() }),
             Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: vec!["r1".into(), "r2".into()], field: "label".into(), value: "Home".into() }),
             Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: "r1".into(), field: "label".into(), value: "Home".into() }),
-            Gis2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["roads".into()] }),
             Gis2dCommand::ToggleLayerVisibility(toggle_layer_visibility::ToggleLayerVisibility { layer_id: "water".into() }),
             Gis2dCommand::FitWorld(fit_world::FitWorld {}),
             Gis2dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into() }),
             Gis2dCommand::SetRenderMode(set_render_mode::SetRenderMode { value: "vector".into() }),
             Gis2dCommand::SetVectorStyle(set_vector_style::SetVectorStyle { value: "colored".into() }),
             Gis2dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "automatic".into() }),
-            Gis2dCommand::SetFeatureSelection(set_feature_selection::SetFeatureSelection { positions: vec!["p1".into()], routes: vec!["r1".into()], mode: "default".into() }),
-            Gis2dCommand::SetHover(set_hover::SetHover { hover_json: "null".into() }),
-            Gis2dCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { value: "lasso".into() }),
-            Gis2dCommand::SetSelectionMode(set_selection_mode::SetSelectionMode { value: "additive".into() }),
-            Gis2dCommand::ClearSelection(clear_selection::ClearSelection {}),
-            Gis2dCommand::SelectAll(select_all::SelectAll {}),
-            Gis2dCommand::Deselect(deselect::Deselect { feature_id: "p1".into(), feature_kind: "position".into() }),
             Gis2dCommand::FocusFeature(focus_feature::FocusFeature { feature_id: "p1".into(), feature_kind: "position".into() }),
             Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 }),
             Gis2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
@@ -575,20 +555,12 @@ mod tests {
         "patch-positions",
         "patch-routes",
         "patch-route",
-        "selection",
         "toggle-layer-visibility",
         "fit-world",
         "camera",
         "render-mode",
         "vector-style",
         "lod-mode",
-        "feature-selection",
-        "hover",
-        "selection-method",
-        "selection-mode",
-        "clear-selection",
-        "select-all",
-        "deselect",
         "focus-feature",
         "layer-stroke-scale",
         "locale",
@@ -603,7 +575,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 22, "every Gis2dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 14, "every Gis2dCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -616,25 +588,12 @@ mod tests {
         }
     }
 
-    /// 🧷️ Pins the exact pre-migration bytes for the rows the `app_commands!` decomposition could have
-    /// silently rewritten: the three fieldless payloads (were unit variants) and the `Vec`-carrying
-    /// rows whose empty/non-empty shapes are distinct wire cases. Hex copied verbatim from the
-    /// pre-migration baseline dump (ticket
-    /// `26/08/05/GIS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`, `🧪️wire-baseline-2d-before.txt`).
+    /// 🧷️ `PatchRoutes`' empty-`Vec` shape round-trips identically to its non-empty shape — the one
+    /// `Vec`-carrying optional-field case left after the interaction-mechanism migration deleted every
+    /// other optional-field row (`setSelection`/`setFeatureSelection`/`clearSelection`/`selectAll`).
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
-        let hex = |command: &Gis2dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
-        assert_eq!(hex(&Gis2dCommand::FitWorld(fit_world::FitWorld {})), "01060000");
-        assert_eq!(hex(&Gis2dCommand::ClearSelection(clear_selection::ClearSelection {})), "010f0000");
-        assert_eq!(hex(&Gis2dCommand::SelectAll(select_all::SelectAll {})), "01100000");
-        assert_eq!(hex(&Gis2dCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() })), "01040001000c00");
-        assert_eq!(hex(&Gis2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["roads".into()] })), "01040105726f61647301000c010600");
-        assert_eq!(hex(&Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: String::new() })), "01020200056c6162656c03000c00010601020600");
-        assert_eq!(
-            hex(&Gis2dCommand::SetFeatureSelection(set_feature_selection::SetFeatureSelection { positions: Vec::new(), routes: Vec::new(), mode: "additive".into() })),
-            "010b0108616464697469766503000c00010c00020600"
-        );
-        assert_eq!(hex(&Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 })), "01130105726f616473020006000105000000000000f83f");
+    fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
+        store::os_store::test_support::assert_op_text_binary_equivalence(&Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: String::new() }));
     }
 
     /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip

@@ -21,9 +21,10 @@ use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, REMODEL_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MeshExporter, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -169,7 +170,6 @@ semio_framework_plugin::app_commands! {
         "clearGeoProducts" as "clear-geo-products" => clear_geo_products::ClearGeoProducts,
         "clearResult" as "clear-result" => clear_result::ClearResult,
         // 👁️ Config-only — emit `config_mutations`, never document operations.
-        "setSelection" as "selection" => set_selection::SetSelection,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setLayerVisibility" as "layer-visibility" => set_layer_visibility::SetLayerVisibility,
         "setFrameCursor" as "frame-cursor" => set_frame_cursor::SetFrameCursor,
@@ -192,7 +192,7 @@ use crate::apps::remodel::commands::{add_stream, import_frame_payload, import_vi
 use crate::apps::remodel::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
 use crate::apps::remodel::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
 use crate::apps::remodel::commands::{export_qc_report, import_frames, import_video};
-use crate::apps::remodel::commands::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table, set_selection};
+use crate::apps::remodel::commands::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table};
 //#endregion 🔖️Commands
 
 //#region 🔖️ActionBridge
@@ -231,10 +231,6 @@ mod args_bridge {
             Value::String(value) => value.parse().ok(),
             _ => None,
         }
-    }
-
-    fn strings(args: Option<&Value>, key: &str) -> Vec<String> {
-        field(args, key).and_then(Value::as_array).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default()
     }
 
     fn vec3(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
@@ -370,7 +366,6 @@ mod args_bridge {
             "clearTracks" => RemodelCommand::ClearTracks(clear_tracks::ClearTracks {}),
             "clearGeoProducts" => RemodelCommand::ClearGeoProducts(clear_geo_products::ClearGeoProducts {}),
             "clearResult" => RemodelCommand::ClearResult(clear_result::ClearResult {}),
-            "setSelection" => RemodelCommand::SetSelection(set_selection::SetSelection { mode: text_or("mode", "single"), ids: strings(args, "ids") }),
             // 🎥️ The world-3d surface reports its orbit camera as flat `{position,target,fov}`; a
             // `{camera:{…}}`-shaped payload (what `RemodelWorldCamera` itself serializes to) is accepted too.
             "setCamera" => {
@@ -518,7 +513,7 @@ impl ArtifactApp for RemodelPlayApp {
         args_bridge::command_from_action(action, args)
     }
 
-    fn handle(command: &RemodelCommand, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &RemodelCommand, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -531,7 +526,7 @@ impl ArtifactApp for RemodelPlayApp {
             capture::windows::frames::REMODEL_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, config),
             analyze::windows::report::REMODEL_PLAY_BODY_REPORT => analyze::windows::report::render(scene, config),
             media::REMODEL_PLAY_BODY_MEDIA => media::render(scene, labels),
-            document::REMODEL_PLAY_BODY_PIPELINE => document::render(scene, config, config.active_utility_id.as_str(), labels),
+            document::REMODEL_PLAY_BODY_PIPELINE => document::render(scene, config.active_utility_id.as_str(), labels),
             results::REMODEL_PLAY_BODY_RESULTS => results::render(scene, labels),
             parameters::REMODEL_PLAY_BODY_PARAMETERS => parameters::render(scene, labels),
             calibration_panel::REMODEL_PLAY_BODY_CALIBRATION => calibration_panel::render(scene, labels),
@@ -571,6 +566,25 @@ pub fn create_remodel_app() -> App {
             .window_kind_def(model::windows::model::definition())
             .window_kind_def(capture::windows::frames::definition())
             .window_kind_def(analyze::windows::report::definition())
+            // 🕹️ The "assets" interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM)
+            // replaces the deleted `RemodelSelection` config field — both windows that carry the "select"
+            // utility (`remodel-main`'s World3d viewport, `remodel-frames`' Canvas2d frame view) declare it.
+            .interaction(InteractionDefinition {
+                id: "assets".into(),
+                label: LocalizedLabel::native("Assets", "Assets"),
+                granularities: vec![GranularityDefinition { id: "asset".into(), label: LocalizedLabel::native("Asset", "Asset"), icon_id: "image".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(model::windows::model::REMODEL_PLAY_WINDOW_MAIN, vec![InteractionRef::new("assets")])
+            .window_kind_interactions(capture::windows::frames::REMODEL_PLAY_WINDOW_FRAMES, vec![InteractionRef::new("assets")])
             .default_layout(model::layout())
             .named_layout(capture::layout())
             .named_layout(analyze::layout())
@@ -737,7 +751,6 @@ pub fn create_remodel_app() -> App {
             .mutation("clearGeoProducts", LocalizedLabel::native("Clear Geo Products", "Geo-Produkte löschen"))
             .mutation("clearResult", LocalizedLabel::native("Clear Result", "Ergebnis löschen"))
             // 👁️ View-only runtime actions.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setLayerVisibility", LocalizedLabel::native("Set Layer Visibility", "Ebenensichtbarkeit festlegen"), ActionKind::View) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFrameCursor", LocalizedLabel::native("Set Frame Cursor", "Frame-Cursor festlegen"), ActionKind::View) })
@@ -860,7 +873,6 @@ mod tests {
             RemodelCommand::ClearTracks(clear_tracks::ClearTracks {}),
             RemodelCommand::ClearGeoProducts(clear_geo_products::ClearGeoProducts {}),
             RemodelCommand::ClearResult(clear_result::ClearResult {}),
-            RemodelCommand::SetSelection(set_selection::SetSelection { mode: "rectangle".into(), ids: vec!["a".into()] }),
             RemodelCommand::SetCamera(set_camera::SetCamera { camera: crate::apps::remodel::config::RemodelWorldCamera::default() }),
             RemodelCommand::SetLayerVisibility(set_layer_visibility::SetLayerVisibility { layer: "dense".into(), visible: false }),
             RemodelCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 }),
@@ -910,7 +922,6 @@ mod tests {
             "clear-tracks",
             "clear-geo-products",
             "clear-result",
-            "selection",
             "camera",
             "layer-visibility",
             "frame-cursor",
@@ -930,16 +941,18 @@ mod tests {
         }
     }
 
-    /// 📌️ Pinned pre-migration hex for the rows whose `Option` fields make `None`/`Some` distinct wire
-    /// cases, plus the two fieldless-variant shapes — copied verbatim out of this ticket's
-    /// `🧪️wire-baseline-before.txt`. A reordered row or a changed field order breaks these immediately.
+    /// 📌️ Pinned hex for the rows whose `Option` fields make `None`/`Some` distinct wire cases, plus the
+    /// two fieldless-variant shapes. `SetFrameCursor`'s ordinal shifted 33→32 (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM deleted the `setSelection` row ahead of it) —
+    /// a legitimate wire break on this greenfield repo, not a bug. A reordered row or a changed field
+    /// order breaks these immediately.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &RemodelCommand| command.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         assert_eq!(hex(&RemodelCommand::RunReconstruction(run_reconstruction::RunReconstruction {})), "01000000", "fieldless row 0");
         assert_eq!(hex(&RemodelCommand::ClearResult(clear_result::ClearResult {})), "011d0000", "fieldless row 29");
-        assert_eq!(hex(&RemodelCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: None, frame_index: 0 })), "01210001010400", "Option field absent");
-        assert_eq!(hex(&RemodelCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 })), "0121010873747265616d2d3102000600010402", "Option field present");
+        assert_eq!(hex(&RemodelCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: None, frame_index: 0 })), "01200001010400", "Option field absent");
+        assert_eq!(hex(&RemodelCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 })), "0120010873747265616d2d3102000600010402", "Option field present");
         assert_eq!(
             hex(&RemodelCommand::SetGeoParams(set_geo_params::SetGeoParams { enabled: false, origin_lon: None, origin_lat: Some(1.0), origin_alt: None, gsd_m: 0.05, dsm_cell_m: 0.1, dtm_filter_radius_m: 2.0, ortho_max_px: 4096 })),
             "0116000600010205000000000000f03f0405000000a09999a93f0505000000a09999b93f0605000000000000004007048020",
@@ -955,12 +968,12 @@ mod tests {
         let mut ids: Vec<&str> = every_command().iter().map(RemodelCommand::command_id).collect();
         ids.sort_unstable();
         ids.dedup();
-        assert_eq!(ids.len(), 40, "40 distinct manifest action ids");
+        assert_eq!(ids.len(), 39, "39 distinct manifest action ids");
 
         let mut keywords: Vec<String> = every_command().iter().map(|command| command.print_op().split_whitespace().next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();
-        assert_eq!(keywords.len(), 40, "40 distinct wire keywords");
+        assert_eq!(keywords.len(), 39, "39 distinct wire keywords");
     }
     /// 🌉️ The action bridge covers every action the manifest declares (framework-injected ones aside)
     /// and rejects anything else — the gap this migration closed (see `command_from_action`'s doc).
@@ -1012,11 +1025,6 @@ mod tests {
     }
 
     //#region 🔖️ManifestSanity
-    #[test]
-    fn every_declared_action_bridges_to_a_command_handler() {
-        testkit::assert_declared_actions_bridge_to_commands::<RemodelPlayApp>(create_remodel_app);
-    }
-
     #[test]
     fn the_manifest_declares_three_modes_three_windows_and_this_apps_panel_tabs() {
         let definition = create_remodel_app().definition;

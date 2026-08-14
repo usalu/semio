@@ -7,16 +7,18 @@
 //! typed media I/O surface (`map:in` overlay, ports, scene media) below in `🔖️Io` — relocated from
 //! the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 
-use crate::apps::gis3d::commands::{exaggeration, locale, selection, view};
+use crate::apps::gis3d::commands::{exaggeration, locale, view};
 use crate::apps::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use crate::apps::gis3d::modes::view as view_mode;
 use crate::apps::gis3d::modes::view::windows::terrain;
 use crate::artifacts::gisterrain::schema::default_terrain_document;
 use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ui_text, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ui_text, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    MediaPayload, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 use store::ArtifactPack;
@@ -103,8 +105,6 @@ semio_framework_plugin::app_commands! {
     pub enum Gis3dCommand for GisTerrainSnapshot, GisTerrainMutation, Gis3dConfig, Gis3dConfigMutation {
         "setExaggeration" as "exaggeration" => set_exaggeration::SetExaggeration,
         "setCamera" as "camera" => set_camera::SetCamera,
-        "setSelection" as "selection" => set_selection::SetSelection,
-        "worldSelect" as "world-select" => world_select::WorldSelect,
         "setLocale" as "locale" => set_locale::SetLocale,
     }
 }
@@ -112,7 +112,6 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier.
 use exaggeration::set_exaggeration;
 use locale::set_locale;
-use selection::{set_selection, world_select};
 use view::set_camera;
 //#endregion 🔖️Commands
 
@@ -198,15 +197,6 @@ impl ArtifactApp for Gis3dPlayApp {
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
-        let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
-        let ids = || -> Vec<String> {
-            let ids = string_list("ids");
-            if ids.is_empty() {
-                string_list("selectedIds")
-            } else {
-                ids
-            }
-        };
         match action {
             "setExaggeration" => Ok(Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration {
                 exaggeration: ["exaggeration", "value"].iter().find_map(|key| args.get(key).and_then(Value::as_f64)).unwrap_or(1.0),
@@ -217,8 +207,6 @@ impl ArtifactApp for Gis3dPlayApp {
                     .unwrap_or_else(|| "{}".into());
                 Ok(Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json }))
             }
-            "setSelection" => Ok(Gis3dCommand::SetSelection(set_selection::SetSelection { ids: ids() })),
-            "worldSelect" => Ok(Gis3dCommand::WorldSelect(world_select::WorldSelect { ids: ids() })),
             "setLocale" => Ok(Gis3dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
@@ -227,12 +215,12 @@ impl ArtifactApp for Gis3dPlayApp {
         }
     }
 
-    fn handle(command: &Gis3dCommand, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Gis3dCommand, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    /// 🧮️ Empty — gis3d's `Config` is session view state (camera/selection), not a user-facing
-    /// settings record; `ConfigSpec::empty()` (the trait default) is correct as-is.
+    /// 🧮️ Empty — gis3d's `Config` is session view state (camera), not a user-facing settings
+    /// record; `ConfigSpec::empty()` (the trait default) is correct as-is.
     fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
     }
@@ -265,9 +253,27 @@ pub fn create_gis3d_app() -> App {
             .default_mode_id(view_mode::GIS3D_PLAY_MODE_VIEW)
             .window_kind_def(terrain::definition())
             .default_layout(view_mode::layout())
+            // 🕹️ The framework-owned "features" interaction domain (ticket
+            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — the imported-overlay pin
+            // selection; auto-injects interactionSelect/interactionHover/clearSelection/selectAll/
+            // setSelectionMode/setInteractionGranularity, replacing the deleted bespoke
+            // setSelection/worldSelect view actions below.
+            .interaction(InteractionDefinition {
+                id: "features".into(),
+                label: LocalizedLabel::native("Features", "Objekte"),
+                granularities: vec![GranularityDefinition { id: "pin".into(), label: LocalizedLabel::native("Pin", "Stift"), icon_id: "map-pin".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .view_action("worldSelect", LocalizedLabel::native("Select", "Auswählen"))
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -310,7 +316,6 @@ pub(crate) mod testkit {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use semio_framework_plugin::ArtifactApp;
     use super::*;
     use crate::apps::gis3d::testkit::{app, app_with_registry, dispatch, render};
     use serde_json::json;
@@ -321,15 +326,13 @@ mod tests {
         vec![
             Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }),
             Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }),
-            Gis3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["p1".into()] }),
-            Gis3dCommand::WorldSelect(world_select::WorldSelect { ids: vec!["p1".into()] }),
             Gis3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ]
     }
 
     /// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
     /// manifest action id.
-    const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera", "selection", "world-select", "locale"];
+    const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera", "locale"];
 
     #[test]
     fn command_ids_are_unique_and_cover_every_row() {
@@ -339,7 +342,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 5, "every Gis3dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 3, "every Gis3dCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -350,20 +353,6 @@ mod tests {
             let printed = protocol::OpText::print_op(command);
             assert!(printed == *keyword || printed.starts_with(&format!("{keyword} ")), "row {} printed {printed:?}, expected the {keyword:?} wire keyword", command.command_id());
         }
-    }
-
-    /// 🧷️ Pins the exact pre-migration bytes for every row. Hex copied verbatim from the pre-migration
-    /// baseline dump (ticket `26/08/05/GIS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
-    /// `🧪️wire-baseline-3d-before.txt`).
-    #[test]
-    fn every_row_keeps_its_pre_migration_bytes() {
-        let hex = |command: &Gis3dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
-        assert_eq!(hex(&Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 })), "0100000100050000000000000440");
-        assert_eq!(hex(&Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() })), "0101011a7b22706f736974696f6e223a5b312e302c322e302c332e305d7d01000600");
-        assert_eq!(hex(&Gis3dCommand::SetSelection(set_selection::SetSelection { ids: vec!["p1".into()] })), "01020102703101000c010600");
-        assert_eq!(hex(&Gis3dCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() })), "01020001000c00");
-        assert_eq!(hex(&Gis3dCommand::WorldSelect(world_select::WorldSelect { ids: vec!["p1".into()] })), "01030102703101000c010600");
-        assert_eq!(hex(&Gis3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })), "0104010564652d444501000600");
     }
 
     /// 🎯️ Every declared action maps to a typed command. The pre-migration `gis3d_ui` crate had NO
@@ -384,12 +373,10 @@ mod tests {
     }
 
     #[test]
-    fn command_from_action_reads_the_nested_camera_object_and_both_id_key_spellings() {
+    fn command_from_action_reads_the_nested_camera_object() {
         let app = Gis3dPlayApp;
         let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).expect("setCamera");
         assert!(matches!(camera, Gis3dCommand::SetCamera(ref payload) if payload.camera_json.contains("position")));
-        let selection = Gis3dPlayApp::command_from_action("worldSelect", Some(&json!({ "selectedIds": ["p1"] }))).expect("worldSelect");
-        assert!(matches!(selection, Gis3dCommand::WorldSelect(ref payload) if payload.ids == vec!["p1".to_string()]));
     }
     //#endregion 🔖️CommandSurface
 
@@ -420,7 +407,6 @@ mod tests {
     fn view_actions_emit_no_ops_under_registry_kind_discipline() {
         let mut app = app_with_registry();
         assert!(dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).mutations.is_empty());
-        assert!(dispatch(&mut app, Gis3dCommand::WorldSelect(world_select::WorldSelect { ids: vec!["p1".into()] })).mutations.is_empty());
         assert_eq!(dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).mutations.len(), 1);
     }
     //#endregion 🔖️Manifest

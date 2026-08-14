@@ -24,8 +24,6 @@ pub struct CurateArtifact {
     pub curated: Vec<CuratedItem>,
     #[state(config)]
     pub filters: Filters,
-    #[state(presence)]
-    pub selected_object_id: Option<String>,
     #[state(config)]
     pub locale: String,
     #[state(config)]
@@ -45,7 +43,6 @@ impl Default for CurateArtifact {
             stock_extra: Vec::new(),
             curated: Vec::new(),
             filters: Filters::default(),
-            selected_object_id: None,
             locale: "en-US".into(),
             contributions_json: default_contributions_json(),
         }

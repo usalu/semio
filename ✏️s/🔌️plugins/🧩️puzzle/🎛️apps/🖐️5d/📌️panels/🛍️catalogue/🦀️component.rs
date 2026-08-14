@@ -96,11 +96,9 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
             kind_catalog_section("puzzle5d-play-kinds.fasteners", labels.fasteners, &slice("fasteners"), None, labels.none),
             kind_catalog_section("puzzle5d-play-kinds.ropes", labels.ropes, &slice("ropes"), None, labels.none),
         ],
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
         drop_action: None,
         menu: None,
+        interaction_domain: None,
     })
 }
 //#endregion 🔖️Render

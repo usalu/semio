@@ -12,7 +12,7 @@ pub struct SetGridSubdivisions {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetGridSubdivisions, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetGridSubdivisions, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_grid_subdivisions(Some(payload.value.round().clamp(1.0, 16.0)))]))
 }
 
@@ -20,6 +20,7 @@ pub fn handle(payload: &SetGridSubdivisions, _doc: &ArtifactView<'_, NoteSnapsho
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::note::commands::set_grid_opacity;
     use crate::apps::note::testkit::{dispatch, note_app};
     use crate::apps::note::NoteCommand;
 

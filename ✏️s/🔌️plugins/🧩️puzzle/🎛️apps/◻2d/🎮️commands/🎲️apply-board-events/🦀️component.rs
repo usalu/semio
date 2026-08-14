@@ -78,11 +78,11 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             "camera" => {
                 set_runtime_camera(&mut envelope.runtime, &payload);
             }
-            "select" => {
-                if let Some(ids) = payload.get("ids").and_then(|value| serde_json::from_value(value.clone()).ok()) {
-                    envelope.runtime.selected_ids = ids;
-                }
-            }
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: "select" board events used
+            // to write `envelope.runtime.selected_ids` directly; selection is framework-owned now and
+            // `handle` has no channel to write it — dropped (see puzzle3d's `select-same-kind` doc
+            // comment for the identical limitation).
+            "select" => {}
             "nodeDragEnd" => {
                 if let Some(moves) = payload.get("moves").and_then(|value| value.as_array()) {
                     for entry in moves {
@@ -119,9 +119,7 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             }
             "nodeDelete" => {
                 if let Some(id) = payload.get("id").and_then(|value| value.as_str()) {
-                    envelope.runtime.selected_ids = vec![id.to_string()];
-                    delete_selection_from_fixture(&mut envelope.fixture, &envelope.runtime.selected_ids);
-                    envelope.runtime.selected_ids.clear();
+                    delete_selection_from_fixture(&mut envelope.fixture, &[id.to_string()]);
                 }
             }
             "edgeDelete" => {
@@ -158,9 +156,4 @@ pub fn apply_board_events(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>)
     };
     *ctx.ui_scope = serde_json::from_str::<Vec<Value>>(events_json).map_or(UiDirtyScope::Full, |events| puzzle2d_board_events_scope(&events));
     apply_board_events_from_json(events_json, ctx.scene);
-    // 🪞️ `apply_host_events` (in the epilogue) trusts `host.selection` as the post-action source of
-    // truth and overwrites `runtime.selected_ids` with it — mirror the new selection into the host now
-    // (as every other selection-setting arm already does) or the just-applied `select`/
-    // `brushCandidates` selection is silently reverted.
-    ctx.host.borrow_mut().set_selection_ids(&ctx.scene.runtime.selected_ids);
 }

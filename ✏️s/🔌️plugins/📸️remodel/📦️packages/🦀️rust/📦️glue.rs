@@ -839,8 +839,6 @@ pub mod apps {
             pub mod import_video;
             #[path = "../../🎛️apps/📸️remodel/🎮️commands/🐚️export-qc-report/🦀️component.rs"]
             pub mod export_qc_report;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-selection/🦀️component.rs"]
-            pub mod set_selection;
             #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-camera/🦀️component.rs"]
             pub mod set_camera;
             #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-layer-visibility/🦀️component.rs"]

@@ -1,23 +1,46 @@
-//! 🗂️ Lowpoly play app — the always-visible selection method/merge-mode/component-kind window-chrome
-//! group (mirrors puzzle 3d's select measures group). Shared verbatim by both windows.
+//! 🗂️ Lowpoly play app — the always-visible mesh-domain granularity/selection-mode window-chrome group
+//! (mirrors puzzle 3d's select measures group). Shared verbatim by both windows.
+//!
+//! 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches the framework-injected
+//! `setInteractionGranularity`/`setSelectionMode` actions (mesh domain) instead of the deleted
+//! `toggleSelectionKind`/`setSelectionMethod`/`setSelectionModeDefault`. `ArtifactApp::window_measures`
+//! is not threaded an `InteractionView` this wave (only `handle`/`copy_fragment`/`cut_operations` are),
+//! so every toggle's `pressed` is `false` here — a real known gap, not an oversight; the shell surfaces
+//! the live granularity/mode generically off the same domain.
 
 use crate::apps::lowpoly::config::LowpolyConfig;
 use crate::apps::lowpoly::lowpoly_action;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
-use crate::apps::lowpoly::view::selection_targets_from_config;
+use crate::apps::lowpoly::view::MESH_INTERACTION_DOMAIN;
 use semio_framework_plugin::{LabelText, WindowMeasure};
 use serde_json::json;
 
-/// 🎯️ One selection-granularity toggle. Selection kinds are a non-exclusive multi-select (mesh + face +
-/// edge + vertex can all be active at once), so they are a window-measure toggle group — NOT a
-/// single-active utility group.
-fn selection_kind_toggle(id: &str, icon: &str, label: LabelText, kind: &str, pressed: bool) -> WindowMeasure {
-    WindowMeasure::Toggle { id: format!("lowpoly-select-{id}"), icon_id: icon.into(), label: Some(label.into()), pressed, text: None, on_change: lowpoly_action("toggleSelectionKind", Some(json!({ "kind": kind }))) }
+/// 🎯️ One mesh-domain granularity toggle — dispatches `setInteractionGranularity`.
+fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_id: &str) -> WindowMeasure {
+    WindowMeasure::Toggle {
+        id: format!("lowpoly-select-{id}"),
+        icon_id: icon.into(),
+        label: Some(label.into()),
+        pressed: false,
+        text: None,
+        on_change: lowpoly_action("setInteractionGranularity", Some(json!({ "domainId": MESH_INTERACTION_DOMAIN, "granularityId": granularity_id }))),
+    }
+}
+
+/// 🎯️ One mesh-domain selection-mode toggle — dispatches `setSelectionMode`.
+fn selection_mode_toggle(id: &str, icon: &str, label: LabelText, mode: &str) -> WindowMeasure {
+    WindowMeasure::Toggle {
+        id: format!("lowpoly-select-{id}"),
+        icon_id: icon.into(),
+        label: Some(label.into()),
+        pressed: false,
+        text: None,
+        on_change: lowpoly_action("setSelectionMode", Some(json!({ "domainId": MESH_INTERACTION_DOMAIN, "mode": mode }))),
+    }
 }
 
 /// 🎛️ The live chrome measure for this option.
-pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
-    let targets = selection_targets_from_config(config);
+pub fn measure(_config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "lowpoly-select".into(),
         label: labels.select.into(),
@@ -32,58 +55,12 @@ pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure 
         waiting: None,
         on_change: None,
         children: vec![
-            WindowMeasure::Toggle {
-                id: "lowpoly-select-rectangle".into(),
-                icon_id: "square".into(),
-                label: Some(labels.rectangle.into()),
-                pressed: config.selection_method == "rectangle",
-                text: None,
-                on_change: lowpoly_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))),
-            },
-            WindowMeasure::Toggle {
-                id: "lowpoly-select-lasso".into(),
-                icon_id: "lasso".into(),
-                label: Some(labels.lasso.into()),
-                pressed: config.selection_method == "lasso",
-                text: None,
-                on_change: lowpoly_action("setSelectionMethod", Some(json!({ "method": "lasso" }))),
-            },
-            WindowMeasure::Toggle {
-                id: "lowpoly-select-mode-default".into(),
-                icon_id: "mouse-pointer".into(),
-                label: Some(labels.selective.into()),
-                pressed: config.selection_mode_default == "default",
-                text: None,
-                on_change: lowpoly_action("setSelectionModeDefault", Some(json!({ "mode": "default" }))),
-            },
-            WindowMeasure::Toggle {
-                id: "lowpoly-select-mode-additive".into(),
-                icon_id: "plus".into(),
-                label: Some(labels.additive.into()),
-                pressed: config.selection_mode_default == "additive",
-                text: None,
-                on_change: lowpoly_action("setSelectionModeDefault", Some(json!({ "mode": "additive" }))),
-            },
-            WindowMeasure::Toggle {
-                id: "lowpoly-select-mode-subtractive".into(),
-                icon_id: "minus".into(),
-                label: Some(labels.subtractive.into()),
-                pressed: config.selection_mode_default == "subtractive",
-                text: None,
-                on_change: lowpoly_action("setSelectionModeDefault", Some(json!({ "mode": "subtractive" }))),
-            },
-            WindowMeasure::Toggle {
-                id: "lowpoly-select-mode-invertive".into(),
-                icon_id: "arrow-right-left".into(),
-                label: Some(labels.invertive.into()),
-                pressed: config.selection_mode_default == "invertive",
-                text: None,
-                on_change: lowpoly_action("setSelectionModeDefault", Some(json!({ "mode": "invertive" }))),
-            },
-            selection_kind_toggle("mesh", "box", labels.mesh, "mesh", targets.mesh),
-            selection_kind_toggle("face", "square", labels.face, "face", targets.face),
-            selection_kind_toggle("edge", "minus", labels.edge, "edge", targets.edge),
-            selection_kind_toggle("vertex", "circle", labels.vertex, "vertex", targets.vertex),
+            selection_mode_toggle("mode-single", "mouse-pointer", labels.selective, "single"),
+            selection_mode_toggle("mode-multiple", "plus", labels.additive, "multiple"),
+            granularity_toggle("mesh", "box", labels.mesh, "object"),
+            granularity_toggle("vertex", "circle", labels.vertex, "vertex"),
+            granularity_toggle("edge", "minus", labels.edge, "edge"),
+            granularity_toggle("face", "square", labels.face, "face"),
         ],
     }
 }
@@ -92,59 +69,29 @@ pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::lowpoly::testkit::{app, dispatch};
-    use crate::apps::lowpoly::LowpolyCommand;
-    use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn select_window_options_mirror_puzzle3d_taxonomy() {
+    fn select_window_options_expose_mesh_domain_granularity_and_mode_toggles() {
         let measure = measure(&LowpolyConfig::default(), semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));
         let (active_utility_id, children) = match measure {
             WindowMeasure::Group { active_utility_id, children, .. } => (active_utility_id, children),
             other => panic!("expected Group, got {other:?}"),
         };
         assert_eq!(active_utility_id, None, "Select options must always surface in window options");
-        let toggle_ids: Vec<&str> = children
+        let toggles: Vec<(&str, &semio_framework_plugin::ActionDescriptor)> = children
             .iter()
             .filter_map(|measure| match measure {
-                WindowMeasure::Toggle { id, .. } => Some(id.as_str()),
+                WindowMeasure::Toggle { id, on_change, .. } => Some((id.as_str(), on_change)),
                 _ => None,
             })
             .collect();
-        assert_eq!(
-            toggle_ids,
-            vec![
-                "lowpoly-select-rectangle",
-                "lowpoly-select-lasso",
-                "lowpoly-select-mode-default",
-                "lowpoly-select-mode-additive",
-                "lowpoly-select-mode-subtractive",
-                "lowpoly-select-mode-invertive",
-                "lowpoly-select-mesh",
-                "lowpoly-select-face",
-                "lowpoly-select-edge",
-                "lowpoly-select-vertex",
-            ]
-        );
-
-        let mut a = app();
-        dispatch(&mut a, LowpolyCommand::SetSelectionMethod(crate::apps::lowpoly::commands::selection::set_selection_method::SetSelectionMethod { value: "lasso".into() }));
-        dispatch(&mut a, LowpolyCommand::SetSelectionModeDefault(crate::apps::lowpoly::commands::selection::set_selection_mode_default::SetSelectionModeDefault { value: "additive".into() }));
-        let window_measures = a.window_measures();
-        let main_measures = window_measures.get(crate::apps::lowpoly::modes::edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN).expect("main window measures");
-        let find_toggle = |id: &str| -> Option<bool> {
-            main_measures.iter().find_map(|measure| match measure {
-                WindowMeasure::Group { id: gid, children, .. } if gid == "lowpoly-select" => children.iter().find_map(|child| match child {
-                    WindowMeasure::Toggle { id: tid, pressed, .. } if tid == id => Some(*pressed),
-                    _ => None,
-                }),
-                _ => None,
-            })
-        };
-        assert_eq!(find_toggle("lowpoly-select-lasso"), Some(true));
-        assert_eq!(find_toggle("lowpoly-select-rectangle"), Some(false));
-        assert_eq!(find_toggle("lowpoly-select-mode-additive"), Some(true));
-        assert_eq!(find_toggle("lowpoly-select-mode-default"), Some(false));
+        let ids: Vec<&str> = toggles.iter().map(|(id, _)| *id).collect();
+        assert_eq!(ids, vec!["lowpoly-select-mode-single", "lowpoly-select-mode-multiple", "lowpoly-select-mesh", "lowpoly-select-vertex", "lowpoly-select-edge", "lowpoly-select-face"]);
+        // 🕹️ Every toggle dispatches a framework-injected mesh-domain interaction verb, never a
+        // deleted app command.
+        for (id, action) in &toggles {
+            assert!(action.action == "setInteractionGranularity" || action.action == "setSelectionMode", "{id} must dispatch a framework interaction verb, got {}", action.action);
+        }
     }
 }
 //#endregion 🧪️Tests

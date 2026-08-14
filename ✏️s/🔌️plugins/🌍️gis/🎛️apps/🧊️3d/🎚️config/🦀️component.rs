@@ -19,8 +19,6 @@ use serde::{Deserialize, Serialize};
 pub struct Gis3dConfig {
     /// 🎥️ The free/live world camera (`{position,target,up,fov}` JSON).
     pub camera_json: String,
-    /// 👁️ Selected pin ids.
-    pub selected_ids: Vec<String>,
     /// 🗣️ BCP-47 locale tag.
     pub locale: String,
 }
@@ -97,7 +95,7 @@ fn default_gis3d_camera_json() -> String {
 
 impl Default for Gis3dConfig {
     fn default() -> Self {
-        Self { camera_json: default_gis3d_camera_json(), selected_ids: Vec::new(), locale: "en-US".into() }
+        Self { camera_json: default_gis3d_camera_json(), locale: "en-US".into() }
     }
 }
 
@@ -113,8 +111,6 @@ store::impl_whole_record_config!(Gis3dConfig);
 pub enum Gis3dConfigMutation {
     #[dsl(key = "camera")]
     SetCamera { camera_json: String },
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }
@@ -198,7 +194,6 @@ impl Mutation<Gis3dConfig> for Gis3dConfigMutation {
         let mut next = base.clone();
         match self {
             Gis3dConfigMutation::SetCamera { camera_json } => next.camera_json = camera_json.clone(),
-            Gis3dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             Gis3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
@@ -207,7 +202,6 @@ impl Mutation<Gis3dConfig> for Gis3dConfigMutation {
     fn inverse(&self, base: &Gis3dConfig) -> Vec<Self> {
         match self {
             Gis3dConfigMutation::SetCamera { .. } => vec![Gis3dConfigMutation::SetCamera { camera_json: base.camera_json.clone() }],
-            Gis3dConfigMutation::SetSelection { .. } => vec![Gis3dConfigMutation::SetSelection { ids: base.selected_ids.clone() }],
             Gis3dConfigMutation::SetLocale { .. } => vec![Gis3dConfigMutation::SetLocale { value: base.locale.clone() }],
         }
     }
@@ -223,14 +217,13 @@ mod tests {
     fn gis3d_config_default_matches_the_pre_migration_view_defaults() {
         let config = Gis3dConfig::default();
         assert!(config.camera_json.contains("800"));
-        assert!(config.selected_ids.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
     #[test]
     fn gis3d_config_dsl_round_trips_default_and_populated() {
         store::os_store::test_support::assert_dsl_round_trip(&Gis3dConfig::default());
-        let populated = Gis3dConfig { selected_ids: vec!["p_institut_de_botanique_ulg_liege".into()], ..Gis3dConfig::default() };
+        let populated = Gis3dConfig { locale: "de-DE".into(), ..Gis3dConfig::default() };
         store::os_store::test_support::assert_dsl_round_trip(&populated);
         store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
     }
@@ -238,18 +231,17 @@ mod tests {
     #[test]
     fn gis3d_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Gis3dConfig::default();
-        let operation = Gis3dConfigMutation::SetSelection { ids: vec!["p1".into()] };
+        let operation = Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() };
         let next = operation.diff(&base);
-        assert_eq!(next.selected_ids, vec!["p1".to_string()]);
+        assert_eq!(next.camera_json, r#"{"position":[1.0,2.0,3.0]}"#);
         let backwards = operation.inverse(&base);
-        assert_eq!(backwards, vec![Gis3dConfigMutation::SetSelection { ids: Vec::new() }]);
+        assert_eq!(backwards, vec![Gis3dConfigMutation::SetCamera { camera_json: base.camera_json.clone() }]);
         assert_eq!(backwards[0].diff(&next), base);
     }
 
     #[test]
     fn gis3d_config_operation_lines_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetSelection { ids: vec!["p1".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }

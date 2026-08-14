@@ -1,10 +1,6 @@
 //! 🧊️ `set-selection-flag` command.
 
-use crate::apps::puzzle3d::panels::inspection;
-use crate::apps::puzzle3d::config::Puzzle3dSelection;
-use semio_framework_plugin::SelectionSet;
 use serde_json::Value;
-use std::collections::HashSet;
 use crate::apps::puzzle3d::Puzzle3dActionCtx;
 use crate::apps::puzzle3d::apply_puzzle3d_selection_flag;
 
@@ -18,10 +14,12 @@ pub fn set_selection_flag(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>)
     match (entity, explicit_ids) {
         (Some(entity), Some(ids)) => apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, entity, &ids, flag, value),
         _ => {
-            let selection = ctx.scene.runtime.selection.clone();
-            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "object", selection.object_ids.as_slice(), flag, value);
-            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "vortex", selection.vortex_ids.as_slice(), flag, value);
-            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "targetVolume", selection.target_volume_ids.as_slice(), flag, value);
+            let object_ids = ctx.selected_object_ids();
+            let vortex_ids = ctx.selected_vortex_ids();
+            let target_volume_ids = ctx.selected_target_volume_ids();
+            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "object", &object_ids, flag, value);
+            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "vortex", &vortex_ids, flag, value);
+            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "targetVolume", &target_volume_ids, flag, value);
         }
     }
 }

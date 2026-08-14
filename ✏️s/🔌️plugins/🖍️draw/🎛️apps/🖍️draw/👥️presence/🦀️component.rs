@@ -6,14 +6,15 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of draw view state (layer selection, hover, camera, active utility, rename input).
+/// 👥️ Shareable live subset of draw view state (camera, active utility, rename input) — layer
+/// selection/hover moved to the framework's typed `PresencePeer.interaction` broadcast (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); this facet keeps only genuinely
+/// draw-specific presence.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "draw.presence")]
 #[dsl(layout = "lines")]
 pub struct DrawPresence {
-    pub selected_ids: Vec<String>,
-    pub hovered_id: Option<String>,
     pub engagement_input: String,
     #[dsl(block)]
     pub camera: DrawCamera,
@@ -22,13 +23,7 @@ pub struct DrawPresence {
 
 impl Default for DrawPresence {
     fn default() -> Self {
-        Self {
-            selected_ids: Vec::new(),
-            hovered_id: None,
-            engagement_input: String::new(),
-            camera: DrawCamera::default(),
-            active_utility_id: "selectDirect".into(),
-        }
+        Self { engagement_input: String::new(), camera: DrawCamera::default(), active_utility_id: "selectDirect".into() }
     }
 }
 

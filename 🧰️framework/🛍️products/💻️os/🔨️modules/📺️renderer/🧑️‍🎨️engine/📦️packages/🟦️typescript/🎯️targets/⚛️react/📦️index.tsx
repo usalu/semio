@@ -668,6 +668,12 @@ import {
   type UIHistory,
   EMPTY_SHELL_LOCKS,
   EMPTY_SHELL_DEFAULTS,
+  type ShellPresencePeer,
+  type PeerInteractionDomain,
+  type PeerInteractionRoster,
+  derivePeerInteractionByDomain,
+  peerIdsSelecting,
+  peerIdsHovering,
 } from "../../../../🧱️elements/Shell/🟦️component.tsx";
 export {
   UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -689,6 +695,12 @@ export {
   shouldPersistIntroductionSeen,
   isEphemeralShellBrand,
   clearDurableShellStorage,
+  type ShellPresencePeer,
+  type PeerInteractionDomain,
+  type PeerInteractionRoster,
+  derivePeerInteractionByDomain,
+  peerIdsSelecting,
+  peerIdsHovering,
 };
 //#endregion 🔖️types
 

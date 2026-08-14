@@ -4,7 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "brushSize",
     "brushOpacity",
     "camera",
@@ -12,17 +11,6 @@
     "locale"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
-    "hoveredId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "brushSize": {
       "type": "number",
       "format": "double",

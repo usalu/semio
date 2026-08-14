@@ -107,21 +107,30 @@ pub mod set_lod_mode {
 }
 //#endregion 🔖️SetLodMode
 
-//#region 🔖️SetHover
-pub mod set_hover {
+//#region 🔖️FocusFeature
+/// 🕹️ Relocated from the deleted `🎮️commands/🗂️selection` node (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): frames the camera on one named feature —
+/// never reads or writes selection state, so it survives the mechanism migration unchanged.
+pub mod focus_feature {
     use super::*;
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "hover")]
-    pub struct SetHover {
-        pub hover_json: String,
+    #[dsl(keyword = "focus-feature")]
+    pub struct FocusFeature {
+        pub feature_id: String,
+        pub feature_kind: String,
     }
 
-    pub fn handle(payload: &SetHover, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
-        Ok(Emit::config(vec![Gis2dConfigMutation::SetHover { value_json: payload.hover_json.clone() }]))
+    pub fn handle(payload: &FocusFeature, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+        let mut host = map_host_from(doc.snapshot, cfg.snapshot);
+        if host.focus_feature(&payload.feature_kind, &payload.feature_id) {
+            Ok(Emit::config(vec![Gis2dConfigMutation::SetCamera { camera_json: host.camera_json() }]))
+        } else {
+            Ok(Emit::default())
+        }
     }
 }
-//#endregion 🔖️SetHover
+//#endregion 🔖️FocusFeature
 
 //#region 🔖️SetLayerStrokeScale
 pub mod set_layer_stroke_scale {
@@ -184,12 +193,18 @@ mod tests {
     }
 
     #[test]
-    fn hover_and_camera_write_straight_through_to_the_config() {
+    fn camera_writes_straight_through_to_the_config() {
         let mut app = app();
-        dispatch(&mut app, Gis2dCommand::SetHover(set_hover::SetHover { hover_json: r#"{"id":"p1"}"#.into() }));
         dispatch(&mut app, Gis2dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"x":5,"y":6,"zoom":7}"#.into() }));
         let json = render(&mut app, GIS2D_PLAY_BODY_COMPOSITE);
         assert!(json.contains("\\\"zoom\\\":7"));
+    }
+
+    #[test]
+    fn focus_feature_on_an_unknown_id_emits_nothing() {
+        let mut app = app();
+        let result = dispatch(&mut app, Gis2dCommand::FocusFeature(focus_feature::FocusFeature { feature_id: "nope".into(), feature_kind: "position".into() }));
+        assert!(result.mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

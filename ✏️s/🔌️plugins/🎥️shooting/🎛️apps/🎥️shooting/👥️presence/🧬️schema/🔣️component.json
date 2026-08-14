@@ -5,7 +5,6 @@
   "additionalProperties": false,
   "required": [
     "selectedShotIds",
-    "selectedAssetIds",
     "camera",
     "activeUtilityId"
   ],
@@ -15,17 +14,6 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "presence"
-    },
-    "selectedAssetIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "hoveredAssetId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "camera": {

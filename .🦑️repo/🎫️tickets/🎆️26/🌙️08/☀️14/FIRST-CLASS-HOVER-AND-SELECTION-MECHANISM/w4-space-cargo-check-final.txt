@@ -1,0 +1,25 @@
+23 | pub fn ensure_space_fixtures_registered() {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `parse_demo_space_document` is never used
+  --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/../../🦀️component.rs:40:8
+   |
+40 | pub fn parse_demo_space_document() -> OsWorkflowArtifactDocument {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `demo_os_document` is never used
+  --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/../../🦀️component.rs:45:8
+   |
+45 | pub fn demo_os_document() -> OsWorkflowArtifactDocument {
+   |        ^^^^^^^^^^^^^^^^
+
+warning: function `demo_space_projection` is never used
+  --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/../../🦀️component.rs:51:8
+   |
+51 | pub fn demo_space_projection() -> WorkflowSnapshot {
+   |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-space` (lib) generated 24 warnings (run `cargo fix --lib -p semio-s-plugin-space` to apply 15 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.36s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 29`

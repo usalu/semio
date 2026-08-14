@@ -1,4 +1,8 @@
 //! 👥️ Space presence — shareable live ephemeral state + mutations.
+//!
+//! Selection/hover broadcast automatically via the framework's typed `PresenceInteraction` (ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_space_app`'s `.interaction(...)`
+//! declaration for the `graph` domain.
 
 use crate::apps::space::config::SpaceWindowCamera;
 use protocol::Mutation;
@@ -13,8 +17,6 @@ use store::ArtifactPack;
 #[dsl(extension = "space.presence")]
 #[dsl(layout = "lines")]
 pub struct SpacePresence {
-    pub selected_node_ids: Vec<String>,
-    pub hovered_node_id: Option<String>,
     pub camera: BTreeMap<String, SpaceWindowCamera>,
     pub active_node_id: Option<String>,
     pub focused_node_id: Option<String>,
@@ -25,8 +27,6 @@ pub struct SpacePresence {
 impl Default for SpacePresence {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
-            hovered_node_id: None,
             camera: BTreeMap::new(),
             active_node_id: None,
             focused_node_id: None,

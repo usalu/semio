@@ -27,6 +27,7 @@ fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfig
         dialect: None,
         migrated_from: None,
         owner: None,
+        lanes: Default::default(),
     };
     match store::print_document_pack(&envelope) {
         Ok(files) => Emit { effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() },

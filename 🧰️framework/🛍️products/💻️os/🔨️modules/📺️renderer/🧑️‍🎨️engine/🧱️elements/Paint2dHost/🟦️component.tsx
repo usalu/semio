@@ -17,7 +17,6 @@ import {
   useCanvasPickInteraction,
   marqueeModeFromModifiers,
   selectionMergeIds,
-  type SelectionMergeMode,
   marqueeCoverageFromGesture,
   screenRectFromPoints,
   type SelectionMarqueeCoverage,
@@ -27,7 +26,7 @@ import {
   type ContextMenuItem,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
+import { type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type RasterWasmSession, createRasterSession } from "../WasmSessionLoader/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`Interpreter` already landed in a prior batch.
@@ -399,7 +398,7 @@ function Paint2dCanvasSurface({
   );
 
   const commitMarqueeSelection = useCallback(
-    (point: { readonly x: number; readonly y: number }, mergeMode: SelectionMergeMode) => {
+    (point: { readonly x: number; readonly y: number }, mergeMode: MergeMode) => {
       const session = sessionRef.current;
       if (!session) return;
       const marquee = marqueeRef.current;

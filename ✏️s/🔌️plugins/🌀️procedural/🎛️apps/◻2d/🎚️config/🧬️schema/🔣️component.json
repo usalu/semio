@@ -4,19 +4,11 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "camera",
     "showMode",
     "locale"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "camera": {
       "$ref": "#/$defs/CameraJson",
       "x-semio-state": "config"

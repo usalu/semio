@@ -26,6 +26,7 @@ mod tests {
     use super::*;
     use crate::apps::procedural2d::testkit::{app, dispatch};
     use crate::apps::procedural2d::Procedural2dCommand;
+    use crate::apps::procedural2d::commands::node_graph_viewport;
 
     #[test]
     fn reorganize_emits_operations() {

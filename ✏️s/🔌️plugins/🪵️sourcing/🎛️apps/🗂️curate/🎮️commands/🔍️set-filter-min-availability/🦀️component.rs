@@ -22,7 +22,7 @@ pub fn handle(payload: &SetFilterMinAvailability, _doc: &ArtifactView<'_, Curate
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::apps::curate::commands::set_filter_min_availability;
+    use super::*;
     use crate::apps::curate::modes::curate::windows::pool;
     use crate::apps::curate::testkit::{dispatch, new_app, render};
     use crate::apps::curate::SourcingCurateCommand;

@@ -37,6 +37,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -61,17 +62,20 @@ pub fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
 //#endregion 🔖️Sun
 
 //#region 🔖️Selection
-/// 🖱️ Extends the base object-selection JSON with face-picking/drag fields: `targets.face` lets the
-/// renderer hit-test individual triangles; `engagementSessionActive` gates the ground-click placement
-/// path used by the cut/drill/attach utilities; `faceDragActive` gates the push/pull drag gesture, only
-/// while the select utility is active (so a click-to-place utility doesn't also start a face drag).
-fn process3d_selection_json(cfg: &Process3dConfig, active_utility: &str) -> String {
-    let mut value: serde_json::Value = serde_json::from_str(&world3d_selection_json(&cfg.selection_method, &cfg.selected_id.clone().into_iter().collect::<Vec<_>>(), cfg.hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
+/// 🖱️ `engagementSessionActive` gates the ground-click placement path used by the cut/drill/attach
+/// utilities; `faceDragActive` gates the push/pull drag gesture, only while the select utility is
+/// active (so a click-to-place utility doesn't also start a face drag).
+///
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): object/face selection AND hover are the
+/// framework-owned `"geometry"` interaction domain now, unreachable at this `render` boundary
+/// (`ArtifactApp::render` carries no `InteractionView` — a known SDK gap, see `w3c-summary.md`) —
+/// `selectionMode`/`targets`/`componentIds` are no longer emitted here, matching every other
+/// migrated world3d call site's empty-selection `world3d_selection_json` call (e.g. `📐️cad`'s
+/// `world_selection_json`).
+fn process3d_selection_json(active_utility: &str) -> String {
+    let mut value: serde_json::Value = serde_json::from_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("engagementSessionActive".into(), json!(active_utility != "select"));
-        object.insert("selectionMode".into(), json!("face"));
-        object.insert("targets".into(), json!({ "mesh": true, "face": true, "vertex": false, "edge": false }));
-        object.insert("componentIds".into(), json!(cfg.selected_face_id.map(|id| vec![id]).unwrap_or_default()));
         object.insert("faceDragActive".into(), json!(active_utility == "select"));
     }
     value.to_string()
@@ -125,7 +129,7 @@ pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiNode {
             world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov),
             meshes_json,
             instances_json,
-            process3d_selection_json(config, config.active_utility()),
+            process3d_selection_json(config.active_utility()),
             &config_sun(config),
         ),
     )

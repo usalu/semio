@@ -384,10 +384,6 @@ pub mod apps {
             pub mod set_filter_min_availability;
             #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️sort-table/🦀️component.rs"]
             pub mod sort_table;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗂️select-row/🦀️component.rs"]
-            pub mod select_row;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗂️world-select/🦀️component.rs"]
-            pub mod world_select;
             #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
             #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧩️set-contributions/🦀️component.rs"]

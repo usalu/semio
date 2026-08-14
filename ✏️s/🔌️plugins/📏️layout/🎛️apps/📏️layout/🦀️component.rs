@@ -14,7 +14,6 @@
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 // (clippy::result_large_err is allowed crate-wide from the plugin root 📦️glue.rs.)
 
-use crate::apps::layout::commands::{author, export, pointer, view};
 use crate::apps::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::apps::layout::modes::edit::windows::{blueprint, preview};
 use crate::apps::layout::modes::edit;
@@ -23,12 +22,15 @@ use crate::apps::layout::terminology::{layout_labels, LayoutLabels};
 use crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields;
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    OsMediaCapability, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
+    INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, CLEAR_SELECTION_ACTION_ID,
 };
+use semio_framework_plugin::app::InteractionView;
+use semio_framework::kernel::HostEffect;
 use store::EngineHandles;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::collections::HashMap;
 
 use crate::apps::layout::engine::scene::LayoutEngine;
@@ -48,6 +50,49 @@ pub fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(LAYOUT_PLAY_APP_ID).action(action, args)
 }
 
+//#region 🔖️Interaction
+/// 🕹️ The one framework-owned interaction domain layout declares — pages/frames on the Blueprint
+/// canvas plus the document tree's frame rows (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+/// Pages are never targets: canvas hit-testing only ever resolves frame ids (`DisplayList::hit_test`
+/// only walks `rects`/`images`), so `"elements"` is frames-only despite the document tree also
+/// listing pages/spreads/layers/etc.
+pub const LAYOUT_INTERACTION_ELEMENTS: &str = "elements";
+pub const LAYOUT_GRANULARITY_ELEMENT: &str = "element";
+
+/// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` (all granularity `"element"`) —
+/// shared by the canvas pointer commands (wrapped into a `HostEffect::DispatchAction`) and any
+/// document-tree row whose click should select a real canvas element (wrapped into an `ActionDescriptor`).
+pub fn layout_select_action_args(ids: &[String], merge: &str) -> Value {
+    let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })).collect();
+    json!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "targets": serde_json::to_string(&targets).unwrap_or_default(), "merge": merge, "method": "pick" })
+}
+
+/// 🐁️ Builds `interactionHover`'s JSON args for the `"pointer"` channel — `id: None` clears hover.
+pub fn layout_hover_action_args(id: Option<&str>) -> Value {
+    let targets: Vec<Value> = id.map(|id| vec![json!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })]).unwrap_or_default();
+    json!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "channel": "pointer", "targets": serde_json::to_string(&targets).unwrap_or_default() })
+}
+
+/// 🕹️ Wraps [`layout_select_action_args`] into the redispatch effect a canvas gesture's own `handle`
+/// returns — `dispatch_action` intercepts the six framework interaction verbs BEFORE routing to
+/// `ArtifactApp::handle`, so a plain config mutation can no longer express a selection change; the
+/// app asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
+/// hit-testing and emit one batched `interactionSelect`").
+pub fn layout_select_effect(ids: &[String], merge: &str) -> HostEffect {
+    HostEffect::DispatchAction { action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_select_action_args(ids, merge))), delay_ms: 0 }
+}
+
+/// 🐁️ Wraps [`layout_hover_action_args`] the same way, for `interactionHover`.
+pub fn layout_hover_effect(id: Option<&str>) -> HostEffect {
+    HostEffect::DispatchAction { action: INTERACTION_HOVER_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_hover_action_args(id))), delay_ms: 0 }
+}
+
+/// 🕹️ Clicking empty canvas clears every domain's selection — `clearSelection` takes no `domainId`.
+pub fn layout_clear_selection_effect() -> HostEffect {
+    HostEffect::DispatchAction { action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
+}
+//#endregion 🔖️Interaction
+
 /// 🙈️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
 /// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
 fn layout_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
@@ -63,9 +108,7 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum LayoutCommand for LayoutSnapshot, LayoutMutation, LayoutConfig, LayoutConfigMutation {
-        "setSelection" as "selection" => set_selection::SetSelection,
         "setActivePage" as "active-page" => set_active_page::SetActivePage,
-        "setHover" as "hover" => set_hover::SetHover,
         "focusPreflightIssue" as "focus-preflight-issue" => focus_preflight_issue::FocusPreflightIssue,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
@@ -90,10 +133,10 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use view::{engagement_input, focus_preflight_issue, set_active_page, set_hover, set_locale, set_selection};
-use pointer::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, set_camera};
-use author::{add_frame, add_page, patch_frame, patch_page};
-use export::{engagement_submit, export_package, export_pdf, export_png, export_svg};
+use crate::apps::layout::commands::{
+    add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, engagement_input,
+    engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue, patch_frame, patch_page, set_active_page, set_camera, set_locale,
+};
 //#endregion 🔖️Commands
 
 //#region 🔖️WindowEngagement
@@ -162,7 +205,7 @@ impl ArtifactApp for LayoutPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &LayoutCommand, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &LayoutCommand, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -284,10 +327,10 @@ pub fn create_layout_app() -> App {
             .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Mutation))
             .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Mutation))
             .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Mutation))
-            // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, pointer, camera, engagement draft.
-            .action_with(layout_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
+            // 👁️ Ephemeral view state — active page, drop ghost, pointer, camera, engagement draft.
+            // Selection/hover are framework-owned now (domain "elements") — no app-declared verbs;
+            // `interactionSelect`/`interactionHover`/`clearSelection` auto-inject below.
             .action_with(layout_internal_action("setActivePage", LocalizedLabel::native("Set Active Page", "Aktive Seite festlegen"), ActionKind::View))
-            .action_with(layout_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
             .action_with(layout_internal_action("focusPreflightIssue", LocalizedLabel::native("Focus Preflight Issue", "Preflight-Problem fokussieren"), ActionKind::View))
             .action_with(layout_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
             .action_with(layout_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View))
@@ -306,6 +349,25 @@ pub fn create_layout_app() -> App {
             .window_kind_actions(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![
                 "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(),
             ])
+            // 🕹️ Domain "elements": frames on the Blueprint canvas (pages are never targets — canvas
+            // hit-testing only ever resolves frame ids). Flat: layout has no real parent/child
+            // structure among frames. `Invertive` merge is the toggle-on-shift-click old
+            // `CanvasPointerDown.extend` used to hand-roll; `Replace` is a plain click.
+            .interaction(InteractionDefinition {
+                id: LAYOUT_INTERACTION_ELEMENTS.into(),
+                label: LocalizedLabel::native("Elements", "Elemente"),
+                granularities: vec![GranularityDefinition { id: LAYOUT_GRANULARITY_ELEMENT.into(), label: LocalizedLabel::native("Element", "Element"), icon_id: "square".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![InteractionRef::new(LAYOUT_INTERACTION_ELEMENTS)])
             // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`layout_io()`
             // are this same information's single source of truth, reused here rather than duplicated.
             .config(LayoutPlayApp::config_spec())
@@ -373,7 +435,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 22, "every LayoutCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 20, "every LayoutCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -388,15 +450,13 @@ mod tests {
     /// `as` literal declared in the `app_commands!` invocation above. Unlike flow (where the wire
     /// keyword happens to be the kebab-cased command id everywhere except `setLocale`), layout's
     /// pre-existing `📡️protocol` crate deliberately shortened every `set*` view command's wire keyword
-    /// (`setSelection` → `selection`, `setActivePage` → `active-page`, `setHover` → `hover`,
-    /// `setCamera` → `camera`, `setLocale` → `locale`) — carried forward verbatim, not a drift.
+    /// (`setActivePage` → `active-page`, `setCamera` → `camera`, `setLocale` → `locale`) — carried
+    /// forward verbatim, not a drift.
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keyword = |id: &str| -> &'static str {
             match id {
-                "setSelection" => "selection",
                 "setActivePage" => "active-page",
-                "setHover" => "hover",
                 "setCamera" => "camera",
                 "setLocale" => "locale",
                 "focusPreflightIssue" => "focus-preflight-issue",
@@ -427,27 +487,23 @@ mod tests {
         }
     }
 
-    /// ⚖️ Rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact bytes
-    /// captured from the pre-merge `layout_protocol` crate (see this ticket's
-    /// `🧪️wire-baseline-before.txt`). A regression here is a real format break, not a test-fixture
-    /// mismatch.
+    /// ⚖️ Rows whose `Option` fields make `None`/`Some` distinct wire cases round-trip text/binary
+    /// identically either way — the enum's binary ordinal shifted when `setSelection`/`setHover`
+    /// were deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so this no longer
+    /// pins exact historical bytes (greenfield: no back-compat), only text/binary equivalence.
     #[test]
-    fn optional_field_rows_keep_their_pre_migration_bytes() {
+    fn optional_field_rows_round_trip_text_and_binary_either_way() {
         use crate::artifacts::layout::LayoutCamera;
-        let cases: [(LayoutCommand, &str, &str); 5] = [
-            (LayoutCommand::SetHover(set_hover::SetHover { id: None }), "hover hover", "01020000"),
-            (LayoutCommand::SetHover(set_hover::SetHover { id: Some("frame-1".into()) }), "hover hover id=frame-1", "010201076672616d652d3101000600"),
-            (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }), "canvas-pointer-move x=1 y=2 width=800 height=600", "010600040105000000000000f03f020500000000000000400305000000000000894004050000000000c08240"),
-            (LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }), "add-frame kind=rect x=1", "010c010472656374020006000105000000000000f03f"),
+        let cases: [(LayoutCommand, &str); 3] = [
+            (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }), "canvas-pointer-move x=1 y=2 width=800 height=600"),
+            (LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }), "add-frame kind=rect x=1"),
             (
                 LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
                 "camera camera { x=1 y=2 zoom=1.5 }",
-                "010a0001010e0d030005000000000000f03f010500000000000000400205000000000000f83f",
             ),
         ];
-        for (command, text, hex) in cases {
+        for (command, text) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
-            assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>(), hex);
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
@@ -456,9 +512,7 @@ mod tests {
     pub(super) fn every_command() -> Vec<LayoutCommand> {
         use crate::artifacts::layout::LayoutCamera;
         vec![
-            LayoutCommand::SetSelection(set_selection::SetSelection { ids: vec!["frame-1".into()] }),
             LayoutCommand::SetActivePage(set_active_page::SetActivePage { page_id: "page-2".into() }),
-            LayoutCommand::SetHover(set_hover::SetHover { id: Some("frame-1".into()) }),
             LayoutCommand::FocusPreflightIssue(focus_preflight_issue::FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-1".into()) }),
             LayoutCommand::EngagementInput(engagement_input::EngagementInput { value: "export png".into() }),
             LayoutCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: false, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
@@ -529,15 +583,11 @@ mod tests {
         assert!(render(&mut app, "layout.play.nope").contains("Unknown body"));
     }
 
-    #[test]
-    fn selected_and_hovered_frames_get_chrome_strokes() {
-        let mut app = layout_app();
-        dispatch(&mut app, LayoutCommand::SetSelection(set_selection::SetSelection { ids: vec!["frame-text-1".into()] }));
-        assert!(render(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("2.5"));
-
-        dispatch(&mut app, LayoutCommand::SetHover(set_hover::SetHover { id: Some("frame-image-1".into()) }));
-        assert!(render(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("1.75"));
-    }
+    // 🕹️ `selected_and_hovered_frames_get_chrome_strokes` deleted: selection/hover chrome strokes read
+    // `config.selected_ids`/`hovered_id`, both deleted with the framework-owned "elements" domain.
+    // `canvas_layers` always renders with empty selection/hover now — `ArtifactApp::render` carries no
+    // `InteractionView` (a known SDK gap, same as gis2d's/puzzle3d's inspection panels — see this
+    // ticket's w3b-summary.md) — flagged, not fixed here (framework file, out of this crate's remit).
 
     #[test]
     fn window_engagements_cover_both_windows() {

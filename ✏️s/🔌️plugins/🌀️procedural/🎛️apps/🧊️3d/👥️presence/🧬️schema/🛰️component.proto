@@ -2,19 +2,13 @@ syntax = "proto3";
 package semio.app.procedural.3d;
 message Procedural3dPresence {
   // @state presence
-  repeated string selected_node_ids = 1;
+  CameraJson camera = 1;
   // @state presence
-  optional string hovered_node_id = 2;
+  Procedural3dPreviewCamera preview_camera = 2;
   // @state presence
-  CameraJson camera = 3;
+  string active_utility_id = 3;
   // @state presence
-  Procedural3dPreviewCamera preview_camera = 4;
-  // @state presence
-  string selection_method = 5;
-  // @state presence
-  string active_utility_id = 6;
-  // @state presence
-  string show_mode = 7;
+  string show_mode = 4;
 }
 message CameraJson {
   double x = 1;

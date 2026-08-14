@@ -1,0 +1,20 @@
+test workflow::tests::validate_workflow_snapshot_requires_edge_xor_input_binding_on_required_ports ... ok
+test workflow::tests::workflow_media_port_dsl_round_trips ... ok
+test workflow::tests::workflow_media_port_id_format ... ok
+test workflow::tests::workflow_diff_print_parse_and_encode_decode_round_trip ... ok
+test workflow::tests::validate_workflow_snapshot_flags_unresolved_bindings ... ok
+test workflow::tests::workflow_operation_backwards_restores_pre_state ... ok
+test workflow::tests::run_operation_op_text_round_trips_every_variant ... ok
+test workflow::tests::run_node_record_dsl_pack_round_trips_nested_tables ... ok
+test workflow::tests::workflow_operation_op_text_round_trips_every_variant ... ok
+test workflow::tests::run_document_dsl_pack_round_trips ... ok
+test workflow::tests::workflow_snapshot_dsl_pack_round_trips ... ok
+
+test result: ok. 105 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests semio_framework
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

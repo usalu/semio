@@ -5,7 +5,6 @@
   "additionalProperties": false,
   "required": [
     "camera",
-    "selection",
     "layers",
     "frameCursor",
     "reportTable",
@@ -42,28 +41,6 @@
         },
         "fov": {
           "type": "number",
-          "x-semio-state": "config"
-        }
-      },
-      "x-semio-state": "config"
-    },
-    "selection": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mode",
-        "ids"
-      ],
-      "properties": {
-        "mode": {
-          "type": "string",
-          "x-semio-state": "config"
-        },
-        "ids": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
           "x-semio-state": "config"
         }
       },

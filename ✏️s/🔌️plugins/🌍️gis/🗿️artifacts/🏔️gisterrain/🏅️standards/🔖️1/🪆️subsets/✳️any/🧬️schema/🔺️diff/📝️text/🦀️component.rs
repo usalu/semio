@@ -25,9 +25,6 @@ impl GisTerrainDiff {
         if let Some(value) = &self.imported_features_json {
             next.imported_features_json = value.clone();
         }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
         if let Some(value) = &self.camera_json {
             next.camera_json = value.clone();
         }
@@ -70,7 +67,6 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
         }
         take!(exaggeration);
         take!(imported_features_json);
-        take!(selected_ids);
         take!(camera_json);
         take!(locale);
     }

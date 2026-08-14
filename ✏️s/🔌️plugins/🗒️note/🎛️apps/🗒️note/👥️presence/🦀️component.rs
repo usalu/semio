@@ -5,28 +5,27 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live canvas view state (peer selection, hover, camera, active utility).
+/// 👥️ Shareable live canvas view state (camera, active utility). 🕹️ ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection/hover no longer live here —
+/// they broadcast automatically via the framework's typed `PresenceInteraction` (assembled from the
+/// "blocks" domain's `InteractionState`, zero app code).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "note.presence")]
 #[dsl(layout = "lines")]
 pub struct NotePresence {
-    pub selected_block_ids: Vec<String>,
     pub camera_x: f64,
     pub camera_y: f64,
     pub camera_zoom: f64,
-    pub hovered_block_id: Option<String>,
     pub active_utility_id: String,
 }
 
 impl Default for NotePresence {
     fn default() -> Self {
         Self {
-            selected_block_ids: Vec::new(),
             camera_x: 0.0,
             camera_y: 0.0,
             camera_zoom: 1.0,
-            hovered_block_id: None,
             active_utility_id: String::new(),
         }
     }

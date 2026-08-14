@@ -1,7 +1,5 @@
 type ShootingPresence {
   selectedShotIds: [String!]! @state(class: PRESENCE)
-  selectedAssetIds: [String!]! @state(class: PRESENCE)
-  hoveredAssetId: String @state(class: PRESENCE)
   camera: ShootingCamera! @state(class: PRESENCE)
   activeUtilityId: String! @state(class: PRESENCE)
 }

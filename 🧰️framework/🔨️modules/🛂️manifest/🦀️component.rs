@@ -12,6 +12,12 @@ use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, Surfa
 // 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 4a. The legacy format enum itself was retired in
 // ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6.
 use crate::IconName;
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
+// definition family, re-exported at the crate root (see
+// 🧰️framework/📦️packages/🦀️rust/📦️glue.rs `pub use interaction::*;`) — referenced here exactly
+// like `IconName` above, so `AppDefinition.interactions`/`WindowKindDefinition.interactions` see
+// them the same way manifest consumers already see `ActionDefinition`/`ActionRef`.
+use crate::{DomainSelection, InteractionDefinition, InteractionRef};
 
 //#region 🔖️Manifest
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -39,6 +45,8 @@ pub enum ActionKind {
     /// Shell-only effect (navigate, export, spawn) — recorded in the session command log via
     /// dispatch or the `noteShellCommand` mechanism, no document mutation.
     Shell,
+    /// Framework-provided hover/selection — auto-injected, never app-declared.
+    Interaction,
 }
 
 //#region 🔖️ActionArgs
@@ -233,19 +241,25 @@ pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
         "setActiveUtility" => "wrench".into(),
         "setActiveTool" => "hammer".into(),
         "startIntroduction" => "graduation-cap".into(),
-        "setSelection" | "documentSelect" | "selectNode" | "nodeGraphSelect" | "setNodeSelection" | "setFeatureSelection"
-        | "setReferenceSelection" | "setMediaNodeSelection" | "setAppInstanceSelection" | "selectRegister"
-        | "selectInstance" | "selectSameKind" | "selectSameKindSelection" | "worldSelect" | "worldVortexSelect" => {
-            "mouse-pointer".into()
-        }
-        "clearSelection" | "deselect" => "mouse-pointer-2".into(),
-        "selectAll" => "mouse-pointer-2".into(),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the six framework-owned
+        // Interaction actions (`interaction_action_definitions`) replace every per-app
+        // `setSelection`/`documentSelect`/`selectNode`/`nodeGraphSelect`/`setNodeSelection`/
+        // `setFeatureSelection`/`setReferenceSelection`/`setMediaNodeSelection`/
+        // `setAppInstanceSelection`/`selectRegister`/`selectInstance`/`selectSameKind`/
+        // `selectSameKindSelection`/`worldSelect`/`worldVortexSelect`/`deselect`/`worldHover`/
+        // `setHover`/`nodeGraphHover`/`textHover`/`referenceHover` id that used to live here — those
+        // arms are deleted, not merely renamed (per-app selection/hover commands dissolve in wave 4).
+        "interactionSelect" => "mouse-pointer".into(),
+        "interactionHover" => "eye".into(),
+        "clearSelection" => "mouse-pointer-2".into(),
+        "selectAll" => "maximize-2".into(),
+        "setSelectionMode" => "sliders-horizontal".into(),
+        "setInteractionGranularity" => "layers".into(),
         "setCamera" | "setCamera2d" | "setCamera3d" | "nodeGraphViewport" => "camera".into(),
         "setProjection" | "setProjectionParam" => "scan".into(),
         "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "graphPointerDown" | "worldPointerDown" => {
             "mouse-pointer".into()
         }
-        "worldHover" | "setHover" | "nodeGraphHover" | "textHover" | "referenceHover" => "eye".into(),
         "worldPick" => "crosshair".into(),
         "engagementInput" | "engagementAbort" | "engagementControlSelect" | "editorEngagementInput"
         | "graphEngagementInput" | "resultsEngagementInput" | "workflowEngagementInput"
@@ -276,6 +290,7 @@ pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
             ActionKind::Mutation => "sparkles".into(),
             ActionKind::History => "clock".into(),
             ActionKind::Clipboard => "clipboard".into(),
+            ActionKind::Interaction => "mouse-pointer".into(),
         },
     }
 }
@@ -486,6 +501,106 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
     ]
 }
 //#endregion 🔖️Clipboard
+
+//#region 🔖️Interaction
+/// 🕹️ The framework-owned action id a renderer dispatches to change a domain's selection (pick,
+/// marquee gather, keyboard range/toggle) — never in the palette: renderers translate raw
+/// pointer/keyboard input into this, the user never picks it from a menu.
+pub const INTERACTION_SELECT_ACTION_ID: &str = "interactionSelect";
+
+/// 🐁️ The framework-owned action id a renderer dispatches to change a domain's hover — never in the
+/// palette (mirrors `INTERACTION_SELECT_ACTION_ID`).
+pub const INTERACTION_HOVER_ACTION_ID: &str = "interactionHover";
+
+/// 🧹️ The framework-owned action id apps dispatch to clear every declared domain's selection.
+pub const CLEAR_SELECTION_ACTION_ID: &str = "clearSelection";
+
+/// 🗂️ The framework-owned action id apps dispatch to select every target of the active domain at its
+/// active granularity.
+pub const SELECT_ALL_ACTION_ID: &str = "selectAll";
+
+/// 🔀️ The framework-owned action id apps dispatch to switch a domain's active `SelectionMode`.
+pub const SET_SELECTION_MODE_ACTION_ID: &str = "setSelectionMode";
+
+/// 🪜️ The framework-owned action id apps dispatch to switch a domain's active granularity.
+pub const SET_INTERACTION_GRANULARITY_ACTION_ID: &str = "setInteractionGranularity";
+
+/// 🕹️ The six framework-owned Interaction actions, auto-injected into any `AppDefinition` that
+/// declares at least one `InteractionDefinition` — mirrors `history_action_definitions`/
+/// `clipboard_action_definitions`, except conditional (like `set_active_utility_action_definition`)
+/// rather than unconditional: returns `[]` when `app.interactions` is empty. `interactionSelect`/
+/// `interactionHover` are the raw dispatch verbs renderers translate clicks/marquee/hover into
+/// (never in the palette); `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity`
+/// are user-facing and drive the per-domain Select controls.
+pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition> {
+    if app.interactions.is_empty() {
+        return Vec::new();
+    }
+    let merge_options = vec![
+        ActionArgOption::new("replace", LocalizedLabel::native("Replace", "Ersetzen")),
+        ActionArgOption::new("additive", LocalizedLabel::native("Additive", "Additiv")),
+        ActionArgOption::new("subtractive", LocalizedLabel::native("Subtractive", "Subtraktiv")),
+        ActionArgOption::new("invertive", LocalizedLabel::native("Invertive", "Invertierend")),
+        ActionArgOption::new("range", LocalizedLabel::native("Range", "Bereich")),
+    ];
+    let method_options = vec![
+        ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")),
+        ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")),
+        ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso")),
+    ];
+    let mode_options = vec![
+        ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")),
+        ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach")),
+    ];
+    vec![
+        ActionDefinition {
+            in_palette: false,
+            ..ActionDefinition::new_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction)
+        }
+        .with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+            ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
+            ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
+        ]),
+        ActionDefinition {
+            in_palette: false,
+            ..ActionDefinition::new_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction)
+        }
+        .with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+            ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+        ]),
+        ActionDefinition {
+            keys: Some("escape".into()),
+            ..ActionDefinition::new_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction)
+        },
+        ActionDefinition {
+            keys: Some("mod+a".into()),
+            ..ActionDefinition::new_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction)
+        },
+        ActionDefinition::new_catalog(
+            SET_SELECTION_MODE_ACTION_ID,
+            LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"),
+            ActionKind::Interaction,
+        )
+        .with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+            ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required(),
+        ]),
+        ActionDefinition::new_catalog(
+            SET_INTERACTION_GRANULARITY_ACTION_ID,
+            LocalizedLabel::native("Set Granularity", "Granularität festlegen"),
+            ActionKind::Interaction,
+        )
+        .with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+            ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).required(),
+        ]),
+    ]
+}
+//#endregion 🔖️Interaction
 
 /// @emoji 🧰️ The framework-owned action id apps dispatch to activate a utility — auto-injected as a View
 /// action into any `AppDefinition` that declares utilities (mirrors `history_action_definitions`).
@@ -1650,13 +1765,14 @@ pub struct TutorialUiSnapshot {
     /// 📑️ Active tab id per panel group; groups absent from the map are collapsed/closed.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_panel_tab_by_group: std::collections::HashMap<String, String>,
-    /// 🗂️ Opaque program vocabulary, verbatim `ViewModel.panel_json`/`selection_json`.
+    /// 🗂️ Opaque program vocabulary, verbatim `ViewModel.panel_json`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub panel_json: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub selection_json: Option<String>,
+    /// 🕹️ Per-domain selection state, keyed by `InteractionDefinition.id` — the framework-owned
+    /// replacement for the deleted opaque `selection_json`; see `TutorialUiChange::Selection`.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub interaction_selection: std::collections::HashMap<String, DomainSelection>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub open_dialog_id: Option<String>,
@@ -1706,8 +1822,14 @@ pub enum TutorialUiChange {
     PanelState {
         panel_json: String,
     },
+    /// 🕹️ Drives one interaction domain's selection during replay — carries the resolved
+    /// `DomainSelection` directly rather than re-dispatching `interactionSelect` (a raw pointer/keyboard
+    /// event would be non-deterministic on replay). `ids: []` clears the domain's selection.
     Selection {
-        selection_json: String,
+        domain_id: String,
+        granularity: String,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        ids: Vec<String>,
     },
     Dialog {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2033,7 +2155,9 @@ pub fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &Tutoria
             }
         },
         TutorialUiChange::PanelState { panel_json } => state.panel_json = Some(panel_json.clone()),
-        TutorialUiChange::Selection { selection_json } => state.selection_json = Some(selection_json.clone()),
+        TutorialUiChange::Selection { domain_id, granularity, ids } => {
+            state.interaction_selection.insert(domain_id.clone(), DomainSelection { granularity: granularity.clone(), ids: ids.clone(), anchor_id: None });
+        }
         TutorialUiChange::Dialog { id, .. } => state.open_dialog_id = id.clone(),
         TutorialUiChange::TreeExpansion { id, expanded } => {
             if *expanded {
@@ -2333,6 +2457,10 @@ pub struct WindowKindDefinition {
     /// 🧰️ Utilities this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub utilities: Vec<UtilityRef>,
+    /// 🕹️ Interaction domains this window kind accepts — references `AppDefinition.interactions` ids.
+    /// Empty = no interactions.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub interactions: Vec<InteractionRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub params_schema: Option<String>,
@@ -2480,6 +2608,10 @@ pub struct AppDefinition {
     /// `Mode`-scope entries; `App`-scope entries apply whenever the app is focused).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub commands: Vec<CommandDefinition>,
+    /// 🕹️ The interaction domains (hover + selection) this app exposes (referenced by
+    /// `WindowKindDefinition.interactions`) — see `crate::InteractionDefinition`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub interactions: Vec<InteractionDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2775,9 +2907,6 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_tool_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub selection_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub panel_json: Option<String>,
@@ -3395,8 +3524,14 @@ mod app_label_tests {
         TutorialChapter, TutorialDefinition, TutorialArtifactEvent, TutorialArtifactEventKind, TutorialEasing, TutorialEvent, TutorialEventKind,
         TutorialNarrationCue, TutorialTracks, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample, TutorialUiSnapshot,
         RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID,
+        interaction_action_definitions, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
+        SELECT_ALL_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
     };
     use crate::ui::kernel::HostEffect;
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
+    // definition family lives at the crate root, not under `crate::ui` — see the equivalent `use`
+    // at this file's top.
+    use crate::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
     use dsl::DslValue;
     use serde_json::json;
 
@@ -3479,6 +3614,7 @@ mod app_label_tests {
                 options: ui_wgpu::wgpu::WindowOptions::default(),
                 actions: window_actions,
                 utilities: Vec::new(),
+                interactions: Vec::new(),
                 params_schema: None,
                 artifact_snapshot_schema: None,
                 input_event_schema: None,
@@ -3491,6 +3627,7 @@ mod app_label_tests {
             utilities: vec![],
             tools: vec![],
             commands: vec![],
+            interactions: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -3537,6 +3674,101 @@ mod app_label_tests {
         assert_eq!(resolved, vec!["add"], "history + setActiveUtility are never panel-eligible orphans");
         assert!(!resolved.contains(&SET_ACTIVE_UTILITY_ACTION_ID));
     }
+
+    //#region 🔖️InteractionTests
+    /// 🕹️ Minimal one-domain, one-granularity `InteractionDefinition` fixture — mirrors the wave-0
+    /// `sample_definition()` fixture in `🕹️interaction/🦀️component.rs`'s own tests.
+    fn sample_interaction_definition(id: &str) -> InteractionDefinition {
+        InteractionDefinition {
+            id: id.into(),
+            label: LocalizedLabel::data(id),
+            granularities: vec![GranularityDefinition { id: "node".into(), label: LocalizedLabel::data("Node"), icon_id: "circle".into() }],
+            hierarchy: HierarchyProvider::Flat,
+            hover: HoverSpec::default(),
+            selection: SelectionSpec {
+                modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                methods: vec![SelectionMethod::Pick],
+                merges: vec![MergeMode::Replace],
+                transitive: false,
+                broadcast: true,
+            },
+        }
+    }
+
+    #[test]
+    fn interaction_action_definitions_empty_when_app_has_no_interactions() {
+        let app = app_with(vec![], vec![]);
+        assert!(app.interactions.is_empty());
+        assert!(interaction_action_definitions(&app).is_empty());
+    }
+
+    #[test]
+    fn interaction_action_definitions_full_set_when_app_has_interactions() {
+        let mut app = app_with(vec![], vec![]);
+        app.interactions = vec![sample_interaction_definition("graph")];
+        let defs = interaction_action_definitions(&app);
+        let ids: Vec<&str> = defs.iter().map(|action| action.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            vec![
+                INTERACTION_SELECT_ACTION_ID,
+                INTERACTION_HOVER_ACTION_ID,
+                CLEAR_SELECTION_ACTION_ID,
+                SELECT_ALL_ACTION_ID,
+                SET_SELECTION_MODE_ACTION_ID,
+                SET_INTERACTION_GRANULARITY_ACTION_ID,
+            ]
+        );
+        assert!(defs.iter().all(|action| action.kind == ActionKind::Interaction));
+        let by_id = |id: &str| defs.iter().find(|action| action.id == id).unwrap();
+        assert!(!by_id(INTERACTION_SELECT_ACTION_ID).in_palette, "raw dispatch verb, never in the palette");
+        assert!(!by_id(INTERACTION_HOVER_ACTION_ID).in_palette, "raw dispatch verb, never in the palette");
+        assert!(by_id(CLEAR_SELECTION_ACTION_ID).in_palette);
+        assert!(by_id(SELECT_ALL_ACTION_ID).in_palette);
+        assert!(by_id(SET_SELECTION_MODE_ACTION_ID).in_palette);
+        assert!(by_id(SET_INTERACTION_GRANULARITY_ACTION_ID).in_palette);
+        assert_eq!(by_id(CLEAR_SELECTION_ACTION_ID).keys.as_deref(), Some("escape"));
+        assert_eq!(by_id(SELECT_ALL_ACTION_ID).keys.as_deref(), Some("mod+a"));
+    }
+
+    #[test]
+    fn resolve_window_actions_includes_injected_interaction_actions() {
+        let mut app = app_with(vec![], vec![]);
+        app.interactions = vec![sample_interaction_definition("graph")];
+        app.actions = interaction_action_definitions(&app);
+        let window = app.window_kinds.first();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
+        for id in [
+            INTERACTION_SELECT_ACTION_ID,
+            INTERACTION_HOVER_ACTION_ID,
+            CLEAR_SELECTION_ACTION_ID,
+            SELECT_ALL_ACTION_ID,
+            SET_SELECTION_MODE_ACTION_ID,
+            SET_INTERACTION_GRANULARITY_ACTION_ID,
+        ] {
+            assert!(resolved.contains(&id), "{id} injected into app.actions but not resolved for its window");
+        }
+    }
+
+    #[test]
+    fn action_kind_interaction_round_trips_through_json() {
+        let json = serde_json::to_string(&ActionKind::Interaction).unwrap();
+        assert_eq!(json, "\"interaction\"");
+        assert_eq!(serde_json::from_str::<ActionKind>(&json).unwrap(), ActionKind::Interaction);
+    }
+
+    #[test]
+    fn app_definition_and_window_kind_definition_serde_round_trip_interactions() {
+        let mut app = app_with(vec![], vec![ActionRef::new("noop")]);
+        app.interactions = vec![sample_interaction_definition("graph")];
+        app.window_kinds.first_mut().interactions = vec![InteractionRef::new("graph")];
+        let json = serde_json::to_string(&app).unwrap();
+        assert!(json.contains("\"interactions\":[{\"id\":\"graph\""), "{json}");
+        let parsed: AppDefinition = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, app);
+        assert_eq!(parsed.window_kinds.first().interactions, vec![InteractionRef::new("graph")]);
+    }
+    //#endregion 🔖️InteractionTests
 
     fn app_with_modes_and_tools(mut modes: Vec<crate::ui::ModeDefinition>, tools: Vec<crate::ui::ToolDefinition>) -> AppDefinition {
         let mut app = app_with(vec![], vec![]);
@@ -4081,6 +4313,13 @@ mod app_label_tests {
         let json = serde_json::to_string(&tree).unwrap();
         let round: TutorialUiChange = serde_json::from_str(&json).unwrap();
         assert_eq!(round, tree);
+
+        let selection = TutorialUiChange::Selection { domain_id: "mesh".into(), granularity: "face".into(), ids: vec!["f1".into(), "f2".into()] };
+        let json = serde_json::to_string(&selection).unwrap();
+        assert!(json.contains("\"domainId\":\"mesh\""), "field must be camelCase: {json}");
+        assert!(json.contains("\"granularity\":\"face\""), "{json}");
+        let round: TutorialUiChange = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, selection);
     }
 
     #[test]
@@ -4248,6 +4487,10 @@ mod app_label_tests {
                 at: 300,
                 sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::PanelTab { group: "top-left".into(), tab_id: Some("catalogue".into()) }] },
             },
+            TutorialUiKeyframe {
+                at: 400,
+                sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::Selection { domain_id: "mesh".into(), granularity: "face".into(), ids: vec!["f1".into()] }] },
+            },
         ];
         // Before any sample: the base snapshot alone.
         let at_0 = compose_tutorial_ui(&def, 0.0);
@@ -4264,6 +4507,11 @@ mod app_label_tests {
         let at_300 = compose_tutorial_ui(&def, 300.0);
         assert_eq!(at_300.active_tool_id, Some("brush".into()));
         assert_eq!(at_300.active_panel_tab_by_group.get("top-left"), Some(&"catalogue".to_string()));
+        // After the selection delta: the framework-owned domain selection lands in `interaction_selection`.
+        let at_400 = compose_tutorial_ui(&def, 400.0);
+        let selection = at_400.interaction_selection.get("mesh").expect("mesh domain selection");
+        assert_eq!(selection.granularity, "face");
+        assert_eq!(selection.ids, vec!["f1".to_string()]);
     }
 
     #[test]
@@ -4584,6 +4832,21 @@ mod app_label_tests {
         crate::ui::ActionArgDef::export().unwrap();
         crate::ui::ActionDefinition::export().unwrap();
         crate::ui::ActionRef::export().unwrap();
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
+        // definition family, re-exported at the crate root (not under `crate::ui`) — see the `use
+        // crate::{InteractionDefinition, InteractionRef};` import above this file's 🔖️Manifest region.
+        crate::InteractionDefinition::export().unwrap();
+        crate::GranularityDefinition::export().unwrap();
+        crate::HierarchyProvider::export().unwrap();
+        crate::HoverSpec::export().unwrap();
+        crate::SelectionSpec::export().unwrap();
+        crate::SelectionMode::export().unwrap();
+        crate::SelectionMethod::export().unwrap();
+        crate::MergeMode::export().unwrap();
+        crate::InteractionRef::export().unwrap();
+        // 🕹️ W3a: `TutorialUiSnapshot.interaction_selection` carries this directly (see
+        // `TutorialUiChange::Selection`), so it needs its own top-level binding too.
+        crate::DomainSelection::export().unwrap();
         crate::ui::UtilityDefinition::export().unwrap();
         crate::ui::UtilityRef::export().unwrap();
         crate::ui::ToolDefinition::export().unwrap();

@@ -33,6 +33,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -70,7 +71,13 @@ pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
         cfg.camera_json.clone(),
         "[]".into(),
         instances_json(&descriptor),
-        world3d_selection_json("rectangle", &cfg.selected_ids, None),
+        // 🕹️ Pin selection now lives in the framework-owned "features" interaction domain (ticket
+        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `ArtifactApp::render` carries no
+        // `InteractionView` (a known SDK gap — see `w3c-summary.md`'s flagged `EngineCanvas`/
+        // `MapHost::sync_interaction` follow-up), so this scene payload can no longer embed a live
+        // selection; every not-yet-migrated `world3d_selection_json` call site in this repo already
+        // passes an empty selection for the same reason.
+        world3d_selection_json("rectangle", &[], None),
         None,
         None,
         None,

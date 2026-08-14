@@ -372,18 +372,8 @@ pub mod apps {
             pub mod request_completions;
             #[path = "../../🎛️apps/✒️writer/🎮️commands/🔍️lint-document/🦀️component.rs"]
             pub mod lint_document;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🗂️text-select/🦀️component.rs"]
-            pub mod text_select;
             #[path = "../../🎛️apps/✒️writer/🎮️commands/🗂️set-editor-selection/🦀️component.rs"]
             pub mod set_editor_selection;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🗂️select-ast-node/🦀️component.rs"]
-            pub mod select_ast_node;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🗂️set-ast-selection/🦀️component.rs"]
-            pub mod set_ast_selection;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🗂️set-ast-hover/🦀️component.rs"]
-            pub mod set_ast_hover;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🗂️text-hover/🦀️component.rs"]
-            pub mod text_hover;
             #[path = "../../🎛️apps/✒️writer/🎮️commands/⚙️toggle-line-numbers/🦀️component.rs"]
             pub mod toggle_line_numbers;
             #[path = "../../🎛️apps/✒️writer/🎮️commands/⚙️set-font-px/🦀️component.rs"]

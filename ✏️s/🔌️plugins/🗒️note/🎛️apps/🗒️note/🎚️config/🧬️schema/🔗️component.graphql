@@ -1,6 +1,4 @@
 type NoteConfig {
-  selectedBlockIds: [String!]! @state(class: CONFIG)
-  hoveredBlockId: String @state(class: CONFIG)
   engagementInput: String! @state(class: CONFIG)
   camera: NoteCamera! @state(class: CONFIG)
   activeUtilityId: String! @state(class: CONFIG)

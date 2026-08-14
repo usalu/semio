@@ -9,7 +9,6 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack.config")]
 pub struct JackConfig {
-    #[state(config)] pub selected_node_ids: Vec<String>,
     #[state(config)] pub camera: Camera,
     #[state(config)] pub active_fixture_id: String,
     #[state(config)] pub jack_query: String,

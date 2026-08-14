@@ -4,28 +4,11 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedAstIds",
     "camera"
   ],
   "properties": {
-    "selectedAstIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
     "editorSelection": {
       "$ref": "#/$defs/WriterEditorSelection",
-      "x-semio-state": "presence"
-    },
-    "treeHoveredAstId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "editorHoverOffset": {
-      "type": "integer",
-      "minimum": 0,
       "x-semio-state": "presence"
     },
     "camera": {

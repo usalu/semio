@@ -1,0 +1,105 @@
+=== crate-layering fix: relocate interaction runtime layer into os-kernel ===
+=== cargo test -p semio-framework-os-kernel interaction 2>&1 | tail -30 ===
+test os_spr::wire::hub::interaction_tests::validate_state_drops_undeclared_domains_and_granularities ... ok
+test os_spr::wire::hub::interaction_tests::validate_state_clamps_single_mode_selection_to_first_id ... ok
+test os_spr::wire::hub::interaction_tests::validate_state_prunes_ids_absent_from_topology ... ok
+test os_store::component::tests::interaction_store_apply_updates_hover_and_bumps_generation ... ok
+test os_store::component::tests::interaction_store_default_seeds_from_hover_default ... ok
+test os_store::component::tests::interaction_store_reset_discards_hover_and_bumps_generation ... ok
+test os_store::component::tests::history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lane ... ok
+test os_store::component::tests::history_lane_default_undo_and_redo_skip_interaction_entries ... ok
+test os_store::component::tests::history_lane_interaction_entries_survive_envelope_json_round_trip ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 838 filtered out; finished in 0.00s
+
+     Running unittests ../../🔨️modules/🎒️pack/⌨️cli/📦️main.rs (target/debug/deps/pack-6f2c7f9cbbd70aa0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../🔨️modules/🧬️semio/📦️bin.rs (target/debug/deps/semio-4b6f6f383b63c7b7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../🔨️modules/📡️spr/⌨️cli/📦️main.rs (target/debug/deps/spr-29edbcec14dc521d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+=== cargo test -p semio-framework 2>&1 | tail -20 ===
+test workflow::tests::validate_workflow_ok_for_acyclic_connected_graph ... ok
+test workflow::tests::remove_operations_backwards_restores_cascade_deleted_dependents ... ok
+test workflow::tests::workflow_media_port_dsl_round_trips ... ok
+test workflow::tests::workflow_media_port_id_format ... ok
+test workflow::tests::validate_workflow_snapshot_requires_edge_xor_input_binding_on_required_ports ... ok
+test workflow::tests::workflow_operation_backwards_restores_pre_state ... ok
+test workflow::tests::run_operation_op_text_round_trips_every_variant ... ok
+test workflow::tests::run_node_record_dsl_pack_round_trips_nested_tables ... ok
+test workflow::tests::workflow_operation_op_text_round_trips_every_variant ... ok
+test workflow::tests::run_document_dsl_pack_round_trips ... ok
+test workflow::tests::workflow_snapshot_dsl_pack_round_trips ... ok
+
+test result: ok. 105 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests semio_framework
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+=== cargo check -p semio-framework-plugin 2>&1 | tail -10 ===
+...
+985 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+    |         ^^^^^^^^^^^
+986 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+    |         ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-plugin` (lib) generated 41 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 34 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.20s
+
+=== full cargo test -p semio-framework-os-kernel (unfiltered) — confirms only the documented pre-existing os_dsl::fixture_sweep::m5_cross_artifact_rejection failure (another dev's DSL fixture work, verified untouched by this change's diff), unrelated to this crate-layering fix ===
+test os_vcs::tests::content_addressed_checkpoint_id_is_deterministic_and_content_sensitive ... ok
+test os_vcs::tests::content_addressed_entity_and_mint_helpers_are_deterministic ... ok
+test os_store::component::tests::space_vcs_host_meta_document_is_backbone_attachable_and_detachable ... ok
+test os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures ... FAILED
+test os_dsl::fixture_sweep::m5_handcrafted_protocol_conformance::all_discovered_snapshot_protocols_walk_their_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture ... ok
+
+failures:
+
+---- os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures stdout ----
+[DEBUG] soft-skip 🏗️fem::◻2d::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 💠️lowpoly::💠️lowpoly::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 📐️cad::📐️cad::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 📕️norm::📘️en1992::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 🕸️dag::🕸️dag::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+[DEBUG] soft-skip 🗒️note::🗒️note::🔖️1.fixture: no .dsl.semio under 📚️examples (🖼️assets-first walk)
+
+
+failures:
+    os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures
+
+test result: FAILED. 859 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+
+error: test failed, to rerun pass `-p semio-framework-os-kernel --lib`
+
+=== bonus: cargo test -p semio-framework --features typegen exports_typescript_bindings 2>&1 | tail -10 (confirms the moved types still ts_rs-export cleanly through the new os-kernel typegen feature) ===
+
+warning: `semio-framework` (lib test) generated 53 warnings (run `cargo fix --lib -p semio-framework --tests` to apply 53 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 7.39s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework-5b7b78166270823a)
+
+running 1 test
+test manifest::app_label_tests::exports_typescript_bindings ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.74s
+

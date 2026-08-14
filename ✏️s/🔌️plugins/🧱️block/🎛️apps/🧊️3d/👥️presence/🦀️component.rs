@@ -5,24 +5,16 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live selection and vortex hover for the block 3d surface.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+/// 👥️ Shareable live presence for the block 3d surface. 🕹️ ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection/hover used to live here
+/// (`selected_ids`/`hovered_vortex_full_id`) — both now broadcast automatically via the framework's
+/// typed `PresenceInteraction` for the declared `vortex` domain (see `crate::apps::block3d::create_block3d_app`),
+/// so this facet is empty until block3d grows genuinely app-specific live state (e.g. a live camera).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "block3d.presence")]
 #[dsl(layout = "lines")]
-pub struct Block3dPresence {
-    pub selected_ids: Vec<String>,
-    pub hovered_vortex_full_id: Option<String>,
-}
-
-impl Default for Block3dPresence {
-    fn default() -> Self {
-        Self {
-            selected_ids: Vec::new(),
-            hovered_vortex_full_id: None,
-        }
-    }
-}
+pub struct Block3dPresence {}
 
 impl protocol::MutationDiff<Block3dPresence> for Block3dPresence {
     fn apply(&self, _base: &Block3dPresence) -> Block3dPresence {

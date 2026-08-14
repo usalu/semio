@@ -15,11 +15,11 @@ const NUDGE_STEP_FAST: f64 = 10.0;
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — one `drag-blocks` mutation for the
 /// whole gesture (real multi-select drag), never a whole-`blocks` vec swap.
-fn nudge(document: &NoteSnapshot, config: &NoteConfig, dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
-    if config.selected_block_ids.is_empty() {
+fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
+    if selected_ids.is_empty() {
         return Emit::default();
     }
-    let selected: HashSet<String> = config.selected_block_ids.iter().cloned().collect();
+    let selected: HashSet<String> = selected_ids.iter().cloned().collect();
     let ids: Vec<String> = flatten_blocks(&document.blocks)
         .into_iter()
         .filter(|block| selected.contains(block_id(block)))
@@ -52,6 +52,6 @@ pub struct NudgeSelection {
     pub dy: f64,
 }
 
-pub fn handle(payload: &NudgeSelection, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    Ok(nudge(doc.snapshot, cfg.snapshot, payload.dx, payload.dy))
+pub fn handle(payload: &NudgeSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    Ok(nudge(doc.snapshot, &ctx.selected_block_ids, payload.dx, payload.dy))
 }

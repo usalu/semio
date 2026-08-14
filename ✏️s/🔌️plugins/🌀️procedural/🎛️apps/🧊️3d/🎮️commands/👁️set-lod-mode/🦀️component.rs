@@ -22,6 +22,7 @@ mod tests {
     use super::*;
     use crate::apps::procedural3d::testkit::{app, app_with_registry, dispatch};
     use crate::apps::procedural3d::Procedural3dCommand;
+    use crate::apps::procedural3d::commands::set_active_utility;
 
     #[test]
     fn set_lod_mode_is_a_view_action_with_no_artifact_mutations() {

@@ -10,7 +10,6 @@ use crate::apps::cad::{cad_solid_export_effect, cad_spatial_export_effect, expor
 use crate::artifacts::cad::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
 use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::SelectionSet;
 use serde_json::Value;
 
 
@@ -33,18 +32,17 @@ pub mod import_cad_file {
         // now returns a `SemioModelElement` (id/placement/`GeometryRef`), the composed-child shape —
         // composing it into a pane's `SemioModelSnapshot` CHILD needs a child-dispatch seam on
         // `CadDispatchCtx`/`Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️component.rs`
-        // framework-kernel surface, W1-owned). Selection still updates; the document write is a
-        // documented no-op until that seam exists.
-        if let Some(element) = import_cad_object_by_extension(&name_lower, &payload_value) {
-            runtime.selected_object_ids = SelectionSet::from(vec![element.id.clone()]);
-            let mut emit = Emit::default();
-            emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
-            return Ok(emit);
+        // framework-kernel surface, W1-owned). Documented no-op. ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-
+        // MECHANISM (26/08/14): auto-selecting the imported object is no longer reachable from a
+        // single `handle()` dispatch — selection is framework-owned (`interaction_store`), written
+        // only through the injected `interactionSelect` verb; a host wanting "select on import" now
+        // issues that as a follow-up command.
+        if import_cad_object_by_extension(&name_lower, &payload_value).is_some() {
+            return Ok(Emit::default());
         }
         let unwrapped = unwrap_spatial_load_payload(&payload_value).unwrap_or(payload_value);
         let scene = scene_from_spatial_payload(&unwrapped).or_else(|| serde_json::from_value::<CadSnapshot>(unwrapped).ok());
         if let Some(scene) = scene {
-            runtime.selected_object_ids.clear();
             runtime.engagement_session = None;
             let mut emit = Emit { effects: vec![reset_document_effect(&scene)], ..Default::default() };
             emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];

@@ -1,0 +1,10 @@
+help: remove the unnecessary path segments
+     |
+2859 -         let Ok(value) = serde_json::from_str::<serde_json::Value>(json) else {
+2859 +         let Ok(value) = serde_json::from_str::<Value>(json) else {
+     |
+
+warning: `semio-framework-os-infinite` (lib) generated 67 warnings (run `cargo fix --lib -p semio-framework-os-infinite` to apply 43 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.53s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`

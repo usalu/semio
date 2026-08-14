@@ -19,7 +19,6 @@ app_labels! {
         running: native_en "Running", native_de "Läuft", reuse_en "Running", reuse_de "Läuft";
         idle: native_en "Idle", native_de "Leerlauf", reuse_en "Idle", reuse_de "Leerlauf";
         utility: native_en "Utility", native_de "Werkzeug", reuse_en "Utility", reuse_de "Werkzeug";
-        selection: native_en "selection", native_de "Auswahl", reuse_en "selection", reuse_de "Auswahl";
         mesh: native_en "Mesh", native_de "Mesh", reuse_en "Mesh", reuse_de "Mesh";
         vertices: native_en "vertices", native_de "Vertices", reuse_en "vertices", reuse_de "Vertices";
         triangles: native_en "triangles", native_de "Dreiecke", reuse_en "triangles", reuse_de "Dreiecke";

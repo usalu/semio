@@ -2,21 +2,13 @@ syntax = "proto3";
 package semio.app.process.x3d;
 message Process3dPresence {
   // @state presence
-  optional string selected_id = 1;
+  string engagement_input = 1;
   // @state presence
-  optional string hovered_id = 2;
+  repeated double camera_position = 2;
   // @state presence
-  optional uint32 selected_face_id = 3;
+  repeated double camera_target = 3;
   // @state presence
-  string selection_method = 4;
+  double camera_fov = 4;
   // @state presence
-  string engagement_input = 5;
-  // @state presence
-  repeated double camera_position = 6;
-  // @state presence
-  repeated double camera_target = 7;
-  // @state presence
-  double camera_fov = 8;
-  // @state presence
-  string active_utility_id = 9;
+  string active_utility_id = 5;
 }

@@ -2,8 +2,6 @@ syntax = "proto3";
 package semio.app.trinity.jack;
 message JackPresence {
   // @state presence
-  repeated string selected_node_ids = 1;
-  // @state presence
   string active_fixture_id = 2;
   // @state presence
   string jack_query = 3;

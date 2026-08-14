@@ -14,10 +14,6 @@ use std::collections::BTreeMap;
 /// 📶️ Mirrors `ui_styling::metrics::board::SUGGESTION_OFFSET`; kept local since the plugin crate has no styling dependency.
 pub const PUZZLE2D_DEFAULT_SUGGESTION_OFFSET: f64 = 80.0;
 
-fn default_selection_method() -> String {
-    "rectangle".into()
-}
-
 fn default_grid_factor() -> f64 {
     1.0
 }
@@ -57,8 +53,6 @@ fn default_terminology() -> String {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle2dConfig {
-    #[serde(default)]
-    pub selected_ids: Vec<String>,
     /// 🎥️ The canvas camera (pan/zoom) — session-only view state, never a document/fixture field
     /// (see `setCamera`'s `ActionKind::View`): moving the camera must never create a VCS edit.
     #[serde(default)]
@@ -79,8 +73,6 @@ pub struct Puzzle2dConfig {
     pub brush_candidate_source_handle_id: String,
     #[serde(default)]
     pub fill_count: u32,
-    #[serde(default = "default_selection_method")]
-    pub selection_method: String,
     #[serde(default)]
     pub grid_snap_enabled: bool,
     #[serde(default = "default_grid_factor")]
@@ -108,7 +100,6 @@ pub struct Puzzle2dConfig {
 impl Default for Puzzle2dConfig {
     fn default() -> Self {
         Self {
-            selected_ids: Vec::new(),
             camera_x: 0.0,
             camera_y: 0.0,
             camera_zoom: default_camera_zoom(),
@@ -118,7 +109,6 @@ impl Default for Puzzle2dConfig {
             brush_candidates: Vec::new(),
             brush_candidate_source_handle_id: String::new(),
             fill_count: 0,
-            selection_method: default_selection_method(),
             grid_snap_enabled: false,
             grid_factor: default_grid_factor(),
             suggestion_offset: default_suggestion_offset(),

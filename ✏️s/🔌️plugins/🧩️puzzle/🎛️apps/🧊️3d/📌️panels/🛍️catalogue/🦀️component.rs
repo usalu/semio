@@ -52,8 +52,6 @@ fn object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
                         icon_id: Some("circle-dot".into()),
                         default_open: None,
                         action: None,
-                        hover_action: None,
-                        unhover_action: None,
                         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -88,14 +86,12 @@ fn object_kind_item(entry: &Value) -> UiTreeItemNode {
     let draggable = mesh_url.is_some();
     UiTreeItemNode {
         presence: UiPresence::default(),
-        id: format!("puzzle3d-kind:{kind_id}"),
+        id: kind_id.clone(),
         label: Label::data(catalog_entry_label(entry)),
         description: Some(kind_id.clone()),
         icon_id: Some("box".into()),
         default_open: Some(false),
         action: Some(puzzle3d_action("addObjectKind", Some(json!({ "objectKind": kind_id })))),
-        hover_action: Some(puzzle3d_action("setKindHover", Some(json!({ "kindId": kind_id })))),
-        unhover_action: Some(puzzle3d_action("setKindHover", Some(json!({ "kindId": Value::Null })))),
         actions: None,
         draggable: draggable.then_some(true),
         drag_data: draggable.then(|| {
@@ -122,8 +118,6 @@ fn catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
         icon_id: Some(icon_id.into()),
         default_open: None,
         action: None,
-        hover_action: None,
-        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -144,8 +138,7 @@ pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
     let attraction_entries = entries("attractions");
     UiNode::Tree(UiTreeNode {
         presence: UiPresence::default(),
-        selected_ids: None,
-        highlighted_ids: None,
+        interaction_domain: Some(crate::apps::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN.into()),
         sections: vec![
             UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(false), presence: UiPresence::default(), items: object_entries.iter().map(object_kind_item).collect() },
             UiTreeSectionNode {
@@ -170,7 +163,6 @@ pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
                 items: attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")).collect(),
             },
         ],
-        selection_change: None,
         drop_action: None,
         menu: None,
     })

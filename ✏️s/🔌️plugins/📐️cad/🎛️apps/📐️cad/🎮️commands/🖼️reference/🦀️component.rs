@@ -10,7 +10,7 @@ use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use crate::apps::cad::{axis3_index, cad_pane_id_from_suffix, clear_component_selection, command_value_json, resolve_number_edit, runtime_of, snapshot_of};
+use crate::apps::cad::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, runtime_of, snapshot_of};
 use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
 use serde_json::{json, Value};
 
@@ -72,12 +72,10 @@ pub mod set_reference_selection {
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.model_definition_id.as_deref().and_then(cad_pane_from_model_definition_id)).unwrap_or(CadPaneId::Shape);
         runtime.selected_reference_model_definition_id = Some(pane_id.model_definition_id().into());
         runtime.selected_reference_id = payload.reference_id.clone();
-        runtime.selected_object_ids.clear();
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object selection is
+        // framework-owned now, unreachable from this handler; only the app-owned node selection
+        // still clears here.
         runtime.selected_node_ids.clear();
-        runtime.selected_primitive_id = None;
-        runtime.selected_primitive_kind = None;
-        runtime.active_object_id = None;
-        clear_component_selection(&mut runtime);
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
     }
 }
@@ -95,7 +93,7 @@ pub mod reference_hover {
 
     pub fn handle(payload: &ReferenceHover, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
-        runtime.hovered_object_id = payload.reference_id.as_deref().map(|id| format!("reference:{id}"));
+        runtime.hovered_reference_id = payload.reference_id.clone();
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
     }
 }

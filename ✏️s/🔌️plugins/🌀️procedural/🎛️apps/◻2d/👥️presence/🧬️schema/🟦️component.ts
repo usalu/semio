@@ -1,8 +1,6 @@
 /** 🧬️ Procedural2dPresence */
 export interface Procedural2dPresence {
   /** @state presence */
-  selectedIds: string[];
-  /** @state presence */
   camera: CameraJson;
   /** @state presence */
   showMode: string;

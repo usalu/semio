@@ -26,6 +26,8 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        // 🕹️ Non-interactive overview — no `.window_kind_interactions(..)` reference for this window.
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -63,7 +65,7 @@ pub fn engagement(active_utility: &str) -> WindowEngagement {
 
 //#region 🔖️Render
 pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
-    crate::apps::note::modes::edit::windows::composite::render_canvas_scene(document, &cfg.camera, &cfg.selected_block_ids, cfg.hovered_block_id.as_deref(), &cfg.active_utility_id, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator")
+    crate::apps::note::modes::edit::windows::composite::render_canvas_scene(document, &cfg.camera, &cfg.active_utility_id, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator")
 }
 //#endregion 🔖️Render
 

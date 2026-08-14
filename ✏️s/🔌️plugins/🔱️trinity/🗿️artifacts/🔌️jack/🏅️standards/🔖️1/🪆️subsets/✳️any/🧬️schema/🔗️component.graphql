@@ -9,7 +9,6 @@ type JackArtifact {
   nodes: [Node!]! @state(class: ARTIFACT)
   edges: [Edge!]! @state(class: ARTIFACT)
   rootNodeId: String @state(class: ARTIFACT)
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
   activeFixtureId: String! @state(class: PRESENCE)
   jackQuery: String! @state(class: PRESENCE)
   lodModeByWindow: [StringEntry!]! @state(class: PRESENCE)

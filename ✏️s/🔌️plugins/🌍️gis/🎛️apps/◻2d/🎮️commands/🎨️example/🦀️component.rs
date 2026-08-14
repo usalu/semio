@@ -25,7 +25,13 @@ pub mod set_active_example {
 
     pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() { GisMapSnapshot::default() } else { default_document() };
-        let mut config_mutations = vec![Gis2dConfigMutation::SetSelection { ids: Vec::new() }];
+        // 🕹️ The pre-migration layer/feature selection clear that used to live here (`SetSelection {
+        // ids: Vec::new() }`) is gone — selection is framework-owned config now, and `Emit` has no
+        // channel to touch the framework's `interaction_store` (ticket
+        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). The `"features"` domain is
+        // `HierarchyProvider::Flat`, so `validate_state` does not auto-prune it either — a stale
+        // selection surviving a document swap is a known, accepted gap of this wave.
+        let mut config_mutations = Vec::new();
         if !payload.example_id.is_empty() {
             let mut host = map_host_from(&next, cfg.snapshot);
             host.fit_world_camera();

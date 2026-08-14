@@ -1,0 +1,5 @@
+13 | const NUDGE_STEP: f64 = 1.0;
+   |       ^^^^^^^^^^
+
+warning: `semio-s-plugin-note` (lib) generated 44 warnings (run `cargo fix --lib -p semio-s-plugin-note` to apply 29 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 18.16s

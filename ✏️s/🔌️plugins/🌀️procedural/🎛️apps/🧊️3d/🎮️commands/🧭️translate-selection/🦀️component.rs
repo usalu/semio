@@ -4,7 +4,7 @@ use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMu
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{FlowEvalSession, FlowFixture, FlowHost};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 use crate::artifacts::procedural3d::schema::{
@@ -61,17 +61,32 @@ pub struct TranslateSelection {
     pub dy: f64,
     pub dz: f64}
 
-pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.fixture;
-    let ids = mesh_selection_ids_typed(&payload.node_ids, &cfg.snapshot.selected_node_ids);
-    let (dx, dy, dz) = (payload.dx, payload.dy, payload.dz);
-    match gumball_transform(fixture, &ids, "translate", move |host, transform_id| {
+fn translate_ids(fixture: &FlowFixture, ids: &[String], dx: f64, dy: f64, dz: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
+    match gumball_transform(fixture, ids, "translate", move |host, transform_id| {
         let current = gumball_widget_offset(host, transform_id);
         let next = [current[0] + dx, current[1] + dy, current[2] + dz];
         host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).is_ok()
     }) {
-        Some((operations, new_selection)) => Ok(Emit { artifact_mutations: operations, config_mutations: vec![Procedural3dConfigMutation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-translate".into()), ..Default::default() }),
-        None => Ok(Emit::default())}
+        Some((operations, _new_selection)) => Emit { artifact_mutations: operations, coalesce_key: Some("gumball-translate".into()), ..Default::default() },
+        None => Emit::default()}
+}
+
+/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
+/// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
+/// reachable only through that macro-generated path (`Procedural3dPlayApp::handle` always routes this
+/// command through `apply` below instead), so an ids-less payload degrades to a no-op transform.
+pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    let ids = mesh_selection_ids_typed(&payload.node_ids, &[]);
+    Ok(translate_ids(&doc.snapshot.fixture, &ids, payload.dx, payload.dy, payload.dz))
+}
+
+/// 🕹️ Falls back to the `graph` domain's current selection instead of a deleted config field when the
+/// command carries no explicit ids. The created gumball transform widget is no longer auto-reselected
+/// — the framework, not this app, owns `graph`'s selection now, and no `Emit` channel can write it
+/// directly.
+pub fn apply(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+    let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
+    Ok(translate_ids(&doc.snapshot.fixture, &ids, payload.dx, payload.dy, payload.dz))
 }
 
 //#region 🧪️Tests
@@ -80,6 +95,7 @@ mod tests {
     use super::*;
     use crate::apps::procedural3d::testkit::{app, dispatch};
     use crate::apps::procedural3d::Procedural3dCommand;
+    use crate::apps::procedural3d::commands::{rotate_selection, scale_selection};
     use crate::artifacts::procedural3d::widget_id;
     use flow::Widget;
 

@@ -741,26 +741,146 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "."]
-            pub(crate) mod fixture {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️set-fixture-json/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-
+            // 🕹️ `query` stays a named submodule (rather than flattened) — `seeded_jack_config` and
+            // the catalogue panel both reach into it via `commands::query::{run_jack_query,preset_query}`.
             #[path = "."]
             pub(crate) mod query {
                 #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️run-query/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
+            pub(crate) use query::run_query;
 
+            // 🕹️ Every other command file is self-contained (its own private copy of any shared
+            // helpers) and exposes exactly one `pub(crate) fn` matching its directory's verb —
+            // re-exported here by name, flat, matching how `TrinityJackCommand::handle` calls them.
             #[path = "."]
-            pub(crate) mod view {
-                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️set-selection/🦀️component.rs"]
+            mod set_fixture_json_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️set-fixture-json/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
+            pub(crate) use set_fixture_json_leaf::set_fixture_json;
+
+            #[path = "."]
+            mod delete_selection_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️delete-selection/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use delete_selection_leaf::delete_selection;
+
+            #[path = "."]
+            mod patch_nodes_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️patch-nodes/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use patch_nodes_leaf::patch_nodes;
+
+            #[path = "."]
+            mod reorganize_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🗺️reorganize/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use reorganize_leaf::reorganize;
+
+            #[path = "."]
+            mod load_example_query_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️load-example-query/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use load_example_query_leaf::load_example_query;
+
+            #[path = "."]
+            mod set_active_example_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️set-active-example/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_active_example_leaf::set_active_example;
+
+            #[path = "."]
+            mod format_document_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️format-document/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use format_document_leaf::format_document;
+
+            #[path = "."]
+            mod request_completions_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/🔎️request-completions/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use request_completions_leaf::request_completions;
+
+            #[path = "."]
+            mod set_viewport_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️set-viewport/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_viewport_leaf::set_viewport;
+
+            #[path = "."]
+            mod text_edit_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️text-edit/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use text_edit_leaf::text_edit;
+
+            #[path = "."]
+            mod text_select_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️text-select/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use text_select_leaf::text_select;
+
+            #[path = "."]
+            mod set_lod_mode_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_lod_mode_leaf::set_lod_mode;
+
+            #[path = "."]
+            mod editor_engagement_input_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️editor-engagement-input/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use editor_engagement_input_leaf::editor_engagement_input;
+
+            #[path = "."]
+            mod graph_engagement_input_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️graph-engagement-input/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use graph_engagement_input_leaf::graph_engagement_input;
+
+            #[path = "."]
+            mod results_engagement_input_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️results-engagement-input/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use results_engagement_input_leaf::results_engagement_input;
+
+            #[path = "."]
+            mod set_locale_leaf {
+                #[path = "../../🎛️apps/🔌️jack/🎮️commands/👁️set-locale/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_locale_leaf::set_locale;
         }
 
         #[path = "."]
@@ -854,19 +974,96 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
+            // 🕹️ Every command file is self-contained (its own private copy of any shared
+            // helpers) and exposes exactly one `pub(crate) fn` matching its directory's verb —
+            // re-exported here by name, flat, matching how `TrinityRewriteCommand::handle` calls them.
             #[path = "."]
-            pub(crate) mod rule {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️delete-rule-clause/🦀️component.rs"]
+            mod node_graph_edit_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️node-graph-edit/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
+            pub(crate) use node_graph_edit_leaf::node_graph_edit;
 
             #[path = "."]
-            pub(crate) mod view {
-                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️set-selection/🦀️component.rs"]
+            mod set_lhs_json_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️set-lhs-json/🦀️component.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
+            pub(crate) use set_lhs_json_leaf::set_lhs_json;
+
+            #[path = "."]
+            mod set_rhs_json_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️set-rhs-json/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_rhs_json_leaf::set_rhs_json;
+
+            #[path = "."]
+            mod set_parameter_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️set-parameter/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_parameter_leaf::set_parameter;
+
+            #[path = "."]
+            mod add_rule_clause_command_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️add-rule-clause-command/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use add_rule_clause_command_leaf::add_rule_clause_command;
+
+            #[path = "."]
+            mod reset_rule_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️reset-rule/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use reset_rule_leaf::reset_rule;
+
+            #[path = "."]
+            mod patch_nodes_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/📜️patch-nodes/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use patch_nodes_leaf::patch_nodes;
+
+            #[path = "."]
+            mod set_viewport_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️set-viewport/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_viewport_leaf::set_viewport;
+
+            #[path = "."]
+            mod reorganize_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️reorganize/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use reorganize_leaf::reorganize;
+
+            #[path = "."]
+            mod set_lod_mode_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_lod_mode_leaf::set_lod_mode;
+
+            #[path = "."]
+            mod set_locale_leaf {
+                #[path = "../../🎛️apps/♻️rewrite/🎮️commands/👁️set-locale/🦀️component.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_locale_leaf::set_locale;
         }
 
         #[path = "."]

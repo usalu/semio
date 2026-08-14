@@ -9,18 +9,18 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Config
-/// 🧮️ gis2d's `ArtifactApp::Config` — selection, per-layer visibility/stroke-weight, camera,
-/// render/vector/LOD mode, feature selection/hover, selection method/mode, plus `locale`.
-/// Per-layer maps are `BTreeMap` (not `HashMap`) because the DSL derive only binds string-keyed maps
-/// through `dsl_schema::Shape::Map`'s `BTreeMap<String, V>` case.
+/// 🧮️ gis2d's `ArtifactApp::Config` — per-layer visibility/stroke-weight, camera, render/vector/LOD
+/// mode, plus `locale`. Layer AND feature selection/hover/method/mode moved to the framework-owned
+/// `"features"` interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
+/// read via `InteractionView::selection("features")`/`.hover("features", "pointer")`, never stored
+/// here again. Per-layer maps are `BTreeMap` (not `HashMap`) because the DSL derive only binds
+/// string-keyed maps through `dsl_schema::Shape::Map`'s `BTreeMap<String, V>` case.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "gis2dcfg")]
 #[dsl(id = "gis.gis2dcfg")]
 #[dsl(layout = "lines")]
 pub struct Gis2dConfig {
-    /// 👁️ Selected document-tree layer ids.
-    pub selected_ids: Vec<String>,
     /// 👁️ Per-layer visibility; a missing entry defaults to visible.
     #[dsl(block)]
     pub layer_visibility: BTreeMap<String, bool>,
@@ -32,14 +32,6 @@ pub struct Gis2dConfig {
     pub vector_style: String,
     /// 🔽️ Active LOD tier id.
     pub lod_mode: String,
-    /// 👁️ `{positions:[id],routes:[id]}` feature selection JSON.
-    pub feature_selection_json: String,
-    /// 👁️ Hovered feature JSON (or `"null"`).
-    pub hover_json: String,
-    /// 🖱️ `"rectangle" | "lasso"` marquee method.
-    pub selection_method: String,
-    /// 🖱️ `"default" | "additive" | "subtractive" | "invertive"`.
-    pub selection_mode: String,
     /// 👁️ Per-layer stroke-weight multiplier; a missing entry defaults to `1.0`.
     #[dsl(block)]
     pub layer_stroke_scale: BTreeMap<String, f64>,
@@ -110,18 +102,6 @@ impl store::ArtifactPack for Gis2dConfig {
 //#endregion 🔖️ArtifactCodec
 
 
-fn default_gis2d_hover_json() -> String {
-    "null".into()
-}
-
-fn default_gis2d_selection_method() -> String {
-    "rectangle".into()
-}
-
-fn default_gis2d_selection_mode() -> String {
-    "default".into()
-}
-
 fn default_gis2d_camera_json() -> String {
     r#"{"x":0,"y":0,"zoom":1}"#.into()
 }
@@ -134,14 +114,9 @@ fn default_gis2d_vector_style() -> String {
     "colored".into()
 }
 
-fn default_gis2d_feature_selection_json() -> String {
-    r#"{"positions":[],"routes":[]}"#.into()
-}
-
 impl Default for Gis2dConfig {
     fn default() -> Self {
         Self {
-            selected_ids: Vec::new(),
             layer_visibility: BTreeMap::new(),
             camera_json: default_gis2d_camera_json(),
             render_mode: default_gis2d_render_mode(),
@@ -149,10 +124,6 @@ impl Default for Gis2dConfig {
             // 🔽️ Mirrors `framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC`, spelled out here so
             // the config type stays independent of the tiled-map surface crate.
             lod_mode: "automatic".into(),
-            feature_selection_json: default_gis2d_feature_selection_json(),
-            hover_json: default_gis2d_hover_json(),
-            selection_method: default_gis2d_selection_method(),
-            selection_mode: default_gis2d_selection_mode(),
             layer_stroke_scale: BTreeMap::new(),
             locale: "en-US".into(),
         }
@@ -180,8 +151,6 @@ pub fn layer_visible(cfg: &Gis2dConfig, layer_id: &str) -> bool {
 /// old value, defaulted via `unwrap_or`) byte-exact even when the pre-operation map had no entry.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Gis2dConfigMutation {
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "layer-visibility")]
     SetLayerVisibility { layer_id: String, visible: bool },
     #[dsl(key = "camera")]
@@ -192,14 +161,6 @@ pub enum Gis2dConfigMutation {
     SetVectorStyle { value: String },
     #[dsl(key = "lod-mode")]
     SetLodMode { value: String },
-    #[dsl(key = "feature-selection")]
-    SetFeatureSelection { value_json: String },
-    #[dsl(key = "hover")]
-    SetHover { value_json: String },
-    #[dsl(key = "selection-method")]
-    SetSelectionMethod { value: String },
-    #[dsl(key = "selection-mode")]
-    SetSelectionMode { value: String },
     #[dsl(key = "layer-stroke-scale")]
     SetLayerStrokeScale { layer_id: String, value: f64 },
     #[dsl(key = "locale")]
@@ -284,7 +245,6 @@ impl Mutation<Gis2dConfig> for Gis2dConfigMutation {
     fn diff(&self, base: &Gis2dConfig) -> Gis2dConfig {
         let mut next = base.clone();
         match self {
-            Gis2dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             Gis2dConfigMutation::SetLayerVisibility { layer_id, visible } => {
                 if *visible {
                     next.layer_visibility.remove(layer_id);
@@ -296,10 +256,6 @@ impl Mutation<Gis2dConfig> for Gis2dConfigMutation {
             Gis2dConfigMutation::SetRenderMode { value } => next.render_mode = value.clone(),
             Gis2dConfigMutation::SetVectorStyle { value } => next.vector_style = value.clone(),
             Gis2dConfigMutation::SetLodMode { value } => next.lod_mode = value.clone(),
-            Gis2dConfigMutation::SetFeatureSelection { value_json } => next.feature_selection_json = value_json.clone(),
-            Gis2dConfigMutation::SetHover { value_json } => next.hover_json = value_json.clone(),
-            Gis2dConfigMutation::SetSelectionMethod { value } => next.selection_method = value.clone(),
-            Gis2dConfigMutation::SetSelectionMode { value } => next.selection_mode = value.clone(),
             Gis2dConfigMutation::SetLayerStrokeScale { layer_id, value } => {
                 if *value == 1.0 {
                     next.layer_stroke_scale.remove(layer_id);
@@ -314,7 +270,6 @@ impl Mutation<Gis2dConfig> for Gis2dConfigMutation {
 
     fn inverse(&self, base: &Gis2dConfig) -> Vec<Self> {
         match self {
-            Gis2dConfigMutation::SetSelection { .. } => vec![Gis2dConfigMutation::SetSelection { ids: base.selected_ids.clone() }],
             Gis2dConfigMutation::SetLayerVisibility { layer_id, .. } => {
                 vec![Gis2dConfigMutation::SetLayerVisibility { layer_id: layer_id.clone(), visible: base.layer_visibility.get(layer_id).copied().unwrap_or(true) }]
             }
@@ -322,10 +277,6 @@ impl Mutation<Gis2dConfig> for Gis2dConfigMutation {
             Gis2dConfigMutation::SetRenderMode { .. } => vec![Gis2dConfigMutation::SetRenderMode { value: base.render_mode.clone() }],
             Gis2dConfigMutation::SetVectorStyle { .. } => vec![Gis2dConfigMutation::SetVectorStyle { value: base.vector_style.clone() }],
             Gis2dConfigMutation::SetLodMode { .. } => vec![Gis2dConfigMutation::SetLodMode { value: base.lod_mode.clone() }],
-            Gis2dConfigMutation::SetFeatureSelection { .. } => vec![Gis2dConfigMutation::SetFeatureSelection { value_json: base.feature_selection_json.clone() }],
-            Gis2dConfigMutation::SetHover { .. } => vec![Gis2dConfigMutation::SetHover { value_json: base.hover_json.clone() }],
-            Gis2dConfigMutation::SetSelectionMethod { .. } => vec![Gis2dConfigMutation::SetSelectionMethod { value: base.selection_method.clone() }],
-            Gis2dConfigMutation::SetSelectionMode { .. } => vec![Gis2dConfigMutation::SetSelectionMode { value: base.selection_mode.clone() }],
             Gis2dConfigMutation::SetLayerStrokeScale { layer_id, .. } => {
                 vec![Gis2dConfigMutation::SetLayerStrokeScale { layer_id: layer_id.clone(), value: base.layer_stroke_scale.get(layer_id).copied().unwrap_or(1.0) }]
             }
@@ -346,8 +297,6 @@ mod tests {
         assert_eq!(config.render_mode, "combined");
         assert_eq!(config.vector_style, "colored");
         assert_eq!(config.lod_mode, "automatic");
-        assert_eq!(config.selection_method, "rectangle");
-        assert_eq!(config.selection_mode, "default");
         assert_eq!(config.locale, "en-US");
     }
 
@@ -367,7 +316,7 @@ mod tests {
     #[test]
     fn gis2d_config_dsl_round_trips_default_and_populated() {
         store::os_store::test_support::assert_dsl_round_trip(&Gis2dConfig::default());
-        let mut populated = Gis2dConfig { selected_ids: vec!["roads".into()], ..Gis2dConfig::default() };
+        let mut populated = Gis2dConfig::default();
         populated.layer_visibility.insert("water".into(), false);
         populated.layer_stroke_scale.insert("roads".into(), 1.5);
         store::os_store::test_support::assert_dsl_round_trip(&populated);
@@ -410,16 +359,11 @@ mod tests {
 
     #[test]
     fn gis2d_config_operation_lines_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelection { ids: vec!["roads".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: false });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetCamera { camera_json: r#"{"x":1,"y":2,"zoom":3}"#.into() });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetRenderMode { value: "vector".into() });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetVectorStyle { value: "figureGround".into() });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLodMode { value: "automatic".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetFeatureSelection { value_json: r#"{"positions":[],"routes":[]}"#.into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetHover { value_json: "null".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelectionMethod { value: "lasso".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetSelectionMode { value: "additive".into() });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLocale { value: "de-DE".into() });
     }

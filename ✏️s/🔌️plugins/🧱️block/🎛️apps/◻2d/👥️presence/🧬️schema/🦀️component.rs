@@ -5,6 +5,4 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.block.2d.presence")]
-pub struct Block2dPresence {
-    #[state(presence)] pub selected_ids: Vec<String>,
-}
+pub struct Block2dPresence {}

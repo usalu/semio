@@ -1,0 +1,20 @@
+=== w3c: cargo check -p semio-framework-os-infinite (lib only) — clean ===
+
+warning: `semio-framework-os-infinite` (lib) generated 67 warnings (run `cargo fix --lib -p semio-framework-os-infinite` to apply 43 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.29s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+
+=== w3c: cargo test -p semio-framework-os-infinite --lib (fails to compile: PRE-EXISTING, unrelated) ===
+error: could not compile `semio-framework-os-infinite` (lib test) due to 22 previous errors; 85 warnings emitted
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧊️capsule_J.glb`: No such file or directory (os error 2)
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🌍️world/../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧊️capsule_J.glb`: No such file or directory (os error 2)
+error[E0608]: cannot index into a value of type `DslValue`
+
+=== proof pre-existing: identical DslValue index error already present in untouched duplicate 🌍️world/component.rs and missing glb asset ===
+error: could not compile `semio-framework-os-infinite` (lib test) due to 22 previous errors; 85 warnings emitted
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧊️capsule_J.glb`: No such file or directory (os error 2)
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🌍️world/../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧊️capsule_J.glb`: No such file or directory (os error 2)
+error[E0608]: cannot index into a value of type `DslValue`
+
+=== proof: zero 'impl Index ... for DslValue' anywhere in repo (pre-existing regression, likely from concurrent DISSOLVE-KERNELS ticket) ===

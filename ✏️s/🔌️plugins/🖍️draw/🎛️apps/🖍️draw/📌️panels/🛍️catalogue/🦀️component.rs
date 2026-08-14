@@ -22,7 +22,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(_document: &DrawSnapshot, interaction: &crate::apps::draw::config::DrawConfig, labels: &DrawPlayLabels) -> UiNode {
+pub fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode {
     let catalogue_kinds = [
         ("path", labels.kind_path, "pen-tool"),
         ("shape:rect", labels.kind_rectangle, "square"),
@@ -46,11 +46,14 @@ pub fn render(_document: &DrawSnapshot, interaction: &crate::apps::draw::config:
     for operation in DRAW_BOOLEAN_OPERATIONS {
         items.push(UiTreeItemNode {
             icon_id: Some("combine".into()),
+            // 🕹️ `ids` is empty at render time (selection is framework-owned, not visible here) — the
+            // `combine-boolean` command falls back to the live `"strokes"` selection when `payload.ids`
+            // is empty (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             ..tree_item_with_action(
                 format!("draw-play-catalogue.bool.{operation}"),
                 Label::data(format!("{} {operation}", labels.kind_boolean.as_str())),
                 None,
-                draw_play_action("combineBoolean", Some(serde_json::json!({ "operation": operation, "ids": interaction.selected_ids }))),
+                draw_play_action("combineBoolean", Some(serde_json::json!({ "operation": operation, "ids": Vec::<String>::new() }))),
             )
         });
     }

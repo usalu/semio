@@ -1,7 +1,5 @@
 type SpaceConfig {
   camera: [SpaceWindowCameraEntry!]! @state(class: CONFIG)
-  selectedNodeIds: [String!]! @state(class: CONFIG)
-  hoveredNodeId: String @state(class: CONFIG)
   collapsedNodeIds: [String!]! @state(class: CONFIG)
   previewOffNodeIds: [String!]! @state(class: CONFIG)
   activeNodeId: String @state(class: CONFIG)

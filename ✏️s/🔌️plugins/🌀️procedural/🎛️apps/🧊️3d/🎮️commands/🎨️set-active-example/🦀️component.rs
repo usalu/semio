@@ -9,20 +9,18 @@ use flow::playbook::GenerationMutation;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-/// 🧾️ Resets ephemeral selection/generation-preview to match a freshly-loaded example, keeping every
-/// other display option (preview camera, LOD, show mode, selection method, sun, active utility,
-/// locale, contributions) unchanged.
+/// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded example, keeping every other
+/// display option (preview camera, LOD, show mode, sun, active utility, locale, contributions)
+/// unchanged. `graph`'s selection resets on its own — the framework prunes it against the new
+/// fixture's `interaction_topology` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &CameraJson) -> Procedural3dConfig {
     Procedural3dConfig {
         camera: flow_camera.clone(),
-        selected_node_ids: Vec::new(),
-        hovered_node_id: None,
         selected_generation_id: None,
         generation_preview_text: None,
         preview_camera: previous.preview_camera.clone(),
         lod_mode: previous.lod_mode.clone(),
         show_mode: previous.show_mode.clone(),
-        selection_method: previous.selection_method.clone(),
         sun_json: previous.sun_json.clone(),
         active_utility_id: previous.active_utility_id.clone(),
         locale: previous.locale.clone(),

@@ -32,5 +32,5 @@ pretty_assertions = "1.4.1"
 [features]
 # 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🟦️manifest.ts`);
 # never enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
-typegen = ["dep:ts-rs", "ui_wgpu/typegen"]
+typegen = ["dep:ts-rs", "ui_wgpu/typegen", "semio-framework-os-kernel/typegen"]
 

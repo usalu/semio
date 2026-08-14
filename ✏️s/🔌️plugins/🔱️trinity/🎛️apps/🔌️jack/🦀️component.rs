@@ -16,7 +16,12 @@ use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SurfaceKind, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, DomainTopology, TopologyNode, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
 };
+// 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
+// `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
+// (itself `pub mod`). Flagged as a likely framework oversight, not fixed here (framework file).
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use std::collections::HashMap;
 use store::{ArtifactDsl, ArtifactPack};
@@ -182,10 +187,6 @@ pub enum TrinityJackCommand {
     GraphEngagementInput { value: String },
     #[dsl(key = "results-engagement-input")]
     ResultsEngagementInput { value: String },
-    #[dsl(key = "graph-pointer-down")]
-    GraphPointerDown { node_id: Option<String> },
-    #[dsl(key = "set-selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "set-locale")]
     SetLocale { value: String },
 }
@@ -340,18 +341,16 @@ impl ArtifactApp for TrinityJackPlayApp {
             TrinityJackCommand::EditorEngagementInput { .. } => "editorEngagementInput",
             TrinityJackCommand::GraphEngagementInput { .. } => "graphEngagementInput",
             TrinityJackCommand::ResultsEngagementInput { .. } => "resultsEngagementInput",
-            TrinityJackCommand::GraphPointerDown { .. } => "graphPointerDown",
-            TrinityJackCommand::SetSelection { .. } => "setSelection",
             TrinityJackCommand::SetLocale { .. } => "setLocale",
         }
     }
 
-    fn handle(command: &TrinityJackCommand, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &TrinityJackCommand, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         match command {
             TrinityJackCommand::SetFixtureJson { json } => crate::apps::jack::commands::set_fixture_json(json),
-            TrinityJackCommand::DeleteSelection => crate::apps::jack::commands::delete_selection(fixture, &config.selected_node_ids),
+            TrinityJackCommand::DeleteSelection => crate::apps::jack::commands::delete_selection(fixture, &interaction.selection("ast").ids),
             TrinityJackCommand::PatchNodes { node_ids, field, value } => crate::apps::jack::commands::patch_nodes(fixture, node_ids, field, value),
             TrinityJackCommand::Reorganize => crate::apps::jack::commands::reorganize(fixture, config.reorganize_epoch),
             TrinityJackCommand::RunQuery { query } => crate::apps::jack::commands::run_query(fixture, query, &config.jack_query),
@@ -366,8 +365,6 @@ impl ArtifactApp for TrinityJackPlayApp {
             TrinityJackCommand::EditorEngagementInput { value } => crate::apps::jack::commands::editor_engagement_input(value),
             TrinityJackCommand::GraphEngagementInput { value } => crate::apps::jack::commands::graph_engagement_input(value),
             TrinityJackCommand::ResultsEngagementInput { value } => crate::apps::jack::commands::results_engagement_input(value),
-            TrinityJackCommand::GraphPointerDown { node_id } => crate::apps::jack::commands::graph_pointer_down(node_id),
-            TrinityJackCommand::SetSelection { ids } => crate::apps::jack::commands::set_selection(ids),
             TrinityJackCommand::SetLocale { value } => crate::apps::jack::commands::set_locale(value),
         }
     }
@@ -381,7 +378,7 @@ impl ArtifactApp for TrinityJackPlayApp {
             TRINITY_JACK_PLAY_BODY_RESULTS => crate::apps::jack::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, cfg.snapshot),
             TRINITY_JACK_PLAY_BODY_DOCUMENT => crate::apps::jack::panels::document::render(fixture, cfg.snapshot, labels),
             TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::apps::jack::panels::catalogue::render(cfg.snapshot, labels),
-            TRINITY_JACK_PLAY_BODY_INSPECTION => crate::apps::jack::panels::inspection::render(fixture, cfg.snapshot, labels),
+            TRINITY_JACK_PLAY_BODY_INSPECTION => crate::apps::jack::panels::inspection::render(),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -395,8 +392,9 @@ impl ArtifactApp for TrinityJackPlayApp {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.snapshot.locale.starts_with("de");
-        let selected = cfg.snapshot.selected_node_ids.clone();
-        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        // 🕹️ Selection is framework-owned now (domain "ast") — `context_menu` has no `InteractionView`,
+        // so the request's own surface-carried selection groups are the only source; no config fallback.
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
         let mut menu = Menu::of(registry).action("runQuery").action("reorganize").action("formatDocument").group("mode", |m| m.action("setActiveExample")).group("open", |m| m.action("loadExampleQuery"));
         // 🩹️ `Direct`, not `ViaNodeGraphEdit`: jack's own `TrinityJackCommand::DeleteSelection` is a
         // real standalone command (no `nodeGraphEdit`-style JSON-operations envelope exists for jack),
@@ -405,6 +403,24 @@ impl ArtifactApp for TrinityJackPlayApp {
             menu = menu.item(spec);
         }
         menu.build()
+    }
+
+    /// 🕹️ Domain "ast" topology: every fixture node is a `TopologyNode`, parented by the source node
+    /// of its first incoming connection (roots — nodes with no incoming edge — get `parent: None`).
+    /// `MergeMode::Range` is not declared for this domain, so `ordered`'s sequence need not be a strict
+    /// pre-order — `descendant_closure`/`ancestors` only need the (id, parent) pairs, not list order.
+    fn interaction_topology(doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, JackConfig>) -> InteractionTopology {
+        let fixture = doc.snapshot;
+        let mut parent_of: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
+        for edge in fixture.edges() {
+            let source = crate::artifacts::jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
+            let target = crate::artifacts::jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
+            parent_of.entry(target).or_insert(source);
+        }
+        let ordered = fixture.nodes().iter().map(|node| TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() }).collect();
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert("ast".to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 }
 //#endregion 🔖️TrinityJackPlayApp
@@ -491,7 +507,6 @@ pub fn create_trinity_jack_app() -> App {
             .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation).with_category("mode"))
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
             .view_action("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"))
             .view_action("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"))
@@ -501,7 +516,18 @@ pub fn create_trinity_jack_app() -> App {
             .view_action("editorEngagementInput", LocalizedLabel::native("Editor Engagement Input", "Editor-Eingabe"))
             .view_action("graphEngagementInput", LocalizedLabel::native("Graph Engagement Input", "Graph-Eingabe"))
             .view_action("resultsEngagementInput", LocalizedLabel::native("Results Engagement Input", "Ergebnis-Eingabe"))
-            .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
+            // 🕹️ Domain "ast": jack's document nodes, transitive over each node's first incoming
+            // connection (see `interaction_topology`). Selection/hover, marquee, modes and merges are
+            // ALL framework-injected now — no app-declared setSelection/graphPointerDown verbs.
+            .interaction(InteractionDefinition {
+                id: "ast".into(),
+                label: LocalizedLabel::native("Nodes", "Knoten"),
+                granularities: vec![GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() }],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
+            })
+            .window_kind_interactions(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec![InteractionRef::new("ast")])
             // 📝️ Staged argument forms for the panel-visible preset loaders.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Fixture", "Fixtur"), vec![
@@ -553,8 +579,6 @@ mod tests {
             TrinityJackCommand::SetViewport { viewport_json: "{\"x\":1.0,\"y\":2.0,\"zoom\":1.0}".into() },
             TrinityJackCommand::TextSelect { start: 3, end: 9 },
             TrinityJackCommand::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() },
-            TrinityJackCommand::GraphPointerDown { node_id: Some("n1".into()) },
-            TrinityJackCommand::SetSelection { ids: vec!["n1".into(), "n2".into()] },
             TrinityJackCommand::SetLocale { value: "de-DE".into() },
         ];
         for command in commands {
@@ -569,12 +593,23 @@ mod tests {
         testkit::meta(actor)
     }
 
+    /// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
+    /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
+    /// domain "ast" selection needs the real manifest's `.interaction(...)` declaration present.
     fn new_app() -> VcsArtifactApp<TrinityJackPlayApp> {
-        testkit::new_app::<TrinityJackPlayApp>()
+        testkit::new_app_with_registry::<TrinityJackPlayApp>(create_trinity_jack_app)
     }
 
     fn node_id_at(app: &VcsArtifactApp<TrinityJackPlayApp>, index: usize) -> String {
         app.snapshot().expect("projection").nodes()[index].id.clone()
+    }
+
+    /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "ast" — the
+    /// replacement for the deleted `TrinityJackCommand::SetSelection`.
+    fn select_ast(app: &mut VcsArtifactApp<TrinityJackPlayApp>, ids: &[&str]) {
+        let targets: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": id })).collect();
+        let args = serde_json::json!({ "domainId": "ast", "targets": serde_json::to_string(&targets).unwrap() });
+        app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
     }
 
     #[test]
@@ -611,10 +646,11 @@ mod tests {
     fn node_graph_select_updates_selection_and_document_tree() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
-        let result = app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
-        assert!(result.mutations.is_empty(), "selection is a config-only command, no document operations");
+        select_ast(&mut app, &[&node_id]);
         let tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&tree).unwrap().contains(&format!("trinity-document.node.{node_id}")));
+        let json = serde_json::to_string(&tree).unwrap();
+        assert!(json.contains(&node_id));
+        assert!(json.contains("\"selected\":true"));
     }
 
     #[test]
@@ -666,12 +702,14 @@ mod tests {
     }
 
     #[test]
-    fn inspection_tree_reflects_selection() {
+    fn inspection_panel_renders_the_selection_prompt() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
-        app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id] }, &meta("local")).expect("select");
+        select_ast(&mut app, &[&node_id]);
         let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("trinity-inspector.identity"));
+        // 🕹️ `render` has no `InteractionView` (see the panel's own doc comment) — it can no longer
+        // build per-selection fields, so it always renders the static prompt.
+        assert!(serde_json::to_string(&node).unwrap().contains("trinity-inspector.empty"));
     }
 
     #[test]
@@ -701,7 +739,7 @@ mod tests {
     fn delete_selection_removes_selected_node() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
-        app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
+        select_ast(&mut app, &[&node_id]);
         let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local")).expect("delete");
         assert!(!result.mutations.is_empty());
         let projection = app.snapshot().expect("projection");
@@ -712,7 +750,6 @@ mod tests {
     fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
         let mut app = testkit::new_app_with_registry::<TrinityJackPlayApp>(create_trinity_jack_app);
         let node_id = node_id_at(&app, 0);
-        app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
         let request = ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
             surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {

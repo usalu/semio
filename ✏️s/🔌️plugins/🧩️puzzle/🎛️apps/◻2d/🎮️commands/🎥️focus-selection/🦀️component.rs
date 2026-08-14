@@ -5,7 +5,8 @@ use serde_json::{json, Value};
 
 /// 🎯️ Centres the camera on the selection's bounding box (session state only — never the fixture).
 pub fn focus_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
-    if ctx.scene.runtime.selected_ids.is_empty() {
+    let selected_ids = ctx.selected_ids();
+    if selected_ids.is_empty() {
         return;
     }
     let mut min_x = f64::INFINITY;
@@ -16,7 +17,7 @@ pub fn focus_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
         let Some(id) = node.get("id").and_then(|value| value.as_str()) else {
             continue;
         };
-        if !ctx.scene.runtime.selected_ids.iter().any(|selected| selected == id) {
+        if !selected_ids.iter().any(|selected| selected == id) {
             continue;
         }
         let x = node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);

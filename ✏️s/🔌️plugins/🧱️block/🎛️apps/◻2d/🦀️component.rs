@@ -12,7 +12,6 @@ use crate::apps::block2d::commands::{edit, set_active_example};
 use crate::apps::block2d::commands::{add_handle, remove_handle};
 use crate::apps::block2d::commands::{add_handle_kind, remove_handle_kind};
 use crate::apps::block2d::commands::patch_node_kind;
-use crate::apps::block2d::commands::set_selection;
 use crate::apps::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use crate::apps::block2d::modes::edit as edit_mode;
 use crate::apps::block2d::modes::edit::windows::board;
@@ -23,11 +22,20 @@ use crate::artifacts::block2d::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA}
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionDescriptor, App, AppIo, ArtifactKindSpec, ArtifactPresentation, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode,
 };
+use semio_framework_plugin::app::InteractionView;
+use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 use store::EngineHandles;
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 //#region 🔖️Constants
 pub const BLOCK2D_PLAY_APP_ID: &str = "block2d-play";
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the framework-owned hover/selection
+/// domain over this app's rim-handle templates ("handle" granularity, the default) and handle-kind
+/// catalog ("handleKind" granularity) — replaces the deleted `Block2dConfig.selected_ids`.
+pub const BLOCK2D_INTERACTION_HANDLE: &str = "handle";
+pub const BLOCK2D_GRANULARITY_HANDLE: &str = "handle";
+pub const BLOCK2D_GRANULARITY_HANDLE_KIND: &str = "handleKind";
 /// 🗂️ The `s/plugin/puzzle` 2d catalog artifact kind block2d's `"catalog:out"` port produces — see
 /// `block2d_io` and `Block2dPlayApp::export_media`.
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
@@ -89,7 +97,6 @@ semio_framework_plugin::app_commands! {
         "removeCompatibilityRule" as "removeCompatibilityRule" => remove_compatibility_rule::RemoveCompatibilityRule,
         "setActiveExample" as "setActiveExample" => set_active_example::SetActiveExample,
         "edit" as "edit" => edit::Edit,
-        "setSelection" as "setSelection" => set_selection::SetSelection,
     }
 }
 //#endregion 🔖️Commands
@@ -138,12 +145,6 @@ impl ArtifactApp for Block2dPlayApp {
     /// bytes directly.
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
-        let str_vec_field = |key: &str| -> Vec<String> {
-            args.and_then(|value| value.get(key))
-                .and_then(|value| value.as_array())
-                .map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect())
-                .unwrap_or_default()
-        };
         match action {
             "patchNodeKind" => Ok(Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
             "addHandleKind" => Ok(Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})),
@@ -154,7 +155,6 @@ impl ArtifactApp for Block2dPlayApp {
             "removeCompatibilityRule" => Ok(Block2dCommand::RemoveCompatibilityRule(remove_compatibility_rule::RemoveCompatibilityRule { id: str_field("id").unwrap_or_default() })),
             "setActiveExample" => Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: str_field("exampleId").or_else(|| str_field("id")).unwrap_or_default() })),
             "edit" => Ok(Block2dCommand::Edit(edit::Edit { text: str_field("text").unwrap_or_default() })),
-            "setSelection" => Ok(Block2dCommand::SetSelection(set_selection::SetSelection { ids: str_vec_field("ids") })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -162,15 +162,33 @@ impl ArtifactApp for Block2dPlayApp {
         }
     }
 
-    fn handle(command: &Block2dCommand, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Block2dCommand, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `handle` domain's
+    /// `HierarchyProvider::Topology` — every handle-kind is a root (`handleKind` granularity), every
+    /// handle nests under its own `handle_kind` (`handle` granularity), so a stale selection is
+    /// pruned the moment `removeHandleKind`/`removeHandle` deletes its target, and hovering/selecting
+    /// a kind can transitively reach its handles.
+    fn interaction_topology(doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> InteractionTopology {
+        let mut ordered: Vec<TopologyNode> = Vec::new();
+        for kind in &doc.snapshot.handle_kinds {
+            ordered.push(TopologyNode { id: format!("handleKind:{}", kind.id), granularity: BLOCK2D_GRANULARITY_HANDLE_KIND.into(), parent: None });
+        }
+        for handle in &doc.snapshot.handles {
+            ordered.push(TopologyNode { id: format!("handle:{}", handle.id), granularity: BLOCK2D_GRANULARITY_HANDLE.into(), parent: Some(format!("handleKind:{}", handle.handle_kind)) });
+        }
+        let mut domains = BTreeMap::new();
+        domains.insert(BLOCK2D_INTERACTION_HANDLE.to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
         let labels = block2d_labels(&cfg.snapshot.locale);
         match body_key {
             board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels),
-            document_panel::BLOCK2D_BODY_DOCUMENT => document_panel::render(doc.snapshot, &cfg.snapshot.selected_ids, labels),
+            document_panel::BLOCK2D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
             inspection_panel::BLOCK2D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -226,6 +244,22 @@ pub fn create_block2d_app() -> App {
             .mode_def(edit_mode::definition())
             .default_mode_id(edit_mode::BLOCK2D_PLAY_MODE_EDIT)
             .window_kind_def(board::definition())
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `handle` domain
+            // replaces the deleted `setSelection` view action — the framework auto-injects
+            // `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/`setSelectionMode`/
+            // `setInteractionGranularity` for it.
+            .interaction(InteractionDefinition {
+                id: BLOCK2D_INTERACTION_HANDLE.into(),
+                label: LocalizedLabel::native("Handles", "Griffe"),
+                granularities: vec![
+                    GranularityDefinition { id: BLOCK2D_GRANULARITY_HANDLE.into(), label: LocalizedLabel::native("Handle", "Griff"), icon_id: "circle-dot".into() },
+                    GranularityDefinition { id: BLOCK2D_GRANULARITY_HANDLE_KIND.into(), label: LocalizedLabel::native("Handle Kind", "Griffart"), icon_id: "circle".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace, MergeMode::Additive], transitive: false, broadcast: true },
+            })
+            .window_kind_interactions(board::BLOCK2D_WINDOW_BOARD, vec![InteractionRef::new(BLOCK2D_INTERACTION_HANDLE)])
             .default_layout(edit_mode::layout())
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(inspection_panel::definition())
@@ -238,7 +272,6 @@ pub fn create_block2d_app() -> App {
             .mutation("removeCompatibilityRule", LocalizedLabel::native("Remove Compatibility Rule", "Kompatibilitätsregel entfernen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .io(block2d_io()),
     )
     .example(
@@ -304,7 +337,6 @@ mod tests {
             Block2dCommand::RemoveCompatibilityRule(remove_compatibility_rule::RemoveCompatibilityRule { id: "c0".into() }),
             Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: "left".into() }),
             Block2dCommand::Edit(edit::Edit { text: "{}".into() }),
-            Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["h0".into()] }),
         ]
     }
 
@@ -316,7 +348,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 10, "every Block2dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 9, "every Block2dCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -335,8 +367,6 @@ mod tests {
         let hex = |command: &Block2dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(hex(&Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})), "01010000");
         assert_eq!(hex(&Block2dCommand::AddHandle(add_handle::AddHandle {})), "01030000");
-        assert_eq!(hex(&Block2dCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() })), "01090001000c00");
-        assert_eq!(hex(&Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["h0".into()] })), "01090102683001000c010600");
     }
 
     /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
@@ -358,6 +388,38 @@ mod tests {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `handle` domain is declared
+    /// once, with both granularities, a `Topology` hierarchy, and scoped to the board window kind.
+    #[test]
+    fn declares_the_handle_interaction_domain_scoped_to_the_board_window() {
+        let definition = create_block2d_app().definition;
+        let interaction = definition.interactions.iter().find(|def| def.id == BLOCK2D_INTERACTION_HANDLE).expect("handle domain declared");
+        assert_eq!(interaction.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec![BLOCK2D_GRANULARITY_HANDLE, BLOCK2D_GRANULARITY_HANDLE_KIND]);
+        assert!(matches!(interaction.hierarchy, HierarchyProvider::Topology));
+        let board_window = definition.window_kinds.iter().find(|window| window.id == board::BLOCK2D_WINDOW_BOARD).expect("board window declared");
+        assert!(board_window.interactions.contains(&InteractionRef::new(BLOCK2D_INTERACTION_HANDLE)));
+    }
+
+    /// 🕹️ `interaction_topology` nests every handle under its own handle-kind, enabling both pruning
+    /// (`removeHandleKind`/`removeHandle`) and transitive hover from a kind to its handles.
+    #[test]
+    fn interaction_topology_nests_handles_under_their_handle_kind() {
+        let mut app: Block2dApp = new_app();
+        testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
+        testkit::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {}));
+        let snapshot = app.snapshot().expect("snapshot");
+        let kind_id = snapshot.handle_kinds[0].id.clone();
+        let handle_id = snapshot.handles[0].id.clone();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let cfg_snapshot = Block2dConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let topology = Block2dPlayApp::interaction_topology(&doc, &cfg);
+        let domain = topology.domains.get(BLOCK2D_INTERACTION_HANDLE).expect("handle domain topology present");
+        let handle_node = domain.ordered.iter().find(|node| node.id == format!("handle:{handle_id}")).expect("handle node present");
+        assert_eq!(handle_node.parent.as_deref(), Some(format!("handleKind:{kind_id}").as_str()));
     }
 
     #[test]
@@ -424,13 +486,6 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
     }
 
-    #[test]
-    fn set_selection_writes_config_not_document() {
-        let mut app = new_app();
-        let result = app.dispatch_typed(Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["handle-kind:b-l".into()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
-        assert!(result.mutations.is_empty(), "setSelection is config-only and must emit no document operations");
-    }
-
     /// 🌉️ `puzzle2d_manifest_fragment`'s new caller round-trips through the `"catalog:out"` media port.
     #[test]
     fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
@@ -454,14 +509,18 @@ mod tests {
         assert!(matches!(Block2dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "left" }))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
     }
 
-    /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document
-    /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
-    /// `testkit::app_with_registry` exists.
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the old `setSelection` view
+    /// action this test exercised is gone — 2d now declares zero app-level view actions (selection
+    /// moved to the framework-owned `handle` domain, an `ActionKind::Interaction` verb entirely
+    /// outside `Block2dCommand`/kind-discipline dispatch; that domain declaration itself is asserted
+    /// by `declares_the_handle_interaction_domain_scoped_to_the_board_window` above).
+    /// `app_with_registry` still earns its keep here: a genuine `Mutation`-kind command must still
+    /// emit document operations under the real, kind-discipline-enforcing registry.
     #[test]
-    fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
+    fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
-        let result = testkit::dispatch(&mut app, Block2dCommand::SetSelection(set_selection::SetSelection { ids: vec!["h0".into()] }));
-        assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+        let result = testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
+        assert!(!result.mutations.is_empty(), "addHandleKind is a mutation and must reach document operations under kind discipline");
     }
     //#endregion 🔖️Behavior
 }

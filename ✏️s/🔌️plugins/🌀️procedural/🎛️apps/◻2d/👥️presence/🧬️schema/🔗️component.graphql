@@ -1,5 +1,4 @@
 type Procedural2dPresence {
-  selectedIds: [String!]! @state(class: PRESENCE)
   camera: CameraJson! @state(class: PRESENCE)
   showMode: String! @state(class: PRESENCE)
   selectedGenerationId: String @state(class: PRESENCE)

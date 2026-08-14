@@ -1,0 +1,10 @@
+3271 | | where
+3272 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+3273 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+3376 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 5 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.15s

@@ -144,10 +144,12 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
 /// a tree-level id list) and `activate` (the row's click `action`) as a `UiStackNode`'s own fields,
 /// plus its embedded `control` (via `ui_control_to_node`), trailing `actions` (via
 /// `tree_item_action_row`), and nested `items` (recursively) as retained children.
-/// `hover_action`/`unhover_action`/`draggable`/`drag_data` have no matching `UiStackNode` field to
-/// carry them structurally — a later events/interaction milestone re-derives those straight from this
-/// row's key (`item.id`) against the parent `Tree` node's still-fully-intact `spec.0` (reconcile never
-/// drops fields, only clones them into `WidgetSpec`).
+/// `draggable`/`drag_data` have no matching `UiStackNode` field to carry them structurally —
+/// `events::is_plain_stack_container`/`find_tree_item_spec` re-derive those straight from this row's
+/// key (`item.id`) against the parent `Tree` node's still-fully-intact `spec.0` (reconcile never drops
+/// fields, only clones them into `WidgetSpec`). ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
+/// MECHANISM W3a: `hover_action`/`unhover_action` are deleted — hover is now framework-owned per
+/// `UiTreeNode.interaction_domain`, never a per-item action.
 fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
     let mut children: Vec<UiNode> = Vec::new();
     if let Some(control) = &item.control {
@@ -434,8 +436,6 @@ mod tests {
             presence: UiPresence::default(),
             default_open: None,
             action: None,
-            hover_action: None,
-            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -451,7 +451,7 @@ mod tests {
             let selected: HashSet<String> = ids.into_iter().collect();
             ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new());
         }
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None, menu: None })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
     #[test]

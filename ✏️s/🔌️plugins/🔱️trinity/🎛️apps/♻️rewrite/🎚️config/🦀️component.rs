@@ -13,14 +13,9 @@ use std::collections::BTreeMap;
 #[dsl(extension = "trinity.rewritecfg")]
 #[dsl(layout = "lines")]
 pub struct RewriteConfig {
-    pub selected_node_ids: Vec<String>,
     #[dsl(block)]
     pub before_pane_camera: Camera,
     pub reorganize_epoch: u64,
-    pub active_hover_var: String,
-    pub hover_epoch: u64,
-    pub active_select_var: String,
-    pub select_epoch: u64,
     pub lod_mode_by_window: BTreeMap<String, String>,
     pub locale: String,
 }
@@ -91,13 +86,8 @@ impl store::ArtifactPack for RewriteConfig {
 impl Default for RewriteConfig {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
             before_pane_camera: Camera::default(),
             reorganize_epoch: 0,
-            active_hover_var: String::new(),
-            hover_epoch: 0,
-            active_select_var: String::new(),
-            select_epoch: 0,
             lod_mode_by_window: BTreeMap::new(),
             locale: "en-US".into(),
         }
@@ -117,8 +107,6 @@ pub enum RewriteConfigMutation {
         #[dsl(block)]
         config: RewriteConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { node_ids: Vec<String> },
     #[dsl(key = "before-pane-camera")]
     SetBeforePaneCamera {
         #[dsl(block)]
@@ -126,14 +114,6 @@ pub enum RewriteConfigMutation {
     },
     #[dsl(key = "reorganize-epoch")]
     SetReorganizeEpoch { value: u64 },
-    #[dsl(key = "active-hover-var")]
-    SetActiveHoverVar { value: String },
-    #[dsl(key = "hover-epoch")]
-    SetHoverEpoch { value: u64 },
-    #[dsl(key = "active-select-var")]
-    SetActiveSelectVar { value: String },
-    #[dsl(key = "select-epoch")]
-    SetSelectEpoch { value: u64 },
     #[dsl(key = "lod-mode")]
     SetLodMode { window_id: String, value: String },
     #[dsl(key = "locale")]
@@ -219,13 +199,8 @@ impl protocol::Mutation<RewriteConfig> for RewriteConfigMutation {
         let mut next = base.clone();
         match self {
             RewriteConfigMutation::Snapshot { config } => return config.clone(),
-            RewriteConfigMutation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
             RewriteConfigMutation::SetBeforePaneCamera { camera } => next.before_pane_camera = camera.clone(),
             RewriteConfigMutation::SetReorganizeEpoch { value } => next.reorganize_epoch = *value,
-            RewriteConfigMutation::SetActiveHoverVar { value } => next.active_hover_var = value.clone(),
-            RewriteConfigMutation::SetHoverEpoch { value } => next.hover_epoch = *value,
-            RewriteConfigMutation::SetActiveSelectVar { value } => next.active_select_var = value.clone(),
-            RewriteConfigMutation::SetSelectEpoch { value } => next.select_epoch = *value,
             RewriteConfigMutation::SetLodMode { window_id, value } => {
                 next.lod_mode_by_window.insert(window_id.clone(), value.clone());
             }
@@ -246,16 +221,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rewrite_config_default_has_empty_selection_and_default_locale() {
+    fn rewrite_config_default_has_default_locale() {
         let config = RewriteConfig::default();
-        assert!(config.selected_node_ids.is_empty());
         assert_eq!(config.locale, "en-US");
         assert_eq!(config.before_pane_camera, Camera::default());
     }
 
     #[test]
     fn rewrite_config_dsl_round_trips() {
-        let mut config = RewriteConfig { selected_node_ids: vec!["n1".into()], active_hover_var: "a".into(), ..RewriteConfig::default() };
+        let mut config = RewriteConfig { reorganize_epoch: 3, ..RewriteConfig::default() };
         config.lod_mode_by_window.insert("trinity-rewrite-before".into(), "compact".into());
         ::store::os_store::test_support::assert_dsl_round_trip(&config);
         ::store::os_store::test_support::assert_dsl_pack_equivalence(&config);
@@ -264,9 +238,9 @@ mod tests {
     #[test]
     fn rewrite_config_operation_backwards_restores_prior_snapshot() {
         let base = RewriteConfig::default();
-        let operation = RewriteConfigMutation::SetSelection { node_ids: vec!["n1".into()] };
+        let operation = RewriteConfigMutation::SetReorganizeEpoch { value: 7 };
         let next = operation.diff(&base);
-        assert_eq!(next.selected_node_ids, vec!["n1".to_string()]);
+        assert_eq!(next.reorganize_epoch, 7);
         let backwards = operation.inverse(&base);
         let restored = backwards[0].diff(&next);
         assert_eq!(restored, base);
@@ -275,7 +249,7 @@ mod tests {
     #[test]
     fn rewrite_config_operation_text_round_trips() {
         ::store::os_store::test_support::assert_op_line_round_trip(&RewriteConfigMutation::SetLodMode { window_id: "trinity-rewrite-before".into(), value: "compact".into() });
-        ::store::os_store::test_support::assert_op_line_round_trip(&RewriteConfigMutation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        ::store::os_store::test_support::assert_op_line_round_trip(&RewriteConfigMutation::SetReorganizeEpoch { value: 4 });
     }
 }
 //#endregion 🧪️Tests

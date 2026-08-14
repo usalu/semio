@@ -26,7 +26,7 @@ pub fn render(labels: &Gis2dPlayLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("gis2d-play-catalogue");
     let items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS
         .iter()
-        .map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id), Label::data(gis2d_layer_label(id, labels)), None, icon, gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id })))))
+        .map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id), Label::data(gis2d_layer_label(id, labels)), None, icon, Some(gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id }))))))
         .collect();
     builder.section("gis2d-play-catalogue.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).build()
 }

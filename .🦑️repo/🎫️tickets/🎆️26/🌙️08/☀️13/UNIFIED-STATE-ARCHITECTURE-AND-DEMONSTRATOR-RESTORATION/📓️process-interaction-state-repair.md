@@ -20,7 +20,16 @@ runtime exception reported after utility/tool interaction.
 4. `ShellHost` resolved the active plugin into `program` but tested a later local named `plugin`
    before initialization in both utility and tool activation branches. That temporal-dead-zone read
    caused the supplied `ReferenceError` and the visible error state.
-5. The architecture ticket explicitly records A2/A3 presence/transient producers as not started.
+5. Controller ids are not globally unique across a plugin and its extensions. Resolving an action
+   by controller id could therefore send Process interaction state to an extension handle instead
+   of the plugin that owns the active/spawned session.
+6. Framework window instances qualify body keys as `<body>:<window-id>`. A right-click rerender used
+   `process.play.main:process-workpiece`, which Process treated as an unknown panel and replaced the
+   world with an error message.
+7. The manifest gained first-class `InteractionDefinition` and `InteractionRef` fields, but
+   `AppBuilder` still discarded them. The partial migration also left `ActionKind::Interaction`
+   unhandled in the history panel.
+8. The architecture ticket explicitly records A2/A3 presence/transient producers as not started.
    Process rendering currently consumes the typed config lane; moving only this app's writers into
    presence would create two sources of truth because the framework render contract does not yet
    receive `PresenceView`. This repair therefore closes the action-to-config command path rather than
@@ -33,15 +42,28 @@ runtime exception reported after utility/tool interaction.
 - Added and declared typed `contextMenuAt`, with selection mutations for face/mesh/object targets.
 - Made `worldPick` update object selection and clear stale face/object selection where appropriate.
 - Added an app-owned Process menu exposing add-step, selected-step removal, undo, and redo.
-- Corrected both ShellHost utility/tool guards to test the initialized `program` handle.
+- Made shell dispatch resolve the program from the target session's `pluginId`, including utility,
+  tool, active-session, and spawned-session paths; corrected the two temporal-dead-zone guards.
+- Normalized instance-qualified Process body keys before app rendering and added regression coverage.
+- Completed the framework app builder's interaction registry: declarations and window references
+  now propagate, invalid references/specs are rejected, framework interaction actions/keybindings
+  are injected, and interaction commands have a history-panel icon.
 - Extended the existing Process test module with command vocabulary/wire coverage, declared-action
   bridge coverage, interaction payload decoding, registry-backed hover-to-render state, and the
   Process context-menu contract.
 
 ## Verification
 
-Verification is in progress. The first focused Nx run spent most of its 20-minute budget behind
-another developer's Cargo target lock, then reached Process and exposed one context-menu fixture
-type mismatch; that mismatch is corrected. The renderer quick suite reached no assertions before
-its 15-second budget, and its long retry could not start a Vitest worker under the concurrent build
-load. Both are being retried after the active workspace builds release their shared resources.
+- `SEMIO_TEST_LEVEL=long CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=... bun nx run
+  @semio-tech/process-plugin:test-long --skip-nx-cache`: **164/164 passed**, 0 skipped.
+- The Process WASM program rebuilt successfully and published into the framework dev plugin modules.
+- In the running React app, changed the example from **Timber Beam Joinery** to **Drilled Plate** and
+  confirmed the combobox and rendered session remained live.
+- Hovered the workpiece and confirmed the visible hover shading changed without a `setHover` failure.
+- Right-clicked the workpiece and confirmed the Process **Object Menu** rendered with **Add Step**,
+  **Undo**, and **Redo**, while the 3D body remained present.
+- Expanded Utilities and activated **Drill**; it remained pressed and the app did not enter its error
+  state.
+- Post-interaction browser logs contained no `action failed`, `Cannot access 'plugin'`, or
+  `Unknown body` errors.
+- `git diff --check` passed for all files in this repair.

@@ -15,29 +15,17 @@ pub struct GisMapDiff {
     #[state(artifact)] pub positions: Option<GisMapFeaturesDelta>,
     #[state(artifact)] pub routes: Option<GisMapFeaturesDelta>,
     #[state(artifact)] pub regions: Option<GisMapFeaturesDelta>,
-    #[state(presence)] pub selected_ids: Option<GisMapStringList>,
-    #[state(presence)] pub feature_selection_json: Option<String>,
     #[state(presence)] pub layer_visibility: Option<GisMapBoolMapDelta>,
     #[state(presence)] pub layer_stroke_scale: Option<GisMapNumberMapDelta>,
     #[state(config)] pub camera_json: Option<String>,
     #[state(config)] pub render_mode: Option<String>,
     #[state(config)] pub vector_style: Option<String>,
     #[state(config)] pub lod_mode: Option<String>,
-    #[state(config)] pub hover_json: Option<String>,
-    #[state(config)] pub selection_method: Option<String>,
-    #[state(config)] pub selection_mode: Option<String>,
     #[state(config)] pub locale: Option<String>,
 }
 //#endregion 🔹Diff
 
 //#region 🔹DeltaHelpers
-/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct GisMapStringList {
-    pub values: Vec<String>,
-}
-
 /// 📂 Bool-map wrapper so optional map diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]

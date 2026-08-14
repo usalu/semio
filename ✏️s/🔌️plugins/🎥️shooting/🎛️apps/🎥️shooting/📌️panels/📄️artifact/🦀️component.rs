@@ -1,6 +1,7 @@
 //! 📄️ Shooting play app panel — the document tree: shots and assets of the current snapshot.
 
 use crate::apps::shooting::terminology::ShootingLabels;
+use crate::apps::shooting::SHOOTING_INTERACTION_DOMAIN;
 use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
@@ -16,16 +17,27 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+/// 🕹️ Builds an `interactionSelect` dispatch for one `"assets"`-domain target — replaces the deleted
+/// `setSelection` action's asset half. This tree mixes shot AND asset rows under namespaced ids
+/// (`"shooting-shot:…"`/`"shooting-asset:…"`), not the domain's raw ids, so it stays un-bound to
+/// `.interaction_domain(...)` (matches `cad`'s `document_tree_selected_ids` precedent) — the asset row's
+/// click action is built manually instead, one target per click (`"replace"` merge, matching the old
+/// `setSelection` row-click semantics).
+fn asset_select_action(asset_id: &str) -> semio_framework_plugin::ActionDescriptor {
+    let targets = serde_json::to_string(&json!([{ "granularity": "asset", "id": asset_id }])).unwrap_or_default();
+    crate::apps::shooting::shooting_action("interactionSelect", Some(json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })))
+}
+
 pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> UiNode {
     let shot_items: Vec<semio_framework_plugin::UiTreeItemNode> = snapshot
         .shots
         .iter()
-        .map(|shot| crate::apps::shooting::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::apps::shooting::shooting_action("setSelection", Some(json!({ "shotIds": [shot.id], "assetIds": [] })))))
+        .map(|shot| crate::apps::shooting::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::apps::shooting::shooting_action("setShotSelection", Some(json!({ "shotIds": [shot.id] })))))
         .collect();
     let asset_items: Vec<semio_framework_plugin::UiTreeItemNode> = snapshot
         .assets
         .iter()
-        .map(|asset| crate::apps::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", crate::apps::shooting::shooting_action("setSelection", Some(json!({ "shotIds": [], "assetIds": [asset.id] })))))
+        .map(|asset| crate::apps::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id)))
         .collect();
     PanelTreeBuilder::new("shooting-play-document").section("shooting-play-document.shots", Some(labels.shots.into()), true, shot_items).section("shooting-play-document.assets", Some(labels.assets.into()), true, asset_items).build()
 }

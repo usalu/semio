@@ -2185,12 +2185,6 @@ pub mod ui {
         pub action: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional))]
-        pub hover_action: Option<ActionDescriptor>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
-        pub unhover_action: Option<ActionDescriptor>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub actions: Option<Vec<UiTreeItemAction>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional))]
@@ -2227,8 +2221,6 @@ pub mod ui {
                 presence: UiPresence::default(),
                 default_open: None,
                 action: None,
-                hover_action: None,
-                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -2265,27 +2257,25 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
         #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
-        pub selected_ids: Option<Vec<String>>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
-        pub highlighted_ids: Option<Vec<String>>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
-        pub selection_change: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional))]
         pub drop_action: Option<ActionDescriptor>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
+        /// 🕹️ Binds this rendered tree to an app-declared `InteractionDefinition` domain — the framework
+        /// (not the app) then owns the domain's selection/hover via `interactionSelect`/`interactionHover`,
+        /// stamped back onto item `presence` by `ui_tree_stamp_presence`. Replaces the deleted per-app
+        /// `selected_ids`/`highlighted_ids`/`selection_change` wire surface.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        pub interaction_domain: Option<String>,
     }
 
     /// 🖌️ Stamps `selected`/`previewed` per-item presence across every item in every section of a
-    /// tree, replacing the old id-list (`selected_ids`/`highlighted_ids`) approach — the one-line
-    /// migration for plugins that held id sets. `previewed` wins visually over a plain `selected` item
-    /// only insofar as both are representable simultaneously (an item can be selected AND previewed).
+    /// tree — the framework-side counterpart of a `UiTreeNode.interaction_domain` binding.
+    /// `previewed` wins visually over a plain `selected` item only insofar as both are representable
+    /// simultaneously (an item can be selected AND previewed).
     pub fn ui_tree_stamp_presence(sections: &mut [UiTreeSectionNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>) {
         fn stamp_items(items: &mut [UiTreeItemNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>) {
             for item in items {
@@ -2491,8 +2481,6 @@ pub mod ui {
                         presence: UiPresence::default(),
                         default_open: None,
                         action: None,
-                        hover_action: None,
-                        unhover_action: None,
                         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -2503,13 +2491,11 @@ pub mod ui {
                     }],
                 }],
                 presence: UiPresence::default(),
-                selected_ids: None,
-                highlighted_ids: None,
-                selection_change: None,
+                interaction_domain: None,
                 drop_action: None,
             }
         } else {
-            UiTreeNode { menu: None, sections: tree_sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }
+            UiTreeNode { menu: None, sections: tree_sections, presence: UiPresence::default(), drop_action: None, interaction_domain: None }
         })
     }
 
@@ -2524,8 +2510,6 @@ pub mod ui {
                 presence: UiPresence::default(),
                 default_open: None,
                 action: None,
-                hover_action: None,
-                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -2544,8 +2528,6 @@ pub mod ui {
                     presence: UiPresence::default(),
                     default_open: None,
                     action: None,
-                    hover_action: None,
-                    unhover_action: None,
                     actions: None,
                     draggable: None,
                     drag_data: None,
@@ -2563,8 +2545,6 @@ pub mod ui {
                 presence: UiPresence::default(),
                 default_open: None,
                 action: None,
-                hover_action: None,
-                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -2584,8 +2564,6 @@ pub mod ui {
                 presence: UiPresence::default(),
                 default_open: group.default_open,
                 action: None,
-                hover_action: None,
-                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -2607,8 +2585,6 @@ pub mod ui {
                 presence: UiPresence::default(),
                 default_open: None,
                 action: None,
-                hover_action: None,
-                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -2625,8 +2601,6 @@ pub mod ui {
                 presence: UiPresence::default(),
                 default_open: None,
                 action: None,
-                hover_action: None,
-                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -2647,8 +2621,6 @@ pub mod ui {
             presence: UiPresence::default(),
             default_open: None,
             action: None,
-            hover_action: None,
-            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -4214,9 +4186,7 @@ pub mod ui {
                             }],
                         }],
                         presence: UiPresence::default(),
-                        selected_ids: None,
-                        highlighted_ids: None,
-                        selection_change: None,
+                        interaction_domain: None,
                         drop_action: None,
                     }),
                     UiNode::Image(UiImageNode { menu: None, id: "img1".into(), src: "icon.png".into(), alt: Some(Label::data("alt text")), presence: UiPresence::default() }),
@@ -4388,7 +4358,7 @@ pub mod ui {
             );
             assert_presence_serializes(UiNode::Section(UiSectionNode { menu: None, id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
             assert_presence_serializes(UiNode::Group(UiGroupNode { menu: None, id: "i".into(), label: Label::data("l"), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
-            assert_presence_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }), "Tree");
+            assert_presence_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
             assert_presence_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
             assert_presence_serializes(UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }), "ExternalSlot");
             assert_presence_serializes(
@@ -4565,7 +4535,7 @@ pub mod ui {
             assert_menu_serializes(UiNode::Button(UiButtonNode { menu: None, id: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
             assert_menu_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator");
             assert_menu_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
-            assert_menu_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }), "Tree");
+            assert_menu_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
         }
 
         //#region 🗂️OrganizeContextMenuTests

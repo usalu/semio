@@ -148,10 +148,12 @@ mod tests {
         let studio_doc = ArtifactView::new(&empty, &history);
         let studio_config = SpaceConfig::default();
         let studio_cfg = ConfigView { snapshot: &studio_config };
-        let studio = crate::apps::space::SpaceApp::default();
-        let draft = semio_framework_plugin::DraftView { snapshot: &semio_framework_plugin::NoDraft::default() };
-        let engines = store::EngineHandles::empty();
-        let open = crate::apps::space::SpaceApp::handle(&SpaceCommand::OpenSpace(crate::apps::space::commands::open_space::OpenSpace { space_id: space_id.to_string() }), &studio_doc, &studio_cfg, &draft, &engines).expect("handle");
+        // 🕹️ `OpenSpace` isn't one of `SpaceApp::handle`'s interaction-aware bypass rows, so it's safe
+        // to exercise via `SpaceCommand::dispatch` directly (the `app_commands!`-generated 3-arg path
+        // — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) rather than through
+        // `SpaceApp::handle`, which now needs a real `InteractionView` only a full `VcsArtifactApp`
+        // dispatch can provide.
+        let open = SpaceCommand::OpenSpace(crate::apps::space::commands::open_space::OpenSpace { space_id: space_id.to_string() }).dispatch(&studio_doc, &studio_cfg).expect("handle");
         assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));

@@ -1,8 +1,7 @@
 syntax = "proto3";
 package semio.app.writer.writer;
 message WriterConfig {
-  // @state config
-  repeated string selected_ast_ids = 1;
+  reserved 1, 7, 8;
   // @state config
   optional WriterEditorSelection editor_selection = 2;
   // @state config
@@ -13,10 +12,6 @@ message WriterConfig {
   uint32 revision = 5;
   // @state config
   WriterEditorSettings editor_settings = 6;
-  // @state config
-  optional string tree_hovered_ast_id = 7;
-  // @state config
-  optional uint32 editor_hover_offset = 8;
   // @state config
   string engagement_input = 9;
   // @state config

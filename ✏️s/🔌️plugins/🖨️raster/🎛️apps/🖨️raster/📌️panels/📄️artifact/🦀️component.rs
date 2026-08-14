@@ -3,9 +3,10 @@
 use crate::apps::raster::config::RasterConfig;
 use crate::apps::raster::terminology::RasterPlayLabels;
 use crate::apps::raster::{layer_row_id, raster_action, RASTER_TREE_PREFIX};
-use crate::artifacts::raster::schema::{find_layer, layer_name, layer_visible};
+use crate::artifacts::raster::schema::layer_name;
+use crate::artifacts::raster::schema::layer_visible;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
 
 //#region 🔖️Constants
@@ -46,23 +47,25 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
         draggable: Some(true),
         items: nested,
         dimmed: if layer_visible(layer) { None } else { Some(true) },
-        ..tree_item_with_action(layer_row_id(layer), Label::data(layer_name(layer)), Some(description.into()), raster_action("setSelection", Some(json!({ "ids": [crate::artifacts::raster::schema::layer_node_id(layer)] }))))
+        ..tree_item_desc(layer_row_id(layer), Label::data(layer_name(layer)), Some(description.into()))
     }
 }
 
-pub fn render(document: &RasterDocument, runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
+/// 🕹️ `runtime` is unused now — layer selection/hover moved into the framework-owned `"layers"`
+/// interaction domain (granularity `"layer"`, ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
+/// MECHANISM); `.interaction_domain("layers")` below has the framework's renderer translate row
+/// clicks into injected `interactionSelect` and stamp presence from `InteractionState`, replacing the
+/// deleted `.selected()`/`.highlighted()`/`.selection_change()` calls (row ids ARE the domain's ids —
+/// this tree is the sole consumer of the `"layers"` domain today).
+pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
     let action_rows = vec![
         UiTreeItemNode { icon_id: Some("image".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.pixel"), labels.add_pixel, None, raster_action("addLayer", Some(json!({ "kind": "pixel" })))) },
         UiTreeItemNode { icon_id: Some("folder-plus".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.group"), labels.add_group, None, raster_action("addLayer", Some(json!({ "kind": "group" })))) },
     ];
     let layer_items: Vec<UiTreeItemNode> = document.layers.iter().map(layer_tree_item).collect();
-    let selected_ids: Vec<String> = runtime.selected_ids.iter().filter_map(|id| find_layer(&document.layers, id).map(layer_row_id)).collect();
-    let highlighted_ids: Vec<String> = runtime.hovered_id.as_deref().and_then(|id| find_layer(&document.layers, id)).map(|layer| vec![layer_row_id(layer)]).unwrap_or_default();
     PanelTreeBuilder::new(RASTER_TREE_PREFIX)
         .section(RASTER_TREE_PREFIX, Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, [action_rows, layer_items].concat())
-        .selected(selected_ids)
-        .highlighted(highlighted_ids)
-        .selection_change(raster_action("setSelection", None))
+        .interaction_domain("layers")
         .build()
 }
 //#endregion 🔖️Render

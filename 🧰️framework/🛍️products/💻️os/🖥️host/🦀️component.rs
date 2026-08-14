@@ -1911,7 +1911,7 @@ pub mod host_runtime {
         #[test]
         fn presence_peers_json_only_matches_presence_events() {
             use semio_framework::PresencePeer;
-            let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), presence_pack: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None }];
+            let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), presence_pack: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None, interaction: None }];
             let json = presence_peers_json(&ArtifactEvent::Presence { peers: peers.clone() }).expect("json");
             assert!(json.contains("\"actor\":\"a\""));
             assert!(presence_peers_json(&ArtifactEvent::Status(Default::default())).is_none());
@@ -4308,6 +4308,7 @@ pub mod registry {
             options: ui_wgpu::wgpu::WindowOptions::default(),
             actions: Vec::new(),
             utilities: Vec::new(),
+            interactions: Vec::new(),
             params_schema: None,
             artifact_snapshot_schema: None,
             input_event_schema: None,
@@ -4330,6 +4331,7 @@ pub mod registry {
             utilities: Vec::new(),
             tools: Vec::new(),
             commands: Vec::new(),
+            interactions: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),

@@ -23,6 +23,11 @@ pub fn definition() -> WindowKindDefinition {
         options: Default::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        // 🕹️ No interaction domain — this VFS window renders through `build_virtual_file_system_scene`
+        // (a `UiNode::ComponentScene`), not a `UiNode::Tree`, so the framework's
+        // `stamp_and_cache_interaction_ui` post-pass never binds it; it is also a root-only stub with
+        // `selected_row_ids_json`/`hovered_row_id` always `None` (see `render`'s own comment).
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

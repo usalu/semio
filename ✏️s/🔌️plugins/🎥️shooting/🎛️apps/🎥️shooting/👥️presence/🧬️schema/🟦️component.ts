@@ -3,10 +3,6 @@ export interface ShootingPresence {
   /** @state presence */
   selectedShotIds: string[];
   /** @state presence */
-  selectedAssetIds: string[];
-  /** @state presence */
-  hoveredAssetId?: string;
-  /** @state presence */
   camera: ShootingCamera;
   /** @state presence */
   activeUtilityId: string;

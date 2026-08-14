@@ -8,7 +8,6 @@ use serde_json::Value;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d.config")]
 pub struct Puzzle2dConfig {
-    #[state(config)] pub selected_ids: Vec<String>,
     #[state(config)] pub camera_x: f64,
     #[state(config)] pub camera_y: f64,
     #[state(config)] pub camera_zoom: f64,
@@ -18,7 +17,6 @@ pub struct Puzzle2dConfig {
     #[state(config)] pub brush_candidates: Vec<Value>,
     #[state(config)] pub brush_candidate_source_handle_id: String,
     #[state(config)] pub fill_count: u32,
-    #[state(config)] pub selection_method: String,
     #[state(config)] pub grid_snap_enabled: bool,
     #[state(config)] pub grid_factor: f64,
     #[state(config)] pub suggestion_offset: f64,

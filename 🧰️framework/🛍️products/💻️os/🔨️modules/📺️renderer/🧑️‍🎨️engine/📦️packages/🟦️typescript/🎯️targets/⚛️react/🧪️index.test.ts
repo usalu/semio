@@ -238,6 +238,10 @@ import {
   TutorialRecorder,
   synthesizeLocalizedLabel,
   resolveManifestLabel,
+  type ShellPresencePeer,
+  derivePeerInteractionByDomain,
+  peerIdsSelecting,
+  peerIdsHovering,
 } from "./📦️index.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
@@ -797,6 +801,49 @@ describe("shell store reducer", () => {
     expect(failed.pluginRuntime.pluginStatusById).toEqual({ note: "loaded", s: "failed" });
   });
   //#endregion 🔌️PluginRuntime hot-swap actions
+});
+
+// 🕹️wave-2b: `derivePeerInteractionByDomain`/`peerIdsSelecting`/`peerIdsHovering` regroup the typed,
+// wave-0 `PresenceInteraction` roster field into an app-agnostic per-domain shape — the replacement for
+// today's per-app `presencePeersJson` decoding (see "s workflow flow routing"'s "renders presence peers
+// from the scene payload" above, one of the only apps that renders peer selection at all today).
+describe("Shell peer interaction (generic, app-agnostic)", () => {
+  const peer = (clientId: string, name: string, interaction?: ShellPresencePeer["interaction"]): ShellPresencePeer => ({ clientId, name, interaction });
+
+  it("regroups per-peer PresenceInteraction domains into a per-domain roster, keyed by clientId", () => {
+    const roster = derivePeerInteractionByDomain([
+      peer("client-a", "Ada", { appId: "flow", domains: [{ domain: "graph", granularity: "node", selected: ["n1", "n2"], hovered: [] }] }),
+      peer("client-b", "Bo", { appId: "lowpoly", domains: [{ domain: "mesh", granularity: "face", selected: [], hovered: ["f7"] }] }),
+    ]);
+    expect(roster["graph"]).toEqual({ selectedByPeer: { "client-a": ["n1", "n2"] }, hoveredByPeer: {} });
+    expect(roster["mesh"]).toEqual({ selectedByPeer: {}, hoveredByPeer: { "client-b": ["f7"] } });
+  });
+
+  it("is app-agnostic: two different apps sharing one domain id merge into the same entry", () => {
+    const roster = derivePeerInteractionByDomain([
+      peer("client-a", "Ada", { appId: "flow", domains: [{ domain: "graph", granularity: "node", selected: ["n1"], hovered: [] }] }),
+      peer("client-b", "Bo", { appId: "dag", domains: [{ domain: "graph", granularity: "node", selected: ["n2"], hovered: [] }] }),
+    ]);
+    expect(roster["graph"]?.selectedByPeer).toEqual({ "client-a": ["n1"], "client-b": ["n2"] });
+  });
+
+  it("peerIdsSelecting/peerIdsHovering find which peers have a given target id", () => {
+    const roster = derivePeerInteractionByDomain([
+      peer("client-a", "Ada", { appId: "flow", domains: [{ domain: "graph", granularity: "node", selected: ["n1", "n2"], hovered: ["n3"] }] }),
+      peer("client-b", "Bo", { appId: "flow", domains: [{ domain: "graph", granularity: "node", selected: ["n2"], hovered: [] }] }),
+    ]);
+    expect(peerIdsSelecting(roster, "graph", "n1")).toEqual(["client-a"]);
+    expect(peerIdsSelecting(roster, "graph", "n2").sort()).toEqual(["client-a", "client-b"]);
+    expect(peerIdsSelecting(roster, "graph", "n99")).toEqual([]);
+    expect(peerIdsHovering(roster, "graph", "n3")).toEqual(["client-a"]);
+  });
+
+  it("is defensive about an absent interaction field (older heartbeat, or wave 2a's wire field not yet landed) and an unknown domain", () => {
+    const roster = derivePeerInteractionByDomain([peer("client-a", "Ada", undefined), peer("client-b", "Bo")]);
+    expect(roster).toEqual({});
+    expect(peerIdsSelecting(roster, "graph", "n1")).toEqual([]);
+    expect(peerIdsHovering({}, "unknown-domain", "x")).toEqual([]);
+  });
 });
 
 // 🐢️ Puzzle 2D performance round 2: the per-interaction full-shell refresh cascade was dominated by

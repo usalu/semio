@@ -26,6 +26,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -43,7 +44,6 @@ pub fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<Windo
         options::render_mode::measure(cfg, labels),
         options::vector_style::measure(cfg, labels),
         options::lod_mode::measure(cfg, labels),
-        options::selection_method::measure(cfg, labels),
         options::layers::measure(cfg, labels),
         options::layer_weights::measure(cfg, labels),
     ]
@@ -89,10 +89,11 @@ pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiNode {
     scene.lod_mode = cfg.lod_mode.clone();
     scene.layer_visibility_json = layer_visibility_json(cfg);
     scene.layer_stroke_scale_json = layer_stroke_scale_json(cfg);
-    scene.selection_json = cfg.feature_selection_json.clone();
-    scene.hover_json = cfg.hover_json.clone();
-    scene.selection_method = cfg.selection_method.clone();
-    scene.selection_mode = cfg.selection_mode.clone();
+    // 🕹️ Feature selection/hover/method/mode now live in the framework-owned "features" interaction
+    // domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `ArtifactApp::render`
+    // carries no `InteractionView` (a known SDK gap — see `w3c-summary.md`'s flagged `EngineCanvas`/
+    // `MapHost::sync_interaction` follow-up), so `TiledMapScene::base`'s own empty-selection defaults
+    // are left as-is here rather than sourced from this deleted config state.
     apply_gis_map_tile_base_url(&mut scene);
     build_tiled_map_scene(GIS2D_PLAY_SURFACE, GIS2D_PLAY_APP_ID, scene)
 }
@@ -125,7 +126,7 @@ mod tests {
     fn the_window_collects_every_option_node_exactly_once() {
         let config = Gis2dConfig::default();
         let measures = window_measures(&config, gis2d_labels(&config));
-        assert_eq!(measures.len(), 6, "4 selects + the layers and layer-weights groups");
+        assert_eq!(measures.len(), 5, "3 selects + the layers and layer-weights groups");
         let mut app = app();
         assert_eq!(main_window_measures(&mut app).len(), measures.len(), "the app routes the same set under the window id");
     }

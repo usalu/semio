@@ -3,7 +3,6 @@
 use crate::apps::writer::config::WriterConfig;
 use crate::apps::writer::modes::edit::windows::main::options;
 use crate::apps::writer::terminology::WriterPlayLabels;
-use crate::apps::writer::editor_hover_context;
 use crate::artifacts::writer::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
 use crate::artifacts::writer::schema::inferences::{language_diagnostics_json, language_tokens_json};
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
@@ -30,6 +29,10 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        // 🕹️ Populated post-hoc by `create_writer_app`'s `.window_kind_interactions(..)` call — a
+        // bare literal `WindowKindDefinition` (not built via `AppBuilder::window_kind_def`) has no
+        // other way to reach the manifest's `InteractionRef`s.
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -69,11 +72,13 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
     let placeholders_json = is_jack.then(|| serde_json::to_string(&jack_editor_placeholders(&text, cursor)).unwrap_or_else(|_| "[]".into()));
     let newline_gates_json = is_jack.then(|| serde_json::to_string(&jack_newline_gate_offsets(&text)).unwrap_or_else(|_| "[]".into()));
 
-    let (_, tree_hover_span, hover_occurrences) = editor_hover_context(document, config);
-    let hover_json = Some(match tree_hover_span {
-        Some((start, end)) => json!({ "start": start, "end": end }).to_string(),
-        None => "null".to_string(),
-    });
+    // 🕹️ Tree-row/editor hover cross-highlighting DISSOLVED (ticket
+    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `ast` domain's hover now lives in the
+    // framework's own `InteractionState`/presence broadcast, not in `WriterConfig` — `render` has no
+    // `InteractionView` (only `handle`/`copy_fragment`/`cut_operations` do), so this scene no longer
+    // computes a server-side `hoverJson`; the client renders `ast` hover highlights itself from live
+    // interaction/presence state.
+    let hover_json: Option<String> = None;
 
     let caret_symbol = if is_jack && selection.start == selection.end { jack_symbol_at_offset(&text, selection.start) } else { None };
     let (selection_occurrences, rename_json): (Vec<(usize, usize)>, Option<String>) = match &caret_symbol {
@@ -86,10 +91,9 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
     };
 
     let occurrences_json = is_jack.then(|| {
-        let hover: Vec<Value> = hover_occurrences.iter().map(|(s, e)| json!({ "start": s, "end": e })).collect();
         let selection: Vec<Value> = selection_occurrences.iter().map(|(s, e)| json!({ "start": s, "end": e })).collect();
         json!({
-            "hover": serde_json::to_string(&hover).unwrap_or_else(|_| "[]".into()),
+            "hover": "[]",
             "selection": serde_json::to_string(&selection).unwrap_or_else(|_| "[]".into()),
         })
         .to_string()

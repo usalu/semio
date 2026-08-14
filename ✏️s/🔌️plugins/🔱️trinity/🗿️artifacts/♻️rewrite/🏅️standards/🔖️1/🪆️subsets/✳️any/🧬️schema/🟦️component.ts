@@ -12,21 +12,11 @@ export interface RewriteArtifact {
   /** @state artifact */
   ruleLayout: Record<string, LayoutPoint>;
   /** @state presence */
-  selectedNodeIds: string[];
-  /** @state presence */
-  activeHoverVar: string;
-  /** @state presence */
-  activeSelectVar: string;
-  /** @state presence */
   lodModeByWindow: Record<string, string>;
   /** @state config */
   beforePaneCamera: Camera;
   /** @state config */
   reorganizeEpoch: number;
-  /** @state config */
-  hoverEpoch: number;
-  /** @state config */
-  selectEpoch: number;
   /** @state config */
   locale: string;
 }

@@ -8,14 +8,6 @@ export interface RemodelWorldCamera {
   fov: number;
 }
 
-/** 🧬️ RemodelSelection */
-export interface RemodelSelection {
-  /** @state config */
-  mode: string;
-  /** @state config */
-  ids: string[];
-}
-
 /** 🧬️ RemodelLayerVisibility */
 export interface RemodelLayerVisibility {
   /** @state config */
@@ -42,8 +34,6 @@ export interface RemodelFrameCursor {
 export interface RemodelConfig {
   /** @state config */
   camera: RemodelWorldCamera;
-  /** @state config */
-  selection: RemodelSelection;
   /** @state config */
   layers: RemodelLayerVisibility;
   /** @state config */

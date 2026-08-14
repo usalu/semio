@@ -2,8 +2,8 @@
 
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::apps::draw::commands::canvas_pointer_down::DrawSession;
-use crate::artifacts::draw::schema::{create_draw_boolean_layer, create_layer_by_kind, find_draw_layer, find_draw_layer_location, layer_id};
-use crate::artifacts::draw::op::{draw_op_for_layer_field, DrawMutation};
+use crate::artifacts::draw::schema::{create_layer_by_kind, find_draw_layer, find_draw_layer_location};
+use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -61,6 +61,5 @@ pub fn handle(payload: &DropLayerKind, doc: &ArtifactView<'_, DrawSnapshot>, _cf
     let document = doc.snapshot;
     let layer = create_layer_by_kind(&payload.kind);
     let (parent_id, index) = resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position);
-    let select_id = layer_id(&layer).to_string();
-    Ok(Emit { artifact_mutations: vec![crate::artifacts::draw::mutations::create_layer(parent_id, Some(index), layer)], config_mutations: vec![DrawConfigMutation::SetSelection { ids: vec![select_id] }], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![crate::artifacts::draw::mutations::create_layer(parent_id, Some(index), layer)], ..Default::default() })
 }

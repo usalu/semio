@@ -1,10 +1,6 @@
 /** 🧬️ DrawPresence */
 export interface DrawPresence {
   /** @state presence */
-  selectedIds: string[];
-  /** @state presence */
-  hoveredId?: string;
-  /** @state presence */
   engagementInput: string;
   /** @state presence */
   camera: DrawCamera;

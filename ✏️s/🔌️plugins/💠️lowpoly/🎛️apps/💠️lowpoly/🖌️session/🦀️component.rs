@@ -10,7 +10,7 @@ use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::apps::lowpoly::view::build_doc;
 use crate::artifacts::lowpoly::op::{LowpolyMutation, PixelRun};
 use crate::artifacts::lowpoly::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
-use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 use base64::Engine;
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
@@ -261,6 +261,14 @@ pub struct LowpolyScratch {
     /// detects that staleness and fails closed rather than silently computing wrong geometry; a real
     /// fix needs child-document resolution, which no WASM-guest plugin in this repo has yet).
     mesh_workspace: HashMap<String, String>,
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the mesh domain's CURRENT selection,
+    /// resolved from `InteractionView` by `LowpolyPlayApp::handle` right before it delegates to
+    /// `LowpolyCommand::dispatch` — the `app_commands!`-generated dispatcher calls every leaf command's
+    /// `handle(payload, doc, cfg, ctx)` uniformly, with no `interaction` parameter of its own, so this
+    /// scratch field is the one channel by which those handlers (via `build_doc`/`mesh_edit`) see the
+    /// framework-owned selection without every one of them threading a fifth argument. Never persisted,
+    /// never read outside the dispatch that set it.
+    current_selection: LowpolySelection,
 }
 
 impl Default for LowpolyScratch {
@@ -274,11 +282,23 @@ impl Default for LowpolyScratch {
             texture_cache: PaintTextureLut::default(),
             preview_seq: 0,
             mesh_workspace: crate::artifacts::lowpoly::schema::default_mesh_workspace(),
+            current_selection: LowpolySelection::default(),
         }
     }
 }
 
 impl LowpolyScratch {
+    /// 🕹️ Sets THIS dispatch's mesh-domain selection — see `current_selection`'s own doc comment.
+    pub fn set_current_selection(&mut self, selection: LowpolySelection) {
+        self.current_selection = selection;
+    }
+
+    /// 🕹️ THIS dispatch's mesh-domain selection (or the default/empty one outside a command dispatch,
+    /// e.g. `render`).
+    pub fn current_selection(&self) -> &LowpolySelection {
+        &self.current_selection
+    }
+
     /// 🕸️ The live half-edge-mesh JSON cached for `object_id`, or `""` when this session has no
     /// working content for it yet (e.g. an object loaded from a real document import, pending child-
     /// document resolution — see this struct's own doc comment).

@@ -4,7 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedNodeIds",
     "camera",
     "activeFixtureId",
     "jackQuery",
@@ -18,11 +17,6 @@
     "locale"
   ],
   "properties": {
-    "selectedNodeIds": {
-      "type": "array",
-      "items": { "type": "string" },
-      "x-semio-state": "config"
-    },
     "camera": {
       "$ref": "#/$defs/Camera",
       "x-semio-state": "config"

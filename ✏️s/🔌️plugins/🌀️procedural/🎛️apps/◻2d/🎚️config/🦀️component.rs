@@ -11,17 +11,17 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// 🧮️ `Procedural2dPlayApp::Config` — the pure-trait config artifact. Selection, the graph camera, the
-/// show-mode display toggle, the derived generation selection/preview, and locale all round-trip
-/// through the config `ArtifactStore` exactly like document content, with a real `backwards` per
-/// [`Procedural2dConfigMutation`].
+/// 🧮️ `Procedural2dPlayApp::Config` — the pure-trait config artifact. The graph camera, the show-mode
+/// display toggle, the derived generation selection/preview, and locale all round-trip through the
+/// config `ArtifactStore` exactly like document content, with a real `backwards` per
+/// [`Procedural2dConfigMutation`]. Selection/hover moved to the framework's own `graph` interaction
+/// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see
+/// `create_procedural2d_app`'s `.interaction(...)` declaration.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural2dcfg")]
 #[dsl(layout = "lines")]
 pub struct Procedural2dConfig {
-    /// 👁️ Selected widget ids.
-    pub selected_ids: Vec<String>,
     /// 🗺️ The node-graph camera.
     #[dsl(block)]
     pub camera: CameraJson,
@@ -98,7 +98,7 @@ impl store::ArtifactPack for Procedural2dConfig {
 
 impl Default for Procedural2dConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None, generation_preview_text: None, locale: "en-US".into() }
+        Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None, generation_preview_text: None, locale: "en-US".into() }
     }
 }
 
@@ -119,8 +119,6 @@ pub enum Procedural2dConfigMutation {
     Snapshot {
         #[dsl(block)]
         config: Procedural2dConfig},
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "camera")]
     SetCamera {
         #[dsl(block)]
@@ -208,7 +206,6 @@ impl Mutation<Procedural2dConfig> for Procedural2dConfigMutation {
         let mut next = base.clone();
         match self {
             Procedural2dConfigMutation::Snapshot { config } => return config.clone(),
-            Procedural2dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             Procedural2dConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             Procedural2dConfigMutation::SetShowMode { value } => next.show_mode = value.clone(),
             Procedural2dConfigMutation::SetGeneration { selected_generation_id, generation_preview_text } => {
@@ -229,16 +226,6 @@ impl Mutation<Procedural2dConfig> for Procedural2dConfigMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn config_set_selection_round_trips_and_restores() {
-        let base = Procedural2dConfig::default();
-        let operation = Procedural2dConfigMutation::SetSelection { ids: vec!["w1".into(), "w2".into()] };
-        let forward = operation.diff(&base);
-        assert_eq!(forward.selected_ids, vec!["w1".to_string(), "w2".to_string()]);
-        let backwards = operation.inverse(&base);
-        assert_eq!(backwards[0].diff(&forward), base);
-    }
 
     #[test]
     fn config_set_camera_round_trips_and_restores() {
@@ -264,9 +251,8 @@ mod tests {
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
-        let config = Procedural2dConfig { selected_ids: vec!["a".into()], locale: "de-DE".into(), ..Procedural2dConfig::default() };
+        let config = Procedural2dConfig { locale: "de-DE".into(), ..Procedural2dConfig::default() };
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::Snapshot { config });
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetShowMode { value: "generate".into() });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::SetGeneration { selected_generation_id: None, generation_preview_text: None });

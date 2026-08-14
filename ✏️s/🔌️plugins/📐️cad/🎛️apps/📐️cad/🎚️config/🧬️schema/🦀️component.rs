@@ -4,31 +4,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CadHoverTarget {
-    pub object_id: Option<String>,
-    pub mode: Option<String>,
-    pub id: Option<u32>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CadSelectionTargets {
-    pub mesh: bool,
-    pub vertex: bool,
-    pub edge: bool,
-    pub face: bool,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CadComponentSelection {
-    pub targets: CadSelectionTargets,
-    pub mode: String,
-    pub ids: Vec<u32>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct CadSunConfig {
     pub enabled: bool,
     pub azimuth: f64,
@@ -64,20 +39,13 @@ pub struct CadDislocateOptions {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad.config")]
 pub struct CadConfig {
-    #[state(config)] pub selected_object_ids: Vec<String>,
     #[state(config)] pub selected_node_ids: Vec<String>,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub hovered_object_id: Option<String>,
-    #[state(config)] pub hovered_target: Option<CadHoverTarget>,
-    #[state(config)] pub active_object_id: Option<String>,
-    #[state(config)] pub component_selection: CadComponentSelection,
+    #[state(config)] pub hovered_reference_id: Option<String>,
     #[state(config)] pub engagement_input: String,
     #[state(config)] pub engagement_step: String,
     #[state(config)] pub active_example_id: Option<String>,
     #[state(config)] pub selected_reference_model_definition_id: Option<String>,
     #[state(config)] pub selected_reference_id: Option<String>,
-    #[state(config)] pub selected_primitive_id: Option<String>,
-    #[state(config)] pub selected_primitive_kind: Option<String>,
     #[state(config)] pub engagement_pane: Option<String>,
     #[state(config)] pub engagement_session_json: Option<String>,
     #[state(config)] pub last_finalized_interaction_id: Option<String>,

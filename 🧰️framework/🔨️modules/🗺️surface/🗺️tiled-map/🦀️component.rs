@@ -1411,13 +1411,15 @@ pub struct MapHost {
     interaction: MapInteraction,
     /// 🎨️ (d) runtime wiring — color palette derived from the app's UI theme.
     theme: MapPalette,
-    /// 🖱️ (c) Preview/Effect — UI selection state for positions, mirrors `Gis2dConfig`'s selection.
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3c: (c) Preview/Effect —
+    /// selection state for positions, read from the framework's `DomainSelection` (granularity
+    /// `"position"`) via [`MapHost::sync_interaction`], not pushed by the app anymore.
     selected_positions: std::collections::BTreeSet<String>,
-    /// 🖱️ (c) Preview/Effect — UI selection state for routes, mirrors `Gis2dConfig`'s selection.
+    /// 🕹️ (c) Preview/Effect — selection state for routes, `DomainSelection` granularity `"route"`.
     selected_routes: std::collections::BTreeSet<String>,
-    /// 🖱️ (c) Preview/Effect — hover feedback kind (position/route), UI-only.
+    /// 🕹️ (c) Preview/Effect — hover feedback kind (position/route), UI-only.
     hovered_kind: Option<String>,
-    /// 🖱️ (c) Preview/Effect — hover feedback entity id, UI-only.
+    /// 🕹️ (c) Preview/Effect — hover feedback entity id, UI-only.
     hovered_id: Option<String>,
 }
 
@@ -2093,37 +2095,21 @@ impl MapHost {
         }
     }
 
-    pub fn set_selection_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
-        let v: serde_json::Value = serde_json::from_str(json)?;
+    /// 🕹️ Replaces the deleted `set_selection_json`/`set_hover_json` push-setters. `granularity` is
+    /// the domain's currently-active granularity (`"position"` or `"route"`, from
+    /// `InteractionState::active_granularity`) — the framework's `DomainSelection`/`DomainHover` carry
+    /// one flat id list each, scoped to that granularity, so it clears the other kind's ids and tags
+    /// the hover accordingly. Called at render time with the framework's `InteractionState`, not
+    /// pushed arbitrarily by app code.
+    pub fn sync_interaction(&mut self, granularity: &str, selected_ids: &[String], hovered_id: Option<&str>) {
         self.selected_positions.clear();
         self.selected_routes.clear();
-        if let Some(rows) = v.get("positions").and_then(|x| x.as_array()) {
-            for row in rows {
-                if let Some(id) = row.as_str() {
-                    self.selected_positions.insert(id.to_string());
-                }
-            }
+        match granularity {
+            "route" => self.selected_routes = selected_ids.iter().cloned().collect(),
+            _ => self.selected_positions = selected_ids.iter().cloned().collect(),
         }
-        if let Some(rows) = v.get("routes").and_then(|x| x.as_array()) {
-            for row in rows {
-                if let Some(id) = row.as_str() {
-                    self.selected_routes.insert(id.to_string());
-                }
-            }
-        }
-        Ok(())
-    }
-
-    pub fn set_hover_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
-        if json == "null" {
-            self.hovered_kind = None;
-            self.hovered_id = None;
-            return Ok(());
-        }
-        let v: serde_json::Value = serde_json::from_str(json)?;
-        self.hovered_kind = v.get("kind").and_then(|x| x.as_str()).map(str::to_string);
-        self.hovered_id = v.get("id").and_then(|x| x.as_str()).map(str::to_string);
-        Ok(())
+        self.hovered_kind = hovered_id.map(|_| granularity.to_string());
+        self.hovered_id = hovered_id.map(str::to_string);
     }
 
     pub fn position_screen_json(&self, id: &str) -> String {
@@ -3120,14 +3106,14 @@ impl MapSession {
         self.state.borrow().host.feature_screen_json(kind, id)
     }
 
-    #[wasm_bindgen(js_name = setSelectionJson)]
-    pub fn set_selection_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_selection_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = setHoverJson)]
-    pub fn set_hover_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_hover_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+    /// 🕹️ Replaces the deleted `setSelectionJson`/`setHoverJson` — `granularity` is the domain's active
+    /// granularity (`"position"`|`"route"`), `selectedIdsJson`/`hoveredId` the caller's resolved
+    /// `DomainSelection.ids`/`DomainHover.ids.first()`, read from `InteractionState` at render time.
+    #[wasm_bindgen(js_name = syncInteraction)]
+    pub fn sync_interaction_wasm(&mut self, granularity: &str, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
+        let ids: Vec<String> = if selected_ids_json.trim().is_empty() { Vec::new() } else { serde_json::from_str(selected_ids_json).map_err(|e| JsValue::from_str(&e.to_string()))? };
+        self.state.borrow_mut().host.sync_interaction(granularity, &ids, hovered_id.as_deref());
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
@@ -3641,14 +3627,19 @@ mod tests {
     }
 
     #[test]
-    fn set_selection_and_hover_json_updates_host_state() {
+    fn sync_interaction_updates_host_state_scoped_to_active_granularity() {
         let mut host = super::MapHost::new();
-        host.set_selection_json(r#"{"positions":["a"],"routes":["b"]}"#).expect("selection");
-        host.set_hover_json(r#"{"kind":"position","id":"a"}"#).expect("hover");
+        host.sync_interaction("position", &["a".to_string()], Some("a"));
         assert!(host.selected_positions.contains("a"));
-        assert!(host.selected_routes.contains("b"));
+        assert!(host.selected_routes.is_empty());
         assert_eq!(host.hovered_kind.as_deref(), Some("position"));
         assert_eq!(host.hovered_id.as_deref(), Some("a"));
+
+        host.sync_interaction("route", &["b".to_string()], None);
+        assert!(host.selected_positions.is_empty(), "switching granularity clears the other kind's ids");
+        assert!(host.selected_routes.contains("b"));
+        assert!(host.hovered_kind.is_none());
+        assert!(host.hovered_id.is_none());
     }
 
     #[test]
@@ -4085,27 +4076,26 @@ mod tests {
     }
 
     #[test]
-    fn set_selection_json_replaces_previous_selection_and_rejects_bad_json() {
+    fn sync_interaction_replaces_previous_selection_within_active_granularity() {
         let mut host = super::MapHost::new();
-        host.set_selection_json(r#"{"positions":["p1","p2"],"routes":["r1"]}"#).expect("select");
+        host.sync_interaction("position", &["p1".to_string(), "p2".to_string()], None);
         assert_eq!(host.selected_positions_json().len(), 2);
+        host.sync_interaction("route", &["r1".to_string()], None);
+        assert!(host.selected_positions_json().is_empty(), "switching to route clears positions");
         assert_eq!(host.selected_routes_json(), vec!["r1".to_string()]);
-        host.set_selection_json(r#"{"positions":[],"routes":[]}"#).expect("clear");
-        assert!(host.selected_positions_json().is_empty());
+        host.sync_interaction("route", &[], None);
         assert!(host.selected_routes_json().is_empty());
-        assert!(host.set_selection_json("not json").is_err());
     }
 
     #[test]
-    fn set_hover_json_null_clears_and_valid_json_sets_kind_and_id() {
+    fn sync_interaction_none_clears_hover_and_some_sets_kind_and_id() {
         let mut host = super::MapHost::new();
-        host.set_hover_json(r#"{"kind":"position","id":"p1"}"#).expect("hover");
+        host.sync_interaction("position", &[], Some("p1"));
         assert_eq!(host.hovered_kind(), Some("position"));
         assert_eq!(host.hovered_id(), Some("p1"));
-        host.set_hover_json("null").expect("clear hover");
+        host.sync_interaction("position", &[], None);
         assert_eq!(host.hovered_kind(), None);
         assert_eq!(host.hovered_id(), None);
-        assert!(host.set_hover_json("not json").is_err());
     }
 
     #[test]

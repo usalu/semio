@@ -27,17 +27,6 @@
       "$ref": "#/$defs/Filters",
       "x-semio-state": "config"
     },
-    "selectedObjectId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "presence"
-    },
     "locale": {
       "type": "string",
       "x-semio-state": "config"

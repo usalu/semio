@@ -681,14 +681,6 @@ pub mod apps {
             pub mod set_active_utility;
             #[path = "../../🎛️apps/🗒️note/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
-            #[path = "../../🎛️apps/🗒️note/🎮️commands/🗂️select-all/🦀️component.rs"]
-            pub mod select_all;
-            #[path = "../../🎛️apps/🗒️note/🎮️commands/🗂️clear-selection/🦀️component.rs"]
-            pub mod clear_selection;
-            #[path = "../../🎛️apps/🗒️note/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🗒️note/🎮️commands/🗂️set-hover/🦀️component.rs"]
-            pub mod set_hover;
             #[path = "../../🎛️apps/🗒️note/🎮️commands/💬️engagement-input/🦀️component.rs"]
             pub mod engagement_input;
             #[path = "../../🎛️apps/🗒️note/🎮️commands/💬️engagement-submit/🦀️component.rs"]

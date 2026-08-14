@@ -15,7 +15,6 @@ import {
   marqueeCoverageFromGesture,
   marqueeModeFromModifiers,
   screenRectFromPoints,
-  type SelectionMergeMode,
   type SelectionMarqueeCoverage,
   type SelectionMarqueePoint,
   type SelectionMarqueeMethod,
@@ -27,7 +26,7 @@ import {
   SelectionMarquee,
   type IconName,
 } from "@semio-tech/ui-react";
-import { type ComponentSceneHostProps } from "@semio-tech/framework";
+import { type ComponentSceneHostProps, type MergeMode } from "@semio-tech/framework";
 import { type MapWasmSession, createMapSession, createDemandFrameScheduler } from "../WasmSessionLoader/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`Interpreter` already landed in a prior batch.
@@ -895,7 +894,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   }, []);
 
   const emitFeatureSelection = useCallback(
-    (hits: MapFeatureHit, mode: SelectionMergeMode, crossing: boolean) => {
+    (hits: MapFeatureHit, mode: MergeMode, crossing: boolean) => {
       dispatch("setFeatureSelection", {
         positions: [...hits.positions],
         routes: [...hits.routes],

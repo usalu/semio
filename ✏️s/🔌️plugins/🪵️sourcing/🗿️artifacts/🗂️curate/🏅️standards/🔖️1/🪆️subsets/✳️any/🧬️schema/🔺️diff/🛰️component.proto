@@ -116,8 +116,6 @@ message CurateDiff {
   optional CurateCuratedDelta curated = 4;
   // @state config
   optional Filters filters = 5;
-  // @state presence
-  optional string selected_object_id = 6;
   // @state config
   optional string locale = 7;
   // @state config

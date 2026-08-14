@@ -12,6 +12,6 @@ pub struct SetPencilWidth {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetPencilWidth, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetPencilWidth, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_pencil_width(Some(payload.value.clamp(1.0, 24.0)))]))
 }

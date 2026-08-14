@@ -2,11 +2,19 @@
 //! helpers threaded through commands, panels and window renders. Every helper here takes `LowpolyConfig`
 //! (an app-only view-state type) as a parameter, so per the DocumentHelpers placement rule these stay at
 //! app level no matter how many taxonomy nodes consume them — artifacts must never depend on apps.
+//!
+//! 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the mesh domain's selection/hover now
+//! lives in the framework's `InteractionState`, never in `LowpolyConfig` — see `🔖️MeshDomain` below for
+//! the target-id scheme (`"lowpoly-document.<objectId>[.<granularity>.<id>]"`, the SAME ids the Document
+//! panel tree (`📌️panels/📄️artifact`) already renders, so a click there and the framework's `UiTree`
+//! presence auto-stamp share one id space) and `selection_from_interaction`, the boundary that turns a
+//! resolved `InteractionView` into the engine's `LowpolySelection`.
 
 use crate::apps::lowpoly::config::LowpolyConfig;
 use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::apps::lowpoly::session::LowpolyScratch;
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolySnapshot, LowpolySelection, LowpolySelectionTargets};
+use semio_framework_plugin::app::InteractionView;
 use serde_json::Value;
 
 //#region 🔖️View
@@ -35,136 +43,87 @@ pub fn active_object<'a>(view: LowpolyView<'a>) -> Option<&'a LowpolyObject> {
 //#endregion 🔖️ActiveObject
 
 //#region 🔖️Selection
-/// 🧮️ Rebuilds a `LowpolySelection` from `LowpolyConfig`'s flattened selection fields — the boundary
-/// where the config's scalar fields become the compute session's structured selection value.
-pub fn selection_from_config(config: &LowpolyConfig) -> LowpolySelection {
-    LowpolySelection { targets: selection_targets_from_config(config), keys: config.selection_keys.clone(), mode: config.selection_mode.clone(), ids: config.selection_ids.clone() }
-}
-
-pub fn selection_targets_from_config(config: &LowpolyConfig) -> LowpolySelectionTargets {
-    LowpolySelectionTargets { mesh: config.selection_targets_mesh, vertex: config.selection_targets_vertex, edge: config.selection_targets_edge, face: config.selection_targets_face }
-}
-
 /// 🕸️ Takes `ctx: &LowpolyScratch` (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's
 /// round-trip law fix) — the compute session's live mesh content now lives in the session-local
-/// `mesh_workspace` cache, never on `LowpolySnapshot`/`LowpolyObject`.
+/// `mesh_workspace` cache, never on `LowpolySnapshot`/`LowpolyObject`. `ctx.current_selection()` is the
+/// mesh-domain selection `LowpolyPlayApp::handle` resolved from `InteractionView` for THIS dispatch
+/// (see `🔖️MeshDomain` below) — render call sites never populate it, which is harmless: geometry/
+/// texture rendering never reads `LowpolyDocument::selection()`.
 pub fn build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig, ctx: &LowpolyScratch) -> Option<LowpolyDocument> {
     let active = resolve_active_object_id(snapshot, config);
-    LowpolyDocument::with_context(snapshot.clone(), active, selection_from_config(config), ctx.mesh_workspace_map()).ok()
-}
-
-pub fn merge_selection_ids(existing: &[u32], incoming: &[u32], merge: &str) -> Vec<u32> {
-    match merge {
-        "add" => {
-            let mut merged = existing.to_vec();
-            for id in incoming {
-                if !merged.contains(id) {
-                    merged.push(*id);
-                }
-            }
-            merged
-        }
-        "toggle" | "invertive" => {
-            let mut merged = existing.to_vec();
-            for id in incoming {
-                if let Some(index) = merged.iter().position(|entry| entry == id) {
-                    merged.remove(index);
-                } else {
-                    merged.push(*id);
-                }
-            }
-            merged
-        }
-        "remove" | "subtractive" => {
-            let mut merged = existing.to_vec();
-            for id in incoming {
-                merged.retain(|entry| entry != id);
-            }
-            merged
-        }
-        _ => incoming.to_vec(),
-    }
+    LowpolyDocument::with_context(snapshot.clone(), active, ctx.current_selection().clone(), ctx.mesh_workspace_map()).ok()
 }
 
 pub fn document_target_row_id(object_id: &str, _object_index: usize, mode: &str, id: u32) -> String {
     format!("lowpoly-document.{object_id}.{mode}.{id}")
 }
 
-pub fn selection_key(object_id: &str, object_index: usize, mode: &str, id: u32) -> String {
-    format!("lowpoly:{object_id}:{object_index}:{mode}:{id}")
+pub fn document_object_row_id(object_id: &str) -> String {
+    format!("lowpoly-document.{object_id}")
 }
 
 pub fn object_index_for(snapshot: &LowpolySnapshot, object_id: &str) -> usize {
     snapshot.objects.iter().position(|object| object.id == object_id).unwrap_or(0)
 }
-
-pub fn enable_selection_target_kind(targets: &mut LowpolySelectionTargets, mode: &str) {
-    match mode {
-        "vertex" => targets.vertex = true,
-        "edge" => targets.edge = true,
-        "face" => targets.face = true,
-        _ => targets.mesh = true,
-    }
-}
-
-/// 🎯️ The pure, typed-command counterpart of the pre-B1 `sync_selection_keys` — computes the
-/// document-target selection keys for `mode`/`ids` without mutating anything.
-pub fn selection_keys_for(snapshot: &LowpolySnapshot, config: &LowpolyConfig, mode: &str, ids: &[u32]) -> Vec<String> {
-    let active = resolve_active_object_id(snapshot, config);
-    let object_index = object_index_for(snapshot, &active);
-    ids.iter().map(|id| selection_key(&active, object_index, mode, *id)).collect()
-}
-
-/// 🎯️ The pure, typed-command counterpart of the pre-B1 `apply_component_selection` — computes the new
-/// selection mode/ids/keys/targets after selecting `incoming` at `mode` granularity, for the caller to
-/// translate into `LowpolyConfigMutation`s (never mutates `config` directly).
-pub fn apply_component_selection(config: &LowpolyConfig, snapshot: &LowpolySnapshot, mode: &str, incoming: &[u32], merge: &str) -> (String, Vec<u32>, Vec<String>, LowpolySelectionTargets) {
-    let normalized = LowpolyDocument::normalize_selection_mode(mode);
-    let mut targets = selection_targets_from_config(config);
-    enable_selection_target_kind(&mut targets, &normalized);
-    let ids = merge_selection_ids(&config.selection_ids, incoming, merge);
-    let keys = selection_keys_for(snapshot, config, &normalized, &ids);
-    (normalized, ids, keys, targets)
-}
-
-pub fn selected_document_ids(view: LowpolyView<'_>) -> Vec<String> {
-    let config = view.config;
-    let active = resolve_active_object_id(view.snapshot, config);
-    let object_index = object_index_for(view.snapshot, &active);
-    config.selection_ids.iter().map(|id| document_target_row_id(&active, object_index, &config.selection_mode, *id)).collect()
-}
-
-pub fn highlighted_document_ids(view: LowpolyView<'_>) -> Vec<String> {
-    let config = view.config;
-    match (&config.hovered_target_object_id, &config.hovered_target_mode, config.hovered_target_id) {
-        (Some(object_id), Some(mode), Some(id)) => {
-            vec![document_target_row_id(object_id, object_index_for(view.snapshot, object_id), mode, id)]
-        }
-        _ => Vec::new(),
-    }
-}
-
-pub fn format_selection_targets_label(targets: &LowpolySelectionTargets) -> String {
-    let mut parts = Vec::new();
-    if targets.mesh {
-        parts.push("mesh");
-    }
-    if targets.vertex {
-        parts.push("vertex");
-    }
-    if targets.edge {
-        parts.push("edge");
-    }
-    if targets.face {
-        parts.push("face");
-    }
-    if parts.is_empty() {
-        "none".into()
-    } else {
-        parts.join("+")
-    }
-}
 //#endregion 🔖️Selection
+
+//#region 🔖️MeshDomain
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" interaction domain's own
+/// id/granularity vocabulary. `InteractionTarget.id` reuses the Document panel tree's own row ids
+/// (`document_object_row_id`/`document_target_row_id`) verbatim — a click there and the framework's
+/// `UiTree` presence auto-stamp (`PanelTreeBuilder::interaction_domain`) then share one id namespace,
+/// no separate translation table. u32 component ids stringify into that row-id shape at this boundary;
+/// `parse_mesh_target_id`/`selection_from_interaction` own the round-trip back.
+pub const MESH_INTERACTION_DOMAIN: &str = "mesh";
+pub const MESH_GRANULARITY_OBJECT: &str = "object";
+
+/// 🔎️ Parses a mesh-domain target id back into `(objectId, Option<(granularity, numericId)>)` — the
+/// second slot is `None` for an object-granularity row (`"lowpoly-document.<objectId>"`).
+pub fn parse_mesh_target_id(id: &str) -> Option<(String, Option<(String, u32)>)> {
+    let rest = id.strip_prefix("lowpoly-document.")?;
+    let mut parts = rest.splitn(3, '.');
+    let object_id = parts.next()?.to_string();
+    match (parts.next(), parts.next()) {
+        (Some(mode), Some(raw_id)) => raw_id.parse::<u32>().ok().map(|numeric| (object_id, Some((mode.to_string(), numeric)))),
+        _ => Some((object_id, None)),
+    }
+}
+
+/// 🕹️ Builds the engine-facing `LowpolySelection` for `active_object_id` from the framework's CURRENT
+/// mesh-domain selection — the boundary where `interaction.selection("mesh")` (`String` ids) crosses
+/// into `LowpolyDocument`'s per-object `u32` component ids. Only ids belonging to `active_object_id`
+/// survive: like the pre-migration model, a mesh-editing kernel op always targets the ACTIVE object's
+/// own selected components.
+///
+/// 🎯️ Reads the granularity off `DomainSelection.granularity` itself — `next_selection` (the
+/// framework's own pure machine) stamps this from the LAST picked target's granularity on every
+/// `interactionSelect`, whereas `InteractionView::active_granularity` only changes on an explicit
+/// `setInteractionGranularity` dispatch (a separate "what the NEXT pick defaults to" concern) and would
+/// silently stay "object" for a plain face pick that never touched it.
+pub fn selection_from_interaction(active_object_id: &str, interaction: &InteractionView<'_>) -> LowpolySelection {
+    let selected = interaction.selection(MESH_INTERACTION_DOMAIN);
+    let granularity = if selected.granularity.is_empty() { MESH_GRANULARITY_OBJECT } else { selected.granularity.as_str() };
+    let mode = LowpolyDocument::normalize_selection_mode(granularity);
+    let ids: Vec<u32> = selected
+        .ids
+        .iter()
+        .filter_map(|raw| parse_mesh_target_id(raw))
+        .filter(|(object_id, _)| object_id == active_object_id)
+        .filter_map(|(_, component)| component.map(|(_, numeric)| numeric))
+        .collect();
+    LowpolySelection { targets: LowpolySelectionTargets::default(), keys: Vec::new(), mode, ids }
+}
+
+/// 🕹️ Builds an `interactionSelect` dispatch for one mesh-domain target — the Document panel tree's row
+/// click replaces the deleted `toggleSelectionTarget`. Hover has no per-row action to build any more:
+/// `UiTreeItemNode.hoverAction`/`.unhoverAction` are DELETED (per `📋️master.md`'s UI section) — a
+/// domain-bound tree's hover is translated generically by the renderer now, like its selection click
+/// modifiers, never by an app-built per-row action.
+pub fn mesh_select_action(granularity: &str, target_id: &str, merge: &str) -> semio_framework_plugin::ActionDescriptor {
+    let targets = serde_json::to_string(&Value::Array(vec![serde_json::json!({ "granularity": granularity, "id": target_id })])).unwrap_or_default();
+    crate::apps::lowpoly::lowpoly_action("interactionSelect", Some(serde_json::json!({ "domainId": MESH_INTERACTION_DOMAIN, "targets": targets, "merge": merge })))
+}
+//#endregion 🔖️MeshDomain
 
 //#region 🔖️Utility
 pub fn is_paint_utility(utility_id: &str) -> bool {

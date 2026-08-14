@@ -1,9 +1,6 @@
 type Procedural3dConfig {
-  selectedNodeIds: [String!]! @state(class: CONFIG)
   lodMode: String! @state(class: CONFIG)
   showMode: String! @state(class: CONFIG)
-  selectionMethod: String! @state(class: CONFIG)
-  hoveredNodeId: String @state(class: CONFIG)
   camera: CameraJson! @state(class: CONFIG)
   previewCamera: Procedural3dPreviewCamera! @state(class: CONFIG)
   sunJson: String! @state(class: CONFIG)

@@ -4,8 +4,6 @@ message SourcingCurateConfig {
   // @state config
   Filters filters = 1;
   // @state config
-  optional string selected_object_id = 2;
-  // @state config
   string locale = 3;
   // @state config
   string contributions_json = 4;

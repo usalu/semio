@@ -11,10 +11,6 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.draw.draw.config")]
 pub struct DrawConfig {
     #[state(config)]
-    pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub hovered_id: Option<String>,
-    #[state(config)]
     pub engagement_input: String,
     #[state(config)]
     pub camera: DrawCamera,

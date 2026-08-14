@@ -4,23 +4,11 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "engagementInput",
     "camera",
     "activeUtilityId"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "hoveredId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "engagementInput": {
       "type": "string",
       "x-semio-state": "presence"

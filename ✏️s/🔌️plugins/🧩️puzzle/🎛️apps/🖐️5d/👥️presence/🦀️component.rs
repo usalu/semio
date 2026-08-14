@@ -11,10 +11,6 @@ use store::ArtifactPack;
 #[dsl(extension = "puzzle5d.presence")]
 #[dsl(layout = "lines")]
 pub struct Puzzle5dPresence {
-    pub selected_part_ids: Vec<String>,
-    pub selected_grip_ids: Vec<String>,
-    pub selected_fastener_ids: Vec<String>,
-    pub hovered_part_id: Option<String>,
     pub camera2d_x: f64,
     pub camera2d_y: f64,
     pub camera2d_zoom: f64,
@@ -27,10 +23,6 @@ pub struct Puzzle5dPresence {
 impl Default for Puzzle5dPresence {
     fn default() -> Self {
         Self {
-            selected_part_ids: Vec::new(),
-            selected_grip_ids: Vec::new(),
-            selected_fastener_ids: Vec::new(),
-            hovered_part_id: None,
             camera2d_x: 0.0,
             camera2d_y: 0.0,
             camera2d_zoom: 1.0,

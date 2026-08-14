@@ -6,10 +6,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.puzzle.puzzle2d.presence")]
 pub struct Puzzle2dPresence {
-    #[state(presence)] pub selected_ids: Vec<String>,
     #[state(presence)] pub camera_x: f64,
     #[state(presence)] pub camera_y: f64,
     #[state(presence)] pub camera_zoom: f64,
-    #[state(presence)] pub selection_method: String,
     #[state(presence)] pub active_utility_id: String,
 }

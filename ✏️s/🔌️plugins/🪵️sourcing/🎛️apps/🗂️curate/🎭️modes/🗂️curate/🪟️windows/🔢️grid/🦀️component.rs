@@ -1,6 +1,6 @@
 //! 🔢️ Sourcing curate app — the grid window: every filtered stock object laid out on a 3D grid.
 
-use crate::apps::curate::config::{selected_ids, SourcingCurateConfig};
+use crate::apps::curate::config::SourcingCurateConfig;
 use crate::apps::curate::SOURCING_CONTROLLER_ID;
 use crate::artifacts::curate::schema::{filtered_stock, grid_placement, grid_scale, instance_json, kind_mesh_json};
 use crate::artifacts::curate::CurateSnapshot;
@@ -25,6 +25,7 @@ pub fn definition() -> WindowKindDefinition {
         icon_id: "grid-3x3".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
+        interactions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -47,10 +48,12 @@ pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiNode {
         }
         let (x, z) = grid_placement(filtered.len(), index, SOURCING_CURATE_GRID_CELL);
         let scale = grid_scale(&kind.geometry, SOURCING_CURATE_GRID_CELL * 0.8);
-        let selected = cfg.selected_object_id.as_deref() == Some(kind.id.as_str());
-        instances.push(instance_json(kind, [x, 0.0, z], scale, selected));
+        // 🕹️ The "rows" selection now lives in the framework-owned interaction domain (ticket
+        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactApp::render` carries no
+        // `InteractionView`, so this scene payload can no longer embed a live selection.
+        instances.push(instance_json(kind, [x, 0.0, z], scale, false));
     }
-    let mut scene = world3d_scene(world3d_default_camera(), json!(meshes).to_string(), json!(instances).to_string(), world3d_selection_json("rectangle", &selected_ids(cfg), None), &WorldSunConfig::default());
+    let mut scene = world3d_scene(world3d_default_camera(), json!(meshes).to_string(), json!(instances).to_string(), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     scene.fit_json = Some(json!({ "enabled": true, "padding": 0.3 }).to_string());
     build_world_3d_scene(SOURCING_CURATE_SURFACE_GRID, SOURCING_CONTROLLER_ID, scene)
 }

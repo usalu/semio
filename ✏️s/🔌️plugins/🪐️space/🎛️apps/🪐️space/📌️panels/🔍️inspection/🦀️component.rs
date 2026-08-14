@@ -1,5 +1,7 @@
 //! 🔍️ S Studio app — inspector panel: selected node position (Transform-ish section) and
-//! identity/parameter-binding facets (Properties-ish section), both driven off `SpaceConfig.selected_node_ids`.
+//! identity/parameter-binding facets (Properties-ish section), both driven off the `graph` interaction
+//! domain's live selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — passed in by
+//! the caller, since `ArtifactApp::render` carries no `InteractionView` (a discovered framework gap).
 
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id, workflow_parameter_to_os};
@@ -19,8 +21,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub fn render(projection: &WorkflowSnapshot, config: &SpaceConfig, term_labels: &SStudioLabels) -> UiNode {
-    let selected_node_ids = &config.selected_node_ids;
+pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_labels: &SStudioLabels) -> UiNode {
     let mut children = vec![UiSectionNode {
         id: "s-play-inspector.header".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
@@ -222,8 +223,8 @@ mod tests {
     fn inspector_tree_exposes_label_field() {
         let projection = demo_space_projection();
         let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
-        let config = SpaceConfig { selected_node_ids: ids, ..SpaceConfig::default() };
-        let tree = render(&projection, &config, semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale));
+        let config = SpaceConfig::default();
+        let tree = render(&projection, &ids, semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale));
         let UiNode::Tree(tree_node) = tree else {
             panic!("expected tree");
         };

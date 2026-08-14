@@ -79,7 +79,6 @@ type CurateArtifact {
   stockExtra: [ObjectKindExtra!]! @state(class: ARTIFACT)
   curated: [CuratedItem!]! @state(class: ARTIFACT)
   filters: Filters! @state(class: CONFIG)
-  selectedObjectId: String @state(class: PRESENCE)
   locale: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
 }

@@ -12,8 +12,10 @@ use serde::{Deserialize, Serialize};
 pub struct SetActiveUtility {
     pub utility_id: String}
 
-/// 🧰️ Host-owned active-utility switch — clears in-progress hover scratch, never emits document
-/// operations.
+/// 🧰️ Host-owned active-utility switch — never emits document operations. No longer clears hover
+/// itself — the framework owns `graph`'s hover exclusively now (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); a client wanting utility-switch-clears-hover
+/// dispatches the injected `interactionHover` verb with empty targets alongside this one.
 pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Procedural3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }, Procedural3dConfigMutation::SetHover { node_id: None }]))
+    Ok(Emit::config(vec![Procedural3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
 }

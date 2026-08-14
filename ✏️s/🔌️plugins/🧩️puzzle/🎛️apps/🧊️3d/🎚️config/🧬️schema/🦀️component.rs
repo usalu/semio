@@ -3,12 +3,6 @@ use artifact_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SelectionSet {
-    pub ids: Vec<String>,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldSunConfig {
@@ -49,16 +43,6 @@ pub struct Puzzle3dCamera {
     pub projection: WorldProjectionConfig,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle3dSelection {
-    pub object_ids: SelectionSet,
-    pub vortex_ids: SelectionSet,
-    pub attraction_ids: SelectionSet,
-    pub target_volume_ids: SelectionSet,
-    pub reference_ids: SelectionSet,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dSelectableKinds {
@@ -73,12 +57,12 @@ pub struct Puzzle3dSuggestionMenu {
     pub x: f64,
     pub y: f64,
     pub window_id: String,
+    pub vortex_full_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dWindowOptions {
-    pub selection_method: String,
     pub lod_automatic: bool,
     pub lod_depth_variable: bool,
     pub grid_visible: bool,
@@ -87,7 +71,6 @@ pub struct Puzzle3dWindowOptions {
     pub grid_spacing: f64,
     pub selectable_kinds: Puzzle3dSelectableKinds,
     pub engagement_input: String,
-    pub selection_mode_default: String,
     pub proximity_radius: f64,
     pub chunk_size: f64,
     pub voxel_dims: [u32; 3],
@@ -103,10 +86,6 @@ pub struct Puzzle3dWindowOptions {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d.config")]
 pub struct Puzzle3dConfig {
-    #[state(config)] pub selection: Puzzle3dSelection,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub hovered_object_id: Option<String>,
-    #[state(config)] pub hovered_vortex_full_id: Option<String>,
     #[state(config)] pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
     #[state(config)] pub overlap_budget: f64,
     #[state(config)] pub fill_count: u32,
@@ -120,9 +99,7 @@ pub struct Puzzle3dConfig {
     #[state(config)] pub grid_snap_enabled: bool,
     #[state(config)] pub grid_spacing: f64,
     #[state(config)] pub selectable_kinds: Puzzle3dSelectableKinds,
-    #[state(config)] pub hovered_kind_id: Option<String>,
     #[state(config)] pub engagement_input: String,
-    #[state(config)] pub selection_mode_default: String,
     #[state(config)] pub proximity_radius: f64,
     #[state(config)] pub chunk_size: f64,
     #[state(config)] pub voxel_dims: [u32; 3],

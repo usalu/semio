@@ -9,12 +9,6 @@ export interface ShootingConfig {
   /** @state config */
   selectedShotIds: string[];
   /** @state config */
-  selectedAssetIds: string[];
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
-  hoveredAssetId?: string;
-  /** @state config */
   centerModel: boolean;
   /** @state config */
   fitRevision: number;

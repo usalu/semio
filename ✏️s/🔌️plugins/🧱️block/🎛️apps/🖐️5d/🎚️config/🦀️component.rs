@@ -16,8 +16,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "block5d.config")]
 #[dsl(layout = "lines")]
 pub struct Block5dConfig {
-    /// 👁️ Multi-selected row ids in the document tree — was `Block5dPlayApp::selected_ids`.
-    pub selected_ids: Vec<String>,
     /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel.locale`.
     pub locale: String,
 }
@@ -87,7 +85,7 @@ impl store::ArtifactPack for Block5dConfig {
 
 impl Default for Block5dConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), locale: "en-US".into() }
+        Self { locale: "en-US".into() }
     }
 }
 
@@ -105,8 +103,6 @@ pub enum Block5dConfigMutation {
         #[dsl(block)]
         config: Block5dConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }
@@ -190,7 +186,6 @@ impl Mutation<Block5dConfig> for Block5dConfigMutation {
         let mut next = base.clone();
         match self {
             Block5dConfigMutation::Snapshot { config } => return config.clone(),
-            Block5dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             Block5dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
@@ -208,18 +203,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn block5d_config_default_has_no_selection() {
+    fn block5d_config_default_has_locale() {
         let config = Block5dConfig::default();
-        assert!(config.selected_ids.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection moved off this config
+    /// onto the framework's `grip` interaction domain — this now exercises `SetLocale` for the
+    /// backwards-restores-snapshot contract.
     #[test]
     fn config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Block5dConfig::default();
-        let operation = Block5dConfigMutation::SetSelection { ids: vec!["g0".into()] };
+        let operation = Block5dConfigMutation::SetLocale { value: "de-DE".into() };
         let next = operation.diff(&base);
-        assert_eq!(next.selected_ids, vec!["g0".to_string()]);
+        assert_eq!(next.locale, "de-DE");
         let inverse = operation.inverse(&base);
         assert_eq!(inverse, vec![Block5dConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(inverse[0].diff(&next), base);

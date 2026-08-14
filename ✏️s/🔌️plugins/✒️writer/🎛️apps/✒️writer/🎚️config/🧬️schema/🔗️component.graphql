@@ -1,12 +1,9 @@
 type WriterConfig {
-  selectedAstIds: [String!]! @state(class: CONFIG)
   editorSelection: WriterEditorSelection @state(class: CONFIG)
   formatSignal: Int! @state(class: CONFIG)
   lintSignal: Int! @state(class: CONFIG)
   revision: Int! @state(class: CONFIG)
   editorSettings: WriterEditorSettings! @state(class: CONFIG)
-  treeHoveredAstId: String @state(class: CONFIG)
-  editorHoverOffset: Int @state(class: CONFIG)
   engagementInput: String! @state(class: CONFIG)
   camera: WriterCamera! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)

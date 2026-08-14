@@ -36,14 +36,11 @@ pub mod add_workshop_machine {
         pub machine_id: String,
     }
 
-    pub fn handle(payload: &AddWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         match catalog_machine(&payload.catalog_id, &payload.machine_id) {
             Some(machine) => match add_workshop_machine_operation(fixture, machine) {
-                Some(operation) => {
-                    let selected = format!("machine:{}", payload.machine_id);
-                    Ok(Emit { artifact_mutations: vec![operation], config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: Some(selected) }], ..Default::default() })
-                }
+                Some(operation) => Ok(Emit { artifact_mutations: vec![operation], ..Default::default() }),
                 None => Ok(Emit::default()),
             },
             None => Ok(Emit::default()),
@@ -62,17 +59,10 @@ pub mod remove_workshop_machine {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &RemoveWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
-        let config = cfg.snapshot;
         match remove_workshop_machine_operation(fixture, &payload.id) {
-            Some(operation) => {
-                let mut config_mutations = Vec::new();
-                if config.selected_id.as_deref() == Some(format!("machine:{}", payload.id).as_str()) {
-                    config_mutations.push(Process3dConfigMutation::SetSelectedId { value: None });
-                }
-                Ok(Emit { artifact_mutations: vec![operation], config_mutations, ..Default::default() })
-            }
+            Some(operation) => Ok(Emit { artifact_mutations: vec![operation], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }
@@ -94,7 +84,7 @@ pub mod update_workshop_machine {
     /// each carry their own semantic mutation now (`RenameMachine`/`ChangeMachineIcon`/
     /// `ReplaceMachineCapabilities`), so this diffs `payload.machine` against the current entity and
     /// emits one targeted mutation per field that actually changed.
-    pub fn handle(payload: &UpdateWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &UpdateWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let Some(existing) = doc.snapshot.workshop.machines.iter().find(|existing| existing.id == payload.machine.id) else {
             return Ok(Emit::default());
         };

@@ -20,8 +20,6 @@ export interface ShootingDiff {
   /** @state presence */
   selectedShotIds?: ShootingStringList;
   /** @state presence */
-  selectedAssetIds?: ShootingStringList;
-  /** @state presence */
   activeUtilityId?: string;
   /** @state config */
   defaultShotFormat?: string;
@@ -29,8 +27,6 @@ export interface ShootingDiff {
   defaultShotShape?: string;
   /** @state config */
   defaultAssetFormat?: string;
-  /** @state config */
-  selectionMethod?: string;
   /** @state config */
   centerModel?: boolean;
   /** @state config */
@@ -41,8 +37,6 @@ export interface ShootingDiff {
   camera?: ShootingCamera;
   /** @state config */
   locale?: string;
-  /** @state artifact */
-  hoveredAssetId?: string | null;
 }
 
 export interface ShootingStringList {
@@ -115,18 +109,15 @@ export interface ShootingArtifact {
   activeShotId: string;
   activeAssetId: string;
   selectedShotIds: string[];
-  selectedAssetIds: string[];
   activeUtilityId: string;
   defaultShotFormat: string;
   defaultShotShape: string;
   defaultAssetFormat: string;
-  selectionMethod: string;
   centerModel: boolean;
   fitRevision: number;
   cameraDraftLabel: string;
   camera: ShootingCamera;
   locale: string;
-  hoveredAssetId?: string;
 }
 
 export interface ShootingCamera {

@@ -1,6 +1,5 @@
 //! 🤝️ `engagement-abort` command.
 
-use crate::apps::puzzle5d::config::puzzle5d_clear_selection;
 use crate::apps::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::apps::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_PLAY_WINDOWS};
 use serde_json::Value;

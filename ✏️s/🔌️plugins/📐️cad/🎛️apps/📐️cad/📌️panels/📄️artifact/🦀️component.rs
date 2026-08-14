@@ -33,30 +33,25 @@ pub fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels)
         .primitives
         .iter()
         .map(|primitive| {
-            let mut item = cad_tree_item(
+            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer
+            // carries `hoverAction`/`unhoverAction` — mesh hover is the framework-owned `"cad"`
+            // domain now. This tree stays un-bound to `interaction_domain` (see
+            // `document_tree_selected_ids`'s doc comment), so the click action below is a
+            // pending-domain-binding placeholder — already a documented no-op path today, since
+            // `build_document_tree` renders every pane's object section empty (UNIFIED-COMPOSABLE-
+            // ARTIFACT-SYSTEM gap).
+            cad_tree_item(
                 format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id),
                 Label::data(format!("{}: {}", primitive.slot, primitive.primitive_id)),
                 Some("hexagon"),
-                cad_action(
-                    "setPrimitiveSelection",
-                    Some(json!({
-                        "objectId": object.id,
-                        "primitiveId": primitive.primitive_id,
-                        "kind": primitive.kind,
-                    })),
-                ),
-            );
-            item.hover_action = Some(cad_action("worldHover", Some(json!({ "id": object.id }))));
-            item.unhover_action = Some(cad_action("worldHover", None));
-            item
+                cad_action("focusModelDefinition", Some(json!({ "modelDefinitionId": id_suffix }))),
+            )
         })
         .collect();
-    let mut item = cad_tree_item(format!("cad-object:{id_suffix}:{}", object.id), Label::data(object.label.clone()), Some("box"), cad_action("worldSelect", Some(json!({ "ids": [object.id], "merge": "replace" }))));
+    let mut item = cad_tree_item(format!("cad-object:{id_suffix}:{}", object.id), Label::data(object.label.clone()), Some("box"), cad_action("focusModelDefinition", Some(json!({ "modelDefinitionId": id_suffix }))));
     if !object.typology.is_empty() {
         item.description = Some(typology_label(&object.typology, labels).to_string());
     }
-    item.hover_action = Some(cad_action("worldHover", Some(json!({ "id": object.id }))));
-    item.unhover_action = Some(cad_action("worldHover", None));
     item.dimmed = Some(!object.visible);
     item.draggable = Some(!object.locked);
     item.actions = Some(vec![
@@ -90,8 +85,9 @@ pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, 
         cad_action("setReferenceSelection", Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id }))),
     );
     item.description = Some(reference.source_url.clone());
-    item.hover_action = Some(cad_action("referenceHover", Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id }))));
-    item.unhover_action = Some(cad_action("referenceHover", None));
+    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer carries
+    // `hoverAction`/`unhoverAction` — no generic tree-hover mechanism replaces it for a non-
+    // `interaction_domain`-bound tree; `referenceHover` stays reachable from the World3d surface only.
     item.dimmed = Some(reference.hidden);
     item.actions = Some(vec![
         UiTreeItemAction {
@@ -131,33 +127,27 @@ pub fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: &str) 
     document.references_by_model_definition_id.get(model_definition_id).map_or(&[][..], |rows| rows.as_slice())
 }
 
-pub fn document_tree_selected_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): only reference-overlay selection is
+/// resolved here now — mesh object/primitive selection is the framework-owned `"cad"` interaction
+/// domain, unreachable at this `render` boundary (no `InteractionView` parameter; see
+/// `edit::instance_is_component_hovered`'s doc comment). This tree stays un-bound to
+/// `interaction_domain` for that reason (its item ids, `"cad-object:…"`/`"cad-reference:…"`/
+/// `"cad-node:…"`, are UI-namespaced composites, not the domain's raw ids anyway).
+pub fn document_tree_selected_ids(_document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
     if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
         return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
     }
-    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `cad_find_object_pane` is
-    // retired (no live per-pane object list on `CadSnapshot`, only composed model-child HANDLES) —
-    // same documented reduced-fidelity gap as `document_tree_highlighted_ids` below: object/
-    // primitive selection no longer resolves a pane at this render boundary.
-    let _ = (document, runtime.selected_object_ids.first(), runtime.selected_primitive_id.as_deref());
     None
 }
 
 pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
-    let hovered = runtime.hovered_object_id.as_deref()?;
-    if let Some(reference_id) = hovered.strip_prefix("reference:") {
-        for pane in CadPaneId::all() {
-            let model_definition_id = pane.model_definition_id();
-            if document.references_by_model_definition_id.get(model_definition_id).is_some_and(|rows| rows.iter().any(|row| row.id == reference_id)) {
-                return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
-            }
+    let hovered = runtime.hovered_reference_id.as_deref()?;
+    for pane in CadPaneId::all() {
+        let model_definition_id = pane.model_definition_id();
+        if document.references_by_model_definition_id.get(model_definition_id).is_some_and(|rows| rows.iter().any(|row| row.id == hovered)) {
+            return Some(vec![format!("cad-reference:{model_definition_id}:{hovered}")]);
         }
-        return None;
     }
-    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `cad_find_object_pane` is
-    // retired (no live per-pane object list on `CadSnapshot`, only composed model-child HANDLES).
-    // Documented reduced-fidelity gap: hover highlighting no longer resolves an object's pane.
-    let _ = (document, hovered);
     None
 }
 
@@ -220,7 +210,7 @@ mod tests {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
     use crate::artifacts::cad::CadPaneId;
-    use semio_framework_plugin::{ArtifactView, PluginApp, SelectionSet, UiNode, ViewModel};
+    use semio_framework_plugin::{ArtifactView, PluginApp, UiNode, ViewModel};
 
     #[test]
     fn document_lists_nodes() {
@@ -258,17 +248,15 @@ mod tests {
         let item = object_tree_item("shape", &object, labels);
         let json = serde_json::to_string(&item).unwrap();
         assert!(json.contains("cad-primitive:"));
-        assert!(json.contains("hoverAction"));
     }
 
     #[test]
-    fn document_tree_selected_and_highlighted_ids_are_none_for_plain_object_selection() {
-        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: object-id → pane
-        // resolution (`cad_find_object_pane`) is retired — no live per-pane object list exists on
-        // `CadSnapshot` to resolve against at this render boundary (composed model-child content,
-        // unresolved here). Documented gap: this asserts the honest `None`, not a fabricated id.
+    fn document_tree_selected_and_highlighted_ids_are_none_without_a_reference_selection() {
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object selection/hover is
+        // framework-owned now, unreachable at this render boundary — only reference-overlay
+        // selection/hover still resolves here (see `document_tree_selected_ids`'s doc comment).
         let scene = default_document();
-        let runtime = CadPlayRuntime { selected_object_ids: SelectionSet::from(vec!["object-box-1".into()]), hovered_object_id: Some("object-box-1".into()), ..CadPlayRuntime::default() };
+        let runtime = CadPlayRuntime::default();
         assert_eq!(document_tree_selected_ids(&scene, &runtime), None);
         assert_eq!(document_tree_highlighted_ids(&scene, &runtime), None);
     }

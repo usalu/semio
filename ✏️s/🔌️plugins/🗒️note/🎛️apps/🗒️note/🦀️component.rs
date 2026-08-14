@@ -17,7 +17,6 @@ use crate::apps::note::commands::{set_grid_opacity, set_grid_spacing, set_grid_s
 use crate::apps::note::commands::ink_apply_events;
 use crate::apps::note::commands::set_locale;
 use crate::apps::note::commands::{nudge_selection, nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
-use crate::apps::note::commands::{clear_selection, select_all, set_hover, set_selection};
 use crate::apps::note::commands::{set_snap_enabled, set_snap_grid_spacing};
 use crate::apps::note::commands::set_active_utility;
 use crate::apps::note::config::{NoteConfig, NoteConfigMutation};
@@ -28,8 +27,12 @@ use crate::apps::note::panels::{catalogue as catalogue_panel, document as docume
 use crate::apps::note::terminology::note_play_labels;
 use crate::artifacts::note::schema::empty_note_snapshot;
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+    DomainTopology, InteractionTopology, TopologyNode,
+};
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use std::collections::HashMap;
 
@@ -75,6 +78,41 @@ fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, catego
 }
 //#endregion 🔖️Utilities
 
+//#region 🔖️Interaction
+/// 🕹️ "blocks" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
+/// this app declares: `HierarchyProvider::Topology` over the document's own Group nesting, transitive
+/// (selecting/hovering a group covers its descendants).
+pub const NOTE_INTERACTION_BLOCKS: &str = "blocks";
+
+/// 🕹️ Per-dispatch scratch: the "blocks" domain's current selection, resolved once by
+/// `ArtifactApp::handle` from `InteractionView` and threaded to every leaf command handler —
+/// `app_commands!`'s generated `dispatch` has no way to thread `InteractionView` itself (mirrors
+/// `📐️cad`'s `CadDispatchCtx`). Row-id-prefixed `InteractionTarget` ids (the SAME canonical ids the
+/// document panel tree renders, see its own doc comment) are converted back to raw block ids here,
+/// once, so every downstream handler keeps working with the raw ids it always did.
+pub struct NoteDispatchCtx {
+    pub selected_block_ids: Vec<String>,
+}
+
+/// 🌳️ `blocks` domain topology from the document's own Group nesting — row-id-prefixed ids (matching
+/// the document panel tree's own item ids), so `validate_state` prunes deleted blocks and
+/// range/transitive selection walk the real tree structure.
+fn note_blocks_topology(document: &NoteSnapshot) -> DomainTopology {
+    fn visit(blocks: &[NoteBlockNode], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
+        for block in blocks {
+            let id = crate::artifacts::note::schema::block_tree_row_id(block);
+            out.push(TopologyNode { id: id.clone(), granularity: "block".into(), parent: parent.map(str::to_string) });
+            if let NoteBlockNode::Group { children, .. } = block {
+                visit(children, Some(id.as_str()), out);
+            }
+        }
+    }
+    let mut ordered = Vec::new();
+    visit(&document.blocks, None, &mut ordered);
+    DomainTopology { ordered }
+}
+//#endregion 🔖️Interaction
+
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
     /// 🎯️ `NotePlayApp::Command` — the SOLE dispatch surface for note's own behavior (B1 pure-trait
@@ -84,7 +122,7 @@ semio_framework_plugin::app_commands! {
     /// or its hosts) collapse onto the one surviving action id's command instead of keeping a dead
     /// synonym. Row order is the binary variant ordinal: appending is safe, reordering is a wire-format
     /// break.
-    pub enum NoteCommand for NoteSnapshot, NoteMutation, NoteConfig, NoteConfigMutation {
+    pub enum NoteCommand for NoteSnapshot, NoteMutation, NoteConfig, NoteConfigMutation, ctx = NoteDispatchCtx {
         "setGridVisible" as "set-grid-visible" => set_grid_visible::SetGridVisible,
         "setGridSpacing" as "set-grid-spacing" => set_grid_spacing::SetGridSpacing,
         "setGridSubdivisions" as "set-grid-subdivisions" => set_grid_subdivisions::SetGridSubdivisions,
@@ -117,10 +155,6 @@ semio_framework_plugin::app_commands! {
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setLocale" as "locale" => set_locale::SetLocale,
-        "selectAll" as "select-all" => select_all::SelectAll,
-        "clearSelection" as "clear-selection" => clear_selection::ClearSelection,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "setHover" as "set-hover" => set_hover::SetHover,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "navigatorEngagementInput" as "navigator-engagement-input" => navigator_engagement_input::NavigatorEngagementInput,
         "saveDownload" as "save-download" => save_download::SaveDownload,
@@ -167,8 +201,18 @@ impl ArtifactApp for NotePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &NoteCommand, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    fn handle(command: &NoteCommand, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
+        let selected_block_ids = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::artifacts::note::schema::block_id_from_tree_row_id(id)).collect();
+        let mut ctx = NoteDispatchCtx { selected_block_ids };
+        command.dispatch(doc, cfg, &mut ctx)
+    }
+
+    /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own Group nesting — see
+    /// `note_blocks_topology`'s doc comment.
+    fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> InteractionTopology {
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(NOTE_INTERACTION_BLOCKS.to_string(), note_blocks_topology(doc.snapshot));
+        InteractionTopology { domains }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
@@ -178,9 +222,9 @@ impl ArtifactApp for NotePlayApp {
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => composite::render(document, config),
             NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, config),
-            NOTE_PLAY_BODY_DOCUMENT => document_panel::render(document, &config.selected_block_ids, labels),
+            NOTE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             NOTE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, &config.selected_block_ids, &config.active_utility_id, labels),
+            NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, &config.active_utility_id, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -188,7 +232,7 @@ impl ArtifactApp for NotePlayApp {
     fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.selected_block_ids, &config.engagement_input)),
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)),
             (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(&config.active_utility_id)),
         ])
     }
@@ -220,9 +264,10 @@ pub fn create_note_app() -> App {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // 📇️ Palette-visible selection commands (P0) — ephemeral selection is View, block edits are Operations.
-            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
-            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
+            // 📇️ Palette-visible selection-consuming commands (P0) — the framework auto-injects
+            // selectAll/clearSelection (and interactionSelect/interactionHover/setSelectionMode/
+            // setInteractionGranularity) for every app that declares an `.interaction(...)` domain
+            // (see below); these two retained verbs still operate ON that framework-owned selection.
             .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
             .mutation("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"))
             // ➕️ Palette-visible block insertion (P1) with a staged argument form.
@@ -261,9 +306,8 @@ pub fn create_note_app() -> App {
             .action_with(note_internal_action("nudgeSelectionDownFast", LocalizedLabel::native("Nudge Selection Down Fast", "Auswahl schnell nach unten verschieben"), ActionKind::Mutation))
             .action_with(note_internal_action("nudgeSelectionLeftFast", LocalizedLabel::native("Nudge Selection Left Fast", "Auswahl schnell nach links verschieben"), ActionKind::Mutation))
             .action_with(note_internal_action("nudgeSelectionRightFast", LocalizedLabel::native("Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"), ActionKind::Mutation))
-            // 👁️ Ephemeral view state — selection/hover/engagement/camera scratch, never a document operation.
-            .action_with(note_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
-            .action_with(note_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            // 👁️ Ephemeral view state — engagement/camera scratch, never a document operation. Selection/
+            // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
             .action_with(note_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
             .action_with(note_internal_action("navigatorEngagementInput", LocalizedLabel::native("Navigator Engagement Input", "Navigator-Eingabe"), ActionKind::View))
             .action_with(note_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
@@ -308,11 +352,12 @@ pub fn create_note_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+y", "redo")
-            .keybinding("mod+a", "selectAll")
+            // 🕹️ `mod+a`/`escape` are no longer declared here — the framework auto-injects `selectAll`/
+            // `clearSelection` (with these SAME keys) for every app with at least one `.interaction(...)`
+            // domain, see `interaction_action_definitions`.
             .keybinding("delete", "deleteSelection")
             .keybinding("backspace", "deleteSelection")
             .keybinding("mod+d", "duplicateSelection")
-            .keybinding("escape", "clearSelection")
             .keybinding("up", "nudgeSelectionUp")
             .keybinding("down", "nudgeSelectionDown")
             .keybinding("left", "nudgeSelectionLeft")
@@ -321,6 +366,26 @@ pub fn create_note_app() -> App {
             .keybinding("shift+down", "nudgeSelectionDownFast")
             .keybinding("shift+left", "nudgeSelectionLeftFast")
             .keybinding("shift+right", "nudgeSelectionRightFast")
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "blocks" interaction
+            // domain — one granularity ("block"), `HierarchyProvider::Topology` from the document's own
+            // Group nesting (`note_blocks_topology`/`NotePlayApp::interaction_topology`), both hover and
+            // selection transitive (selecting/hovering a group covers its descendants). Multi-select via
+            // both Pick (tree rows) and Rectangle (the `selectMarquee` canvas utility), all five merges.
+            .interaction(InteractionDefinition {
+                id: NOTE_INTERACTION_BLOCKS.into(),
+                label: LocalizedLabel::native("Blocks", "Blöcke"),
+                granularities: vec![GranularityDefinition { id: "block".into(), label: LocalizedLabel::native("Block", "Block"), icon_id: "square".into() }],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: true,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(NOTE_PLAY_WINDOW_COMPOSITE, vec![InteractionRef::new(NOTE_INTERACTION_BLOCKS)])
             // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE) —
             // note has no user-visible sticky config defaults (unlike shooting's default shot/asset
             // format), so `config_spec()` stays the trait default (`ConfigSpec::empty()`); registering it
@@ -366,6 +431,18 @@ pub(crate) mod testkit {
     pub fn render(app: &mut NoteApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
+    /// injected `interactionSelect` verb, dispatched against the "blocks" domain declared on this app —
+    /// requires `note_app_with_registry()` (a bare `note_app()` has no declared interaction domains to
+    /// select against). `ids` are raw block ids, converted to the row-id-prefixed `InteractionTarget`
+    /// id the document panel tree/`interaction_topology` both use (see `note_blocks_topology`'s doc
+    /// comment).
+    pub fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
+        let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "block", "id": format!("note-play-block:{id}") })).collect();
+        let targets = serde_json::to_string(&target_list).expect("targets json");
+        app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
+    }
 }
 //#endregion 🧪️Testkit
 
@@ -388,7 +465,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 40, "every NoteCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 36, "every NoteCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -434,10 +511,6 @@ mod tests {
             NoteCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 1.5 }),
             NoteCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pencil".into() }),
             NoteCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            NoteCommand::SelectAll(select_all::SelectAll {}),
-            NoteCommand::ClearSelection(clear_selection::ClearSelection {}),
-            NoteCommand::SetSelection(set_selection::SetSelection { ids: vec!["b1".into()] }),
-            NoteCommand::SetHover(set_hover::SetHover { block_id: Some("b1".into()) }),
             NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Renaming…".into() }),
             NoteCommand::NavigatorEngagementInput(navigator_engagement_input::NavigatorEngagementInput {}),
             NoteCommand::SaveDownload(save_download::SaveDownload {}),
@@ -451,7 +524,6 @@ mod tests {
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: None }));
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetHover(set_hover::SetHover { block_id: None }));
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None }));
     }
@@ -482,6 +554,63 @@ mod tests {
         assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, Kind::View)));
     }
     //#endregion 🔖️ManifestSanity
+
+    //#region 🔖️Interaction
+    /// 🕹️ The `blocks` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
+    /// selection, and scoped to the composite (canvas) window kind.
+    #[test]
+    fn blocks_interaction_domain_is_declared_topology_and_transitive_on_the_composite_window() {
+        let definition = create_note_app().definition;
+        let blocks = definition.interactions.iter().find(|interaction| interaction.id == NOTE_INTERACTION_BLOCKS).expect("blocks interaction domain declared");
+        assert!(matches!(blocks.hierarchy, HierarchyProvider::Topology));
+        assert!(blocks.hover.transitive, "blocks hover must be transitive so a hovered group covers its descendants");
+        assert!(blocks.selection.transitive, "blocks selection must be transitive so a selected group covers its descendants");
+        let composite_window = definition.window_kinds.iter().find(|window| window.id == NOTE_PLAY_WINDOW_COMPOSITE).expect("composite window kind declared");
+        assert!(composite_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == NOTE_INTERACTION_BLOCKS), "composite window must reference the blocks interaction domain");
+    }
+
+    /// 🌳️ `interaction_topology` walks the document's own Group nesting into `TopologyNode.parent`
+    /// links — a top-level block has no parent, every group child's parent is the group's own row id.
+    #[test]
+    fn interaction_topology_walks_group_nesting_into_parent_links() {
+        let document = crate::artifacts::note::schema::semio_example_snapshot();
+        let config = NoteConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = NotePlayApp::interaction_topology(&doc, &cfg);
+        let blocks = topology.domains.get(NOTE_INTERACTION_BLOCKS).expect("blocks domain present in topology");
+        assert!(!blocks.ordered.is_empty(), "the semio example document must produce a non-empty blocks topology");
+        assert_eq!(blocks.ordered.len(), crate::artifacts::note::schema::flatten_blocks(&document.blocks).len(), "topology must cover every block, nested or not");
+    }
+
+    /// 🌱️ An empty document has no blocks to select — an empty topology (every stale `blocks`
+    /// selection id gets pruned).
+    #[test]
+    fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
+        let document = empty_note_snapshot();
+        let config = NoteConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = NotePlayApp::interaction_topology(&doc, &cfg);
+        assert!(topology.domains.get(NOTE_INTERACTION_BLOCKS).expect("blocks domain present in topology").ordered.is_empty());
+    }
+
+    /// 🕹️ Retained verb over the framework-owned selection: `delete-selection` reads
+    /// `InteractionView::selection("blocks")` (via `NoteDispatchCtx`) — picking through the real
+    /// injected `interactionSelect` verb, not a deleted app command.
+    #[test]
+    fn delete_selection_deletes_the_blocks_picked_via_interaction_select() {
+        use crate::apps::note::testkit::{dispatch as note_dispatch, note_app_with_registry, select_blocks};
+        let mut app = note_app_with_registry();
+        note_dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));
+        let new_id = crate::artifacts::note::schema::block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
+        select_blocks(&mut app, &[&new_id]);
+        note_dispatch(&mut app, NoteCommand::DeleteSelection(delete_selection::DeleteSelection {}));
+        assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "the picked block must be deleted");
+    }
+    //#endregion 🔖️Interaction
 
     //#region 🔖️Locale
     #[test]

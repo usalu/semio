@@ -21,8 +21,6 @@ message JackArtifact {
   // @state artifact
   optional string root_node_id = 8;
   // @state presence
-  repeated string selected_node_ids = 9;
-  // @state presence
   string active_fixture_id = 10;
   // @state presence
   string jack_query = 11;

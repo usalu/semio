@@ -5,7 +5,7 @@ use crate::apps::puzzle5d::Puzzle5dActionCtx;
 use crate::apps::puzzle5d::mesh_selection_ids;
 
 pub fn translate_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
-    let ids = mesh_selection_ids(args, ctx.scene.runtime.selection.part_ids.as_slice());
+    let ids = mesh_selection_ids(args, &ctx.selected_part_ids());
     let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);

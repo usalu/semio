@@ -8,8 +8,6 @@
     "defaultShotShape",
     "defaultAssetFormat",
     "selectedShotIds",
-    "selectedAssetIds",
-    "selectionMethod",
     "centerModel",
     "fitRevision",
     "cameraDraftLabel",
@@ -35,21 +33,6 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "config"
-    },
-    "selectedAssetIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "hoveredAssetId": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "centerModel": {

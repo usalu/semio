@@ -1,0 +1,30 @@
+
+failures:
+    node_graph::tests::graph_host_align_selection_errors_on_unknown_mode
+    node_graph::tests::graph_host_align_selection_ok_for_single_node
+    node_graph::tests::graph_host_camera_json_reflects_viewport
+    node_graph::tests::graph_host_entity_screen_json_invisible_for_unknown_node
+    node_graph::tests::graph_host_entity_screen_json_visible_for_known_node
+    node_graph::tests::graph_host_fixture_json_round_trips_nodes
+    node_graph::tests::graph_host_label_overlay_paint_state_json_includes_camera
+    node_graph::tests::graph_host_pick_targets_at_screen_json_finds_node
+    node_graph::tests::graph_host_pointer_click_selects_node
+    node_graph::tests::graph_host_pointer_up_after_plain_click_gathers_one_pick_target
+    node_graph::tests::graph_host_selected_node_ids_json_matches_selection
+    node_graph::tests::graph_host_sync_from_payload_applies_computing_progress
+    node_graph::tests::graph_host_sync_from_payload_applies_lod_settings
+    node_graph::tests::graph_host_sync_from_payload_dims_preview_off_nodes
+    node_graph::tests::graph_host_sync_from_payload_updates_catalogue_without_signature_change
+    node_graph::tests::graph_host_sync_from_scene_json_parses_raw_json
+    node_graph::tests::graph_host_sync_from_scene_json_rejects_invalid_json
+    node_graph::tests::graph_host_sync_from_scene_pack_decodes_pack_shell
+    node_graph::tests::graph_host_sync_interaction_clears_hover_when_absent
+    node_graph::tests::graph_host_sync_interaction_sets_hover_node_only
+    node_graph::tests::graph_host_syncs_selection_from_framework_interaction_state
+    node_graph::tests::graph_host_wheel_screen_pan_without_zoom_gesture
+    node_graph::tests::graph_host_wheel_screen_zoom_gesture_changes_zoom
+    node_graph::tests::set_canvas_theme_dark_applies_board_palette
+
+test result: FAILED. 190 passed; 24 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `-p semio-framework-surface --lib`

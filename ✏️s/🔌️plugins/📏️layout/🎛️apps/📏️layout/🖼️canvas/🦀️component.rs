@@ -146,12 +146,18 @@ fn display_list_to_host_layers(list: &crate::apps::layout::engine::scene::Displa
 
 /// 🖼️ Builds the host canvas-2d layer JSON for the given surface (`blueprint` or `preview`) — the
 /// single shared render path both `🎭️modes/✏️edit/🪟️windows/📐️blueprint` and `…/👁️preview` call.
+///
+/// 🕹️ Always renders with empty selection/hover now — `ArtifactApp::render` carries no
+/// `InteractionView` (a known SDK gap, same one gis2d's/rewrite's render doc comments flag), so the
+/// selected/hovered chrome strokes `display_list_to_host_layers` can still draw are simply never lit
+/// server-side; flagged, not fixed here (framework file, out of this crate's remit — ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig, blueprint: bool) -> String {
     let page = match active_page(doc, config) {
         Some(page) => page,
         None => return "[]".into(),
     };
-    let list = build_display_list_for_page(engine, doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
+    let list = build_display_list_for_page(engine, doc, page, &page.id, &[], None, blueprint);
     let layers = display_list_to_host_layers(&list, blueprint, &config.drop_preview);
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }

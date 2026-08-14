@@ -48,11 +48,10 @@ import {
   type SelectionMarqueeCoverage,
   type SelectionMarqueeMethod,
   type SelectionMarqueePoint,
-  type SelectionMergeMode,
   type TutorialCameraDriver,
   type UiLabel,
 } from "@semio-tech/ui-react";
-import { windowElementId, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
+import { windowElementId, type ComponentSceneHostProps, type ContextMenuItemSpec, type MergeMode, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
 import {
   cadVec3ToThree,
   computeWorldProjectionPose,
@@ -163,7 +162,7 @@ type WorldContextMenuItem = ContextMenuItemSpec;
 
 type WorldSelectionRecord = {
   readonly method?: SelectionMarqueeMethod;
-  readonly selectionMergeMode?: SelectionMergeMode;
+  readonly selectionMergeMode?: MergeMode;
   readonly ids?: readonly string[];
   readonly hoveredId?: string | null;
   readonly referenceSelectedId?: string;
@@ -2085,8 +2084,8 @@ function WorldInstancesLayer({
   readonly instances: readonly WorldInstanceRecord[];
   readonly meshes: readonly WorldMeshRecord[];
   readonly selection: WorldSelectionRecord;
-  /** 🐚️ This shell's own `SelectionModeStore` value — see `resolveWorldSelectionMergeMode`'s doc. */
-  readonly persistentSelectionMode: SelectionMergeMode;
+  /** 🐚️ This shell's own `SelectionModeStore` value — see `resolveWorldMergeMode`'s doc. */
+  readonly persistentSelectionMode: MergeMode;
   readonly palette: MeshStylePalette;
   readonly projectionSpec?: WorldProjectionSpec;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
@@ -2341,7 +2340,7 @@ function WorldInstancesLayer({
     [applyGumballLivePreview, onGumballDragEnd],
   );
 
-  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
+  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
 
   const paintFromHit = (objectId: string, mesh: WorldMeshData, event: ThreeEvent<PointerEvent> & { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
     if (!onPaintAt) return;
@@ -2861,7 +2860,7 @@ const MARQUEE_DRAG_THRESHOLD_PX = 4;
 function mergeIdSet<T>(mode: ReturnType<typeof marqueeModeFromModifiers>, current: readonly T[], incoming: readonly T[]): T[] {
   const currentSet = new Set(current);
   const incomingSet = new Set(incoming);
-  if (mode === "default") return [...incomingSet];
+  if (mode === "replace" || mode === "range") return [...incomingSet];
   if (mode === "additive") {
     for (const id of incomingSet) currentSet.add(id);
     return [...currentSet];
@@ -2877,7 +2876,7 @@ function mergeIdSet<T>(mode: ReturnType<typeof marqueeModeFromModifiers>, curren
   return [...currentSet];
 }
 
-/** @emoji 🖱️ additive→add, subtractive→remove, invertive→toggle, default→replace (whole-instance picks/marquee). */
+/** @emoji 🖱️ additive→add, subtractive→remove, invertive→toggle, replace/range→replace (whole-instance picks/marquee). */
 function instanceMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): string {
   if (mode === "additive") return "add";
   if (mode === "subtractive") return "remove";
@@ -2886,19 +2885,19 @@ function instanceMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): st
 }
 
 /** @emoji 🎯️ Resolves a world surface's declared selection mode before falling back to the shared selection toolbar. */
-export function resolveWorldSelectionMergeMode(
-  configuredMode: SelectionMergeMode | undefined,
+export function resolveWorldMergeMode(
+  configuredMode: MergeMode | undefined,
   modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean },
-  persistentMode?: SelectionMergeMode,
-): SelectionMergeMode {
+  persistentMode?: MergeMode,
+): MergeMode {
   if (configuredMode === undefined) return marqueeModeFromModifiers(modifiers, persistentMode);
-  if (configuredMode !== "default") return configuredMode;
+  if (configuredMode !== "replace") return configuredMode;
   const shift = modifiers.shiftKey === true;
   const ctrl = modifiers.ctrlKey === true || modifiers.metaKey === true;
   if (shift && ctrl) return "invertive";
   if (shift) return "additive";
   if (ctrl) return "subtractive";
-  return "default";
+  return "replace";
 }
 
 /** @emoji 🖱️ Same as {@link instanceMergeArg} but a bare click (no modifiers) defaults to invertive. */
@@ -3614,7 +3613,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // is consumed inside `<Canvas>` r3f subtrees (`WorldInstancesLayer`) via a prop, not context — R3F
   // primitives aren't guaranteed to re-render just because an *outer* DOM component's context changed,
   // so the toolbar's mode toggle needs an explicit subscription to actually propagate.
-  const [persistentSelectionMode, setPersistentSelectionMode] = useState<SelectionMergeMode>(() => shellScope?.selection.get() ?? "default");
+  const [persistentSelectionMode, setPersistentSelectionMode] = useState<MergeMode>(() => shellScope?.selection.get() ?? "replace");
   useEffect(() => {
     if (!shellScope) return;
     return shellScope.selection.subscribe(() => setPersistentSelectionMode(shellScope.selection.get()));
@@ -3802,7 +3801,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const marqueeStart = marqueePath[0];
   const marqueeEnd = marqueePath[marqueePath.length - 1];
   const marqueeDragActive = marqueeDown && marqueePath.length > 1 && marqueeStart != null && marqueeEnd != null && Math.hypot(marqueeEnd.x - marqueeStart.x, marqueeEnd.y - marqueeStart.y) > MARQUEE_DRAG_THRESHOLD_PX;
-  const marqueeMergeMode = useMemo(() => resolveWorldSelectionMergeMode(selection.selectionMergeMode, marqueeModifiers, persistentSelectionMode), [marqueeModifiers, selection.selectionMergeMode, persistentSelectionMode]);
+  const marqueeMergeMode = useMemo(() => resolveWorldMergeMode(selection.selectionMergeMode, marqueeModifiers, persistentSelectionMode), [marqueeModifiers, selection.selectionMergeMode, persistentSelectionMode]);
   const marqueeCoverage: SelectionMarqueeCoverage = useMemo(() => {
     if (!marqueeDragActive || !marqueeStart || !marqueeEnd) return "full";
     return marqueeCoverageFromGesture({ method, startX: marqueeStart.x, endX: marqueeEnd.x, path: marqueePath });
@@ -4090,7 +4089,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleInstancePointerDown = useCallback(
     (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
-      const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
+      const merge = instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
       const record = instances.find((entry) => entry.id === id);
       if (record?.disabled) {
         dispatch("worldPick", { granularity: selectionMode, id: null, merge });
@@ -4153,7 +4152,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleVortexSelect = useCallback(
     (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
-      const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event ?? {}, persistentSelectionMode));
+      const merge = instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event ?? {}, persistentSelectionMode));
       dispatch("worldVortexSelect", { fullId, merge });
     },
     [dispatch, selection.selectionMergeMode],
@@ -4603,7 +4602,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (interaction.suggestionMenu?.open) {
         handleSuggestionClose();
       }
-      dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event, persistentSelectionMode)) });
+      dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode)) });
     },
     [dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, paintMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
   );

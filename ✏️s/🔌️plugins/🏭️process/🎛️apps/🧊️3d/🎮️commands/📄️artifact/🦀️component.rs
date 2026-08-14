@@ -26,13 +26,9 @@ pub mod set_snapshot {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetDocument, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetDocument, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot: Process3dSnapshot = serde_json::from_str(&payload.json).map_err(|e| Fault::from(e.to_string()))?;
-        Ok(Emit {
-            effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)],
-            config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }],
-            ..Default::default()
-        })
+        Ok(Emit { effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() })
     }
 }
 //#endregion 🔖️SetDocument
@@ -50,17 +46,13 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot = match payload.example_id.as_str() {
             crate::apps::process3d::PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
             "" => Process3dSnapshot::default(),
             _ => default_document(),
         };
-        Ok(Emit {
-            effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)],
-            config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }],
-            ..Default::default()
-        })
+        Ok(Emit { effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

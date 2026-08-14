@@ -2,15 +2,13 @@
 //! one render).
 
 use crate::apps::writer::config::WriterConfig;
-use crate::apps::writer::editor_hover_context;
 use crate::apps::writer::terminology::WriterPlayLabels;
 use crate::artifacts::writer::schema::{jack_ast_tree_icon, parse_jack_ast, JackAstNode};
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{
-    tree_item, ui_declarative_sections_to_tree, ui_text, ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
+    tree_item, ui_declarative_sections_to_tree, ui_text, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
-use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_BODY_ARTIFACT: &str = "writer.play.document";
@@ -35,10 +33,11 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    crate::apps::writer::writer_action(action, args)
-}
-
+/// 🕹️ `ast` domain items — no per-item `action` (and `UiTreeItemNode` no longer even carries
+/// `hover_action`/`unhover_action` fields): the tree is bound to the `ast` interaction domain via
+/// `.interaction_domain("ast")` below, so the framework auto-injects `interactionSelect`/
+/// `interactionHover` for every row (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM —
+/// never declare those actions yourself).
 fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
     let children: Vec<UiTreeItemNode> = node.children.iter().map(jack_ast_to_tree_item).collect();
     UiTreeItemNode {
@@ -50,9 +49,7 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         icon_id: jack_ast_tree_icon(&node.kind).and_then(IconName::from_str),
         presence: UiPresence::default(),
         default_open: Some(matches!(node.kind.as_str(), "query" | "match" | "pattern" | "return")),
-        action: Some(play_action("selectAstNode", Some(json!({ "id": node.id, "start": node.start, "end": node.end })))),
-        hover_action: Some(play_action("setAstHover", Some(json!({ "id": node.id })))),
-        unhover_action: Some(play_action("setAstHover", Some(json!({ "id": Value::Null })))),
+        action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -63,7 +60,7 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
     }
 }
 
-pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
+pub fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "writer-document".into(),
@@ -80,12 +77,9 @@ pub fn render(document: &WriterSnapshot, config: &WriterConfig, labels: &WriterP
     } else {
         vec![jack_ast_to_tree_item(&root)]
     };
-    let (highlighted_ast_id, _, _) = editor_hover_context(document, config);
     PanelTreeBuilder::new("writer-play-document")
         .section_or_placeholder("writer-play-document.ast", Some(labels.document.into()), true, items, labels.empty_query)
-        .selected(config.selected_ast_ids.clone())
-        .highlighted(highlighted_ast_id.map(|id| vec![id]).unwrap_or_default())
-        .selection_change(play_action("setAstSelection", None))
+        .interaction_domain("ast")
         .build()
 }
 //#endregion 🔖️Render

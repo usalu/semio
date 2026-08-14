@@ -1,14 +1,14 @@
 //! 🧩️ `duplicate-selection` command.
 
-use crate::apps::puzzle5d::config::Puzzle5dSelection;
-use crate::apps::puzzle5d::{add_palette_part, next_part_id, remove_grips, remove_parts, Puzzle5dActionCtx, Puzzle5dPart};
-use semio_framework_plugin::SelectionSet;
-use serde_json::{json, Value};
+use crate::apps::puzzle5d::{next_part_id, Puzzle5dActionCtx, Puzzle5dPart};
 
 /// 📄️ Clones every selected part at a small flat+volume offset. Aborts (emitting nothing at all) when
-/// the selection holds no parts — the pre-migration `return Emit::default()`.
+/// the selection holds no parts — the pre-migration `return Emit::default()`. 🕹️ ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: no longer re-selects the new
+/// duplicates afterward — see puzzle3d's `duplicate-selection` doc comment for the identical
+/// limitation.
 pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
-    let ids = ctx.scene.runtime.selection.part_ids.clone();
+    let ids = ctx.selected_part_ids();
     let clones: Vec<Puzzle5dPart> = ctx
         .scene
         .document
@@ -29,7 +29,5 @@ pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
         ctx.abort = true;
         return;
     }
-    let new_ids: Vec<String> = clones.iter().map(|part| part.id.clone()).collect();
     ctx.scene.document.parts.extend(clones);
-    ctx.scene.runtime.selection = Puzzle5dSelection { part_ids: SelectionSet::from_ids(new_ids), grip_ids: SelectionSet::default(), fastener_ids: SelectionSet::default() };
 }

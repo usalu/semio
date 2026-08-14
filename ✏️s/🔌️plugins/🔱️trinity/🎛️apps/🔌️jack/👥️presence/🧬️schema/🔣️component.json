@@ -4,18 +4,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedNodeIds",
     "activeFixtureId",
     "jackQuery",
     "camera",
     "lodModeByWindow"
   ],
   "properties": {
-    "selectedNodeIds": {
-      "type": "array",
-      "items": { "type": "string" },
-      "x-semio-state": "presence"
-    },
     "activeFixtureId": {
       "type": "string",
       "x-semio-state": "presence"

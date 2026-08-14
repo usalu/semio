@@ -6,19 +6,10 @@ type RewriteDiff {
   rhsJson: String @state(class: ARTIFACT)
   parameterBindings: [PropertyValueOptEntry!] @state(class: ARTIFACT)
   ruleLayout: [LayoutPointOptEntry!] @state(class: ARTIFACT)
-  selectedNodeIds: RewriteStringList @state(class: PRESENCE)
-  activeHoverVar: String @state(class: PRESENCE)
-  activeSelectVar: String @state(class: PRESENCE)
   lodModeByWindow: [StringOptEntry!] @state(class: PRESENCE)
   beforePaneCamera: Camera @state(class: CONFIG)
   reorganizeEpoch: Int @state(class: CONFIG)
-  hoverEpoch: Int @state(class: CONFIG)
-  selectEpoch: Int @state(class: CONFIG)
   locale: String @state(class: CONFIG)
-}
-
-type RewriteStringList {
-  values: [String!]!
 }
 
 type PropertyValueOptEntry {

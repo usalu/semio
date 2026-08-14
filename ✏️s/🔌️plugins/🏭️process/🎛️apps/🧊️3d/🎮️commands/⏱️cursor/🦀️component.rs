@@ -23,7 +23,7 @@ pub mod set_cursor {
         pub value: Option<u64>,
     }
 
-    pub fn handle(payload: &SetCursor, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCursor, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let _ = doc;
         let resolved = payload.value.map(|n| n as usize);
         Ok(Emit::mutations(vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: resolved })]))
@@ -41,7 +41,7 @@ pub mod step_cursor {
         pub delta: i64,
     }
 
-    pub fn handle(payload: &StepCursor, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &StepCursor, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let current = fixture.resolved_up_to.unwrap_or(0) as i64;
         Ok(Emit::mutations(vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some((current + payload.delta).max(0) as usize) })]))
@@ -57,7 +57,7 @@ pub mod step_cursor_back {
     #[dsl(keyword = "step-cursor-back")]
     pub struct StepCursorBack {}
 
-    pub fn handle(_payload: &StepCursorBack, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &StepCursorBack, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let current = fixture.resolved_up_to.unwrap_or(0) as i64;
         Ok(Emit::mutations(vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some((current - 1).max(0) as usize) })]))
@@ -73,7 +73,7 @@ pub mod step_cursor_forward {
     #[dsl(keyword = "step-cursor-forward")]
     pub struct StepCursorForward {}
 
-    pub fn handle(_payload: &StepCursorForward, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &StepCursorForward, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let current = fixture.resolved_up_to.unwrap_or(0) as i64;
         Ok(Emit::mutations(vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some((current + 1).max(0) as usize) })]))

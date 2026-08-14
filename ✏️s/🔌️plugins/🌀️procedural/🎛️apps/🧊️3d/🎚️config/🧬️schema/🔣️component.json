@@ -4,10 +4,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedNodeIds",
     "lodMode",
     "showMode",
-    "selectionMethod",
     "camera",
     "previewCamera",
     "sunJson",
@@ -16,26 +14,11 @@
     "contributionsJson"
   ],
   "properties": {
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "lodMode": {
       "type": "string",
       "x-semio-state": "config"
     },
     "showMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "hoveredNodeId": {
       "type": "string",
       "x-semio-state": "config"
     },

@@ -55,8 +55,6 @@ export interface CurateArtifact {
   curated: CuratedItem[];
   /** @state config */
   filters: Filters;
-  /** @state presence */
-  selectedObjectId?: string | null;
   /** @state config */
   locale: string;
   /** @state config */

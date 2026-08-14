@@ -17,27 +17,13 @@ message RewriteDiff {
   // @state artifact
   optional map<string, LayoutPoint> rule_layout = 6;
   // @state presence
-  optional RewriteStringList selected_node_ids = 7;
-  // @state presence
-  optional string active_hover_var = 8;
-  // @state presence
-  optional string active_select_var = 9;
-  // @state presence
   optional map<string, string> lod_mode_by_window = 10;
   // @state config
   optional Camera before_pane_camera = 11;
   // @state config
   optional int64 reorganize_epoch = 12;
   // @state config
-  optional int64 hover_epoch = 13;
-  // @state config
-  optional int64 select_epoch = 14;
-  // @state config
   optional string locale = 15;
-}
-
-message RewriteStringList {
-  repeated string values = 1;
 }
 
 message RewriteArtifact {

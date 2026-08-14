@@ -9,8 +9,6 @@ use std::collections::BTreeMap;
 #[artifact_schema(id = "s.space.space.config")]
 pub struct SpaceConfig {
     #[state(config)] pub camera: BTreeMap<String, SpaceWindowCamera>,
-    #[state(config)] pub selected_node_ids: Vec<String>,
-    #[state(config)] pub hovered_node_id: Option<String>,
     #[state(config)] pub collapsed_node_ids: Vec<String>,
     #[state(config)] pub preview_off_node_ids: Vec<String>,
     #[state(config)] pub active_node_id: Option<String>,

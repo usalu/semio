@@ -9,9 +9,9 @@
 
 use crate::apps::draw::commands::canvas_pointer_down::DrawSession;
 use crate::apps::draw::commands::{
-    add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, clear_selection, combine_boolean,
-    commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, move_layer, patch_layer, patch_layers, select_all, set_active_example,
-    set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_hover, set_locale, set_selected_opacity, set_selection, set_snapshot, toggle_layer_visible,
+    add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean,
+    commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, move_layer, patch_layer, patch_layers, set_active_example,
+    set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_locale, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::apps::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::apps::draw::presence::{DrawPresence, DrawPresenceMutation};
@@ -21,10 +21,11 @@ use crate::apps::draw::panels::{catalogue as catalogue_panel, layers as layers_p
 use crate::apps::draw::terminology::DrawPlayLabels;
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement,
-    WindowEngagementInput, WindowEngagementStatus,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    MediaPayload, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 use store::ArtifactPack;
@@ -40,6 +41,10 @@ pub const DRAW_PLAY_CONTROLLER_ID: &str = "draw-play";
 /// 🧰️ The utility the canvas returns to after committing a shape/draft/trace (first UtilityRef default).
 pub const DRAW_DEFAULT_UTILITY: &str = "selectDirect";
 pub const DRAW_PLAY_EXAMPLE_DEFAULT_ID: &str = "semio";
+/// 🕹️ The single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM interaction domain this app declares
+/// (granularity `stroke`, `HierarchyProvider::Flat`, methods Pick/Rectangle/Lasso).
+pub const DRAW_INTERACTION_DOMAIN: &str = "strokes";
+pub const DRAW_INTERACTION_GRANULARITY: &str = "stroke";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
@@ -83,10 +88,6 @@ semio_framework_plugin::app_commands! {
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "setHover" as "set-hover" => set_hover::SetHover,
-        "selectAll" as "select-all" => select_all::SelectAll,
-        "clearSelection" as "clear-selection" => clear_selection::ClearSelection,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "setLocale" as "locale" => set_locale::SetLocale,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
@@ -167,12 +168,14 @@ impl ArtifactApp for DrawPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &DrawCommand, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &DrawCommand, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
         thread_local! {
             static DRAW_SESSION: std::cell::RefCell<DrawSession> = std::cell::RefCell::new(DrawSession::default());
         }
+        let selection_ids = interaction.selection(DRAW_INTERACTION_DOMAIN).ids.clone();
         DRAW_SESSION.with(|session| {
             let mut session = session.borrow_mut();
+            session.interaction.ids = selection_ids;
             command.dispatch(doc, cfg, &mut session)
         })
     }
@@ -185,9 +188,9 @@ impl ArtifactApp for DrawPlayApp {
         let session = DrawSession::default();
         match body_key {
             DRAW_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, &session.gesture, active_utility),
-            DRAW_PLAY_BODY_LAYERS => layers_panel::render(document, config, labels),
-            DRAW_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, config, labels),
-            DRAW_PLAY_BODY_PROPERTIES => properties_panel::render(document, config, labels, active_utility),
+            DRAW_PLAY_BODY_LAYERS => layers_panel::render(document, labels),
+            DRAW_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels),
+            DRAW_PLAY_BODY_PROPERTIES => properties_panel::render(document, active_utility),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -296,11 +299,10 @@ pub fn create_draw_app() -> App {
             .action_with(draw_internal_action("canvasCommitDraft", LocalizedLabel::native("Canvas Commit Draft", "Leinwand-Entwurf übernehmen"), ActionKind::Mutation))
             .action_with(draw_internal_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View))
             .action_with(draw_internal_action("canvasEscape", LocalizedLabel::native("Canvas Escape", "Leinwand abbrechen"), ActionKind::View))
-            // 👁️ Ephemeral view state.
-            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
-            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
-            .action_with(draw_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
-            .action_with(draw_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            // 👁️ Ephemeral view state — selection/hover are framework-owned now (see `.interaction(...)`
+            // below): interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
+            // setInteractionGranularity auto-inject, never declared here (ticket
+            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .action_with(draw_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
             .action_with(draw_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📷️ Camera — session-only runtime pose, never a document operation.
@@ -323,9 +325,29 @@ pub fn create_draw_app() -> App {
                 "pen".into(), "shapeRect".into(), "shapeEllipse".into(), "shapeLine".into(), "shapePolygon".into(),
                 "booleanCombine".into(), "trace".into(), "transformMove".into(),
             ])
+            // 🕹️ The framework-owned "strokes" interaction domain (ticket
+            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the layers panel tree
+            // (`.interaction_domain("strokes")`) and the canvas's pick/marquee/lasso layer selection;
+            // auto-injects interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
+            // setInteractionGranularity, replacing every deleted bespoke setSelection/setHover/
+            // clearSelection/selectAll action.
+            .interaction(InteractionDefinition {
+                id: DRAW_INTERACTION_DOMAIN.into(),
+                label: LocalizedLabel::native("Strokes", "Striche"),
+                granularities: vec![GranularityDefinition { id: DRAW_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Stroke", "Strich"), icon_id: "pen-tool".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(DRAW_PLAY_WINDOW_CANVAS, vec![InteractionRef::new(DRAW_INTERACTION_DOMAIN)])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .keybinding("mod+a", "selectAll")
             .keybinding("escape", "canvasEscape")
             .keybinding("enter", "canvasCommitDraft")
             .default_layout(edit::layout()),
@@ -526,18 +548,6 @@ mod tests {
     }
 
     #[test]
-    fn set_selection_view_action_emits_no_ops_and_drives_inspector() {
-        let mut app = draw_app();
-        let id = first_layer_id(&app);
-        let result = app.dispatch_typed(DrawCommand::SetSelection(set_selection::SetSelection { ids: vec![id] }), &fw_testkit::meta("local")).expect("select");
-        assert!(result.mutations.is_empty(), "selection is ephemeral view state, not a document operation");
-        let node = app.render(DRAW_PLAY_BODY_PROPERTIES, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("Orientation"));
-        assert!(json.contains("Position X"));
-    }
-
-    #[test]
     fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
         let mut app = draw_app_with_registry();
         set_utility(&mut app, "shapeRect");
@@ -564,7 +574,7 @@ mod tests {
     #[test]
     fn canvas_point_to_world_matches_host_formula() {
         let camera = crate::artifacts::draw::DrawCamera { x: 100.0, y: 50.0, zoom: 2.0 };
-        let (world_x, world_y) = canvas::canvas_point_to_world(&camera, 420.0, 310.0, 800.0, 600.0);
+        let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&camera, 420.0, 310.0, 800.0, 600.0);
         assert!((world_x - 110.0).abs() < 1e-9);
         assert!((world_y - 55.0).abs() < 1e-9);
     }
@@ -640,11 +650,12 @@ mod tests {
         app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("camera");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
         app.dispatch_typed(DrawCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &fw_testkit::meta("local")).expect("move");
-        app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains(&format!("overlay:sel:{rect_a_id}")), "the contained rect is selected");
-        assert!(!json.contains(&format!("overlay:sel:{ellipse_b_id}")), "the outside ellipse is not selected");
+        let result = app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
+        // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+        // the marquee hit-test requests `interactionSelect` for exactly the contained rect via a
+        // `HostEffect::ReplayShellCommand`, instead of writing a `DrawConfigMutation::SetSelection`.
+        assert!(result.mutations.is_empty(), "a pure marquee-select gesture is not a document operation");
+        assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_a_id.clone()], "replace")], "only the contained rect is requested, not the outside ellipse");
     }
 
     #[test]
@@ -691,14 +702,43 @@ mod tests {
     }
 
     #[test]
-    fn render_canvas_emits_selection_overlay() {
-        let mut app = draw_app();
-        app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
-        let id = last_layer_id(&app);
-        app.dispatch_typed(DrawCommand::SetSelection(set_selection::SetSelection { ids: vec![id.clone()] }), &fw_testkit::meta("local")).expect("select");
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains(&format!("overlay:sel:{id}")));
+    fn strokes_interaction_domain_is_declared_flat_pick_rectangle_lasso_on_the_canvas_window() {
+        let definition = create_draw_app().definition;
+        let domain = definition.interactions.iter().find(|interaction| interaction.id == DRAW_INTERACTION_DOMAIN).expect("strokes interaction domain declared");
+        assert!(matches!(domain.hierarchy, HierarchyProvider::Flat));
+        assert_eq!(domain.selection.methods, vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso]);
+        let canvas_window = definition.window_kinds.iter().find(|window| window.id == DRAW_PLAY_WINDOW_CANVAS).expect("canvas window");
+        assert!(canvas_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == DRAW_INTERACTION_DOMAIN));
+    }
+
+    #[test]
+    fn canvas_pointer_up_direct_pick_requests_interaction_select() {
+        let mut app = draw_app_with_registry();
+        // 🔖 The default document's one layer is an empty-segment path (no bounds to hit-test against
+        // — see `default_draw_document`), so a real shape is added first, mirroring
+        // `marquee_select_covers_contained_layer_only`'s own setup.
+        let initial_id = first_layer_id(&app);
+        app.dispatch_typed(DrawCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).expect("clear default layer");
+        app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add rect");
+        let rect_id = last_layer_id(&app);
+        app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("camera");
+        set_utility(&mut app, "selectDirect");
+        // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
+        // viewport with the identity camera above maps to world (10,10) — inside the rect.
+        let result = app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("pick");
+        assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
+        assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_id], "replace")]);
+    }
+
+    #[test]
+    fn set_selected_opacity_reads_the_framework_interaction_selection() {
+        let mut app = draw_app_with_registry();
+        let id = first_layer_id(&app);
+        let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAW_INTERACTION_GRANULARITY, "id": id })]).unwrap();
+        app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &fw_testkit::meta("local")).expect("select");
+        let result = app.dispatch_typed(DrawCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &fw_testkit::meta("local")).expect("opacity");
+        assert_eq!(result.mutations.len(), 1);
+        assert!((crate::artifacts::draw::schema::layer_base(&app.snapshot().unwrap().layers[0]).opacity - 0.25).abs() < f64::EPSILON);
     }
 
     #[test]
@@ -731,8 +771,8 @@ mod tests {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
         let projection = app.snapshot().expect("projection");
-        let doc = ArtifactView::new(&projection, &semio_framework_plugin::HistoryView::empty());
-        let app_impl = DrawPlayApp::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&projection, &history);
         let vector = DrawPlayApp::export_media("vector:out", &doc).expect("vector:out");
         let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
         assert_eq!(schema, "2d.drawing");
@@ -752,9 +792,9 @@ mod tests {
     fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
         let mut session = DrawSession::default();
         let document = default_draw_document("empty", None);
-        let mut config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
+        let config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
 
-        let down = session.step_gesture(canvas::draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document, &mut config);
+        let down = session.step_gesture(canvas_pointer_down::draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document, &config);
         assert!(down.artifact_mutations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
         let (key, seq_after_down, payload) = session.gesture_preview().expect("shape drag is live after pointer-down");
         assert_eq!(key, "gesture");
@@ -762,14 +802,14 @@ mod tests {
         assert_eq!(value["start"], serde_json::json!([10.0, 10.0]));
         assert_eq!(value["cursor"], serde_json::json!([10.0, 10.0]));
 
-        let moved = session.step_gesture(canvas::draw_gesture::Event::PointerMove { world: [40.0, 30.0], marquee_threshold_world: 4.0 }, &document, &mut config);
+        let moved = session.step_gesture(canvas_pointer_down::draw_gesture::Event::PointerMove { world: [40.0, 30.0], marquee_threshold_world: 4.0 }, &document, &config);
         assert!(moved.artifact_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
         let (_, seq_after_move, payload) = session.gesture_preview().expect("shape drag is still live mid-drag");
         let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
         assert_eq!(value["cursor"], serde_json::json!([40.0, 30.0]), "preview tracks the live cursor, not the drag start");
         assert!(seq_after_move > seq_after_down, "seq is monotone per tick, for staleness detection on the receiving end");
 
-        let up = session.step_gesture(canvas::draw_gesture::Event::PointerUp { utility: "shapeRect".into(), world: [40.0, 30.0], shift: false, ctrl: false, meta: false }, &document, &mut config);
+        let up = session.step_gesture(canvas_pointer_down::draw_gesture::Event::PointerUp { utility: "shapeRect".into(), world: [40.0, 30.0], shift: false, ctrl: false, meta: false }, &document, &config);
         assert_eq!(up.artifact_mutations.len(), 1, "pointer-up commits the shape as one real DrawMutation");
         assert!(session.gesture_preview().is_none(), "the gesture returned to idle: nothing left to preview, and the commit above already carried the real operation");
     }
@@ -778,8 +818,8 @@ mod tests {
     fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
         let mut session = DrawSession::default();
         let document = default_draw_document("empty", None);
-        let mut config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
-        session.step_gesture(canvas::draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [1.0, 2.0], shift: false, ctrl: false, meta: false }, &document, &mut config);
+        let config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
+        session.step_gesture(canvas_pointer_down::draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [1.0, 2.0], shift: false, ctrl: false, meta: false }, &document, &config);
         let context_before = session.gesture.context.clone();
         let _ = session.gesture_preview();
         let _ = session.gesture_preview();
@@ -811,10 +851,6 @@ mod tests {
             DrawCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pen".into() }),
             DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
             DrawCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 2.0 }),
-            DrawCommand::SetSelection(set_selection::SetSelection { ids: vec!["a".into(), "b".into()] }),
-            DrawCommand::SetHover(set_hover::SetHover { id: Some("a".into()) }),
-            DrawCommand::SelectAll(select_all::SelectAll {}),
-            DrawCommand::ClearSelection(clear_selection::ClearSelection {}),
             DrawCommand::EngagementInput(engagement_input::EngagementInput { value: "typing".into() }),
             DrawCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: true, ctrl: false, meta: false }),
@@ -831,10 +867,9 @@ mod tests {
         for command in every_command() {
             store::os_store::test_support::assert_op_line_round_trip(&command);
         }
-        // The two `None`-field variants missing from `every_command` (kept distinct from their
-        // `Some` counterpart above, matching the pre-migration wire-baseline capture).
+        // The `None`-field variant missing from `every_command` (kept distinct from its `Some`
+        // counterpart above, matching the pre-migration wire-baseline capture).
         store::os_store::test_support::assert_op_line_round_trip(&DrawCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
-        store::os_store::test_support::assert_op_line_round_trip(&DrawCommand::SetHover(set_hover::SetHover { id: None }));
     }
 
     #[test]
@@ -855,10 +890,6 @@ mod tests {
         assert_eq!(engagement_submit_some.encode_op().expect("encode"), hex_bytes("0105010f52656e616d656420226c617965722201000600"));
         let engagement_submit_none = DrawCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None });
         assert_eq!(engagement_submit_none.encode_op().expect("encode"), hex_bytes("01050000"));
-        let set_hover_some = DrawCommand::SetHover(set_hover::SetHover { id: Some("a".into()) });
-        assert_eq!(set_hover_some.encode_op().expect("encode"), hex_bytes("011301016101000600"));
-        let set_hover_none = DrawCommand::SetHover(set_hover::SetHover { id: None });
-        assert_eq!(set_hover_none.encode_op().expect("encode"), hex_bytes("01130000"));
     }
 
     fn hex_bytes(hex: &str) -> Vec<u8> {
@@ -887,10 +918,6 @@ mod tests {
             "active-utility",
             "camera",
             "camera-zoom",
-            "set-selection",
-            "set-hover",
-            "select-all",
-            "clear-selection",
             "engagement-input",
             "locale",
             "canvas-pointer-down",

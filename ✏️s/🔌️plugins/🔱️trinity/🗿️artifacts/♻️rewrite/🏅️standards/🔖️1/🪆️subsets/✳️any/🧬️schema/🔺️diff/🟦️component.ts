@@ -14,27 +14,13 @@ export interface RewriteDiff {
   /** @state artifact */
   ruleLayout?: Record<string, LayoutPoint | null>;
   /** @state presence */
-  selectedNodeIds?: RewriteStringList;
-  /** @state presence */
-  activeHoverVar?: string;
-  /** @state presence */
-  activeSelectVar?: string;
-  /** @state presence */
   lodModeByWindow?: Record<string, string | null>;
   /** @state config */
   beforePaneCamera?: Camera;
   /** @state config */
   reorganizeEpoch?: number;
   /** @state config */
-  hoverEpoch?: number;
-  /** @state config */
-  selectEpoch?: number;
-  /** @state config */
   locale?: string;
-}
-
-export interface RewriteStringList {
-  values: string[];
 }
 
 export interface RewriteArtifact {

@@ -31,14 +31,12 @@ pub struct ShootingConfig {
     pub default_shot_shape: String,
     /// 🧱️ Mirrors `addAsset`'s `format` `ActionArgDef` default (`"glb"`).
     pub default_asset_format: String,
-    /// 👁️ Selected shot ids.
+    /// 👁️ Selected shot ids (gallery/document-tree multi-select) — genuinely app-specific, NOT part of
+    /// the framework-owned `"assets"` interaction domain (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): asset selection/hover dissolved into that
+    /// domain, but shots have no world-3d pick/marquee/hover surface of their own, so shot selection
+    /// stays a plain config field, set via [`ShootingConfigMutation::SetShotSelection`].
     pub selected_shot_ids: Vec<String>,
-    /// 👁️ Selected asset ids.
-    pub selected_asset_ids: Vec<String>,
-    /// 👁️ Marquee selection method (`"rectangle"`/…).
-    pub selection_method: String,
-    /// 👁️ Hovered asset id.
-    pub hovered_asset_id: Option<String>,
     /// 👁️ "Center model in viewport" toggle.
     pub center_model: bool,
     /// 👁️ Bumped whenever the active asset changes to re-trigger a viewport fit.
@@ -124,9 +122,6 @@ impl Default for ShootingConfig {
             default_shot_shape: "rectangle".into(),
             default_asset_format: "glb".into(),
             selected_shot_ids: Vec::new(),
-            selected_asset_ids: Vec::new(),
-            selection_method: "rectangle".into(),
-            hovered_asset_id: None,
             center_model: true,
             fit_revision: 0,
             camera_draft_label: String::new(),
@@ -157,12 +152,11 @@ pub enum ShootingConfigMutation {
         #[dsl(block)]
         config: ShootingConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { shot_ids: Vec<String>, asset_ids: Vec<String> },
-    #[dsl(key = "hovered-asset")]
-    SetHoveredAsset { asset_id: Option<String> },
-    #[dsl(key = "selection-method")]
-    SetSelectionMethod { method: String },
+    /// 🎞️ Sets the gallery/document-tree shot selection — the sole remaining app-owned selection
+    /// field (see [`ShootingConfig::selected_shot_ids`]'s doc comment: asset selection/hover moved to
+    /// the framework-owned `"assets"` interaction domain, shot selection did not).
+    #[dsl(key = "shot-selection")]
+    SetShotSelection { shot_ids: Vec<String> },
     #[dsl(key = "center-model")]
     SetCenterModel { value: bool },
     #[dsl(key = "fit-revision")]
@@ -261,12 +255,7 @@ impl Mutation<ShootingConfig> for ShootingConfigMutation {
         let mut next = base.clone();
         match self {
             ShootingConfigMutation::Snapshot { config } => return config.clone(),
-            ShootingConfigMutation::SetSelection { shot_ids, asset_ids } => {
-                next.selected_shot_ids = shot_ids.clone();
-                next.selected_asset_ids = asset_ids.clone();
-            }
-            ShootingConfigMutation::SetHoveredAsset { asset_id } => next.hovered_asset_id = asset_id.clone(),
-            ShootingConfigMutation::SetSelectionMethod { method } => next.selection_method = method.clone(),
+            ShootingConfigMutation::SetShotSelection { shot_ids } => next.selected_shot_ids = shot_ids.clone(),
             ShootingConfigMutation::SetCenterModel { value } => next.center_model = *value,
             ShootingConfigMutation::SetFitRevision { value } => next.fit_revision = *value,
             ShootingConfigMutation::SetCameraDraftLabel { value } => next.camera_draft_label = value.clone(),
@@ -306,9 +295,6 @@ mod tests {
     fn shooting_config_dsl_pack_round_trip() {
         let config = ShootingConfig {
             selected_shot_ids: vec!["s1".into()],
-            selected_asset_ids: vec!["a1".into(), "a2".into()],
-            selection_method: "lasso".into(),
-            hovered_asset_id: Some("a1".into()),
             center_model: false,
             fit_revision: 3,
             camera_draft_label: "Hero".into(),
@@ -323,10 +309,7 @@ mod tests {
     #[test]
     fn shooting_config_operation_text_binary_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::Snapshot { config: ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "de-DE".into(), ..ShootingConfig::default() } });
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetSelection { shot_ids: vec!["s1".into()], asset_ids: vec!["a1".into(), "a2".into()] });
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetHoveredAsset { asset_id: Some("a1".into()) });
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetHoveredAsset { asset_id: None });
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetSelectionMethod { method: "rectangle".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetShotSelection { shot_ids: vec!["s1".into(), "s2".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCenterModel { value: true });
         store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetFitRevision { value: 4 });
         store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetCameraDraftLabel { value: "Hero".into() });
@@ -339,7 +322,7 @@ mod tests {
     #[test]
     fn shooting_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "en-US".into(), ..ShootingConfig::default() };
-        let operation = ShootingConfigMutation::SetSelection { shot_ids: vec!["s2".into()], asset_ids: Vec::new() };
+        let operation = ShootingConfigMutation::SetShotSelection { shot_ids: vec!["s2".into()] };
         let forward = operation.diff(&base);
         assert_eq!(forward.selected_shot_ids, vec!["s2".to_string()]);
         let backwards = operation.inverse(&base);

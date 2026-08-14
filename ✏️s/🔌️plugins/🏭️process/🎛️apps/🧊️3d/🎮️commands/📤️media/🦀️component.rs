@@ -18,7 +18,7 @@ pub mod export_model {
         pub format: String,
     }
 
-    pub fn handle(payload: &ExportModel, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &ExportModel, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: no `LinkResolver` — see
         // `ProcessWorkingScene`'s doc comment; `doc.snapshot` alone cannot recover its composed
         // children's content, so export degrades honestly to the empty working scene.
@@ -47,7 +47,7 @@ pub mod load_model_request {
     #[dsl(keyword = "load-model-request")]
     pub struct LoadModelRequest {}
 
-    pub fn handle(_payload: &LoadModelRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(_payload: &LoadModelRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }))
     }
 }
@@ -67,13 +67,9 @@ pub mod import_model_file {
     /// 📤️ Importing a model file replaces the whole document (stock geometry + a cleared timeline),
     /// which has no in-history mutation (see `📓️taxonomy.md`'s forbidden vocabulary), so this routes
     /// through `apps::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`).
-    pub fn handle(payload: &ImportModelFile, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportModelFile, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         match import_process3d_model(&payload.name.to_ascii_lowercase(), &payload.payload) {
-            Some(snapshot) => Ok(Emit {
-                effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)],
-                config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: None }],
-                ..Default::default()
-            }),
+            Some(snapshot) => Ok(Emit { effects: vec![crate::apps::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }

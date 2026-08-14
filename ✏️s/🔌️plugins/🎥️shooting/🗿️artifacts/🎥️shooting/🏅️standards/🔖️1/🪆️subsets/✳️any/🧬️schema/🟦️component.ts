@@ -18,8 +18,6 @@ export interface ShootingArtifact {
   /** @state presence */
   selectedShotIds: string[];
   /** @state presence */
-  selectedAssetIds: string[];
-  /** @state presence */
   activeUtilityId: string;
   /** @state config */
   defaultShotFormat: string;
@@ -27,8 +25,6 @@ export interface ShootingArtifact {
   defaultShotShape: string;
   /** @state config */
   defaultAssetFormat: string;
-  /** @state config */
-  selectionMethod: string;
   /** @state config */
   centerModel: boolean;
   /** @state config */
@@ -39,8 +35,6 @@ export interface ShootingArtifact {
   camera: ShootingCamera;
   /** @state config */
   locale: string;
-  /** @state artifact */
-  hoveredAssetId?: string;
 }
 
 export interface ShootingCamera {

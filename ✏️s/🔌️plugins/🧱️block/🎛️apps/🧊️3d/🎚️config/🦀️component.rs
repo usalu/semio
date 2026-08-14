@@ -21,8 +21,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "block3d.config")]
 #[dsl(layout = "lines")]
 pub struct Block3dConfig {
-    /// 👁️ Multi-selected row ids in the document tree — was `Block3dPlayApp::selected_ids`.
-    pub selected_ids: Vec<String>,
     /// 👁️ The representation shown in the inspector's representation select — was
     /// `Block3dPlayApp::active_representation_id`.
     pub active_representation_id: Option<String>,
@@ -44,8 +42,6 @@ pub struct Block3dConfig {
     pub brush_preview: Option<Block3dBrushPreview>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub camera: Option<BlockCamera3d>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub hovered_vortex_full_id: Option<String>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -118,7 +114,6 @@ fn default_brush_radius() -> f64 {
 impl Default for Block3dConfig {
     fn default() -> Self {
         Self {
-            selected_ids: Vec::new(),
             active_representation_id: None,
             wanted_tags: Vec::new(),
             locale: "en-US".into(),
@@ -128,7 +123,6 @@ impl Default for Block3dConfig {
             brush_flip: false,
             brush_preview: None,
             camera: None,
-            hovered_vortex_full_id: None,
         }
     }
 }
@@ -171,8 +165,6 @@ pub enum Block3dConfigMutation {
         #[dsl(block)]
         config: Block3dConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "active-representation")]
     SetActiveRepresentation { representation_id: Option<String> },
     #[dsl(key = "wanted-tags")]
@@ -199,8 +191,6 @@ pub enum Block3dConfigMutation {
     SetBrushPreview { preview: Option<Block3dBrushPreview> },
     #[dsl(key = "camera")]
     SetCamera { camera: BlockCamera3d },
-    #[dsl(key = "hovered-vortex")]
-    SetHoveredVortexFullId { full_id: Option<String> },
 }
 
 //#region 🔖️OpCodec
@@ -282,7 +272,6 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
         let mut next = base.clone();
         match self {
             Block3dConfigMutation::Snapshot { config } => return config.clone(),
-            Block3dConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             Block3dConfigMutation::SetActiveRepresentation { representation_id } => next.active_representation_id = representation_id.clone(),
             Block3dConfigMutation::SetWantedTags { tags } => next.wanted_tags = tags.clone(),
             Block3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
@@ -318,7 +307,6 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
             Block3dConfigMutation::SetBrushFlip { flip } => next.brush_flip = *flip,
             Block3dConfigMutation::SetBrushPreview { preview } => next.brush_preview = preview.clone(),
             Block3dConfigMutation::SetCamera { camera } => next.camera = Some(camera.clone()),
-            Block3dConfigMutation::SetHoveredVortexFullId { full_id } => next.hovered_vortex_full_id = full_id.clone(),
         }
         next
     }
@@ -335,9 +323,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn block3d_config_default_has_no_selection_and_all_tags() {
+    fn block3d_config_default_has_all_tags() {
         let config = Block3dConfig::default();
-        assert!(config.selected_ids.is_empty());
         assert!(config.active_representation_id.is_none());
         assert!(config.wanted_tags.is_empty());
         assert_eq!(config.locale, "en-US");
@@ -345,12 +332,15 @@ mod tests {
         assert_eq!(config.brush_radius, 0.3);
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection/hover moved off this
+    /// config onto the framework's `vortex` interaction domain — this now exercises a genuinely
+    /// remaining config mutation (`SetActiveRepresentation`) for the backwards-restores-snapshot contract.
     #[test]
     fn config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Block3dConfig::default();
-        let operation = Block3dConfigMutation::SetSelection { ids: vec!["r0".into()] };
+        let operation = Block3dConfigMutation::SetActiveRepresentation { representation_id: Some("r0".into()) };
         let next = operation.diff(&base);
-        assert_eq!(next.selected_ids, vec!["r0".to_string()]);
+        assert_eq!(next.active_representation_id, Some("r0".to_string()));
         let inverse = operation.inverse(&base);
         assert_eq!(inverse, vec![Block3dConfigMutation::Snapshot { config: base.clone() }]);
         let restored = inverse[0].diff(&next);

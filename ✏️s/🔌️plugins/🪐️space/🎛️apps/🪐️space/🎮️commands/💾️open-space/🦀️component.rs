@@ -41,7 +41,6 @@ pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _c
     let mut config_mutations = vec![
         SpaceConfigMutation::SetSpaceId { space_id: Some(space_id.clone()) },
         SpaceConfigMutation::SetFocusedNode { node_id: None },
-        SpaceConfigMutation::SetSelection { node_ids: Vec::new() },
         SpaceConfigMutation::SetClipboard { node_ids: Vec::new() },
     ];
     // 🕸️ `document` is a `space::SpaceSnapshot`-backed manifest — it carries no workflow graph of

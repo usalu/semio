@@ -51,6 +51,7 @@ import {
   type IntroductionDefinition,
   type IntroductionStepDefinition,
   type LocalizedLabel,
+  type MergeMode,
   missingRequiredArgs,
   type PanelTabKind,
   panelTabKindId,
@@ -118,7 +119,6 @@ import {
   type SearchSpec,
   Select,
   SelectContent,
-  type SelectionMergeMode,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -2398,9 +2398,9 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }:
   // shell's marquee gestures.
   const selectionStore = useShellScope().selection;
 
-  const [selectionMode, setSelectionMode] = useState<SelectionMergeMode>(() => selectionStore.get());
+  const [selectionMode, setSelectionMode] = useState<MergeMode>(() => selectionStore.get());
 
-  const handleModeChange = (mode: SelectionMergeMode) => {
+  const handleModeChange = (mode: MergeMode) => {
     selectionStore.set(mode);
     setSelectionMode(mode);
   };
@@ -2438,12 +2438,12 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }:
           kind="single"
           value={selectionMode}
           onValueChange={(val) => {
-            if (val === "default" || val === "additive" || val === "subtractive" || val === "invertive") {
+            if (val === "replace" || val === "additive" || val === "subtractive" || val === "invertive") {
               handleModeChange(val);
             }
           }}
           items={[
-            { value: "default", text: selectiveLabel },
+            { value: "replace", text: selectiveLabel },
             { value: "additive", text: additiveLabel },
             { value: "subtractive", text: subtractiveLabel },
             { value: "invertive", text: invertiveLabel },

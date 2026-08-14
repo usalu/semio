@@ -1,9 +1,9 @@
-//! 🔍️ Shooting play app panel — the inspector: fields for the selected shot or asset (falling back to
-//! the active shot, then a schema summary).
+//! 🔍️ Shooting play app panel — the inspector: fields for the selected shot (falling back to the active
+//! shot, then a schema summary). Per-asset fields dropped — see this file's `render` doc comment.
 
 use crate::apps::shooting::config::ShootingConfig;
 use crate::apps::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
+use crate::artifacts::shooting::{ShootingSnapshot, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInspectorFieldGroup, UiNode,
     UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -104,75 +104,16 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
     }
 }
 
-fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiInspectorFieldGroup {
-    UiInspectorFieldGroup {
-        id: "shooting-play-inspector.asset".into(),
-        label: labels.asset.into(),
-        default_open: None,
-        presence: UiPresence::default(),
-        fields: vec![
-            UiNode::Field(UiFieldNode {
-                presence: UiPresence::default(),
-                id: "shooting-play-inspector.asset.name".into(),
-                label: labels.field_name.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
-                    presence: UiPresence::default(),
-                    id: "shooting-play-inspector.asset.name.input".into(),
-                    input_kind: "text".into(),
-                    value: asset.name.clone(),
-                    placeholder: None,
-                    commit: None,
-                    on_change: crate::apps::shooting::shooting_action("patchAsset", Some(serde_json::json!({ "assetId": asset.id, "field": "name" }))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                menu: None,
-            }),
-            UiNode::Field(UiFieldNode {
-                presence: UiPresence::default(),
-                id: "shooting-play-inspector.asset.url".into(),
-                label: labels.field_url.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
-                    presence: UiPresence::default(),
-                    id: "shooting-play-inspector.asset.url.input".into(),
-                    input_kind: "text".into(),
-                    value: asset.url.clone(),
-                    placeholder: None,
-                    commit: None,
-                    on_change: crate::apps::shooting::shooting_action("patchAsset", Some(serde_json::json!({ "assetId": asset.id, "field": "url" }))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                menu: None,
-            }),
-            ui_inspector_readonly_field("shooting-play-inspector.asset.format", labels.field_format, &asset.format),
-        ],
-    }
-}
-
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the asset-selection branch this used
+/// to have (`if !cfg.selected_asset_ids.is_empty() { ... an asset field group ... }`) — and the field
+/// group it rendered — are DELETED: asset selection is the framework-owned `"assets"` interaction
+/// domain now, and `render` has no `InteractionView` parameter (unlike `handle`/`copy_fragment`/
+/// `cut_operations`), so it is unreachable here. Documented reduced-fidelity gap.
 pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> UiNode {
     if !cfg.selected_shot_ids.is_empty() {
         let shot_id = &cfg.selected_shot_ids[0];
         if let Some(shot) = snapshot.shots.iter().find(|entry| &entry.id == shot_id) {
             return ui_inspector_groups_to_tree(&[shot_inspector_group(shot, labels)]);
-        }
-    }
-    if !cfg.selected_asset_ids.is_empty() {
-        let asset_id = &cfg.selected_asset_ids[0];
-        if let Some(asset) = snapshot.assets.iter().find(|entry| &entry.id == asset_id) {
-            return ui_inspector_groups_to_tree(&[asset_inspector_group(asset, labels)]);
         }
     }
     if let Some(shot) = crate::artifacts::shooting::schema::active_shot(snapshot) {

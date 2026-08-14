@@ -1,8 +1,6 @@
 /** 🧬️ WriterConfig */
 export interface WriterConfig {
   /** @state config */
-  selectedAstIds: string[];
-  /** @state config */
   editorSelection?: WriterEditorSelection;
   /** @state config */
   formatSignal: number;
@@ -12,10 +10,6 @@ export interface WriterConfig {
   revision: number;
   /** @state config */
   editorSettings: WriterEditorSettings;
-  /** @state config */
-  treeHoveredAstId?: string;
-  /** @state config */
-  editorHoverOffset?: number;
   /** @state config */
   engagementInput: string;
   /** @state config */

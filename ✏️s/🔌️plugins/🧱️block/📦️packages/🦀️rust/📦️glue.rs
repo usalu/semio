@@ -1797,8 +1797,6 @@ pub mod apps {
             pub mod set_active_example;
             #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️edit/🦀️component.rs"]
             pub mod edit;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
         }
 
         #[path = "."]
@@ -1879,12 +1877,6 @@ pub mod apps {
             pub mod set_active_example;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎨️edit/🦀️component.rs"]
             pub mod edit;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️select-vortex/🦀️component.rs"]
-            pub mod select_vortex;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️hover-vortex/🦀️component.rs"]
-            pub mod hover_vortex;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-active-representation/🦀️component.rs"]
             pub mod set_active_representation;
             #[path = "../../🎛️apps/🧊️3d/🎮️commands/🪟️set-window-representations/🦀️component.rs"]
@@ -2001,8 +1993,6 @@ pub mod apps {
             pub mod set_active_example;
             #[path = "../../🎛️apps/🖐️5d/🎮️commands/🎨️edit/🦀️component.rs"]
             pub mod edit;
-            #[path = "../../🎛️apps/🖐️5d/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
         }
 
         #[path = "."]

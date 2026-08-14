@@ -19,6 +19,7 @@ pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use super::SetLocale;
         use crate::apps::writer::testkit::{dispatch, new_app, render};
     use crate::apps::writer::{WriterCommand, WRITER_PLAY_BODY_INSPECTION};
 

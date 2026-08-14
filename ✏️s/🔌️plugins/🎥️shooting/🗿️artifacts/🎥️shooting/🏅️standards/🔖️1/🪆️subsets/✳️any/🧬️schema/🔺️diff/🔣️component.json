@@ -42,10 +42,6 @@
       "$ref": "#/$defs/ShootingStringList",
       "x-semio-state": "presence"
     },
-    "selectedAssetIds": {
-      "$ref": "#/$defs/ShootingStringList",
-      "x-semio-state": "presence"
-    },
     "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
@@ -59,10 +55,6 @@
       "x-semio-state": "config"
     },
     "defaultAssetFormat": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
       "type": "string",
       "x-semio-state": "config"
     },
@@ -87,17 +79,6 @@
     "locale": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "hoveredAssetId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {

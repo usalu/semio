@@ -46,9 +46,6 @@ impl JackDiff {
         if let Some(value) = &self.root_node_id {
             next.root_node_id = value.clone();
         }
-        if let Some(list) = &self.selected_node_ids {
-            next.selected_node_ids = list.values.clone();
-        }
         if let Some(value) = &self.active_fixture_id {
             next.active_fixture_id = value.clone();
         }
@@ -140,7 +137,6 @@ impl MutationDiff<JackSnapshot> for JackDiff {
         take!(camera);
         take!(content);
         take!(root_node_id);
-        take!(selected_node_ids);
         take!(active_fixture_id);
         take!(jack_query);
         take!(lod_mode_by_window);

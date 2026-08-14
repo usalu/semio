@@ -9,7 +9,6 @@
     "languageId",
     "uri",
     "text",
-    "selectedAstIds",
     "editorSettings",
     "formatSignal",
     "lintSignal",
@@ -40,13 +39,6 @@
     "text": {
       "type": "string",
       "x-semio-state": "artifact"
-    },
-    "selectedAstIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
     },
     "editorSelection": {
       "$ref": "#/$defs/WriterEditorSelection",
@@ -96,16 +88,6 @@
     "locale": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "treeHoveredAstId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "editorHoverOffset": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -159,21 +141,6 @@
         }
       }
     },
-    "WriterStringList": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "WriterTextRangeEdit": {
       "type": "object",
       "additionalProperties": false,
@@ -222,7 +189,6 @@
         "languageId",
         "uri",
         "text",
-        "selectedAstIds",
         "editorSettings",
         "formatSignal",
         "lintSignal",

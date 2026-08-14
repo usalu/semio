@@ -1,6 +1,5 @@
 //! 👁️ Sourcing curate app — the preview window: a 3D preview of the currently-selected object.
 
-use crate::apps::curate::config::SourcingCurateConfig;
 use crate::apps::curate::terminology::SourcingLabels;
 use crate::apps::curate::SOURCING_CONTROLLER_ID;
 use crate::artifacts::curate::schema::{instance_json, kind_mesh_json};
@@ -24,6 +23,7 @@ pub fn definition() -> WindowKindDefinition {
         icon_id: "preview".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
+        interactions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -35,9 +35,16 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+/// 👁️ `selected_ids` is the "rows" interaction domain's current selection — `ArtifactApp::render`
+/// carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM's
+/// w3b-summary.md: the breaking pass only threaded it into `handle`/`copy_fragment`/`cut_operations`),
+/// so the app-level call site always passes an empty slice and this window degrades to its "no
+/// selection" placeholder until a future wave threads interaction into render. Flagged as a discovered
+/// framework gap, not worked around here — kept as a parameter (rather than deleted outright) so that
+/// future wave has a slot to fill in.
+pub fn render(document: &CurateSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiNode {
     let stock = crate::artifacts::curate::stock_of(document);
-    let Some(kind) = cfg.selected_object_id.as_ref().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
+    let Some(kind) = selected_ids.first().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
         return ui_text(labels.no_selection);
     };
     let meshes_json = json!([kind_mesh_json(kind)]).to_string();
@@ -52,14 +59,17 @@ pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &So
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::curate::config::SourcingCurateConfig;
     use crate::apps::curate::testkit::{new_app, render as render_body};
 
+    /// 🧬️ Direct unit coverage for `render`'s own id-lookup logic — the app-level call site always
+    /// passes an empty slice (see the `selected_ids` doc comment above) until a future wave threads
+    /// interaction into `render`.
     #[test]
     fn preview_renders_selected_mesh_id() {
         let document = crate::artifacts::curate::schema::default_document();
         let object_id = crate::artifacts::curate::stock_of(&document)[0].id.clone();
-        let cfg = SourcingCurateConfig { selected_object_id: Some(object_id.clone()), ..Default::default() };
-        let node = render(&document, &cfg, crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
+        let node = render(&document, &[object_id.clone()], crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
         let json = serde_json::to_value(&node).unwrap();
         let meshes_json = json.pointer("/world3d/meshesJson").and_then(|value| value.as_str()).unwrap();
         let meshes: Vec<serde_json::Value> = serde_json::from_str(meshes_json).unwrap();
@@ -70,8 +80,7 @@ mod tests {
     #[test]
     fn preview_shows_placeholder_without_selection() {
         let document = crate::artifacts::curate::schema::default_document();
-        let cfg = SourcingCurateConfig::default();
-        let node = render(&document, &cfg, crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
+        let node = render(&document, &[], crate::apps::curate::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No selection"));
     }
@@ -86,7 +95,7 @@ mod tests {
     #[test]
     fn renders_via_the_app() {
         let mut app = new_app();
-        // Default config has no selection, so the app-level render shows the placeholder.
+        // `render` carries no `InteractionView` yet, so the app-level render always shows the placeholder.
         assert!(render_body(&mut app, SOURCING_CURATE_BODY_PREVIEW).contains("No selection"));
     }
 }

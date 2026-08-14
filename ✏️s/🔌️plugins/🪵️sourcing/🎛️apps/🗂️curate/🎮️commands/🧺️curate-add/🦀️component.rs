@@ -55,7 +55,8 @@ pub fn handle(payload: &CurateAdd, doc: &ArtifactView<'_, CurateSnapshot>, _cfg:
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::apps::curate::commands::{curate_add, curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
+    use super::*;
+    use crate::apps::curate::commands::{curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
     use crate::apps::curate::testkit::{dispatch, new_app};
     use crate::apps::curate::SourcingCurateCommand;
     use crate::artifacts::curate::schema::curated_count;

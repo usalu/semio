@@ -35,11 +35,14 @@ import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation,
 import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../🧭️Flow/🟦️component.tsx";
 import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
-import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣️Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️component.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️component.tsx";
 import { Button } from "../🔘️Button/🟦️component.tsx";
+// 🕹️wave-0: imported directly from the module's own source (see react/📦️index.tsx's header comment on
+// this same import for why not via `@semio-tech/framework`'s barrel).
+import { nextSelection, validateState, type DomainSelection, type DomainTopology, type InteractionDefinition } from "../../../🕹️interaction/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 // #region 📜️Tree
@@ -936,35 +939,58 @@ interface TreeSelectionComputationResult {
   anchorId?: string;
 }
 
+// #region 🕹️InteractionDelegation
+/** 🕹️ Tree has no real granularity/domain concept of its own — every row is addressed under this one
+ * fixed granularity id when adapting to `🕹️interaction`'s domain-keyed machine below. */
+const TREE_INTERACTION_GRANULARITY = "item";
+const TREE_INTERACTION_DOMAIN = "tree";
+
+/** 🕹️ Minimal `InteractionDefinition` wrapping `selectionMode` — only `granularities[0].id` and
+ * `selection.modes[0]` are read by `nextSelection`/`validateState`; `hover`/`hierarchy`/`iconId` are
+ * unused filler required by the type. */
+const treeInteractionDefinition = (selectionMode: TreeSelectionMode): InteractionDefinition => ({
+  id: TREE_INTERACTION_DOMAIN,
+  label: "",
+  granularities: [{ id: TREE_INTERACTION_GRANULARITY, label: "", iconId: "circle" }],
+  hierarchy: { kind: "flat" },
+  hover: { enabled: true, transitive: false, channels: ["pointer"], broadcast: false },
+  selection: { modes: [selectionMode], methods: ["pick"], merges: ["replace", "additive", "subtractive", "invertive", "range"], transitive: false, broadcast: false },
+});
+// #endregion 🕹️InteractionDelegation
+
+/** 🕹️ Delegates to `🕹️interaction`'s `validateState` (wave 0) for the FIRST-id clamp Tree has always
+ * applied to externally-supplied/persisted ids (`defaultSelectedIds`, controlled `selectedIds`/
+ * `highlightedIds`) — distinct from {@link getTreeNextSelectionState}'s LAST-target clamp for a live
+ * pick. Falsy-id filtering + dedup stay local sanitization ahead of the shared machine, which has no
+ * notion of either. */
 export const normalizeTreeSelectedIds = (selectedIds: readonly string[], selectionMode: TreeSelectionMode): string[] => {
-  const uniqueIds = Array.from(new Set(selectedIds.filter(Boolean)));
-  return selectionMode === "single" ? uniqueIds.slice(0, 1) : uniqueIds;
+  const sanitizedIds = Array.from(new Set(selectedIds.filter(Boolean)));
+  const validated = validateState([treeInteractionDefinition(selectionMode)], { domains: {} }, {
+    selection: { [TREE_INTERACTION_DOMAIN]: { granularity: TREE_INTERACTION_GRANULARITY, ids: sanitizedIds } },
+    hover: {},
+    activeMode: {},
+    activeGranularity: {},
+  });
+  return [...(validated.selection[TREE_INTERACTION_DOMAIN]?.ids ?? [])];
 };
 
 const getTreeItemDefaultOpen = (item: TreeDataItem): boolean => item.defaultOpen ?? item.collapsibleState === TreeItemCollapsibleState.Expanded;
 
+/** 🕹️ Delegates to `🕹️interaction`'s `nextSelection` (wave 0) for a live pick's LAST-target clamp — see
+ * {@link normalizeTreeSelectedIds}'s doc for the two clamps this wave deliberately keeps distinct.
+ * `additiveKey`/`rangeKey` fold to one `MergeMode` the same way `interactionMergeFromModifiers` folds raw
+ * pointer modifiers (shift wins over ctrl/meta) — this function's own boolean-pair signature is kept
+ * unchanged since `📁️VirtualFileSystem`/tests already call it this shape. */
 export const getTreeNextSelectionState = ({ selectionMode, selectedIds, orderedIds, targetId, anchorId, additiveKey, rangeKey }: TreeSelectionComputationArgs): TreeSelectionComputationResult => {
-  if (selectionMode === "single") {
-    return { selectedIds: [targetId], anchorId: targetId };
-  }
-
-  if (rangeKey) {
-    const fallbackAnchorId = anchorId ?? selectedIds[selectedIds.length - 1] ?? targetId;
-    const anchorIndex = orderedIds.indexOf(fallbackAnchorId);
-    const targetIndex = orderedIds.indexOf(targetId);
-    if (anchorIndex !== -1 && targetIndex !== -1) {
-      const startIndex = Math.min(anchorIndex, targetIndex);
-      const endIndex = Math.max(anchorIndex, targetIndex);
-      return { selectedIds: orderedIds.slice(startIndex, endIndex + 1), anchorId: fallbackAnchorId };
-    }
-  }
-
-  if (additiveKey) {
-    const nextSelectedIds = selectedIds.includes(targetId) ? selectedIds.filter((id) => id !== targetId) : [...selectedIds, targetId];
-    return { selectedIds: nextSelectedIds, anchorId: targetId };
-  }
-
-  return { selectedIds: [targetId], anchorId: targetId };
+  const merge = rangeKey ? "range" : additiveKey ? "invertive" : "replace";
+  const topology: DomainTopology = { ordered: orderedIds.map((id) => ({ id, granularity: TREE_INTERACTION_GRANULARITY })) };
+  const current: DomainSelection = { granularity: TREE_INTERACTION_GRANULARITY, ids: [...selectedIds], anchorId };
+  const result = nextSelection(treeInteractionDefinition(selectionMode).selection, current, topology, {
+    targets: [{ granularity: TREE_INTERACTION_GRANULARITY, id: targetId }],
+    merge,
+    mode: selectionMode,
+  });
+  return { selectedIds: [...result.ids], anchorId: result.anchorId };
 };
 
 const collectTreeItemMap = (items: TreeDataItem[], map: Record<string, TreeDataItem> = {}): Record<string, TreeDataItem> => {
@@ -3162,14 +3188,17 @@ export const Tree = (({
       }
       const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
       const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
+      // 🎯️ Routed through the ONE shared modifier→merge policy (see `interactionMergeFromModifiers`'s
+      // doc) rather than hand-checking `event.metaKey`/`event.ctrlKey`/`event.shiftKey` here directly.
+      const merge = interactionMergeFromModifiers(event);
       const nextSelection = getTreeNextSelectionState({
         selectionMode,
         selectedIds: currentSelectedIds,
         orderedIds,
         targetId: item.id,
         anchorId: anchorIdRef.current,
-        additiveKey: event.metaKey || event.ctrlKey,
-        rangeKey: event.shiftKey,
+        additiveKey: merge === "invertive",
+        rangeKey: merge === "range",
       });
       anchorIdRef.current = nextSelection.anchorId;
       updateSelection(nextSelection.selectedIds);

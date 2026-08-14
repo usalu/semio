@@ -1905,7 +1905,7 @@ pub mod host_runtime {
         #[test]
         fn presence_peers_json_only_matches_presence_events() {
             use semio_framework::PresencePeer;
-            let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), presence_pack: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None }];
+            let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), presence_pack: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None, interaction: None }];
             let json = presence_peers_json(&ArtifactEvent::Presence { peers: peers.clone() }).expect("json");
             assert!(json.contains("\"actor\":\"a\""));
             assert!(presence_peers_json(&ArtifactEvent::Status(Default::default())).is_none());

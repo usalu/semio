@@ -30,14 +30,13 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
         return Ok(Emit::default());
     };
     let index = projection.objects.len();
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the newly-added object used to also
+    // reset the mesh domain's selection/targets to whole-object/empty here — that state is
+    // framework-owned `InteractionState` now, only ever mutated by the framework's own injected
+    // `interactionSelect` handling, never by an app command's `Emit::config_mutations`.
     Ok(Emit {
         artifact_mutations: vec![LowpolyMutation::CreateObject(crate::artifacts::lowpoly::mutations::create_object::mutation::CreateObject { index, object: new_object })],
-        config_mutations: vec![
-            LowpolyConfigMutation::SetActiveObject { object_id: new_id },
-            LowpolyConfigMutation::SetSelectionTargets { mesh: true, vertex: false, edge: false, face: false },
-            LowpolyConfigMutation::SetSelection { mode: "mesh".into(), ids: Vec::new() },
-            LowpolyConfigMutation::SetSelectionKeys { keys: Vec::new() },
-        ],
+        config_mutations: vec![LowpolyConfigMutation::SetActiveObject { object_id: new_id }],
         ..Default::default()
     })
 }

@@ -97,6 +97,7 @@ mod tests {
     use super::*;
     use crate::apps::procedural2d::testkit::{app, dispatch};
     use crate::apps::procedural2d::Procedural2dCommand;
+    use crate::apps::procedural2d::commands::enter_generate;
 
     #[test]
     fn add_generation_records_an_undoable_generation_operation() {

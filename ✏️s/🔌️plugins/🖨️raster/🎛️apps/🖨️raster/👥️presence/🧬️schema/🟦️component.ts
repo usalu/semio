@@ -10,10 +10,6 @@ export interface RasterPresenceCamera {
 
 export interface RasterPresence {
   /** @state presence */
-  selectedIds: string[];
-  /** @state presence */
-  hoveredId?: string;
-  /** @state presence */
   brushSize: number;
   /** @state presence */
   brushOpacity: number;

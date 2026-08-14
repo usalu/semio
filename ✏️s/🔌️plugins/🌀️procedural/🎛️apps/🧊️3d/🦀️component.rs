@@ -6,10 +6,10 @@
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
 use crate::apps::procedural3d::commands::{
-    add_generation, add_widget, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, graph_pointer_down, move_media_node, node_graph_edit, node_graph_hover,
-    node_graph_select, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection, scale_selection, select_generation,
-    select_node, set_active_example, set_active_utility, set_camera, set_contributions, set_hover, set_locale, set_lod_mode, set_selection, set_selection_method, set_show_mode,
-    set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values, world_hover, world_pointer_down, world_select,
+    add_generation, add_widget, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport,
+    patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility,
+    set_camera, set_contributions, set_locale, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values,
+    world_pointer_down,
 };
 use crate::apps::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::apps::procedural3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -20,7 +20,11 @@ use crate::apps::procedural3d::terminology::procedural3d_labels;
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::{artifact_kind, Procedural3dSnapshot, PROCEDURAL_3D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, UiNode, UtilityDefinition, WindowMeasure};
+use semio_framework_plugin::{
+    app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView,
+    DomainTopology, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
+    MediaClass, MediaError, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, UtilityDefinition, WindowMeasure,
+};
 use store::{ArtifactDsl, EngineHandles};
 use serde_json::Value;
 use serde_json::json;
@@ -58,16 +62,8 @@ semio_framework_plugin::app_commands! {
         "renameGeneration" as "rename-generation" => rename_generation::RenameGeneration,
         "updateGenerationValues" as "update-generation-values" => update_generation_values::UpdateGenerationValues,
         "nodeGraphViewport" as "viewport" => node_graph_viewport::NodeGraphViewport,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "selectNode" as "select-node" => select_node::SelectNode,
-        "nodeGraphSelect" as "graph-select" => node_graph_select::NodeGraphSelect,
-        "nodeGraphHover" as "graph-hover" => node_graph_hover::NodeGraphHover,
-        "setHover" as "set-hover" => set_hover::SetHover,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
         "graphPointerDown" as "graph-pointer-down" => graph_pointer_down::GraphPointerDown,
-        "worldSelect" as "world-select" => world_select::WorldSelect,
-        "worldHover" as "world-hover" => world_hover::WorldHover,
-        "setSelectionMethod" as "selection-method" => set_selection_method::SetSelectionMethod,
         "setLodMode" as "lod-mode" => set_lod_mode::SetLodMode,
         "setShowMode" as "show-mode" => set_show_mode::SetShowMode,
         "toggleSun" as "toggle-sun" => toggle_sun::ToggleSun,
@@ -260,16 +256,8 @@ impl ArtifactApp for Procedural3dPlayApp {
                     value}))
             }
             "nodeGraphViewport" => Ok(Procedural3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: parse_flow_camera_json(&args) })),
-            "setSelection" => Ok(Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: string_list("ids") })),
-            "selectNode" => Ok(Procedural3dCommand::SelectNode(select_node::SelectNode { node_ids: string_list("ids").into_iter().chain(string_list("nodeIds")).collect() })),
-            "nodeGraphSelect" => Ok(Procedural3dCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: string_list("ids").into_iter().chain(string_list("nodeIds")).collect() })),
-            "nodeGraphHover" => Ok(Procedural3dCommand::NodeGraphHover(node_graph_hover::NodeGraphHover { widget_id: str_arg(&["widgetId", "widget_id"]) })),
-            "setHover" => Ok(Procedural3dCommand::SetHover(set_hover::SetHover { object_id: str_arg(&["objectId", "object_id", "id"]) })),
             "worldPointerDown" => Ok(Procedural3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {})),
             "graphPointerDown" => Ok(Procedural3dCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
-            "worldSelect" => Ok(Procedural3dCommand::WorldSelect(world_select::WorldSelect { ids: string_list("ids"), merge: str_arg(&["merge"]).unwrap_or_else(|| "replace".into()) })),
-            "worldHover" => Ok(Procedural3dCommand::WorldHover(world_hover::WorldHover { id: str_arg(&["id", "objectId", "object_id"]) })),
-            "setSelectionMethod" => Ok(Procedural3dCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: str_arg(&["value", "method", "selectionMethod"]).unwrap_or_default() })),
             "setLodMode" => Ok(Procedural3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() })),
             "setShowMode" => Ok(Procedural3dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode", "show_mode"]).unwrap_or_default() })),
             "toggleSun" => Ok(Procedural3dCommand::ToggleSun(toggle_sun::ToggleSun {})),
@@ -295,8 +283,52 @@ impl ArtifactApp for Procedural3dPlayApp {
             )))}
     }
 
-    fn handle(command: &Procedural3dCommand, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
-        with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
+    /// 🕹️ `deleteSelection`/`nodeGraphEdit`/`{translate,rotate,scale}Selection` read the `graph`
+    /// interaction domain directly (bypassing the `app_commands!`-generated `dispatch`, whose
+    /// per-row `$module::handle(payload, doc, cfg, ctx)` signature is framework-fixed and has no
+    /// `interaction` slot) — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+    fn handle(command: &Procedural3dCommand, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
+        with_process_flow_eval_session(|session| match command {
+            Procedural3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, session),
+            Procedural3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
+            Procedural3dCommand::TranslateSelection(payload) => translate_selection::apply(payload, doc, cfg, interaction, session),
+            Procedural3dCommand::RotateSelection(payload) => rotate_selection::apply(payload, doc, cfg, interaction, session),
+            Procedural3dCommand::ScaleSelection(payload) => scale_selection::apply(payload, doc, cfg, interaction, session),
+            _ => command.dispatch(doc, cfg, session),
+        })
+    }
+
+    /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every top-level widget is a "node" (root unless
+    /// nested in a `Widget::Cluster`'s own `tree.neurons`, where each nested `Neuron` becomes a "node"
+    /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
+    /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
+    /// "edge" targets, parented to nothing (edges are leaves, not containers).
+    fn interaction_topology(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> InteractionTopology {
+        fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
+            ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
+            if let Some(tree) = &neuron.tree {
+                for child in &tree.neurons {
+                    walk_neuron(child, neuron.id.clone(), ordered);
+                }
+            }
+        }
+        let fixture = &doc.snapshot.fixture;
+        let mut ordered = Vec::new();
+        for widget in &fixture.widgets {
+            let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
+            ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
+            if let flow::Widget::Cluster { tree, .. } = widget {
+                for child in &tree.neurons {
+                    walk_neuron(child, id.clone(), &mut ordered);
+                }
+            }
+        }
+        for synapse in &fixture.synapses {
+            ordered.push(TopologyNode { id: synapse.id.clone(), granularity: "edge".into(), parent: None });
+        }
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert("graph".to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
@@ -322,9 +354,13 @@ impl ArtifactApp for Procedural3dPlayApp {
             generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::default()),
             form::PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
             generate_preview::PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, config, labels, active_utility),
-            document_panel::PROCEDURAL_3D_PLAY_BODY_DOCUMENT => document_panel::render(&document.fixture, &config.selected_node_ids, labels),
+            document_panel::PROCEDURAL_3D_PLAY_BODY_DOCUMENT => document_panel::render(&document.fixture, labels),
             catalogue_panel::PROCEDURAL_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &config.selected_node_ids, labels),
+            // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
+            // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
+            // widget-details view degrades to its "no selection" default until a future wave threads
+            // interaction into render. Flagged as a discovered framework gap, not worked around here.
+            inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &[], labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}")))})
     }
 
@@ -341,12 +377,16 @@ impl ArtifactApp for Procedural3dPlayApp {
     /// 🗂️ Grouped disclosure: `reorganize`/`translateSelection`/`rotateSelection`/`scaleSelection` stay
     /// top-level; creation, removal and generation methods fold into taxonomy groups; `delete-selection`
     /// stays a direct destructive item last.
+    ///
+    /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render` — see ticket
+    /// 26/08/14's w3b-summary.md), so the selection-dependent rows below always take the "nothing
+    /// selected" branch rather than reading a stale/wrong selection.
     fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
         let is_de = config.locale.starts_with("de");
-        let selected = config.selected_node_ids.clone();
+        let selected: Vec<String> = Vec::new();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let has_selection = !nodes.is_empty() || !edges.is_empty();
         let mut menu = Menu::of(registry).action("reorganize");
@@ -398,18 +438,13 @@ pub fn create_procedural3d_app() -> App {
             .action_with(ActionDefinition::new_catalog("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::Mutation).with_category("targets"))
             .action_with(ActionDefinition::new_catalog("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::Mutation).with_category("methods"))
             .action_with(ActionDefinition::new_catalog("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::Mutation).with_category("methods"))
-            // 👁️ Ephemeral view actions — selection, hover, world picking, graph camera, sun/LOD/show-mode display toggles, preview camera.
+            // 👁️ Ephemeral view actions — world picking, graph camera, sun/LOD/show-mode display toggles, preview camera.
+            // Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
+            // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
+            // `selectAll`/`setSelectionMode`/`setInteractionGranularity`) auto-inject.
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .view_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"))
-            .view_action("nodeGraphSelect", LocalizedLabel::native("Node Graph Select", "Graph-Auswahl"))
-            .view_action("nodeGraphHover", LocalizedLabel::native("Node Graph Hover", "Graph-Hover"))
-            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
             .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
             .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
-            .view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"))
-            .view_action("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"))
-            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
             .view_action("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"))
             .view_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"))
             .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
@@ -442,6 +477,32 @@ pub fn create_procedural3d_app() -> App {
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") })
             .window_kind_utilities(edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
+            // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+            // one domain over the flow-graph widget DAG, node/edge/handle granularities,
+            // `HierarchyProvider::Topology` (see `Procedural3dPlayApp::interaction_topology` below) —
+            // transitive hover is the headline feature: hovering a Cluster group node highlights every
+            // widget nested in its tree.
+            .interaction(InteractionDefinition {
+                id: "graph".into(),
+                label: LocalizedLabel::native("Graph", "Graph"),
+                granularities: vec![
+                    GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() },
+                    GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+                    GranularityDefinition { id: "handle".into(), label: LocalizedLabel::native("Handle", "Griff"), icon_id: "move".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(flow_window::PROCEDURAL_3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("graph")])
+            .window_kind_interactions(edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, vec![InteractionRef::new("graph")])
+            .window_kind_interactions(generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW, vec![InteractionRef::new("graph")])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .config(Procedural3dPlayApp::config_spec())
@@ -509,8 +570,14 @@ pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
 
 /// 🧭️ World-3d selection payload with the host-owned gumball utility spliced in, so the transform
 /// handles follow `cfg.active_utility_id` instead of any document-stored utility.
+///
+/// 🕹️ `render` carries no `InteractionView` (same discovered framework gap as `context_menu` —
+/// see ticket 26/08/14's w3b-summary.md), so this always reports an empty `graph` selection/hover
+/// rather than a stale one; the gumball never shows until a future wave threads interaction into
+/// `render`. `"rectangle"` (the pre-migration default `selection_method`) is hardcoded — the
+/// framework no longer tracks a persistent "last marquee method" outside a live gesture.
 pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) -> String {
-    let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json(&cfg.selection_method, &cfg.selected_node_ids, cfg.hovered_node_id.as_deref())).unwrap_or_else(|_| json!({}));
+    let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
     let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
     let (show_edges, selection_mode) = match show_mode {
         "wireframe" => (true, "mesh"),
@@ -519,7 +586,7 @@ pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) ->
         _ => (false, "mesh")};
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode".into(), json!(active_utility));
-        object.insert("gumballActive".into(), json!(!cfg.selected_node_ids.is_empty()));
+        object.insert("gumballActive".into(), json!(false));
         object.insert("showEdges".into(), json!(show_edges));
         object.insert("selectionMode".into(), json!(selection_mode));
         object.insert("granularity".into(), json!(selection_mode));
@@ -754,8 +821,10 @@ pub fn preview_payload_from_eval_with_session(eval_json: &str, fixture: &flow::F
         if handles.is_empty() {
             continue;
         }
-        let selected = cfg.selected_node_ids.iter().any(|entry| entry == &id);
-        let hovered = cfg.hovered_node_id.as_deref() == Some(id.as_str());
+        // 🕹️ `render` carries no `InteractionView` (see `preview_selection_json`'s doc comment) — no
+        // preview instance is ever marked selected/hovered until a future wave threads interaction in.
+        let selected = false;
+        let hovered = false;
         for (index, handle) in handles.iter().enumerate() {
             let mesh_id = if handles.len() == 1 { format!("eval-{id}") } else { format!("eval-{id}#{index}") };
             let instance_id = if handles.len() == 1 { id.clone() } else { format!("{id}#{index}") };
@@ -989,7 +1058,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 39, "every Procedural3dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 31, "every Procedural3dCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -1023,16 +1092,8 @@ mod tests {
             "rename-generation",
             "update-generation-values",
             "viewport",
-            "set-selection",
-            "select-node",
-            "graph-select",
-            "graph-hover",
-            "set-hover",
             "world-pointer-down",
             "graph-pointer-down",
-            "world-select",
-            "world-hover",
-            "selection-method",
             "lod-mode",
             "show-mode",
             "toggle-sun",
@@ -1074,16 +1135,8 @@ mod tests {
             Procedural3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
             Procedural3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: dsl::DslValue::Number(5.0) }),
             Procedural3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: flow::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
-            Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: vec!["a".into()] }),
-            Procedural3dCommand::SelectNode(select_node::SelectNode { node_ids: vec!["a".into()] }),
-            Procedural3dCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["a".into()] }),
-            Procedural3dCommand::NodeGraphHover(node_graph_hover::NodeGraphHover { widget_id: Some("extrude".into()) }),
-            Procedural3dCommand::SetHover(set_hover::SetHover { object_id: None }),
             Procedural3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {}),
             Procedural3dCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
-            Procedural3dCommand::WorldSelect(world_select::WorldSelect { ids: vec!["a".into()], merge: "replace".into() }),
-            Procedural3dCommand::WorldHover(world_hover::WorldHover { id: Some("a".into()) }),
-            Procedural3dCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: "lasso".into() }),
             Procedural3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
             Procedural3dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),
             Procedural3dCommand::ToggleSun(toggle_sun::ToggleSun {}),
@@ -1191,20 +1244,20 @@ mod tests {
         assert!(inspector.contains("Elemente:"));
     }
 
+    /// 🕹️ `context_menu` carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM,
+    /// same discovered gap as `render`), so `has_selection` is always false now and the destructive
+    /// `delete-selection` row (conditioned on a real selection) never appears; this test now only pins
+    /// the disclosure budget.
     #[test]
-    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+    fn context_menu_grouped_disclosure_stays_within_budget() {
         let _serial = test_support::lock();
         let mut app = app_with_registry();
         let widgets: Vec<String> = app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural3d::widget_id(widget).to_string()).collect();
         assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
-        app.dispatch_typed(Procedural3dCommand::SetSelection(set_selection::SetSelection { node_ids: widgets }), &semio_framework_plugin::testkit::meta("local")).expect("set selection");
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let menu = app.context_menu(&request);
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
-        let last = menu.last().expect("grouped disclosure menu should not be empty");
-        let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true);
-        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).is_some_and(|child| child.destructive == Some(true));
-        assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must be last: {menu:?}");
+        assert!(!menu.is_empty(), "grouped disclosure menu should not be empty");
     }
 
     #[test]
@@ -1221,7 +1274,7 @@ mod tests {
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — these tests exercise
     /// `PreviewPipeline`/`MeshBridge`/`ExtensionContributions` functions above, all of which are app
     /// behavior (they construct or take a [`Procedural3dConfig`]), so the tests travel with them.
-    use ui_wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
+    use ui_wgpu::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
     use std::sync::MutexGuard;
 
     fn test_serial() -> MutexGuard<'static, ()> {

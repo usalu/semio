@@ -67,13 +67,15 @@ pub mod engagement_submit {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::apps::lowpoly::testkit::{app, dispatch, face_selection};
+    use crate::apps::lowpoly::testkit::{app_with_registry, dispatch, select_face};
     use crate::apps::lowpoly::LowpolyCommand;
 
     #[test]
     fn engagement_submit_resolves_a_typed_token_into_a_real_command() {
-        let mut a = app();
-        dispatch(&mut a, face_selection());
+        use semio_framework_plugin::PluginApp;
+        let mut a = app_with_registry();
+        let object_id = a.snapshot().expect("projection").objects[0].id.clone();
+        select_face(&mut a, &object_id, 0);
         let before = a.snapshot().expect("projection").objects[0].mesh.clone();
         dispatch(&mut a, LowpolyCommand::EngagementSubmit(super::engagement_submit::EngagementSubmit { value: Some("extrude".into()) }));
         assert_ne!(a.snapshot().expect("projection").objects[0].mesh, before, "typed 'extrude' must run the extrude command");
@@ -81,7 +83,7 @@ mod tests {
 
     #[test]
     fn engagement_submit_ignores_unresolvable_input() {
-        let mut a = app();
+        let mut a = app_with_registry();
         let result = dispatch(&mut a, LowpolyCommand::EngagementSubmit(super::engagement_submit::EngagementSubmit { value: Some("bogus".into()) }));
         assert!(result.mutations.is_empty());
     }

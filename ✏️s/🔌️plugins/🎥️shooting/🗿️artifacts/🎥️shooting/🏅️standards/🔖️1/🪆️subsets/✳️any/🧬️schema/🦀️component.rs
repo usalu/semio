@@ -40,8 +40,6 @@ pub struct ShootingArtifact {
     #[state(presence)]
     pub selected_shot_ids: Vec<String>,
     #[state(presence)]
-    pub selected_asset_ids: Vec<String>,
-    #[state(presence)]
     pub active_utility_id: String,
     #[state(config)]
     pub default_shot_format: String,
@@ -49,8 +47,6 @@ pub struct ShootingArtifact {
     pub default_shot_shape: String,
     #[state(config)]
     pub default_asset_format: String,
-    #[state(config)]
-    pub selection_method: String,
     #[state(config)]
     pub center_model: bool,
     #[state(config)]
@@ -61,8 +57,6 @@ pub struct ShootingArtifact {
     pub camera: ShootingCamera,
     #[state(config)]
     pub locale: String,
-    #[state(artifact)]
-    pub hovered_asset_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -79,18 +73,15 @@ impl Default for ShootingArtifact {
             active_asset_id: String::new(),
             emblem: None,
             selected_shot_ids: Vec::new(),
-            selected_asset_ids: Vec::new(),
             active_utility_id: "move".into(),
             default_shot_format: "png".into(),
             default_shot_shape: "rectangle".into(),
             default_asset_format: "glb".into(),
-            selection_method: "rectangle".into(),
             center_model: true,
             fit_revision: 0,
             camera_draft_label: String::new(),
             camera: ShootingCamera::default(),
             locale: "en-US".into(),
-            hovered_asset_id: None,
         }
     }
 }

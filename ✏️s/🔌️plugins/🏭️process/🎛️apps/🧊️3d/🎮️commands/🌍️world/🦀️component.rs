@@ -49,7 +49,7 @@ pub mod world_pointer_down {
         pub position: [f64; 3],
     }
 
-    pub fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let utility = config.active_utility();
@@ -70,8 +70,7 @@ pub mod world_pointer_down {
             origin: Some(origin),
             measure: crate::artifacts::process3d::schema::inferences::measure_for_capability(&capability, Some(payload.position)),
         };
-        let step_id = step.id.clone();
-        Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: Some(step_id) }], effects: vec![set_active_utility_effect("select")], ..Default::default() })
+        Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), effects: vec![set_active_utility_effect("select")], ..Default::default() })
     }
 }
 //#endregion 🔖️WorldPointerDown
@@ -91,58 +90,19 @@ pub mod world_face_drag_end {
         pub face_extent: Option<[f64; 2]>,
     }
 
-    pub fn handle(payload: &WorldFaceDragEnd, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &WorldFaceDragEnd, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::apps::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         if config.active_utility() != "select" {
             return Ok(Emit::default());
         }
         match process3d_step_from_face_drag(payload.normal, payload.start_point, payload.distance, payload.face_extent, process3d_labels(config)) {
-            Some(step) => {
-                let step_id = step.id.clone();
-                Ok(Emit {
-                    artifact_mutations: insert_step_mutations(fixture, step),
-                    config_mutations: vec![Process3dConfigMutation::SetSelectedId { value: Some(step_id) }, Process3dConfigMutation::SetSelectedFaceId { value: None }],
-                    ..Default::default()
-                })
-            }
+            Some(step) => Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }
 }
 //#endregion 🔖️WorldFaceDragEnd
-
-//#region 🔖️WorldPick
-pub mod world_pick {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "world-pick")]
-    pub struct WorldPick {
-        pub granularity: String,
-        pub id: Option<u32>,
-    }
-
-    pub fn handle(payload: &WorldPick, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let mutations = match payload.granularity.as_str() {
-            "face" => match payload.id {
-                Some(id) => vec![Process3dConfigMutation::SetSelectedId { value: Some("processed".into()) }, Process3dConfigMutation::SetSelectedFaceId { value: Some(id) }],
-                None => vec![Process3dConfigMutation::SetSelectedId { value: None }, Process3dConfigMutation::SetSelectedFaceId { value: None }],
-            },
-            "mesh" | "object" => vec![
-                Process3dConfigMutation::SetSelectedId { value: payload.id.map(|_| "processed".into()) },
-                Process3dConfigMutation::SetSelectedFaceId { value: None },
-            ],
-            _ if payload.id.is_none() => vec![
-                Process3dConfigMutation::SetSelectedId { value: None },
-                Process3dConfigMutation::SetSelectedFaceId { value: None },
-            ],
-            _ => Vec::new(),
-        };
-        Ok(Emit::config(mutations))
-    }
-}
-//#endregion 🔖️WorldPick
 
 //#region 🧪️Tests
 #[cfg(test)]

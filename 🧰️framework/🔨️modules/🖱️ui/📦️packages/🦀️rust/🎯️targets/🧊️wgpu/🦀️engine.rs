@@ -466,7 +466,10 @@ mod tests {
                 sections: tree.sections.iter().map(tree_section_to_widget).collect(),
                 selected_ids: Vec::new(),
                 highlighted_ids: Vec::new(),
-                selection_change: tree.selection_change.clone(),
+                // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: `UiTreeNode.selectionChange`
+                // is deleted — selection now flows through `interactionSelect`/`interaction_domain`, not yet
+                // wired into this retained-mode engine.
+                selection_change: None,
             },
             // KNOWN GAP: `WidgetNode<E>` (the immediate-mode `widgets` region's tree type) has no
             // Image/ComponentScene/ExternalSlot variant at all — the renderer's own
@@ -537,8 +540,10 @@ mod tests {
             default_open: item.default_open.unwrap_or(false),
             dimmed: item.dimmed.unwrap_or(false),
             event: item.action.clone(),
-            hover_event: item.hover_action.clone(),
-            unhover_event: item.unhover_action.clone(),
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: `UiTreeItemNode.hoverAction`/
+            // `unhoverAction` are deleted — hover is now framework-owned per `UiTreeNode.interactionDomain`.
+            hover_event: None,
+            unhover_event: None,
             actions: item.actions.as_ref().map(|actions| actions.iter().map(tree_action_to_widget).collect()).unwrap_or_default(),
             draggable: item.draggable.unwrap_or(false),
             drag_data: item.drag_data.clone().unwrap_or_default(),
@@ -786,8 +791,6 @@ mod tests {
             presence: UiPresence::default(),
             default_open: None,
             action: None,
-            hover_action: None,
-            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -799,11 +802,9 @@ mod tests {
         let node = UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
             presence: UiPresence::default(),
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
             drop_action: None,
             menu: None,
+            interaction_domain: None,
         });
         assert_equivalent("Tree", &node);
     }

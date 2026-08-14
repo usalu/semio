@@ -10,6 +10,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "navigator-engagement-input")]
 pub struct NavigatorEngagementInput {}
 
-pub fn handle(_payload: &NavigatorEngagementInput, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(_payload: &NavigatorEngagementInput, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::default())
 }

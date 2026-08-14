@@ -4,8 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectionMode",
-    "selectionIds",
     "worldCameraPosition",
     "worldCameraTarget",
     "worldCameraFov",
@@ -14,17 +12,6 @@
     "reportTable"
   ],
   "properties": {
-    "selectionMode": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "selectionIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
     "worldCameraPosition": {
       "type": "array",
       "items": {

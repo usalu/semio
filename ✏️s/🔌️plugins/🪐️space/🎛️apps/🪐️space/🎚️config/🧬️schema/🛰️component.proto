@@ -4,37 +4,33 @@ message SpaceConfig {
   // @state config
   map<string, SpaceWindowCamera> camera = 1;
   // @state config
-  repeated string selected_node_ids = 2;
+  repeated string collapsed_node_ids = 2;
   // @state config
-  optional string hovered_node_id = 3;
+  repeated string preview_off_node_ids = 3;
   // @state config
-  repeated string collapsed_node_ids = 4;
+  optional string active_node_id = 4;
   // @state config
-  repeated string preview_off_node_ids = 5;
+  optional string focused_node_id = 5;
   // @state config
-  optional string active_node_id = 6;
+  repeated string clipboard_node_ids = 6;
   // @state config
-  optional string focused_node_id = 7;
+  string workflow_engagement_input = 7;
   // @state config
-  repeated string clipboard_node_ids = 8;
+  string compiled_dag_engagement_input = 8;
   // @state config
-  string workflow_engagement_input = 9;
+  optional string pending_import_node_id = 9;
   // @state config
-  string compiled_dag_engagement_input = 10;
+  optional string pending_import_format = 10;
   // @state config
-  optional string pending_import_node_id = 11;
+  string active_panel_tab = 11;
   // @state config
-  optional string pending_import_format = 12;
+  optional string space_id = 12;
   // @state config
-  string active_panel_tab = 13;
+  optional string client_id = 13;
   // @state config
-  optional string space_id = 14;
+  optional string client_name = 14;
   // @state config
-  optional string client_id = 15;
-  // @state config
-  optional string client_name = 16;
-  // @state config
-  string locale = 17;
+  string locale = 15;
 }
 
 message SpaceWindowCamera {

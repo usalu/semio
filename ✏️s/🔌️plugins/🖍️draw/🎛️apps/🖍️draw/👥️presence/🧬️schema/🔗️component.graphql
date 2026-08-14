@@ -1,6 +1,4 @@
 type DrawPresence {
-  selectedIds: [String!]! @state(class: PRESENCE)
-  hoveredId: String @state(class: PRESENCE)
   engagementInput: String! @state(class: PRESENCE)
   camera: DrawCamera! @state(class: PRESENCE)
   activeUtilityId: String! @state(class: PRESENCE)

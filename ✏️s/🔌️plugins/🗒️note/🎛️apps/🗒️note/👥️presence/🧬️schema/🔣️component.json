@@ -4,20 +4,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedBlockIds",
     "cameraX",
     "cameraY",
     "cameraZoom",
     "activeUtilityId"
   ],
   "properties": {
-    "selectedBlockIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
     "cameraX": {
       "type": "number",
       "x-semio-state": "presence"
@@ -28,10 +20,6 @@
     },
     "cameraZoom": {
       "type": "number",
-      "x-semio-state": "presence"
-    },
-    "hoveredBlockId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "activeUtilityId": {

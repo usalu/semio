@@ -5,7 +5,7 @@ use crate::apps::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use crate::artifacts::procedural3d::schema::{fixture_to_workflow, host_from_fixture};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphHover, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
 pub const PROCEDURAL_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";
@@ -24,6 +24,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -54,8 +55,14 @@ pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, sess
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let selection = config.selected_node_ids.clone();
     let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
+    // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and
+    // `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
+    // (unlike `UiNode::Tree` — see `stamp_and_cache_interaction_ui`), so `selection`/`hover` are left
+    // at `NodeGraphScene::base`'s defaults (empty/none) — the canvas no longer paints a live
+    // highlight until a future wave threads interaction into scene rendering. Flagged as a
+    // discovered framework gap, not worked around here.
     build_node_graph_scene(
         PROCEDURAL_3D_PLAY_SURFACE_MAIN,
         PROCEDURAL_3D_PLAY_APP_ID,
@@ -68,8 +75,6 @@ pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, sess
             fixture_json: flow_extras.fixture_json,
             eval_json: flow_extras.eval_json,
             status_json: flow_extras.status_json,
-            selection,
-            hover: config.hovered_node_id.as_ref().map(|id| NodeGraphHover { node_id: Some(id.clone()) }),
             ..NodeGraphScene::base(nodes, edges, viewport)
         },
     )

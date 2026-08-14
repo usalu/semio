@@ -11,22 +11,18 @@ use store::ArtifactPack;
 #[dsl(extension = "puzzle2d.presence")]
 #[dsl(layout = "lines")]
 pub struct Puzzle2dPresence {
-    pub selected_ids: Vec<String>,
     pub camera_x: f64,
     pub camera_y: f64,
     pub camera_zoom: f64,
-    pub selection_method: String,
     pub active_utility_id: String,
 }
 
 impl Default for Puzzle2dPresence {
     fn default() -> Self {
         Self {
-            selected_ids: Vec::new(),
             camera_x: 0.0,
             camera_y: 0.0,
             camera_zoom: 1.0,
-            selection_method: "rectangle".into(),
             active_utility_id: String::new(),
         }
     }

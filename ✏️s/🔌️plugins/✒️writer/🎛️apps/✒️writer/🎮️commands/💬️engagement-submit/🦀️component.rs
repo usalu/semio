@@ -83,6 +83,7 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, WriterSnapshot>
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use super::EngagementSubmit;
         use crate::apps::writer::testkit::new_app;
     use crate::apps::writer::{WriterCommand, WRITER_PLAY_WINDOW_KIND};
     use semio_framework_plugin::{PluginApp, WindowMeasure};

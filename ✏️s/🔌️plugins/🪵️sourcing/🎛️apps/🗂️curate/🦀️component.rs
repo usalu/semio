@@ -13,10 +13,11 @@ use crate::apps::curate::modes::curate::windows::{curated, grid, pool, preview};
 use crate::apps::curate::terminology::sourcing_curate_labels;
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    OsMediaCapability, UiNode,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use store::ArtifactPack;
 
@@ -82,8 +83,6 @@ semio_framework_plugin::app_commands! {
         "setFilterTypology" as "filter-typology" => set_filter_typology::SetFilterTypology,
         "setFilterMinAvailability" as "filter-min-availability" => set_filter_min_availability::SetFilterMinAvailability,
         "sortTable" as "sort-table" => sort_table::SortTable,
-        "selectRow" as "select-row" => select_row::SelectRow,
-        "worldSelect" as "world-select" => world_select::WorldSelect,
         "setLocale" as "locale" => set_locale::SetLocale,
         "setContributions" as "contributions" => set_contributions::SetContributions,
     }
@@ -96,7 +95,6 @@ use crate::apps::curate::commands::set_contributions;
 use crate::apps::curate::commands::{set_active_example, set_artifact_json, stock_from_catalogue};
 use crate::apps::curate::commands::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
 use crate::apps::curate::commands::set_locale;
-use crate::apps::curate::commands::{select_row, world_select};
 //#endregion 🔖️Commands
 
 //#region 🔖️SourcingCurateApp
@@ -177,7 +175,7 @@ impl ArtifactApp for SourcingCurateApp {
         command.command_id()
     }
 
-    fn handle(command: &SourcingCurateCommand, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &SourcingCurateCommand, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -188,8 +186,12 @@ impl ArtifactApp for SourcingCurateApp {
         let labels = sourcing_curate_labels(config);
         match body_key {
             pool::SOURCING_CURATE_BODY_POOL => pool::render(snapshot, config, labels),
-            curated::SOURCING_CURATE_BODY_CURATED => curated::render(snapshot, config, labels),
-            preview::SOURCING_CURATE_BODY_PREVIEW => preview::render(snapshot, config, labels),
+            curated::SOURCING_CURATE_BODY_CURATED => curated::render(snapshot, labels),
+            // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
+            // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
+            // preview window degrades to its "no selection" default until a future wave threads
+            // interaction into render. Flagged as a discovered framework gap, not worked around here.
+            preview::SOURCING_CURATE_BODY_PREVIEW => preview::render(snapshot, &[], labels),
             grid::SOURCING_CURATE_BODY_GRID => grid::render(snapshot, config),
             _ => semio_framework_plugin::ui_text(Label::data("")),
         }
@@ -273,6 +275,29 @@ pub fn create_sourcing_curate_app() -> App {
             .window_kind_def(preview::definition())
             .window_kind_def(grid::definition())
             .default_layout(curate::layout())
+            // 🕹️ The "rows" interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
+            // MECHANISM) replaces the deleted `selected_object_id` config field and the `select-row`/
+            // `world-select` commands — a curation table picks exactly one row. The six framework verbs
+            // (`interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/`setSelectionMode`/
+            // `setInteractionGranularity`) auto-inject; the pool/curated tables and the grid's world3d
+            // pick surface all carry it.
+            .interaction(InteractionDefinition {
+                id: "rows".into(),
+                label: LocalizedLabel::native("Rows", "Zeilen"),
+                granularities: vec![GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(pool::SOURCING_CURATE_WINDOW_POOL, vec![InteractionRef::new("rows")])
+            .window_kind_interactions(curated::SOURCING_CURATE_WINDOW_CURATED, vec![InteractionRef::new("rows")])
+            .window_kind_interactions(grid::SOURCING_CURATE_WINDOW_GRID, vec![InteractionRef::new("rows")])
             // 🔧️ Curation counts/stock edits are persisted in `CurateSnapshot`, so each arm emits a
             // whole-document `SetArtifact` operation and is declared as a Mutation, never a View.
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
@@ -289,8 +314,6 @@ pub fn create_sourcing_curate_app() -> App {
             .action_with(hidden_view_action("setFilterTypology", LocalizedLabel::native("Set Filter Typology", "Filtertypologie festlegen")))
             .action_with(hidden_view_action("setFilterMinAvailability", LocalizedLabel::native("Set Filter Min Availability", "Mindestverfügbarkeit festlegen")))
             .action_with(hidden_view_action("sortTable", LocalizedLabel::native("Sort Table", "Tabelle sortieren")))
-            .action_with(hidden_view_action("selectRow", LocalizedLabel::native("Select Row", "Zeile auswählen")))
-            .action_with(hidden_view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen")))
             // 📝️ Staged argument form for the panel-visible example switch.
             .action_args(
                 "setActiveExample",
@@ -372,7 +395,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 17, "every SourcingCurateCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 15, "every SourcingCurateCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row — the
@@ -408,8 +431,6 @@ mod tests {
                 "setFilterTypology" => "filter-typology",
                 "setFilterMinAvailability" => "filter-min-availability",
                 "sortTable" => "sort-table",
-                "selectRow" => "select-row",
-                "worldSelect" => "world-select",
                 "setLocale" => "locale",
                 "setContributions" => "contributions",
                 other => panic!("expected_wire_key: unhandled command id {other}"),
@@ -428,7 +449,7 @@ mod tests {
     /// a test-fixture mismatch.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
-        let cases: [(SourcingCurateCommand, &str, &str); 4] = [
+        let cases: [(SourcingCurateCommand, &str, &str); 2] = [
             (
                 SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }),
                 "curate-set-count curate-set-count object-id=beam-glulam-gl24h delta=1",
@@ -439,8 +460,6 @@ mod tests {
                 "curate-set-count curate-set-count object-id=beam-glulam-gl24h value=4",
                 "010401116265616d2d676c756c616d2d676c3234680200060002050000000000001040",
             ),
-            (SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: Some("beam-glulam-gl24h".into()) }), "select-row select-row object-id=beam-glulam-gl24h", "010d01116265616d2d676c756c616d2d676c32346801000600"),
-            (SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: None }), "select-row select-row", "010d0000"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
@@ -466,8 +485,6 @@ mod tests {
             SourcingCurateCommand::SetFilterTypology(set_filter_typology::SetFilterTypology { path: "beams/steel".into() }),
             SourcingCurateCommand::SetFilterMinAvailability(set_filter_min_availability::SetFilterMinAvailability { delta: Some(1.0), value: None }),
             SourcingCurateCommand::SortTable(sort_table::SortTable { column_id: "availability".into(), direction: "desc".into() }),
-            SourcingCurateCommand::SelectRow(select_row::SelectRow { object_id: Some("beam-glulam-gl24h".into()) }),
-            SourcingCurateCommand::WorldSelect(world_select::WorldSelect { ids: vec!["beam-glulam-gl24h".into(), "beam-kvh-c24".into()] }),
             SourcingCurateCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             SourcingCurateCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         ]

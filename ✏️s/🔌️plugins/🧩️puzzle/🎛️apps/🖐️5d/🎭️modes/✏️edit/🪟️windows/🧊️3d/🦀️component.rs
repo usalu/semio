@@ -58,6 +58,7 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
             board2d::utilities::fill::UTILITY_ID.into(),
             utilities::world_relocate::UTILITY_ID.into(),
         ],
+        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::apps::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -82,13 +83,14 @@ pub fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
     json!({ "position": camera.position, "target": camera.target, "zoom": camera.zoom, "fov": 45.0 }).to_string()
 }
 
-fn world_instances_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime) -> String {
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: `selected`/`hovered` per
+/// instance always read `false` now — see `world_selection_json_ex`'s doc comment for why (`render`
+/// has no `InteractionView`).
+fn world_instances_json(document: &Puzzle5dDocument, _runtime: &Puzzle5dRuntime) -> String {
     let instances: Vec<Value> = document
         .parts
         .iter()
         .map(|part| {
-            let selected = runtime.selection.part_ids.contains(&part.id);
-            let hovered = runtime.hovered_part_id.as_deref() == Some(part.id.as_str());
             let mesh_id = resolve_part_mesh_url(part, document.kind_catalogs.as_ref()).map_or_else(|| PUZZLE5D_FALLBACK_MESH_KIND.into(), |url| world3d_mesh_id_from_url(&url));
             json!({
                 "id": part.id,
@@ -97,8 +99,8 @@ fn world_instances_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime) 
                 "rotation": part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
                 "scale": part_scale_json(part),
                 "label": part.part_3d.label.clone().unwrap_or_else(|| part.part_kind.clone()),
-                "selected": selected,
-                "hovered": hovered,
+                "selected": false,
+                "hovered": false,
                 "disabled": part.part_2d.locked.unwrap_or(false),
             })
         })
@@ -150,10 +152,15 @@ fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-/// 🎯️ Base selection JSON augmented with the mesh granularity, transform tool, and gumball fields the world-3d host reads.
+/// 🎯️ Base selection JSON augmented with the mesh granularity, transform tool, and gumball fields the
+/// world-3d host reads. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap:
+/// selection/hover ids used to come from `runtime.selection`/`hovered_part_id`, now dissolved into
+/// the framework-owned `vortex` interaction domain; `render` has no `InteractionView` to read it from
+/// (see `puzzle3d`'s `world_selection_json` doc comment for the identical gap), so this payload
+/// carries no live ids until that framework gap closes.
 fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
     let runtime = &envelope.runtime;
-    let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, runtime.selection.part_ids.as_slice(), runtime.hovered_part_id.as_deref())).unwrap_or_else(|_| json!({}));
+    let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
@@ -161,16 +168,7 @@ fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
         if let Some(transform_mode) = puzzle5d_transform_handle(&envelope.active_utility) {
             object.insert("transformMode".into(), json!(transform_mode));
         }
-        if let Some(active_id) = runtime.selection.part_ids.first() {
-            object.insert("activeObjectId".into(), json!(active_id));
-        }
-        let gumball_active = puzzle5d_gumball_active(runtime, &envelope.active_utility);
-        object.insert("gumballActive".into(), json!(gumball_active));
-        if gumball_active {
-            if let Some(target) = gumball_target_world(envelope) {
-                object.insert("gumballTarget".into(), json!(target));
-            }
-        }
+        object.insert("gumballActive".into(), json!(puzzle5d_gumball_active(runtime, &envelope.active_utility)));
     }
     value.to_string()
 }
@@ -180,7 +178,6 @@ fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> St
         "activeUtility": puzzle5d_scene_mode(active_utility),
         "brushCandidateIndex": runtime.brush_candidate_index,
         "fillCount": runtime.fill_count,
-        "hoveredVortexFullId": runtime.selection.grip_ids.first().map(str::to_string),
     })
     .to_string()
 }

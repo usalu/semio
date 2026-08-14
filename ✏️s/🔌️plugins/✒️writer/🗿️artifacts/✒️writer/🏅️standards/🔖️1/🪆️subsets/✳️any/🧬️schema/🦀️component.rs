@@ -17,7 +17,6 @@ pub struct WriterArtifact {
     #[state(artifact)] pub language_id: String,
     #[state(artifact)] pub uri: String,
     #[state(artifact)] #[child(kind = "s.stdio.semio.document")] pub document: WriterDocumentChild,
-    #[state(presence)] pub selected_ast_ids: Vec<String>,
     #[state(presence)] pub editor_selection: Option<WriterEditorSelection>,
     #[state(presence)] pub editor_settings: WriterEditorSettings,
     #[state(config)] pub format_signal: u32,
@@ -28,8 +27,6 @@ pub struct WriterArtifact {
     #[state(config)] pub camera_y: f64,
     #[state(config)] pub camera_zoom: f64,
     #[state(config)] pub locale: String,
-    #[state(artifact)] pub tree_hovered_ast_id: Option<String>,
-    #[state(artifact)] pub editor_hover_offset: Option<usize>,
 }
 //#endregion 🔖️Artifact
 
@@ -71,7 +68,6 @@ impl WriterArtifact {
             language_id: "plaintext".into(),
             uri: crate::artifacts::writer::default_uri(),
             document: document_child_handle_and_cache("", "", "plaintext"),
-            selected_ast_ids: Vec::new(),
             editor_selection: None,
             editor_settings: WriterEditorSettings::default(),
             format_signal: 0,
@@ -82,8 +78,6 @@ impl WriterArtifact {
             camera_y: 0.0,
             camera_zoom: 1.0,
             locale: "en-US".into(),
-            tree_hovered_ast_id: None,
-            editor_hover_offset: None,
         }
     }
 

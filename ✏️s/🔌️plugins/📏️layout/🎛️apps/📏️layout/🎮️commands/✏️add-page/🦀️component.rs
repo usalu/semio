@@ -52,9 +52,15 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
         frames: Vec::new(),
         overrides: Vec::new(),
     };
+    // 🕹️ Used to also `SetSelection { ids: vec![page_id] }` — pages were never real "elements" domain
+    // targets (canvas hit-testing only ever resolves frame ids), so selecting one meant nothing beyond
+    // coincidentally matching a document-tree page row's id; dropped with the deleted config field
+    // rather than reproduced as a meaningless `interactionSelect` (ticket
+    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `setActivePage` still switches the Blueprint
+    // surface to the new page.
     Ok(Emit {
         artifact_mutations: vec![LayoutMutation::CreatePage(CreatePage { page, index: Some(index) })],
-        config_mutations: vec![LayoutConfigMutation::SetActivePage { page_id: page_id.clone() }, LayoutConfigMutation::SetSelection { ids: vec![page_id] }],
+        config_mutations: vec![LayoutConfigMutation::SetActivePage { page_id: page_id.clone() }],
         ..Default::default()
     })
 }

@@ -938,6 +938,75 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
         self.generation
     }
 }
+
+//#region 🔖️InteractionStore
+/// @emoji 🕹️ Ephemeral LOCAL-ONLY lane for the framework interaction mechanism's hover half — the
+/// `PresenceStore`/`TransientStore` sibling for `InteractionState.hover`.
+///
+/// 🎯️ Only hover lives here. Selection + `active_mode`/`active_granularity` are
+/// **persisted-local** (`InteractionState`'s other three fields) and already flow through the
+/// ordinary `ConfigStore` (`ArtifactStore<Config, ConfigMutation>`) via `ArtifactCommand::
+/// ApplyInLane { lane: HistoryLane::Interaction, .. }` — no new store type needed for that half,
+/// it is the ENTIRE point of the `HistoryLane` mechanism above. Hover must never take that path
+/// (never persisted, never in `Edit`/`Change` history), so it gets this dedicated ephemeral
+/// sibling instead, shaped exactly like `TransientStore` (single local value, no peer roster —
+/// peers' hover arrives over the wire as `PresencePeer.interaction`, not through this store).
+///
+/// `S`/`Mutation` are supplied by the caller (mirrors `PresenceStore<A::Presence,
+/// A::PresenceMutation>` in `VcsArtifactApp`): this crate has no dependency edge to the
+/// `semio-framework` crate that owns `InteractionState`/`DomainHover` (that crate depends on
+/// THIS one, for its `spr`/`dsl`/`pack` types — the reverse edge would cycle), so `S` stays
+/// generic here and gets instantiated with the app's concrete hover-shaped type one layer up,
+/// where that dependency edge actually exists.
+#[derive(Clone, Debug)]
+pub struct InteractionStore<S, Mutation> {
+    hover: S,
+    generation: u64,
+    _mutation: PhantomData<fn() -> Mutation>,
+}
+
+impl<S: Clone + Default, Mutation: self::Mutation<S>> Default for InteractionStore<S, Mutation> {
+    fn default() -> Self {
+        Self::new(S::default())
+    }
+}
+
+impl<S: Clone, Mutation: self::Mutation<S>> InteractionStore<S, Mutation> {
+    /// 🏗️ Starts with this actor's own initial hover state (typically empty).
+    pub fn new(hover: S) -> Self {
+        Self { hover, generation: 0, _mutation: PhantomData }
+    }
+
+    /// 👁️ This actor's own hover — what the presence heartbeat mirrors onto `PresenceDomain.hovered`.
+    pub fn hover(&self) -> &S {
+        &self.hover
+    }
+
+    /// ✍️ Applies hover updates. Like presence/transient, no history and no failure mode — an
+    /// invalid hover target is simply the newest one; the caller's `Mutation` impl is expected to
+    /// route through the framework's `next_hover` pure fn before landing here.
+    pub fn apply(&mut self, mutations: &[Mutation]) {
+        for mutation in mutations {
+            self.hover = mutation.diff(&self.hover).apply(&self.hover);
+        }
+        if !mutations.is_empty() {
+            self.generation = self.generation.wrapping_add(1);
+        }
+    }
+
+    /// 🔄️ Discards hover — a host clears this when a view/window closes (nothing left to hover).
+    pub fn reset(&mut self, hover: S) {
+        self.hover = hover;
+        self.generation = self.generation.wrapping_add(1);
+    }
+
+    /// 🔢️ Bumps on every local hover change; drives the same broadcast-coalescing signal as
+    /// `PresenceStore::generation`.
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+}
+//#endregion 🔖️InteractionStore
 //#endregion 🔖️EphemeralLanes
 //#endregion 🔖️Authority
 
@@ -6044,7 +6113,7 @@ pub mod test_support {
 mod tests {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
     #[dsl(id = "demo.doc", extension = "demo")]
     struct DemoSnapshot {
         n: i32,
@@ -6358,6 +6427,47 @@ impl OpBinary for DemoMutation {
         assert!(reloaded.redo_edit_ids().contains(&doc_id), "the reverted document edit now sits on the redo stack");
     }
     //#endregion 🔖️HistoryLaneTests
+
+    //#region 🔖️InteractionStoreTests
+    /// @emoji 🕹️ `InteractionStore::apply` mutates the local hover value and bumps `generation`,
+    /// mirroring `PresenceStore`/`TransientStore` — the same `Mutation<S>::diff().apply()` seam,
+    /// reused here with the file's existing `DemoSnapshot`/`DemoMutation` fixtures standing in for
+    /// an app's hover-shaped type.
+    #[test]
+    fn interaction_store_apply_updates_hover_and_bumps_generation() {
+        let mut store = InteractionStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 0 });
+        assert_eq!(store.generation(), 0);
+        assert_eq!(store.hover().n, 0);
+
+        store.apply(&[DemoMutation::SetN { n: 7 }]);
+        assert_eq!(store.hover().n, 7, "apply routes through Mutation::diff/Diff::apply like PresenceStore");
+        assert_eq!(store.generation(), 1);
+
+        store.apply(&[]);
+        assert_eq!(store.generation(), 1, "an empty mutation batch must not bump generation, same as PresenceStore/TransientStore");
+    }
+
+    /// @emoji 🔄️ `reset` discards the current hover outright (a host clears hover when a
+    /// view/window closes) and still bumps `generation` so a pending broadcast reflects the clear.
+    #[test]
+    fn interaction_store_reset_discards_hover_and_bumps_generation() {
+        let mut store = InteractionStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 0 });
+        store.apply(&[DemoMutation::SetN { n: 3 }]);
+        assert_eq!(store.generation(), 1);
+
+        store.reset(DemoSnapshot { n: 0 });
+        assert_eq!(store.hover().n, 0);
+        assert_eq!(store.generation(), 2, "reset bumps generation even though the value returns to default");
+    }
+
+    /// @emoji 🏗️ `Default` seeds from `S::default()`, same convention as `PresenceStore`/`TransientStore`.
+    #[test]
+    fn interaction_store_default_seeds_from_hover_default() {
+        let store = InteractionStore::<DemoSnapshot, DemoMutation>::default();
+        assert_eq!(store.hover().n, 0);
+        assert_eq!(store.generation(), 0);
+    }
+    //#endregion 🔖️InteractionStoreTests
 
     #[test]
     fn apply_computes_backwards_from_pre_state() {

@@ -38,7 +38,6 @@ mod tests {
         let json = render(&mut app, GIS2D_PLAY_BODY_INSPECTION);
         assert!(json.contains("\"Map View\""));
         assert!(json.contains("\"Render Mode\""));
-        assert!(json.contains("\"Selected Features\""));
         assert!(json.contains("\"Map Layer\""));
         assert!(!json.contains("Kartenansicht"));
     }
@@ -54,7 +53,6 @@ mod tests {
         let inspector_json = render(&mut app, GIS2D_PLAY_BODY_INSPECTION);
         assert!(inspector_json.contains("Kartenansicht"));
         assert!(inspector_json.contains("Darstellungsmodus"));
-        assert!(inspector_json.contains("Ausgewählte Objekte"));
         assert!(inspector_json.contains("Kartenebene"));
         assert!(!inspector_json.contains("\"Map View\""));
 

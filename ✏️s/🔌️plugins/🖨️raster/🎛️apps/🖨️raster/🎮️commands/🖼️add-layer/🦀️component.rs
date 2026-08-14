@@ -18,13 +18,15 @@ pub struct AddLayer {
     pub kind: String,
 }
 
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the newly-added layer used to also
+/// select itself here — the `"layers"` domain's selection is framework-owned `InteractionState` now,
+/// only ever mutated by the framework's own injected `interactionSelect` handling, never by an app
+/// command's `Emit::config_mutations`.
 pub fn handle(payload: &AddLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     let layer = create_layer_of_kind(&payload.kind);
-    let select_id = layer_node_id(&layer).to_string();
     Ok(Emit {
         artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) })],
-        config_mutations: vec![RasterConfigMutation::SetSelection { ids: vec![select_id] }],
         ..Default::default()
     })
 }

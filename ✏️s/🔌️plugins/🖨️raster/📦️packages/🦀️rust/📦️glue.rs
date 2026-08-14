@@ -529,12 +529,6 @@ pub mod apps {
             pub mod patch_layers;
             #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖼️move-layer/🦀️component.rs"]
             pub mod move_layer;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗂️set-hover/🦀️component.rs"]
-            pub mod set_hover;
-            #[path = "../../🎛️apps/🖨️raster/🎮️commands/🗂️select-all/🦀️component.rs"]
-            pub mod select_all;
             #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-size/🦀️component.rs"]
             pub mod set_brush_size;
             #[path = "../../🎛️apps/🖨️raster/🎮️commands/🖌️set-brush-opacity/🦀️component.rs"]

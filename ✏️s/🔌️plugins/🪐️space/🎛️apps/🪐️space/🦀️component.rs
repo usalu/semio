@@ -23,15 +23,18 @@ use crate::apps::space::commands::{go_home, navigate_virtual_file_system_node, s
 use crate::apps::space::commands::{copy_app_instance, delete_selection, duplicate_app_instance, move_media_node, patch_app_instances, patch_media_nodes, paste_app_instance, remove_app_instance, rename_app_instance, reorganize_workflow, spawn_app};
 use crate::apps::space::commands::{add_parameter, bind_parameter_field, patch_parameter, remove_parameter, unbind_parameter_field};
 use crate::apps::space::commands::presence_heartbeat;
-use crate::apps::space::commands::{node_graph_select, select_instance, set_app_instance_selection, set_media_node_selection};
+use crate::apps::space::commands::node_graph_viewport;
 use crate::apps::space::commands::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
-use crate::apps::space::commands::{node_graph_hover, node_graph_viewport, text_hover};
 use crate::apps::space::config::SpaceConfig;
 use crate::apps::space::presence::{SpacePresence, SpacePresenceMutation};
 use crate::apps::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
 use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowSnapshot, WorkflowEdge, WorkflowMutation, S_WORKFLOW_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, FaultOrigin, HostEffect, Label, LocalizedLabel, UiNode, WindowLayout};
+use semio_framework_plugin::{
+    app::InteractionView, NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView,
+    DomainTopology, Emit, Fault, FaultOrigin, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionTopology, Label, LocalizedLabel, MergeMode, SelectionMethod,
+    SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
+};
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -48,11 +51,23 @@ pub const S_PLAY_PARAMETERS_BODY_KEY: &str = "s.play.parameters";
 pub const S_PLAY_INSPECTOR_BODY_KEY: &str = "s.play.inspector";
 pub const S_PLAY_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 pub const S_STUDIO_EXAMPLES: &[(&str, &str)] = &[("demo", "Demo Studio")];
+/// 🕹️ The `graph` interaction domain id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
+/// one domain over the workflow node graph, shared by both the "instance" and "media-node" granularities.
+pub const S_PLAY_INTERACTION_DOMAIN: &str = "graph";
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
 pub(crate) fn s_play_action(action: &str, args: Option<Value>) -> semio_framework_plugin::ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(S_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
+/// action targeting one `(granularity, id)` pair in the `graph` domain — replaces the deleted
+/// `selectInstance`/`nodeGraphSelect`/`setMediaNodeSelection`/`setAppInstanceSelection` action builders
+/// every measure/document row used to construct by hand.
+pub(crate) fn space_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
+    let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
+    s_play_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": S_PLAY_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
 
 /// @emoji 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire contract
@@ -69,9 +84,11 @@ pub(crate) fn connect_edge_operation(source_node_id: &str, source_port_id: &str,
 }
 
 /// @emoji 🔎️ First selected node — the fallback target for actions that implicitly operate on "the"
-/// current selection (rename/remove/open) when no explicit node id is supplied.
-pub(crate) fn primary_selected_node_id(config: &SpaceConfig) -> Option<String> {
-    config.selected_node_ids.first().cloned().or_else(|| config.active_node_id.clone())
+/// current selection (rename/remove/open) when no explicit node id is supplied. `selected` is the
+/// `graph` domain's live selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no
+/// longer a deleted `SpaceConfig` field.
+pub(crate) fn primary_selected_node_id(selected: &[String], config: &SpaceConfig) -> Option<String> {
+    selected.first().cloned().or_else(|| config.active_node_id.clone())
 }
 
 /// 🔧️ Small pure fold applying a batch of `SpaceConfigMutation`s onto a snapshot — used where a
@@ -100,12 +117,7 @@ const S_PRESENCE_STALE_MS: f64 = 15_000.0;
 
 fn presence_refresh_needed(operations: &[crate::apps::space::config::SpaceConfigMutation]) -> bool {
     use crate::apps::space::config::SpaceConfigMutation;
-    operations.iter().any(|operation| {
-        matches!(
-            operation,
-            SpaceConfigMutation::SetClient { .. } | SpaceConfigMutation::SetSelection { .. } | SpaceConfigMutation::Snapshot { .. }
-        )
-    })
+    operations.iter().any(|operation| matches!(operation, SpaceConfigMutation::SetClient { .. } | SpaceConfigMutation::Snapshot { .. }))
 }
 
 pub(crate) fn config_space_id(config: &SpaceConfig) -> String {
@@ -133,7 +145,7 @@ pub(crate) fn presence_peers_json(_app: &SpaceApp, config: &SpaceConfig) -> Stri
     serde_json::to_string(&peers).unwrap_or_else(|_| "[]".into())
 }
 
-pub(crate) fn publish_presence(_app: &SpaceApp, config: &SpaceConfig) {
+pub(crate) fn publish_presence(_app: &SpaceApp, config: &SpaceConfig, selected_node_ids: &[String]) {
     let (Some(client_id), Some(client_name)) = (&config.client_id, &config.client_name) else {
         return;
     };
@@ -142,7 +154,7 @@ pub(crate) fn publish_presence(_app: &SpaceApp, config: &SpaceConfig) {
     if let Ok(mut registry) = shared_presence_peers().lock() {
         let peers = registry.entry(space_id).or_default();
         peers.retain(|_, entry| now_ms - entry.updated_at_ms <= S_PRESENCE_STALE_MS);
-        peers.insert(client_id.clone(), SPresencePeerLocal { client_id: client_id.clone(), name: client_name.clone(), selection: config.selected_node_ids.clone(), updated_at_ms: now_ms });
+        peers.insert(client_id.clone(), SPresencePeerLocal { client_id: client_id.clone(), name: client_name.clone(), selection: selected_node_ids.to_vec(), updated_at_ms: now_ms });
     }
 }
 
@@ -165,14 +177,7 @@ fn space_workflow_context_menu_items(
         // reorganize is a rarer layout action so it moves into its own taxonomy group.
         menu = menu
             .item(ContextMenuItemSpec { id: "paste-instance".into(), label: Some(labels.context_paste.into()), icon: Some("clipboard".into()), action: Some("pasteAppInstance".into()), ..Default::default() })
-            .item(ContextMenuItemSpec {
-                id: "select-all".into(),
-                label: Some(labels.context_select_all.into()),
-                icon: Some("maximize-2".into()),
-                action: Some("setMediaNodeSelection".into()),
-                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "selectAll": true }))),
-                ..Default::default()
-            })
+            .item(ContextMenuItemSpec { id: "select-all".into(), label: Some(labels.context_select_all.into()), icon: Some("maximize-2".into()), action: Some(SELECT_ALL_ACTION_ID.into()), ..Default::default() })
             .group("transform", |m| m.item(ContextMenuItemSpec { id: "reorganize".into(), label: Some(labels.context_reorganize.into()), icon: Some("layout-grid".into()), action: Some("reorganizeWorkflow".into()), ..Default::default() }));
     }
     if hit_node.is_some() || !nodes.is_empty() {
@@ -187,7 +192,7 @@ fn space_workflow_context_menu_items(
             .group("settings", |m| m.item(ContextMenuItemSpec { id: "rename-instance".into(), label: Some(labels.context_rename_label.into()), icon: Some("edit-3".into()), action: Some("renameAppInstance".into()), ..Default::default() }));
         if !nodes.is_empty() {
             menu = menu.group("selection", |m| {
-                m.item(ContextMenuItemSpec { id: "clear-selection".into(), label: Some(labels.context_clear_selection.into()), icon: Some("square-dashed".into()), action: Some("setMediaNodeSelection".into()), args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "nodeIds": [] }))), ..Default::default() })
+                m.item(ContextMenuItemSpec { id: "clear-selection".into(), label: Some(labels.context_clear_selection.into()), icon: Some("square-dashed".into()), action: Some(CLEAR_SELECTION_ACTION_ID.into()), ..Default::default() })
             });
         }
         let phrase = selection_count_phrase(is_de, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })]);
@@ -230,12 +235,6 @@ app_commands! {
 
         // 👁️ Config-only — emit `config_mutations`, never document operations.
         "setActivePanelTab" as "active-panel-tab" => set_active_panel_tab::SetActivePanelTab,
-        "selectInstance" as "select-instance" => select_instance::SelectInstance,
-        "nodeGraphSelect" as "node-graph-select" => node_graph_select::NodeGraphSelect,
-        "setMediaNodeSelection" as "set-media-node-selection" => set_media_node_selection::SetMediaNodeSelection,
-        "setAppInstanceSelection" as "set-app-instance-selection" => set_app_instance_selection::SetAppInstanceSelection,
-        "nodeGraphHover" as "node-graph-hover" => node_graph_hover::NodeGraphHover,
-        "textHover" as "text-hover" => text_hover::TextHover,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "presenceHeartbeat" as "presence-heartbeat" => presence_heartbeat::PresenceHeartbeat,
         "workflowEngagementInput" as "workflow-engagement-input" => workflow_engagement_input::WorkflowEngagementInput,
@@ -301,7 +300,6 @@ impl ArtifactApp for SpaceApp {
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<SpaceCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(|raw| raw.as_f64().or_else(|| raw.as_i64().map(|n| n as f64)).or_else(|| raw.as_u64().map(|n| n as f64)));
-        let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
         let string_vec = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_array).map(|items| items.iter().filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>()).unwrap_or_default();
         let json_field = |key: &str| args.and_then(|value| value.get(key)).map(|raw| if let Some(text) = raw.as_str() { text.to_string() } else { raw.to_string() });
         let node_id = || str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("instanceId")).or_else(|| str_field("instance_id"));
@@ -361,18 +359,6 @@ impl ArtifactApp for SpaceApp {
             "compiledDagEngagementSubmit" => Ok(SpaceCommand::CompiledDagEngagementSubmit(compiled_dag_engagement_submit::CompiledDagEngagementSubmit {})),
             "nodeGraphEdit" => Ok(SpaceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: json_field("operations").or_else(|| json_field("operationsJson")).unwrap_or_else(|| "[]".into()) })),
             "setActivePanelTab" => Ok(SpaceCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default() })),
-            "selectInstance" => Ok(SpaceCommand::SelectInstance(select_instance::SelectInstance { node_id: node_id() })),
-            "nodeGraphSelect" => Ok(SpaceCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: string_vec("nodeIds"), select_all: bool_field("selectAll").unwrap_or(false) })),
-            "setMediaNodeSelection" => {
-                let ids = string_vec("nodeIds");
-                Ok(SpaceCommand::SetMediaNodeSelection(set_media_node_selection::SetMediaNodeSelection { node_ids: if ids.is_empty() { string_vec("ids") } else { ids }, select_all: bool_field("selectAll").unwrap_or(false) }))
-            }
-            "setAppInstanceSelection" => {
-                let ids = string_vec("nodeIds");
-                Ok(SpaceCommand::SetAppInstanceSelection(set_app_instance_selection::SetAppInstanceSelection { node_ids: if ids.is_empty() { string_vec("ids") } else { ids } }))
-            }
-            "nodeGraphHover" => Ok(SpaceCommand::NodeGraphHover(node_graph_hover::NodeGraphHover { hover_json: json_field("hover").or_else(|| json_field("hoverJson")) })),
-            "textHover" => Ok(SpaceCommand::TextHover(text_hover::TextHover { hover_json: json_field("hover").or_else(|| json_field("hoverJson")) })),
             "nodeGraphViewport" => Ok(SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: json_field("viewport").or_else(|| json_field("viewportJson")).unwrap_or_else(|| "{}".into()) })),
             "presenceHeartbeat" => Ok(SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat { client_id: str_field("clientId").or_else(|| str_field("client_id")).unwrap_or_default(), name: str_field("name").unwrap_or_default() })),
             "workflowEngagementInput" => Ok(SpaceCommand::WorkflowEngagementInput(workflow_engagement_input::WorkflowEngagementInput { value: str_field("value").unwrap_or_default() })),
@@ -397,13 +383,44 @@ impl ArtifactApp for SpaceApp {
         }
     }
 
-    fn handle(command: &SpaceCommand, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
-        let emit = command.dispatch(doc, cfg)?;
+    /// 🕹️ `deleteSelection`/`nodeGraphEdit`/`reorganizeWorkflow`/`copyAppInstance`/
+    /// `duplicateAppInstance`/`removeAppInstance`/`renameAppInstance`/`openInstance` read the `graph`
+    /// interaction domain directly (bypassing the `app_commands!`-generated `dispatch`, whose per-row
+    /// `$module::handle(payload, doc, cfg)` signature is framework-fixed and has no `interaction`
+    /// slot) — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+    fn handle(command: &SpaceCommand, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
+        let emit = match command {
+            SpaceCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
+            SpaceCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
+            SpaceCommand::ReorganizeWorkflow(payload) => reorganize_workflow::apply(payload, doc, cfg, interaction),
+            SpaceCommand::CopyAppInstance(payload) => copy_app_instance::apply(payload, doc, cfg, interaction),
+            SpaceCommand::DuplicateAppInstance(payload) => duplicate_app_instance::apply(payload, doc, cfg, interaction),
+            SpaceCommand::RemoveAppInstance(payload) => remove_app_instance::apply(payload, doc, cfg, interaction),
+            SpaceCommand::RenameAppInstance(payload) => rename_app_instance::apply(payload, doc, cfg, interaction),
+            SpaceCommand::OpenInstance(payload) => open_instance::apply(payload, doc, cfg, interaction),
+            _ => command.dispatch(doc, cfg),
+        }?;
         if presence_refresh_needed(&emit.config_mutations) {
             let next_config = apply_config_mutations(cfg.snapshot, &emit.config_mutations);
-            publish_presence(&SpaceApp::default(), &next_config);
+            publish_presence(&SpaceApp::default(), &next_config, &interaction.selection(S_PLAY_INTERACTION_DOMAIN).ids);
         }
         Ok(emit)
+    }
+
+    /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every workflow node is registered at both the
+    /// "instance" and "media-node" granularities (a node IS the app instance now, see the kernel
+    /// `🔁️workflow` crate's `🔖️InstanceIdentity` doc) so `selectAll`/range-selection behave correctly
+    /// under either granularity; no real parent/child structure exists in the node graph, so every
+    /// node is a root.
+    fn interaction_topology(doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> InteractionTopology {
+        let mut ordered = Vec::new();
+        for node in &doc.snapshot.graph.nodes {
+            ordered.push(TopologyNode { id: node.id.clone(), granularity: "instance".into(), parent: None });
+            ordered.push(TopologyNode { id: node.id.clone(), granularity: "media-node".into(), parent: None });
+        }
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(S_PLAY_INTERACTION_DOMAIN.to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
@@ -419,7 +436,11 @@ impl ArtifactApp for SpaceApp {
             crate::apps::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::apps::space::modes::main::windows::compiled_dag::render(projection),
             S_PLAY_CATALOGUE_BODY_KEY => crate::apps::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)),
             S_PLAY_PARAMETERS_BODY_KEY => crate::apps::space::panels::parameters::render(projection, labels),
-            S_PLAY_INSPECTOR_BODY_KEY => crate::apps::space::panels::inspection::render(projection, config, labels),
+            // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
+            // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
+            // inspector degrades to its "no selection" default until a future wave threads interaction
+            // into render. Flagged as a discovered framework gap, not worked around here.
+            S_PLAY_INSPECTOR_BODY_KEY => crate::apps::space::panels::inspection::render(projection, &[], labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -428,10 +449,13 @@ impl ArtifactApp for SpaceApp {
         HashMap::from([(crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), crate::apps::space::modes::main::windows::workflow::window_measures(cfg.snapshot, &doc.snapshot.graph.nodes))])
     }
 
+    /// 🕹️ `context_menu` carries no `InteractionView` (same gap as `render` — see ticket 26/08/14's
+    /// w3b-summary.md), so the selection-dependent rows below always take the "nothing selected"
+    /// branch rather than reading a stale/wrong selection.
     fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.snapshot.locale);
         let is_de = cfg.snapshot.locale.starts_with("de");
-        space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &cfg.snapshot.selected_node_ids)
+        space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &[])
     }
 }
 //#endregion 🔖️SpaceApp
@@ -484,15 +508,12 @@ pub fn create_space_app() -> App {
         .mutation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen"))
         .mutation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten"))
+        // 🕹️ Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
+        // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
+        // `selectAll`/`setSelectionMode`/`setInteractionGranularity`) auto-inject.
         .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
-        .view_action("selectInstance", LocalizedLabel::native("Select Instance", "Instanz auswählen"))
-        .view_action("nodeGraphSelect", LocalizedLabel::native("Select Graph Node", "Graphknoten auswählen"))
-        .action_with(ActionDefinition::new_catalog("setMediaNodeSelection", LocalizedLabel::native("Set Media Node Selection", "Medienknoten-Auswahl festlegen"), ActionKind::View).with_category("selection"))
-        .view_action("nodeGraphHover", LocalizedLabel::native("Hover Graph Node", "Graphknoten hovern"))
-        .view_action("textHover", LocalizedLabel::native("Text Hover", "Text-Hover"))
         .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Anwesenheits-Heartbeat"))
-        .view_action("setAppInstanceSelection", LocalizedLabel::native("Set App Instance Selection", "App-Instanz-Auswahl festlegen"))
         .view_action("workflowEngagementInput", LocalizedLabel::native("Workflow Engagement Input", "Workflow-Eingabe"))
         .view_action("compiledDagEngagementInput", LocalizedLabel::native("Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"))
         .shell_action("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
@@ -530,8 +551,7 @@ pub fn create_space_app() -> App {
             "duplicateAppInstance".into(), "pasteAppInstance".into(), "renameAppInstance".into(),
             "patchMediaNodes".into(), "patchAppInstances".into(), "bindParameterField".into(),
             "unbindParameterField".into(), "reorganizeWorkflow".into(), "workflowEngagementSubmit".into(),
-            "workflowEngagementInput".into(), "nodeGraphEdit".into(), "selectInstance".into(),
-            "setMediaNodeSelection".into(), "setAppInstanceSelection".into(), "exportMedia".into(),
+            "workflowEngagementInput".into(), "nodeGraphEdit".into(), "exportMedia".into(),
             "importMedia".into(), "importMediaPayload".into(),
         ])
         .window_kind_actions(media_vfs::S_PLAY_WINDOW_MEDIA_VFS, vec![
@@ -540,6 +560,30 @@ pub fn create_space_app() -> App {
         .window_kind_actions(compiled_dag::S_PLAY_WINDOW_COMPILED_DAG, vec![
             "compiledDagEngagementSubmit".into(), "compiledDagEngagementInput".into(),
         ])
+        // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+        // one domain over the workflow node graph, "instance"/"media-node" granularities (a node IS
+        // the app instance now — see the kernel `🔁️workflow` crate's `🔖️InstanceIdentity` doc),
+        // `HierarchyProvider::Topology` (see `SpaceApp::interaction_topology` above) — the node graph
+        // itself is flat (no parent/child structure), so the topology exists purely so a deleted
+        // node's id auto-prunes out of `graph`'s selection.
+        .interaction(InteractionDefinition {
+            id: S_PLAY_INTERACTION_DOMAIN.into(),
+            label: LocalizedLabel::native("Graph", "Graph"),
+            granularities: vec![
+                GranularityDefinition { id: "instance".into(), label: LocalizedLabel::native("Instance", "Instanz"), icon_id: "box".into() },
+                GranularityDefinition { id: "media-node".into(), label: LocalizedLabel::native("Media Node", "Medienknoten"), icon_id: "circle".into() },
+            ],
+            hierarchy: HierarchyProvider::Topology,
+            hover: HoverSpec::default(),
+            selection: SelectionSpec {
+                modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                methods: vec![SelectionMethod::Pick],
+                merges: vec![MergeMode::Replace],
+                transitive: false,
+                broadcast: true,
+            },
+        })
+        .window_kind_interactions(workflow::S_PLAY_WINDOW_WORKFLOW, vec![InteractionRef::new(S_PLAY_INTERACTION_DOMAIN)])
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
         .keybinding("mod+s", "commitCheckpoint");
@@ -565,33 +609,48 @@ pub(crate) mod testkit {
     use super::*;
     use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
     use semio_framework_os::{apply_workflow_operation, register_app_io, ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity};
-    use semio_framework_plugin::{App, AppIo, DraftView, HistoryView, LocalizedLabel, SurfaceKind};
-    use store::EngineHandles;
+    use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel, SurfaceKind};
 
     pub(crate) fn empty_history() -> HistoryView {
         HistoryView::empty()
     }
 
-    use std::cell::RefCell;
+    pub type SpaceVcsApp = semio_framework_plugin::VcsArtifactApp<SpaceApp>;
 
-    thread_local! {
-        static STUDIO_TEST_APP: RefCell<SpaceApp> = RefCell::new(SpaceApp::default());
+    /// 🕹️ A fresh, real `VcsArtifactApp<SpaceApp>` — the only way a downstream crate can obtain a
+    /// genuine `InteractionView` (its fields are framework-crate-private; ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so any test exercising the `graph`
+    /// domain's real selection/hover state must go through this, not `studio_emit`.
+    pub(crate) fn app() -> SpaceVcsApp {
+        semio_framework_plugin::testkit::new_app::<SpaceApp>()
     }
 
+    /// 🕹️ Registry-backed counterpart of `app()` — carries the manifest's real `AppActionRegistry`
+    /// (including the declared `graph` interaction domain), needed by any test that dispatches a
+    /// framework interaction verb (`interactionSelect`/`interactionHover`/…) via `handle_action`, which
+    /// faults with "undeclared interaction domain" against the bare, registry-less `app()`.
+    pub(crate) fn app_with_registry() -> SpaceVcsApp {
+        semio_framework_plugin::testkit::new_app_with_registry::<SpaceApp>(create_space_app)
+    }
+
+    pub(crate) fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
+        app.dispatch_typed(command, &semio_framework_plugin::testkit::meta("local")).expect("dispatch")
+    }
+
+    /// 🕹️ Routes through `SpaceCommand::dispatch` (the `app_commands!`-generated, framework-fixed
+    /// 3-arg path — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), NOT
+    /// `SpaceApp::handle` (which now needs a real `InteractionView`, only obtainable through a full
+    /// `VcsArtifactApp` dispatch — see `testkit::app`/`dispatch` below for that path). The 7 commands
+    /// that read live selection (`deleteSelection`/`nodeGraphEdit`/`reorganizeWorkflow`/
+    /// `copyAppInstance`/`duplicateAppInstance`/`removeAppInstance`/`renameAppInstance`) fall back to
+    /// treating the selection as empty here — exactly the same degradation `SpaceApp::render`'s own
+    /// selection-dependent branches already carry — so this helper stays usable for every OTHER
+    /// command's non-selection-dependent behavior unchanged.
     pub(crate) fn studio_emit(projection: &WorkflowSnapshot, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, crate::apps::space::config::SpaceConfigMutation>, Fault> {
-        STUDIO_TEST_APP.with(|app| {
-            let _app = app.borrow();
-            let history = empty_history();
-            let doc = ArtifactView::new(projection, &history);
-            let cfg = ConfigView { snapshot: config };
-            let draft = DraftView { snapshot: &NoDraft::default() };
-            let engines = EngineHandles::empty();
-            SpaceApp::handle(command, &doc, &cfg, &draft, &engines)
-        })
-    }
-
-    pub(crate) fn studio_presence_peers_json(config: &SpaceConfig) -> String {
-        STUDIO_TEST_APP.with(|app| crate::apps::space::presence_peers_json(&app.borrow(), config))
+        let history = empty_history();
+        let doc = ArtifactView::new(projection, &history);
+        let cfg = ConfigView { snapshot: config };
+        command.dispatch(&doc, &cfg)
     }
 
     /// 📽️ Folds studio document operations onto a projection the way the store would (minus history).

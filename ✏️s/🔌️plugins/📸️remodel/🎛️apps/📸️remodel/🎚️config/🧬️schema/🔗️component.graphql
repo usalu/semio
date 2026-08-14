@@ -4,11 +4,6 @@ type RemodelWorldCamera {
   fov: Float! @state(class: CONFIG)
 }
 
-type RemodelSelection {
-  mode: String! @state(class: CONFIG)
-  ids: [String!]! @state(class: CONFIG)
-}
-
 type RemodelLayerVisibility {
   mesh: Boolean! @state(class: CONFIG)
   dense: Boolean! @state(class: CONFIG)
@@ -24,7 +19,6 @@ type RemodelFrameCursor {
 
 type RemodelConfig {
   camera: RemodelWorldCamera! @state(class: CONFIG)
-  selection: RemodelSelection! @state(class: CONFIG)
   layers: RemodelLayerVisibility! @state(class: CONFIG)
   frameCursor: RemodelFrameCursor! @state(class: CONFIG)
   reportTable: String! @state(class: CONFIG)

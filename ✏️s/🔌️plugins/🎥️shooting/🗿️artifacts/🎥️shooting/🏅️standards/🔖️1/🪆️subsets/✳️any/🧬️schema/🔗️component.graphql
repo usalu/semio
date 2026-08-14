@@ -9,18 +9,15 @@ type ShootingArtifact {
   activeShotId: String! @state(class: ARTIFACT)
   activeAssetId: String! @state(class: ARTIFACT)
   selectedShotIds: [String!]! @state(class: PRESENCE)
-  selectedAssetIds: [String!]! @state(class: PRESENCE)
   activeUtilityId: String! @state(class: PRESENCE)
   defaultShotFormat: String! @state(class: CONFIG)
   defaultShotShape: String! @state(class: CONFIG)
   defaultAssetFormat: String! @state(class: CONFIG)
-  selectionMethod: String! @state(class: CONFIG)
   centerModel: Boolean! @state(class: CONFIG)
   fitRevision: Int! @state(class: CONFIG)
   cameraDraftLabel: String! @state(class: CONFIG)
   camera: ShootingCamera! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
-  hoveredAssetId: String @state(class: ARTIFACT)
 }
 
 type ShootingCamera {

@@ -31,7 +31,7 @@ fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutConfig, sx: f64, sy: f64, wi
     let page = active_page(doc, config)?;
     let (wx, wy) = screen_to_world_for_surface(config, blueprint, sx, sy, width, height);
     let mut engine = LayoutEngine::new();
-    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
+    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &[], None, blueprint);
     list.hit_test(wx as f32, wy as f32)
 }
 //#endregion 🔖️Shared

@@ -13,10 +13,11 @@ use crate::apps::raster::terminology::raster_play_labels;
 use crate::artifacts::raster::schema::semio_example_json;
 use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    App, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    OsMediaCapability, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    App, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
+    Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -85,13 +86,20 @@ fn assets_json_from_document(document: &RasterSnapshot) -> String {
 /// 🎞️ Builds the shared `Paint2dScene` payload for both the composite and navigator windows. Takes
 /// `&RasterConfig` (an app-only view-state type), so per TEMPLATE.md §4's `DocumentHelpers` placement
 /// rule this stays at app level even though it has two window consumers.
+///
+/// 🕹️ `selection_json`/`hovered_id` used to read `RasterConfig.selected_ids`/`.hovered_id` (deleted,
+/// ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); the `"layers"` domain's selection/
+/// hover is framework-owned `InteractionState` now, and `ArtifactApp::render` is not threaded an
+/// `InteractionView` this wave (known SDK gap — see the ticket's `w3c-summary.md`) — left at neutral
+/// defaults here. The real sync happens below `render`, at the paint surface/host layer
+/// (`RasterHost::sync_interaction`, `🧰️framework/🔨️modules/🗺️surface/🎨️paint`), already migrated.
 pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_utility: &str, view_mode: &str) -> semio_framework_plugin::Paint2dScene {
     semio_framework_plugin::Paint2dScene {
         document_sync_json: document_sync_json(document),
         assets_json: assets_json_from_document(document),
         camera_json: serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
-        selection_json: serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into()),
-        hovered_id: runtime.hovered_id.clone(),
+        selection_json: "[]".into(),
+        hovered_id: None,
         active_utility: active_utility.into(),
         brush_size: runtime.brush_size,
         brush_opacity: runtime.brush_opacity,
@@ -126,9 +134,6 @@ semio_framework_plugin::app_commands! {
         "patchLayer" as "patch-layer" => patch_layer::PatchLayer,
         "patchLayers" as "patch-layers" => patch_layers::PatchLayers,
         "moveLayer" as "move-layer" => move_layer::MoveLayer,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "setHover" as "set-hover" => set_hover::SetHover,
-        "selectAll" as "select-all" => select_all::SelectAll,
         "setBrushSize" as "brush-size" => set_brush_size::SetBrushSize,
         "setBrushOpacity" as "brush-opacity" => set_brush_opacity::SetBrushOpacity,
         "setCompositeViewport" as "composite-viewport" => set_composite_viewport::SetCompositeViewport,
@@ -145,7 +150,6 @@ use crate::apps::raster::commands::{set_brush_opacity, set_brush_size};
 use crate::apps::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
 use crate::apps::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::apps::raster::commands::set_locale;
-use crate::apps::raster::commands::{select_all, set_hover, set_selection};
 use crate::apps::raster::commands::set_active_utility;
 //#endregion 🔖️Commands
 
@@ -223,7 +227,7 @@ impl ArtifactApp for RasterPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &RasterCommand, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &RasterCommand, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -377,10 +381,27 @@ pub fn create_raster_app() -> App {
             .action_with(raster_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Mutation))
             .action_with(raster_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation))
             .action_with(raster_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Mutation))
-            // 👁️ Ephemeral view state — selection, hover, live brush controls, navigator viewport, camera.
-            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
-            .action_with(raster_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
-            .action_with(raster_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            // 🕹️ The framework-owned "layers" interaction domain (ticket
+            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — the layer tree's selection;
+            // auto-injects interactionSelect/interactionHover/clearSelection/selectAll/
+            // setSelectionMode/setInteractionGranularity, replacing the deleted bespoke
+            // setSelection/setHover/selectAll actions below.
+            .interaction(InteractionDefinition {
+                id: "layers".into(),
+                label: LocalizedLabel::native("Layers", "Ebenen"),
+                granularities: vec![GranularityDefinition { id: "layer".into(), label: LocalizedLabel::native("Layer", "Ebene"), icon_id: "image".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(composite::RASTER_PLAY_WINDOW_COMPOSITE, vec![InteractionRef::new("layers")])
+            // 👁️ Ephemeral view state — live brush controls, navigator viewport, camera.
             .action_with(raster_internal_action("setBrushSize", LocalizedLabel::native("Set Brush Size", "Pinselgröße festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setBrushOpacity", LocalizedLabel::native("Set Brush Opacity", "Pinseldeckkraft festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setCompositeViewport", LocalizedLabel::native("Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"), ActionKind::View))
@@ -584,16 +605,15 @@ mod tests {
         assert!(params.contains_key("contrast"), "fixture contrast must roundtrip");
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: layer hover/selection dispatch
+    /// through the framework-injected `interactionHover`/`interactionSelect` verbs against the
+    /// `"layers"` domain now (`semio-framework-plugin`'s own suite covers that generic machinery);
+    /// this app's contribution is declaring the domain and binding the tree to it.
     #[test]
-    fn set_hover_highlights_layer_row_via_runtime() {
+    fn document_tree_binds_the_layers_interaction_domain() {
         let mut app = semio_app();
-        let layer_id = crate::artifacts::raster::schema::layer_node_id(&app.snapshot().expect("snapshot").layers[0]).to_string();
-        let row_id = layer_row_id(crate::artifacts::raster::schema::find_layer(&app.snapshot().expect("snapshot").layers, &layer_id).expect("layer"));
-        let result = app.dispatch_typed(RasterCommand::SetHover(set_hover::SetHover { id: Some(layer_id) }), &testkit::meta("local")).expect("hover");
-        assert!(result.mutations.is_empty(), "hover is a view action and emits no operations");
         let json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
-        assert!(json.contains(&format!("\"id\":\"{row_id}\"")), "hovered layer row must be present");
-        assert!(json.contains("\"state\":\"previewed\""), "hover stamps UiState::Previewed onto the layer row");
+        assert!(json.contains("\"interactionDomain\":\"layers\""), "layer tree must bind the framework-owned layers domain: {json}");
     }
 
     #[test]
@@ -787,9 +807,6 @@ mod tests {
             RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: "l1".into(), field: "opacity".into(), value: "0.4".into() }),
             RasterCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec!["a".into(), "b".into()], field: "name".into(), value: "Renamed".into() }),
             RasterCommand::MoveLayer(move_layer::MoveLayer { layer_id: "l1".into(), target_row_id: "raster-play-layers".into(), drop_position: "after".into() }),
-            RasterCommand::SetSelection(set_selection::SetSelection { ids: vec!["a".into()] }),
-            RasterCommand::SetHover(set_hover::SetHover { id: Some("a".into()) }),
-            RasterCommand::SelectAll(select_all::SelectAll {}),
             RasterCommand::SetBrushSize(set_brush_size::SetBrushSize { value: 40.0 }),
             RasterCommand::SetBrushOpacity(set_brush_opacity::SetBrushOpacity { value: 0.5 }),
             RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }),
@@ -813,7 +830,7 @@ mod tests {
     #[test]
     fn command_wire_keywords_are_unique_across_every_row() {
         let commands = every_command();
-        assert_eq!(commands.len(), 19, "every RasterCommand row must be covered by every_command()");
+        assert_eq!(commands.len(), 16, "every RasterCommand row must be covered by every_command()");
         let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();
@@ -838,9 +855,6 @@ mod tests {
                     RasterCommand::PatchLayer(_) => "patch-layer",
                     RasterCommand::PatchLayers(_) => "patch-layers",
                     RasterCommand::MoveLayer(_) => "move-layer",
-                    RasterCommand::SetSelection(_) => "set-selection",
-                    RasterCommand::SetHover(_) => "set-hover",
-                    RasterCommand::SelectAll(_) => "select-all",
                     RasterCommand::SetBrushSize(_) => "brush-size",
                     RasterCommand::SetBrushOpacity(_) => "brush-opacity",
                     RasterCommand::SetCompositeViewport(_) => "composite-viewport",
@@ -862,15 +876,17 @@ mod tests {
     /// bytes so an ACCIDENTAL row reorder is caught. Baseline rebased once, deliberately, by the
     /// `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL` ticket: dropping the two leading `setSnapshot`/
     /// `setActiveExample` rows (whole-document replace is no longer expressible as a mutation)
-    /// shifted every later row's binary ordinal down by two — `set-layer-visible` 4→2 (`0104`→`0102`),
-    /// `set-hover` 12→10 (`010c`→`010a`). Only the leading ordinal byte moved; each row's payload
-    /// encoding is byte-identical to the pre-migration capture. Greenfield repo, no persisted wire
-    /// data to migrate. Any FURTHER drift here is a real format break, not a fixture mismatch.
+    /// shifted every later row's binary ordinal down by two — `set-layer-visible` 4→2 (`0104`→`0102`).
+    /// Rebased again by `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`: the `set-selection`/
+    /// `set-hover`/`select-all` rows (the only other `Option`-carrying case, `set-hover`) are deleted
+    /// outright — layer selection/hover is the framework-owned `"layers"` interaction domain now.
+    /// `set-layer-visible`'s ordinal is unaffected (it sits before the deleted rows). Greenfield repo,
+    /// no persisted wire data to migrate. Any FURTHER drift here is a real format break, not a
+    /// fixture mismatch.
     #[test]
     fn optional_field_rows_keep_their_declared_wire_bytes() {
-        let cases: [(RasterCommand, &str, &str); 2] = [
+        let cases: [(RasterCommand, &str, &str); 1] = [
             (RasterCommand::SetLayerVisible(set_layer_visible::SetLayerVisible { layer_id: "l1".into(), visible: None }), "set-layer-visible set-layer-visible layer-id=l1", "010201026c3101000600"),
-            (RasterCommand::SetHover(set_hover::SetHover { id: None }), "set-hover set-hover", "010a0000"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text, "printed text drifted for {command:?}");

@@ -4,6 +4,11 @@ export * from "../../🔨️modules/🧬️schema/🟦️component.ts";
 export * from "../../🔨️modules/🖥️platform/🟦️component.ts";
 export * from "../../🔨️modules/🔺️mesh/🟦️component.ts";
 export * from "../../🔨️modules/🛂️manifest/🟦️component.ts";
+// 🕹️wave-2b: named (not `export *`) — the 🕹️interaction module's own `InteractionDefinition`/`MergeMode`/…
+// family is already re-exported above via `🛂️manifest` (ts-rs-generated mirror of the same Rust types),
+// so a second blanket export of the module root would collide; only its presence-broadcast leaf types,
+// which nothing else exports yet, are pulled in here for `@semio-tech/framework` consumers like the OS Shell.
+export type { PresenceDomain, PresenceInteraction } from "../../🔨️modules/🕹️interaction/🧬️schema/🟦️component.ts";
 export * from "../../🔨️modules/🎠️kernel/🟦️component.ts";
 export * from "../../🔨️modules/🔄️machine/🟦️component.ts";
 

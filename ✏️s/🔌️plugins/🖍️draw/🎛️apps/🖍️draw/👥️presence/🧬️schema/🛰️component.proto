@@ -2,14 +2,10 @@ syntax = "proto3";
 package semio.app.draw.draw;
 message DrawPresence {
   // @state presence
-  repeated string selected_ids = 1;
+  string engagement_input = 1;
   // @state presence
-  optional string hovered_id = 2;
+  DrawCamera camera = 2;
   // @state presence
-  string engagement_input = 3;
-  // @state presence
-  DrawCamera camera = 4;
-  // @state presence
-  string active_utility_id = 5;
+  string active_utility_id = 3;
 }
 message DrawCamera { double x = 1; double y = 2; double zoom = 3; }

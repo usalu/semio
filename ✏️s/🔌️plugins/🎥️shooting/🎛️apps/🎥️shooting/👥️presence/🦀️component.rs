@@ -12,9 +12,11 @@ use store::ArtifactPack;
 #[dsl(extension = "shooting.presence")]
 #[dsl(layout = "lines")]
 pub struct ShootingPresence {
+    /// 👥️ Genuinely app-specific — asset selection/hover broadcast automatically now via the
+    /// framework's typed `PresencePeer.interaction` (`"assets"` domain, ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); mirrors [`crate::apps::shooting::config::ShootingConfig::selected_shot_ids`]'s
+    /// doc comment on why shot selection stays here instead.
     pub selected_shot_ids: Vec<String>,
-    pub selected_asset_ids: Vec<String>,
-    pub hovered_asset_id: Option<String>,
     #[dsl(block)]
     pub camera: ShootingCamera,
     pub active_utility_id: String,
@@ -22,13 +24,7 @@ pub struct ShootingPresence {
 
 impl Default for ShootingPresence {
     fn default() -> Self {
-        Self {
-            selected_shot_ids: Vec::new(),
-            selected_asset_ids: Vec::new(),
-            hovered_asset_id: None,
-            camera: ShootingCamera::default(),
-            active_utility_id: "move".into(),
-        }
+        Self { selected_shot_ids: Vec::new(), camera: ShootingCamera::default(), active_utility_id: "move".into() }
     }
 }
 

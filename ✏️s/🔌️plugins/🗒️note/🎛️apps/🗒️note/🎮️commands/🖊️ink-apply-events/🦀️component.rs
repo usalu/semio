@@ -141,13 +141,15 @@ pub struct InkApplyEvents {
     pub select_ids: Option<Vec<String>>,
 }
 
-pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `payload.select_ids` used to become
+// the new selection after a gesture (e.g. a freshly-drawn stroke) — selection is framework-owned
+// `InteractionState` now, only ever mutated by the framework's own injected `interactionSelect`
+// handling, never by an app command's `Emit`; the field stays on the wire (the ink-canvas host still
+// sends it) but is no longer acted on.
+pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let document = doc.snapshot;
     let events: Vec<NoteCanvasEvent> = serde_json::from_str(&payload.events_json).unwrap_or_default();
     let mut config_mutations = Vec::new();
-    if let Some(ids) = &payload.select_ids {
-        config_mutations.push(NoteConfigMutation::SetSelection { block_ids: ids.clone() });
-    }
     // 📷️ Camera rides in the same batch as content edits but never becomes a document operation —
     // diffs into a config operation instead.
     for event in &events {

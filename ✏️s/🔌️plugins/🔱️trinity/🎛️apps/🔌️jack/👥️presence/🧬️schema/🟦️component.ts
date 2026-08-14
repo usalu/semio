@@ -1,8 +1,6 @@
 /** 🧬️ JackPresence */
 export interface JackPresence {
   /** @state presence */
-  selectedNodeIds: string[];
-  /** @state presence */
   activeFixtureId: string;
   /** @state presence */
   jackQuery: string;

@@ -1,10 +1,7 @@
 syntax = "proto3";
 package semio.app.note.note;
 message NoteConfig {
-  // @state config
-  repeated string selected_block_ids = 1;
-  // @state config
-  optional string hovered_block_id = 2;
+  reserved 1, 2;
   // @state config
   string engagement_input = 3;
   // @state config

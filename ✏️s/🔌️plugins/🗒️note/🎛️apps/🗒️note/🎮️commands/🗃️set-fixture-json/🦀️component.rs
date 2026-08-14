@@ -14,7 +14,7 @@ pub struct SetFixtureJson {
     pub json: String,
 }
 
-pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let next_document = if let Ok(document) = crate::artifacts::note::dsl::parse_dsl(&payload.json) {
         document
     } else {
@@ -29,5 +29,5 @@ pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _
         };
         document
     };
-    Ok(Emit { effects: vec![crate::apps::note::reset_document_effect(&next_document)], config_mutations: vec![NoteConfigMutation::SetSelection { block_ids: Vec::new() }], ..Default::default() })
+    Ok(Emit { effects: vec![crate::apps::note::reset_document_effect(&next_document)], ..Default::default() })
 }

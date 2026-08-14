@@ -14,7 +14,7 @@ use crate::apps::writer::commands::{set_font_px, set_line_height, set_tab_size, 
 use crate::apps::writer::commands::{engagement_input, engagement_submit};
 use crate::apps::writer::commands::{lint_document, request_completions};
 use crate::apps::writer::commands::set_locale;
-use crate::apps::writer::commands::{select_ast_node, set_ast_hover, set_ast_selection, set_editor_selection, text_hover, text_select};
+use crate::apps::writer::commands::set_editor_selection;
 use crate::apps::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_snapshot, set_snapshot_json, set_fixture_json, set_text, text_edit};
 use crate::apps::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::apps::writer::presence::{WriterPresence, WriterPresenceMutation};
@@ -28,7 +28,10 @@ use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, AppIo, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, ArtifactApp, ArtifactView, Emit, Fault, Label,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, WindowMeasure,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+    DomainTopology, InteractionTopology, TopologyNode,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -214,28 +217,29 @@ pub(crate) fn register_writer_languages() {
 }
 //#endregion 🔌️Registration
 
-//#region 🔖️DocumentHelpers
-/// 🐁️ (highlighted AST id, tree-hover span, hover occurrences) — the tuple [`editor_hover_context`] resolves.
-type HoverContext = (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>);
+//#region 🔖️Interaction
+/// 🕹️ `ast` domain topology from the jack AST's own parent links — `HierarchyProvider::Topology`, so
+/// this is the framework's ONLY source of truth for that domain's membership/hierarchy (selection
+/// pruning after a document edit, `selectAll`, range-select, transitive descendant-closure
+/// hover/selection). Empty for a non-jack document (nothing to select) or a document with no AST.
+fn writer_ast_topology(document: &WriterSnapshot) -> DomainTopology {
+    use crate::artifacts::writer::schema::{parse_jack_ast, JackAstNode};
 
-/// 🐁️ Resolves tree/editor hover cross-highlighting. Lives at APP level, not the artifact's `🧬️schema`,
-/// even though it has two consumers (the main window and the document panel) — it takes `WriterConfig`,
-/// an app-only view-state type, and artifacts must never depend on apps.
-pub fn editor_hover_context(document: &WriterSnapshot, config: &WriterConfig) -> HoverContext {
-    use crate::artifacts::writer::schema::{find_deepest_jack_ast_node_at, jack_ast_node_by_id, jack_symbol_at_offset, parse_jack_ast, JackSymbolKind};
-
-    if document.language_id != "jack" {
-        return (None, None, Vec::new());
+    fn visit(node: &JackAstNode, parent: Option<&str>, out: &mut Vec<TopologyNode>) {
+        out.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent.map(str::to_string) });
+        for child in &node.children {
+            visit(child, Some(node.id.as_str()), out);
+        }
     }
-    let text = writer_text(document);
-    let root = parse_jack_ast(&text);
-    let tree_span = config.tree_hovered_ast_id.as_ref().and_then(|id| jack_ast_node_by_id(&root, id)).map(|node| (node.start, node.end));
-    let editor_hovered_ast_id = config.editor_hover_offset.and_then(|offset| find_deepest_jack_ast_node_at(&root, offset)).map(|node| node.id.clone());
-    let highlighted = config.tree_hovered_ast_id.clone().or(editor_hovered_ast_id);
-    let hover_occurrences = config.editor_hover_offset.and_then(|offset| jack_symbol_at_offset(&text, offset)).filter(|symbol| symbol.kind == JackSymbolKind::Variable).map(|symbol| symbol.occurrences).unwrap_or_default();
-    (highlighted, tree_span, hover_occurrences)
+
+    let mut ordered = Vec::new();
+    if document.language_id == "jack" {
+        let root = parse_jack_ast(&writer_text(document));
+        visit(&root, None, &mut ordered);
+    }
+    DomainTopology { ordered }
 }
-//#endregion 🔖️DocumentHelpers
+//#endregion 🔖️Interaction
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -261,12 +265,7 @@ semio_framework_plugin::app_commands! {
         "setCamera" as "camera" => set_camera::SetCamera,
         "requestCompletions" as "request-completions" => request_completions::RequestCompletions,
         "lintDocument" as "lint-document" => lint_document::LintDocument,
-        "textSelect" as "text-select" => text_select::TextSelect,
         "setEditorSelection" as "editor-selection" => set_editor_selection::SetEditorSelection,
-        "selectAstNode" as "select-ast-node" => select_ast_node::SelectAstNode,
-        "setAstSelection" as "ast-selection" => set_ast_selection::SetAstSelection,
-        "setAstHover" as "ast-hover" => set_ast_hover::SetAstHover,
-        "textHover" as "text-hover" => text_hover::TextHover,
         "toggleLineNumbers" as "toggle-line-numbers" => toggle_line_numbers::ToggleLineNumbers,
         "setEditorSetting" as "font-px" => set_font_px::SetFontPx,
         "setEditorSetting" as "line-height" => set_line_height::SetLineHeight,
@@ -376,8 +375,16 @@ impl ArtifactApp for WriterPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WriterCommand, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &WriterCommand, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
+    }
+
+    /// 🕹️ `ast` domain: `HierarchyProvider::Topology` from the jack AST's own parent links — see
+    /// `writer_ast_topology`'s doc comment.
+    fn interaction_topology(doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> InteractionTopology {
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert("ast".to_string(), writer_ast_topology(doc.snapshot));
+        InteractionTopology { domains }
     }
 
     /// 🎞️ `"text:out"` exports the writer document's current text as one "chapter" payload (see
@@ -494,14 +501,12 @@ pub fn create_writer_app() -> App {
             .action_with(writer_hidden_operation("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen")))
             .action_with(writer_hidden_operation("setSnapshotJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen")))
             .action_with(writer_hidden_operation("setFixtureJson", LocalizedLabel::native("Set Fixture JSON", "Fixture-JSON festlegen")))
-            // 🙈️ Internal View measures — selection, hover, AST navigation, completions, editor settings.
+            // 🙈️ Internal View measures — editor caret/range, completions, editor settings. AST
+            // selection/hover no longer declared here: the framework auto-injects
+            // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
+            // setInteractionGranularity for every domain declared via `.interaction(...)` below.
             .action_with(writer_hidden_view("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern")).with_category("tools"))
-            .action_with(writer_hidden_view("textSelect", LocalizedLabel::native("Text Select", "Text auswählen")))
             .action_with(writer_hidden_view("setEditorSelection", LocalizedLabel::native("Set Editor Selection", "Editor-Auswahl festlegen")))
-            .action_with(writer_hidden_view("selectAstNode", LocalizedLabel::native("Select Ast Node", "AST-Knoten auswählen")))
-            .action_with(writer_hidden_view("setAstSelection", LocalizedLabel::native("Set Ast Selection", "AST-Auswahl festlegen")))
-            .action_with(writer_hidden_view("setAstHover", LocalizedLabel::native("Set Ast Hover", "Überfahren (AST) festlegen")))
-            .action_with(writer_hidden_view("textHover", LocalizedLabel::native("Text Hover", "Text-Hover")))
             .action_with(writer_hidden_view("toggleLineNumbers", LocalizedLabel::native("Toggle Line Numbers", "Zeilennummern umschalten")))
             .action_with(writer_hidden_view("setEditorSetting", LocalizedLabel::native("Set Editor Setting", "Editor-Einstellung festlegen")))
             .action_with(writer_hidden_view("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe")))
@@ -516,6 +521,21 @@ pub fn create_writer_app() -> App {
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
+            // 🕹️ THE TRANSITIVE TEMPLATE (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+            // `ast` is `HierarchyProvider::Topology` from the jack AST's own parent links
+            // (`writer_ast_topology`/`WriterPlayApp::interaction_topology`); `hover.transitive`/
+            // `selection.transitive` both `true` — dispatch the deepest AST node at the caret and
+            // transitivity produces the covering behavior the old `jack_ast_node_for_selection`
+            // covering-node search used to compute by hand.
+            .interaction(InteractionDefinition {
+                id: "ast".into(),
+                label: LocalizedLabel::native("AST", "AST"),
+                granularities: vec![GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() }],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec { modes: vec![SelectionMode::Single, SelectionMode::Multiple], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
+            })
+            .window_kind_interactions(WRITER_PLAY_WINDOW_KIND, vec![InteractionRef::new("ast")])
             // 🎯️ Typed channel surface (mirrors `shooting_ui::create_shooting_app`'s identical wiring) —
             // `writer_io()` is the single source of truth for both the trait's `io()` override and this
             // manifest declaration.
@@ -608,7 +628,7 @@ mod tests {
     #[test]
     fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
         let commands = every_command();
-        assert_eq!(commands.len(), 25, "every WriterCommand row must be covered by every_command()");
+        assert_eq!(commands.len(), 20, "every WriterCommand row must be covered by every_command()");
         let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();
@@ -641,12 +661,7 @@ mod tests {
             ("camera", WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::writer::WriterCamera::default() })),
             ("request-completions", WriterCommand::RequestCompletions(request_completions::RequestCompletions {})),
             ("lint-document", WriterCommand::LintDocument(lint_document::LintDocument {})),
-            ("text-select", WriterCommand::TextSelect(text_select::TextSelect { start: 0, end: 1 })),
             ("editor-selection", WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 0, end: 1 })),
-            ("select-ast-node", WriterCommand::SelectAstNode(select_ast_node::SelectAstNode { id: "n1".into(), start: 0, end: 1 })),
-            ("ast-selection", WriterCommand::SetAstSelection(set_ast_selection::SetAstSelection { ids: vec!["n1".into()] })),
-            ("ast-hover", WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some("n1".into()) })),
-            ("text-hover", WriterCommand::TextHover(text_hover::TextHover { start: Some(0), end: Some(1) })),
             ("toggle-line-numbers", WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {})),
             ("font-px", WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 })),
             ("line-height", WriterCommand::SetLineHeight(set_line_height::SetLineHeight { value: 24 })),
@@ -681,12 +696,7 @@ mod tests {
             WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::writer::WriterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
             WriterCommand::RequestCompletions(request_completions::RequestCompletions {}),
             WriterCommand::LintDocument(lint_document::LintDocument {}),
-            WriterCommand::TextSelect(text_select::TextSelect { start: 3, end: 7 }),
             WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 3, end: 7 }),
-            WriterCommand::SelectAstNode(select_ast_node::SelectAstNode { id: "jack-ast-1".into(), start: 0, end: 5 }),
-            WriterCommand::SetAstSelection(set_ast_selection::SetAstSelection { ids: vec!["a".into(), "b".into()] }),
-            WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some("jack-ast-1".into()) }),
-            WriterCommand::TextHover(text_hover::TextHover { start: Some(3), end: None }),
             WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {}),
             WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 }),
             WriterCommand::SetLineHeight(set_line_height::SetLineHeight { value: 24 }),
@@ -699,14 +709,13 @@ mod tests {
 
     /// ⚖️ The rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact
     /// bytes captured from the pre-merge `writer_protocol` crate (this ticket's
-    /// `🧪️wire-baseline-before.txt`, rows 15/16/22). A regression here is a real format break, not a
-    /// test-fixture mismatch.
+    /// `🧪️wire-baseline-before.txt`, row 22 — rows 15/16 (`ast-hover`/`text-hover`) dissolved into the
+    /// framework's own `ast` interaction domain and no longer exist as writer commands). A regression
+    /// here is a real format break, not a test-fixture mismatch.
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
-        let cases: [(WriterCommand, &str, &str); 3] = [
-            (WriterCommand::SetAstHover(set_ast_hover::SetAstHover { id: Some("jack-ast-1".into()) }), "ast-hover ast-hover id=jack-ast-1", "0110010a6a61636b2d6173742d3101000600"),
-            (WriterCommand::TextHover(text_hover::TextHover { start: Some(3), end: None }), "text-hover text-hover start=3", "01110001000403"),
-            (WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit engagement-submit", "01170000"),
+        let cases: [(WriterCommand, &str, &str); 1] = [
+            (WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit engagement-submit", "01120000"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
@@ -738,6 +747,52 @@ mod tests {
         assert!(app.examples.iter().any(|example| example.id == "dag.jack"), "dag.jack example missing from the manifest");
     }
     //#endregion 🔖️ManifestSanity
+
+    //#region 🔖️Interaction
+    /// 🕹️ The `ast` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
+    /// selection, and scoped to writer's one window kind — the manifest side of THE TRANSITIVE
+    /// TEMPLATE (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    #[test]
+    fn ast_interaction_domain_is_declared_topology_and_transitive_on_the_main_window() {
+        let definition = create_writer_app().definition;
+        let ast = definition.interactions.iter().find(|interaction| interaction.id == "ast").expect("ast interaction domain declared");
+        assert!(matches!(ast.hierarchy, HierarchyProvider::Topology));
+        assert!(ast.hover.transitive, "ast hover must be transitive for the covering-node behavior");
+        assert!(ast.selection.transitive, "ast selection must be transitive for the covering-node behavior");
+        let main_window = definition.window_kinds.iter().find(|window| window.id == WRITER_PLAY_WINDOW_KIND).expect("main window kind declared");
+        assert!(main_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == "ast"), "main window must reference the ast interaction domain");
+    }
+
+    /// 🌳️ `interaction_topology` walks the jack AST's own `children` into `TopologyNode.parent` links —
+    /// root has no parent, every child's parent is its syntactic parent's id.
+    #[test]
+    fn interaction_topology_walks_the_jack_ast_into_parent_links() {
+        let document = crate::artifacts::writer::dsl::jack_example_document();
+        let config = WriterConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = WriterPlayApp::interaction_topology(&doc, &cfg);
+        let ast = topology.domains.get("ast").expect("ast domain present in topology");
+        assert!(!ast.ordered.is_empty(), "jack document must produce a non-empty ast topology");
+        let root = &ast.ordered[0];
+        assert!(root.parent.is_none(), "the first (pre-order) node is the AST root and has no parent");
+        assert!(ast.ordered.iter().skip(1).all(|node| node.parent.is_some()), "every non-root node must carry its syntactic parent's id");
+    }
+
+    /// 🌱️ A non-jack document has no AST to select — an empty topology, matching `Flat`-vs-empty
+    /// pruning semantics: every stale `ast` selection id gets pruned for a document with no AST.
+    #[test]
+    fn interaction_topology_is_empty_for_non_jack_documents() {
+        let document = crate::artifacts::writer::schema::empty_writer_snapshot();
+        let config = WriterConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = WriterPlayApp::interaction_topology(&doc, &cfg);
+        assert!(topology.domains.get("ast").expect("ast domain present in topology").ordered.is_empty());
+    }
+    //#endregion 🔖️Interaction
 
     //#region 🔖️PortTests
     #[test]

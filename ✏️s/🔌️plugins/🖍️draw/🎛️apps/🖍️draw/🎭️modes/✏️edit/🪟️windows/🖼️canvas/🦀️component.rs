@@ -2,11 +2,10 @@
 
 use crate::apps::draw::commands::canvas_pointer_down::{draft_preview_segments, draw_gesture, shape_preview_segments};
 use crate::apps::draw::config::DrawConfig;
-use crate::artifacts::draw::schema::{draw_layer_descendant_leaf_ids, find_draw_layer, flatten_draw_document_to_scene_nodes, resolve_draw_artboard, DrawSceneNode};
+use crate::artifacts::draw::schema::{flatten_draw_document_to_scene_nodes, resolve_draw_artboard};
 use crate::artifacts::draw::{DrawArtboard, DrawSnapshot, PathSegment};
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, UiNode};
 use serde_json::{json, Value};
-use std::collections::HashMap;
 
 pub const DRAW_PLAY_WINDOW_CANVAS: &str = "draw-composite";
 pub const DRAW_PLAY_SURFACE_ID: &str = "draw.play.composite";
@@ -14,7 +13,6 @@ pub const DRAW_PLAY_BODY_COMPOSITE: &str = "draw.play.composite";
 
 const DRAW_OVERLAY_SELECTION_STROKE: [f64; 4] = [0.98, 0.75, 0.14, 0.95];
 const DRAW_OVERLAY_SELECTION_FILL: [f64; 4] = [0.98, 0.75, 0.14, 0.16];
-const DRAW_OVERLAY_HOVER_STROKE: [f64; 4] = [0.56, 0.78, 0.98, 0.9];
 const DRAW_OVERLAY_MARQUEE_STROKE: [f64; 4] = [0.36, 0.65, 0.98, 0.9];
 const DRAW_OVERLAY_MARQUEE_FILL: [f64; 4] = [0.36, 0.65, 0.98, 0.12];
 const DRAW_ARTBOARD_FILL: [f64; 4] = [0.969, 0.953, 0.890, 1.0];
@@ -70,7 +68,12 @@ fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
     ]
 }
 
-pub fn render(document: &DrawSnapshot, interaction: &DrawConfig, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
+/// 🕹️ `config` no longer carries `selected_ids`/`hovered_id` (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection/hover are framework-owned state,
+/// and `ArtifactApp::render` is never given an `InteractionView`) — the selection/hover overlay
+/// records this function used to bake into `layersJson` are gone; the client renders that highlight
+/// itself from the framework's own interaction state now.
+pub fn render(document: &DrawSnapshot, config: &DrawConfig, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
@@ -82,24 +85,6 @@ pub fn render(document: &DrawSnapshot, interaction: &DrawConfig, gesture: &draw_
     records.extend(artboard_records);
     for node in &scene_nodes {
         records.push(serde_json::to_value(node).unwrap_or(Value::Null));
-    }
-    let node_by_id: HashMap<&str, &DrawSceneNode> = scene_nodes.iter().map(|node| (node.id.as_str(), node)).collect();
-    let selected_leaf_ids: Vec<String> = interaction.selected_ids.iter().filter_map(|id| find_draw_layer(document, id)).flat_map(draw_layer_descendant_leaf_ids).collect();
-    for leaf_id in &selected_leaf_ids {
-        if let Some(node) = node_by_id.get(leaf_id.as_str()) {
-            records.push(overlay_record(&format!("overlay:sel:{leaf_id}"), node.transform, &node.segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 2.0));
-        }
-    }
-    if let Some(hovered_id) = &interaction.hovered_id {
-        if !selected_leaf_ids.iter().any(|id| id == hovered_id) {
-            if let Some(layer) = find_draw_layer(document, hovered_id) {
-                for leaf_id in draw_layer_descendant_leaf_ids(layer) {
-                    if let Some(node) = node_by_id.get(leaf_id.as_str()) {
-                        records.push(overlay_record(&format!("overlay:hover:{leaf_id}"), node.transform, &node.segments, None, DRAW_OVERLAY_HOVER_STROKE, 1.5));
-                    }
-                }
-            }
-        }
     }
     if gesture.matches("marqueeing") {
         let ctx = &gesture.context;
@@ -121,6 +106,6 @@ pub fn render(document: &DrawSnapshot, interaction: &DrawConfig, gesture: &draw_
     build_canvas_2d_scene(
         DRAW_PLAY_SURFACE_ID,
         crate::apps::draw::DRAW_PLAY_CONTROLLER_ID,
-        Canvas2dScene { camera_x: interaction.camera.x, camera_y: interaction.camera.y, zoom: interaction.camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()) },
+        Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()) },
     )
 }

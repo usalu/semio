@@ -570,8 +570,6 @@ pub mod apps {
             pub mod paint;
             #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🗂️selection/🦀️component.rs"]
             pub mod selection;
-            #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🌍️world/🦀️component.rs"]
-            pub mod world;
             #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🎥️camera/🦀️component.rs"]
             pub mod camera;
             #[path = "../../🎛️apps/💠️lowpoly/🎮️commands/🌞️sun/🦀️component.rs"]

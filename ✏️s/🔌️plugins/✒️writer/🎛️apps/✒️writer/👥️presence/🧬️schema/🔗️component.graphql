@@ -1,8 +1,5 @@
 type WriterPresence {
-  selectedAstIds: [String!]! @state(class: PRESENCE)
   editorSelection: WriterEditorSelection @state(class: PRESENCE)
-  treeHoveredAstId: String @state(class: PRESENCE)
-  editorHoverOffset: Int @state(class: PRESENCE)
   camera: WriterCamera! @state(class: PRESENCE)
 }
 

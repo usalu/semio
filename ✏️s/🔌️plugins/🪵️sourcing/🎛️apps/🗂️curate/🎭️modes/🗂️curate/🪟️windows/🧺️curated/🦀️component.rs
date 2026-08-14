@@ -1,6 +1,5 @@
 //! 🧺️ Sourcing curate app — the curated window: the currently-picked objects and their counts.
 
-use crate::apps::curate::config::{selection_json_for, SourcingCurateConfig};
 use crate::apps::curate::terminology::SourcingLabels;
 use crate::apps::curate::{sourcing_action, SOURCING_CONTROLLER_ID, SOURCING_DRAG_MIME};
 use crate::artifacts::curate::CurateSnapshot;
@@ -23,6 +22,7 @@ pub fn definition() -> WindowKindDefinition {
         icon_id: "tags".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
+        interactions: Vec::new(),
         utilities: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+pub fn render(document: &CurateSnapshot, labels: &SourcingLabels) -> UiNode {
     let columns = json!([
         {"id": "name", "label": labels.col_name.as_str()},
         {"id": "availability", "label": labels.col_availability.as_str()},
@@ -66,7 +66,9 @@ pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &So
         })
         .collect();
     let mut scene = TableScene::base(columns, serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()));
-    scene.selection_json = Some(selection_json_for(cfg));
+    // 🕹️ Row selection is the framework-owned "rows" interaction domain now (ticket
+    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactApp::render` carries no
+    // `InteractionView`, so `scene.selection_json` stays at its default (unset) here.
     scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
     scene.drop_action = Some(sourcing_action("dropOnCurated", None));
     build_table_scene(SOURCING_CURATE_SURFACE_CURATED, SOURCING_CONTROLLER_ID, scene)

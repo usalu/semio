@@ -15,21 +15,11 @@ message RewriteArtifact {
   // @state artifact
   map<string, LayoutPoint> rule_layout = 5;
   // @state presence
-  repeated string selected_node_ids = 6;
-  // @state presence
-  string active_hover_var = 7;
-  // @state presence
-  string active_select_var = 8;
-  // @state presence
   map<string, string> lod_mode_by_window = 9;
   // @state config
   Camera before_pane_camera = 10;
   // @state config
   int64 reorganize_epoch = 11;
-  // @state config
-  int64 hover_epoch = 12;
-  // @state config
-  int64 select_epoch = 13;
   // @state config
   string locale = 14;
 }

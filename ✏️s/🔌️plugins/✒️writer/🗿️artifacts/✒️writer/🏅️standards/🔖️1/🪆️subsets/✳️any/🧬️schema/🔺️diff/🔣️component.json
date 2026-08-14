@@ -30,10 +30,6 @@
       "$ref": "#/$defs/WriterTextDelta",
       "x-semio-state": "artifact"
     },
-    "selectedAstIds": {
-      "$ref": "#/$defs/WriterStringList",
-      "x-semio-state": "presence"
-    },
     "editorSelection": {
       "oneOf": [
         {
@@ -89,30 +85,6 @@
     "locale": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "treeHoveredAstId": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "editorHoverOffset": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        }
-      ],
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {
@@ -165,22 +137,6 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
-        }
-      }
-    },
-    "WriterStringList": {
-      "title": "WriterStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     },

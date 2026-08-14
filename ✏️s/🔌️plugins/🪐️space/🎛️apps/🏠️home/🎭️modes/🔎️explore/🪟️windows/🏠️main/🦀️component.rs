@@ -22,6 +22,9 @@ pub fn definition() -> WindowKindDefinition {
         options: Default::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        // 🕹️ No interaction domain (see `HomeApp::handle`'s doc — the VFS scene here is a
+        // `ComponentScene`, not a `UiTree`, and every row command already carries an explicit id).
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

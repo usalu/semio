@@ -12,7 +12,7 @@
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `ArtifactApp::handle`.
 
-use crate::apps::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, selection, step, stock, sun, utility, workshop, world};
+use crate::apps::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, step, stock, sun, utility, workshop, world};
 use crate::apps::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::apps::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::apps::process3d::modes::edit;
@@ -22,9 +22,9 @@ use crate::apps::process3d::terminology::process3d_labels;
 use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability,
-    UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, Menu, OsMediaCapability,
+    SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
 use serde_json::Value;
@@ -34,6 +34,43 @@ use store::ArtifactPack;
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
 const PROCESS_3D_PLAY_CONTROLLER_ID: &str = "process3d-play";
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the app's sole interaction domain — the
+/// stock, every process step, and every installed workshop machine share the "object" granularity
+/// (as their raw ids / `"machine:{id}"`), the processed mesh's picked faces use "face" (u32 ids
+/// stringified at the `InteractionTarget` boundary). Flat hierarchy: no cross-object parent/child
+/// structure to declare a topology for.
+pub const PROCESS3D_INTERACTION_DOMAIN: &str = "geometry";
+
+/// 🕹️ Owned snapshot of `InteractionView::selection(PROCESS3D_INTERACTION_DOMAIN).ids`, read once per
+/// dispatch by `ArtifactApp::handle` and threaded through `Process3dDispatchCtx` to the one command
+/// handler that needs it (`remove_selected_step`) — mirrors `📐️cad`'s own `CadInteractionSnapshot`.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Process3dInteractionSnapshot {
+    pub ids: Vec<String>,
+}
+
+/// 🕹️ `app_commands!`'s `ctx` payload — every command handler now takes this fourth parameter (most
+/// ignore it via `_ctx`), see `🔖️KeyedAndContextualForms` in the SDK's `app_commands!` doc comment.
+pub struct Process3dDispatchCtx {
+    pub interaction: Process3dInteractionSnapshot,
+}
+
+/// 🕹️ The `"geometry"` domain declaration: object granularity (stock/step/machine ids, the domain
+/// default) plus face granularity (u32 mesh face ids, stringified at the `InteractionTarget`
+/// boundary). Flat hierarchy — no cross-object parent/child structure.
+fn process3d_interaction_definition() -> InteractionDefinition {
+    InteractionDefinition {
+        id: PROCESS3D_INTERACTION_DOMAIN.into(),
+        label: LocalizedLabel::native("Geometry", "Geometrie"),
+        granularities: vec![
+            GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() },
+            GranularityDefinition { id: "face".into(), label: LocalizedLabel::native("Face", "Fläche"), icon_id: "square".into() },
+        ],
+        hierarchy: HierarchyProvider::Flat,
+        hover: HoverSpec::default(),
+        selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
+    }
+}
 pub const PROCESS3D_EXAMPLE_TIMBER: &str = "timber-beam-joinery";
 pub const PROCESS3D_EXAMPLE_PLATE: &str = "drilled-plate";
 pub use workpiece::PROCESS_3D_PLAY_BODY_MAIN;
@@ -94,7 +131,7 @@ semio_framework_plugin::app_commands! {
     /// (`command_id()`) and the `dsl` wire keyword (the kebab `#[dsl(key = ..)]` the codec uses) — copied
     /// verbatim from the pre-migration `Process3dCommand`/`command_id()` match. **Row order is the binary
     /// variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum Process3dCommand for Process3dSnapshot, Process3dMutation, Process3dConfig, Process3dConfigMutation {
+    pub enum Process3dCommand for Process3dSnapshot, Process3dMutation, Process3dConfig, Process3dConfigMutation, ctx = Process3dDispatchCtx {
         "setSnapshot" as "document" => set_snapshot::SetDocument,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "addStep" as "add-step" => add_step::AddStep,
@@ -119,10 +156,7 @@ semio_framework_plugin::app_commands! {
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "engagementAbort" as "engagement-abort" => engagement_abort::EngagementAbort,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "setHover" as "set-hover" => set_hover::SetHover,
         "setCamera" as "camera" => set_camera::SetCamera,
-        "worldPick" as "world-pick" => world_pick::WorldPick,
         "toggleSun" as "toggle-sun" => toggle_sun::ToggleSun,
         "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
         "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
@@ -131,7 +165,6 @@ semio_framework_plugin::app_commands! {
         "setContributions" as "contributions" => set_contributions::SetContributions,
         "exportModel" as "export-model" => export_model::ExportModel,
         "loadModelRequest" as "load-model-request" => load_model_request::LoadModelRequest,
-        "contextMenuAt" as "context-menu-at" => context_menu_at::ContextMenuAt,
     }
 }
 
@@ -145,13 +178,12 @@ use inspector::patch_inspector;
 use locale::set_locale;
 use contribution::set_contributions;
 use media::{export_model, import_model_file, load_model_request};
-use selection::{context_menu_at, set_hover, set_selection};
 use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
 use stock::set_stock;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use utility::set_active_utility;
 use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
-use world::{world_face_drag_end, world_pick, world_pointer_down};
+use world::{world_face_drag_end, world_pointer_down};
 //#endregion 🔖️Commands
 
 //#region 🔖️Process3dPlayApp
@@ -256,9 +288,6 @@ impl ArtifactApp for Process3dPlayApp {
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let field = |key: &str| args.and_then(|value| value.get(key));
         let string_field = |key: &str| field(key).and_then(Value::as_str).map(str::to_string);
-        let stringish_field = |key: &str| {
-            field(key).and_then(|value| value.as_str().map(str::to_string).or_else(|| value.as_u64().map(|number| number.to_string())).or_else(|| value.as_i64().map(|number| number.to_string())))
-        };
         let number_field = |key: &str| field(key).and_then(Value::as_f64);
         let unsigned_field = |key: &str| field(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().filter(|number| number.is_finite() && *number >= 0.0).map(|number| number as u64)));
         let signed_field = |key: &str| field(key).and_then(|value| value.as_i64().or_else(|| value.as_f64().filter(|number| number.is_finite()).map(|number| number as i64)));
@@ -276,7 +305,6 @@ impl ArtifactApp for Process3dPlayApp {
             }
             Some([values[0].as_f64()?, values[1].as_f64()?])
         };
-        let first_string_id = || field("ids").and_then(Value::as_array).and_then(|values| values.first()).and_then(Value::as_str).map(str::to_string);
         match action {
             "setSnapshot" => {
                 let json = string_field("json").or_else(|| field("document").and_then(|value| serde_json::to_string(value).ok())).unwrap_or_default();
@@ -344,16 +372,11 @@ impl ArtifactApp for Process3dPlayApp {
             })),
             "engagementInput" => Ok(Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: string_field("value").unwrap_or_default() })),
             "engagementAbort" => Ok(Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {})),
-            "setSelection" => Ok(Process3dCommand::SetSelection(set_selection::SetSelection {
-                id: string_field("objectId").or_else(|| string_field("id")).or_else(first_string_id),
-            })),
-            "setHover" => Ok(Process3dCommand::SetHover(set_hover::SetHover { id: string_field("objectId").or_else(|| string_field("id")) })),
             "setCamera" => Ok(Process3dCommand::SetCamera(set_camera::SetCamera {
                 position: vec3_field("position").unwrap_or([3.0, -3.0, 2.0]),
                 target: vec3_field("target").unwrap_or_default(),
                 fov: number_field("fov").unwrap_or(45.0),
             })),
-            "worldPick" => Ok(Process3dCommand::WorldPick(world_pick::WorldPick { granularity: string_field("granularity").unwrap_or_else(|| "object".into()), id: unsigned_field("id").map(|value| value as u32) })),
             "toggleSun" => Ok(Process3dCommand::ToggleSun(toggle_sun::ToggleSun {})),
             "setSunAzimuth" => Ok(Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: number_field("value").unwrap_or_default() })),
             "setSunElevation" => Ok(Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: number_field("value").unwrap_or_default() })),
@@ -362,16 +385,18 @@ impl ArtifactApp for Process3dPlayApp {
             "setContributions" => Ok(Process3dCommand::SetContributions(set_contributions::SetContributions { json: string_field("json").unwrap_or_else(|| "[]".into()) })),
             "exportModel" => Ok(Process3dCommand::ExportModel(export_model::ExportModel { format: string_field("format").unwrap_or_else(|| "step".into()) })),
             "loadModelRequest" => Ok(Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {})),
-            "contextMenuAt" => Ok(Process3dCommand::ContextMenuAt(context_menu_at::ContextMenuAt {
-                kind: string_field("kind").unwrap_or_default(),
-                id: stringish_field("id").unwrap_or_default(),
-            })),
             other => Err(process3d_action_fault(other, "not declared by the process app's typed command vocabulary")),
         }
     }
 
-    fn handle(command: &Process3dCommand, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): reads the framework-owned
+    /// `"geometry"` domain selection once per dispatch and threads it through `Process3dDispatchCtx`
+    /// — the one retained verb that operates ON the selection (`remove_selected_step`) reads it from
+    /// there; every other command ignores it (mirrors `📐️cad`'s own `handle`).
+    fn handle(command: &Process3dCommand, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
+        let selection = interaction.selection(PROCESS3D_INTERACTION_DOMAIN);
+        let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.ids.clone() } };
+        command.dispatch(doc, cfg, &mut ctx)
     }
 
     /// 🧮️ process3d exposes no genuinely settings-like sticky defaults — every `Process3dConfig` field
@@ -384,11 +409,12 @@ impl ArtifactApp for Process3dPlayApp {
         sync_process_machine_contributions(&cfg.snapshot.contributions_json);
         let config = cfg.snapshot;
         let labels = process3d_labels(config);
-        match body_key {
+        let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
+        match base_body_key {
             PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc.snapshot, config),
-            PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, config, labels),
+            PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
             PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc.snapshot, labels),
-            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.snapshot, config, labels),
+            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.snapshot, labels),
             PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc.snapshot, config, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -402,14 +428,13 @@ impl ArtifactApp for Process3dPlayApp {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot))])
     }
 
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        Menu::of(registry)
-            .action("addStep")
-            .when(cfg.snapshot.selected_id.as_deref().is_some_and(|id| id != "processed"), |menu| menu.destructive("removeSelectedStep"))
-            .separator()
-            .action("undo")
-            .action("redo")
-            .build()
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `context_menu` is no longer
+    /// selection-gated — `ArtifactApp::context_menu` has no `InteractionView` parameter, so it can no
+    /// longer tell whether anything is selected (mirrors `📐️cad`'s own precedent) — always shows
+    /// `removeSelectedStep`; it is itself a no-op via `remove_selected_step::handle` when nothing in
+    /// the `"geometry"` domain is selected.
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build()
     }
 }
 //#endregion 🔖️Process3dPlayApp
@@ -476,12 +501,11 @@ pub fn create_process3d_app() -> App {
             .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
             .action_with(internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
             .action_with(internal_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View))
-            // 👁️ Ephemeral view state — selection, hover, camera, face picking, sun.
-            .action_with(internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
-            .action_with(internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
-            .action_with(internal_action("contextMenuAt", LocalizedLabel::native("Context Menu At", "Kontextmenü an Position"), ActionKind::View))
+            // 👁️ Ephemeral view state — camera, sun. Selection/hover are the framework-owned
+            // "geometry" interaction domain now (declared below via `.interaction`); the six
+            // framework verbs (interactionSelect/interactionHover/clearSelection/selectAll/
+            // setSelectionMode/setInteractionGranularity) auto-inject — never declared here.
             .action_with(internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
-            .action_with(internal_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"), ActionKind::View))
             .action_with(internal_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View))
             .action_with(internal_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View))
             .action_with(internal_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View))
@@ -524,6 +548,8 @@ pub fn create_process3d_app() -> App {
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("drill", LocalizedLabel::native("Drill", "Bohren"), "circle-dot") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("attach", LocalizedLabel::native("Attach", "Anbauen"), "plus") })
             .window_kind_utilities(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN, vec!["select".into(), "cut".into(), "drill".into(), "attach".into()])
+            .interaction(process3d_interaction_definition())
+            .window_kind_interactions(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new(PROCESS3D_INTERACTION_DOMAIN)])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("bracketleft", "stepCursorBack")
@@ -960,7 +986,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 37, "every Process3dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 33, "every Process3dCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -1002,10 +1028,7 @@ mod tests {
                 "importModelFile" => "import-model-file",
                 "engagementInput" => "engagement-input",
                 "engagementAbort" => "engagement-abort",
-                "setSelection" => "set-selection",
-                "setHover" => "set-hover",
                 "setCamera" => "camera",
-                "worldPick" => "world-pick",
                 "toggleSun" => "toggle-sun",
                 "setSunAzimuth" => "sun-azimuth",
                 "setSunElevation" => "sun-elevation",
@@ -1014,7 +1037,6 @@ mod tests {
                 "setContributions" => "contributions",
                 "exportModel" => "export-model",
                 "loadModelRequest" => "load-model-request",
-                "contextMenuAt" => "context-menu-at",
                 other if other == SET_ACTIVE_UTILITY_ACTION_ID => "active-utility",
                 other => panic!("no expected wire key recorded for command id {other} — add it to this table"),
             }
@@ -1063,10 +1085,7 @@ mod tests {
             Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "cut".into() }),
             Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: "cut".into() }),
             Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
-            Process3dCommand::SetSelection(set_selection::SetSelection { id: Some("stock".into()) }),
-            Process3dCommand::SetHover(set_hover::SetHover { id: Some("step-0".into()) }),
             Process3dCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }),
-            Process3dCommand::WorldPick(world_pick::WorldPick { granularity: "face".into(), id: Some(7) }),
             Process3dCommand::ToggleSun(toggle_sun::ToggleSun {}),
             Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }),
             Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 45.0 }),
@@ -1075,7 +1094,6 @@ mod tests {
             Process3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
             Process3dCommand::ExportModel(export_model::ExportModel { format: "step".into() }),
             Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {}),
-            Process3dCommand::ContextMenuAt(context_menu_at::ContextMenuAt { kind: "object".into(), id: "processed".into() }),
         ]
     }
 
@@ -1087,32 +1105,18 @@ mod tests {
         assert!(Process3dPlayApp::command_from_action("nonsense", None).is_err());
     }
 
-    /// 🖱️ The three interaction payload shapes that regressed retain their identifiers through the
-    /// transport bridge instead of being dropped into ad-hoc host state.
+    /// 🖱️ The interaction payload shape that regressed retains its identifier through the transport
+    /// bridge instead of being dropped into ad-hoc host state.
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `setHover`/`contextMenuAt` were
+    /// app-owned selection/hover commands, deleted along with `Process3dConfig::selected_id`/
+    /// `hovered_id` — hover/selection now decode through the framework's auto-injected
+    /// `interactionHover`/`interactionSelect` verbs instead of this app's own command vocabulary.
     #[test]
     fn interaction_actions_decode_into_typed_commands() {
         assert_eq!(
             Process3dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))).expect("example bridge"),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() })
         );
-        assert_eq!(
-            Process3dPlayApp::command_from_action("setHover", Some(&serde_json::json!({ "objectId": "processed" }))).expect("hover bridge"),
-            Process3dCommand::SetHover(set_hover::SetHover { id: Some("processed".into()) })
-        );
-        assert_eq!(
-            Process3dPlayApp::command_from_action("contextMenuAt", Some(&serde_json::json!({ "kind": "face", "id": 7 }))).expect("context-menu bridge"),
-            Process3dCommand::ContextMenuAt(context_menu_at::ContextMenuAt { kind: "face".into(), id: "7".into() })
-        );
-    }
-
-    /// 🔄️ The real registry-backed action entry point mutates the same config store consumed by the
-    /// renderer, proving hover no longer terminates at the transport boundary.
-    #[test]
-    fn registry_backed_hover_action_reaches_rendered_state() {
-        let mut app = app_with_registry();
-        action(&mut app, "setHover", Some(&serde_json::json!({ "objectId": "processed" })));
-        let rendered = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
-        assert!(rendered.contains("processed"), "hovered object must be present in the rendered selection state: {rendered}");
     }
 
     /// 📄️ Example switching exercises the complete registry-backed action path and emits the
@@ -1128,22 +1132,20 @@ mod tests {
         assert_eq!(loaded, crate::artifacts::process3d::schema::plate_document());
     }
 
-    /// 🎯️ A component pick keeps its parent object and face id coherent in the single rendered
-    /// selection snapshot; clearing the pick clears both values together.
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `worldPick` (a pure selection-setting
+    /// command) is deleted along with `Process3dConfig::selected_face_id` — object/face picking now
+    /// decodes through the framework's auto-injected `interactionSelect` verb, and the rendered
+    /// world3d selection JSON carries no live selection ids anymore (see
+    /// `🎭️modes/✏️edit/🪟️windows/🪚️workpiece`'s `process3d_selection_json` doc comment).
     #[test]
-    fn face_pick_updates_and_clears_coherent_rendered_selection() {
+    fn world3d_render_carries_no_stale_selection_json_fields() {
         let mut app = app();
-        dispatch(&mut app, Process3dCommand::WorldPick(world_pick::WorldPick { granularity: "face".into(), id: Some(7) }));
-        let selected = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
-        assert!(selected.contains("processed") && selected.contains("[7]"), "face selection must include its object and component id: {selected}");
-
-        dispatch(&mut app, Process3dCommand::WorldPick(world_pick::WorldPick { granularity: "face".into(), id: None }));
-        let cleared = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
-        assert!(!cleared.contains("[7]"), "clearing a face pick must remove the stale component id: {cleared}");
+        let rendered = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
+        assert!(!rendered.contains("componentIds"), "componentIds is no longer emitted by the render boundary: {rendered}");
     }
 
-    /// 🖱️ A world right-click has an app-owned menu to request after its typed `contextMenuAt`
-    /// selection update; the host no longer falls through to an empty default.
+    /// 🖱️ A world right-click has an app-owned menu to request; the host no longer falls through to
+    /// an empty default.
     #[test]
     fn world_context_menu_exposes_process_commands() {
         let mut app = app_with_registry();
@@ -1380,6 +1382,14 @@ mod tests {
     fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = app();
         assert!(render_body(&mut app, "process3d.play.nope").contains("Unknown body"));
+    }
+
+    #[test]
+    fn window_body_accepts_the_framework_instance_suffix() {
+        let mut app = app();
+        let body_key = format!("{}:{}", workpiece::PROCESS_3D_PLAY_BODY_MAIN, workpiece::PROCESS_3D_PLAY_WINDOW_MAIN);
+        let rendered = render_body(&mut app, &body_key);
+        assert!(rendered.contains("processed"), "window-instance body key must render the Process world: {rendered}");
     }
 
     /// 🧪️ The registry-enforced app must accept every declared manifest action id without a kind-

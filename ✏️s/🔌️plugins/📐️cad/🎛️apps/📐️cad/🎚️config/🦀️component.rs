@@ -9,60 +9,6 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-/// @emoji 🎯️ Ephemeral World3d hover target — object + optional component (edge/face/vertex). Moved
-/// out of `cad_ui` (was private there) so `CadConfig` can embed it as a `#[dsl(block)]` field; every
-/// field stays optional so the whole record round-trips through a still-empty hover state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadHoverTarget {
-    #[serde(default)]
-    pub object_id: Option<String>,
-    #[serde(default)]
-    pub mode: Option<String>,
-    #[serde(default)]
-    pub id: Option<u32>,
-}
-
-/// @emoji 🎯️ Which geometry kinds World3d may pick; edges stay enabled so B-rep lines hover/select.
-/// Moved out of `cad_ui` alongside `CadHoverTarget`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadSelectionTargets {
-    pub mesh: bool,
-    pub vertex: bool,
-    pub edge: bool,
-    pub face: bool,
-}
-
-impl Default for CadSelectionTargets {
-    fn default() -> Self {
-        Self { mesh: true, vertex: false, edge: true, face: false }
-    }
-}
-
-fn default_component_selection_mode() -> String {
-    "mesh".into()
-}
-
-/// @emoji 🧩️ Component-level selection for World3d edge/face/vertex overlays. Moved out of `cad_ui`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CadComponentSelection {
-    #[serde(default)]
-    #[dsl(block)]
-    pub targets: CadSelectionTargets,
-    #[serde(default = "default_component_selection_mode")]
-    pub mode: String,
-    #[serde(default)]
-    pub ids: Vec<u32>,
-}
-
-impl Default for CadComponentSelection {
-    fn default() -> Self {
-        Self { targets: CadSelectionTargets::default(), mode: default_component_selection_mode(), ids: Vec::new() }
-    }
-}
-
 /// 🎛️ Per-pane handle groups exposed by the Dislocate gumball utility — was keyed by an arbitrary
 /// host-pushed `ViewModel.window_id` (`cad_ui::CadPlayRuntime::dislocate_options_by_window_id`); the
 /// pure `ArtifactApp::render`/`window_measures` surface has no per-window-instance parameter anymore
@@ -109,9 +55,7 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
 }
 
 /// 🧮️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: cad's real `ArtifactApp::Config` — see the region doc
-/// comment above for the full absorption story. `selected_object_ids` is a plain `Vec<String>` (not
-/// `semio_framework_plugin::SelectionSet`, which is foreign and has no `dsl` derive); `cad_ui` still
-/// uses the richer `SelectionSet` internally and converts at the boundary.
+/// comment above for the full absorption story.
 /// `engagement_session_json` is the pre-serialized JSON of `cad_document_engine::interaction::
 /// CadEngagementScratch` — that type's `context: HashMap<String, Value>` field has no `dsl` shape
 /// (arbitrary JSON), so it round-trips as an opaque string rather than a nested `#[dsl(block)]`.
@@ -121,22 +65,17 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
 #[dsl(id = "cad.config")]
 #[dsl(layout = "lines")]
 pub struct CadConfig {
-    /// 👁️ Was `CadPlayRuntime::selected_object_ids` (`SelectionSet`).
-    pub selected_object_ids: Vec<String>,
-    /// 👁️ Was `CadPlayRuntime::selected_node_ids`.
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object/vertex/edge/face
+    /// selection AND hover are now the framework-owned `"cad"` interaction domain
+    /// (`InteractionView::selection("cad")`/`.hover("cad", "pointer")`) — `selected_object_ids`,
+    /// `selection_method`, `hovered_object_id`, `hovered_target`, `active_object_id` (now
+    /// `DomainSelection::anchor_id`) and `component_selection` are DELETED, not migrated in place.
+    /// 👁️ Node (document-tree) selection stays app-owned — not a mesh-geometry granularity.
     pub selected_node_ids: Vec<String>,
-    /// 👁️ Marquee selection method (`"rectangle"`/…) — was `CadPlayRuntime::selection_method`.
-    pub selection_method: String,
-    /// 👁️ Was `CadPlayRuntime::hovered_object_id`.
-    pub hovered_object_id: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::hovered_target`.
-    #[dsl(block)]
-    pub hovered_target: Option<CadHoverTarget>,
-    /// 👁️ Was `CadPlayRuntime::active_object_id`.
-    pub active_object_id: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::component_selection`.
-    #[dsl(block)]
-    pub component_selection: CadComponentSelection,
+    /// 🐁️ Hovered reference-overlay id (per-pane background image) — app-owned, distinct from the
+    /// framework `"cad"` domain's mesh hover; was piggy-backed onto the deleted `hovered_object_id`
+    /// via a `"reference:"` string prefix, now its own field.
+    pub hovered_reference_id: Option<String>,
     /// 👁️ Was `CadPlayRuntime::engagement_input`.
     pub engagement_input: String,
     /// 👁️ Was `CadPlayRuntime::engagement_step`.
@@ -147,10 +86,6 @@ pub struct CadConfig {
     pub selected_reference_model_definition_id: Option<String>,
     /// 👁️ Was `CadPlayRuntime::selected_reference_id`.
     pub selected_reference_id: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::selected_primitive_id`.
-    pub selected_primitive_id: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::selected_primitive_kind`.
-    pub selected_primitive_kind: Option<String>,
     /// 👁️ Was `CadPlayRuntime::engagement_pane`.
     pub engagement_pane: Option<String>,
     /// 👁️ Was `CadPlayRuntime::engagement_session` (`Option<CadEngagementScratch>`) — see the struct
@@ -265,20 +200,13 @@ fn default_contributions_json() -> String {
 impl Default for CadConfig {
     fn default() -> Self {
         Self {
-            selected_object_ids: Vec::new(),
             selected_node_ids: Vec::new(),
-            selection_method: "rectangle".into(),
-            hovered_object_id: None,
-            hovered_target: None,
-            active_object_id: None,
-            component_selection: CadComponentSelection::default(),
+            hovered_reference_id: None,
             engagement_input: String::new(),
             engagement_step: "Idle".into(),
             active_example_id: None,
             selected_reference_model_definition_id: None,
             selected_reference_id: None,
-            selected_primitive_id: None,
-            selected_primitive_kind: None,
             engagement_pane: None,
             engagement_session_json: None,
             last_finalized_interaction_id: None,
@@ -428,7 +356,6 @@ mod tests {
     #[test]
     fn cad_config_default_matches_the_existing_runtime_defaults() {
         let config = CadConfig::default();
-        assert_eq!(config.selection_method, "rectangle");
         assert_eq!(config.engagement_step, "Idle");
         assert_eq!(config.active_utility_id, "move");
         assert_eq!(config.locale, "en-US");
@@ -438,17 +365,15 @@ mod tests {
 
     #[test]
     fn cad_config_dsl_round_trips_a_populated_record() {
-        let mut config = CadConfig {
-            selected_object_ids: vec!["object-1".into(), "object-2".into()],
-            hovered_target: Some(CadHoverTarget { object_id: Some("object-1".into()), mode: Some("edge".into()), id: Some(3) }),
+        let config = CadConfig {
+            selected_node_ids: vec!["node-1".into(), "node-2".into()],
+            hovered_reference_id: Some("ref-1".into()),
             engagement_session_json: Some("{\"interactionId\":\"box\"}".into()),
             active_utility_id: "rotate".into(),
             locale: "de-DE".into(),
+            camera: CadCamera { position: [1.0, 2.0, 3.0], ..CadCamera::default() },
             ..CadConfig::default()
         };
-        config.component_selection.mode = "face".into();
-        config.component_selection.ids = vec![1, 2, 3];
-        config.camera.position = [1.0, 2.0, 3.0];
         let text = store::ArtifactDsl::print_dsl(&config);
         let parsed = <CadConfig as store::ArtifactDsl>::parse_dsl(&text).expect("cad config dsl parses");
         assert_eq!(parsed, config);
@@ -473,8 +398,8 @@ mod tests {
 
     #[test]
     fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
-        let base = CadConfig { selection_method: "lasso".into(), active_utility_id: "move".into(), ..CadConfig::default() };
-        let next = CadConfig { selection_method: "lasso".into(), active_utility_id: "rotate".into(), selected_object_ids: vec!["object-1".into()], ..CadConfig::default() };
+        let base = CadConfig { active_utility_id: "move".into(), ..CadConfig::default() };
+        let next = CadConfig { active_utility_id: "rotate".into(), selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
         let operation = CadConfigMutation::Snapshot { config: next.clone() };
         let forward = operation.diff(&base);
         assert_eq!(forward, next);

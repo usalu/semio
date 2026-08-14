@@ -27,7 +27,7 @@ pub fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurateSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::curate::commands::document::{set_active_example, set_artifact_json, stock_from_catalogue};
+    use crate::apps::curate::commands::{set_active_example, stock_from_catalogue};
     use crate::apps::curate::testkit::new_app;
     use crate::apps::curate::SourcingCurateCommand;
     use crate::apps::curate::DEMO_STOCK_EXAMPLE_ID;

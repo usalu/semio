@@ -26,8 +26,6 @@ pub struct CurateDiff {
     pub curated: Option<CurateCuratedDelta>,
     #[state(config)]
     pub filters: Option<Filters>,
-    #[state(presence)]
-    pub selected_object_id: Option<Option<String>>,
     #[state(config)]
     pub locale: Option<String>,
     #[state(config)]

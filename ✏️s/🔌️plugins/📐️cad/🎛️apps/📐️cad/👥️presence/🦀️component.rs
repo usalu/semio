@@ -5,25 +5,17 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live CAD view state (peer selection, hover, camera, active utility, engagement).
+/// 👥️ Shareable live CAD view state — camera, active utility, engagement step. Peer mesh
+/// selection/hover now broadcasts via the framework's typed `PresenceInteraction`, not here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "cad.presence")]
 #[dsl(layout = "lines")]
 pub struct CadPresence {
-    pub selected_object_ids: Vec<String>,
-    pub selected_node_ids: Vec<String>,
-    pub hovered_object_id: Option<String>,
-    pub hovered_target_object_id: Option<String>,
-    pub hovered_target_mode: Option<String>,
-    pub hovered_target_id: Option<u32>,
-    pub active_object_id: Option<String>,
-    pub component_selection_mode: String,
-    pub component_selection_ids: Vec<u32>,
-    pub component_selection_targets_mesh: bool,
-    pub component_selection_targets_vertex: bool,
-    pub component_selection_targets_edge: bool,
-    pub component_selection_targets_face: bool,
+    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object/vertex/edge/face
+    // selection AND hover broadcast automatically now via the framework's typed
+    // `PresencePeer.interaction: Option<PresenceInteraction>` for the `"cad"` domain — every field
+    // that used to mirror `CadConfig`'s selection/hover here is DELETED, not migrated in place.
     pub camera_position: [f64; 3],
     pub camera_target: [f64; 3],
     pub camera_zoom: f64,
@@ -36,19 +28,6 @@ pub struct CadPresence {
 impl Default for CadPresence {
     fn default() -> Self {
         Self {
-            selected_object_ids: Vec::new(),
-            selected_node_ids: Vec::new(),
-            hovered_object_id: None,
-            hovered_target_object_id: None,
-            hovered_target_mode: None,
-            hovered_target_id: None,
-            active_object_id: None,
-            component_selection_mode: "mesh".into(),
-            component_selection_ids: Vec::new(),
-            component_selection_targets_mesh: true,
-            component_selection_targets_vertex: false,
-            component_selection_targets_edge: true,
-            component_selection_targets_face: false,
             camera_position: [12.0, -12.0, 8.0],
             camera_target: [0.0, 0.0, 0.0],
             camera_zoom: 1.0,

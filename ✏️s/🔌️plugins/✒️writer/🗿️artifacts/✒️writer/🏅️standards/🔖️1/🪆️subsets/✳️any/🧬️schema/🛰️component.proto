@@ -2,12 +2,12 @@ syntax = "proto3";
 package semio.s.writer.writer;
 
 message WriterArtifact {
+  reserved 6, 17, 18;
   string schema = 1;
   string id = 2;
   string language_id = 3;
   string uri = 4;
   string text = 5;
-  repeated string selected_ast_ids = 6;
   optional WriterEditorSelection editor_selection = 7;
   WriterEditorSettings editor_settings = 8;
   uint32 format_signal = 9;
@@ -18,8 +18,6 @@ message WriterArtifact {
   double camera_y = 14;
   double camera_zoom = 15;
   string locale = 16;
-  optional string tree_hovered_ast_id = 17;
-  optional uint32 editor_hover_offset = 18;
 }
 
 message WriterEditorSelection {

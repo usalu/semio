@@ -116,7 +116,12 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
     let glyph_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map_or_else(|| "{}".into(), |value| value.to_string());
-    let selection_json = serde_json::to_string(&envelope.runtime.selected_ids).unwrap_or_else(|_| "[]".into());
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/method used
+    // to come from `runtime.selected_ids`/`selection_method`, now dissolved into the framework-owned
+    // `vortex` interaction domain; `render` has no `InteractionView` to read it from (see
+    // `puzzle3d`'s `world_selection_json` doc comment for the identical framework-level gap) — this
+    // payload carries no live ids until that gap closes.
+    let selection_json = "[]".to_string();
     let brush_weights_json = serde_json::to_string(&json!({
         "nodeWeights": envelope.runtime.node_kind_weights,
         "handleWeights": envelope.runtime.handle_kind_weights,
@@ -132,7 +137,7 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
         interactive: pane == overview::WINDOW_KIND_ID,
         hovered_id: None,
         active_utility: Some(envelope.active_utility.clone()),
-        selection_method: envelope.runtime.selection_method.clone(),
+        selection_method: "rectangle".into(),
         grid_snap_enabled: envelope.runtime.grid_snap_enabled,
         grid_factor: envelope.runtime.grid_factor,
         suggestion_offset: envelope.runtime.suggestion_offset,

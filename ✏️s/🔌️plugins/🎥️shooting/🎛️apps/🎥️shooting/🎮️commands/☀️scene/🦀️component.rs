@@ -2,6 +2,7 @@
 //! undoable document mutations via `ShootingMutation::PatchScene`.
 
 use crate::apps::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::apps::shooting::ShootingDispatchCtx;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -17,7 +18,7 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneSunAzimuth(crate::artifacts::shooting::mutations::change_scene_sun_azimuth::mutation::ChangeSceneSunAzimuth { new_azimuth: payload.value })]))
     }
 }
@@ -33,7 +34,7 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneSunElevation(crate::artifacts::shooting::mutations::change_scene_sun_elevation::mutation::ChangeSceneSunElevation { new_elevation: payload.value })]))
     }
 }
@@ -49,7 +50,7 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneSunIntensity(crate::artifacts::shooting::mutations::change_scene_sun_intensity::mutation::ChangeSceneSunIntensity { new_intensity: payload.value })]))
     }
 }
@@ -65,7 +66,7 @@ pub mod set_ambient_intensity {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetAmbientIntensity, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAmbientIntensity, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneAmbientIntensity(crate::artifacts::shooting::mutations::change_scene_ambient_intensity::mutation::ChangeSceneAmbientIntensity { new_intensity: payload.value })]))
     }
 }
@@ -81,7 +82,7 @@ pub mod set_material_roughness {
         pub value: f64,
     }
 
-    pub fn handle(payload: &SetMaterialRoughness, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetMaterialRoughness, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneMaterialRoughness(crate::artifacts::shooting::mutations::change_scene_material_roughness::mutation::ChangeSceneMaterialRoughness { new_roughness: payload.value })]))
     }
 }
@@ -97,7 +98,7 @@ pub mod set_shadow_enabled {
         pub value: bool,
     }
 
-    pub fn handle(payload: &SetShadowEnabled, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetShadowEnabled, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneShadowEnabled(crate::artifacts::shooting::mutations::change_scene_shadow_enabled::mutation::ChangeSceneShadowEnabled { new_enabled: payload.value })]))
     }
 }
@@ -113,7 +114,7 @@ pub mod toggle_sun {
         pub value: bool,
     }
 
-    pub fn handle(payload: &ToggleSun, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ToggleSun, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![ShootingMutation::ChangeSceneSunEnabled(crate::artifacts::shooting::mutations::change_scene_sun_enabled::mutation::ChangeSceneSunEnabled { new_enabled: payload.value })]))
     }
 }

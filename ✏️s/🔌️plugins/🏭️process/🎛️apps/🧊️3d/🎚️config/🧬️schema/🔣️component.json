@@ -4,7 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectionMethod",
     "engagementInput",
     "cameraPosition",
     "cameraTarget",
@@ -19,23 +18,6 @@
     "contributionsJson"
   ],
   "properties": {
-    "selectedId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "hoveredId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectedFaceId": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "engagementInput": {
       "type": "string",
       "x-semio-state": "config"

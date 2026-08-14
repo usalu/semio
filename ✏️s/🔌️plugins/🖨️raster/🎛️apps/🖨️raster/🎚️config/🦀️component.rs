@@ -1,9 +1,14 @@
 //! 🧮️ Raster app — view-state configuration (constitutional: general/config). B1: this absorbs every
-//! former `RasterPlayRuntime` (`ui`-crate `RefCell`) field (selection, hover, brush size/opacity,
-//! navigator composite-viewport size, the session-only free camera) plus the two former `ViewModel`-
-//! driven fields the raster UI actually reads (`active_utility_id`/`locale` — mirrors
+//! former `RasterPlayRuntime` (`ui`-crate `RefCell`) field (brush size/opacity, navigator
+//! composite-viewport size, the session-only free camera) plus the two former `ViewModel`-driven
+//! fields the raster UI actually reads (`active_utility_id`/`locale` — mirrors
 //! `shooting_engine::ShootingConfig`'s identical B1 migration). `RasterConfigMutation` lives here too,
 //! next to the `RasterConfig` it patches (TEMPLATE.md §4).
+//!
+//! 🕹️ `selected_ids`/`hovered_id` deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+//! layer selection/hover is the framework-owned `"layers"` interaction domain now (granularity
+//! `"layer"`, `HierarchyProvider::Flat`), read via `InteractionView::selection("layers")` instead of
+//! this config.
 
 use crate::artifacts::raster::RasterCamera;
 use protocol::Mutation;
@@ -16,10 +21,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(extension = "rastercfg")]
 #[dsl(layout = "lines")]
 pub struct RasterConfig {
-    /// 👁️ Selected layer ids — was `RasterPlayRuntime::selected_ids`.
-    pub selected_ids: Vec<String>,
-    /// 👁️ Hovered layer id — was `RasterPlayRuntime::hovered_id`.
-    pub hovered_id: Option<String>,
     /// 🖌️ Brush diameter (px) — was `RasterPlayRuntime::brush_size`.
     pub brush_size: f64,
     /// 🖌️ Brush opacity (0..1) — was `RasterPlayRuntime::brush_opacity`.
@@ -106,7 +107,7 @@ pub type RasterConfigViewportSize = crate::artifacts::raster::RasterViewportSize
 
 impl Default for RasterConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), hovered_id: None, brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default(), active_utility_id: "selectMarquee".into(), locale: "en-US".into() }
+        Self { brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default(), active_utility_id: "selectMarquee".into(), locale: "en-US".into() }
     }
 }
 
@@ -124,10 +125,6 @@ pub enum RasterConfigMutation {
         #[dsl(block)]
         config: RasterConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
-    #[dsl(key = "hover")]
-    SetHovered { id: Option<String> },
     #[dsl(key = "brush-size")]
     SetBrushSize { value: f64 },
     #[dsl(key = "brush-opacity")]
@@ -227,8 +224,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
         let mut next = base.clone();
         match self {
             RasterConfigMutation::Snapshot { config } => return config.clone(),
-            RasterConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
-            RasterConfigMutation::SetHovered { id } => next.hovered_id = id.clone(),
             RasterConfigMutation::SetBrushSize { value } => next.brush_size = *value,
             RasterConfigMutation::SetBrushOpacity { value } => next.brush_opacity = value.clamp(0.0, 1.0),
             RasterConfigMutation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
@@ -252,10 +247,10 @@ mod tests {
 
     #[test]
     fn raster_config_operation_round_trips_and_backwards_restores_snapshot() {
-        let base = RasterConfig { selected_ids: vec!["a".into()], ..Default::default() };
-        let operation = RasterConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] };
+        let base = RasterConfig { brush_size: 24.0, ..Default::default() };
+        let operation = RasterConfigMutation::SetBrushSize { value: 40.0 };
         let forward = operation.diff(&base);
-        assert_eq!(forward.selected_ids, vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(forward.brush_size, 40.0);
         let backwards = operation.inverse(&base);
         assert_eq!(backwards, vec![RasterConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(backwards[0].diff(&forward), base);
@@ -264,9 +259,6 @@ mod tests {
     #[test]
     fn raster_config_operation_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::Snapshot { config: RasterConfig::default() });
-        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetSelection { ids: vec!["a".into(), "b".into()] });
-        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetHovered { id: Some("a".into()) });
-        store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetHovered { id: None });
         store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushSize { value: 40.0 });
         store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushOpacity { value: 0.5 });
         store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) });
@@ -288,8 +280,6 @@ mod tests {
     #[test]
     fn raster_config_dsl_round_trips() {
         let config = RasterConfig {
-            selected_ids: vec!["l1".into(), "l2".into()],
-            hovered_id: Some("l3".into()),
             brush_size: 40.0,
             brush_opacity: 0.5,
             composite_viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }),

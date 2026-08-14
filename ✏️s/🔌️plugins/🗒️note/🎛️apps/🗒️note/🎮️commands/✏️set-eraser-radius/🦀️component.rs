@@ -12,6 +12,6 @@ pub struct SetEraserRadius {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetEraserRadius, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetEraserRadius, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::apps::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_eraser_radius(Some(payload.value.clamp(4.0, 48.0)))]))
 }

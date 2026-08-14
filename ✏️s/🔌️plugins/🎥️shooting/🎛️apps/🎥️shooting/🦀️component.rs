@@ -18,15 +18,21 @@ use crate::apps::shooting::terminology::shooting_play_labels;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, DslValue, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, OsMediaCapability, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
+    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, DslValue, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_APP_ID: &str = "shooting-play";
 const SHOOTING_PLAY_CONTROLLER_ID: &str = "shooting-play";
+/// 🕹️ The framework-owned interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM)
+/// covering asset pick/marquee selection and pointer hover in the 3d scene window — granularity `"asset"`
+/// only, `HierarchyProvider::Flat`. Shot selection is NOT part of this domain — see
+/// `ShootingConfig::selected_shot_ids`'s doc comment.
+pub const SHOOTING_INTERACTION_DOMAIN: &str = "assets";
 pub use icon_window::SHOOTING_PLAY_BODY_ICON;
 pub use icon_window::SHOOTING_PLAY_WINDOW_ICON;
 pub use scene_window::SHOOTING_PLAY_BODY_SCENE;
@@ -109,6 +115,17 @@ pub fn shooting_photo_media(snapshot: &ShootingSnapshot) -> Result<Media, MediaE
 //#endregion 🔖️Io
 
 //#region 🔖️Commands
+/// 🕹️ Per-dispatch app-struct state that is neither document nor config: a read-only snapshot of the
+/// `"assets"` interaction domain's current selection ids (see [`SHOOTING_INTERACTION_DOMAIN`]). The
+/// `semio_framework_plugin::app_commands!`-generated `dispatch` has no way to thread `InteractionView`
+/// itself (see that macro's own doc comment on `ctx`), so `ArtifactApp::handle` reads it once and hands
+/// it down through this app-owned context instead — used by the retained `translate/rotate/scale-
+/// Selection` gumball verbs (`🎮️commands/🧭️gumball`) as their fallback-to-current-selection source.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ShootingDispatchCtx {
+    pub selected_asset_ids: Vec<String>,
+}
+
 semio_framework_plugin::app_commands! {
     /// 🎯️ `ShootingPlayApp::Command` — the SOLE dispatch surface for shooting's own behavior, assembled
     /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
@@ -116,7 +133,7 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — different vocabularies, and
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
-    pub enum ShootingCommand for ShootingSnapshot, ShootingMutation, ShootingConfig, ShootingConfigMutation {
+    pub enum ShootingCommand for ShootingSnapshot, ShootingMutation, ShootingConfig, ShootingConfigMutation, ctx = ShootingDispatchCtx {
         "importSnapshotJson" as "import-snapshot-json" => import_snapshot_json::ImportSnapshotJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "setActiveShot" as "active-shot" => set_active_shot::SetActiveShot,
@@ -148,11 +165,7 @@ semio_framework_plugin::app_commands! {
         "setCenterModel" as "center-model" => set_center_model::SetCenterModel,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setLocale" as "locale" => set_locale::SetLocale,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "setSelectionMethod" as "selection-method" => set_selection_method::SetSelectionMethod,
-        "worldSelect" as "world-select" => world_select::WorldSelect,
-        "setHover" as "set-hover" => set_hover::SetHover,
-        "worldPick" as "world-pick" => world_pick::WorldPick,
+        "setShotSelection" as "set-shot-selection" => set_shot_selection::SetShotSelection,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
         "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove,
         "saveDownload" as "save-download" => save_download::SaveDownload,
@@ -173,7 +186,7 @@ use fixture::{load_request, reset_snapshot, save_download, set_active_example, i
 use gumball::{rotate_selection, scale_selection, translate_selection};
 use locale::set_locale;
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use selection::{set_active_utility, set_center_model, set_hover, set_selection, set_selection_method, world_pick, world_pointer_down, world_pointer_move, world_select};
+use selection::{set_active_utility, set_center_model, set_shot_selection, world_pointer_down, world_pointer_move};
 use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_active_shot_label, set_active_shot_shape};
 //#endregion 🔖️Commands
 
@@ -264,8 +277,9 @@ impl ArtifactApp for ShootingPlayApp {
         }
     }
 
-    fn handle(command: &ShootingCommand, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    fn handle(command: &ShootingCommand, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
+        let mut ctx = ShootingDispatchCtx { selected_asset_ids: interaction.selection(SHOOTING_INTERACTION_DOMAIN).ids.clone() };
+        command.dispatch(doc, cfg, &mut ctx)
     }
 
     /// 🧮️ This app's typed configuration spec — mirrors `ShootingConfig`'s three sticky-default fields,
@@ -402,16 +416,32 @@ pub fn create_shooting_app() -> App {
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
-            // 👁️ Ephemeral view state — selection, camera draft label, world picking.
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            // 👁️ Ephemeral view state — shot gallery selection, camera draft label, transform utility.
+            .view_action("setShotSelection", LocalizedLabel::native("Set Shot Selection", "Aufnahmeauswahl festlegen"))
             .view_action("setCameraDraftLabel", LocalizedLabel::native("Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"))
             .view_action("setCenterModel", LocalizedLabel::native("Set Center Model", "Modellzentrierung festlegen"))
-            .view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"))
-            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
-            .view_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"))
-            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
             .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
             .view_action("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"))
+            // 🕹️ The framework-owned "assets" interaction domain (ticket
+            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — the 3d scene's asset pick/marquee
+            // selection and pointer hover; auto-injects interactionSelect/interactionHover/
+            // clearSelection/selectAll/setSelectionMode/setInteractionGranularity, replacing the deleted
+            // bespoke setSelection/setSelectionMethod/worldSelect/setHover/worldPick actions above.
+            .interaction(InteractionDefinition {
+                id: SHOOTING_INTERACTION_DOMAIN.into(),
+                label: LocalizedLabel::native("Assets", "Objekte"),
+                granularities: vec![GranularityDefinition { id: "asset".into(), label: LocalizedLabel::native("Asset", "Objekt"), icon_id: "box".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(SHOOTING_PLAY_WINDOW_SCENE, vec![InteractionRef::new(SHOOTING_INTERACTION_DOMAIN)])
             // 🐚️ Shell effects — export/import round-trips through the host.
             .shell_action("saveDownload", LocalizedLabel::native("Save Download", "Download speichern"))
             .shell_action("loadRequest", LocalizedLabel::native("Load Request", "Ladeanfrage"))
@@ -513,7 +543,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 42, "every ShootingCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 38, "every ShootingCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -558,11 +588,7 @@ mod tests {
             ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(true) }),
             ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }),
             ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            ShootingCommand::SetSelection(set_selection::SetSelection { shot_ids: vec!["s1".into()], asset_ids: vec!["a1".into(), "a2".into()] }),
-            ShootingCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: "rectangle".into() }),
-            ShootingCommand::WorldSelect(world_select::WorldSelect { ids: vec!["a1".into()], merge: "replace".into() }),
-            ShootingCommand::SetHover(set_hover::SetHover { asset_id: Some("a1".into()) }),
-            ShootingCommand::WorldPick(world_pick::WorldPick { asset_id: Some("a1".into()), asset_index: Some(2), merge: "toggle".into() }),
+            ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec!["s1".into()] }),
             ShootingCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {}),
             ShootingCommand::WorldPointerMove(world_pointer_move::WorldPointerMove {}),
             ShootingCommand::SaveDownload(save_download::SaveDownload {}),
@@ -605,14 +631,27 @@ mod tests {
         assert!(engagements[SHOOTING_PLAY_WINDOW_ICON].status.as_ref().unwrap()[0].text.contains("256×256"));
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: replaces the deleted
+    /// `world_pick_is_declared_as_a_view_action_and_emits_no_operations` test — asset pick/select is the
+    /// framework-injected `interactionSelect` verb now (no app-declared action id), asserted here
+    /// instead of a bespoke `worldPick` action.
     #[test]
-    fn world_pick_is_declared_as_a_view_action_and_emits_no_operations() {
-        let definition = create_shooting_app().definition;
-        let world_pick_action = definition.actions.iter().find(|action| action.id == "worldPick").expect("worldPick declared");
-        assert!(matches!(world_pick_action.kind, ActionKind::View), "worldPick is a View action");
+    fn interaction_select_is_reachable_as_a_framework_injected_action_under_registry_enforcement() {
         let mut app = shooting_app_with_registry();
-        let result = dispatch(&mut app, ShootingCommand::WorldPick(world_pick::WorldPick { asset_id: None, asset_index: Some(0), merge: "replace".into() }));
-        assert!(result.mutations.is_empty(), "worldPick (View) emits no operations even under registry enforcement");
+        let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
+        let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).unwrap();
+        app.handle_action("interactionSelect", Some(&json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &testkit::meta("local")).expect("interactionSelect");
+    }
+
+    #[test]
+    fn assets_interaction_domain_is_declared_and_scoped_to_the_scene_window() {
+        let definition = create_shooting_app().definition;
+        let domain = definition.interactions.iter().find(|interaction| interaction.id == SHOOTING_INTERACTION_DOMAIN).expect("assets interaction domain declared");
+        assert_eq!(domain.granularities.len(), 1);
+        assert_eq!(domain.granularities[0].id, "asset");
+        assert!(matches!(domain.hierarchy, HierarchyProvider::Flat));
+        let scene = definition.window_kinds.iter().find(|window| window.id == SHOOTING_PLAY_WINDOW_SCENE).expect("scene window");
+        assert!(scene.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == SHOOTING_INTERACTION_DOMAIN));
     }
     //#endregion 🔖️ManifestSanity
 

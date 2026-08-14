@@ -8,11 +8,8 @@ use super::Procedural3dPreviewCamera;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.3d.config")]
 pub struct Procedural3dConfig {
-    #[state(config)] pub selected_node_ids: Vec<String>,
     #[state(config)] pub lod_mode: String,
     #[state(config)] pub show_mode: String,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub hovered_node_id: Option<String>,
     #[state(config)] pub camera: CameraJson,
     #[state(config)] pub preview_camera: Procedural3dPreviewCamera,
     #[state(config)] pub sun_json: String,

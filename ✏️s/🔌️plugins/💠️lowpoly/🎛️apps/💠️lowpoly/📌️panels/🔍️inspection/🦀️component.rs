@@ -3,7 +3,7 @@
 
 use crate::apps::lowpoly::lowpoly_action;
 use crate::apps::lowpoly::terminology::LowpolyLabels;
-use crate::apps::lowpoly::view::{active_object, format_selection_targets_label, selection_targets_from_config, utility_params_value, LowpolyView};
+use crate::apps::lowpoly::view::{active_object, utility_params_value, LowpolyView};
 use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode,
@@ -60,7 +60,6 @@ pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabel
     };
     let config = view.config;
     let params = utility_params_value(config);
-    let targets = selection_targets_from_config(config);
     ui_inspector_groups_to_tree(&[
         UiInspectorFieldGroup {
             id: "lowpoly-play-inspector.object".into(),
@@ -108,8 +107,10 @@ pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabel
                     error: None,
                     menu: None,
                 }),
-                ui_inspector_readonly_field("lowpoly-play-inspector.object.selection", labels.selection, format!("{} · {} {}", format_selection_targets_label(&targets), config.selection_ids.len(), labels.selected.as_str())),
-                ui_inspector_readonly_field("lowpoly-play-inspector.object.selection-mode", labels.selection_mode, &config.selection_mode),
+                // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the selection summary/mode
+                // rows used to read `LowpolyConfig`; the mesh domain's selection is framework-owned
+                // `InteractionState` now, and `ArtifactApp::render` is not threaded an `InteractionView`
+                // this wave — dropped rather than shown stale. Peer/self selection surfaces generically.
             ],
         },
         UiInspectorFieldGroup {

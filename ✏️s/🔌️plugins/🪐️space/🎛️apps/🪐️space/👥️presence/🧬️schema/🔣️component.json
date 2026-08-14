@@ -4,23 +4,11 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedNodeIds",
     "camera",
     "collapsedNodeIds",
     "previewOffNodeIds"
   ],
   "properties": {
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "hoveredNodeId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "camera": {
       "type": "object",
       "additionalProperties": {

@@ -18,15 +18,17 @@ pub struct DuplicateLayer {
     pub layer_id: String,
 }
 
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the duplicated layer used to also
+/// select itself here — the `"layers"` domain's selection is framework-owned `InteractionState` now,
+/// only ever mutated by the framework's own injected `interactionSelect` handling, never by an app
+/// command's `Emit::config_mutations`.
 pub fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     match find_layer(&document.layers, &payload.layer_id) {
         Some(layer) => {
             let copy = clone_layer(layer);
-            let select_id = layer_node_id(&copy).to_string();
             Ok(Emit {
                 artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) })],
-                config_mutations: vec![RasterConfigMutation::SetSelection { ids: vec![select_id] }],
                 ..Default::default()
             })
         }

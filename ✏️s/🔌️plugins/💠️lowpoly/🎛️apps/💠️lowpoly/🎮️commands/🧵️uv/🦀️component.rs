@@ -39,7 +39,9 @@ pub mod mark_uv_seam {
     pub fn handle(payload: &MarkUvSeam, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let seam = payload.seam.unwrap_or(true);
-        let edge_ids = payload.edge_ids.clone().unwrap_or_else(|| config.selection_ids.clone());
+        // 🕹️ Falls back to the mesh domain's CURRENT selection (`LowpolyScratch::current_selection`,
+        // resolved from `InteractionView` by `LowpolyPlayApp::handle`) rather than a deleted config field.
+        let edge_ids = payload.edge_ids.clone().unwrap_or_else(|| ctx.current_selection().ids.clone());
         Ok(mesh_edit(projection, config, ctx, move |doc| {
             let edges: Vec<EdgeId> = edge_ids.into_iter().map(EdgeId).collect();
             doc.active_mesh_mut().map_err(|e| e.to_string())?.mark_uv_seam(&edges, seam);

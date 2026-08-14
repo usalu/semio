@@ -11,10 +11,7 @@ message RasterPresenceCamera {
 }
 
 message RasterPresence {
-  // @state presence
-  repeated string selected_ids = 1;
-  // @state presence
-  optional string hovered_id = 2;
+  reserved 1, 2;
   // @state presence
   double brush_size = 3;
   // @state presence

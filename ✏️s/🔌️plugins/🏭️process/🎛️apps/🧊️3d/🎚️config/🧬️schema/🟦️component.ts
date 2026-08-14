@@ -1,14 +1,6 @@
 /** 🧬️ Process3dConfig */
 export interface Process3dConfig {
   /** @state config */
-  selectedId?: string;
-  /** @state config */
-  hoveredId?: string;
-  /** @state config */
-  selectedFaceId?: number;
-  /** @state config */
-  selectionMethod: string;
-  /** @state config */
   engagementInput: string;
   /** @state config */
   cameraPosition: number[];

@@ -140,11 +140,9 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
     // A bare `Stack` is a layout-only container with no interaction semantics of its own — it
     // must never be the hit result itself, only a pass-through to its children (same intent as
     // `HIT_TRANSPARENT`, just implicit for this variant instead of flag-driven) — *unless* W2
-    // wiring (`is_plain_stack_container`) finds it actually carries `activate`/`drop_action`, is a
-    // registered drag source, or (for `Tree`'s synthesized per-row `Stack`s, see
-    // `reconcile::children_of`'s `Tree` arm) its original `UiTreeItemNode` spec has a
-    // `hover_action`/`unhover_action` — any of those make it a real interaction target.
-    let is_plain_container = is_plain_stack_container(tree, id, node);
+    // wiring (`is_plain_stack_container`) finds it actually carries `activate`/`drop_action`, or is
+    // a registered drag source — any of those make it a real interaction target.
+    let is_plain_container = is_plain_stack_container(node);
     if inside && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {
         Some(id)
     } else {
@@ -157,29 +155,18 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
 /// (`paint::sync_interactive_state` keeps that flag synced with `Tree` rows' `draggable` field, and
 /// `dispatch`'s `PointerDown` handling can only ever register a drag payload on a node that's
 /// actually reachable as a hit-test target in the first place — see `find_tree_item_spec`'s own
-/// caller in `dispatch`). A `Tree`'s synthesized per-row `Stack` (`reconcile::children_of`'s `Tree`
-/// arm, keyed by `item.id`) has no room for `hover_action`/`unhover_action` on its own retained
-/// shape either — those are re-derived here, by key, straight from the row's *original*
-/// `UiTreeItemNode` spec (`find_tree_item_spec`), so a row with only a hover affordance (no
-/// `action`/`draggable`) still becomes hit-testable.
-fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
+/// caller in `dispatch`). ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: a `Tree`
+/// row's per-item `hover_action`/`unhover_action` exception is deleted — hover on a tree row is now
+/// dispatched through the row's `UiTreeNode.interaction_domain` binding (`interactionHover`),
+/// never an ad hoc per-item action.
+fn is_plain_stack_container(node: &Node) -> bool {
     let UiNode::Stack(stack) = &node.spec.0 else { return false };
-    if stack.activate.is_some() || stack.drop_action.is_some() || node.flags.contains(NodeFlags::DRAG_SOURCE) {
-        return false;
-    }
-    if stack.id.is_some() {
-        if let Some(item) = find_tree_item_spec(tree, id) {
-            if item.hover_action.is_some() || item.unhover_action.is_some() {
-                return false;
-            }
-        }
-    }
-    true
+    stack.activate.is_none() && stack.drop_action.is_none() && !node.flags.contains(NodeFlags::DRAG_SOURCE)
 }
 
 //#region 🔖️TreeItemLookup
-/// 🌳️ Re-derives a `Tree` row's *original* `UiTreeItemNode` spec — `hover_action`/`unhover_action`/
-/// `draggable`/`drag_data`, fields `UiStackNode` (the row's synthesized retained shape, see
+/// 🌳️ Re-derives a `Tree` row's *original* `UiTreeItemNode` spec — `draggable`/`drag_data`, fields
+/// `UiStackNode` (the row's synthesized retained shape, see
 /// `reconcile::children_of`'s `Tree` arm) has no room for at all — by walking up from `row` to the
 /// nearest ancestor `UiNode::Tree` and searching its still-fully-intact spec (`reconcile` never
 /// drops fields, only clones them into `WidgetSpec` — see that module's own doc comment) for the
@@ -794,11 +781,10 @@ impl EventRouter {
 
     /// 👆️ Flips `NodeFlags::HOVERED` off every node in the old hover bubble chain that isn't in the
     /// new one, and on for every new node that wasn't in the old one — see `hover_chain`'s own doc
-    /// comment for why the whole chain (not just the leaf) carries the flag. W2 wiring: also fires a
-    /// `Tree` row's `hover_action`/`unhover_action` (`find_tree_item_spec`) on entering/leaving —
-    /// `UiStackNode` (a row's synthesized retained shape) has no field for either, so this is the same
-    /// re-derivation `is_plain_stack_container`'s tree-row exception uses, fired via `UiCommand::App`
-    /// exactly like a `Button`'s click (see `dispatch`'s `PointerUp` handling for that precedent).
+    /// comment for why the whole chain (not just the leaf) carries the flag. ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: the per-row `hover_action`/
+    /// `unhover_action` dispatch this used to fire is deleted — a `Tree`'s hover now flows through its
+    /// `UiTreeNode.interaction_domain` binding (`interactionHover`) instead of an ad hoc per-item action.
     fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) -> Vec<UiCommand> {
         let mut commands = Vec::new();
         if self.hovered == target {
@@ -817,9 +803,6 @@ impl EventRouter {
                     node.flags.set(NodeFlags::HOVERED, false);
                 }
                 tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
-                if let Some(action) = find_tree_item_spec(tree, previous).and_then(|item| item.unhover_action.clone()) {
-                    commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
-                }
             }
         }
         for &next in &new_chain {
@@ -828,9 +811,6 @@ impl EventRouter {
                     node.flags.set(NodeFlags::HOVERED, true);
                 }
                 tree.mark_dirty(next, NodeFlags::DIRTY_PAINT);
-                if let Some(action) = find_tree_item_spec(tree, next).and_then(|item| item.hover_action.clone()) {
-                    commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
-                }
             }
         }
         self.hover_chain = new_chain;
@@ -1391,7 +1371,7 @@ mod tests {
     }
 
     fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None, menu: None })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
     /// 🌳️ Manually inserts a `Tree` row `Stack` (mirroring `reconcile::tree_item_row`'s synthesized
@@ -1910,7 +1890,7 @@ mod tests {
     // 🔽️🎴️🌳️ Tests for the wiring closed out per `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2
     // pass: `Select` popup open/close (`toggle_select_popup`/`finish_close`), `Stack`
     // `activate`/`drop_action` (`is_plain_stack_container`'s hit-test exception), and `Tree` row
-    // `hover_action`/`unhover_action`/`draggable` (`find_tree_item_spec`).
+    // `draggable` (`find_tree_item_spec`).
 
     #[test]
     fn clicking_a_select_opens_its_popup_and_clicking_again_closes_it() {
@@ -2001,16 +1981,16 @@ mod tests {
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
         let _plain = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 100.0, 40.0));
 
-        assert_eq!(hit_test(&tree, root, 10.0, 10.0), None, "a bare Stack (no activate/drop_action/drag_source/tree-row hover affordance) must remain a hit-test pass-through");
+        assert_eq!(hit_test(&tree, root, 10.0, 10.0), None, "a bare Stack (no activate/drop_action/drag_source) must remain a hit-test pass-through");
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: `UiTreeItemNode.hoverAction`/
+    /// `unhoverAction` are deleted, so a tree row's hover no longer dispatches an ad hoc per-item
+    /// action here — the framework now owns hover per `UiTreeNode.interactionDomain`
+    /// (`interactionHover`), wired at a layer above this retained-mode event router.
     #[test]
-    fn hovering_a_tree_row_fires_its_hover_action_and_leaving_fires_unhover_action() {
-        let mut item = UiTreeItemNode::base("row1", "Row One");
-        item.hover_action = Some(action());
-        let mut leave_action = action();
-        leave_action.action = "leave".into();
-        item.unhover_action = Some(leave_action.clone());
+    fn hovering_a_tree_row_no_longer_fires_a_per_item_action() {
+        let item = UiTreeItemNode::base("row1", "Row One");
         let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
         let mut tree = UiTree::new();
@@ -2020,11 +2000,10 @@ mod tests {
         let mut router = EventRouter::new("main");
 
         let entered = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
-        let expected_enter = action();
-        assert!(entered.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == expected_enter)), "moving onto a hover-only tree row should fire its hover_action even though it has no activate/draggable of its own");
+        assert!(entered.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "hovering a plain tree row must never fire a per-item action anymore");
 
         let left = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0 });
-        assert!(left.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == leave_action)), "moving off the row should fire its unhover_action");
+        assert!(left.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "leaving a plain tree row must never fire a per-item action anymore");
     }
 
     #[test]

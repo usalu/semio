@@ -1,0 +1,40 @@
+test apps::procedural3d::modes::edit::windows::flow::tests::main_graph_scene_exports_flow_backed_node_graph_fields ... ok
+test apps::procedural3d::modes::edit::windows::flow::tests::renders_node_graph_scene ... ok
+test apps::procedural3d::modes::edit::windows::preview::tests::renders_world_preview_scene ... ok
+test apps::procedural3d::panels::catalogue::tests::procedural3d_labels_resolve_native_english_by_default ... ok
+test apps::procedural3d::panels::document::tests::document_lists_widgets ... ok
+test apps::procedural3d::panels::inspection::tests::inspector_shows_no_selection_by_default ... ok
+
+failures:
+
+---- artifacts::assembly::standards::v1::subsets::any::schema::inferences::component::tests::empty_assembly_solves_trivially_with_no_assignments stdout ----
+
+thread 'artifacts::assembly::standards::v1::subsets::any::schema::inferences::component::tests::empty_assembly_solves_trivially_with_no_assignments' (319975151) panicked at ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:271:9:
+assertion `left == right` failed
+  left: Unsolved
+ right: Solved { assignments: {} }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law stdout ----
+
+thread 'artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law' (319975178) panicked at ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:109:9:
+assertion `left == right` failed
+  left: Procedural2dInference { topology: Procedural2dTopology { node_count: 3, edge_count: 2, topo_order: ["slider", "add", "preview"], depth: 2, cycle_free: true } }
+ right: Procedural2dInference { topology: Procedural2dTopology { node_count: 0, edge_count: 0, topo_order: [], depth: 0, cycle_free: false } }
+
+---- artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law stdout ----
+
+thread 'artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law' (319975238) panicked at ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:109:9:
+assertion `left == right` failed
+  left: Procedural3dInference { topology: Procedural3dTopology { node_count: 3, edge_count: 2, topo_order: ["slider", "add", "preview"], depth: 2, cycle_free: true } }
+ right: Procedural3dInference { topology: Procedural3dTopology { node_count: 0, edge_count: 0, topo_order: [], depth: 0, cycle_free: false } }
+
+
+failures:
+    artifacts::assembly::standards::v1::subsets::any::schema::inferences::component::tests::empty_assembly_solves_trivially_with_no_assignments
+    artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law
+    artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law
+
+test result: FAILED. 499 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.52s
+
+error: test failed, to rerun pass `-p semio-s-plugin-procedural --lib`

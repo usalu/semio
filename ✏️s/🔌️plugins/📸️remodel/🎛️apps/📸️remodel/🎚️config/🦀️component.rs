@@ -27,14 +27,6 @@ impl Default for RemodelWorldCamera {
     }
 }
 
-/// 🖱️ Ephemeral face/vertex/object selection — was `RemodelPlayRuntime::selection`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
-pub struct RemodelSelection {
-    pub mode: String,
-    pub ids: Vec<String>,
-}
-
 /// 👁️ Which `remodel-main` point-cloud/mesh layers are visible — was `RemodelPlayRuntime::layers`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
@@ -75,8 +67,6 @@ pub struct RemodelFrameCursor {
 pub struct RemodelConfig {
     #[dsl(block)]
     pub camera: RemodelWorldCamera,
-    #[dsl(block)]
-    pub selection: RemodelSelection,
     #[dsl(block)]
     pub layers: RemodelLayerVisibility,
     #[dsl(block)]
@@ -156,7 +146,6 @@ impl Default for RemodelConfig {
     fn default() -> Self {
         Self {
             camera: RemodelWorldCamera::default(),
-            selection: RemodelSelection::default(),
             layers: RemodelLayerVisibility::default(),
             frame_cursor: RemodelFrameCursor::default(),
             report_table: "frames".into(),
@@ -189,8 +178,6 @@ pub enum RemodelConfigMutation {
         #[dsl(block)]
         camera: RemodelWorldCamera,
     },
-    #[dsl(key = "selection")]
-    SetSelection { mode: String, ids: Vec<String> },
     #[dsl(key = "layer-visibility")]
     SetLayerVisibility { layer: String, visible: bool },
     #[dsl(key = "frame-cursor")]
@@ -287,10 +274,6 @@ impl Mutation<RemodelConfig> for RemodelConfigMutation {
         match self {
             RemodelConfigMutation::Snapshot { config } => return config.clone(),
             RemodelConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            RemodelConfigMutation::SetSelection { mode, ids } => {
-                next.selection.mode = mode.clone();
-                next.selection.ids = ids.clone();
-            }
             RemodelConfigMutation::SetLayerVisibility { layer, visible } => match layer.as_str() {
                 "mesh" => next.layers.mesh = *visible,
                 "dense" => next.layers.dense = *visible,
@@ -327,7 +310,6 @@ mod tests {
     fn remodel_config_default_matches_the_former_runtime_defaults() {
         let config = RemodelConfig::default();
         assert_eq!(config.camera, RemodelWorldCamera { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
-        assert_eq!(config.selection, RemodelSelection::default());
         assert!(config.layers.mesh && config.layers.dense && config.layers.sparse && config.layers.cameras && config.layers.gcps);
         assert_eq!(config.frame_cursor, RemodelFrameCursor::default());
         assert_eq!(config.report_table, "frames");
@@ -354,11 +336,6 @@ mod tests {
         assert_eq!(op.inverse(&base), vec![RemodelConfigMutation::Snapshot { config: base.clone() }]);
         assert_eq!(op.inverse(&base)[0].diff(&next), base, "backwards restores the exact pre-edit config");
 
-        let op = RemodelConfigMutation::SetSelection { mode: "rectangle".into(), ids: vec!["a".into()] };
-        let next = op.diff(&base);
-        assert_eq!(next.selection.mode, "rectangle");
-        assert_eq!(next.selection.ids, vec!["a".to_string()]);
-
         let op = RemodelConfigMutation::SetLayerVisibility { layer: "dense".into(), visible: false };
         let next = op.diff(&base);
         assert!(!next.layers.dense);
@@ -384,7 +361,6 @@ mod tests {
         let config = RemodelConfig::default();
         store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::Snapshot { config });
         store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetCamera { camera: RemodelWorldCamera::default() });
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetSelection { mode: "rectangle".into(), ids: vec!["a".into(), "b".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetLayerVisibility { layer: "gcps".into(), visible: false });
         store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 });
         store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::SetFrameCursor { stream_id: None, frame_index: 0 });

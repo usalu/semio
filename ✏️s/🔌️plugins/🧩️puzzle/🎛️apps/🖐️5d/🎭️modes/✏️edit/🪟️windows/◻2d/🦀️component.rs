@@ -10,7 +10,7 @@ use crate::apps::puzzle5d::modes::edit::options as mode_options;
 use crate::apps::puzzle5d::modes::edit::windows::board2d::{actions, options, utilities};
 use crate::apps::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 use crate::apps::puzzle5d::{
-    puzzle5d_grip_full_id, puzzle5d_scene_mode, selection_flat_ids, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID,
+    puzzle5d_grip_full_id, puzzle5d_scene_mode, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID,
 };
 use crate::apps::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dRuntime};
 use crate::apps::puzzle5d::precompute::Puzzle5dPrecomputeSession;
@@ -38,6 +38,7 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
         options: WindowOptions { measures: window_measures(envelope, precompute, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
         actions: vec![actions::apply_board_events::reference(), actions::set_camera::reference()],
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::fill::UTILITY_ID.into()],
+        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::apps::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -150,11 +151,16 @@ fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         fixture_json: board_fixture_value(&envelope.document, &envelope.runtime.camera2d).to_string(),
         camera_json: board_camera_value(&envelope.runtime.camera2d).to_string(),
         glyph_catalogs_json: board_kind_catalogs_value(&envelope.document).to_string(),
-        selection_json: serde_json::to_string(&selection_flat_ids(&envelope.runtime.selection)).unwrap_or_else(|_| "[]".into()),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/hover ids
+        // and method used to come from `runtime.selection`/`hovered_part_id`/`selection_method`, now
+        // dissolved into the framework-owned `vortex` interaction domain; `render` has no
+        // `InteractionView` to read it from (see `puzzle5d_gumball_active`'s doc comment) — this
+        // payload carries no live ids until that framework gap closes.
+        selection_json: "[]".into(),
         interactive: true,
-        hovered_id: envelope.runtime.hovered_part_id.clone(),
+        hovered_id: None,
         active_utility: Some(puzzle5d_scene_mode(&envelope.active_utility).to_string()),
-        selection_method: envelope.runtime.selection_method.clone(),
+        selection_method: "rectangle".into(),
         grid_snap_enabled: envelope.runtime.grid_snap_enabled,
         grid_factor: envelope.runtime.grid_factor,
         suggestion_offset: envelope.runtime.suggestion_offset,

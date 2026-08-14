@@ -11,13 +11,6 @@ use store::ArtifactPack;
 #[dsl(extension = "puzzle3d.presence")]
 #[dsl(layout = "lines")]
 pub struct Puzzle3dPresence {
-    pub selected_object_ids: Vec<String>,
-    pub selected_vortex_ids: Vec<String>,
-    pub selected_attraction_ids: Vec<String>,
-    pub selected_target_volume_ids: Vec<String>,
-    pub selected_reference_ids: Vec<String>,
-    pub hovered_object_id: Option<String>,
-    pub hovered_vortex_full_id: Option<String>,
     pub camera_position: [f64; 3],
     pub camera_target: [f64; 3],
     pub camera_zoom: f64,
@@ -28,13 +21,6 @@ pub struct Puzzle3dPresence {
 impl Default for Puzzle3dPresence {
     fn default() -> Self {
         Self {
-            selected_object_ids: Vec::new(),
-            selected_vortex_ids: Vec::new(),
-            selected_attraction_ids: Vec::new(),
-            selected_target_volume_ids: Vec::new(),
-            selected_reference_ids: Vec::new(),
-            hovered_object_id: None,
-            hovered_vortex_full_id: None,
             camera_position: [0.0, 0.0, 0.0],
             camera_target: [0.0, 0.0, 0.0],
             camera_zoom: 1.0,

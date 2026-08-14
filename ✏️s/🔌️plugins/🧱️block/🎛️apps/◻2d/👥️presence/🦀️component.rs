@@ -5,20 +5,16 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live selection for the block 2d surface (peers see selected row ids).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+/// 👥️ Shareable live presence for the block 2d surface. 🕹️ ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_ids` used to live here — it now
+/// broadcasts automatically via the framework's typed `PresenceInteraction` for the declared `handle`
+/// domain (see `crate::apps::block2d::create_block2d_app`), so this facet is empty until block2d
+/// grows genuinely app-specific live state.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "block2d.presence")]
 #[dsl(layout = "lines")]
-pub struct Block2dPresence {
-    pub selected_ids: Vec<String>,
-}
-
-impl Default for Block2dPresence {
-    fn default() -> Self {
-        Self { selected_ids: Vec::new() }
-    }
-}
+pub struct Block2dPresence {}
 
 impl protocol::MutationDiff<Block2dPresence> for Block2dPresence {
     fn apply(&self, _base: &Block2dPresence) -> Block2dPresence {

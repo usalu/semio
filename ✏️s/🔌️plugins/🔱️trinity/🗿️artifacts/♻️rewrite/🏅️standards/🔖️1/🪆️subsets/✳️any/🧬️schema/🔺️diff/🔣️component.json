@@ -53,18 +53,6 @@
       },
       "x-semio-state": "artifact"
     },
-    "selectedNodeIds": {
-      "$ref": "#/$defs/RewriteStringList",
-      "x-semio-state": "presence"
-    },
-    "activeHoverVar": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "activeSelectVar": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "lodModeByWindow": {
       "type": "object",
       "additionalProperties": {
@@ -88,38 +76,12 @@
       "format": "int64",
       "x-semio-state": "config"
     },
-    "hoverEpoch": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
-    "selectEpoch": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
     "locale": {
       "type": "string",
       "x-semio-state": "config"
     }
   },
   "$defs": {
-    "RewriteStringList": {
-      "title": "RewriteStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "PropertyValue": {
       "title": "PropertyValue",
       "description": "JSON-equivalent property value."

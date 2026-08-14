@@ -1,0 +1,25 @@
+
+warning: variants `ModelTopologyMismatch`, `SeedMissingInStrictMode`, `CheckpointVersionMismatch`, and `CorruptCheckpoint` are never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚠️error/🦀️component.rs:167:5
+    |
+165 | pub enum SolveError {
+    |          ---------- variants in this enum
+166 |     /// 🚨️ A solver was built from a model and topology whose relation universes disagree.
+167 |     ModelTopologyMismatch { reason: &'static str },
+    |     ^^^^^^^^^^^^^^^^^^^^^
+168 |     /// 🚨️ Strict-integer determinism was requested but the model has no integer weight table.
+169 |     SeedMissingInStrictMode,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^
+170 |     /// 🚨️ A checkpoint's format/schema version does not match this build.
+171 |     CheckpointVersionMismatch { expected: u32, actual: u32 },
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+172 |     /// 🚨️ A checkpoint failed structural revalidation (bitset length, index bound, or fingerprint).
+173 |     CorruptCheckpoint { reason: &'static str },
+    |     ^^^^^^^^^^^^^^^^^
+    |
+    = note: `SolveError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-s-plugin-procedural` (lib) generated 352 warnings (run `cargo fix --lib -p semio-s-plugin-procedural` to apply 179 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.37s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 29`
