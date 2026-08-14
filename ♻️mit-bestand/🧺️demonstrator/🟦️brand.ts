@@ -743,9 +743,7 @@ export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
 
 //#region 🎪️DemonstratorPanes
 /** @emoji 🎪️ One live pane in the demonstrator's 3×2 grid — order here IS grid order (row-major: index
- * 0-2 top row, 3-5 bottom row). `variant` is the same playground alias `bun ./📜️script.ts dev <variant>`
- * already resolves (see `resolveFrameworkOsPlaygroundPlugin`), so `resolvePlaygroundBoot(variant)` finds
- * the right plugin/app without a separate mapping table. */
+ * 0-2 top row, 3-5 bottom row). */
 export type DemonstratorPaneSpec = {
   readonly id: string;
   readonly variant: string;
@@ -754,6 +752,11 @@ export type DemonstratorPaneSpec = {
   readonly tagline: string;
   readonly icon: IconName;
 };
+
+/** @emoji 🔌️ Resolves the runtime playground variant behind a branded demonstrator pane. */
+export function demonstratorPaneRuntimeVariant(variant: string): string {
+  return variant === "generator" ? "procedural3d" : variant;
+}
 
 export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
   { id: "generator", variant: "generator", brand: ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND, label: "Generator", tagline: "Parametrische Abläufe", icon: "workflow" },

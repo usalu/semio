@@ -24,6 +24,7 @@ pub fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, MathematicalSnapsho
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::mathematical::commands::{node_graph_edit, node_graph_viewport, set_directed};
     use crate::apps::mathematical::testkit::{dispatch, math_app, MathApp};
     use crate::apps::mathematical::MathematicalCommand;
     use crate::artifacts::mathematical::mathematical_graph;

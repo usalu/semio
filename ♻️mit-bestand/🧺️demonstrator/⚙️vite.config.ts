@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
-import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_PANES } from "./🟦️brand.ts";
+import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🟦️brand.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,7 +26,8 @@ const pluginModulesDir = path.join(playDir, "../../🧰️framework/🛍️produ
 /** @emoji 🎪️ Registry rows for exactly this demonstrator's six panes — the union this page needs to
  * actually mount, not every playground variant in the monorepo (mirrors `os/dev`'s own `resolvedPlaygroundAssets`,
  * scoped down from its "studio serves everything" fallback since a demonstrator pane list is fixed). */
-const demonstratorTargets = PLAYGROUND_BUILD_TARGETS.filter((target) => DEMONSTRATOR_PANES.some((pane) => pane.variant === target.variant));
+const demonstratorRuntimeVariants = new Set(DEMONSTRATOR_PANES.flatMap((pane) => [pane.variant, demonstratorPaneRuntimeVariant(pane.variant)]));
+const demonstratorTargets = PLAYGROUND_BUILD_TARGETS.filter((target) => demonstratorRuntimeVariants.has(target.variant));
 const resolvedPlaygroundAssets = demonstratorTargets.flatMap((target) => target.assets);
 /** @emoji 🔌️ `_vendor` (shared `🟨️host-shim.js` deps every plugin imports) plus each demonstrator pane's
  * own resolved plugin crate dir — mirrors `os/dev`'s single-variant `pluginModuleDirNames`, unioned

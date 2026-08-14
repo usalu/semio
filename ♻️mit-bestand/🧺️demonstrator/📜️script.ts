@@ -4,19 +4,33 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmdStatus, runViteBunxDev, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
-import { DEMONSTRATOR_PANES } from "./🟦️brand.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import { DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🟦️brand.ts";
 
 const demonstratorRoot = import.meta.dir;
 
-/** @emoji 🎪️ Builds the demonstrator's plugin crate + every pane's declared engines into the shared
+//#region 🎪️DemonstratorPluginBuild
+/** @emoji 🎯️ Builds only the primary crate behind a runtime variant; its contributed extensions are
+ * already included by the demonstrator crate's own consumer closure. */
+async function buildRuntimePlugin(variant: string): Promise<void> {
+  const pluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === variant)?.pluginId;
+  if (!pluginId) throw new Error(`unknown demonstrator runtime variant: ${variant}`);
+  const previousPluginOnly = process.env.SEMIO_PLUGIN_ONLY;
+  process.env.SEMIO_PLUGIN_ONLY = pluginId;
+  try {
+    await buildPlugins(variant);
+  } finally {
+    if (previousPluginOnly === undefined) delete process.env.SEMIO_PLUGIN_ONLY;
+    else process.env.SEMIO_PLUGIN_ONLY = previousPluginOnly;
+  }
+}
+
+/** @emoji 🎪️ Builds every pane's runtime plugin crate + declared engines into the shared
  * `🧧framework/os/dev` `🔌️plugin-modules/` dir this page's own `⚙️vite.config.ts` static-serves from.
  *
- * 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: all six panes now share ONE plugin crate
- * (`✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust` — see its docstring),
- * so the plugin build only needs to run once, keyed off any one pane's variant (`buildPlugins`/
- * `ensurePluginRegistry` resolve a variant to its plugin crate; all six now resolve to the same one).
- * This also removes the six-way `writePlaygroundSession` race that used to exist here — each pane's
- * `buildPlugins` call overwrote the same generated session file with its own variant, in array order.
+ * Five panes share the demonstrator crate. Generator deliberately boots the procedural crate, so it
+ * must be built separately rather than consuming whichever procedural artifact happens to be staged.
+ * The primary variant is restored after both builds so registry session generation stays deterministic.
  * Engines still need a per-pane pass: only some panes declare one (e.g. only `verfolgen` needs
  * tiled-map), and each variant's own registry row carries its own `engines` list independently even
  * though they now share a `pluginId`. */
@@ -37,10 +51,16 @@ async function buildDemonstratorPlugins(): Promise<void> {
       await buildPlugins(primaryVariant);
     }
   }
+  const secondaryRuntimeVariants = [...new Set(DEMONSTRATOR_PANES.map((pane) => demonstratorPaneRuntimeVariant(pane.variant)))].filter((variant) => variant !== primaryVariant);
+  if (process.env.SKIP_PLUGIN_BUILD !== "1") {
+    for (const variant of secondaryRuntimeVariants) await buildRuntimePlugin(variant);
+  }
+  if (primaryVariant) await ensurePluginRegistry(primaryVariant);
   for (const pane of DEMONSTRATOR_PANES) {
     await buildEngineWasm(pane.variant, "react");
   }
 }
+//#endregion 🎪️DemonstratorPluginBuild
 
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

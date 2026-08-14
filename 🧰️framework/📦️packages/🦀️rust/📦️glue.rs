@@ -27,6 +27,19 @@ pub mod platform;
 #[path = "../../🔨️modules/🛂️manifest/🦀️component.rs"]
 pub mod manifest;
 
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W0: pure hover/selection state
+// machine + declaration types, mirroring `manifest`'s own facet-nesting convention (`schema` sits
+// alongside the root `component` rather than under it, same as `writer`'s `config { component; schema; }`).
+#[path = "."]
+pub mod interaction {
+    #[path = "../../🔨️modules/🕹️interaction/🦀️component.rs"]
+    mod component;
+    pub use component::*;
+
+    #[path = "../../🔨️modules/🕹️interaction/🧬️schema/🦀️component.rs"]
+    pub mod schema;
+}
+
 // 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: mounted
 // HERE, not in the os-kernel crate — its `semio_framework::{AppDefinition, MediaClass, MediaType,
 // ConfigSpec, Terminology, Locale, …}` references need this crate's full assembled surface (mesh's
@@ -82,6 +95,7 @@ pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use workflow::*;
 pub use manifest::*;
 pub use manifest as ui;
+pub use interaction::*;
 pub use manifest::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,

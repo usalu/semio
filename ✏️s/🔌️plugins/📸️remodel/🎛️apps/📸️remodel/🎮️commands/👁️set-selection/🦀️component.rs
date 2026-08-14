@@ -21,6 +21,7 @@ pub fn handle(payload: &SetSelection, _doc: &ArtifactView<'_, RemodelSnapshot>, 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::remodel::commands::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table};
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
 

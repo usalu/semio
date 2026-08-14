@@ -373,6 +373,11 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+hover and selection must be first class citizens (with folders mechanisms, etc) in apps and not be part of e.g. commands.
+Make sure that the mechanism is fullblown, automatically has support for declarative transitive hover, the different selection modes, and it cleanly integrates into app config, is broadcasted over presence, etc
+
+---
+
 The following architecture must be reached:
 - Every artifact has a schema, snapshot, diff, mutations, inferences, io system.
 - Every artifact is tracked over vcs.
@@ -2131,6 +2136,22 @@ This MUST NOT happen.
 ## ui
 
 ###
+
+---
+
+Achieve the following end to end:
+
+- A running hub with
+  - users that can create and share spaces.
+  - spaces are persisted in db.
+  - presence inside an app is shared peer to peer between all active users.
+  - 
+
+---
+
+The ui must have a special feature:
+The content inside a window must flow through the chips (the chips are glassy with the name over it) but make sure that cutouts remain cutouts. This means that content isnt visible in the shape of a pure rectangle.
+e.g. 3d scenes or text, etc must be tinted and continued below it.
 
 ---
 

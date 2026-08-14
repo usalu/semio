@@ -81,6 +81,14 @@ document to that surface. Fixed by sharing one `puzzle3d_io()` between the trait
 
 Forced fresh WASM build (`FORCE_PLUGIN_BUILD=1`) now unblocked and running.
 
+## CAD Example Loading Regression
+
+CAD's production `ArtifactApp` now converts its declared host actions into the closed typed
+`CadCommand` vocabulary. The conversion had previously existed only in `#[cfg(test)]`, so production
+rejected `setActiveExample` and left all four CAD 3D windows empty. The CAD suite passes 141/141 with
+the new production-bridge regression test. Full diagnosis, repair, and the post-repair WASM build
+contention boundary are recorded in `📓️cad-example-action-bridge-regression.md`.
+
 ## Flagged for the user — a 4,400-line unmounted ghost
 
 `🧰️framework/🛍️products/💻️os/🦀️component.rs` holds ~110 `semio_framework::` references and a full

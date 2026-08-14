@@ -11,15 +11,15 @@ use std::collections::HashSet;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, SolidId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
-use semio_framework_3d::brep::engine::{MeshTransfer, PointClassification};
-use semio_framework_3d::brep::error::{BooleanError, KernelError};
+use semio_framework_3d::engine::{MeshTransfer, PointClassification};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::{BooleanError, KernelError};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{solid_bounding_box, solid_volume, AxisAlignedBox};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 

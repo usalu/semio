@@ -52,6 +52,7 @@ pub fn handle(payload: &EditCalibration, doc: &ArtifactView<'_, RemodelSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::remodel::commands::{add_gcp, calibrate_cameras, place_gcp_observation, remove_gcp};
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
 

@@ -7940,6 +7940,7 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-math",
  "semio-framework-mesh-engine",
+ "semio-framework-number",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",

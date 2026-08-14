@@ -15,19 +15,19 @@
 //! plugin edge, which would be a real crate cycle since `stdio → semio-framework-3d` already exists
 //! for the algorithm forward-edge above — dissolves that edge instead: the DWG calls become
 //! same-crate `crate::artifacts::dwg::{…}`, and the framework-3d algorithm imports become the same
-//! external `semio_framework_3d::brep::*` forward-edge pattern the parent `engine/component.rs`
+//! external `semio_framework_3d::engine::*` forward-edge pattern the parent `engine/component.rs`
 //! already uses.
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId;
-use semio_framework_3d::brep::engine::MeshTransfer;
-use semio_framework_3d::brep::error::KernelError;
+use semio_framework_3d::engine::MeshTransfer;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
-use semio_framework_3d::brep::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 use semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter};
 use crate::artifacts::dwg::{dwg_drawing_to_mesh, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing};
 

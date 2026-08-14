@@ -11,7 +11,6 @@
 //! routing table: `handle` → `RemodelCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::apps::remodel::commands::{calibration, ingest, params, reset, shell, view};
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::apps::remodel::presence::{RemodelPresence, RemodelPresenceMutation};
 use crate::apps::remodel::modes::{analyze, capture, model};
@@ -188,12 +187,12 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::apps::remodel::commands::{retry_stage, run_reconstruction, run_stage};
-use calibration::{add_gcp, calibrate_cameras, edit_calibration, place_gcp_observation, remove_gcp};
-use ingest::{add_stream, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
-use params::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
-use reset::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
-use shell::{export_qc_report, import_frames, import_video};
-use view::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table, set_selection};
+use crate::apps::remodel::commands::{add_gcp, calibrate_cameras, edit_calibration, place_gcp_observation, remove_gcp};
+use crate::apps::remodel::commands::{add_stream, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
+use crate::apps::remodel::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
+use crate::apps::remodel::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
+use crate::apps::remodel::commands::{export_qc_report, import_frames, import_video};
+use crate::apps::remodel::commands::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table, set_selection};
 //#endregion 🔖️Commands
 
 //#region 🔖️ActionBridge

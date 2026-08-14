@@ -1,0 +1,229 @@
+{
+  "$id": "https://semio.tech/schema/framework/interaction/component.json",
+  "title": "InteractionSchema",
+  "description": "Canonical schema for the 🕹️interaction framework module: static InteractionDefinition declarations (manifest-altitude, not state-axis classified), the InteractionState shape (own persisted-local selection/mode/granularity, ephemeral-local hover), and the PresenceInteraction broadcast payload mirrored onto PresencePeer for every peer's roster.",
+  "$defs": {
+    "InteractionDefinition": {
+      "title": "InteractionDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "granularities", "hierarchy", "hover", "selection"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "object", "description": "LocalizedLabel — resolved terminology×locale matrix, opaque at the wire boundary" },
+        "granularities": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/GranularityDefinition" },
+          "description": "Non-empty; the first entry is the domain's default granularity."
+        },
+        "hierarchy": { "$ref": "#/$defs/HierarchyProvider" },
+        "hover": { "$ref": "#/$defs/HoverSpec" },
+        "selection": { "$ref": "#/$defs/SelectionSpec" }
+      }
+    },
+    "GranularityDefinition": {
+      "title": "GranularityDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "iconId"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "object", "description": "LocalizedLabel — resolved terminology×locale matrix, opaque at the wire boundary" },
+        "iconId": { "type": "string" }
+      }
+    },
+    "HierarchyProvider": {
+      "title": "HierarchyProvider",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "flat" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "topology" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "uiTree" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "delimiter"],
+          "properties": {
+            "kind": { "const": "pathDelimited" },
+            "delimiter": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "HoverSpec": {
+      "title": "HoverSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "transitive", "channels", "broadcast"],
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "transitive": { "type": "boolean", "default": false, "description": "Requires hierarchy != flat." },
+        "channels": { "type": "array", "items": { "type": "string" }, "default": ["pointer"] },
+        "broadcast": { "type": "boolean", "default": true }
+      }
+    },
+    "SelectionSpec": {
+      "title": "SelectionSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modes", "methods", "merges", "transitive", "broadcast"],
+      "properties": {
+        "modes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/SelectionMode" },
+          "description": "Non-empty; the first entry is the domain's default mode."
+        },
+        "methods": { "type": "array", "items": { "$ref": "#/$defs/SelectionMethod" } },
+        "merges": { "type": "array", "items": { "$ref": "#/$defs/MergeMode" } },
+        "transitive": { "type": "boolean", "default": false, "description": "Requires hierarchy != flat." },
+        "broadcast": { "type": "boolean", "default": true }
+      }
+    },
+    "SelectionMode": {
+      "title": "SelectionMode",
+      "type": "string",
+      "enum": ["single", "multiple"]
+    },
+    "SelectionMethod": {
+      "title": "SelectionMethod",
+      "type": "string",
+      "enum": ["pick", "rectangle", "lasso"]
+    },
+    "MergeMode": {
+      "title": "MergeMode",
+      "type": "string",
+      "enum": ["replace", "additive", "subtractive", "invertive", "range"]
+    },
+    "InteractionTarget": {
+      "title": "InteractionTarget",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["granularity", "id"],
+      "properties": {
+        "granularity": { "type": "string" },
+        "id": { "type": "string" }
+      }
+    },
+    "DomainSelection": {
+      "title": "DomainSelection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["granularity", "ids"],
+      "properties": {
+        "granularity": { "type": "string" },
+        "ids": { "type": "array", "items": { "type": "string" } },
+        "anchorId": { "type": "string" }
+      }
+    },
+    "DomainHover": {
+      "title": "DomainHover",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "ids"],
+      "properties": {
+        "channel": { "type": "string" },
+        "ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "InteractionState": {
+      "title": "InteractionState",
+      "description": "Own selection + activeMode/activeGranularity are persisted-local (Interaction history lane, default-undo-skipped); hover is ephemeral-local.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selection", "hover", "activeMode", "activeGranularity"],
+      "properties": {
+        "selection": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/DomainSelection" },
+          "description": "Keyed by domain id.",
+          "x-semio-state": "config"
+        },
+        "hover": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/DomainHover" },
+          "description": "Keyed by domain id.",
+          "x-semio-state": "transient"
+        },
+        "activeMode": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/SelectionMode" },
+          "description": "Keyed by domain id.",
+          "x-semio-state": "config"
+        },
+        "activeGranularity": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Keyed by domain id.",
+          "x-semio-state": "config"
+        }
+      }
+    },
+    "TopologyNode": {
+      "title": "TopologyNode",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "granularity"],
+      "properties": {
+        "id": { "type": "string" },
+        "granularity": { "type": "string" },
+        "parent": { "type": "string" }
+      }
+    },
+    "DomainTopology": {
+      "title": "DomainTopology",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordered"],
+      "properties": {
+        "ordered": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TopologyNode" },
+          "description": "Pre-order; this sequence IS the range-selection order."
+        }
+      }
+    },
+    "PresenceDomain": {
+      "title": "PresenceDomain",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "granularity", "selected", "hovered"],
+      "properties": {
+        "domain": { "type": "string" },
+        "granularity": { "type": "string" },
+        "selected": { "type": "array", "items": { "type": "string" } },
+        "hovered": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "PresenceInteraction": {
+      "title": "PresenceInteraction",
+      "description": "Typed field on PresencePeer (bit 7) — assembled by the wrapper from InteractionState on the presence heartbeat; only explicit ids broadcast, receivers expand closures via their own topology.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appId", "domains"],
+      "properties": {
+        "appId": { "type": "string", "x-semio-state": "presence" },
+        "domains": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PresenceDomain" },
+          "x-semio-state": "presence"
+        }
+      }
+    }
+  }
+}

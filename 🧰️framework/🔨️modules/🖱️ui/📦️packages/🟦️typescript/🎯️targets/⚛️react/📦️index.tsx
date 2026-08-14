@@ -8262,8 +8262,8 @@ export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
 }
 
 /** @emoji ↔ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
-export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSProperties {
-  if (widthPx <= 0) return { paddingInlineStart: shellNavbarTrailingEndReserveCss };
+export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSProperties | undefined {
+  if (widthPx <= 0) return undefined;
   return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
 }
 
@@ -13665,14 +13665,29 @@ if (import.meta.vitest) {
       rectSpy.mockRestore();
     });
 
-    it("open chrome-hosted top-right panel reserves trailing navbar end space on the cap row", async () => {
+    it("open chrome-hosted top-right panel reserves trailing navbar end space on the cap row only when trailing elements exist", async () => {
       const { render } = await import("@testing-library/react");
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Inspector", tree: { sections: [] } })];
       publishShellNavbarTrailingEndWidthPx(undefined, 96);
-      const { container } = render(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);
+      const { container, rerender } = render(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);
       const cap = container.querySelector('[data-slot="panel"][data-anchor="top-right"] [data-slot="window-chrome-cap"]') as HTMLElement;
       expect(cap.style.paddingInlineStart).toBe(`${96 + uiSpacingPx(1)}px`);
+
+      publishShellNavbarTrailingEndWidthPx(undefined, 0);
+      rerender(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);
+      const capNoReserve = container.querySelector('[data-slot="panel"][data-anchor="top-right"] [data-slot="window-chrome-cap"]') as HTMLElement;
+      expect(capNoReserve.style.paddingInlineStart).toBe("");
+    });
+
+    it("open chrome-hosted bottom-right panel does not reserve trailing navbar end space", async () => {
+      const { render } = await import("@testing-library/react");
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "History", tree: { sections: [] } })];
+      publishShellNavbarTrailingEndWidthPx(undefined, 96);
+      const { container } = render(<Panel anchor="bottom-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);
+      const cap = container.querySelector('[data-slot="panel"][data-anchor="bottom-right"] [data-slot="window-chrome-cap"]') as HTMLElement;
+      expect(cap.style.paddingInlineStart).toBe("");
     });
 
     it("navbar fullscreen toggle parks its width so inline labels do not collapse", async () => {

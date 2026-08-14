@@ -1,5 +1,6 @@
 //! 📥️ 📥️ Remodel play app commands command — `import-frame-payload`.
 
+use crate::apps::remodel::commands::import_video_bytes_payload;
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::apps::remodel::engine::{describe_video_probe, images as remodel_image, video as remodel_video, video_codec_to_artifact};
 use crate::apps::remodel::{decode_still_image, payload_from_data_url};
@@ -120,7 +121,7 @@ pub(crate) fn testkit_import_checker_stream(app: &mut crate::apps::remodel::test
     use crate::apps::remodel::testkit::dispatch;
     use crate::apps::remodel::RemodelCommand;
     for index in 0..n {
-        dispatch(app, RemodelCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index }));
+        dispatch(app, RemodelCommand::ImportFramePayload(ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index }));
     }
 }
 

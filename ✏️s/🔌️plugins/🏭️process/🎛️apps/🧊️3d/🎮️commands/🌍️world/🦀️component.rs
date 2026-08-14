@@ -124,11 +124,22 @@ pub mod world_pick {
     }
 
     pub fn handle(payload: &WorldPick, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        if payload.granularity == "face" {
-            Ok(Emit::config(vec![Process3dConfigMutation::SetSelectedFaceId { value: payload.id }]))
-        } else {
-            Ok(Emit::default())
-        }
+        let mutations = match payload.granularity.as_str() {
+            "face" => match payload.id {
+                Some(id) => vec![Process3dConfigMutation::SetSelectedId { value: Some("processed".into()) }, Process3dConfigMutation::SetSelectedFaceId { value: Some(id) }],
+                None => vec![Process3dConfigMutation::SetSelectedId { value: None }, Process3dConfigMutation::SetSelectedFaceId { value: None }],
+            },
+            "mesh" | "object" => vec![
+                Process3dConfigMutation::SetSelectedId { value: payload.id.map(|_| "processed".into()) },
+                Process3dConfigMutation::SetSelectedFaceId { value: None },
+            ],
+            _ if payload.id.is_none() => vec![
+                Process3dConfigMutation::SetSelectedId { value: None },
+                Process3dConfigMutation::SetSelectedFaceId { value: None },
+            ],
+            _ => Vec::new(),
+        };
+        Ok(Emit::config(mutations))
     }
 }
 //#endregion 🔖️WorldPick

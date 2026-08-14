@@ -11,10 +11,10 @@ pub mod spatial {
 //! 🌳️ Generic bounding-volume-hierarchy spatial index over AABB-bounded items.
 //!
 //! Kernel-agnostic: works with any leaf payload (`semio_framework_3d::brep::kernel` instantiates
-//! `Bvh<FaceId>`/`Bvh<EdgeId>` internally) using only [`semio_framework_3d::brep::engine`]'s `Vec3`/`Aabb`
+//! `Bvh<FaceId>`/`Bvh<EdgeId>` internally) using only [`semio_framework_3d::engine`]'s `Vec3`/`Aabb`
 //! types, so this crate never depends on brep and stays reusable by other 3D kernels.
 
-use semio_framework_3d::brep::engine::{Aabb, Vec3};
+use semio_framework_3d::engine::{Aabb, Vec3};
 
 // #region 🔖️AabbHelpers
 fn aabb_union(a: &Aabb, b: &Aabb) -> Aabb {
@@ -261,11 +261,11 @@ mod tests {
 // 🌳 B-Rep entity BVH adapters over `spatial::Bvh` (ray / AABB / nearest by leaf bounds).
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId};
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::engine::{Aabb, Vec3};
-use semio_framework_3d::brep::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use semio_framework_3d::engine::{Aabb, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use semio_framework_3d::brep::vec::Pnt3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 use spatial::Bvh;
 
 // #region 🔖️Bounds
@@ -439,12 +439,12 @@ impl EdgeBvh {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_3d::brep::curve::Curve3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use semio_framework_3d::brep::mat::Frame3;
-    use semio_framework_3d::brep::surface::Surface;
-    use semio_framework_3d::brep::tolerance::Tol;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
     use std::collections::HashMap;
 
     fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> SolidId {

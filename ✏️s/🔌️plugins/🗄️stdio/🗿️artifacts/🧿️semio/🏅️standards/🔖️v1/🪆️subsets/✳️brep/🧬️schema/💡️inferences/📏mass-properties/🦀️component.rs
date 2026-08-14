@@ -8,13 +8,13 @@
 // 📏 Divergence-theorem mass properties, axis-aligned bounds, and solid distance queries on [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`].
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::curve_ops;
-use semio_framework_3d::brep::error::KernelError;
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::surface_ops;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use semio_framework_3d::brep::vec::{Pnt2, Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Types
 
@@ -443,7 +443,7 @@ fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelE
     body.surfaces.get(face_ent.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))
 }
 
-fn outward_plane_normal(frame: &semio_framework_3d::brep::mat::Frame3, flipped: bool) -> Vec3 {
+fn outward_plane_normal(frame: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3, flipped: bool) -> Vec3 {
     let mut n = frame.z;
     if flipped {
         n = -n;
@@ -787,8 +787,8 @@ fn point_in_face_plane(body: &Body, face: FaceId, point: Pnt3) -> Result<bool, K
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
-    use semio_framework_3d::brep::mat::Frame3;
-    use semio_framework_3d::brep::tolerance::Tol;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
     use std::f64::consts::PI;
 
@@ -987,8 +987,8 @@ pub mod oracle {
 //! primitives it can already describe; mass-property, watertightness and shape-generator oracles
 //! land in the phases that need them.
 
-use semio_framework_3d::brep::mat::Trsf;
-use semio_framework_3d::brep::vec::Pnt3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 
 // #region 🔖️Sdf
@@ -1251,8 +1251,8 @@ mod tests {
 
     #[test]
     fn union_is_the_min_and_matches_containment_of_either_operand() {
-        let a = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(semio_framework_3d::brep::vec::Vec3::new(-1.0, 0.0, 0.0)) };
-        let b = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(semio_framework_3d::brep::vec::Vec3::new(1.0, 0.0, 0.0)) };
+        let a = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(-1.0, 0.0, 0.0)) };
+        let b = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(1.0, 0.0, 0.0)) };
         let u = a.union(b);
         assert!(u.contains(Pnt3::new(-1.0, 0.0, 0.0), 1e-9));
         assert!(u.contains(Pnt3::new(1.0, 0.0, 0.0), 1e-9));
@@ -1270,7 +1270,7 @@ mod tests {
 
     #[test]
     fn placed_box_sdf_respects_transform() {
-        let placement = Trsf::translation(semio_framework_3d::brep::vec::Vec3::new(10.0, 0.0, 0.0));
+        let placement = Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(10.0, 0.0, 0.0));
         let b = Sdf::Box { half_extents: Pnt3::new(1.0, 1.0, 1.0), placement };
         assert!(b.eval(Pnt3::new(10.0, 0.0, 0.0)) < 0.0);
         assert!(b.eval(Pnt3::new(0.0, 0.0, 0.0)) > 0.0);

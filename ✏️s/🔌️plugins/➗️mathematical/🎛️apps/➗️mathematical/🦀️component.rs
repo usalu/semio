@@ -13,7 +13,7 @@
 //! This file is a routing table: `handle` → `MathematicalCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::apps::mathematical::commands::document::set_artifact;
+use crate::apps::mathematical::commands::set_artifact;
 use crate::apps::mathematical::commands::set_points;
 use crate::apps::mathematical::commands::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
 use crate::apps::mathematical::commands::set_locale;

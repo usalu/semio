@@ -2777,7 +2777,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 🧊️ Exports `shapes` from `kernel` through the solid exporter registered for `artifact_kind` + `format`.
-    pub fn export_registered_solid(artifact_kind: &str, format_kind: &str, kernel: &semio_framework_3d::brep::kernel::Brep, shapes: &[semio_framework_3d::brep::engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
+    pub fn export_registered_solid(artifact_kind: &str, format_kind: &str, kernel: &semio_framework_3d::brep::kernel::Brep, shapes: &[semio_framework_3d::engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
         let key = solid_registry_key(artifact_kind, format_kind);
         let handlers = solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let exporter = handlers.get(&key).ok_or_else(|| format!("no solid export handler for {key}"))?;
@@ -2785,7 +2785,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 🧊️ Imports bytes into `kernel` through the solid importer registered for `artifact_kind` + `format`.
-    pub fn import_registered_solid(artifact_kind: &str, format_kind: &str, kernel: &mut semio_framework_3d::brep::kernel::Brep, data: &[u8], tolerance: f64) -> Result<Vec<semio_framework_3d::brep::engine::GeometryHandle>, String> {
+    pub fn import_registered_solid(artifact_kind: &str, format_kind: &str, kernel: &mut semio_framework_3d::brep::kernel::Brep, data: &[u8], tolerance: f64) -> Result<Vec<semio_framework_3d::engine::GeometryHandle>, String> {
         let key = solid_registry_key(artifact_kind, format_kind);
         let handlers = solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let importer = handlers.get(&key).ok_or_else(|| format!("no solid import handler for {key}"))?;

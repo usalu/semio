@@ -6,7 +6,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
-use semio_framework_3d::brep::engine::Vec3;
+use semio_framework_3d::engine::Vec3;
 
 // #region 🔖️Fixtures
 

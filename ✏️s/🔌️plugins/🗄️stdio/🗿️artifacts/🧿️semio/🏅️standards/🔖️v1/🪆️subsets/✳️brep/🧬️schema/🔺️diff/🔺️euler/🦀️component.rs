@@ -16,13 +16,13 @@
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::error::KernelError;
-use semio_framework_3d::brep::mat::Frame3;
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
-use semio_framework_3d::brep::vec::{Pnt2, Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Make
 

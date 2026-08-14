@@ -8,18 +8,18 @@ use std::collections::HashMap;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, BooleanOp};
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::engine::MeshTransfer;
-use semio_framework_3d::brep::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use semio_framework_3d::engine::MeshTransfer;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{solid_bounding_box, solid_volume, AxisAlignedBox};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_convex_hull, make_planar_face_from_points};
-use semio_framework_3d::brep::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sweep::extrude_face;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 

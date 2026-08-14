@@ -7288,7 +7288,10 @@ impl ShellState {
             ],
             LeftPanelKind::Workbench => {
                 let mut tabs: Vec<PanelTabDefinition> = session.app.panel_tabs.iter().filter(|tab| group_side(tab.group) == "left").cloned().collect();
-                let has_document = tabs.iter().any(|t| t.id() == FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
+                fn panel_tabs_contain_artifact(list: &[PanelTabDefinition]) -> bool {
+                    list.iter().any(|t| t.id() == FRAMEWORK_PANEL_TAB_ARTIFACT_ID || panel_tabs_contain_artifact(&t.children))
+                }
+                let has_document = panel_tabs_contain_artifact(&tabs);
                 if !has_document {
                     tabs.insert(
                         0,

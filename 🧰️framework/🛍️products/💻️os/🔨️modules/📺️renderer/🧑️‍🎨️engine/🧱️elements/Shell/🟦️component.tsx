@@ -376,6 +376,9 @@ type OverlayState = {
   readonly findOpen: boolean;
   /** 🎓️ Current step of the active app's introduction walkthrough, or `null` when none is playing. */
   readonly introductionStepIndex: number | null;
+  /** 🚦️ Introduction launch keys already auto-started during this shell lifetime — keeps a dismissed
+   * replay-on-load tour dismissed while still allowing a different app/brand introduction to launch. */
+  readonly introductionAutoStartedKeys: readonly string[];
   /** ✅️ Indices into the active step's `interactions` that are done — reset whenever the step changes. */
   readonly introductionCompletedInteractions: readonly number[];
   /** 🗨️ The open declared dialog (id + `HostEffect`-seeded args), or `null` when none is open. */
@@ -503,6 +506,7 @@ export type ShellAction =
   | { readonly type: "SET_WINDOW_ICON"; readonly windowId: string; readonly iconId: IconName }
   | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
+  | { readonly type: "AUTO_START_INTRODUCTION"; readonly key: string }
   | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
   | { readonly type: "COMPLETE_INTRODUCTION_INTERACTION"; readonly index: number }
   | { readonly type: "SET_DIALOG"; readonly value: OverlayState["dialog"] }
@@ -722,6 +726,14 @@ function overlayReducer(state: OverlayState, action: ShellAction): OverlayState 
       return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
     case "SET_FIND_OPEN":
       return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
+    case "AUTO_START_INTRODUCTION":
+      if (state.introductionAutoStartedKeys.includes(action.key)) return state;
+      return {
+        ...state,
+        introductionStepIndex: 0,
+        introductionAutoStartedKeys: [...state.introductionAutoStartedKeys, action.key],
+        introductionCompletedInteractions: [],
+      };
     case "SET_INTRODUCTION_STEP": {
       const nextIndex = resolveUpdatable(action.value, state.introductionStepIndex);
       return { ...state, introductionStepIndex: nextIndex, introductionCompletedInteractions: [] };
@@ -871,7 +883,7 @@ export function initialShellState(_props: {
       windowTitlesById: {},
       windowIconsById: {},
     },
-    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionCompletedInteractions: [], dialog: null },
+    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionAutoStartedKeys: [], introductionCompletedInteractions: [], dialog: null },
     tutorial: { activeTutorialId: null, playing: false, rate: 1, muted: false, captionsOn: true, recording: false, deviated: false },
     uiPrefs: {
       // 🐚️ No more `ephemeral ? default : readStored...()` branching here — `storage` already resolves

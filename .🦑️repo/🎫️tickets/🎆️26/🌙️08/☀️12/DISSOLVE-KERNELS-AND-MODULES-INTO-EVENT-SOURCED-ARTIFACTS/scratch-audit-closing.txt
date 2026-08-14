@@ -1,0 +1,10 @@
+╔═══ CLOSING LOSS AUDIT ═══
+║ symbols in the 4 dying modules at baseline : 5826
+║ still present in the tree                  : 5821
+║ LOST                                       : 5
+║     BREP_ENGINE_ID
+║     BrepDocumentOpEngine
+║     BrepEngineHost
+║     host_derive_registers_brep_engine
+║     kernel_lock_runs_box_prim
+╚═══

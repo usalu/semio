@@ -14,11 +14,11 @@
 use std::collections::HashMap;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
-use semio_framework_3d::brep::curve::{Curve2, Curve3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::{LabelSource, PersistentLabel};
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::tolerance::Tol;
-use semio_framework_3d::brep::vec::Pnt3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 use semio_framework_os_kernel::EngineRep;
 
 // #region 🔖️Entities
@@ -636,8 +636,8 @@ pub mod history {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
-    use semio_framework_3d::brep::mat::Frame3;
-    use semio_framework_3d::brep::vec::Vec3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
     fn null_coedge() -> CoedgeId {
         ArenaId::from_raw(0, 0)

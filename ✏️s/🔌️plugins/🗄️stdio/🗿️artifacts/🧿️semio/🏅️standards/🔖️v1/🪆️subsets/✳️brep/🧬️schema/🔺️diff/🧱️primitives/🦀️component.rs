@@ -1,8 +1,8 @@
 //! 🧱 Analytic solid primitives: box/sphere/cylinder/cone/torus + wires/planar faces/convex hull.
 //!
 //! Builds closed [`Body`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body) solids exclusively through
-//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] editors, attaching shared [`Curve3`](semio_framework_3d::brep::curve::Curve3) /
-//! [`Surface`](semio_framework_3d::brep::surface::Surface) geometry from the body's pools.
+//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] editors, attaching shared [`Curve3`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3) /
+//! [`Surface`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface) geometry from the body's pools.
 //! Topology layouts follow the reference shapes (box V−E+F=2, sphere hemispheres,
 //! cylinder/cone seam wires, torus fundamental polygon, Quickhull convex hull).
 
@@ -14,15 +14,15 @@ use std::collections::HashMap;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use semio_framework_3d::brep::mat::Frame3;
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Wire
 

@@ -213,6 +213,9 @@ opt-level = 3
 [profile.dev.package.semio-framework-os-kernel]
 codegen-units = 1
 
+[profile.dev.package.semio-framework-math]
+codegen-units = 1
+
 # 🚀️ Ship profile for native binaries (`cargo build --release`, compose hub/gql, os-run in CI).
 # Dev loops use `[profile.dev]` only — see root `📜️script.ts` `os run` and wgpu native defaults.
 [profile.release]

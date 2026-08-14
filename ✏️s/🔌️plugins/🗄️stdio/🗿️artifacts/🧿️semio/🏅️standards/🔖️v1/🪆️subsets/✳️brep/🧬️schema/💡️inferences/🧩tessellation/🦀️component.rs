@@ -1,4 +1,4 @@
-//! 🧩 Crack-free edge-first tessellation producing [`semio_framework_3d::brep::engine::MeshTransfer`].
+//! 🧩 Crack-free edge-first tessellation producing [`semio_framework_3d::engine::MeshTransfer`].
 //!
 //! Edges are discretized once and reused by every adjacent face (Stoger & Kurka 2003 style), then
 //! each face's UV-domain boundary is ear-clipped into triangles. Shared edge samples keep seams
@@ -12,14 +12,14 @@
 use std::collections::HashMap;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId};
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::engine::{FaceGroup, MeshTransfer};
-use semio_framework_3d::brep::error::KernelError;
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::surface_ops;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use semio_framework_3d::engine::{FaceGroup, MeshTransfer};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::Wire;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Constants
 
@@ -605,12 +605,12 @@ fn ensure_winding(positions: &[Pnt3], indices: &mut [u32], desired: Vec3) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_3d::brep::curve::Curve3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use semio_framework_3d::brep::mat::Frame3;
-    use semio_framework_3d::brep::surface::Surface;
-    use semio_framework_3d::brep::tolerance::Tol;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 
     fn build_unit_box(body: &mut Body, rec: &mut OpRecorder) -> SolidId {

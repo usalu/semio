@@ -1,7 +1,7 @@
 //! 🗂️ Remodel play app panel — the Media tab: an import drop zone plus a summary line per imported
 //! stream/asset.
 
-use crate::apps::remodel::commands::shell::REMODEL_MEDIA_ACCEPT;
+use crate::apps::remodel::commands::import_frames::REMODEL_MEDIA_ACCEPT;
 use crate::apps::remodel::remodel_action;
 use crate::apps::remodel::terminology::RemodelLabels;
 use crate::artifacts::remodel::{MediaKind, RemodelSnapshot};
@@ -42,7 +42,7 @@ pub fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::remodel::commands::ingest::testkit_import_checker_stream;
+    use crate::apps::remodel::commands::import_frame_payload::testkit_import_checker_stream;
     use crate::apps::remodel::testkit::{app, render as render_body};
 
     #[test]

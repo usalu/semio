@@ -1,0 +1,40 @@
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3307:19
+     |
+3201 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+3202 | | where
+3203 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+3204 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+3307 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) {
+     |                     ^^^^^^^^^^^^
+
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 5 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 1.29s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework-353974cbecd6c752)
+
+running 19 tests
+test interaction::component::tests::additive_unions_batch_into_current_selection ... ok
+test interaction::component::tests::empty_hover_targets_clears_the_channel ... ok
+test interaction::component::tests::invertive_toggles_each_batch_target_independently ... ok
+test interaction::component::tests::hierarchy_provider_serializes_internally_tagged_variants ... ok
+test interaction::component::tests::interaction_definition_round_trips_through_json ... ok
+test interaction::component::tests::non_transitive_hover_replaces_with_raw_targets_only ... ok
+test interaction::component::tests::range_falls_back_to_last_selected_id_when_no_anchor_recorded ... ok
+test interaction::component::tests::range_handles_target_before_anchor_in_topology_order ... ok
+test interaction::component::tests::range_slices_topology_order_between_anchor_and_target ... ok
+test interaction::component::tests::replace_sets_selection_to_batch_targets ... ok
+test interaction::component::tests::single_mode_clamps_to_last_target_regardless_of_merge ... ok
+test interaction::component::tests::subtractive_removes_batch_from_current_selection ... ok
+test interaction::component::tests::transitive_hover_expands_with_root_first ... ok
+test interaction::component::tests::transitive_select_expands_target_to_descendant_closure ... ok
+test interaction::component::tests::validate_state_clamps_single_mode_selection_to_first_id ... ok
+test interaction::component::tests::validate_state_drops_undeclared_domains_and_granularities ... ok
+test interaction::component::tests::validate_state_prunes_ids_absent_from_topology ... ok
+test manifest::app_label_tests::introduction_interaction_kind_round_trips_tagged ... ok
+test manifest::app_label_tests::introduction_interaction_round_trips_and_defaults ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.01s
+

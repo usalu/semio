@@ -39,6 +39,7 @@ use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView,
     Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, SelectionSet, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
+    SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
@@ -884,6 +885,113 @@ semio_framework_plugin::app_commands! {
         "loadRawRequest" as "load-raw-request" => load_raw_request::LoadRawRequest,
     }
 }
+
+/// 🌉️ Converts the host shell's declared action id and JSON arguments into cad's closed typed
+/// command vocabulary before the app dispatches through the binary command path.
+fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
+    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_f64);
+    let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_u64);
+    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
+    let str_vec_field = |key: &str| -> Vec<String> { args.and_then(|value| value.get(key)).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
+    let u32_vec_field = |key: &str| -> Vec<u32> {
+        args.and_then(|value| value.get(key))
+            .and_then(|value| if let Some(array) = value.as_array() { Some(array.iter().filter_map(|entry| entry.as_u64().map(|number| number as u32)).collect()) } else { serde_json::from_value(value.clone()).ok() })
+            .unwrap_or_default()
+    };
+    let value_string = || -> Option<String> {
+        args.and_then(|value| value.get("value")).and_then(|value| match value {
+            Value::String(text) => Some(text.clone()),
+            Value::Bool(flag) => Some(flag.to_string()),
+            Value::Number(number) => Some(number.to_string()),
+            _ => None,
+        })
+    };
+    let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(|value| value.get(index)).and_then(Value::as_f64);
+    Ok(match action {
+        "setActiveExample" => CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
+        SET_ACTIVE_UTILITY_ACTION_ID => CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_field("utilityId").unwrap_or_default() }),
+        "setLocale" => CadCommand::SetLocale(set_locale::SetLocale { value: str_field("value").unwrap_or_default() }),
+        "setTerminology" => CadCommand::SetTerminology(set_terminology::SetTerminology { value: str_field("value").unwrap_or_default() }),
+        "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
+        "setSelection" => CadCommand::SetSelection(set_selection::SetSelection { mode: str_field("mode").unwrap_or_else(|| "mesh".into()), ids: u32_vec_field("ids"), object_id: str_field("objectId"), merge: str_field("merge").unwrap_or_else(|| "replace".into()) }),
+        "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
+        "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() }),
+        "setProjection" => CadCommand::SetProjection(set_projection::SetProjection {
+            pane: str_field("surfaceId"),
+            field: str_field("field"),
+            value_str: args.and_then(|value| value.get("value")).and_then(Value::as_str).map(String::from),
+            value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
+            param: str_field("param"),
+        }),
+        "setProjectionParam" => CadCommand::SetProjectionParam(set_projection_param::SetProjectionParam {
+            pane: str_field("surfaceId"),
+            field: str_field("field"),
+            value_str: args.and_then(|value| value.get("value")).and_then(Value::as_str).map(String::from),
+            value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
+            param: str_field("param"),
+        }),
+        "translateSelection" => CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: str_vec_field("objectIds"), dx: f64_field("dx").unwrap_or(0.0), dy: f64_field("dy").unwrap_or(0.0), dz: f64_field("dz").unwrap_or(0.0) }),
+        "rotateSelection" => CadCommand::RotateSelection(rotate_selection::RotateSelection { object_ids: str_vec_field("objectIds"), ax: f64_field("ax").unwrap_or(0.0), ay: f64_field("ay").unwrap_or(0.0), az: f64_field("az").unwrap_or(0.0), angle: f64_field("angle").unwrap_or(0.0) }),
+        "scaleSelection" => CadCommand::ScaleSelection(scale_selection::ScaleSelection { object_ids: str_vec_field("objectIds"), sx: f64_field("sx").unwrap_or(1.0), sy: f64_field("sy").unwrap_or(1.0), sz: f64_field("sz").unwrap_or(1.0) }),
+        "addObject" => CadCommand::AddObject(add_object::AddObject { typology: str_field("typology") }),
+        "patchObject" => CadCommand::PatchObject(patch_object::PatchObject { object_id: str_field("objectId").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") }),
+        "patchSelection" => CadCommand::PatchSelection(patch_selection::PatchSelection { object_ids: str_vec_field("objectIds"), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") }),
+        "deleteObject" => CadCommand::DeleteObject(delete_object::DeleteObject { object_id: str_field("objectId").unwrap_or_default() }),
+        "duplicateObject" => CadCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: str_field("objectId").unwrap_or_default() }),
+        "addNode" => CadCommand::AddNode(add_node::AddNode { kind: str_field("kind").unwrap_or_else(|| "solid".into()) }),
+        "renameNode" => CadCommand::RenameNode(rename_node::RenameNode { node_id: str_field("nodeId").unwrap_or_default(), value: str_field("value").unwrap_or_default() }),
+        "worldSelect" => CadCommand::WorldSelect(world_select::WorldSelect { ids: str_vec_field("ids"), merge: str_field("merge").unwrap_or_else(|| "replace".into()) }),
+        "worldHover" => CadCommand::WorldHover(world_hover::WorldHover { object_id: str_field("id") }),
+        "setHover" => CadCommand::SetHover(set_hover::SetHover { object_id: str_field("objectId"), mode: str_field("mode"), id: u64_field("id").map(|value| value as u32) }),
+        "worldPick" => CadCommand::WorldPick(world_pick::WorldPick {
+            id: u64_field("id"),
+            merge: str_field("merge").unwrap_or_else(|| "replace".into()),
+            granularity: str_field("granularity").unwrap_or_else(|| "mesh".into()),
+            object_id: str_field("objectId"),
+            surface_id: str_field("surfaceId"),
+            pane: str_field("pane"),
+        }),
+        "setSelectionMethod" => CadCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: str_field("method").unwrap_or_else(|| "rectangle".into()) }),
+        "focusModelDefinition" => CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: str_field("modelDefinitionId").unwrap_or_default() }),
+        "applyTransformation" => CadCommand::ApplyTransformation(apply_transformation::ApplyTransformation { qid: str_field("qid").unwrap_or_default() }),
+        "saveSelected" => CadCommand::SaveSelected(save_selected::SaveSelected {}),
+        "saveInPlay" => CadCommand::SaveInPlay(save_in_play::SaveInPlay {}),
+        "saveCurrent" => CadCommand::SaveCurrent(save_current::SaveCurrent { format: str_field("format") }),
+        "loadRawRequest" => CadCommand::LoadRawRequest(load_raw_request::LoadRawRequest {}),
+        "importCadFile" => {
+            let payload = args.and_then(|value| value.get("payload").or_else(|| value.get("modelSpace"))).cloned().or_else(|| args.cloned());
+            let payload = match payload {
+                Some(Value::String(text)) => text,
+                Some(other) => other.to_string(),
+                None => String::new(),
+            };
+            CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: str_field("name").unwrap_or_default(), payload })
+        }
+        "setReferenceSelection" => CadCommand::SetReferenceSelection(set_reference_selection::SetReferenceSelection { pane: str_field("pane"), model_definition_id: str_field("modelDefinitionId"), reference_id: str_field("referenceId") }),
+        "referenceHover" => CadCommand::ReferenceHover(reference_hover::ReferenceHover { reference_id: str_field("referenceId") }),
+        "patchCadPlayReference" => CadCommand::PatchCadPlayReference(patch_cad_play_reference::PatchCadPlayReference {
+            model_definition_id: str_field("modelDefinitionId").unwrap_or_default(),
+            reference_id: str_field("referenceId").unwrap_or_default(),
+            field: str_field("field").unwrap_or_default(),
+            value: value_string(),
+            delta: f64_field("delta"),
+        }),
+        "engagementInput" => CadCommand::EngagementInput(engagement_input::EngagementInput { value: str_field("value").unwrap_or_default(), pane: str_field("pane") }),
+        "engagementSubmit" => CadCommand::EngagementSubmit(engagement_submit::EngagementSubmit { pane: str_field("pane") }),
+        "engagementPossibleSelect" => CadCommand::EngagementPossibleSelect(engagement_possible_select::EngagementPossibleSelect { pane: str_field("pane"), possible_id: str_field("possibleId").unwrap_or_default() }),
+        "engagementRepeatLast" => CadCommand::EngagementRepeatLast(engagement_repeat_last::EngagementRepeatLast { pane: str_field("pane") }),
+        "engagementAbort" => CadCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
+        "worldPointerDown" | "engagementPointerDown" => CadCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { pane: str_field("pane"), surface_id: str_field("surfaceId"), x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
+        "worldPointerMove" => CadCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
+        "setPrimitiveSelection" => CadCommand::SetPrimitiveSelection(set_primitive_selection::SetPrimitiveSelection { object_id: str_field("objectId").unwrap_or_default(), primitive_id: str_field("primitiveId"), kind: str_field("kind") }),
+        "toggleSun" => CadCommand::ToggleSun(toggle_sun::ToggleSun {}),
+        "setSunAzimuth" => CadCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_field("value").unwrap_or(0.0) }),
+        "setSunElevation" => CadCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_field("value").unwrap_or(0.0) }),
+        "setSunIntensity" => CadCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: f64_field("value").unwrap_or(0.0) }),
+        other => return Err(Fault::from(format!("unknown cad action '{other}'"))),
+    })
+}
 //#endregion 🔖️Commands
 
 //#region 🔖️PlayApp
@@ -1014,6 +1122,10 @@ impl ArtifactApp for CadPlayApp {
 
     fn command_id(command: &CadCommand) -> &'static str {
         command.command_id()
+    }
+
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
+        cad_command_from_action(action, args)
     }
 
     fn handle(command: &CadCommand, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
@@ -1219,7 +1331,7 @@ pub(crate) mod testkit {
     //! instead of re-deriving a store/dispatch/render scaffold of its own.
     use super::*;
     use protocol::{Mutation, MutationDiff};
-    use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp, SET_ACTIVE_UTILITY_ACTION_ID};
+    use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp};
 
 
     pub fn meta(actor: &str) -> ActionMeta {
@@ -1234,116 +1346,9 @@ pub(crate) mod testkit {
         HistoryView::empty()
     }
 
-    /// @emoji 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS test-only bridge: recovers a typed `CadCommand` from
-    /// the pre-B1 `(action id, JSON args)` shape every test in this module was already written against
-    /// — the same information `AppDefinition`'s declared `ActionArgDef`s carry, reconstructed by hand
-    /// here rather than threading a real host-side action→command bridge (out of scope for this ticket;
-    /// Wave 3 wires the shell). Panics on an unrecognized action id — every id used below is covered.
+    /// 🔀️ Keeps the legacy test-harness call shape while exercising the production action bridge.
     pub fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
-        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
-        let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_f64);
-        let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_u64);
-        let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
-        let str_vec_field = |key: &str| -> Vec<String> { args.and_then(|value| value.get(key)).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
-        let u32_vec_field = |key: &str| -> Vec<u32> {
-            args.and_then(|value| value.get(key))
-                .and_then(|value| if let Some(array) = value.as_array() { Some(array.iter().filter_map(|entry| entry.as_u64().map(|number| number as u32)).collect()) } else { serde_json::from_value(value.clone()).ok() })
-                .unwrap_or_default()
-        };
-        let value_string = || -> Option<String> {
-            args.and_then(|value| value.get("value")).and_then(|value| match value {
-                Value::String(text) => Some(text.clone()),
-                Value::Bool(flag) => Some(flag.to_string()),
-                Value::Number(number) => Some(number.to_string()),
-                _ => None,
-            })
-        };
-        let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(|value| value.get(index)).and_then(Value::as_f64);
-        match action {
-            "setActiveExample" => CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
-            SET_ACTIVE_UTILITY_ACTION_ID => CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_field("utilityId").unwrap_or_default() }),
-            "setLocale" => CadCommand::SetLocale(set_locale::SetLocale { value: str_field("value").unwrap_or_default() }),
-            "setTerminology" => CadCommand::SetTerminology(set_terminology::SetTerminology { value: str_field("value").unwrap_or_default() }),
-            "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
-            "setSelection" => CadCommand::SetSelection(set_selection::SetSelection { mode: str_field("mode").unwrap_or_else(|| "mesh".into()), ids: u32_vec_field("ids"), object_id: str_field("objectId"), merge: str_field("merge").unwrap_or_else(|| "replace".into()) }),
-            "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
-            "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() }),
-            "setProjection" => CadCommand::SetProjection(set_projection::SetProjection {
-                pane: str_field("surfaceId"),
-                field: str_field("field"),
-                value_str: args.and_then(|value| value.get("value")).and_then(Value::as_str).map(String::from),
-                value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
-                param: str_field("param"),
-            }),
-            "setProjectionParam" => CadCommand::SetProjectionParam(set_projection_param::SetProjectionParam {
-                pane: str_field("surfaceId"),
-                field: str_field("field"),
-                value_str: args.and_then(|value| value.get("value")).and_then(Value::as_str).map(String::from),
-                value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
-                param: str_field("param"),
-            }),
-            "translateSelection" => CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: str_vec_field("objectIds"), dx: f64_field("dx").unwrap_or(0.0), dy: f64_field("dy").unwrap_or(0.0), dz: f64_field("dz").unwrap_or(0.0) }),
-            "rotateSelection" => {
-                CadCommand::RotateSelection(rotate_selection::RotateSelection { object_ids: str_vec_field("objectIds"), ax: f64_field("ax").unwrap_or(0.0), ay: f64_field("ay").unwrap_or(0.0), az: f64_field("az").unwrap_or(0.0), angle: f64_field("angle").unwrap_or(0.0) })
-            }
-            "scaleSelection" => CadCommand::ScaleSelection(scale_selection::ScaleSelection { object_ids: str_vec_field("objectIds"), sx: f64_field("sx").unwrap_or(1.0), sy: f64_field("sy").unwrap_or(1.0), sz: f64_field("sz").unwrap_or(1.0) }),
-            "addObject" => CadCommand::AddObject(add_object::AddObject { typology: str_field("typology") }),
-            "patchObject" => CadCommand::PatchObject(patch_object::PatchObject { object_id: str_field("objectId").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") }),
-            "patchSelection" => CadCommand::PatchSelection(patch_selection::PatchSelection { object_ids: str_vec_field("objectIds"), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") }),
-            "deleteObject" => CadCommand::DeleteObject(delete_object::DeleteObject { object_id: str_field("objectId").unwrap_or_default() }),
-            "duplicateObject" => CadCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: str_field("objectId").unwrap_or_default() }),
-            "addNode" => CadCommand::AddNode(add_node::AddNode { kind: str_field("kind").unwrap_or_else(|| "solid".into()) }),
-            "renameNode" => CadCommand::RenameNode(rename_node::RenameNode { node_id: str_field("nodeId").unwrap_or_default(), value: str_field("value").unwrap_or_default() }),
-            "worldSelect" => CadCommand::WorldSelect(world_select::WorldSelect { ids: str_vec_field("ids"), merge: str_field("merge").unwrap_or_else(|| "replace".into()) }),
-            "worldHover" => CadCommand::WorldHover(world_hover::WorldHover { object_id: str_field("id") }),
-            "setHover" => CadCommand::SetHover(set_hover::SetHover { object_id: str_field("objectId"), mode: str_field("mode"), id: u64_field("id").map(|value| value as u32) }),
-            "worldPick" => CadCommand::WorldPick(world_pick::WorldPick {
-                id: u64_field("id"),
-                merge: str_field("merge").unwrap_or_else(|| "replace".into()),
-                granularity: str_field("granularity").unwrap_or_else(|| "mesh".into()),
-                object_id: str_field("objectId"),
-                surface_id: str_field("surfaceId"),
-                pane: str_field("pane"),
-            }),
-            "setSelectionMethod" => CadCommand::SetSelectionMethod(set_selection_method::SetSelectionMethod { method: str_field("method").unwrap_or_else(|| "rectangle".into()) }),
-            "focusModelDefinition" => CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: str_field("modelDefinitionId").unwrap_or_default() }),
-            "applyTransformation" => CadCommand::ApplyTransformation(apply_transformation::ApplyTransformation { qid: str_field("qid").unwrap_or_default() }),
-            "saveSelected" => CadCommand::SaveSelected(save_selected::SaveSelected {}),
-            "saveInPlay" => CadCommand::SaveInPlay(save_in_play::SaveInPlay {}),
-            "saveCurrent" => CadCommand::SaveCurrent(save_current::SaveCurrent { format: str_field("format") }),
-            "loadRawRequest" => CadCommand::LoadRawRequest(load_raw_request::LoadRawRequest {}),
-            "importCadFile" => {
-                let payload = args.and_then(|value| value.get("payload").or_else(|| value.get("modelSpace"))).cloned().or_else(|| args.cloned());
-                let payload = match payload {
-                    Some(Value::String(text)) => text,
-                    Some(other) => other.to_string(),
-                    None => String::new(),
-                };
-                CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: str_field("name").unwrap_or_default(), payload })
-            }
-            "setReferenceSelection" => CadCommand::SetReferenceSelection(set_reference_selection::SetReferenceSelection { pane: str_field("pane"), model_definition_id: str_field("modelDefinitionId"), reference_id: str_field("referenceId") }),
-            "referenceHover" => CadCommand::ReferenceHover(reference_hover::ReferenceHover { reference_id: str_field("referenceId") }),
-            "patchCadPlayReference" => CadCommand::PatchCadPlayReference(patch_cad_play_reference::PatchCadPlayReference {
-                model_definition_id: str_field("modelDefinitionId").unwrap_or_default(),
-                reference_id: str_field("referenceId").unwrap_or_default(),
-                field: str_field("field").unwrap_or_default(),
-                value: value_string(),
-                delta: f64_field("delta"),
-            }),
-            "engagementInput" => CadCommand::EngagementInput(engagement_input::EngagementInput { value: str_field("value").unwrap_or_default(), pane: str_field("pane") }),
-            "engagementSubmit" => CadCommand::EngagementSubmit(engagement_submit::EngagementSubmit { pane: str_field("pane") }),
-            "engagementPossibleSelect" => CadCommand::EngagementPossibleSelect(engagement_possible_select::EngagementPossibleSelect { pane: str_field("pane"), possible_id: str_field("possibleId").unwrap_or_default() }),
-            "engagementRepeatLast" => CadCommand::EngagementRepeatLast(engagement_repeat_last::EngagementRepeatLast { pane: str_field("pane") }),
-            "engagementAbort" => CadCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
-            "worldPointerDown" | "engagementPointerDown" => CadCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { pane: str_field("pane"), surface_id: str_field("surfaceId"), x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
-            "worldPointerMove" => CadCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
-            "setPrimitiveSelection" => CadCommand::SetPrimitiveSelection(set_primitive_selection::SetPrimitiveSelection { object_id: str_field("objectId").unwrap_or_default(), primitive_id: str_field("primitiveId"), kind: str_field("kind") }),
-            "toggleSun" => CadCommand::ToggleSun(toggle_sun::ToggleSun {}),
-            "setSunAzimuth" => CadCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_field("value").unwrap_or(0.0) }),
-            "setSunElevation" => CadCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_field("value").unwrap_or(0.0) }),
-            "setSunIntensity" => CadCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: f64_field("value").unwrap_or(0.0) }),
-            other => panic!("command_from_action: unhandled test action {other}"),
-        }
+        cad_command_from_action(action, args).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
     }
 
     /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
@@ -1505,6 +1510,15 @@ mod tests {
             CadCommand::SaveCurrent(save_current::SaveCurrent { format: None }),
             CadCommand::LoadRawRequest(load_raw_request::LoadRawRequest {}),
         ]
+    }
+
+    /// 🧪️ The shell's example picker reaches the production bridge and produces the typed command
+    /// that replaces the CAD document instead of falling through to the framework-only action path.
+    #[test]
+    fn production_action_bridge_loads_the_declared_example() {
+        let command = <CadPlayApp as ArtifactApp>::command_from_action("setActiveExample", Some(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT }))).expect("declared example action");
+        assert!(matches!(command, CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id }) if example_id == CAD_EXAMPLE_FOREST_LEFT));
+        assert!(<CadPlayApp as ArtifactApp>::command_from_action("notACadAction", None).is_err());
     }
 
     /// ⚖️ Text and binary are two projections of the same command, and every printed line starts with

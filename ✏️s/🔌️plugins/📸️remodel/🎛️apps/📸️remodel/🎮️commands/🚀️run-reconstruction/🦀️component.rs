@@ -156,7 +156,8 @@ pub fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelSnapsh
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::apps::remodel::commands::ingest::testkit_import_checker_stream;
+    use crate::apps::remodel::commands::import_frame_payload::testkit_import_checker_stream;
+    use crate::apps::remodel::commands::retry_stage;
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
     use crate::artifacts::remodel::ReconstructionStage;
@@ -190,7 +191,7 @@ mod tests {
         dispatch(&mut app, RemodelCommand::RunReconstruction(super::RunReconstruction {}));
         let first_job_id = app.snapshot().expect("projection").job.id;
 
-        dispatch(&mut app, RemodelCommand::RetryStage(super::retry_stage::RetryStage { stage: "extracting-features".into() }));
+        dispatch(&mut app, RemodelCommand::RetryStage(retry_stage::RetryStage { stage: "extracting-features".into() }));
         let scene = app.snapshot().expect("projection");
         assert!(scene.job.stage == ReconstructionStage::Done || scene.job.stage == ReconstructionStage::Failed);
         assert_ne!(scene.job.id, first_job_id, "retryStage must start a new job");

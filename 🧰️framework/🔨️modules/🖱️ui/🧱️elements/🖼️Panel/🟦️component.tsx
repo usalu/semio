@@ -449,7 +449,7 @@ const Panel: React.FC<PanelProps> = ({
         }
       : undefined;
   const chromeHostedTrailingEndReserveStyle =
-    isChromeHosted && visible && horizontal === "right" ? shellNavbarTrailingEndReserveStyle(trailingEndWidthPx) : undefined;
+    isChromeHosted && visible && anchor === "top-right" ? shellNavbarTrailingEndReserveStyle(trailingEndWidthPx) : undefined;
 
   // 🎯️ An anchor with no tabs renders nothing at rest. Panel-hosted: it becomes a drop target only while a dock
   // drag is in flight, so a tab can be dragged into an otherwise-empty anchor. Chrome-hosted: the sibling

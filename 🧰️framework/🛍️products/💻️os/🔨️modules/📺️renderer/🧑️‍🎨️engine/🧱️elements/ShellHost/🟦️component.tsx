@@ -654,8 +654,8 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
   return (
     <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ position: "relative", height: "100%", width: "100%", isolation: "isolate" }}>
       <ShellScopeProvider scope={scope}>
-        <div data-semio-portal-layer ref={setPortalLayer} className="pointer-events-none absolute inset-0 z-tutorial" />
         <FrameworkOsShellInner {...innerProps} locks={locks} brand={brand} />
+        <div data-semio-portal-layer ref={setPortalLayer} className="pointer-events-none absolute inset-0" />
       </ShellScopeProvider>
     </div>
   );
@@ -1386,12 +1386,12 @@ function FrameworkOsShellInner({
     // unfocused shell keeps mounting UIIntroduction (veil/hotkeys/ghost cursor) and steals step chrome
     // from the focused pane.
     if (suppressAutoIntroduction) {
-      if (introductionStepIndex != null) dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
       return;
     }
     if (!replayIntroductionOnLoad && readStoredIntroductionSeen(scope.storage, introductionSeenKey)) return;
-    dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction, introductionStepIndex]);
+    dispatch({ type: "AUTO_START_INTRODUCTION", key: introductionSeenKey });
+  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction]);
 
   // 🎥️ Zero per-app work: any app/brand that declares `tutorials` gets shell support automatically.
   // Brand-owned tutorials are shown ALONGSIDE the app's own (never replacing them, unlike `introduction`).
@@ -2105,7 +2105,7 @@ function FrameworkOsShellInner({
           const { selectionJson, vorticesJson, documentSelectedIds, documentHighlightedIds } = effect.patchWorld3dChrome;
           const patch = { selectionJson, vorticesJson };
           const windowInstances = sessionWindowInstances(baseSession.app, extraWindowInstancesRef.current);
-          const documentPanelKey = panelTabKindId(FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
+          const documentPanelKey = FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
           dispatch({
             type: "SET_WINDOW_UI_BY_WINDOW_ID",
             value: (current) =>
@@ -2619,7 +2619,7 @@ function FrameworkOsShellInner({
         if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "utility" && interaction.on.id === next);
         const pluginEntry = findPluginForAction(action);
         const program = pluginEntry?.handle;
-        if (plugin) {
+        if (program) {
           const viewState: ViewModel = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void program
@@ -2643,7 +2643,7 @@ function FrameworkOsShellInner({
         if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
         const pluginEntry = findPluginForAction(action);
         const program = pluginEntry?.handle;
-        if (plugin) {
+        if (program) {
           const viewState: ViewModel = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
           void program
@@ -3873,7 +3873,7 @@ function FrameworkOsShellInner({
     if (!session) return [];
     const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
     if (hostMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
-    const hasPluginArtifactTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
+    const hasPluginArtifactTab = flattenPanelTabLeaves(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
     const artifactTab = singleTreeLeaf({
       id: FRAMEWORK_PANEL_TAB_ARTIFACT_ID,

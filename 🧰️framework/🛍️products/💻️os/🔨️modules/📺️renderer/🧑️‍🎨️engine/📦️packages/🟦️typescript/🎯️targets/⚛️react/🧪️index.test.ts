@@ -234,6 +234,7 @@ import {
   buildToolTabs,
   toolIdFromPanelTabId,
   sceneToSyncPack,
+  FrameworkOsShell,
   TutorialRecorder,
   synthesizeLocalizedLabel,
   resolveManifestLabel,
@@ -486,6 +487,23 @@ describe("shell store reducer", () => {
     expect(advanced.overlays.introductionStepIndex).toBe(1);
     const dismissed = shellReducer(advanced, { type: "SET_INTRODUCTION_STEP", value: null });
     expect(dismissed.overlays.introductionStepIndex).toBeNull();
+  });
+
+  it("auto-starts each introduction launch once and keeps a skipped replay-on-load introduction dismissed", () => {
+    const state = baseState();
+    const started = shellReducer(state, { type: "AUTO_START_INTRODUCTION", key: "demonstrator:app" });
+    expect(started.overlays.introductionStepIndex).toBe(0);
+    expect(started.overlays.introductionAutoStartedKeys).toEqual(["demonstrator:app"]);
+
+    const skipped = shellReducer(started, { type: "SET_INTRODUCTION_STEP", value: null });
+    const repeatedAutoStart = shellReducer(skipped, { type: "AUTO_START_INTRODUCTION", key: "demonstrator:app" });
+    expect(repeatedAutoStart.overlays.introductionStepIndex).toBeNull();
+    expect(repeatedAutoStart.overlays).toBe(skipped.overlays);
+
+    const manuallyAdvanced = shellReducer(repeatedAutoStart, { type: "SET_INTRODUCTION_STEP", value: 2 });
+    const nextApp = shellReducer(manuallyAdvanced, { type: "AUTO_START_INTRODUCTION", key: "demonstrator:other-app" });
+    expect(nextApp.overlays.introductionStepIndex).toBe(0);
+    expect(nextApp.overlays.introductionAutoStartedKeys).toEqual(["demonstrator:app", "demonstrator:other-app"]);
   });
 
   it("COMPLETE_INTRODUCTION_INTERACTION appends and dedupes indices; SET_INTRODUCTION_STEP resets them", () => {
@@ -5339,5 +5357,17 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
 
     expect(resolveManifestLabel(def.title, "native", "en")).toBe("Recorded Tutorial");
     expect(resolveManifestLabel(def.chapters[0].title, "reuse", "de")).toBe("Introduction");
+  });
+
+  it("FrameworkOsShell portal layer is unconstrained by z-tutorial so portaled elements sit above elevated windows", () => {
+    if (!window.matchMedia) {
+      window.matchMedia = (() => ({ matches: false, media: "", onchange: null, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false })) as unknown as typeof window.matchMedia;
+    }
+    const { container } = render(
+      createElement(FrameworkOsShell, { plugins: [], appId: "test" })
+    );
+    const portalLayer = container.querySelector("[data-semio-portal-layer]");
+    expect(portalLayer).toBeTruthy();
+    expect(portalLayer?.className).not.toContain("z-tutorial");
   });
 });

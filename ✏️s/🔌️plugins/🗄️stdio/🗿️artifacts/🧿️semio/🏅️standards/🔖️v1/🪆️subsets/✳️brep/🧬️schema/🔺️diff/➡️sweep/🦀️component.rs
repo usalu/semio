@@ -1,7 +1,7 @@
 //! ➡️ Extrude/revolve/loft/pipe/helical sweep.
 //!
 //! Native sweep ops that mutate a [`Body`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body) through
-//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] editors and attach [`Surface`](semio_framework_3d::brep::surface::Surface)
+//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] editors and attach [`Surface`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface)
 //! geometry (planes for polygonal sides, cylinders when a circular profile edge is extruded).
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/➡️sweep` in ticket
@@ -10,16 +10,16 @@
 use std::f64::consts::TAU;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use semio_framework_3d::brep::mat::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::Wire;
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Helpers
 
@@ -532,8 +532,8 @@ fn sample_wire_points(body: &Body, wire: &Wire, samples_per_edge: usize) -> Resu
     Ok(points)
 }
 
-fn curve_point(curve: &semio_framework_3d::brep::curve::Curve3, u: f64) -> Pnt3 {
-    use semio_framework_3d::brep::curve::Curve3;
+fn curve_point(curve: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, u: f64) -> Pnt3 {
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     match curve {
         Curve3::Line { origin, dir } => *origin + *dir * u,
         Curve3::Circle { frame, radius } => {

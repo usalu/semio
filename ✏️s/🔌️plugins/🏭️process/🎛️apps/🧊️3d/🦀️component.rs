@@ -23,7 +23,7 @@ use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability,
     UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
@@ -79,6 +79,12 @@ pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> HostEffe
     let spr = store::print_document_spr(&envelope).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
     HostEffect::LoadDocument { pack, spr }
 }
+
+/// 🚨 Typed host-action decoding fault with one stable app-specific code.
+fn process3d_action_fault(action: &str, detail: impl Into<String>) -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new("process3d.action.invalid"), format!("action '{action}': {}", detail.into()))
+}
+
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
@@ -125,6 +131,7 @@ semio_framework_plugin::app_commands! {
         "setContributions" as "contributions" => set_contributions::SetContributions,
         "exportModel" as "export-model" => export_model::ExportModel,
         "loadModelRequest" as "load-model-request" => load_model_request::LoadModelRequest,
+        "contextMenuAt" as "context-menu-at" => context_menu_at::ContextMenuAt,
     }
 }
 
@@ -138,7 +145,7 @@ use inspector::patch_inspector;
 use locale::set_locale;
 use contribution::set_contributions;
 use media::{export_model, import_model_file, load_model_request};
-use selection::{set_hover, set_selection};
+use selection::{context_menu_at, set_hover, set_selection};
 use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
 use stock::set_stock;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
@@ -244,6 +251,125 @@ impl ArtifactApp for Process3dPlayApp {
         command.command_id()
     }
 
+    /// 🎯️ Exhaustive host-action bridge into the closed `Process3dCommand` enum. React and wgpu still
+    /// emit manifest action ids plus JSON arguments; only this boundary interprets that transport shape.
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        let field = |key: &str| args.and_then(|value| value.get(key));
+        let string_field = |key: &str| field(key).and_then(Value::as_str).map(str::to_string);
+        let stringish_field = |key: &str| {
+            field(key).and_then(|value| value.as_str().map(str::to_string).or_else(|| value.as_u64().map(|number| number.to_string())).or_else(|| value.as_i64().map(|number| number.to_string())))
+        };
+        let number_field = |key: &str| field(key).and_then(Value::as_f64);
+        let unsigned_field = |key: &str| field(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().filter(|number| number.is_finite() && *number >= 0.0).map(|number| number as u64)));
+        let signed_field = |key: &str| field(key).and_then(|value| value.as_i64().or_else(|| value.as_f64().filter(|number| number.is_finite()).map(|number| number as i64)));
+        let vec3_field = |key: &str| -> Option<[f64; 3]> {
+            let values = field(key)?.as_array()?;
+            if values.len() != 3 {
+                return None;
+            }
+            Some([values[0].as_f64()?, values[1].as_f64()?, values[2].as_f64()?])
+        };
+        let vec2_field = |key: &str| -> Option<[f64; 2]> {
+            let values = field(key)?.as_array()?;
+            if values.len() != 2 {
+                return None;
+            }
+            Some([values[0].as_f64()?, values[1].as_f64()?])
+        };
+        let first_string_id = || field("ids").and_then(Value::as_array).and_then(|values| values.first()).and_then(Value::as_str).map(str::to_string);
+        match action {
+            "setSnapshot" => {
+                let json = string_field("json").or_else(|| field("document").and_then(|value| serde_json::to_string(value).ok())).unwrap_or_default();
+                Ok(Process3dCommand::SetDocument(set_snapshot::SetDocument { json }))
+            }
+            "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample {
+                example_id: string_field("exampleId").or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_TIMBER.into()),
+            })),
+            "addStep" => Ok(Process3dCommand::AddStep(add_step::AddStep {
+                measure: string_field("measure"),
+                machine_id: string_field("machineId").or_else(|| string_field("machine_id")),
+                capability_id: string_field("capabilityId").or_else(|| string_field("capability_id")),
+                position: vec3_field("position"),
+            })),
+            "addWorkshopMachine" => Ok(Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine {
+                catalog_id: string_field("catalogId").or_else(|| string_field("catalog_id")).unwrap_or_default(),
+                machine_id: string_field("machineId").or_else(|| string_field("machine_id")).unwrap_or_default(),
+            })),
+            "removeWorkshopMachine" => Ok(Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: string_field("id").unwrap_or_default() })),
+            "updateWorkshopMachine" => Ok(Process3dCommand::UpdateWorkshopMachine(update_workshop_machine::UpdateWorkshopMachine {
+                machine: args
+                    .and_then(|value| value.get("machine"))
+                    .cloned()
+                    .map(serde_json::from_value)
+                    .transpose()
+                    .map_err(|error| process3d_action_fault(action, format!("invalid 'machine': {error}")))?
+                    .unwrap_or(crate::artifacts::process3d::WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }),
+            })),
+            "removeStep" => Ok(Process3dCommand::RemoveStep(remove_step::RemoveStep { id: string_field("id").unwrap_or_default() })),
+            "removeSelectedStep" => Ok(Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {})),
+            "moveStep" => Ok(Process3dCommand::MoveStep(move_step::MoveStep { id: string_field("id").unwrap_or_default(), index: unsigned_field("index").unwrap_or_default() as usize })),
+            "updateStep" => {
+                let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").and_then(|value| serde_json::to_string(value).ok())).unwrap_or_default();
+                Ok(Process3dCommand::UpdateStep(update_step::UpdateStep { step_json }))
+            }
+            "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled {
+                id: string_field("id").unwrap_or_default(),
+                enabled: field("enabled").and_then(Value::as_bool).unwrap_or(true),
+            })),
+            "setStock" => Ok(Process3dCommand::SetStock(set_stock::SetStock { kind: string_field("kind").or_else(|| string_field("value")).unwrap_or_else(|| "box".into()) })),
+            "patchInspector" => Ok(Process3dCommand::PatchInspector(patch_inspector::PatchInspector {
+                target: string_field("target").unwrap_or_default(),
+                field: string_field("field").unwrap_or_default(),
+                number: number_field("number").or_else(|| number_field("value")),
+                text: string_field("text").or_else(|| string_field("value")),
+            })),
+            "setCursor" => Ok(Process3dCommand::SetCursor(set_cursor::SetCursor { value: unsigned_field("value") })),
+            "stepCursor" => Ok(Process3dCommand::StepCursor(step_cursor::StepCursor { delta: signed_field("delta").unwrap_or_default() })),
+            "stepCursorBack" => Ok(Process3dCommand::StepCursorBack(step_cursor_back::StepCursorBack {})),
+            "stepCursorForward" => Ok(Process3dCommand::StepCursorForward(step_cursor_forward::StepCursorForward {})),
+            "engagementSubmit" => Ok(Process3dCommand::EngagementSubmit(engagement_submit::EngagementSubmit {})),
+            "worldPointerDown" => Ok(Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: vec3_field("position").unwrap_or_default() })),
+            "worldFaceDragEnd" => Ok(Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd {
+                normal: vec3_field("normal").unwrap_or([0.0, 0.0, 1.0]),
+                start_point: vec3_field("startPoint").or_else(|| vec3_field("start_point")).unwrap_or_default(),
+                distance: number_field("distance").unwrap_or_default(),
+                face_extent: vec2_field("faceExtent").or_else(|| vec2_field("face_extent")),
+            })),
+            "importModelFile" => Ok(Process3dCommand::ImportModelFile(import_model_file::ImportModelFile {
+                name: string_field("name").unwrap_or_default(),
+                payload: string_field("payload").unwrap_or_default(),
+            })),
+            "setActiveUtility" => Ok(Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility {
+                utility_id: string_field("utilityId").or_else(|| string_field("utility_id")).unwrap_or_else(|| crate::apps::process3d::config::PROCESS3D_DEFAULT_UTILITY.into()),
+            })),
+            "engagementInput" => Ok(Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: string_field("value").unwrap_or_default() })),
+            "engagementAbort" => Ok(Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {})),
+            "setSelection" => Ok(Process3dCommand::SetSelection(set_selection::SetSelection {
+                id: string_field("objectId").or_else(|| string_field("id")).or_else(first_string_id),
+            })),
+            "setHover" => Ok(Process3dCommand::SetHover(set_hover::SetHover { id: string_field("objectId").or_else(|| string_field("id")) })),
+            "setCamera" => Ok(Process3dCommand::SetCamera(set_camera::SetCamera {
+                position: vec3_field("position").unwrap_or([3.0, -3.0, 2.0]),
+                target: vec3_field("target").unwrap_or_default(),
+                fov: number_field("fov").unwrap_or(45.0),
+            })),
+            "worldPick" => Ok(Process3dCommand::WorldPick(world_pick::WorldPick { granularity: string_field("granularity").unwrap_or_else(|| "object".into()), id: unsigned_field("id").map(|value| value as u32) })),
+            "toggleSun" => Ok(Process3dCommand::ToggleSun(toggle_sun::ToggleSun {})),
+            "setSunAzimuth" => Ok(Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: number_field("value").unwrap_or_default() })),
+            "setSunElevation" => Ok(Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: number_field("value").unwrap_or_default() })),
+            "setSunIntensity" => Ok(Process3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: number_field("value").unwrap_or_default() })),
+            "setLocale" => Ok(Process3dCommand::SetLocale(set_locale::SetLocale { value: string_field("value").unwrap_or_else(|| "en-US".into()) })),
+            "setContributions" => Ok(Process3dCommand::SetContributions(set_contributions::SetContributions { json: string_field("json").unwrap_or_else(|| "[]".into()) })),
+            "exportModel" => Ok(Process3dCommand::ExportModel(export_model::ExportModel { format: string_field("format").unwrap_or_else(|| "step".into()) })),
+            "loadModelRequest" => Ok(Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {})),
+            "contextMenuAt" => Ok(Process3dCommand::ContextMenuAt(context_menu_at::ContextMenuAt {
+                kind: string_field("kind").unwrap_or_default(),
+                id: stringish_field("id").unwrap_or_default(),
+            })),
+            other => Err(process3d_action_fault(other, "not declared by the process app's typed command vocabulary")),
+        }
+    }
+
     fn handle(command: &Process3dCommand, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
@@ -274,6 +400,16 @@ impl ArtifactApp for Process3dPlayApp {
 
     fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot))])
+    }
+
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        Menu::of(registry)
+            .action("addStep")
+            .when(cfg.snapshot.selected_id.as_deref().is_some_and(|id| id != "processed"), |menu| menu.destructive("removeSelectedStep"))
+            .separator()
+            .action("undo")
+            .action("redo")
+            .build()
     }
 }
 //#endregion 🔖️Process3dPlayApp
@@ -343,6 +479,7 @@ pub fn create_process3d_app() -> App {
             // 👁️ Ephemeral view state — selection, hover, camera, face picking, sun.
             .action_with(internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
             .action_with(internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            .action_with(internal_action("contextMenuAt", LocalizedLabel::native("Context Menu At", "Kontextmenü an Position"), ActionKind::View))
             .action_with(internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
             .action_with(internal_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"), ActionKind::View))
             .action_with(internal_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View))
@@ -791,6 +928,10 @@ pub(crate) mod testkit {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
+    pub fn action(app: &mut Process3dApp, action: &str, args: Option<&Value>) -> InvocationResult {
+        app.handle_action(action, args, &meta("local")).expect("action dispatch")
+    }
+
     pub fn render(app: &mut Process3dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
@@ -805,8 +946,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::process3d::testkit::{app, app_with_registry, dispatch, main_window_measures, render as render_body};
-    use semio_framework_plugin::{testkit, HistoryView, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
+    use crate::apps::process3d::testkit::{action, app, app_with_registry, dispatch, main_window_measures, render as render_body};
+    use semio_framework_plugin::{testkit, ContextMenuRequest, ContextMenuSurfaceTarget, HistoryView, PluginApp, UiMenuRef, SET_ACTIVE_UTILITY_ACTION_ID};
 
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -819,7 +960,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 36, "every Process3dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 37, "every Process3dCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -873,6 +1014,7 @@ mod tests {
                 "setContributions" => "contributions",
                 "exportModel" => "export-model",
                 "loadModelRequest" => "load-model-request",
+                "contextMenuAt" => "context-menu-at",
                 other if other == SET_ACTIVE_UTILITY_ACTION_ID => "active-utility",
                 other => panic!("no expected wire key recorded for command id {other} — add it to this table"),
             }
@@ -933,7 +1075,88 @@ mod tests {
             Process3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
             Process3dCommand::ExportModel(export_model::ExportModel { format: "step".into() }),
             Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {}),
+            Process3dCommand::ContextMenuAt(context_menu_at::ContextMenuAt { kind: "object".into(), id: "processed".into() }),
         ]
+    }
+
+    /// 🌉️ Every Process action emitted by React or wgpu must enter the same closed typed command
+    /// vocabulary as native typed callers; undeclared strings fail at this single boundary.
+    #[test]
+    fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+        testkit::assert_declared_actions_bridge_to_commands::<Process3dPlayApp>(create_process3d_app);
+        assert!(Process3dPlayApp::command_from_action("nonsense", None).is_err());
+    }
+
+    /// 🖱️ The three interaction payload shapes that regressed retain their identifiers through the
+    /// transport bridge instead of being dropped into ad-hoc host state.
+    #[test]
+    fn interaction_actions_decode_into_typed_commands() {
+        assert_eq!(
+            Process3dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))).expect("example bridge"),
+            Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() })
+        );
+        assert_eq!(
+            Process3dPlayApp::command_from_action("setHover", Some(&serde_json::json!({ "objectId": "processed" }))).expect("hover bridge"),
+            Process3dCommand::SetHover(set_hover::SetHover { id: Some("processed".into()) })
+        );
+        assert_eq!(
+            Process3dPlayApp::command_from_action("contextMenuAt", Some(&serde_json::json!({ "kind": "face", "id": 7 }))).expect("context-menu bridge"),
+            Process3dCommand::ContextMenuAt(context_menu_at::ContextMenuAt { kind: "face".into(), id: "7".into() })
+        );
+    }
+
+    /// 🔄️ The real registry-backed action entry point mutates the same config store consumed by the
+    /// renderer, proving hover no longer terminates at the transport boundary.
+    #[test]
+    fn registry_backed_hover_action_reaches_rendered_state() {
+        let mut app = app_with_registry();
+        action(&mut app, "setHover", Some(&serde_json::json!({ "objectId": "processed" })));
+        let rendered = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
+        assert!(rendered.contains("processed"), "hovered object must be present in the rendered selection state: {rendered}");
+    }
+
+    /// 📄️ Example switching exercises the complete registry-backed action path and emits the
+    /// architecture's sanctioned whole-document load effect for the requested fixture.
+    #[test]
+    fn registry_backed_example_action_emits_the_requested_document() {
+        let mut app = app_with_registry();
+        let result = action(&mut app, "setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE })));
+        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("example action must load a document") else {
+            panic!("expected a LoadDocument effect");
+        };
+        let loaded = <Process3dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode example document");
+        assert_eq!(loaded, crate::artifacts::process3d::schema::plate_document());
+    }
+
+    /// 🎯️ A component pick keeps its parent object and face id coherent in the single rendered
+    /// selection snapshot; clearing the pick clears both values together.
+    #[test]
+    fn face_pick_updates_and_clears_coherent_rendered_selection() {
+        let mut app = app();
+        dispatch(&mut app, Process3dCommand::WorldPick(world_pick::WorldPick { granularity: "face".into(), id: Some(7) }));
+        let selected = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
+        assert!(selected.contains("processed") && selected.contains("[7]"), "face selection must include its object and component id: {selected}");
+
+        dispatch(&mut app, Process3dCommand::WorldPick(world_pick::WorldPick { granularity: "face".into(), id: None }));
+        let cleared = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
+        assert!(!cleared.contains("[7]"), "clearing a face pick must remove the stale component id: {cleared}");
+    }
+
+    /// 🖱️ A world right-click has an app-owned menu to request after its typed `contextMenuAt`
+    /// selection update; the host no longer falls through to an empty default.
+    #[test]
+    fn world_context_menu_exposes_process_commands() {
+        let mut app = app_with_registry();
+        let request = ContextMenuRequest {
+            menu: UiMenuRef { id: "window".into(), args: None },
+            surface: Some(ContextMenuSurfaceTarget { surface_id: "process.play".into(), kind: "world3d".into(), hits: Vec::new(), selection: Vec::new(), text: None }),
+            window_instance_id: None,
+            point: None,
+        };
+        let menu = app.context_menu(&request);
+        let ids: Vec<&str> = menu.iter().map(|item| item.id.as_str()).collect();
+        assert!(ids.contains(&"addStep"), "right-click menu must expose the primary Process command: {ids:?}");
+        assert!(ids.contains(&"undo") && ids.contains(&"redo"), "right-click menu must expose history commands: {ids:?}");
     }
     //#endregion 🔖️CommandSurface
 

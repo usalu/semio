@@ -52,6 +52,7 @@ pub fn handle(_payload: &ResetPlaceholderMesh, _doc: &ArtifactView<'_, RemodelSn
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::remodel::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks};
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
     use semio_framework_plugin::testkit;

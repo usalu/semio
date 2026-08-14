@@ -770,6 +770,59 @@ The agent correctly **refused** step 3 (remove `MeshData` from the SDK's public 
 
 **Consequence for the mesh wave: `MeshData`'s blast radius is not the ~30 direct importers previously counted — it is those plus everything reaching it through this glob.** Recorded as the real gate on deleting `MeshData`.
 
+## 🏁 `📐️brep` IS DELETED — the user's headline target, closed
+
+**17,910 LOC → the directory no longer exists.** Every algorithm now lives in stdio's `✳️brep` artifact as `📸️snapshot`/`🔺️diff`/`💡️inferences` compute facets, reachable only through mutations and inferences.
+
+The last 67 LOC — `Vec3`/`Aabb`/`ParamDomain`/`FaceGroup`/`MeshTransfer`/`PointClassification` — relocated to `🧊️3d/⚙️engine/` and **stay in framework tier under the user's domain-neutral exemption**, because `💻️os` and `🌊️flow/📐️brep-geometry` structurally cannot depend on stdio. Confirmed by census, not assumed. Public path is now `semio_framework_3d::engine::X`.
+
+**13 consumer files repointed — not the ~8 my brief estimated.** The agent derived the census itself rather than trusting me: `💻️os`, `📐️brep-geometry`, the flow brep extension, two `📐️cad` facets, six stdio `✳️brep` facets, and a bench.
+
+Verified: framework-3d **62/0** · stdio **3379 / 5** (baseline names) · cad **140/0/1** · os-flow gated on a **byte-identical sorted error-set diff** against its recorded baseline — zero new, zero fixed.
+
+### `MeshTransfer` has two definitions and that is correct
+
+The single-source check flagged it. Investigated: `engine::MeshTransfer` and `mesh::MeshTransfer` are **genuinely different structs with different field sets** in different modules — a pre-existing name collision, not duplication this ticket introduced. `🥽️mesh` is another wave's slice. Recorded rather than "fixed" by merging two unrelated types.
+
+## ✅ CLOSING AUDIT — nothing lost
+
+```
+distinctive symbols in the 4 dying modules at session baseline : 5826
+still present somewhere in the tree                            : 5821
+LOST                                                           :    5
+  BREP_ENGINE_ID · BrepDocumentOpEngine · BrepEngineHost
+  host_derive_registers_brep_engine · kernel_lock_runs_box_prim
+```
+**All five have zero live references, and all five are `BrepEngineHost` and its tests — the process-global `Mutex<EngineCache> + Mutex<Brep>` singleton this entire ticket existed to remove.** Deleting a singleton and the tests that exercised it *is* the deliverable. **Real loss: zero.**
+
+### Final module state
+
+| module | before | now |
+|---|---|---|
+| `📐️brep` | 17,910 | **DELETED** |
+| `🔺️mesh` | 1,648 | **0 LOC rust** (only `🟦️component.ts`, unrelated and actively imported) |
+| `🧮️math` | 72,439 | **9,848** (`🎯️sampling` 9,809 + packages) |
+| `🧊️3d` | 23,014 | **2,864** (`⚙️engine` 67 + `🥽️mesh` 2,769) |
+| `🔺️mesh-engine` | 912 | 1,129 |
+
+**Named remainders, none silent:** `🎯️sampling` (no owner exists anywhere — reported, not force-placed) · `🥽️mesh` halfedge (needs `EngineRep` scaffolding; an architectural split, not a move) · `🔺️mesh-engine` (codecs *confirmed* redundant with `✳️mesh/🚪️io`; blocked only on consumers inside a sibling wave) · `BrepKernel` (four independent waves concluded it is its own project, each naming the same real consumers).
+
+## 🚑 A PEER SESSION DIED MID-WRITE — orphan repair, and a near-miss in my own attribution
+
+UCAS (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) **ended mid-transaction** during a `🎮️commands` consolidation across several plugins. Confirmed dead by me, not inferred: its socket is absent from `/tmp/cc-socks/` (`20304`, `8850`, `92028` remain; `32926` is gone) and `ListAgents` no longer lists it. The evidence it died mid-*write* rather than mid-thought: `🧩️puzzle` was left with **45 files whose `use` braces were syntactically unclosed** — imports stripped, brace never written, so the next line began a new `use`. A file caught literally between two writes.
+
+Another session repaired `🧩️puzzle` (159 → 0) and `🪵️sourcing` (1 → 0). I verified puzzle at **0 errors** rather than taking the claim.
+
+### ⚠️ I nearly read my own edits as a live foreign session
+
+I had cited "uncommitted `🎮️commands` deletions + fresh mtimes" in `➗️mathematical`/`📸️remodel` as evidence someone was actively typing there — and told my agents to treat it as live churn. Those mtimes were **wave FIXALG, my own**, minutes earlier. The peer's insistence that I *re-derive ownership rather than inherit their conclusion* is what surfaced it. **"Someone is editing this" is an action-licensing belief** (it stops you working) exactly as much as "this is abandoned" is (it lets you), so it carries the same evidentiary bar. I had applied that rule in one direction all night and not the other.
+
+### REPAIR — both orphans fixed, evidence-led
+
+`semio-s-plugin-mathematical` **9 → 0 errors** (248 passed / 14 failed — the 14 all in migrated `cas`/`polynomial`, the documented pre-existing set). `semio-s-plugin-remodel` **41 → 0** (487 passed / 2 failed, both in photogrammetry algorithm code, out of scope).
+
+**The root cause is worth recording**: both crates' `📦️glue.rs` mount `commands` **flat**, but the abandoned script had rewritten call sites to reference grouping modules (`document`; `calibration`/`ingest`/`params`/`reset`/`shell`/`view`) **that were never created**. The repair flattened them back to what the glue actually declares — evidenced by the `pub mod` list, a doc comment confirming flat-by-design intent, and rustc's own unambiguous suggestions. **No module or type was invented.** The `apps::X` vs `artifacts::X` distinct-type trap that bit the puzzle repair did not arise here; the agent checked rather than assuming symmetry.
+
 ## ✅ MATHEND — `🧮️math` 21,258 → 9,848 LOC. Three placements, one framework bug found.
 
 - **`🔢️number` (3,456) → new framework module** `🧰️framework/🔨️modules/🔢️number/`, taking the user's domain-neutral exemption. The case, made rather than assumed: `🧊️3d/📐️brep/⚖️predicates` is a **framework-tier** consumer that structurally cannot depend on a plugin, so `Rational` had to live in framework tier. 79/79 tests, exact parity.

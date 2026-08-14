@@ -298,6 +298,16 @@ So `git log --oneline` is **actively misleading** for attribution: it makes toda
 
 **Use `git log --date=iso` (or `%cd` with `--date=iso`) and `stat -f '%Sm %N'`. Never quote a date read from a commit subject.** Note also that `stat` mtime is corrupted by your own `touch`-to-force-recheck — if you touched a file to defeat the cargo cache, its mtime is now yours and proves nothing about its author.
 
+### 🛑 THREE mechanisms that manufacture FAKE compile errors — build directly before believing a failure
+
+All three hit this tree in one evening. Each produces output a careful reader would reasonably file as "that crate is broken", and **none of them is a compile error**:
+
+1. **Disk full.** `cargo` fails with `No space left on device`, which renders indistinguishably from real diagnostics. It swung one crate's count **94 → 16 → 116** across three runs. A count taken on a full disk is not a measurement — **`df -h` first**.
+2. **Mid-transaction windows.** A wave that repoints an import before landing the mount (or deletes a directory before removing its `#[path]`) leaves minutes where a *correct* consumer names a *not-yet-existing* path. Two sessions recorded phantom failures this way tonight. Re-measure before reporting; the window may already have closed.
+3. **Silent wall-clock kills.** The build harness enforces `SEMIO_BUILD_BUDGET_MS` via `runCmdStatus`, and under `FORCE_PLUGIN_BUILD=1` slow modules get killed with **non-zero status and NO error text**. Two crates reported as "build failed" compiled standalone in ~2.4s. **A timeout and a broken crate look identical in that harness.**
+
+**The defence that works: when a failure has no error text, or the error names something you just changed, build the target directly before believing the report.** Discovered/confirmed by the state-architecture session; recorded here so it is not rediscovered one mechanism at a time.
+
 ### ⚠️ Two cargo artefacts that manufacture false confidence
 
 1. **`cargo check` does not compile `#[cfg(test)]`.** Six separate instances in this repo in one day, including test code that **landed unverified in a closed ticket** because its own gate could not see it. Use `--tests`/`--all-targets`, and treat a green `check` as saying nothing about test code.

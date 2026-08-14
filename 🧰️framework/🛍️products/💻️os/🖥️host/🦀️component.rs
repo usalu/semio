@@ -367,7 +367,7 @@ pub mod host {
         P: Clone,
         Op: Clone,
     {
-        ArtifactEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None }
+        ArtifactEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() }
     }
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
@@ -620,7 +620,7 @@ pub mod host {
     impl OsWorkflowStore {
         pub fn new(document: OsWorkflowArtifactDocument) -> Self {
             let applied_edit_ids = document.applied_edit_ids.clone();
-            let envelope = ArtifactEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None };
+            let envelope = ArtifactEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() };
             let mut inner = ArtifactStore::new(envelope);
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();

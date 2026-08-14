@@ -109,7 +109,7 @@ mod derive_transformation {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
-    use semio_framework_3d::brep::engine::Vec3;
+    use semio_framework_3d::engine::Vec3;
     use std::collections::HashMap;
 
     //#region 🔖️ClassifyRules
@@ -794,7 +794,7 @@ mod scene_compute {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
-    use semio_framework_3d::brep::engine::MeshTransfer;
+    use semio_framework_3d::engine::MeshTransfer;
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use serde_json::Value;

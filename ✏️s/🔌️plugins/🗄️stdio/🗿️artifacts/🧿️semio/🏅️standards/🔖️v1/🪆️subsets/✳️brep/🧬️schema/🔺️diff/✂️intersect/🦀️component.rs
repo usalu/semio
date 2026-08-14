@@ -11,17 +11,17 @@ pub mod curve_curve {
 //! ✂️ Curve/curve intersection (analytic + Bézier clipping).
 //!
 //! Analytic fast paths cover [`Curve3::Line`]/[`Curve3::Circle`] pairs; every other combination
-//! falls through to a NURBS representation that is either clipped with [`semio_framework_3d::brep::bezier`]
+//! falls through to a NURBS representation that is either clipped with [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier`]
 //! control-hull subdivision or refined by Newton on sample seeds.
 //!
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`.
 
-use semio_framework_3d::brep::bezier::RationalBezier3;
-use semio_framework_3d::brep::bspline::insert_knot;
-use semio_framework_3d::brep::curve::{Curve3, NurbsCurve3};
-use semio_framework_3d::brep::error::IntersectError;
-use semio_framework_3d::brep::mat::Frame3;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve3, NurbsCurve3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -584,12 +584,12 @@ pub mod curve_surface {
 //!
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`.
 
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::error::IntersectError;
-use semio_framework_3d::brep::mat::Frame3;
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::surface_ops::closest_point;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_point;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -1080,11 +1080,11 @@ pub mod surface_surface {
 //!
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`.
 
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::error::IntersectError;
-use semio_framework_3d::brep::mat::Frame3;
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -1249,7 +1249,7 @@ fn intersect_surfaces_sampled(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<
         }]);
     }
     let n = controls.len();
-    let knots = semio_framework_3d::brep::bspline::KnotVector::clamped_uniform(n, 1);
+    let knots = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::clamped_uniform(n, 1);
     let weights = vec![1.0; n];
     Ok(vec![IntCurve {
         curve3: Curve3::Nurbs {

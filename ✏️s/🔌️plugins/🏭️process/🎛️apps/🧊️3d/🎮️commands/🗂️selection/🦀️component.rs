@@ -36,3 +36,30 @@ pub mod set_hover {
     }
 }
 //#endregion 🔖️SetHover
+
+//#region 🔖️ContextMenuAt
+pub mod context_menu_at {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "context-menu-at")]
+    pub struct ContextMenuAt {
+        pub kind: String,
+        pub id: String,
+    }
+
+    pub fn handle(payload: &ContextMenuAt, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let mutations = match payload.kind.as_str() {
+            "face" => payload
+                .id
+                .parse()
+                .ok()
+                .map(|value| vec![Process3dConfigMutation::SetSelectedId { value: Some("processed".into()) }, Process3dConfigMutation::SetSelectedFaceId { value: Some(value) }])
+                .unwrap_or_default(),
+            "mesh" | "object" => vec![Process3dConfigMutation::SetSelectedId { value: Some(payload.id.clone()) }, Process3dConfigMutation::SetSelectedFaceId { value: None }],
+            _ => Vec::new(),
+        };
+        Ok(Emit::config(mutations))
+    }
+}
+//#endregion 🔖️ContextMenuAt

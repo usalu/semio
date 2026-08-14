@@ -1,0 +1,13 @@
+{
+  "title": "First-Class Hover and Selection Mechanism",
+  "emoji": "🕹️",
+  "status": "open",
+  "description": "Dissolve hover and selection out of per-app commands/config into one first-class framework mechanism: unified InteractionDefinition per domain (granularities, hierarchy provider, HoverSpec, SelectionSpec) declared in the manifest alongside actions/utilities/tools/commands; new 🕹️interaction framework module holding the pure state machine (merge modes, range, transitive closure, validate_state) with Rust+TS parity and schema leaves; persisted-local selection via a new store HistoryLane mechanism that default undo/redo skips; ephemeral hover; uniform presence broadcast of selection/hover for every app via a typed PresenceInteraction field (wire bit 7) on PresencePeer; framework interception of interaction verbs in VcsArtifactApp replacing all per-app set-selection/set-hover handlers; UiTree/Tree/Shell/surface integration; migration of all ~14 apps plus the OS infinite module and fixtures. Plan file: /Users/ueli/.claude/plans/hover-and-selection-must-crystalline-stallman.md",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2555"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪d3243dd0bc7640f9b16901f6fad97e31"
+  ]
+}

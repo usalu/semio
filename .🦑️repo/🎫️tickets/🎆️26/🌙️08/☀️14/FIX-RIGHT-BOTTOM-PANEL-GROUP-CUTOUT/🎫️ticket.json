@@ -1,0 +1,8 @@
+{
+  "title": "Fix Right Bottom Panel Group Cutout Bug",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fixed right bottom panel group wrongly having the top-right navbar reserve cutout by scoping the reserve style condition strictly to anchor === 'top-right' and ensuring shellNavbarTrailingEndReserveStyle returns undefined when widthPx <= 0.",
+  "goal": "🎯aioptimizedrepo",
+  "created_at": "2026-08-14T00:38:00Z"
+}

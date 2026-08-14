@@ -1,0 +1,8 @@
+{
+  "title": "Fix Demonstrator Document Panel Toggle Duplication",
+  "emoji": "🐛️",
+  "status": "open",
+  "description": "Fix bug in demonstrator generator where document panel toggle appears wrongly twice.",
+  "goal": "🎯aioptimizedrepo",
+  "created_at": "2026-08-14T00:36:00Z"
+}

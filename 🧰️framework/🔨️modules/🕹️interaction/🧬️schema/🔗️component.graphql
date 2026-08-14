@@ -1,0 +1,140 @@
+# 🧬️ Interaction schema — InteractionDefinition (manifest declaration), InteractionState (own
+# persisted-local selection/mode/granularity + ephemeral-local hover), and PresenceInteraction (the
+# broadcast payload mirrored onto every peer's PresencePeer roster).
+
+type InteractionDefinition {
+  id: String!
+  label: LocalizedLabel!
+  granularities: [GranularityDefinition!]!
+  hierarchy: HierarchyProvider!
+  hover: HoverSpec!
+  selection: SelectionSpec!
+}
+
+type GranularityDefinition {
+  id: String!
+  label: LocalizedLabel!
+  iconId: String!
+}
+
+union HierarchyProvider = Flat | Topology | UiTree | PathDelimited
+
+type Flat {
+  kind: String! # "flat"
+}
+
+type Topology {
+  kind: String! # "topology"
+}
+
+type UiTree {
+  kind: String! # "uiTree"
+}
+
+type PathDelimited {
+  kind: String! # "pathDelimited"
+  delimiter: String!
+}
+
+type HoverSpec {
+  enabled: Boolean!
+  transitive: Boolean!
+  channels: [String!]!
+  broadcast: Boolean!
+}
+
+type SelectionSpec {
+  modes: [SelectionMode!]!
+  methods: [SelectionMethod!]!
+  merges: [MergeMode!]!
+  transitive: Boolean!
+  broadcast: Boolean!
+}
+
+enum SelectionMode {
+  SINGLE
+  MULTIPLE
+}
+
+enum SelectionMethod {
+  PICK
+  RECTANGLE
+  LASSO
+}
+
+enum MergeMode {
+  REPLACE
+  ADDITIVE
+  SUBTRACTIVE
+  INVERTIVE
+  RANGE
+}
+
+type InteractionTarget {
+  granularity: String!
+  id: String!
+}
+
+type DomainSelection {
+  granularity: String!
+  ids: [String!]!
+  anchorId: String
+}
+
+type DomainHover {
+  channel: String!
+  ids: [String!]!
+}
+
+# 👥️ Keyed by domain id (a GraphQL map — represented app-side as `Record<string, T>`/`BTreeMap<String, T>`).
+type InteractionState {
+  selection: [DomainSelectionEntry!]! @state(class: CONFIG)
+  hover: [DomainHoverEntry!]! @state(class: TRANSIENT)
+  activeMode: [ActiveModeEntry!]! @state(class: CONFIG)
+  activeGranularity: [ActiveGranularityEntry!]! @state(class: CONFIG)
+}
+
+type DomainSelectionEntry {
+  domain: String!
+  value: DomainSelection!
+}
+
+type DomainHoverEntry {
+  domain: String!
+  value: DomainHover!
+}
+
+type ActiveModeEntry {
+  domain: String!
+  value: SelectionMode!
+}
+
+type ActiveGranularityEntry {
+  domain: String!
+  value: String!
+}
+
+type TopologyNode {
+  id: String!
+  granularity: String!
+  parent: String
+}
+
+# 🌲️ Pre-order; this sequence IS the range-selection order.
+type DomainTopology {
+  ordered: [TopologyNode!]!
+}
+
+# 📡️ Typed field on PresencePeer (bit 7) — only explicit ids broadcast, receivers expand transitive
+# closures via their own topology.
+type PresenceInteraction {
+  appId: String! @state(class: PRESENCE)
+  domains: [PresenceDomain!]! @state(class: PRESENCE)
+}
+
+type PresenceDomain {
+  domain: String!
+  granularity: String!
+  selected: [String!]!
+  hovered: [String!]!
+}

@@ -14,7 +14,7 @@
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
-use semio_framework_3d::brep::engine::Vec3;
+use semio_framework_3d::engine::Vec3;
 use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use serde_json::Value;

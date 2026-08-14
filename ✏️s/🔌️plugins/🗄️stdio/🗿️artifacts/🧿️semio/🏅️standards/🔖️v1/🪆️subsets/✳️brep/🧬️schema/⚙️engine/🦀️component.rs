@@ -1,13 +1,13 @@
 //! 🧠 Native B-Rep kernel: consumer contract (`BrepKernel`, `GeometryHandle`, `GeometryKind`,
 //! `block_on`) plus its sole implementor `Brep`, which delegates every operation to
-//! `semio_framework_3d::brep::*`'s pure algorithm modules over a `&mut Body`/`&Body` arena.
+//! `semio_framework_3d::engine::*`'s pure algorithm modules over a `&mut Body`/`&Body` arena.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/{⚙️engine,🧰️kernel}` in ticket 26/08/12/
 //! DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave G5 ("the brep flip") — this is
 //! the temporary forward edge (`stdio → semio-framework-3d`) that lets the other 35 framework-3d
 //! brep subdirs (arena, topology, boolean, tessellate, euler, …) peel into `✳️brep`'s compute
 //! subdirs one at a time without ever touching a consumer. `MeshTransfer`/`Vec3`/`Aabb`/
-//! `ParamDomain` stayed behind in `semio_framework_3d::brep::engine` — those algorithm modules
+//! `ParamDomain` stayed behind in `semio_framework_3d::engine` — those algorithm modules
 //! still return/accept them directly, so this file imports them back across the new edge.
 //!
 //! `📦️mesh-io` (below) moved IN wave DEDUP: it was brep↔mesh bridging/IO code whose only real
@@ -43,16 +43,16 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sweep::
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_face, tessellate_solid, tessellate_wire};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use semio_framework_3d::brep::bspline::KnotVector;
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::engine::{MeshTransfer, ParamDomain, PointClassification, Vec3, Vec3 as EVec3};
-use semio_framework_3d::brep::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use semio_framework_3d::engine::{MeshTransfer, ParamDomain, PointClassification, Vec3, Vec3 as EVec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_curve;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_surface_surface;
-use semio_framework_3d::brep::mat::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{
     closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box,
     solid_center_of_mass, solid_surface_area, solid_volume,
@@ -68,11 +68,11 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primiti
     make_sphere, make_torus, Wire,
 };
 use step::{read_step, write_step};
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::tolerance::Tol;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
-use semio_framework_3d::brep::vec::{Pnt3, Vec3 as NativeVec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3 as NativeVec3};
 
 // #region 🔖️ContractTypes
 
@@ -339,7 +339,7 @@ fn vec3(v: EVec3) -> NativeVec3 {
 fn map_err(e: KernelError) -> BrepError {
     BrepError::Operation(e.to_string())
 }
-fn map_step(e: semio_framework_3d::brep::error::StepError) -> BrepError {
+fn map_step(e: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::StepError) -> BrepError {
     BrepError::Operation(e.to_string())
 }
 

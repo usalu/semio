@@ -21,7 +21,8 @@ pub fn handle(payload: &SetPoints, _doc: &ArtifactView<'_, MathematicalSnapshot>
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-        use crate::apps::mathematical::testkit::{dispatch, math_app};
+    use super::*;
+    use crate::apps::mathematical::testkit::{dispatch, math_app};
     use crate::apps::mathematical::MathematicalCommand;
     use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalPoint};
 

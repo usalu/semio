@@ -104,7 +104,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
 //#endregion 🔖️DependencyHashChain
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
-use semio_framework_3d::brep::error::ValidationIssue;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::ValidationIssue;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 
 // #region 🔖️Topology
@@ -158,7 +158,7 @@ fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, edge) in body.edges.iter() {
         for v in [edge.v0, edge.v1] {
             let Some(vertex) = body.vertices.get(v) else { continue };
-            if let Some((finer, coarser)) = semio_framework_3d::brep::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol) {
+            if let Some((finer, coarser)) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol) {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
         }
@@ -167,7 +167,7 @@ fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
         for coedge_id in body.face_coedges(face_id) {
             let Some(coedge) = body.coedges.get(coedge_id) else { continue };
             let Some(edge) = body.edges.get(coedge.edge) else { continue };
-            if let Some((finer, coarser)) = semio_framework_3d::brep::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol) {
+            if let Some((finer, coarser)) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol) {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
         }
@@ -302,13 +302,13 @@ mod tests {
     }
     //#endregion 🧪️IncrementalityLaw
 
-    use semio_framework_3d::brep::curve::Curve3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use semio_framework_3d::brep::mat::Frame3;
-    use semio_framework_3d::brep::surface::Surface;
-    use semio_framework_3d::brep::tolerance::Tol;
-    use semio_framework_3d::brep::vec::{Pnt3, Vec3};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
     fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
         let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
@@ -407,7 +407,7 @@ mod tests {
         let coedge_id = body.loop_coedges(outer)[0];
         // Attach a pcurve that does NOT correspond to the face's surface at all — a constant,
         // clearly-wrong 2D point far from where the 3D edge actually projects.
-        let bad_pcurve = body.curves2.insert(semio_framework_3d::brep::curve::Curve2::Line { origin: semio_framework_3d::brep::vec::Pnt2::new(500.0, 500.0), dir: semio_framework_3d::brep::vec::Vec2::new(0.0, 0.0) });
+        let bad_pcurve = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line { origin: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(500.0, 500.0), dir: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec2::new(0.0, 0.0) });
         let coedge = body.coedges.get_mut(coedge_id).unwrap();
         coedge.pcurve = Some(bad_pcurve);
         coedge.prange = (0.0, 1.0);

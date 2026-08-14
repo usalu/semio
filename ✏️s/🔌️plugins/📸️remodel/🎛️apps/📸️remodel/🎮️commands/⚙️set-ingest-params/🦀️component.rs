@@ -29,6 +29,7 @@ pub fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelSnapshot
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::remodel::commands::{set_dense_params, set_feature_params, set_geo_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
 

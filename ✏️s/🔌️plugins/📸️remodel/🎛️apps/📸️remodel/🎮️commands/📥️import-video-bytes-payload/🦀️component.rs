@@ -1,5 +1,6 @@
 //! 📥️ 📥️ Remodel play app commands command — `import-video-bytes-payload`.
 
+use crate::apps::remodel::commands::import_frame_payload;
 use crate::apps::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::apps::remodel::engine::{describe_video_probe, images as remodel_image, video as remodel_video, video_codec_to_artifact};
 use crate::apps::remodel::{decode_still_image, payload_from_data_url};

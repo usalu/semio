@@ -64,6 +64,33 @@ pub struct ArtifactCursor {
     pub checkpoint_id: Option<String>,
 }
 
+//#region 🔖️HistoryLane
+/// @emoji 🛤️ Which undo/redo cursor a recorded edit belongs to. `Document` is the default — the
+/// ordinary main history `Undo`/`Redo` travels. Any other lane (starting with `Interaction`) is a
+/// persisted, replayable SIDE history: mutations recorded under it stay in `ArtifactVcs.edits` and
+/// `ArtifactEnvelope.lanes` forever (never dropped, never un-persisted), but default `Undo`/`Redo`
+/// skip past them to the nearest `Document`-lane entry instead of reverting them — see
+/// `ArtifactStore::dispatch`'s `Undo`/`Redo` arms, and `ArtifactCommand::UndoInLane`/`RedoInLane`
+/// for the explicit lane-scoped API that CAN walk a non-`Document` lane. Deliberately an
+/// extensible general store mechanism — e.g. a future framework-owned selection/interaction state
+/// that must survive reload but must never be what a document editor's undo reverts — not a
+/// hover/selection special case baked into this crate. See ticket
+/// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM/📋️master.md` decision 1.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum HistoryLane {
+    #[default]
+    Document,
+    Interaction,
+}
+
+impl HistoryLane {
+    fn is_document(&self) -> bool {
+        matches!(self, HistoryLane::Document)
+    }
+}
+//#endregion 🔖️HistoryLane
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ArtifactEnvelope<P, Mutation> {
@@ -100,6 +127,16 @@ pub struct ArtifactEnvelope<P, Mutation> {
     /// (the overwhelming majority) and for every envelope minted before this ticket.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub owner: Option<OwnerRef>,
+    /// @emoji 🛤️ Sparse `Edit.id → HistoryLane` ledger: only entries recorded under a NON-`Document`
+    /// lane are ever inserted (an ordinary document edit never gets a map entry at all), so an id
+    /// absent from this map is `HistoryLane::Document` by construction — see
+    /// `ArtifactStore::edit_lane`. Additive — absent (empty map) for every envelope minted before
+    /// this field existed, all of which therefore decode as if every edit were `Document` lane,
+    /// matching prior undo/redo behavior exactly. Lives on the envelope (not on `Edit<Mutation>`
+    /// itself, which this crate's per-technology `Mutation` types don't own) so it survives a plain
+    /// JSON round trip (`ArtifactStore::envelope_json`) alongside `cursor`/`owner`/`dialect`.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub lanes: std::collections::BTreeMap<String, HistoryLane>,
 }
 
 /// @emoji 🧬️ Provenance stamp for an envelope produced by `migrate_document`: which prior document,
@@ -131,6 +168,38 @@ pub enum ArtifactCommand<Mutation> {
         policy: UndoPolicy,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         semantic_command: Option<Box<ArtifactCommand<Mutation>>>,
+    },
+    /// @emoji 🛤️ `Apply`'s lane-tagged twin — records the resulting edit under `lane` (via
+    /// `ArtifactEnvelope.lanes`) instead of the implicit `HistoryLane::Document` a plain `Apply`
+    /// gets. New variant, not a field added to `Apply` itself, so every existing `Apply {
+    /// mutations, description }` construction across the workspace keeps compiling untouched.
+    ApplyInLane {
+        mutations: Vec<Mutation>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        description: Option<String>,
+        #[serde(default)]
+        lane: HistoryLane,
+    },
+    /// @emoji 🛤️ `AmendLast`'s lane-tagged twin — see `ApplyInLane`'s doc for why this is an
+    /// additive new variant rather than a field on `AmendLast`.
+    AmendLastInLane {
+        mutations: Vec<Mutation>,
+        coalesce_key: Option<String>,
+        #[serde(default)]
+        lane: HistoryLane,
+    },
+    /// @emoji 🛤️ Explicit lane-scoped undo: mirrors plain `Undo`'s `ExactBaseOnly` semantics (must
+    /// be local, must be the nearest-to-tail match) but searches `applied_edit_ids` for the nearest
+    /// entry whose `HistoryLane` is exactly `lane`, instead of `HistoryLane::Document`. Lets a
+    /// caller walk a non-`Document` lane on purpose — the completing half of "default `Undo`/`Redo`
+    /// skip non-`Document` lanes" (see `ArtifactStore::dispatch`'s `Undo` arm).
+    UndoInLane {
+        lane: HistoryLane,
+    },
+    /// @emoji 🛤️ `UndoInLane`'s redo-direction sibling — mirrors plain `Redo`, but pops the
+    /// nearest-to-top `redo_edit_ids` entry whose `HistoryLane` is exactly `lane`.
+    RedoInLane {
+        lane: HistoryLane,
     },
     CommitCheckpoint {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1480,7 +1549,7 @@ pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_sna
 where
     P: Clone,
 {
-    ArtifactEnvelope { schema: schema.into(), id: id.into(), vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None }
+    ArtifactEnvelope { schema: schema.into(), id: id.into(), vcs: ArtifactVcs { initial_snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() }, backbone, active_alternative_id: None, cursor: None, dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() }
 }
 
 pub fn edit_ids_for_changes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, change_ids: &[String]) -> Vec<String>
@@ -2120,6 +2189,12 @@ where
         dialect: None,
         migrated_from: None,
         owner: None,
+        // 🎯️ `crate::os_spr::HistoryLog`/`HistoryEdit` don't carry a lane overlay yet (like
+        // `composition_pins` above, that codec extension is out of this wave's scope) — a
+        // `.pack`+`.spr` reload therefore loses non-`Document` lane tags today; only the plain
+        // `ArtifactStore::envelope_json` path round-trips them. Follow-up for whichever wave wires
+        // real persisted-local interaction state through this reload path.
+        lanes: std::collections::BTreeMap::new(),
     };
     if let Some(composition) = &log.composition {
         apply_history_composition(&mut envelope, composition);
@@ -2283,8 +2358,9 @@ where
     // 🎯️ `.ops` text format does not carry the owner stamp yet either — same in-memory-only
     // deferral as `composition_pins` a few lines above (see
     // `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b2-store-composition-report.md`
-    // sharedFileRequests) until a later wave threads `OwnerRef` through the text grammar.
-    let envelope = ArtifactEnvelope { schema, id, vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone(), dialect: None, migrated_from: None, owner: None };
+    // sharedFileRequests) until a later wave threads `OwnerRef` through the text grammar. Same
+    // deferral for `lanes` — see the matching note in `parse_document_spr` above.
+    let envelope = ArtifactEnvelope { schema, id, vcs: ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives }, backbone: None, active_alternative_id, cursor: cursor.clone(), dialect: None, migrated_from: None, owner: None, lanes: std::collections::BTreeMap::new() };
     // 🎯️ W4: every edit is still folded above in file order (needed for correct inverse/meta —
     // an edit's inverse depends on the snapshot state at the time it was made, which requires
     // walking the FULL sequence regardless of undo/redo position). Only the RETURNED live
@@ -2387,6 +2463,22 @@ enum CommandHeaderLine {
         key: Option<String>,
     },
     PruneDrafts,
+    /// @emoji 🛤️ Text twin of `ArtifactCommand::ApplyInLane` — `lane` is a kebab token
+    /// (`history_lane_to_token`/`parse_history_lane_token`), matching `Undo.policy`'s convention.
+    ApplyInLane {
+        description: Option<String>,
+        lane: String,
+    },
+    AmendInLane {
+        key: Option<String>,
+        lane: String,
+    },
+    UndoInLane {
+        lane: String,
+    },
+    RedoInLane {
+        lane: String,
+    },
 }
 
 //#region 🔖️OpCodec
@@ -2499,6 +2591,39 @@ fn undo_policy_from_ordinal(ordinal: u8) -> Result<UndoPolicy, crate::os_spr::Pr
     }
 }
 
+/// @emoji 🛤️ `HistoryLane`'s text token — the `ApplyInLane`/`AmendInLane`/`UndoInLane`/
+/// `RedoInLane` command lines' `lane=...` value, mirroring `undo_policy_to_token`'s convention.
+fn history_lane_to_token(lane: HistoryLane) -> &'static str {
+    match lane {
+        HistoryLane::Document => "document",
+        HistoryLane::Interaction => "interaction",
+    }
+}
+
+fn parse_history_lane_token(token: &str) -> Result<HistoryLane, TextError> {
+    match token {
+        "document" => Ok(HistoryLane::Document),
+        "interaction" => Ok(HistoryLane::Interaction),
+        other => Err(crate::os_dsl::__rt::field_error(format!("unknown history lane token {other:?}"))),
+    }
+}
+
+/// @emoji 🛤️ `HistoryLane`'s binary ordinal, mirroring `undo_policy_ordinal`'s convention.
+fn history_lane_ordinal(lane: HistoryLane) -> u8 {
+    match lane {
+        HistoryLane::Document => 0,
+        HistoryLane::Interaction => 1,
+    }
+}
+
+fn history_lane_from_ordinal(ordinal: u8) -> Result<HistoryLane, crate::os_spr::ProtocolError> {
+    match ordinal {
+        0 => Ok(HistoryLane::Document),
+        1 => Ok(HistoryLane::Interaction),
+        other => Err(crate::os_spr::ProtocolError::Malformed { what: "history lane ordinal", offset: 0, detail: format!("unknown history lane ordinal {other}") }),
+    }
+}
+
 /// @emoji 📤️ Prints every 2-space-indented `Op::print_op` line for one `apply`/`amend` body,
 /// erroring exactly like `print_edit_lines` if any op prints a line containing a newline.
 fn print_indented_ops<Op: OpText>(out: &mut String, mutations: &[Op]) -> Result<(), VcsError> {
@@ -2596,6 +2721,24 @@ pub fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<String
             out.push('\n');
             print_indented_ops(&mut out, mutations)?;
         }
+        ArtifactCommand::ApplyInLane { mutations, description, lane } => {
+            out.push_str(&CommandHeaderLine::ApplyInLane { description: description.clone(), lane: history_lane_to_token(*lane).to_string() }.print_op());
+            out.push('\n');
+            print_indented_ops(&mut out, mutations)?;
+        }
+        ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => {
+            out.push_str(&CommandHeaderLine::AmendInLane { key: coalesce_key.clone(), lane: history_lane_to_token(*lane).to_string() }.print_op());
+            out.push('\n');
+            print_indented_ops(&mut out, mutations)?;
+        }
+        ArtifactCommand::UndoInLane { lane } => {
+            out.push_str(&CommandHeaderLine::UndoInLane { lane: history_lane_to_token(*lane).to_string() }.print_op());
+            out.push('\n');
+        }
+        ArtifactCommand::RedoInLane { lane } => {
+            out.push_str(&CommandHeaderLine::RedoInLane { lane: history_lane_to_token(*lane).to_string() }.print_op());
+            out.push('\n');
+        }
         ArtifactCommand::IngestRemote { .. } => {
             return Err(VcsError::Serialize("IngestRemote has no text command form".into()));
         }
@@ -2658,6 +2801,22 @@ pub fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>, Text
             Ok(ArtifactCommand::AmendLast { mutations, coalesce_key: key })
         }
         CommandHeaderLine::PruneDrafts => Ok(ArtifactCommand::PruneDrafts),
+        CommandHeaderLine::ApplyInLane { description, lane } => {
+            let mutations = parse_indented_ops(&body_lines)?;
+            if mutations.is_empty() {
+                return Err(crate::os_dsl::__rt::field_error("apply-in-lane requires at least one operation line"));
+            }
+            Ok(ArtifactCommand::ApplyInLane { mutations, description, lane: parse_history_lane_token(&lane)? })
+        }
+        CommandHeaderLine::AmendInLane { key, lane } => {
+            let mutations = parse_indented_ops(&body_lines)?;
+            if mutations.is_empty() {
+                return Err(crate::os_dsl::__rt::field_error("amend-in-lane requires at least one operation line"));
+            }
+            Ok(ArtifactCommand::AmendLastInLane { mutations, coalesce_key: key, lane: parse_history_lane_token(&lane)? })
+        }
+        CommandHeaderLine::UndoInLane { lane } => Ok(ArtifactCommand::UndoInLane { lane: parse_history_lane_token(&lane)? }),
+        CommandHeaderLine::RedoInLane { lane } => Ok(ArtifactCommand::RedoInLane { lane: parse_history_lane_token(&lane)? }),
     }
 }
 
@@ -2772,6 +2931,32 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
                 out.extend_from_slice(&bytes);
             }
             ArtifactCommand::PruneDrafts => crate::os_pack::write_varint_u64(&mut out, 10),
+            ArtifactCommand::ApplyInLane { mutations, description, lane } => {
+                crate::os_pack::write_varint_u64(&mut out, 11);
+                out.push(if description.is_some() { 0b01 } else { 0 });
+                if let Some(text) = description {
+                    write_command_str(&mut out, text);
+                }
+                out.push(history_lane_ordinal(*lane));
+                write_command_ops(&mut out, mutations)?;
+            }
+            ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => {
+                crate::os_pack::write_varint_u64(&mut out, 12);
+                out.push(if coalesce_key.is_some() { 0b01 } else { 0 });
+                if let Some(key) = coalesce_key {
+                    write_command_str(&mut out, key);
+                }
+                out.push(history_lane_ordinal(*lane));
+                write_command_ops(&mut out, mutations)?;
+            }
+            ArtifactCommand::UndoInLane { lane } => {
+                crate::os_pack::write_varint_u64(&mut out, 13);
+                out.push(history_lane_ordinal(*lane));
+            }
+            ArtifactCommand::RedoInLane { lane } => {
+                crate::os_pack::write_varint_u64(&mut out, 14);
+                out.push(history_lane_ordinal(*lane));
+            }
         }
         Ok(out)
     }
@@ -2833,6 +3018,22 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
                 Ok(ArtifactCommand::IngestRemote { envelope })
             }
             10 => Ok(ArtifactCommand::PruneDrafts),
+            11 => {
+                let presence = reader.read_u8()?;
+                let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let lane = history_lane_from_ordinal(reader.read_u8()?)?;
+                let mutations = read_command_ops(&mut reader)?;
+                Ok(ArtifactCommand::ApplyInLane { mutations, description, lane })
+            }
+            12 => {
+                let presence = reader.read_u8()?;
+                let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let lane = history_lane_from_ordinal(reader.read_u8()?)?;
+                let mutations = read_command_ops(&mut reader)?;
+                Ok(ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane })
+            }
+            13 => Ok(ArtifactCommand::UndoInLane { lane: history_lane_from_ordinal(reader.read_u8()?)? }),
+            14 => Ok(ArtifactCommand::RedoInLane { lane: history_lane_from_ordinal(reader.read_u8()?)? }),
             other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }),
         }
     }
@@ -3219,30 +3420,17 @@ where
     fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError> {
         match command {
             ArtifactCommand::Undo => self.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).map(|_| ()),
+            // 🛤️ Both branches below now search for the nearest match FROM THE TAIL rather than
+            // requiring the literal last id, so a run of trailing `Interaction`-lane entries (e.g.
+            // a selection change recorded after the last document edit) is transparently skipped
+            // rather than blocking undo entirely — see `HistoryLane`'s doc and `undo_lane_position`.
             ArtifactCommand::UndoWithPolicy { policy, semantic_command } => match policy {
                 UndoPolicy::ExactBaseOnly => {
-                    let last = self.applied_edit_ids.last().cloned().ok_or(VcsError::NothingToUndo)?;
-                    if !self.edit_is_local(&last) {
-                        return Err(VcsError::ForeignEdit(last));
-                    }
-                    self.applied_edit_ids.pop();
-                    self.redo_edit_ids.push(last.clone());
-                    // ⚡️ O(1) fast path when undoing exactly the cached tail edit; any other shape
-                    // (cache miss, or a prior mid-history undo already invalidated it) falls back to a
-                    // full raw-fold recompute — always correct, see `fold_current`.
-                    match self.tail_undo_cache.take() {
-                        Some((cached_id, cached_pre)) if cached_id == last => {
-                            self.current = cached_pre;
-                        }
-                        _ => {
-                            self.current = self.fold_current()?;
-                        }
-                    }
-                    self.bump();
-                    Ok(())
+                    let position = self.applied_edit_ids.iter().rposition(|id| self.edit_lane(id) == HistoryLane::Document).ok_or(VcsError::NothingToUndo)?;
+                    self.undo_lane_position(position)
                 }
                 UndoPolicy::TransformAgainstConcurrent => {
-                    let position = self.applied_edit_ids.iter().rposition(|id| self.edit_is_local(id)).ok_or(VcsError::NothingToUndo)?;
+                    let position = self.applied_edit_ids.iter().rposition(|id| self.edit_is_local(id) && self.edit_lane(id) == HistoryLane::Document).ok_or(VcsError::NothingToUndo)?;
                     let removed = self.applied_edit_ids.remove(position);
                     self.redo_edit_ids.push(removed);
                     // 🔂️ Removing a MID-history edit has no cheap incremental inverse; cold-path replay.
@@ -3257,22 +3445,19 @@ where
                 }
             },
             ArtifactCommand::Redo => {
-                let next = self.redo_edit_ids.pop().ok_or(VcsError::NothingToRedo)?;
-                self.applied_edit_ids.push(next.clone());
-                // ⚡️ Fold the redone edit's forwards onto `current` in their own natural order — cheap
-                // and correct regardless of the edit's internal op grouping (unlike undo, this never
-                // needs `Edit.inverse`). Re-seeds `tail_undo_cache` so a following Undo is O(1) again.
-                if let Some(edit) = self.envelope.vcs.edits.iter().find(|entry| entry.id == next) {
-                    let pre = self.current.clone();
-                    let mut folded = pre.clone();
-                    for operation in &edit.forwards {
-                        folded = apply_mutation(&folded, operation);
-                    }
-                    self.current = folded;
-                    self.tail_undo_cache = Some((next, pre));
-                }
-                self.bump();
-                Ok(())
+                let position = self.redo_edit_ids.iter().rposition(|id| self.edit_lane(id) == HistoryLane::Document).ok_or(VcsError::NothingToRedo)?;
+                self.redo_lane_position(position)
+            }
+            // 🛤️ Explicit lane-scoped mirrors of `UndoWithPolicy { ExactBaseOnly }`/`Redo` above,
+            // filtering on an arbitrary caller-chosen `lane` instead of hard-coding `Document` — the
+            // "walk a specific lane on purpose" half of the mechanism (see `HistoryLane`'s doc).
+            ArtifactCommand::UndoInLane { lane } => {
+                let position = self.applied_edit_ids.iter().rposition(|id| self.edit_lane(id) == lane).ok_or(VcsError::NothingToUndo)?;
+                self.undo_lane_position(position)
+            }
+            ArtifactCommand::RedoInLane { lane } => {
+                let position = self.redo_edit_ids.iter().rposition(|id| self.edit_lane(id) == lane).ok_or(VcsError::NothingToRedo)?;
+                self.redo_lane_position(position)
             }
             ArtifactCommand::CommitCheckpoint { message, authors } => {
                 let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids);
@@ -3336,72 +3521,12 @@ where
                 self.bump();
                 Ok(())
             }
-            ArtifactCommand::Apply { mutations, description } => {
-                if mutations.is_empty() {
-                    return Err(VcsError::EmptyApply);
-                }
-                let started_at = now_iso();
-                // ⚡️ `current` is always up to date (maintained by every mutating command below), so
-                // this is an O(1) clone instead of a full replay — see the `current` field doc.
-                let pre_snapshot = self.current.clone();
-                let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
-                let actor = edit_actor_from_meta(&mutation_meta);
-                self.local_actor_id = actor.clone();
-                self.edit_sequence += 1;
-                let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
-                let edit = Edit { id: mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint), actor, forwards, inverse, mutation_meta, description, coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
-                self.tail_undo_cache = Some((edit.id.clone(), pre_snapshot));
-                self.applied_edit_ids.push(edit.id.clone());
-                self.envelope.vcs.edits.push(edit);
-                self.current = post;
-                self.redo_edit_ids.clear();
-                self.bump();
-                Ok(())
-            }
-            ArtifactCommand::AmendLast { mutations, coalesce_key } => {
-                if mutations.is_empty() {
-                    return Err(VcsError::EmptyApply);
-                }
-                let amend_target = self.applied_edit_ids.last().cloned().filter(|last_id| {
-                    coalesce_key.is_some()
-                        && uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).contains(last_id)
-                        && self.envelope.vcs.edits.iter().find(|edit| edit.id == *last_id).map(|edit| edit.coalesce_key == coalesce_key).unwrap_or(false)
-                });
-                if let Some(edit_id) = amend_target {
-                    // ⚡️ `current` already reflects this edit's existing forwards (it was folded in
-                    // when the edit was created or last amended), so it's always the correct base for
-                    // the NEW operations — O(1) instead of the old cache-validity dance.
-                    let pre_snapshot = self.current.clone();
-                    let (new_forwards, new_inverse, new_mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
-                    if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
-                        edit.forwards.extend(new_forwards);
-                        edit.inverse.extend(new_inverse);
-                        edit.mutation_meta.extend(new_mutation_meta);
-                        edit.finished_at = Some(now_iso());
-                    }
-                    self.current = post;
-                    self.redo_edit_ids.clear();
-                    self.bump();
-                    Ok(())
-                } else {
-                    let started_at = now_iso();
-                    let pre_snapshot = self.current.clone();
-                    let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
-                    let actor = edit_actor_from_meta(&mutation_meta);
-                    self.local_actor_id = actor.clone();
-                    self.edit_sequence += 1;
-                    let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
-                    let edit_id = mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint);
-                    let edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
-                    self.tail_undo_cache = Some((edit_id, pre_snapshot));
-                    self.applied_edit_ids.push(edit.id.clone());
-                    self.envelope.vcs.edits.push(edit);
-                    self.current = post;
-                    self.redo_edit_ids.clear();
-                    self.bump();
-                    Ok(())
-                }
-            }
+            ArtifactCommand::Apply { mutations, description } => self.apply_command(mutations, description, HistoryLane::Document),
+            // 🛤️ Same edit-recording path as `Apply`, tagging the fresh edit into `lane` instead of
+            // the implicit `Document` default — see `HistoryLane`'s doc.
+            ArtifactCommand::ApplyInLane { mutations, description, lane } => self.apply_command(mutations, description, lane),
+            ArtifactCommand::AmendLast { mutations, coalesce_key } => self.amend_command(mutations, coalesce_key, HistoryLane::Document),
+            ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => self.amend_command(mutations, coalesce_key, lane),
             ArtifactCommand::IngestRemote { envelope } => {
                 let _receipt = self.ingest_remote(envelope)?;
                 Ok(())
@@ -3412,6 +3537,144 @@ where
             }
         }
     }
+
+    //#region 🔖️HistoryLane
+    /// @emoji 🛤️ The lane `edit_id` was recorded under. Absence from `envelope.lanes` means
+    /// `Document` by construction — `apply_command`/`amend_command` below only ever insert a map
+    /// entry for a NON-`Document` lane, so an ordinary document edit (and every edit that predates
+    /// this field) never gets one. `HistoryLane` is `Copy`, so this returns by value like
+    /// `edit_is_local` returns `bool`.
+    fn edit_lane(&self, edit_id: &str) -> HistoryLane {
+        self.envelope.lanes.get(edit_id).copied().unwrap_or_default()
+    }
+
+    /// @emoji 🛤️ Shared tail of every undo path (`UndoWithPolicy::ExactBaseOnly`, `UndoInLane`):
+    /// `position` has already been chosen by the caller's own lane/locality search — this just
+    /// performs the actual removal, foreign-edit rejection, and `current` recompute (O(1) via
+    /// `tail_undo_cache` when `position` really is the tail, cold-path `fold_current` otherwise,
+    /// exactly mirroring the pre-lane `ExactBaseOnly` arm's own fast path).
+    fn undo_lane_position(&mut self, position: usize) -> Result<(), VcsError> {
+        let target = self.applied_edit_ids[position].clone();
+        if !self.edit_is_local(&target) {
+            return Err(VcsError::ForeignEdit(target));
+        }
+        let is_tail = position + 1 == self.applied_edit_ids.len();
+        self.applied_edit_ids.remove(position);
+        self.redo_edit_ids.push(target.clone());
+        match self.tail_undo_cache.take() {
+            Some((cached_id, cached_pre)) if is_tail && cached_id == target => {
+                self.current = cached_pre;
+            }
+            _ => {
+                self.current = self.fold_current()?;
+            }
+        }
+        self.bump();
+        Ok(())
+    }
+
+    /// @emoji 🛤️ Shared tail of every redo path (plain `Redo`, `RedoInLane`): `position` indexes
+    /// `redo_edit_ids` (already chosen by the caller's own lane search), removed from wherever it
+    /// sits — not necessarily the stack top, since a lane-filtered search can land mid-vec once
+    /// undos from more than one lane have interleaved — folded onto `current` and re-appended to
+    /// `applied_edit_ids`, mirroring the pre-lane `Redo` arm's own logic exactly.
+    fn redo_lane_position(&mut self, position: usize) -> Result<(), VcsError> {
+        let next = self.redo_edit_ids.remove(position);
+        self.applied_edit_ids.push(next.clone());
+        if let Some(edit) = self.envelope.vcs.edits.iter().find(|entry| entry.id == next) {
+            let pre = self.current.clone();
+            let mut folded = pre.clone();
+            for operation in &edit.forwards {
+                folded = apply_mutation(&folded, operation);
+            }
+            self.current = folded;
+            self.tail_undo_cache = Some((next, pre));
+        }
+        self.bump();
+        Ok(())
+    }
+
+    /// @emoji 🛤️ Shared body of `Apply`/`ApplyInLane`: identical edit-recording logic to the
+    /// pre-lane `Apply` arm, plus tagging the fresh edit into `envelope.lanes` when `lane` isn't
+    /// the default `Document` (kept sparse — see `ArtifactEnvelope.lanes`'s doc).
+    fn apply_command(&mut self, mutations: Vec<Mutation>, description: Option<String>, lane: HistoryLane) -> Result<(), VcsError> {
+        if mutations.is_empty() {
+            return Err(VcsError::EmptyApply);
+        }
+        let started_at = now_iso();
+        // ⚡️ `current` is always up to date (maintained by every mutating command below), so this
+        // is an O(1) clone instead of a full replay — see the `current` field doc.
+        let pre_snapshot = self.current.clone();
+        let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
+        let actor = edit_actor_from_meta(&mutation_meta);
+        self.local_actor_id = actor.clone();
+        self.edit_sequence += 1;
+        let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
+        let edit = Edit { id: mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint), actor, forwards, inverse, mutation_meta, description, coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
+        if !lane.is_document() {
+            self.envelope.lanes.insert(edit.id.clone(), lane);
+        }
+        self.tail_undo_cache = Some((edit.id.clone(), pre_snapshot));
+        self.applied_edit_ids.push(edit.id.clone());
+        self.envelope.vcs.edits.push(edit);
+        self.current = post;
+        self.redo_edit_ids.clear();
+        self.bump();
+        Ok(())
+    }
+
+    /// @emoji 🛤️ Shared body of `AmendLast`/`AmendLastInLane`: identical edit-recording logic to
+    /// the pre-lane `AmendLast` arm. Only the FRESH-edit branch can tag a lane — an edit absorbed
+    /// into an already-coalescing target keeps whatever lane it was first created under (amending
+    /// never changes an edit's lane after the fact).
+    fn amend_command(&mut self, mutations: Vec<Mutation>, coalesce_key: Option<String>, lane: HistoryLane) -> Result<(), VcsError> {
+        if mutations.is_empty() {
+            return Err(VcsError::EmptyApply);
+        }
+        let amend_target = self.applied_edit_ids.last().cloned().filter(|last_id| {
+            coalesce_key.is_some()
+                && uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).contains(last_id)
+                && self.envelope.vcs.edits.iter().find(|edit| edit.id == *last_id).map(|edit| edit.coalesce_key == coalesce_key).unwrap_or(false)
+        });
+        if let Some(edit_id) = amend_target {
+            // ⚡️ `current` already reflects this edit's existing forwards (it was folded in when
+            // the edit was created or last amended), so it's always the correct base for the NEW
+            // operations — O(1) instead of the old cache-validity dance.
+            let pre_snapshot = self.current.clone();
+            let (new_forwards, new_inverse, new_mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
+            if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
+                edit.forwards.extend(new_forwards);
+                edit.inverse.extend(new_inverse);
+                edit.mutation_meta.extend(new_mutation_meta);
+                edit.finished_at = Some(now_iso());
+            }
+            self.current = post;
+            self.redo_edit_ids.clear();
+            self.bump();
+            Ok(())
+        } else {
+            let started_at = now_iso();
+            let pre_snapshot = self.current.clone();
+            let (forwards, inverse, mutation_meta, post) = Self::replay_mutations(&pre_snapshot, mutations);
+            let actor = edit_actor_from_meta(&mutation_meta);
+            self.local_actor_id = actor.clone();
+            self.edit_sequence += 1;
+            let forwards_fingerprint = serde_json::to_vec(&forwards).unwrap_or_default();
+            let edit_id = mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint);
+            let edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
+            if !lane.is_document() {
+                self.envelope.lanes.insert(edit_id.clone(), lane);
+            }
+            self.tail_undo_cache = Some((edit_id, pre_snapshot));
+            self.applied_edit_ids.push(edit.id.clone());
+            self.envelope.vcs.edits.push(edit);
+            self.current = post;
+            self.redo_edit_ids.clear();
+            self.bump();
+            Ok(())
+        }
+    }
+    //#endregion 🔖️HistoryLane
 
     /// @emoji 🔂️ Replays `operations` over `pre_snapshot`, returning forwards, reversed-inverse,
     /// per-operation metadata, and the resulting snapshot. Shared by `Apply` and `AmendLast`. This
@@ -5974,6 +6237,128 @@ impl OpBinary for DemoMutation {
         assert_eq!(store.snapshot().expect("snapshot").n, 1);
     }
 
+    //#region 🔖️HistoryLaneTests
+    #[test]
+    fn history_lane_defaults_to_document() {
+        assert_eq!(HistoryLane::default(), HistoryLane::Document);
+    }
+
+    /// @emoji 🛤️ The design's headline acceptance case: undoing after an interleaved run of
+    /// document/interaction edits reverts the last DOCUMENT edit, skipping past trailing (and even
+    /// mid-history) `Interaction`-lane entries in both directions, which stay applied throughout.
+    #[test]
+    fn history_lane_default_undo_and_redo_skip_interaction_entries() {
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply doc1");
+        let doc1_id = store.applied_edit_ids()[0].clone();
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 100 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction1");
+        let interaction1_id = store.applied_edit_ids()[1].clone();
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply doc2");
+        let doc2_id = store.applied_edit_ids()[2].clone();
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 200 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction2");
+        let interaction2_id = store.applied_edit_ids()[3].clone();
+
+        assert_eq!(store.envelope().lanes.get(&interaction1_id), Some(&HistoryLane::Interaction));
+        assert_eq!(store.envelope().lanes.get(&interaction2_id), Some(&HistoryLane::Interaction));
+        assert!(store.envelope().lanes.get(&doc1_id).is_none(), "an ordinary Document-lane edit never gets a `lanes` entry (sparse ledger)");
+        assert!(store.envelope().lanes.get(&doc2_id).is_none());
+
+        // Default undo skips the TRAILING interaction2 edit to revert doc2 instead.
+        store.dispatch(ArtifactCommand::Undo).expect("undo skips interaction2 to revert doc2");
+        assert_eq!(store.applied_edit_ids(), &[doc1_id.clone(), interaction1_id.clone(), interaction2_id.clone()], "doc2 removed; both interaction edits remain applied");
+        assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&doc2_id));
+
+        // A second default undo reverts doc1 — the only remaining Document-lane entry — even though
+        // it now sits BEFORE two still-applied interaction edits in `applied_edit_ids`.
+        store.dispatch(ArtifactCommand::Undo).expect("undo doc1 despite interaction edits between it and the tail");
+        assert_eq!(store.applied_edit_ids(), &[interaction1_id.clone(), interaction2_id.clone()]);
+        assert_eq!(store.redo_edit_ids(), &[doc2_id.clone(), doc1_id.clone()]);
+
+        // Default redo mirrors it: restores doc1 first (nearest Document entry in the redo stack),
+        // then doc2, never touching either interaction edit's own applied/redo membership.
+        store.dispatch(ArtifactCommand::Redo).expect("redo doc1");
+        assert_eq!(store.applied_edit_ids(), &[interaction1_id.clone(), interaction2_id.clone(), doc1_id.clone()]);
+        assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&doc2_id));
+        store.dispatch(ArtifactCommand::Redo).expect("redo doc2");
+        assert_eq!(store.applied_edit_ids(), &[interaction1_id.clone(), interaction2_id.clone(), doc1_id.clone(), doc2_id.clone()]);
+        assert!(store.redo_edit_ids().is_empty());
+    }
+
+    /// @emoji 🛤️ The completing half of the mechanism: `UndoInLane`/`RedoInLane` walk a NON-`Document`
+    /// lane explicitly and independently of the document lane's own cursor position.
+    #[test]
+    fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane() {
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply doc");
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 99 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction");
+        let doc_id = store.applied_edit_ids()[0].clone();
+        let interaction_id = store.applied_edit_ids()[1].clone();
+
+        // Explicit lane-scoped undo reverts ONLY the interaction edit, leaving the document edit
+        // applied — the mirror image of default `Undo` skipping it.
+        store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).expect("undo in interaction lane");
+        assert_eq!(store.applied_edit_ids(), std::slice::from_ref(&doc_id));
+        assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&interaction_id));
+        assert_eq!(store.snapshot().expect("snapshot").n, 1, "reverting the interaction edit restores the document edit's own value");
+
+        // Redoing the Document lane from here has nothing to redo — only the Interaction lane's
+        // cursor moved, proving the two lanes' redo stacks are independent, not one shared position.
+        assert_eq!(store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Document }).unwrap_err(), VcsError::NothingToRedo);
+
+        store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction }).expect("redo in interaction lane");
+        assert_eq!(store.applied_edit_ids(), &[doc_id.clone(), interaction_id.clone()]);
+        assert!(store.redo_edit_ids().is_empty());
+    }
+
+    /// @emoji 🛤️ Acceptance: a history made ENTIRELY of `Interaction`-lane edits is a no-op for
+    /// default `Undo` (no `Document`-lane entry exists at all), while the lane-scoped API still
+    /// reaches them.
+    #[test]
+    fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lane() {
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction1");
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction2");
+        assert_eq!(store.applied_edit_ids().len(), 2);
+
+        let error = store.dispatch(ArtifactCommand::Undo).unwrap_err();
+        assert_eq!(error, VcsError::NothingToUndo, "no Document-lane entry exists to undo; both interaction edits must stay untouched");
+        assert_eq!(store.applied_edit_ids().len(), 2, "default undo must not remove either interaction edit");
+
+        // The explicit lane-scoped API can still walk them.
+        store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).expect("undo in interaction lane");
+        assert_eq!(store.applied_edit_ids().len(), 1);
+        assert_eq!(store.snapshot().expect("snapshot").n, 1);
+    }
+
+    /// @emoji 🛤️ `Interaction`-lane entries are ordinary persisted `Edit`s — they survive a plain
+    /// JSON envelope round trip (`ArtifactStore::envelope_json`, the in-scope persistence path for
+    /// this store-level mechanism; `.pack`+`.spr` reload is a follow-up, see `parse_document_spr`'s
+    /// `lanes` field-construction comment), and a reloaded store's default undo still skips them.
+    #[test]
+    fn history_lane_interaction_entries_survive_envelope_json_round_trip() {
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply doc");
+        let doc_id = store.applied_edit_ids()[0].clone();
+        store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 42 }], description: None, lane: HistoryLane::Interaction }).expect("apply interaction");
+        let interaction_id = store.applied_edit_ids()[1].clone();
+        assert_eq!(store.envelope().lanes.get(&interaction_id), Some(&HistoryLane::Interaction));
+
+        let json = store.envelope_json().expect("envelope json");
+        let reloaded_envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = serde_json::from_str(&json).expect("parse envelope json");
+        assert_eq!(reloaded_envelope.lanes.get(&interaction_id), Some(&HistoryLane::Interaction), "lane tag must survive a plain JSON envelope round trip");
+
+        let mut reloaded = ArtifactStore::new(reloaded_envelope);
+        assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "reload seeds applied_edit_ids from the persisted cursor, same as any other edit");
+        reloaded.dispatch(ArtifactCommand::Undo).expect("undo on the reloaded store still skips the interaction edit");
+        assert_eq!(reloaded.applied_edit_ids(), std::slice::from_ref(&interaction_id), "the document edit was removed; the interaction edit is the only one left applied");
+        assert!(reloaded.redo_edit_ids().contains(&doc_id), "the reverted document edit now sits on the redo stack");
+    }
+    //#endregion 🔖️HistoryLaneTests
+
     #[test]
     fn apply_computes_backwards_from_pre_state() {
         let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
@@ -7241,6 +7626,11 @@ impl OpBinary for TimestampedMutation {
             ArtifactCommand::SwitchAlternative { alternative_id: "alt-1".to_string() },
             ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "ck-1".to_string() },
             ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN { n: 3 }], coalesce_key: Some("drag".to_string()) },
+            ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 9 }], description: Some("select".to_string()), lane: HistoryLane::Interaction },
+            ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN { n: 9 }], description: None, lane: HistoryLane::Document },
+            ArtifactCommand::AmendLastInLane { mutations: vec![DemoMutation::SetN { n: 4 }], coalesce_key: Some("hover".to_string()), lane: HistoryLane::Interaction },
+            ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction },
+            ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction },
         ];
         for command in &commands {
             test_support::assert_command_text_binary_equivalence(command);

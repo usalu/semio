@@ -34,6 +34,7 @@ pub fn handle(_payload: &ImportFrames, _doc: &ArtifactView<'_, RemodelSnapshot>,
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::remodel::commands::{export_qc_report, import_video};
     use crate::apps::remodel::testkit::{app, dispatch};
     use crate::apps::remodel::RemodelCommand;
 

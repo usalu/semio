@@ -32,7 +32,7 @@ pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural3dSnapsho
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::procedural3d::testkit::{app, dispatch};
+    use crate::apps::procedural3d::testkit::{app, dispatch, drain_flow_eval_ticks};
     use crate::apps::procedural3d::Procedural3dCommand;
 
     #[test]
@@ -53,6 +53,25 @@ mod tests {
             Widget::InputSlider { id, value, .. } if id == "height" => Some(*value),
             _ => None});
         assert_eq!(value, Some(9.5));
+    }
+
+    #[test]
+    fn patch_flow_widgets_recomputes_preview_geometry() {
+        let _serial = crate::apps::procedural3d::test_support::lock();
+        let mut app = app();
+        drain_flow_eval_ticks(&mut app);
+        let before_eval = flow::with_process_flow_eval_session(|session| session.eval_json().to_string());
+        let before_fixture = app.snapshot().expect("snapshot").fixture.clone();
+        let (before_meshes, _) = crate::apps::procedural3d::preview_payload_from_eval(&before_eval, &before_fixture, &Procedural3dConfig::default());
+
+        dispatch(&mut app, Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }));
+        drain_flow_eval_ticks(&mut app);
+        let after_eval = flow::with_process_flow_eval_session(|session| session.eval_json().to_string());
+        let after_fixture = app.snapshot().expect("snapshot").fixture.clone();
+        let (after_meshes, _) = crate::apps::procedural3d::preview_payload_from_eval(&after_eval, &after_fixture, &Procedural3dConfig::default());
+
+        assert_ne!(before_eval, after_eval, "slider mutation must invalidate the evaluated flow");
+        assert_ne!(before_meshes, after_meshes, "slider mutation must change the tessellated preview mesh");
     }
 
     #[test]

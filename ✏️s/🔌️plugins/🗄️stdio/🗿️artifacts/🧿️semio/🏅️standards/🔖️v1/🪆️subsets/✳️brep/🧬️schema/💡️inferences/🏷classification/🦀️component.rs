@@ -2,7 +2,7 @@
 //!
 //! Face trimming uses robust winding in surface `(u, v)`; solids use BVH-culled rays with
 //! interval-certified roots and a retry table of irrational directions (consensus consensus).
-//! Returns [`semio_framework_3d::brep::engine::PointClassification`] for solid queries.
+//! Returns [`semio_framework_3d::engine::PointClassification`] for solid queries.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🏷️classify` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL. `🔮️oracle`'s
@@ -11,17 +11,17 @@
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::{build_face_bvh, FaceBvh};
-use semio_framework_3d::brep::curve::Curve3;
-use semio_framework_3d::brep::engine::PointClassification;
-use semio_framework_3d::brep::error::KernelError;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use semio_framework_3d::engine::PointClassification;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
-use semio_framework_3d::brep::mat::Frame3;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_solid;
-use semio_framework_3d::brep::predicates::{orient2d, Orient};
-use semio_framework_3d::brep::surface::Surface;
-use semio_framework_3d::brep::tolerance::Iv;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Iv;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use semio_framework_3d::brep::vec::{Pnt2, Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -468,12 +468,12 @@ impl Midpoint for f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_3d::brep::mat::Trsf;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{classify_point_on_solid, PointSolidClassification};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::oracle::{ClosedFormMass, Sdf};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
-    use semio_framework_3d::brep::tolerance::Tol;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 
     fn assert_classify(body: &Body, solid: SolidId, p: Pnt3, expected: PointClassification) {
         let got = point_in_solid(body, solid, p, Tol::DEFAULT.value()).unwrap();
