@@ -31,7 +31,7 @@ use crate::apps::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
 use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowSnapshot, WorkflowEdge, WorkflowMutation, S_WORKFLOW_SCHEMA};
 use semio_framework_plugin::{
-    app::InteractionView, NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView,
+    app::InteractionView, NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView,
     DomainTopology, Emit, Fault, FaultOrigin, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionTopology, Label, LocalizedLabel, MergeMode, SelectionMethod,
     SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
@@ -477,6 +477,7 @@ fn space_play_layout() -> WindowLayout {
 pub fn create_space_app() -> App {
     use crate::apps::space::modes::main::windows::{compiled_dag, media_vfs, workflow};
     let builder = App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space")).document(["semio", "s", "studio"])
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setAppRegistrations", LocalizedLabel::native("Set App Registrations", "App-Registrierungen festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("App Registrations", "App-Registrierungen"))]) })
         .icon_id("s")
         .mode_def(crate::apps::space::modes::main::definition())
         .default_mode_id("main")
@@ -544,7 +545,7 @@ pub fn create_space_app() -> App {
         // (VirtualFileSystem) window only navigates the media file tree; the read-only Compiled DAG
         // window only drives its own engagement. Navigation, panel-tab, presence, example and generic
         // node-graph view actions stay unscoped orphans and appear on every window.
-        .window_kind_actions(workflow::S_PLAY_WINDOW_WORKFLOW, vec![
+        .window_kind_action_refs(workflow::S_PLAY_WINDOW_WORKFLOW, vec![
             "patchParameter".into(), "addParameter".into(), "removeParameter".into(),
             "spawnApp".into(), "moveMediaNode".into(), "connectMediaPorts".into(), "disconnectMediaEdge".into(),
             "removeAppInstance".into(), "deleteSelection".into(), "copyAppInstance".into(),
@@ -554,10 +555,10 @@ pub fn create_space_app() -> App {
             "workflowEngagementInput".into(), "nodeGraphEdit".into(), "exportMedia".into(),
             "importMedia".into(), "importMediaPayload".into(),
         ])
-        .window_kind_actions(media_vfs::S_PLAY_WINDOW_MEDIA_VFS, vec![
+        .window_kind_action_refs(media_vfs::S_PLAY_WINDOW_MEDIA_VFS, vec![
             "navigateVirtualFileSystemNode".into(),
         ])
-        .window_kind_actions(compiled_dag::S_PLAY_WINDOW_COMPILED_DAG, vec![
+        .window_kind_action_refs(compiled_dag::S_PLAY_WINDOW_COMPILED_DAG, vec![
             "compiledDagEngagementSubmit".into(), "compiledDagEngagementInput".into(),
         ])
         // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -814,8 +815,12 @@ mod tests {
     #[test]
     fn space_declares_expected_actions_and_examples() {
         let studio = create_space_app();
-        assert!(studio.definition.actions.iter().any(|action| action.id == "spawnApp"));
-        assert!(studio.definition.actions.iter().any(|action| action.id == "reorganizeWorkflow"));
+        let workflow = studio.definition.window_kinds.iter().find(|window| window.id == crate::apps::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW).expect("workflow window");
+        assert!(workflow.actions.iter().any(|action| action.id == "spawnApp"));
+        assert!(workflow.actions.iter().any(|action| action.id == "reorganizeWorkflow"));
+        let registrations = studio.definition.commands.iter().find(|command| command.id == "setAppRegistrations").expect("host registration command");
+        assert!(!registrations.in_palette);
+        assert_eq!(registrations.args.iter().map(|arg| arg.id.as_str()).collect::<Vec<_>>(), vec!["json"]);
         assert_eq!(studio.examples.len(), S_STUDIO_EXAMPLES.len());
     }
 

@@ -29,6 +29,10 @@ use schema::ArtifactSchema;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.svg.diff")]
 pub struct SvgDiff {
+    /// 🧬️ Tri-state native source provenance.
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<Option<crate::ArtifactSource>>,
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = declaration removed, `Some(Some(d))` = set.
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -152,7 +156,7 @@ pub fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
             }),
         });
     }
-    SvgDiff { declaration: None, doctype: None, root: Some(node_diff) }
+    SvgDiff { source: None, declaration: None, doctype: None, root: Some(node_diff) }
 }
 //#endregion 🔖️DiffAtPath
 
@@ -160,6 +164,9 @@ pub fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
 impl MutationDiff<SvgSnapshot> for SvgDiff {
     fn apply(&self, base: &SvgSnapshot) -> SvgSnapshot {
         let mut next = base.clone();
+        if let Some(source) = &self.source {
+            next.source = source.clone();
+        }
         if let Some(declaration) = &self.declaration {
             next.doc.declaration = declaration.clone();
         }
@@ -173,6 +180,9 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
     }
 
     fn absorb(&mut self, other: Self) {
+        if other.source.is_some() {
+            self.source = other.source;
+        }
         if other.declaration.is_some() {
             self.declaration = other.declaration;
         }
@@ -267,6 +277,7 @@ fn apply_children_diff(children: &[XmlNode], diff: &SvgChildrenDiff) -> Vec<XmlN
 impl DiffAlgebra<SvgSnapshot> for SvgDiff {
     fn inverse(&self, base: &SvgSnapshot) -> Self {
         SvgDiff {
+            source: self.source.as_ref().map(|_| base.source.clone()),
             declaration: self.declaration.as_ref().map(|_| base.doc.declaration.clone()),
             doctype: self.doctype.as_ref().map(|_| base.doc.doctype.clone()),
             root: self.root.as_ref().map(|d| inverse_node_diff(base.doc.root.as_ref(), d)),
@@ -275,6 +286,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
 
     fn between(base: &SvgSnapshot, other: &SvgSnapshot) -> Self {
         SvgDiff {
+            source: if base.source != other.source { Some(other.source.clone()) } else { None },
             declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
             doctype: if base.doc.doctype != other.doc.doctype { Some(other.doc.doctype.clone()) } else { None },
             root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()),
@@ -282,7 +294,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
+        self.source.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
     }
 }
 
@@ -672,6 +684,16 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
     }
 }
 
+pub(crate) fn enc_artifact_source(source: &crate::ArtifactSource) -> String {
+    format!("[{},{}]", hex_encode(&source.bytes), hex_encode(&source.semantic_blake3))
+}
+
+pub(crate) fn dec_artifact_source(s: &str) -> Result<crate::ArtifactSource, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [bytes, semantic_blake3] = parts.as_slice() else { return Err(format!("artifact source: expected 2 fields, got {}", parts.len())) };
+    Ok(crate::ArtifactSource { bytes: hex_decode(bytes)?, semantic_blake3: hex_decode(semantic_blake3)? })
+}
+
 //#region 🔖️BinaryPrimitives
 /// 🧪️ P2-FG3: real LEB128-varint-framed binary primitives (length-prefixed bytes/utf8) backing
 /// the upgraded `DiffCodec` frame below (and, via re-export, `../🧬️mutations/🦀️component.rs`'s own
@@ -692,6 +714,15 @@ pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
 }
 pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+
+pub(crate) fn enc_artifact_source_bin(source: &crate::ArtifactSource, out: &mut Vec<u8>) {
+    write_bytes_lp(out, &source.bytes);
+    write_bytes_lp(out, &source.semantic_blake3);
+}
+
+pub(crate) fn dec_artifact_source_bin(reader: &mut store::ByteReader<'_>) -> Result<crate::ArtifactSource, String> {
+    Ok(crate::ArtifactSource { bytes: read_bytes_lp(reader)?, semantic_blake3: read_bytes_lp(reader)? })
 }
 //#endregion 🔖️BinaryPrimitives
 //#endregion 🔖️Primitives
@@ -1089,6 +1120,7 @@ fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgChildr
 //#region 🔖️TopLevel
 fn print_svg_diff(d: &SvgDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
+    if let Some(v) = &d.source { tokens.push(format!("source={}", encode_option(v, enc_artifact_source))); }
     if let Some(v) = &d.declaration { tokens.push(format!("declaration={}", encode_option(v, enc_declaration))); }
     if let Some(v) = &d.doctype { tokens.push(format!("doctype={}", encode_option(v, |v| enc_str(v)))); }
     if let Some(v) = &d.root { tokens.push(format!("root={}", enc_node_diff(v))); }
@@ -1100,7 +1132,8 @@ fn parse_svg_diff(line: &str) -> Result<SvgDiff, String> {
         return Ok(d);
     }
     for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("declaration=") { d.declaration = Some(decode_option(rest, dec_declaration)?); }
+        if let Some(rest) = token.strip_prefix("source=") { d.source = Some(decode_option(rest, dec_artifact_source)?); }
+        else if let Some(rest) = token.strip_prefix("declaration=") { d.declaration = Some(decode_option(rest, dec_declaration)?); }
         else if let Some(rest) = token.strip_prefix("doctype=") { d.doctype = Some(decode_option(rest, dec_str)?); }
         else if let Some(rest) = token.strip_prefix("root=") { d.root = Some(dec_node_diff(rest)?); }
         else { return Err(format!("svg diff: unknown token {token:?}")); }
@@ -1119,14 +1152,21 @@ impl protocol::DiffCodec for SvgDiff {
     /// matching `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload
     /// bytes` shape — upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100%
     /// of stdio's `DiffCodec` impls were still on that shortcut per the P2-W0 census). `flags` bits
-    /// 0/1/2 mark `declaration`/`doctype`/`root` presence; each present field's own tri-state/
+    /// 0/1/2/3 mark `declaration`/`doctype`/`root`/`source` presence; each present field's own tri-state/
     /// recursive payload follows in that fixed order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.declaration.is_some() { flags |= 0b001; }
         if self.doctype.is_some() { flags |= 0b010; }
         if self.root.is_some() { flags |= 0b100; }
+        if self.source.is_some() { flags |= 0b1000; }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
+        if let Some(source) = &self.source {
+            out.push(if source.is_some() { 1 } else { 0 });
+            if let Some(source) = source {
+                enc_artifact_source_bin(source, &mut out);
+            }
+        }
         if let Some(declaration) = &self.declaration {
             out.push(if declaration.is_some() { 1 } else { 0 });
             if let Some(declaration) = declaration {
@@ -1149,6 +1189,12 @@ impl protocol::DiffCodec for SvgDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let source = if flags & 0b1000 != 0 {
+            let has = reader.read_u8().map_err(|e| malformed("diff source presence", reader.position(), e.to_string()))?;
+            Some(if has != 0 { Some(dec_artifact_source_bin(&mut reader).map_err(|e| malformed("diff source", reader.position(), e))?) } else { None })
+        } else {
+            None
+        };
         let declaration = if flags & 0b001 != 0 {
             let has = reader.read_u8().map_err(|e| malformed("diff declaration presence", reader.position(), e.to_string()))?;
             Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", reader.position(), e))?) } else { None })
@@ -1162,7 +1208,7 @@ impl protocol::DiffCodec for SvgDiff {
             None
         };
         let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", reader.position(), e))?) } else { None };
-        Ok(SvgDiff { declaration, doctype, root })
+        Ok(SvgDiff { source, declaration, doctype, root })
     }
 }
 //#endregion 🔖️TopLevel

@@ -322,7 +322,9 @@ pub fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
             _ => unknown_boxes.push(SnapMp4Box { fourcc: b.kind.as_str().into_owned(), data: b.payload.to_vec() }),
         }
     }
-    Ok(Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp, tracks, unknown_boxes })
+    let mut snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp, tracks, unknown_boxes, source: None };
+    snapshot.source = Some(crate::ArtifactSource::capture(bytes, &snapshot.projection())?);
+    Ok(snapshot)
 }
 
 /// 📥️ Decodes one `trak`; `Ok(None)` for a non-video-handler track (caller retains it raw).
@@ -582,6 +584,11 @@ fn build_mvhd(tracks: &[Mp4Track]) -> Vec<u8> {
 /// known up-front (no two-pass placeholder needed, unlike remodel's `mp4_mux`, which places
 /// `moov` first and so must measure it before it can know `mdat`'s offset).
 pub fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
+    if let Some(source) = &snapshot.source {
+        if source.matches(&snapshot.projection()).unwrap_or(false) {
+            return source.bytes.clone();
+        }
+    }
     let mut major_brand_bytes = [b' '; 4];
     for (i, b) in snapshot.ftyp.major_brand.as_bytes().iter().take(4).enumerate() { major_brand_bytes[i] = *b; }
     let mut ftyp_payload = Vec::new();
@@ -646,6 +653,7 @@ mod codec_tests {
                 ],
             }],
             unknown_boxes: vec![SnapBox { fourcc: "free".into(), data: vec![0, 0, 0, 0] }],
+            source: None,
         }
     }
 
@@ -662,7 +670,7 @@ mod codec_tests {
         let snap = synthetic_snapshot();
         let bytes = encode_mp4(&snap);
         let back = decode_mp4(&bytes).expect("decode");
-        assert_eq!(back, snap, "decode(encode(snapshot)) must reproduce the snapshot exactly");
+        assert_eq!(back.projection(), snap, "decode(encode(snapshot)) must reproduce the semantic projection exactly");
     }
 
     #[test]
@@ -672,7 +680,7 @@ mod codec_tests {
         snap.tracks[0].codec = Mp4Codec::Other { fourcc: "mjpg".into(), raw: mp4_visual_sample_entry(b"mjpg", width, height, &[]) };
         let bytes = encode_mp4(&snap);
         let back = decode_mp4(&bytes).expect("decode");
-        assert_eq!(back, snap);
+        assert_eq!(back.projection(), snap);
     }
 
     //#region codec_retention_law — the REAL 43KB fixture
@@ -735,6 +743,15 @@ mod codec_tests {
             // the box header (size+fourcc) starts 4 bytes before the "free" tag itself.
             let _ = pos;
         }
+    }
+
+    #[test]
+    fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
+        let bytes = std::fs::read(path).expect("read exact MP4 fixture");
+        let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
+        assert_eq!(encode_mp4(&snapshot), bytes);
+        assert!(snapshot.source.as_ref().expect("captured source").matches(&snapshot.projection()).expect("match projection"));
     }
     //#endregion codec_retention_law
 }

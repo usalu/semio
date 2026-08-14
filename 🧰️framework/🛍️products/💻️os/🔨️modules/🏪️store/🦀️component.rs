@@ -31,7 +31,7 @@ use std::sync::{Arc, Mutex};
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
 pub use crate::os_vcs::{
-    apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_entity_id, create_document_vcs_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionMutation,
+    apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_entity_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionMutation,
     ArtifactVcs, Identified, ItemPatch, Patchable, VcsError,
 };
 

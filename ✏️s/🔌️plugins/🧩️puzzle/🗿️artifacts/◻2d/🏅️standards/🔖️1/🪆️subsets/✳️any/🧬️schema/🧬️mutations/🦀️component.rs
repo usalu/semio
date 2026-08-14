@@ -349,27 +349,25 @@ mod tests {
     #[test]
     fn puzzle2d_delta_ops_are_granular_and_round_trip() {
         let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "anchor": "fixed", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "anchor": "fixed", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
-        // Move n2, add n3, remove n1 — a disjoint mix of granular edits. The camera is deliberately
-        // absent here: it is session-only `Puzzle2dConfig` state (see `setCamera`'s
-        // `ActionKind::View`), never a document field the delta operations need to diff.
         let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "anchor": "fixed", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
+        let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle2dSnapshot>(value.clone()).expect("typed puzzle2d fixture")).expect("canonical puzzle2d JSON");
         let operations = puzzle2d_document_delta_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::MoveNode(_))));
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::CreateNode(_))));
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::DeleteNode(_))));
-        // Forward replay (over the bare Value fixture, mirroring how the play app applies these) reproduces
-        // `after`, and each operation's backwards restores `before`.
+        // The typed bridge canonicalizes optional/default JSON fields while preserving the
+        // artifact value and every operation's backwards restores the canonical pre-edit value.
         let mut forward = before.clone();
         let mut inverses = Vec::new();
         for operation in &operations {
             inverses.extend(Mutation::<Value>::inverse(operation, &forward));
             forward = Mutation::<Value>::diff(operation, &forward).apply(&forward);
         }
-        assert_eq!(forward, after);
+        assert_eq!(forward, canonical(&after));
         for inverse in inverses.iter().rev() {
             forward = Mutation::<Value>::diff(inverse, &forward).apply(&forward);
         }
-        assert_eq!(forward, before, "backwards operations must restore the pre-edit document");
+        assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }
 
     #[test]

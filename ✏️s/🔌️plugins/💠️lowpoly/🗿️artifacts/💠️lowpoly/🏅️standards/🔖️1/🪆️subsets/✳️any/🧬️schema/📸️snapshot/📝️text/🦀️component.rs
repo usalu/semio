@@ -68,9 +68,12 @@ mod tests {
     }
 
     #[test]
-    fn handcrafted_example_text_has_no_mesh_json_smuggle() {
+    fn handcrafted_example_text_uses_structural_object_codec() {
         assert!(!LOWPOLY_EXAMPLE_TEXT.contains("mesh-json"));
-        assert!(LOWPOLY_EXAMPLE_TEXT.contains("mesh {") || LOWPOLY_EXAMPLE_TEXT.contains("mesh{"));
+        let parsed = parse_dsl(LOWPOLY_EXAMPLE_TEXT).expect("handcrafted example should parse");
+        assert_eq!(parsed.objects.len(), 1);
+        assert_eq!(parsed.objects[0].id, "obj-1");
+        assert!(parsed.objects[0].mesh.is_none());
         assert!(COMPONENT_GRAMMAR_SEMIO.contains("halfedge"));
     }
 

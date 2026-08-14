@@ -963,7 +963,7 @@ mod tests {
     #[test]
     fn app_definition_declares_reorganize_and_history_actions() {
         let definition = create_rewrite_app().definition;
-        let action_ids: Vec<&str> = definition.actions.iter().map(|action| action.id.as_str()).collect();
+        let action_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|action| action.id.as_str()).collect();
         assert!(action_ids.contains(&"undo"));
         assert!(action_ids.contains(&"reorganize"));
     }
@@ -990,7 +990,7 @@ mod tests {
         let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_PARAMETERS, None, &ViewModel::default()).expect("render")).unwrap();
         assert!(parameters_json.contains("\"Parameter\""));
         let definition = create_rewrite_app().definition;
-        let reset_rule = definition.actions.iter().find(|action| action.id == "resetRule").expect("resetRule action");
+        let reset_rule = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resetRule").expect("resetRule action");
         assert_eq!(reset_rule.label.resolve(Terminology::Native, Locale::De), "Regel zurücksetzen");
     }
 

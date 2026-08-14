@@ -197,12 +197,13 @@ pub mod app {
             KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
-        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppIo, CommandDefinition, CommandGrammar, CommandRef, CommandScope, ConfigSpec, DialogDefinition, ExampleDefinition,
+        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition,
         IconName, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef,
         TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, Fault, FaultCode, FaultFrom, FaultOrigin, InteractionDefinition, InteractionRef, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
         SET_HISTORY_COMMAND_FILTER_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
         CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
     };
+    use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
@@ -320,7 +321,7 @@ pub mod app {
         pub icon_id: IconName,
         pub tools: Vec<ToolRef>,
         pub layout_id: Option<String>,
-        pub commands: Vec<CommandRef>,
+        pub commands: Vec<CommandDefinition>,
     }
 
     pub struct WindowKindSpec {
@@ -331,7 +332,8 @@ pub mod app {
         pub icon_id: IconName,
         pub measures: Vec<WindowMeasure>,
         pub engagement: Option<WindowEngagement>,
-        pub actions: Vec<ActionRef>,
+        pub actions: Vec<ActionDefinition>,
+        pub action_refs: Vec<ActionRef>,
         pub utilities: Vec<UtilityRef>,
         pub interactions: Vec<InteractionRef>,
         /// 🧱️ Carried verbatim from `.window_kind_def(WindowKindDefinition)`; the scalar-arg constructors
@@ -410,6 +412,7 @@ pub mod app {
             measures: def.options.measures,
             engagement: def.options.engagement.as_option().cloned(),
             actions: def.actions,
+            action_refs: Vec::new(),
             utilities: def.utilities,
             interactions: def.interactions,
             params_schema: def.params_schema,
@@ -1547,12 +1550,20 @@ pub mod app {
             self
         }
 
-        /// 🎛️ Scopes commands to a mode — references ids declared via `.mode_command()`/`.command()`
-        /// (each of which must be `CommandScope::Mode`).
-        pub fn mode_commands(mut self, mode_id: impl AsRef<str>, command_ids: Vec<CommandRef>) -> Self {
+        /// 🎛️ Replaces the commands structurally owned by one mode.
+        pub fn mode_commands(mut self, mode_id: impl AsRef<str>, commands: Vec<CommandDefinition>) -> Self {
             let mode_id = mode_id.as_ref();
             if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
-                mode.commands = command_ids;
+                mode.commands = commands;
+            }
+            self
+        }
+
+        /// 🎛️ Adds one command definition to the mode that owns it.
+        pub fn mode_command(mut self, mode_id: impl AsRef<str>, command: CommandDefinition) -> Self {
+            let mode_id = mode_id.as_ref();
+            if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
+                mode.commands.push(command);
             }
             self
         }
@@ -1590,6 +1601,7 @@ pub mod app {
                 measures: Vec::new(),
                 engagement: None,
                 actions: Vec::new(),
+                action_refs: Vec::new(),
                 utilities: Vec::new(),
                 interactions: Vec::new(),
                 params_schema: None,
@@ -1611,6 +1623,7 @@ pub mod app {
                 measures: Vec::new(),
                 engagement: Some(engagement),
                 actions: Vec::new(),
+                action_refs: Vec::new(),
                 utilities: Vec::new(),
                 interactions: Vec::new(),
                 params_schema: None,
@@ -1656,11 +1669,20 @@ pub mod app {
             self
         }
 
-        /// 📇️ Scopes actions to a window kind — references ids declared via `.mutation()/.view_action()/.shell_action()`.
-        pub fn window_kind_actions(mut self, window_kind_id: impl AsRef<str>, action_ids: Vec<ActionRef>) -> Self {
+        /// 📇️ Replaces the action definitions structurally owned by one window kind.
+        pub fn window_kind_actions(mut self, window_kind_id: impl AsRef<str>, actions: Vec<ActionDefinition>) -> Self {
             let window_kind_id = window_kind_id.as_ref();
             if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
-                window.actions = action_ids;
+                window.actions = actions;
+            }
+            self
+        }
+
+        /// 📇️ Assigns centrally declared builder actions to one structural window owner.
+        pub fn window_kind_action_refs(mut self, window_kind_id: impl AsRef<str>, action_refs: Vec<ActionRef>) -> Self {
+            let window_kind_id = window_kind_id.as_ref();
+            if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
+                window.action_refs = action_refs;
             }
             self
         }
@@ -1749,23 +1771,15 @@ pub mod app {
             self
         }
 
-        /// @emoji 🎛️ Declares a fully specified command. There are no window-level commands — only
-        /// `CommandScope::App`/`CommandScope::Mode` may be declared here (`Os`/`Plugin` are rejected in
-        /// `build_definition`); `Mode`-scope commands must additionally be referenced via `.mode_commands()`.
+        /// @emoji 🎛️ Declares a fully specified app-owned command.
         pub fn command(mut self, command: CommandDefinition) -> Self {
             self.commands.push(command);
             self
         }
 
         /// @emoji 🎛️ Declares an app-scope command (applies whenever this app is focused, in any mode).
-        pub fn app_command(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>) -> Self {
-            self.command(CommandDefinition::new_catalog(id, label, CommandScope::App, category))
-        }
-
-        /// @emoji 🎛️ Declares a mode-scope command definition — still requires `.mode_commands(mode_id, ..)`
-        /// to actually scope it to the mode(s) it applies to.
-        pub fn mode_command(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>) -> Self {
-            self.command(CommandDefinition::new_catalog(id, label, CommandScope::Mode, category))
+        pub fn app_command(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
+            self.command(CommandDefinition::new_catalog(id, label, category, kind))
         }
 
         /// @emoji 📝️ Attaches typed argument declarations to an already-declared command (post-hoc,
@@ -1883,10 +1897,10 @@ pub mod app {
                 assert!(!tool.id.trim().is_empty(), "app {} tool id must be non-empty", self.id);
                 assert!(declared_tool_ids.insert(tool.id.clone()), "app {} duplicate tool id {}", self.id, tool.id);
             }
-            let mut declared_command_scopes: HashMap<String, CommandScope> = HashMap::new();
+            let mut declared_command_ids = HashSet::new();
             for command in &self.commands {
-                assert!(matches!(command.scope, CommandScope::App | CommandScope::Mode), "app {} command {} must be declared CommandScope::App or CommandScope::Mode (Os/Plugin commands are not declared via AppBuilder)", self.id, command.id);
-                assert!(declared_command_scopes.insert(command.id.clone(), command.scope).is_none(), "app {} duplicate command id {}", self.id, command.id);
+                assert!(!command.id.trim().is_empty(), "app {} command id must be non-empty", self.id);
+                assert!(declared_command_ids.insert(command.id.clone()), "app {} duplicate app command id {}", self.id, command.id);
                 validate_arg_defs(&self.id, &format!("command {}", command.id), &command.args);
             }
             let app_declared_actions = !self.actions.is_empty();
@@ -1921,6 +1935,32 @@ pub mod app {
             }
             if declared_action_ids.insert(NOTE_SHELL_COMMAND_ACTION_ID.to_string()) {
                 actions.push(note_shell_command_action_definition());
+            }
+            let explicitly_owned_action_ids: HashSet<String> = self
+                .window_kinds
+                .iter()
+                .flat_map(|window| window.actions.iter().map(|action| action.id.clone()).chain(window.action_refs.iter().map(|action| action.as_str().to_string())))
+                .collect();
+            for window in &mut self.window_kinds {
+                for action_ref in &window.action_refs {
+                    let action = actions
+                        .iter()
+                        .find(|action| action.id == action_ref.as_str())
+                        .unwrap_or_else(|| panic!("app {} window kind {} references undeclared action {}", self.id, window.id, action_ref.as_str()));
+                    window.actions.push(action.clone());
+                }
+                let mut window_action_ids = HashSet::new();
+                for action in &window.actions {
+                    assert!(!action.id.trim().is_empty(), "app {} window kind {} action id must be non-empty", self.id, window.id);
+                    assert!(window_action_ids.insert(action.id.clone()), "app {} window kind {} duplicate action id {}", self.id, window.id, action.id);
+                    declared_action_ids.insert(action.id.clone());
+                    validate_arg_defs(&self.id, &format!("window kind {} action {}", window.id, action.id), &action.args);
+                }
+                for action in &actions {
+                    if !explicitly_owned_action_ids.contains(&action.id) {
+                        window.actions.push(action.clone());
+                    }
+                }
             }
             let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
             let mut keybindings: Vec<Keybinding> = self.keybindings.into_iter().map(|binding| Keybinding { keys: binding.keys, action: ActionDescriptor { controller_id: binding.controller_id, action: binding.action, args: None } }).collect();
@@ -1957,9 +1997,6 @@ pub mod app {
                 }
             }
             for window in &self.window_kinds {
-                for action_ref in &window.actions {
-                    assert!(declared_action_ids.contains(action_ref.as_str()), "app {} window kind {} references undeclared action {}", self.id, window.id, action_ref.as_str());
-                }
                 for utility_ref in &window.utilities {
                     assert!(declared_utility_ids.contains(utility_ref.as_str()), "app {} window kind {} references undeclared utility {}", self.id, window.id, utility_ref.as_str());
                 }
@@ -1968,16 +2005,16 @@ pub mod app {
                 }
             }
             for mode in &self.modes {
-                for command_ref in &mode.commands {
-                    assert!(declared_command_scopes.get(command_ref.as_str()).copied() == Some(CommandScope::Mode), "app {} mode {} references undeclared or non-Mode-scope command {}", self.id, mode.id, command_ref.as_str());
+                let mut mode_command_ids = HashSet::new();
+                for command in &mode.commands {
+                    assert!(!command.id.trim().is_empty(), "app {} mode {} command id must be non-empty", self.id, mode.id);
+                    assert!(mode_command_ids.insert(command.id.clone()), "app {} mode {} duplicate command id {}", self.id, mode.id, command.id);
+                    declared_command_ids.insert(command.id.clone());
+                    validate_arg_defs(&self.id, &format!("mode {} command {}", mode.id, command.id), &command.args);
                 }
                 for tool_ref in &mode.tools {
                     assert!(declared_tool_ids.contains(tool_ref.as_str()), "app {} mode {} references undeclared tool {}", self.id, mode.id, tool_ref.as_str());
                 }
-            }
-            let mode_referenced_commands: HashSet<&str> = self.modes.iter().flat_map(|mode| mode.commands.iter().map(|command_ref| command_ref.as_str())).collect();
-            for (id, scope) in &declared_command_scopes {
-                assert!(*scope != CommandScope::Mode || mode_referenced_commands.contains(id.as_str()), "app {} mode-scope command {} is not referenced by any mode", self.id, id);
             }
             let mode_referenced_tools: HashSet<&str> = self.modes.iter().flat_map(|mode| mode.tools.iter().map(|tool_ref| tool_ref.as_str())).collect();
             for tool in &self.tools {
@@ -2045,7 +2082,7 @@ pub mod app {
                 for event in &tutorial.tracks.events {
                     match &event.kind {
                         semio_framework::TutorialEventKind::Action { action, .. } => assert!(declared_action_ids.contains(action), "app {} {} event references undeclared action {}", self.id, owner, action),
-                        semio_framework::TutorialEventKind::Command { command, .. } => assert!(declared_command_scopes.contains_key(command), "app {} {} event references undeclared command {}", self.id, owner, command),
+                        semio_framework::TutorialEventKind::Command { command, .. } => assert!(declared_command_ids.contains(command), "app {} {} event references undeclared command {}", self.id, owner, command),
                         semio_framework::TutorialEventKind::Key { .. } => {}
                     }
                 }
@@ -2112,7 +2149,6 @@ pub mod app {
                 .expect("app must declare at least one window kind (checked above)"),
                 panel_tabs: self.panel_tabs.into_iter().map(panel_tab_spec_to_definition).collect(),
                 keybindings,
-                actions,
                 utilities: self.utilities,
                 interactions: self.interactions,
                 tools: self.tools,
@@ -2138,7 +2174,11 @@ pub mod app {
                             definition.keybindings.push(Keybinding { keys: keys.clone(), action: ActionDescriptor { controller_id: definition.controller_id.clone(), action: action.id.clone(), args: None } });
                         }
                     }
-                    definition.actions.push(action);
+                    for window in definition.window_kinds.iter_mut() {
+                        if !window.actions.iter().any(|entry| entry.id == action.id) {
+                            window.actions.push(action.clone());
+                        }
+                    }
                 }
             }
             definition
@@ -3052,7 +3092,7 @@ pub mod app {
                 "setSelectionMode",
                 "setInteractionGranularity",
             ];
-            for action in &definition.actions {
+            for action in definition.window_kinds.iter().flat_map(|window| &window.actions) {
                 if skip.contains(&action.id.as_str()) {
                     continue;
                 }
@@ -3458,7 +3498,7 @@ pub mod app {
         #[test]
         fn build_definition_auto_injects_history_actions_and_keybindings() {
             let definition = minimal_app("history-app").build_definition();
-            let history_ids: HashSet<&str> = definition.actions.iter().map(|c| c.id.as_str()).collect();
+            let history_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
             assert!(history_ids.contains("undo"));
             assert!(history_ids.contains("redo"));
             assert!(history_ids.contains("commitCheckpoint"));
@@ -3479,13 +3519,13 @@ pub mod app {
         #[test]
         fn build_definition_auto_injects_clipboard_actions_and_keybindings() {
             let definition = minimal_app("clipboard-app").build_definition();
-            let clipboard_ids: HashSet<&str> = definition.actions.iter().map(|c| c.id.as_str()).collect();
+            let clipboard_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
             assert!(clipboard_ids.contains("copy"));
             assert!(clipboard_ids.contains("cut"));
             assert!(clipboard_ids.contains("paste"));
-            let copy_action = definition.actions.iter().find(|a| a.id == "copy").expect("copy declared");
+            let copy_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == "copy").expect("copy declared");
             assert_eq!(copy_action.kind, ActionKind::Clipboard);
-            let paste_action = definition.actions.iter().find(|a| a.id == "paste").expect("paste declared");
+            let paste_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == "paste").expect("paste declared");
             assert!(paste_action.args.iter().any(|arg| arg.id == "anchor"));
             let copy_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+c").expect("copy keybinding auto-injected");
             assert_eq!(copy_binding.action.action, "copy");
@@ -3498,13 +3538,13 @@ pub mod app {
         fn build_definition_auto_injects_the_history_panel_tab_and_filter_action() {
             let definition = minimal_app("history-panel-app").build_definition();
             assert!(definition.panel_tabs.iter().any(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID));
-            let action_ids: HashSet<&str> = definition.actions.iter().map(|a| a.id.as_str()).collect();
+            let action_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|a| a.id.as_str()).collect();
             assert!(action_ids.contains(REVERT_TO_COMMAND_ACTION_ID));
             assert!(action_ids.contains(SET_HISTORY_COMMAND_FILTER_ACTION_ID));
-            let revert = definition.actions.iter().find(|a| a.id == REVERT_TO_COMMAND_ACTION_ID).expect("revertToCommand declared");
+            let revert = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == REVERT_TO_COMMAND_ACTION_ID).expect("revertToCommand declared");
             assert_eq!(revert.kind, ActionKind::History);
             assert!(!revert.in_palette);
-            let filter = definition.actions.iter().find(|a| a.id == SET_HISTORY_COMMAND_FILTER_ACTION_ID).expect("setHistoryCommandFilter declared");
+            let filter = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == SET_HISTORY_COMMAND_FILTER_ACTION_ID).expect("setHistoryCommandFilter declared");
             assert_eq!(filter.kind, ActionKind::View);
             assert!(!filter.in_palette);
         }
@@ -3521,7 +3561,7 @@ pub mod app {
         fn operation_view_and_shell_actions_are_declared_with_their_kind() {
             let definition =
                 minimal_app("typed-actions-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).view_action("setCamera", LocalizedLabel::data("Set Camera")).shell_action("exportPng", LocalizedLabel::data("Export PNG")).build_definition();
-            let by_id = |id: &str| definition.actions.iter().find(|c| c.id == id).expect("declared");
+            let by_id = |id: &str| definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|c| c.id == id).expect("declared");
             assert_eq!(by_id("addLayer").kind, ActionKind::Mutation);
             assert_eq!(by_id("setCamera").kind, ActionKind::View);
             assert_eq!(by_id("exportPng").kind, ActionKind::Shell);
@@ -3546,7 +3586,7 @@ pub mod app {
                 .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush) })
                 .utility_simple("eraser", LocalizedLabel::data("Eraser"), IconName::Eraser)
                 .build_definition();
-            let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility injected");
+            let set_active_utility = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility injected");
             assert_eq!(set_active_utility.kind, ActionKind::View);
             assert!(!set_active_utility.in_palette);
             let binding = definition.keybindings.iter().find(|binding| binding.keys == "b").expect("utility keybinding auto-injected");
@@ -3558,7 +3598,7 @@ pub mod app {
         fn no_utilities_means_no_set_active_utility_action() {
             use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
             let definition = minimal_app("no-utility-app").build_definition();
-            assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
+            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
         }
 
         #[test]
@@ -3587,7 +3627,7 @@ pub mod app {
             use semio_framework::{ActionKind, ToolDefinition, ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
             let definition =
                 minimal_app("tool-keybinding-app").tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket) }).mode_tools("edit", vec![ToolRef::new("fill")]).build_definition();
-            let set_active_tool = definition.actions.iter().find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool injected");
+            let set_active_tool = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool injected");
             assert_eq!(set_active_tool.kind, ActionKind::View);
             assert!(!set_active_tool.in_palette);
             let binding = definition.keybindings.iter().find(|binding| binding.keys == "f").expect("tool keybinding auto-injected");
@@ -3599,13 +3639,13 @@ pub mod app {
         fn no_tools_means_no_set_active_tool_action() {
             use semio_framework::SET_ACTIVE_TOOL_ACTION_ID;
             let definition = minimal_app("no-tool-app").build_definition();
-            assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
+            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
         }
 
         #[test]
         fn action_args_attaches_declared_arguments() {
             let definition = minimal_app("args-app").mutation("resize", LocalizedLabel::data("Resize")).action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).build_definition();
-            let resize = definition.actions.iter().find(|action| action.id == "resize").expect("declared");
+            let resize = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resize").expect("declared");
             assert_eq!(resize.args.len(), 1);
             assert_eq!(resize.args[0].id, "scale");
             assert!(resize.args[0].required);
@@ -3619,7 +3659,7 @@ pub mod app {
 
         #[test]
         fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
-            let result = std::panic::catch_unwind(|| minimal_app("bad-action-ref-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).window_kind_actions("main", vec!["removeLayer".into()]).build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("bad-action-ref-app").mutation("addLayer", LocalizedLabel::data("Add Layer")).window_kind_action_refs("main", vec!["removeLayer".into()]).build_definition());
             assert!(result.is_err());
         }
 
@@ -3639,7 +3679,7 @@ pub mod app {
                 .build_definition();
             assert_eq!(definition.interactions.len(), 1);
             assert_eq!(definition.window_kinds.first().interactions, vec![InteractionRef::new("world")]);
-            assert_eq!(definition.actions.iter().find(|action| action.id == INTERACTION_HOVER_ACTION_ID).map(|action| action.kind), Some(ActionKind::Interaction));
+            assert_eq!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == INTERACTION_HOVER_ACTION_ID).map(|action| action.kind), Some(ActionKind::Interaction));
             assert_eq!(definition.keybindings.iter().find(|binding| binding.keys == "escape").map(|binding| binding.action.action.as_str()), Some("clearSelection"));
         }
 
@@ -3660,7 +3700,7 @@ pub mod app {
             use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
             use ui_wgpu::wgpu::LocalizedLabel;
             let definition = minimal_app("intro-app").introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] }).build_definition();
-            let start_introduction = definition.actions.iter().find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
+            let start_introduction = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
             assert_eq!(start_introduction.kind, ActionKind::View);
             assert!(!start_introduction.in_palette, "the shell-owned Introduce App command owns palette discovery");
         }
@@ -3669,7 +3709,7 @@ pub mod app {
         fn no_introduction_means_no_start_introduction_action() {
             use semio_framework::START_INTRODUCTION_ACTION_ID;
             let definition = minimal_app("no-intro-app").build_definition();
-            assert!(!definition.actions.iter().any(|action| action.id == START_INTRODUCTION_ACTION_ID));
+            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_INTRODUCTION_ACTION_ID));
         }
 
         #[test]
@@ -3770,7 +3810,7 @@ pub mod app {
                 .mutation("addLayer", LocalizedLabel::data("Add Layer"))
                 .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
                 .window_kind_utilities("main", vec!["brush".into()])
-                .window_kind_actions("main", vec!["addLayer".into()])
+                .window_kind_action_refs("main", vec!["addLayer".into()])
                 .introduction(IntroductionDefinition {
                     title: LocalizedLabel::data("Welcome"),
                     steps: vec![
@@ -3804,7 +3844,7 @@ pub mod app {
         fn declaring_tutorial_injects_start_tutorial_action() {
             use semio_framework::{ActionKind, START_TUTORIAL_ACTION_ID};
             let definition = minimal_app("tutorial-app").tutorial(minimal_tutorial("welcome-tour")).build_definition();
-            let start_tutorial = definition.actions.iter().find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
+            let start_tutorial = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
             assert_eq!(start_tutorial.kind, ActionKind::View);
             assert!(!start_tutorial.in_palette, "the shell-owned Play Tutorial command owns palette discovery");
         }
@@ -3813,8 +3853,8 @@ pub mod app {
         fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
             use semio_framework::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
             let definition = minimal_app("no-tutorial-app").build_definition();
-            assert!(!definition.actions.iter().any(|action| action.id == START_TUTORIAL_ACTION_ID));
-            assert!(definition.actions.iter().any(|action| action.id == RECORD_TUTORIAL_ACTION_ID), "recordTutorial is injected unconditionally — recording needs no app declaration");
+            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_TUTORIAL_ACTION_ID));
+            assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == RECORD_TUTORIAL_ACTION_ID), "recordTutorial is injected unconditionally — recording needs no app declaration");
         }
 
         #[test]
@@ -3950,43 +3990,48 @@ pub mod app {
 
         #[test]
         fn build_definition_accepts_app_and_mode_scope_commands() {
-            use semio_framework::{CommandDefinition, CommandRef, CommandScope};
+            use semio_framework::CommandDefinition;
             let definition = minimal_app("command-app")
-                .app_command("app.export", LocalizedLabel::data("Export"), "document")
-                .command(CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), CommandScope::Mode, "view"))
-                .mode_commands("edit", vec![CommandRef::new("mode.focus")])
+                .app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell)
+                .mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View))
                 .build_definition();
-            assert_eq!(definition.commands.len(), 2);
-            assert_eq!(definition.modes[0].commands, vec![CommandRef::new("mode.focus")]);
+            assert_eq!(definition.commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["app.export"]);
+            assert_eq!(definition.modes[0].commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["mode.focus"]);
         }
 
         #[test]
         fn build_definition_rejects_duplicate_command_ids() {
-            let result = std::panic::catch_unwind(|| minimal_app("dupe-command-app").app_command("app.export", LocalizedLabel::data("Export"), "document").app_command("app.export", LocalizedLabel::data("Export Again"), "document").build_definition());
+            let result = std::panic::catch_unwind(|| minimal_app("dupe-command-app").app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell).app_command("app.export", LocalizedLabel::data("Export Again"), "document", ActionKind::Shell).build_definition());
             assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_rejects_os_or_plugin_scope_command() {
-            use semio_framework::{CommandDefinition, CommandScope};
-            let result = std::panic::catch_unwind(|| minimal_app("os-scope-command-app").command(CommandDefinition::new_catalog("os.theme", LocalizedLabel::data("Theme"), CommandScope::Os, "appearance")).build_definition());
-            assert!(result.is_err(), "AppBuilder must reject Os/Plugin-scope commands — those are declared by the shell/Plugin, not an app");
+        fn build_definition_rejects_duplicate_mode_command_ids() {
+            use semio_framework::CommandDefinition;
+            let result = std::panic::catch_unwind(|| {
+                minimal_app("dupe-mode-command-app")
+                    .mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View))
+                    .mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus Again"), "view", ActionKind::View))
+                    .build_definition()
+            });
+            assert!(result.is_err());
         }
 
         #[test]
-        fn build_definition_rejects_mode_command_ref_to_undeclared_or_wrong_scope_command() {
-            use semio_framework::CommandRef;
-            let undeclared = std::panic::catch_unwind(|| minimal_app("undeclared-mode-command-app").mode_commands("edit", vec![CommandRef::new("nope")]).build_definition());
-            assert!(undeclared.is_err());
-
-            let wrong_scope = std::panic::catch_unwind(|| minimal_app("wrong-scope-mode-command-app").app_command("app.export", LocalizedLabel::data("Export"), "document").mode_commands("edit", vec![CommandRef::new("app.export")]).build_definition());
-            assert!(wrong_scope.is_err(), "an App-scope command must not be referenceable from a mode's commands list");
+        fn build_definition_derives_command_owner_from_structural_containment() {
+            use semio_framework::CommandDefinition;
+            let definition = minimal_app("structural-command-app")
+                .app_command("focus", LocalizedLabel::data("App Focus"), "app", ActionKind::View)
+                .mode_command("edit", CommandDefinition::new_catalog("focus", LocalizedLabel::data("Mode Focus"), "mode", ActionKind::View))
+                .build_definition();
+            assert_eq!(definition.commands[0].category, "app");
+            assert_eq!(definition.modes[0].commands[0].category, "mode");
         }
 
         #[test]
-        fn build_definition_rejects_mode_scope_command_referenced_by_no_mode() {
-            use semio_framework::{CommandDefinition, CommandScope};
-            let result = std::panic::catch_unwind(|| minimal_app("orphan-mode-command-app").command(CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), CommandScope::Mode, "view")).build_definition());
+        fn build_definition_rejects_empty_mode_command_id() {
+            use semio_framework::CommandDefinition;
+            let result = std::panic::catch_unwind(|| minimal_app("empty-mode-command-app").mode_command("edit", CommandDefinition::new_catalog("", LocalizedLabel::data("Focus"), "view", ActionKind::View)).build_definition());
             assert!(result.is_err());
         }
     }
@@ -5860,12 +5905,15 @@ pub mod app {
         /// behavior is reached exclusively through `handle_command_frame`'s typed `Self::Command` decode).
         /// An unrecognized `action` id is a hard error pointing at the typed channel.
         fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
-        /// @emoji 🕰️ Same FRAMEWORK-reserved scope as `handle_action` above — kept as a distinct entry
-        /// point for `CommandDefinition`-shaped host calls (a command has no `ActionKind` of its own).
-        fn handle_command(&mut self, command: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        /// @emoji 📍️ Validates and dispatches a window-instance-owned action invocation.
+        fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        /// @emoji 🎯️ Dispatches the manifest protocol's structurally addressed app- or mode-owned
+        /// command. This is deliberately `ManifestCommandInvocation`, not the kernel execution envelope
+        /// re-exported under the same unqualified name; the active mode is mandatory for mode ownership.
+        fn handle_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🎯️ The single dispatch point `plugin_runtime::plugin_exchange` calls for every
         /// `AppCommand::Command` frame: recognizes a framework-reserved `{kind,name,args}` wire-value
-        /// envelope (routed through `handle_action`/`handle_command` above) and otherwise decodes
+        /// action envelope (routed through `handle_action` above) and otherwise decodes
         /// `command_bytes` directly as the app's typed `ArtifactApp::Command` via `OpBinary::decode_op`
         /// and calls the pure `ArtifactApp::handle`.
         fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
@@ -5877,6 +5925,8 @@ pub mod app {
         fn hydrate_config_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
         /// 📥 Hydrate draft lane from host pack bytes.
         fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
+        /// 👥️ Packs the typed local presence snapshot and exposes both ephemeral generations.
+        fn ephemeral_snapshot(&self) -> (Vec<u8>, u64, u64);
         /// 🧮️ Object-safe counterpart to `ArtifactApp::Config`'s binary-pack encoding — the config-store
         /// twin of `document_pack` below.
         fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
@@ -5996,7 +6046,9 @@ pub mod app {
     #[derive(Clone, Default)]
     pub struct AppActionRegistry {
         actions: HashMap<String, ActionDefinition>,
-        commands: HashMap<String, CommandDefinition>,
+        window_actions: HashMap<String, HashMap<String, ActionDefinition>>,
+        app_commands: HashMap<String, CommandDefinition>,
+        mode_commands: HashMap<String, HashMap<String, CommandDefinition>>,
         /// @emoji 📇️ The app's `controller_id` — addresses `ActionDescriptor.controller_id` for the
         /// framework-built history panel. Empty for the registry-less test path.
         controller_id: String,
@@ -6012,9 +6064,23 @@ pub mod app {
         /// @emoji 📇️ Indexes an app definition's declared actions and commands (including
         /// framework-injected ones) by id.
         pub fn from_definition(definition: &AppDefinition) -> Self {
+            let app_commands = definition.commands.iter().map(|command| (command.id.clone(), command.clone())).collect();
+            let mode_commands = definition
+                .modes
+                .iter()
+                .map(|mode| (mode.id.clone(), mode.commands.iter().map(|command| (command.id.clone(), command.clone())).collect()))
+                .collect();
+            let window_actions: HashMap<String, HashMap<String, ActionDefinition>> = definition
+                .window_kinds
+                .iter()
+                .map(|window| (window.id.clone(), window.actions.iter().map(|action| (action.id.clone(), action.clone())).collect()))
+                .collect();
+            let actions = window_actions.values().flat_map(|window| window.iter().map(|(id, action)| (id.clone(), action.clone()))).collect();
             Self {
-                actions: definition.actions.iter().map(|action| (action.id.clone(), action.clone())).collect(),
-                commands: definition.commands.iter().map(|command| (command.id.clone(), command.clone())).collect(),
+                actions,
+                window_actions,
+                app_commands,
+                mode_commands,
                 controller_id: definition.controller_id.clone(),
                 interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect(),
             }
@@ -6024,8 +6090,36 @@ pub mod app {
             self.actions.get(id)
         }
 
+        fn has_window_action(&self, window_kind_id: &str, action_id: &str) -> bool {
+            self.window_actions.get(window_kind_id).is_some_and(|actions| actions.contains_key(action_id))
+        }
+
+        fn window_action(&self, window_kind_id: &str, action_id: &str) -> Option<&ActionDefinition> {
+            self.window_actions.get(window_kind_id)?.get(action_id)
+        }
+
+        fn has_mode(&self, mode_id: &str) -> bool {
+            self.mode_commands.contains_key(mode_id)
+        }
+
         fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
-            self.commands.get(id)
+            self.app_commands.get(id).or_else(|| self.mode_commands.values().find_map(|commands| commands.get(id)))
+        }
+
+        fn has_app_command(&self, id: &str) -> bool {
+            self.app_commands.contains_key(id)
+        }
+
+        fn app_command(&self, id: &str) -> Option<&CommandDefinition> {
+            self.app_commands.get(id)
+        }
+
+        fn has_mode_command(&self, mode_id: &str, id: &str) -> bool {
+            self.mode_commands.get(mode_id).is_some_and(|commands| commands.contains_key(id))
+        }
+
+        fn mode_command(&self, mode_id: &str, id: &str) -> Option<&CommandDefinition> {
+            self.mode_commands.get(mode_id)?.get(id)
         }
 
         /// 🕹️ `domain_id`'s declared `InteractionDefinition`, `None` when undeclared.
@@ -6299,6 +6393,7 @@ pub mod app {
         /// changing invalidates the cached snapshot/`HistoryView` pair.
         cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Snapshot, A::Config, HistoryView)>,
         registry: AppActionRegistry,
+        invocation_kind: Option<ActionKind>,
         /// @emoji 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
         /// truncated: undo/redo/revert push entries, they never remove any.
         command_log: Vec<CommandLogEntry>,
@@ -6419,6 +6514,7 @@ pub mod app {
                 last_emit_wire: None,
                 cache: None,
                 registry,
+                invocation_kind: None,
                 command_log: Vec::new(),
                 next_command_seq: 0,
                 log_generation: 0,
@@ -6918,12 +7014,12 @@ pub mod app {
                 // 🧾️ An app-declared action logs under its declared kind (so an `Mutation`-kind action
                 // that happened to produce zero document operations — e.g. paste with no clipboard
                 // fragment, or a pure config-op dispatch — still gets a real row, `edit_id: None`,
-                // correctly filed under "Without Operations"); a declared command (no `ActionKind` of its
-                // own) logs as `Shell`; anything unresolved (registry-less test construction, an ad-hoc
+                // correctly filed under "Without Operations"); a declared command logs under its own
+                // independently declared kind; anything unresolved (registry-less test construction, an ad-hoc
                 // verb like an import-media port id) logs as `View`.
-                let kind = match self.registry.get(verb) {
-                    Some(def) => def.kind,
-                    None if self.registry.get_command(verb).is_some() => ActionKind::Shell,
+                let kind = match self.invocation_kind.or_else(|| self.registry.get(verb).map(|definition| definition.kind)) {
+                    Some(kind) => kind,
+                    None if self.registry.get_command(verb).is_some() => self.registry.get_command(verb).expect("command checked").kind,
                     None => ActionKind::View,
                 };
                 self.record_command(verb, kind, description.clone(), None, config_edit_id, None);
@@ -6952,10 +7048,7 @@ pub mod app {
             // existing entry's `op_lines` live (see `build_history_view`), it never appends a new entry.
             if !amended_same_edit {
                 if let Some(edit_id) = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) {
-                    // 🧾️ `verb` is the app's typed-command tag or a framework command id — `CommandDefinition`
-                    // has no `ActionKind` (commands aren't View/Shell/History), and reaching here means
-                    // operations were dispatched, so `Mutation` is always correct.
-                    let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Mutation);
+                    let kind = self.invocation_kind.or_else(|| self.registry.get(verb).map(|def| def.kind)).or_else(|| self.registry.get_command(verb).map(|def| def.kind)).unwrap_or(ActionKind::Mutation);
                     // ⏪️ No memory `inverse` for an edit-linked row — the VCS edit's own `Mutation::inverse`
                     // is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
                     self.record_command(verb, kind, log_label, Some(edit_id), config_edit_id, None);
@@ -7701,31 +7794,42 @@ pub mod app {
             }
         }
 
-        /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
-        /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
-        /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
-        /// by `CommandDefinition`-driven host call sites) stays stable.
-        fn dispatch_command(&mut self, command: &str, _args: Option<&Value>, _meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            Err(Fault::from(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)")))
+        /// @emoji 🎯️ Validates manifest structural app/mode ownership, converts the addressed
+        /// invocation arguments once into the app's typed command, and enters the typed dispatch channel.
+        fn dispatch_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let command_id = invocation.address.command_id.as_str();
+            let kind = match &invocation.address.owner {
+                ManifestCommandOwnerAddress::App { app_id, .. } => {
+                    if app_id != A::APP_ID {
+                        return Err(Fault::from(format!("command '{command_id}' is not owned by app {}", A::APP_ID)));
+                    }
+                    self.registry.app_command(command_id).map(|definition| definition.kind).ok_or_else(|| Fault::from(format!("command '{command_id}' is not owned by app {}", A::APP_ID)))?
+                }
+                ManifestCommandOwnerAddress::Mode { app_id, mode_id, .. } => {
+                    if app_id != A::APP_ID || active_mode_id != Some(mode_id.as_str()) {
+                        return Err(Fault::from(format!("command '{command_id}' is not owned by active mode {mode_id} of app {}", A::APP_ID)));
+                    }
+                    self.registry.mode_command(mode_id, command_id).map(|definition| definition.kind).ok_or_else(|| Fault::from(format!("command '{command_id}' is not owned by active mode {mode_id} of app {}", A::APP_ID)))?
+                }
+                _ => return Err(Fault::from(format!("command '{command_id}' is not app- or mode-owned"))),
+            };
+            let args = Value::Object(invocation.arguments.iter().map(|(key, value)| (key.clone(), value.clone())).collect());
+            let command = A::command_from_action(command_id, Some(&args))?;
+            let previous_kind = self.invocation_kind.replace(kind);
+            let result = self.dispatch_typed_command_inner(command, meta);
+            self.invocation_kind = previous_kind;
+            result
         }
 
         /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
         /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
         /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
-        /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+        /// routed through `dispatch_action` — now FRAMEWORK-reserved verbs only.
         fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             if command_bytes.first().copied() == Some(1) {
                 return self.dispatch_typed_command(command_bytes, meta);
             }
-            let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.into_fault())?;
-            let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
-            let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
-            let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
-            if kind == "command" {
-                self.dispatch_command(&name, args.as_ref(), meta)
-            } else {
-                self.dispatch_action(&name, args.as_ref(), meta)
-            }
+            Err(plugin_sdk_fault("commands require an owner-qualified ManifestCommandInvocation or typed binary frame"))
         }
 
         /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
@@ -7770,9 +7874,9 @@ pub mod app {
             // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
             // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
             // registry-less construction, or a command whose id isn't declared, skips this check).
-            if let Some(def) = self.registry.get(&verb) {
-                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.artifact_mutations.is_empty() {
-                    return Err(Fault::from(format!("{:?}-kind command '{verb}' must not emit operations", def.kind)));
+            if let Some(kind) = self.invocation_kind.or_else(|| self.registry.get_command(&verb).map(|definition| definition.kind)) {
+                if matches!(kind, ActionKind::View | ActionKind::Shell) && !emit.artifact_mutations.is_empty() {
+                    return Err(Fault::from(format!("{kind:?}-kind command '{verb}' must not emit operations")));
                 }
             }
             self.dispatch_emit(&verb, emit, meta)
@@ -7868,10 +7972,36 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, action, result))
         }
 
-        fn handle_command(&mut self, command: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let address = &invocation.address;
+            if address.app_id != A::APP_ID {
+                return Err(plugin_sdk_fault(format!("action app owner {} does not match {}", address.app_id, A::APP_ID)));
+            }
+            if address.window_instance_id.trim().is_empty() {
+                return Err(plugin_sdk_fault("action window instance id must be non-empty"));
+            }
+            if !self.registry.has_mode(&address.mode_id) {
+                return Err(plugin_sdk_fault(format!("unknown action mode owner {}", address.mode_id)));
+            }
+            if active_mode_id != Some(address.mode_id.as_str()) {
+                return Err(plugin_sdk_fault(format!("action {} belongs to inactive mode {}", address.action_id, address.mode_id)));
+            }
+            let kind = self.registry.window_action(&address.window_kind_id, &address.action_id).map(|definition| definition.kind).ok_or_else(|| plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id)))?;
+            let mut arguments = invocation.arguments.clone();
+            arguments.insert("windowId".into(), Value::String(address.window_instance_id.clone()));
+            let args = Value::Object(arguments.into_iter().collect());
             let log_generation_before = self.log_generation;
-            let result = self.dispatch_command(command, args, meta)?;
-            Ok(self.finish_recorded(log_generation_before, command, result))
+            let previous_kind = self.invocation_kind.replace(kind);
+            let result = self.dispatch_action(&address.action_id, Some(&args), meta);
+            self.invocation_kind = previous_kind;
+            let result = result?;
+            Ok(self.finish_recorded(log_generation_before, &address.action_id, result))
+        }
+
+        fn handle_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let log_generation_before = self.log_generation;
+            let result = self.dispatch_command(invocation, active_mode_id, meta)?;
+            Ok(self.finish_recorded(log_generation_before, &invocation.address.command_id, result))
         }
 
         fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -7909,6 +8039,10 @@ pub mod app {
             };
             self.draft_store.reset(parsed.envelope, applied, redo).map_err(|error| error.into_fault())?;
             Ok(())
+        }
+
+        fn ephemeral_snapshot(&self) -> (Vec<u8>, u64, u64) {
+            (self.presence_store.local().encode_pack(), self.presence_store.generation(), self.transient_store.generation())
         }
 
         fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
@@ -8141,14 +8275,21 @@ pub mod app {
     }
     //#endregion 🔖️DocumentContract
 
+    /// 🔌️ A plugin-owned command executes at the program boundary, never through an arbitrary
+    /// focused app. The manifest invocation carries its structural owner address; the handler may return
+    /// the same host effects/events as app command dispatch without acquiring app document state.
+    pub type PluginCommandHandler = Box<dyn Fn(&ManifestCommandInvocation, &ActionMeta) -> Result<InvocationResult, Fault> + Send>;
+
     pub trait PluginProgram: Send {
         fn manifest(&self) -> PluginManifest;
         fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>>;
+        fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
     }
 
     pub struct Plugin {
         pub manifest: PluginManifest,
         apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
+        command_handlers: HashMap<String, PluginCommandHandler>,
     }
 
     impl Plugin {
@@ -8156,15 +8297,45 @@ pub mod app {
             Self {
                 manifest: PluginManifest { plugin_id: plugin_id.into(), label: label.into(), version: version.into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new() },
                 apps: HashMap::new(),
+                command_handlers: HashMap::new(),
             }
         }
 
-        /// @emoji 🎛️ Declares a plugin-scope command (applies whenever any of this plugin's apps is
-        /// focused). Panics if `command.scope != CommandScope::Plugin`.
-        pub fn plugin_command(mut self, command: CommandDefinition) -> Self {
-            assert!(command.scope == CommandScope::Plugin, "plugin {} command {} must be declared CommandScope::Plugin", self.manifest.plugin_id, command.id);
+        /// @emoji 🎛️ Declares a plugin-owned command and its program-level handler.
+        pub fn plugin_command(mut self, command: CommandDefinition, handler: PluginCommandHandler) -> Self {
+            assert!(!command.id.trim().is_empty(), "plugin {} command id must be non-empty", self.manifest.plugin_id);
+            assert!(!self.command_handlers.contains_key(&command.id), "plugin {} duplicate command id {}", self.manifest.plugin_id, command.id);
+            let mut arg_ids = HashSet::new();
+            for arg in &command.args {
+                assert!(!arg.id.trim().is_empty(), "plugin {} command {} has an empty arg id", self.manifest.plugin_id, command.id);
+                assert!(arg_ids.insert(arg.id.clone()), "plugin {} command {} declares duplicate arg id {}", self.manifest.plugin_id, command.id, arg.id);
+                if let semio_framework::ActionArgControl::Select { options } = &arg.control {
+                    assert!(!options.is_empty(), "plugin {} command {} arg {} is a Select with no options", self.manifest.plugin_id, command.id, arg.id);
+                }
+            }
+            self.command_handlers.insert(command.id.clone(), handler);
             self.manifest.commands.push(command);
             self
+        }
+
+        /// 🔌️ Dispatches only commands structurally owned by this plugin.
+        pub fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let ManifestCommandOwnerAddress::Plugin { plugin_id } = &invocation.address.owner else {
+                return Err(Fault::from("plugin command handler received a non-plugin owner"));
+            };
+            if plugin_id != &self.manifest.plugin_id {
+                return Err(Fault::from(format!("plugin command owner {plugin_id} does not match {}", self.manifest.plugin_id)));
+            }
+            let handler = self
+                .command_handlers
+                .get(&invocation.address.command_id)
+                .ok_or_else(|| Fault::from(format!("unknown plugin command: {}", invocation.address.command_id)))?;
+            let definition = self.manifest.commands.iter().find(|command| command.id == invocation.address.command_id).ok_or_else(|| Fault::from(format!("plugin command definition missing: {}", invocation.address.command_id)))?;
+            let result = handler(invocation, meta)?;
+            if matches!(definition.kind, ActionKind::View | ActionKind::Shell) && !result.mutations.is_empty() {
+                return Err(Fault::from(format!("{:?}-kind plugin command '{}' must not emit mutations", definition.kind, definition.id)));
+            }
+            Ok(result)
         }
 
         pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
@@ -8221,6 +8392,10 @@ pub mod app {
         fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
             Plugin::create_app(self, app_id)
         }
+
+        fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            Plugin::handle_plugin_command(self, invocation, meta)
+        }
     }
 
     pub use super::builder::{NeedsLabel, NeedsVersion, PluginBuilder, Ready};
@@ -8238,6 +8413,7 @@ pub mod plugin_runtime {
         kernel::{CapabilityRequirement, HostEffect, InvocationResult},
         TopicContribution, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, ViewModel,
     };
+    use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     use std::collections::HashMap;
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
@@ -8430,31 +8606,61 @@ pub mod plugin_runtime {
     }
 
     pub fn plugin_handle_action(instance_id: u32, action_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
-        let action: Value = serde_json::from_str(action_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let invocation: ManifestActionInvocation = serde_json::from_str(action_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
-        let action_name = action.get("action").and_then(|value| value.as_str()).unwrap_or("");
-        let args = action.get("args").cloned();
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
         let meta = ActionMeta { actor, instance_id };
+        let owner_matches = PLUGIN.with(|slot| slot.borrow().as_ref().is_some_and(|program| program.manifest.plugin_id == invocation.address.plugin_id));
+        if !owner_matches {
+            return Err(plugin_internal_fault(format!("action plugin owner {} does not match the active program", invocation.address.plugin_id)));
+        }
+        let view = context
+            .get("viewState")
+            .cloned()
+            .and_then(|value| serde_json::from_value::<ViewModel>(value).ok())
+            .ok_or_else(|| plugin_internal_fault("action context is missing a valid viewState"))?;
+        let addressed_window = view.window_instances.iter().find(|window| window.id == invocation.address.window_instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown action window instance {}", invocation.address.window_instance_id)))?;
+        if addressed_window.window_kind_id != invocation.address.window_kind_id {
+            return Err(plugin_internal_fault(format!("action window instance {} has kind {}, not {}", addressed_window.id, addressed_window.window_kind_id, invocation.address.window_kind_id)));
+        }
+        let active_mode_id = view.active_mode_id;
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
-            instance.app.handle_action(action_name, args.as_ref(), &meta)
+            instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta)
         })
     }
 
-    /// @emoji 🎛️ Dispatches a scoped command (os/plugin/app/mode) through the same instance/context
-    /// parsing as `plugin_handle_action` — mirrors its shape exactly.
+    /// @emoji 🎛️ Dispatches a structurally addressed command to its actual owner. Plugin commands
+    /// execute on the program registry; app/mode commands execute on the addressed app instance, with
+    /// active-mode gating for mode ownership. OS commands never enter a plugin runtime.
     pub fn plugin_handle_command(instance_id: u32, command_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
-        let command: Value = serde_json::from_str(command_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let invocation: ManifestCommandInvocation = serde_json::from_str(command_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
-        let command_name = command.get("command").and_then(|value| value.as_str()).unwrap_or("");
-        let args = command.get("args").cloned();
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
         let meta = ActionMeta { actor, instance_id };
-        with_instances_mut(|list| {
-            let instance = find_instance(list, instance_id)?;
-            instance.app.handle_command(command_name, args.as_ref(), &meta)
-        })
+        match &invocation.address.owner {
+            ManifestCommandOwnerAddress::Os => Err(plugin_internal_fault("os commands must be dispatched by the os host")),
+            ManifestCommandOwnerAddress::Plugin { .. } => PLUGIN.with(|slot| {
+                let program = slot.borrow();
+                let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
+                program.handle_plugin_command(&invocation, &meta)
+            }),
+            ManifestCommandOwnerAddress::App { plugin_id, .. } | ManifestCommandOwnerAddress::Mode { plugin_id, .. } => {
+                let owner_matches = PLUGIN.with(|slot| slot.borrow().as_ref().is_some_and(|program| program.manifest.plugin_id == *plugin_id));
+                if !owner_matches {
+                    return Err(plugin_internal_fault(format!("command plugin owner {plugin_id} does not match the active program")));
+                }
+                let active_mode_id = context
+                    .get("viewState")
+                    .cloned()
+                    .and_then(|value| serde_json::from_value::<ViewModel>(value).ok())
+                    .and_then(|view| view.active_mode_id);
+                with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    instance.app.handle_command(&invocation, active_mode_id.as_deref(), &meta)
+                })
+            }
+        }
     }
 
     /// @emoji 📥️ Ingests binary-encoded remote `MutationEnvelope`s (`protocol::decode_envelopes`) into
@@ -8908,12 +9114,48 @@ pub mod plugin_runtime {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }
                 }
-                protocol::AppCommand::Command { seq, command, view_state: _view_state } => {
+                protocol::AppCommand::Command { seq, command, view_state } => {
                     let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
-                    let dispatched = with_instances_mut(|list| {
-                        let instance = find_instance(list, instance_id)?;
-                        instance.app.handle_command_frame(&command, &meta)
-                    });
+                    let dispatched = match decode_wire_serialized::<ManifestActionInvocation>(&command) {
+                        Ok(invocation) => {
+                            let active_mode_id = decode_view_state(&view_state).active_mode_id;
+                            let owner_matches = PLUGIN.with(|slot| slot.borrow().as_ref().is_some_and(|program| program.manifest.plugin_id == invocation.address.plugin_id));
+                            if !owner_matches {
+                                Err(plugin_internal_fault(format!("action plugin owner {} does not match the active program", invocation.address.plugin_id)))
+                            } else {
+                                with_instances_mut(|list| {
+                                    let instance = find_instance(list, instance_id)?;
+                                    instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta)
+                                })
+                            }
+                        }
+                        Err(_) => match decode_wire_serialized::<ManifestCommandInvocation>(&command) {
+                        Ok(invocation) => {
+                            let active_mode_id = decode_view_state(&view_state).active_mode_id;
+                            match &invocation.address.owner {
+                                ManifestCommandOwnerAddress::Os => Err(plugin_internal_fault("os commands must be dispatched by the os host")),
+                                ManifestCommandOwnerAddress::Plugin { .. } => PLUGIN.with(|slot| {
+                                    let program = slot.borrow();
+                                    program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?.handle_plugin_command(&invocation, &meta)
+                                }),
+                                ManifestCommandOwnerAddress::App { plugin_id, .. } | ManifestCommandOwnerAddress::Mode { plugin_id, .. } => {
+                                    let owner_matches = PLUGIN.with(|slot| slot.borrow().as_ref().is_some_and(|program| program.manifest.plugin_id == *plugin_id));
+                                    if !owner_matches {
+                                        Err(plugin_internal_fault(format!("command plugin owner {plugin_id} does not match the active program")))
+                                    } else {
+                                        with_instances_mut(|list| {
+                                            let instance = find_instance(list, instance_id)?;
+                                            instance.app.handle_command(&invocation, active_mode_id.as_deref(), &meta)
+                                        })
+                                    }
+                                }
+                            }
+                        }
+                        Err(_) => with_instances_mut(|list| {
+                            let instance = find_instance(list, instance_id)?;
+                            instance.app.handle_command_frame(&command, &meta)
+                        }),
+                    }};
                     match dispatched {
                         Ok(result) => {
                             mutated = true;
@@ -9175,6 +9417,14 @@ pub mod plugin_runtime {
             }
         }
 
+        let ephemeral = with_instances_mut(|list| {
+            let instance = find_instance(list, instance_id)?;
+            Ok(instance.app.ephemeral_snapshot())
+        });
+        if let Ok((presence, presence_generation, transient_generation)) = ephemeral {
+            frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation });
+        }
+
         Ok(frames.iter().map(protocol::encode_app_frame).collect())
     }
     //#endregion 🔖️Exchange
@@ -9418,12 +9668,12 @@ pub mod plugin_runtime {
         use crate::app::{ui_history_panel, ActionMeta, App, AppActionRegistry, ChildEmit, CommandView, ConfigView, ArtifactApp, ArtifactView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, VcsArtifactApp};
         use semio_framework::kernel::ArtifactHandle;
         use crate::app::{ArtifactSerializer, ArtifactDeserializer, serializer_entry_of, deserializer_entry_of, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload};
-        use store::EngineHandles;
+        use store::{ArtifactPack, EngineHandles};
         use semio_framework::Fault;
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
         use protocol::{Mutation, MutationDiff};
         use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
-        use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+        use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
         use serde::{Deserialize, Serialize};
         use serde_json::json;
         use store::{Backbone, BackboneMessage, MemoryBackbone};
@@ -9882,6 +10132,19 @@ pub mod plugin_runtime {
                 }
             }
 
+            fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+                match action {
+                    "incrementViaCommand" | "mode.increment" => Ok(TestCommand::IncrementViaCommand),
+                    "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand {
+                        value: args.and_then(|value| value.get("value")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string(),
+                    }),
+                    "targetWindow" => Ok(TestCommand::SetLabelViaCommand {
+                        value: args.and_then(|value| value.get("windowId")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string(),
+                    }),
+                    _ => Err(Fault::from(format!("unknown test command: {action}"))),
+                }
+            }
+
             fn handle(command: &TestCommand, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &crate::app::InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
                 let _ = Self::command_id(command);
                 match command {
@@ -10009,10 +10272,12 @@ pub mod plugin_runtime {
                 // 🧪️ `Mutation`-kind by declaration, but `TestApp` emits zero operations for it — the
                 // "declared Mutation action that happened to produce nothing" fixture.
                 .mutation("noopMutation", LocalizedLabel::data("Noop Mutation"))
+                .mutation("targetWindow", LocalizedLabel::data("Target Window"))
                 .view_action("badView", LocalizedLabel::data("Bad View"))
                 .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
-                .app_command("incrementViaCommand", LocalizedLabel::data("Increment"), "counter")
-                .app_command("setLabelViaCommand", LocalizedLabel::data("Set Label"), "counter"),
+                .app_command("incrementViaCommand", LocalizedLabel::data("Increment"), "counter", ActionKind::Mutation)
+                .app_command("setLabelViaCommand", LocalizedLabel::data("Set Label"), "counter", ActionKind::Mutation)
+                .mode_command("edit", CommandDefinition::new_catalog("mode.increment", LocalizedLabel::data("Mode Increment"), "counter", ActionKind::Mutation)),
             );
             AppActionRegistry::from_definition(&app.definition)
         }
@@ -10114,6 +10379,7 @@ pub mod plugin_runtime {
 
             assert_eq!(app.presence_store.generation(), 1, "presence lane never received the command's emission");
             assert_eq!(app.transient_store.generation(), 1, "transient lane never received the command's emission");
+            assert_eq!(app.ephemeral_snapshot(), (NoPresence::default().encode_pack(), 1, 1), "object-safe channel snapshot must carry the typed presence pack and both generations");
 
             // 🧾️ Neither ephemeral lane may appear in history: they have no edits, no undo, and no
             // command-log rows of their own — the document's single edit is the only thing recorded.
@@ -10448,7 +10714,7 @@ pub mod plugin_runtime {
         fn copy_cut_paste_are_registered_as_clipboard_kind_actions() {
             let definition = synthetic_play_app().definition;
             for id in ["copy", "cut", "paste"] {
-                let action = definition.actions.iter().find(|a| a.id == id).unwrap_or_else(|| panic!("{id} must be auto-injected into every app's manifest"));
+                let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == id).unwrap_or_else(|| panic!("{id} must be auto-injected into every app's manifest"));
                 assert_eq!(action.kind, semio_framework::ActionKind::Clipboard);
             }
         }
@@ -11011,12 +11277,85 @@ pub mod plugin_runtime {
         }
 
         #[test]
-        fn unknown_string_command_is_a_hard_error() {
-            // B1: `PluginApp::handle_command` (string-keyed) is FRAMEWORK-reserved only now — there are no
-            // framework-reserved commands, so it always errors, pointing callers at the typed channel.
+        fn manifest_command_dispatch_validates_structural_app_ownership() {
+            use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
             let mut app = contract_app_under_test();
-            let error = app.handle_command("nope", None, &meta()).expect_err("the string command channel always rejects now");
-            assert!(error.message.contains("typed command channel"), "unexpected error: {}", error.message);
+            let valid = CommandInvocation {
+                address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: "synthetic-play".into() }, command_id: "incrementViaCommand".into() },
+                arguments: Default::default(),
+            };
+            app.handle_command(&valid, Some("edit"), &meta()).expect("app-owned command");
+            assert_eq!(app.test_snapshot().count, 1);
+            let unknown = CommandInvocation { address: CommandAddress { command_id: "nope".into(), ..valid.address }, arguments: Default::default() };
+            let error = app.handle_command(&unknown, Some("edit"), &meta()).expect_err("undeclared app command");
+            assert!(error.message.contains("not owned by app"), "unexpected error: {}", error.message);
+        }
+
+        #[test]
+        fn manifest_mode_command_requires_the_active_structural_owner() {
+            use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
+            let invocation = CommandInvocation {
+                address: CommandAddress {
+                    owner: CommandOwnerAddress::Mode { plugin_id: "test".into(), app_id: "synthetic-play".into(), mode_id: "edit".into() },
+                    command_id: "mode.increment".into(),
+                },
+                arguments: Default::default(),
+            };
+            let mut app = contract_app_under_test();
+            app.handle_command(&invocation, Some("edit"), &meta()).expect("active mode-owned command");
+            assert_eq!(app.test_snapshot().count, 1);
+            let error = app.handle_command(&invocation, None, &meta()).expect_err("inactive mode command");
+            assert!(error.message.contains("not owned by active mode edit"), "unexpected error: {}", error.message);
+        }
+
+        #[test]
+        fn addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler() {
+            use semio_framework::manifest::{ActionAddress, ActionInvocation};
+            let invocation = ActionInvocation {
+                address: ActionAddress {
+                    plugin_id: "test".into(),
+                    app_id: "synthetic-play".into(),
+                    mode_id: "edit".into(),
+                    window_kind_id: "main".into(),
+                    window_instance_id: "main-instance-2".into(),
+                    action_id: "targetWindow".into(),
+                },
+                arguments: Default::default(),
+            };
+            let mut app = contract_app_under_test();
+            app.handle_action_invocation(&invocation, Some("edit"), &meta()).expect("addressed window action");
+            assert_eq!(app.test_snapshot().label, "main-instance-2");
+        }
+
+        #[test]
+        fn plugin_command_handler_is_program_owned_across_app_instances() {
+            use semio_framework::kernel::{InvocationId, InvocationResult, UndoGroup};
+            use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
+            use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+            let calls = Arc::new(AtomicUsize::new(0));
+            let handler_calls = calls.clone();
+            let plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
+                CommandDefinition::new_catalog("refresh", LocalizedLabel::data("Refresh"), "plugin", ActionKind::Shell),
+                Box::new(move |_, meta| {
+                    handler_calls.fetch_add(meta.instance_id as usize, Ordering::SeqCst);
+                    Ok(InvocationResult {
+                        output: dsl::DslValue::Null,
+                        mutations: Vec::new(),
+                        inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
+                        diagnostics: Vec::new(),
+                        requested_effects: Vec::new(),
+                        events: Vec::new(),
+                        ui_scope: UiDirtyScope::None,
+                    })
+                }),
+            );
+            let invocation = CommandInvocation {
+                address: CommandAddress { owner: CommandOwnerAddress::Plugin { plugin_id: "fixture".into() }, command_id: "refresh".into() },
+                arguments: Default::default(),
+            };
+            plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "a".into(), instance_id: 1 }).expect("first app instance");
+            plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "b".into(), instance_id: 2 }).expect("second app instance");
+            assert_eq!(calls.load(Ordering::SeqCst), 3);
         }
 
         #[test]
@@ -11685,9 +12024,12 @@ pub mod world3d_host {
     }
 
     pub fn world3d_scene(camera_json: String, meshes_json: String, instances_json: String, selection_json: String, sun: &WorldSunConfig) -> World3dScene {
-        world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, None, None, None, None, None, None, None, None, None, Some(world3d_environment_json(sun)), None, None, None, None, None)
+        world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, None, None, None, None, None, None, None, None, None, Some(world3d_environment_json(sun)), None, None, None, None, None, None, None)
     }
 
+    /// 🪟️ `domain_id`/`domain_granularity_id`: see `World3dScene`'s own doc comments — pass the app's
+    /// bound `InteractionRef` id (and its plain-pick granularity id) for this window kind, or `None`
+    /// to leave this window on the OS's shared `world` board domain.
     pub fn world3d_scene_extended(
         camera_json: String,
         meshes_json: String,
@@ -11708,6 +12050,8 @@ pub mod world3d_host {
         terrain_json: Option<String>,
         points_json: Option<String>,
         status_json: Option<String>,
+        domain_id: Option<String>,
+        domain_granularity_id: Option<String>,
     ) -> World3dScene {
         World3dScene {
             camera_json,
@@ -11729,6 +12073,8 @@ pub mod world3d_host {
             terrain_json,
             points_json,
             status_json,
+            domain_id,
+            domain_granularity_id,
         }
     }
 

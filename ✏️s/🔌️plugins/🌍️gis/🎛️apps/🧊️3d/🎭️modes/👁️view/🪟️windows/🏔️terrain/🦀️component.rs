@@ -93,6 +93,11 @@ pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
         None,
         None,
         None,
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): this window binds the "features"
+        // domain (see `create_gis3d_app`'s `.window_kind_interactions`) — a plain pick/hover on this
+        // surface targets its single `"pin"` granularity, not the OS's own bare `world` board domain.
+        Some("features".into()),
+        Some("pin".into()),
     );
     scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
     build_world_3d_scene(GIS3D_PLAY_SURFACE, GIS3D_PLAY_APP_ID, scene)

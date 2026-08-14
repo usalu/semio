@@ -10,7 +10,7 @@ use crate::apps::puzzle5d::config::{Puzzle5dCamera3d, Puzzle5dRuntime};
 use crate::apps::puzzle5d::modes::edit;
 use crate::apps::puzzle5d::modes::edit::options as mode_options;
 use crate::apps::puzzle5d::modes::edit::windows::board2d;
-use crate::apps::puzzle5d::modes::edit::windows::world3d::{actions, options, utilities};
+use crate::apps::puzzle5d::modes::edit::windows::world3d::{options, utilities};
 use crate::apps::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 use crate::apps::puzzle5d::{
     collect_mesh_urls, gumball_target_world, puzzle5d_brush_target_grip, puzzle5d_grip_full_id, puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, part_scale_json, resolve_grip_world_position, resolve_part_mesh_url,
@@ -43,13 +43,7 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
         surface_kind: SurfaceKind::World3d,
         icon_id: "puzzle5d-3d".into(),
         options: WindowOptions { measures: window_measures(envelope, precompute, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
-        actions: vec![
-            actions::translate_selection::reference(),
-            actions::rotate_selection::reference(),
-            actions::scale_selection::reference(),
-            actions::world_relocate::reference(),
-            actions::set_camera::reference(),
-        ],
+        actions: Vec::new(),
         utilities: vec![
             utilities::transform::MOVE_UTILITY_ID.into(),
             utilities::transform::ROTATE_UTILITY_ID.into(),
@@ -213,6 +207,8 @@ pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession) 
             None,
             Some(world3d_chunking_json(256.0, 8000.0)),
             Some(world3d_environment_json(&envelope.runtime.sun)),
+            None,
+            None,
             None,
             None,
             None,

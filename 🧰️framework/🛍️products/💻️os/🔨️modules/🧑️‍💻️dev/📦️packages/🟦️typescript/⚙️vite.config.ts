@@ -16,7 +16,7 @@ const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 const pluginModulesDir = path.join(playDir, "🔌️plugin-modules");
 const installedExtensionsDir = defaultExtensionInstallRoot(repoRoot);
-const rendererModulesDir = path.join(playDir, "📺️renderer-modules");
+const rendererModulesDir = path.join(repoRoot, ".🦑️repo/⚡️cache/📺️renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
 const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;

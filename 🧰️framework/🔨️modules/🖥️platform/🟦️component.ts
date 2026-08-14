@@ -16,6 +16,7 @@ import {
   type UiTreeSectionNode,
   type CanvasPickTarget,
   type CanvasHoverFocus,
+  type NamedLayout,
   type WindowLayout,
   UI_INSPECTOR_MIXED_PLACEHOLDER,
 } from "../🛂️manifest/🟦️component.ts";
@@ -214,18 +215,83 @@ export interface StoragePort {
   remove(key: string): void;
 }
 
-function namedLayoutStorageKey(appId: string): string {
-  return `compose.display.layouts.${appId}`;
+/** @emoji 🎚️ The single persisted local-only OS shell configuration document. The four shell
+ * projections share this schema and storage key, so persistence has one authority rather than
+ * independent key-value stores that can drift across shell instances. */
+export interface OsShellConfigSnapshot {
+  readonly version: 1;
+  readonly preferences: Readonly<Record<string, string>>;
+  readonly namedLayouts: Readonly<Record<string, readonly NamedLayout[]>>;
+  readonly dockLayouts: {
+    readonly os?: DockSkeleton;
+    readonly apps: Readonly<Record<string, DockSkeleton>>;
+  };
+  readonly dockUi: {
+    readonly os?: DockUiState;
+    readonly apps: Readonly<Record<string, DockUiState>>;
+  };
+  readonly windowPanes: {
+    readonly os?: WindowPaneUiState;
+    readonly apps: Readonly<Record<string, WindowPaneUiState>>;
+  };
+}
+
+const OS_SHELL_CONFIG_STORAGE_KEY = "semio.os.config";
+
+function emptyOsShellConfig(): OsShellConfigSnapshot {
+  return { version: 1, preferences: {}, namedLayouts: {}, dockLayouts: { apps: {} }, dockUi: { apps: {} }, windowPanes: { apps: {} } };
+}
+
+/** @emoji 🎚️ Typed config-lane adapter over the host's storage port. Writes always re-read the
+ * latest complete document before applying a projection update, preserving sibling projections
+ * when several store views share a browser origin. */
+export class OsShellConfig extends Store<OsShellConfigSnapshot> {
+  constructor(private readonly storage: StoragePort) {
+    super();
+  }
+
+  getSnapshot(): OsShellConfigSnapshot {
+    const raw = this.storage.get(OS_SHELL_CONFIG_STORAGE_KEY);
+    if (!raw) return emptyOsShellConfig();
+    try {
+      const parsed = JSON.parse(raw) as Partial<OsShellConfigSnapshot>;
+      if (parsed.version !== 1 || !parsed.preferences || !parsed.namedLayouts || !parsed.dockLayouts?.apps || !parsed.dockUi?.apps || !parsed.windowPanes?.apps) return emptyOsShellConfig();
+      return parsed as OsShellConfigSnapshot;
+    } catch {
+      return emptyOsShellConfig();
+    }
+  }
+
+  update(update: (current: OsShellConfigSnapshot) => OsShellConfigSnapshot): void {
+    const next = update(this.getSnapshot());
+    this.storage.set(OS_SHELL_CONFIG_STORAGE_KEY, JSON.stringify(next));
+    this.notify();
+  }
+
+  getPreference(key: string): string | undefined {
+    return this.getSnapshot().preferences[key];
+  }
+
+  setPreference(key: string, value: string): void {
+    this.update((current) => ({ ...current, preferences: { ...current.preferences, [key]: value } }));
+  }
+
+  reset(): void {
+    this.storage.remove(OS_SHELL_CONFIG_STORAGE_KEY);
+    this.notify();
+  }
 }
 
 export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
   private layouts: NamedLayout[] = [];
+  private readonly config: OsShellConfig;
 
   constructor(
     private readonly appId: string,
-    private readonly storage: StoragePort,
+    storage: StoragePort,
   ) {
     super();
+    this.config = new OsShellConfig(storage);
     this.layouts = this.readPersisted();
   }
 
@@ -252,22 +318,16 @@ export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
   }
 
   private readPersisted(): NamedLayout[] {
-    const raw = this.storage.get(namedLayoutStorageKey(this.appId));
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter(
-        (entry): entry is NamedLayout =>
-          Boolean(entry) && typeof entry === "object" && typeof (entry as NamedLayout).id === "string" && typeof (entry as NamedLayout).label === "string" && (entry as NamedLayout).origin === "user" && Boolean((entry as NamedLayout).layout),
-      );
-    } catch {
-      return [];
-    }
+    const parsed = this.config.getSnapshot().namedLayouts[this.appId];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (entry): entry is NamedLayout =>
+        Boolean(entry) && typeof entry === "object" && typeof entry.id === "string" && typeof entry.label === "string" && entry.origin === "user" && Boolean(entry.layout),
+    );
   }
 
   private persist(): void {
-    this.storage.set(namedLayoutStorageKey(this.appId), JSON.stringify(this.layouts));
+    this.config.update((current) => ({ ...current, namedLayouts: { ...current.namedLayouts, [this.appId]: this.layouts } }));
   }
 }
 
@@ -288,63 +348,60 @@ export interface DockSkeleton {
   anchors: Record<PersistedAnchor, readonly DockTabSkeleton[]>;
 }
 
-function dockOsStorageKey(): string {
-  return "semio.os.dock";
-}
-
-function dockAppStorageKey(appId: string): string {
-  return `semio.os.dock.${appId}`;
-}
-
-/** 🧪️ Defensive read: corrupt or foreign JSON at `key` resolves to `null` rather than throwing. */
-function readDockSkeleton(storage: StoragePort, key: string): DockSkeleton | null {
-  const raw = storage.get(key);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || (parsed as DockSkeleton).version !== 3 || !(parsed as DockSkeleton).anchors || typeof (parsed as DockSkeleton).anchors !== "object") return null;
-    return parsed as DockSkeleton;
-  } catch {
-    return null;
-  }
+function validDockSkeleton(value: unknown): value is DockSkeleton {
+  return Boolean(value) && typeof value === "object" && (value as DockSkeleton).version === 3 && Boolean((value as DockSkeleton).anchors) && typeof (value as DockSkeleton).anchors === "object";
 }
 
 /** 🐳️ Persists the dock panel arrangement across an "os" layer (global default across all apps) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
 export class DockLayoutStore extends Store<DockSkeleton | null> {
+  private readonly config: OsShellConfig;
+
   constructor(
-    private readonly storage: StoragePort,
+    storage: StoragePort,
     private readonly appId?: string,
   ) {
     super();
+    this.config = new OsShellConfig(storage);
   }
 
   getSnapshot(): DockSkeleton | null {
+    const layouts = this.config.getSnapshot().dockLayouts;
     if (this.appId) {
-      const app = readDockSkeleton(this.storage, dockAppStorageKey(this.appId));
-      if (app) return app;
+      const app = layouts.apps[this.appId];
+      if (validDockSkeleton(app)) return app;
     }
-    return readDockSkeleton(this.storage, dockOsStorageKey());
+    return validDockSkeleton(layouts.os) ? layouts.os : null;
   }
 
   save(skeleton: DockSkeleton | null): void {
-    this.writeOrRemove(this.appId ? dockAppStorageKey(this.appId) : dockOsStorageKey(), skeleton);
+    this.updateLayer(this.appId, skeleton);
     this.notify();
   }
 
   saveOs(skeleton: DockSkeleton | null): void {
-    this.writeOrRemove(dockOsStorageKey(), skeleton);
+    this.updateLayer(undefined, skeleton);
     this.notify();
   }
 
   reset(): void {
-    this.storage.remove(dockOsStorageKey());
-    if (this.appId) this.storage.remove(dockAppStorageKey(this.appId));
+    this.config.update((current) => {
+      const apps = { ...current.dockLayouts.apps };
+      if (this.appId) delete apps[this.appId];
+      return { ...current, dockLayouts: { apps } };
+    });
     this.notify();
   }
 
-  private writeOrRemove(key: string, skeleton: DockSkeleton | null): void {
-    if (skeleton === null) this.storage.remove(key);
-    else this.storage.set(key, JSON.stringify(skeleton));
+  private updateLayer(appId: string | undefined, skeleton: DockSkeleton | null): void {
+    this.config.update((current) => {
+      const apps = { ...current.dockLayouts.apps };
+      if (appId) {
+        if (skeleton) apps[appId] = skeleton;
+        else delete apps[appId];
+        return { ...current, dockLayouts: { ...current.dockLayouts, apps } };
+      }
+      return { ...current, dockLayouts: skeleton ? { ...current.dockLayouts, os: skeleton } : { apps } };
+    });
   }
 }
 //#endregion DockLayoutStore
@@ -365,63 +422,60 @@ export interface DockUiState {
   treeOpen?: Readonly<Record<string, boolean>>;
 }
 
-function dockUiOsStorageKey(): string {
-  return "semio.os.dockUi";
-}
-
-function dockUiAppStorageKey(appId: string): string {
-  return `semio.os.dockUi.${appId}`;
-}
-
-/** 🧪️ Defensive read: corrupt or foreign JSON at `key` resolves to `null` rather than throwing. */
-function readDockUiState(storage: StoragePort, key: string): DockUiState | null {
-  const raw = storage.get(key);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || (parsed as DockUiState).version !== 3 || !(parsed as DockUiState).anchors || typeof (parsed as DockUiState).anchors !== "object") return null;
-    return parsed as DockUiState;
-  } catch {
-    return null;
-  }
+function validDockUiState(value: unknown): value is DockUiState {
+  return Boolean(value) && typeof value === "object" && (value as DockUiState).version === 3 && Boolean((value as DockUiState).anchors) && typeof (value as DockUiState).anchors === "object";
 }
 
 /** 🌱️ Persists panel visibility/size/path, drill-down memory, and tree expansion across an "os" layer (global default) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
 export class DockUiStateStore extends Store<DockUiState | null> {
+  private readonly config: OsShellConfig;
+
   constructor(
-    private readonly storage: StoragePort,
+    storage: StoragePort,
     private readonly appId?: string,
   ) {
     super();
+    this.config = new OsShellConfig(storage);
   }
 
   getSnapshot(): DockUiState | null {
+    const dockUi = this.config.getSnapshot().dockUi;
     if (this.appId) {
-      const app = readDockUiState(this.storage, dockUiAppStorageKey(this.appId));
-      if (app) return app;
+      const app = dockUi.apps[this.appId];
+      if (validDockUiState(app)) return app;
     }
-    return readDockUiState(this.storage, dockUiOsStorageKey());
+    return validDockUiState(dockUi.os) ? dockUi.os : null;
   }
 
   save(state: DockUiState | null): void {
-    this.writeOrRemove(this.appId ? dockUiAppStorageKey(this.appId) : dockUiOsStorageKey(), state);
+    this.updateLayer(this.appId, state);
     this.notify();
   }
 
   saveOs(state: DockUiState | null): void {
-    this.writeOrRemove(dockUiOsStorageKey(), state);
+    this.updateLayer(undefined, state);
     this.notify();
   }
 
   reset(): void {
-    this.storage.remove(dockUiOsStorageKey());
-    if (this.appId) this.storage.remove(dockUiAppStorageKey(this.appId));
+    this.config.update((current) => {
+      const apps = { ...current.dockUi.apps };
+      if (this.appId) delete apps[this.appId];
+      return { ...current, dockUi: { apps } };
+    });
     this.notify();
   }
 
-  private writeOrRemove(key: string, state: DockUiState | null): void {
-    if (state === null) this.storage.remove(key);
-    else this.storage.set(key, JSON.stringify(state));
+  private updateLayer(appId: string | undefined, state: DockUiState | null): void {
+    this.config.update((current) => {
+      const apps = { ...current.dockUi.apps };
+      if (appId) {
+        if (state) apps[appId] = state;
+        else delete apps[appId];
+        return { ...current, dockUi: { ...current.dockUi, apps } };
+      }
+      return { ...current, dockUi: state ? { ...current.dockUi, os: state } : { apps } };
+    });
   }
 }
 //#endregion DockUiStateStore
@@ -440,63 +494,60 @@ export interface WindowPaneUiState {
   windows: Record<string, Record<string, WindowPaneState>>;
 }
 
-function windowPaneUiOsStorageKey(): string {
-  return "semio.os.paneUi";
-}
-
-function windowPaneUiAppStorageKey(appId: string): string {
-  return `semio.os.paneUi.${appId}`;
-}
-
-/** 🧪️ Defensive read: corrupt or foreign JSON at `key` resolves to `null` rather than throwing. */
-function readWindowPaneUiState(storage: StoragePort, key: string): WindowPaneUiState | null {
-  const raw = storage.get(key);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || (parsed as WindowPaneUiState).version !== 1 || !(parsed as WindowPaneUiState).windows || typeof (parsed as WindowPaneUiState).windows !== "object") return null;
-    return parsed as WindowPaneUiState;
-  } catch {
-    return null;
-  }
+function validWindowPaneUiState(value: unknown): value is WindowPaneUiState {
+  return Boolean(value) && typeof value === "object" && (value as WindowPaneUiState).version === 1 && Boolean((value as WindowPaneUiState).windows) && typeof (value as WindowPaneUiState).windows === "object";
 }
 
 /** 🪟️ Persists window-pane anchor/fold/size across an "os" layer (global default across all apps) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
 export class WindowPaneStateStore extends Store<WindowPaneUiState | null> {
+  private readonly config: OsShellConfig;
+
   constructor(
-    private readonly storage: StoragePort,
+    storage: StoragePort,
     private readonly appId?: string,
   ) {
     super();
+    this.config = new OsShellConfig(storage);
   }
 
   getSnapshot(): WindowPaneUiState | null {
+    const panes = this.config.getSnapshot().windowPanes;
     if (this.appId) {
-      const app = readWindowPaneUiState(this.storage, windowPaneUiAppStorageKey(this.appId));
-      if (app) return app;
+      const app = panes.apps[this.appId];
+      if (validWindowPaneUiState(app)) return app;
     }
-    return readWindowPaneUiState(this.storage, windowPaneUiOsStorageKey());
+    return validWindowPaneUiState(panes.os) ? panes.os : null;
   }
 
   save(state: WindowPaneUiState | null): void {
-    this.writeOrRemove(this.appId ? windowPaneUiAppStorageKey(this.appId) : windowPaneUiOsStorageKey(), state);
+    this.updateLayer(this.appId, state);
     this.notify();
   }
 
   saveOs(state: WindowPaneUiState | null): void {
-    this.writeOrRemove(windowPaneUiOsStorageKey(), state);
+    this.updateLayer(undefined, state);
     this.notify();
   }
 
   reset(): void {
-    this.storage.remove(windowPaneUiOsStorageKey());
-    if (this.appId) this.storage.remove(windowPaneUiAppStorageKey(this.appId));
+    this.config.update((current) => {
+      const apps = { ...current.windowPanes.apps };
+      if (this.appId) delete apps[this.appId];
+      return { ...current, windowPanes: { apps } };
+    });
     this.notify();
   }
 
-  private writeOrRemove(key: string, state: WindowPaneUiState | null): void {
-    if (state === null) this.storage.remove(key);
-    else this.storage.set(key, JSON.stringify(state));
+  private updateLayer(appId: string | undefined, state: WindowPaneUiState | null): void {
+    this.config.update((current) => {
+      const apps = { ...current.windowPanes.apps };
+      if (appId) {
+        if (state) apps[appId] = state;
+        else delete apps[appId];
+        return { ...current, windowPanes: { ...current.windowPanes, apps } };
+      }
+      return { ...current, windowPanes: state ? { ...current.windowPanes, os: state } : { apps } };
+    });
   }
 }
 //#endregion WindowPaneStateStore

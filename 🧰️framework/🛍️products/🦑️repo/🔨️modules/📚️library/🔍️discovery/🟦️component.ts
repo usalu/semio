@@ -162,8 +162,10 @@ export interface Taxonomy {
   readonly forbiddenExampleSlugs: readonly string[];
   readonly forbiddenExamplePluralDirs: readonly string[];
   readonly appChildDirs: readonly string[];
-  /** 🎭️ STRUCTURAL set: every directory allowed directly below a mode — its windows plus its three own state lanes. */
+  /** 🎭️ STRUCTURAL set: every directory allowed directly below a mode. */
   readonly modeChildDirs: readonly string[];
+  /** 🎭️ COMPLETENESS set: mode children that must exist even when empty. */
+  readonly modeRequiredChildDirs: readonly string[];
   readonly semioDataLeafPrefix: string;
   readonly semioFileExtension: string;
   /** 📖️ Normative `.semio` spec filename per constitutional artifact facet (`artifactComponentDirs` keys only). */
@@ -185,8 +187,12 @@ export interface Taxonomy {
   readonly storyLeafFilename: string;
   readonly libWiringLineBudget: number;
   readonly forbiddenPathSegments: readonly string[];
-  /** 🔌️ Required facet folders directly under each `✏️s/🔌️plugins/<plugin>/` root. */
+  /** 🔌️ Structural facet folders allowed directly under each plugin root. */
   readonly pluginChildDirs: readonly string[];
+  readonly pluginRequiredChildDirs: readonly string[];
+  /** 💻️ Structural facet folders owned directly by the OS product. */
+  readonly osChildDirs: readonly string[];
+  readonly osRequiredChildDirs: readonly string[];
   /** 🚫️ Emoji-stripped directory/file stems banned repo-wide (e.g. `core`, `shared`). */
   readonly bannedNameStems: readonly string[];
   /** ✅️ Taxonomy directories must start with an emoji prefix that includes U+FE0F. */
@@ -198,6 +204,10 @@ export interface Taxonomy {
   readonly packageMaturityStates: readonly PackageMaturity[];
   /** 🧭️ How migration is detected — structurally, never from a hand-maintained package list. */
   readonly migratedMarker: "packages-dir-exists";
+  /** 🔌️ Area roots whose package owners contribute plugins. */
+  readonly pluginAreas: readonly string[];
+  /** 🌳️ Independent graduation state of each plugin area's taxonomy-tree contract. */
+  readonly pluginTaxonomyStates: Readonly<Record<string, AreaState>>;
   readonly areas: Readonly<Record<string, AreaState>>;
 }
 
@@ -337,6 +347,15 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   const areaStates = new Set<string>(taxonomy.areaStates);
   for (const [area, state] of Object.entries(taxonomy.areas)) {
     if (!areaStates.has(state)) problems.push(`areas["${area}"] = "${state}" is not one of areaStates (${taxonomy.areaStates.join(", ")}).`);
+  }
+  for (const area of taxonomy.pluginAreas) {
+    if (!(area in taxonomy.areas)) problems.push(`pluginAreas member "${area}" is missing from areas.`);
+    const state = taxonomy.pluginTaxonomyStates[area];
+    if (!state) problems.push(`pluginTaxonomyStates is missing plugin area "${area}".`);
+    else if (!areaStates.has(state)) problems.push(`pluginTaxonomyStates["${area}"] = "${state}" is not one of areaStates (${taxonomy.areaStates.join(", ")}).`);
+  }
+  for (const area of Object.keys(taxonomy.pluginTaxonomyStates)) {
+    if (!taxonomy.pluginAreas.includes(area)) problems.push(`pluginTaxonomyStates declares non-plugin area "${area}".`);
   }
   //#region ExampleShapeContract
   if (!taxonomy.exampleAssetsDirName) problems.push(`exampleAssetsDirName is required.`);
@@ -612,6 +631,20 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
       problems.push(`a bare "${banned}" is not an app facet — use "🎚️config" and "🌉️wasm".`);
     }
   }
+  for (const [owner, structural, required] of [
+    ["plugin", taxonomy.pluginChildDirs, taxonomy.pluginRequiredChildDirs],
+    ["os", taxonomy.osChildDirs, taxonomy.osRequiredChildDirs],
+  ] as const) {
+    if (!Array.isArray(required) || required.length === 0) {
+      problems.push(`${owner}RequiredChildDirs must be a non-empty array.`);
+      continue;
+    }
+    for (const dir of new Set(required)) {
+      if (!structural.includes(dir)) problems.push(`${owner}RequiredChildDirs member "${dir}" is missing from ${owner}ChildDirs.`);
+      if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) problems.push(`${owner}RequiredChildDirs member "${dir}" is missing from taxonomyLeafParentDirs.`);
+    }
+    if (new Set(required).size !== required.length) problems.push(`${owner}RequiredChildDirs contains duplicate members.`);
+  }
   //#region StateLaneContract
   // 🫧️ The four state mechanisms are exhaustive, so every state-owning scope (app, mode, window)
   // declares the same three non-artifact lanes; artifacts themselves are the fourth.
@@ -627,6 +660,13 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
       else if (dir !== taxonomy.windowsDirName && !taxonomy.taxonomyLeafParentDirs.includes(dir)) {
         problems.push(`modeChildDirs member "${dir}" is missing from taxonomyLeafParentDirs.`);
       }
+    }
+  }
+  if (!Array.isArray(taxonomy.modeRequiredChildDirs) || taxonomy.modeRequiredChildDirs.length === 0) {
+    problems.push(`modeRequiredChildDirs must be a non-empty array.`);
+  } else {
+    for (const dir of taxonomy.modeRequiredChildDirs) {
+      if (!taxonomy.modeChildDirs.includes(dir)) problems.push(`modeRequiredChildDirs member "${dir}" is missing from modeChildDirs.`);
     }
   }
   for (const lane of stateLaneDirs) {
@@ -674,6 +714,15 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     for (const dir of taxonomy.pluginChildDirs) {
       if (!dir) problems.push(`pluginChildDirs contains an empty entry.`);
     }
+  }
+  const commandsDir = "🎮️commands";
+  for (const [owner, dirs] of [
+    ["appChildDirs", taxonomy.appChildDirs],
+    ["modeChildDirs", taxonomy.modeChildDirs],
+    ["pluginChildDirs", taxonomy.pluginChildDirs],
+    ["osChildDirs", taxonomy.osChildDirs],
+  ] as const) {
+    if (!Array.isArray(dirs) || !dirs.includes(commandsDir)) problems.push(`${owner} must include "${commandsDir}" — commands are owned at every command scope.`);
   }
   if (!Array.isArray(taxonomy.bannedNameStems) || taxonomy.bannedNameStems.length === 0) {
     problems.push(`bannedNameStems must be a non-empty array.`);

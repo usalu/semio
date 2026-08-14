@@ -8,7 +8,7 @@ use crate::apps::lowpoly::view::LowpolyView;
 use crate::apps::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
 use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::LOWPOLY_PAINT_TEXTURE_SIZE;
-use semio_framework_plugin::{build_canvas_2d_scene, ActionRef, Canvas2dScene, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::json;
 use std::collections::HashMap;
 
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "layout-grid".into(),
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
-        actions: LOWPOLY_UV_ACTIONS.iter().map(|id| ActionRef::from(*id)).collect(),
+        actions: Vec::new(),
         utilities: ["brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the UV window paints textures —
         // it never selects/hovers mesh components, so it declares no interaction domain.

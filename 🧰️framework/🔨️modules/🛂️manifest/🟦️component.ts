@@ -13,6 +13,8 @@ import type {
   ActionDescriptor as GeneratedActionDescriptor,
   ActionKind as GeneratedActionKind,
   ActionDefinition as GeneratedActionDefinition,
+  ActionAddress as GeneratedActionAddress,
+  ActionInvocation as GeneratedActionInvocation,
   ActionArgDef as GeneratedActionArgDef,
   ActionArgControl as GeneratedActionArgControl,
   ActionArgOption as GeneratedActionArgOption,
@@ -37,9 +39,13 @@ import type {
   DomainSelection as GeneratedDomainSelection,
   ToolDefinition as GeneratedToolDefinition,
   ToolRef as GeneratedToolRef,
-  CommandScope as GeneratedCommandScope,
   CommandDefinition as GeneratedCommandDefinition,
-  CommandRef as GeneratedCommandRef,
+  CommandOwnerAddress as GeneratedCommandOwnerAddress,
+  CommandAddress as GeneratedCommandAddress,
+  CommandInvocation as GeneratedCommandInvocation,
+  OsDefinition as GeneratedOsDefinition,
+  Platform as GeneratedPlatform,
+  PlatformKeybinding as GeneratedPlatformKeybinding,
   WindowMeasure as GeneratedWindowMeasure,
   WindowEngagementOption as GeneratedWindowEngagementOption,
   WindowEngagementInput as GeneratedWindowEngagementInput,
@@ -520,6 +526,8 @@ export type UiInspectorFieldGroup = {
 /** 🧬️ Generated from Rust `ActionKind`/`ActionDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type ActionKind = GeneratedActionKind;
 export type ActionDefinition = GeneratedActionDefinition;
+export type ActionAddress = GeneratedActionAddress;
+export type ActionInvocation = GeneratedActionInvocation;
 export type ActionArgDef = GeneratedActionArgDef;
 export type ActionArgControl = GeneratedActionArgControl;
 export type ActionArgOption = GeneratedActionArgOption;
@@ -545,10 +553,14 @@ export type DomainSelection = GeneratedDomainSelection;
 export type ToolDefinition = GeneratedToolDefinition;
 export type ToolRef = GeneratedToolRef;
 
-/** 🎛️ Generated from Rust `CommandScope`/`CommandDefinition`/`CommandRef` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
-export type CommandScope = GeneratedCommandScope;
+/** 🎛️ Generated command ownership, invocation, and platform-aware keybinding contracts. */
 export type CommandDefinition = GeneratedCommandDefinition;
-export type CommandRef = GeneratedCommandRef;
+export type CommandOwnerAddress = GeneratedCommandOwnerAddress;
+export type CommandAddress = GeneratedCommandAddress;
+export type CommandInvocation = GeneratedCommandInvocation;
+export type OsDefinition = GeneratedOsDefinition;
+export type Platform = GeneratedPlatform;
+export type PlatformKeybinding = GeneratedPlatformKeybinding;
 
 /** 🧰️ The framework-owned action id apps dispatch to activate a utility — mirrors `SET_ACTIVE_UTILITY_ACTION_ID`. */
 export const SET_ACTIVE_UTILITY_ACTION_ID = "setActiveUtility";

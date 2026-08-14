@@ -94,6 +94,7 @@ fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
         Key::Named(NamedKey::ArrowRight) => Some(KeyAction::ArrowRight),
         Key::Named(NamedKey::ArrowUp) => Some(KeyAction::ArrowUp),
         Key::Named(NamedKey::ArrowDown) => Some(KeyAction::ArrowDown),
+        Key::Named(NamedKey::F11) => Some(KeyAction::Function(11)),
         Key::Named(NamedKey::Tab) => Some(KeyAction::Tab),
         Key::Character(ch) if ch.chars().count() == 1 => Some(KeyAction::Char(ch.to_string())),
         _ => None,

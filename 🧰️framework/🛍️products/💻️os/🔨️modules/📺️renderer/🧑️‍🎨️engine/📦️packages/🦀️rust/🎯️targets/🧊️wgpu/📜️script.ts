@@ -24,19 +24,19 @@ import {
 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
-import { writePlaygroundSession } from "../../../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
-const crateName = "semio-framework-renderer-wgpu";
-const outDir = join(repoRoot, "framework/product/os/module/dev/js/renderer-modules/wgpu");
-const pluginOutRoot = join(repoRoot, "framework/product/os/module/dev/js/plugin-modules");
+const crateName = "semio-framework-os-renderer-wgpu";
+const outDir = join(repoRoot, ".🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu");
+const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
 
 //#region 🌐️ DevServer
 function trunkEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
   delete env.NO_COLOR;
   delete env.FORCE_COLOR;
+  if (env.SEMIO_PARITY_QUIET_CARGO === "1") env.RUSTFLAGS = [env.RUSTFLAGS, "-Awarnings"].filter(Boolean).join(" ");
   return env;
 }
 
@@ -73,8 +73,9 @@ function ensureTrunk(): void {
 }
 
 function syncStableRendererArtifacts(): void {
-  const js = readdirSync(outDir).find((name) => name.startsWith("semio-framework-renderer-wgpu-") && name.endsWith(".js"));
-  const wasm = readdirSync(outDir).find((name) => name.startsWith("semio-framework-renderer-wgpu-") && name.endsWith("_bg.wasm"));
+  const artifactPrefix = `${crateName}-`;
+  const js = readdirSync(outDir).find((name) => name.startsWith(artifactPrefix) && name.endsWith(".js"));
+  const wasm = readdirSync(outDir).find((name) => name.startsWith(artifactPrefix) && name.endsWith("_bg.wasm"));
   if (!js) throw new Error("missing trunk wgpu renderer js artifact");
   copyFileSync(join(outDir, js), join(outDir, "semio_framework_renderer_wgpu.js"));
   if (wasm) copyFileSync(join(outDir, wasm), join(outDir, "semio-framework-renderer-wgpu_bg.wasm"));
@@ -107,11 +108,8 @@ function resolveNativeAppArgs(catalog: ReturnType<typeof loadFrameworkOsPlaygrou
 }
 
 function buildBootScript(bundleRoot: string): void {
-  const bootTs = join(bundleRoot, "js/🟦️boot.ts");
-  const bootJs = join(bundleRoot, "js/🟨️boot.js");
-  const variant = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
-  const sessionPath = join(repoRoot, "framework/product/os/module/dev/js/generated/🟦️session.ts");
-  writePlaygroundSession(variant, sessionPath, repoRoot);
+  const bootTs = join(bundleRoot, "🟦️typescript/🟦️boot.ts");
+  const bootJs = join(bundleRoot, "🟦️typescript/🟨️boot.js");
   if (runCmdStatus("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot }) !== 0) throw new Error("🟨️boot.js build failed");
 }
 
@@ -136,12 +134,13 @@ class TrunkServeScript extends BundleScript {
     ensureWasmTarget();
     buildBootScript(this.root);
     const program = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
-    ensureAssetServer(plugin);
+    ensureAssetServer(program);
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const defaultPort = String(frameworkOsPlaygroundDefaultPort(catalog, program, "wgpu"));
     const port = process.env.S_OS_PORT ?? defaultPort;
     const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
     const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
+    if (process.env.SEMIO_PARITY_QUIET_CARGO === "1") args.push("--ignore", pluginOutRoot);
     if ((await runInteractiveCommand("trunk", args, this.root, trunkEnv())) !== 0) throw new Error("trunk serve failed for wgpu renderer");
   }
 }
@@ -156,10 +155,10 @@ class NativeBuildScript extends BundleScript {
     if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
       throw new Error("native wgpu renderer build failed");
     }
-    const osDevScript = join(repoRoot, "framework/product/os/module/dev/js/📜️script.ts");
+    const osDevScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts");
     // Recurses into os/dev's own `program` build loop, whose per-plugin `cargo build` calls are individually budgeted.
     const program = runCmdStatus("bun", [osDevScript, "plugin", filterPlugin], {
-      cwd: join(repoRoot, "framework/product/os/module/dev/js"),
+      cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"),
       env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_PLUGIN: filterPlugin },
       ...orchestratorBudgetOpts(),
     });
@@ -204,7 +203,7 @@ class TestScript extends BundleScript {
 //#region 🔖️LintScript
 /** 🎨️Raw color-construction calls (`Rgba::new`/`from_srgb8`) must live only inside `framework/ui/wgpu`'s theme module — the renderer takes every color via `ui_wgpu::Theme`. */
 function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
-  const libPath = join(bundleRoot, "rs", "lib.rs");
+  const libPath = join(bundleRoot, "📦️glue.rs");
   if (!existsSync(libPath)) return [];
   const text = readFileSync(libPath, "utf8");
   const violations: string[] = [];
@@ -212,7 +211,7 @@ function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
     if (/\bRgba::new\(|\bfrom_srgb8\(/.test(line)) {
-      violations.push(`rs/lib.rs:${i + 1}: ${line.trim()}`);
+      violations.push(`📦️glue.rs:${i + 1}: ${line.trim()}`);
     }
   }
   return violations;

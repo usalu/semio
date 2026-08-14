@@ -3,6 +3,7 @@
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfDictEntry, PdfInfo, PdfIndirectObject, PdfPage, PdfSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use crate::ArtifactSource;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
@@ -25,6 +26,9 @@ pub struct PdfArtifact {
     #[state(artifact)]
     #[serde(default)]
     pub trailer: Vec<PdfDictEntry>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<ArtifactSource>,
 }
 
 impl Default for PdfArtifact {
@@ -40,6 +44,7 @@ impl PdfArtifact {
             info: self.info.clone(),
             objects: self.objects.clone(),
             trailer: self.trailer.clone(),
+            source: self.source.clone(),
         }
     }
     pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
@@ -50,6 +55,7 @@ impl PdfArtifact {
             info: snapshot.info,
             objects: snapshot.objects,
             trailer: snapshot.trailer,
+            source: snapshot.source,
         }
     }
     pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
@@ -59,6 +65,7 @@ impl PdfArtifact {
         self.info = snapshot.info;
         self.objects = snapshot.objects;
         self.trailer = snapshot.trailer;
+        self.source = snapshot.source;
     }
 }
 

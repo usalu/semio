@@ -114,7 +114,9 @@ mod tests {
     fn round_trip(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {
         let forward = vcs::apply_mutation(snapshot, mutation);
         let mut restored = forward.clone();
-        for back in mutation.inverse(snapshot) {
+        let mut backward = mutation.inverse(snapshot);
+        backward.reverse();
+        for back in backward {
             restored = vcs::apply_mutation(&restored, &back);
         }
         assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot");

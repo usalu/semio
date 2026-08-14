@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { Mode, createEvenWindowLayout, reactHostPort } from "@semio-tech/ui-react";
+import { Mode, createEvenWindowLayout, reactHostPort, uiDataLabel } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 // #endregion 🔌️Adapters
@@ -16,6 +16,28 @@ const Pane = ({ label }: { label: string }) => (
     <span className="text-lg font-semibold">{label}</span>
   </div>
 );
+
+// #region 🧪️SilhouetteVisualFixture
+const SilhouetteVisualFixture = () => (
+  <div data-testid="silhouette-visual-content" data-window-content-layout="edgeless" aria-label="Continuous content / Fortlaufender Inhalt" className="relative h-full min-h-0 overflow-hidden bg-transparent">
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 bottom-0"
+      style={{
+        top: -48,
+        backgroundColor: "#0d2742",
+        backgroundImage:
+          "linear-gradient(90deg, transparent 0 47px, #ffd43b 47px 55px, transparent 55px 103px, #52e5ff 103px 111px, transparent 111px), linear-gradient(0deg, rgb(255 255 255 / 12%) 1px, transparent 1px)",
+        backgroundSize: "160px 100%, 100% 24px",
+      }}
+    />
+    <div aria-hidden className="pointer-events-none absolute bottom-0 w-2 bg-[#ff4d6d]" style={{ insetInlineStart: 23, top: -48 }} />
+    <div data-testid="silhouette-visual-label" className="absolute text-sm font-semibold text-white" style={{ insetInlineStart: 72, top: 16 }}>
+      0123456789 · Text · Szene · Scene
+    </div>
+  </div>
+);
+// #endregion 🧪️SilhouetteVisualFixture
 
 const meta = {
   title: "🖱️ui⚛️react/Mode",
@@ -147,4 +169,44 @@ export const EvenSplit: Story = {
       />
     </div>
   ),
+};
+
+export const ContentThroughGlass: Story = {
+  args: { windows: [], activeWindowId: "flow" },
+  render: () => {
+    const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("flow");
+    return (
+      <div
+        data-testid="silhouette-visual-floor"
+        className="h-[420px] w-full p-single"
+        style={{
+          backgroundColor: "#641f45",
+          backgroundImage: "linear-gradient(135deg, rgb(255 255 255 / 10%) 25%, transparent 25% 50%, rgb(255 255 255 / 10%) 50% 75%, transparent 75%)",
+          backgroundSize: "32px 32px",
+        }}
+      >
+        <Mode
+          windows={[
+            { id: "flow", title: uiDataLabel("Flow / Fluss"), children: <SilhouetteVisualFixture /> },
+            { id: "reference", title: uiDataLabel("Reference / Referenz"), children: <Pane label="Reference / Referenz" /> },
+          ]}
+          layout={{
+            kind: "stack",
+            activeId: "flow",
+            children: [
+              { kind: "window", id: "flow" },
+              { kind: "window", id: "reference" },
+            ],
+          }}
+          activeWindowId={activeWindowId}
+          onActiveWindowChange={setActiveWindowId}
+        />
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    expect(canvasElement.querySelector('[data-testid="silhouette-visual-content"]')).toBeTruthy();
+    expect(canvasElement.querySelectorAll("[data-window-silhouette-chip]").length).toBeGreaterThan(1);
+    expect(canvasElement.querySelector("[data-window-silhouette-gap]")).toBeTruthy();
+  },
 };

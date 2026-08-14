@@ -4,7 +4,7 @@
 
 use crate::apps::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::apps::cad::terminology::CadLabels;
-use crate::apps::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_PLAY_APP_ID};
+use crate::apps::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
 use crate::apps::cad::config::CadDislocateOptions;
 use crate::apps::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
@@ -212,6 +212,12 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
             None,
             None,
             None,
+            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): all four CAD panes bind the
+            // same `CAD_INTERACTION_DOMAIN` (see `create_cad_app`'s `.window_kind_interactions` calls)
+            // — a plain whole-object pick/hover on this shared world-3d surface targets that domain's
+            // `"object"` granularity, not the OS's own bare `world` board domain.
+            Some(CAD_INTERACTION_DOMAIN.into()),
+            Some("object".into()),
         ),
     )
 }

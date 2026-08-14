@@ -89,6 +89,61 @@ rejected `setActiveExample` and left all four CAD 3D windows empty. The CAD suit
 the new production-bridge regression test. Full diagnosis, repair, and the post-repair WASM build
 contention boundary are recorded in `📓️cad-example-action-bridge-regression.md`.
 
+## Sourcing Action Bridge — the same defect as CAD, one pane over
+
+The Aussuchen pane could not load its `demo-stock` example: `🪵️sourcing`'s curate app declared 15
+command rows and **zero** `command_from_action` implementations, so it inherited the trait default
+that rejects every app-owned action. Fixed with a production `sourcing_curate_command_from_action`
+joining the manifest's camelCase arg names to the payloads' snake_case fields, verified against what
+the renderer actually dispatches (`{value}` / `{delta}` / `{pressed}`, and drag payloads spread from
+the row's own `{objectId}`). `semio-s-plugin-sourcing --lib` **80 passed / 0 failed**, including the
+framework's own `assert_declared_actions_bridge_to_commands` harness.
+
+The same census across `✏️s` found **34 more apps with 442 declared command rows and no production
+bridge** — none of them a demonstrator pane, but all latent UI-dead-on-arrival. Full diagnosis, the
+reason this must NOT be generated inside `app_commands!`, and the per-app remedy (lead with the
+framework law, which *measures* instead of assuming) are in `📓️action-bridge-defect-class.md`.
+
+### Proven in the browser on freshly built WASM ✅
+
+`.core.wasm` rebuilt today 11:44, dev server on :6029, boot with **250 resources and zero 404s**.
+The **Aussuchen pane works end to end**:
+
+- the `demo-stock` example loads — the Pool window lists all ten stock components with module,
+  typology, availability and curate steppers, and the title bar's example selector reads
+  *Beispielbestand*. This is the exact surface that was dead.
+- clicking `+` on *Glulam GL24h 200×400* took its curated count **0 → 1**, the **Kuratiert** window
+  picked the row up, and the **Raster** window renders real 3D beam geometry. That is a full round
+  trip — chrome action → the new bridge → typed command → WASM handler → mutation → snapshot →
+  re-render — with `delta` supplied by the host and merged onto the row's own `objectId`, which is
+  precisely the host-filled-args path the bridge was written to read defensively.
+- the old `action 'setActiveExample' is not a framework-reserved action` fault is **gone** from the
+  console.
+
+The `engagementPointerDown` alias deletion is likewise live (cad 137/137).
+
+### Koordinator (cad) — geometry still absent, OPEN and NOT diagnosed
+
+On a **clean** dev server with fresh WASM (250 resources, zero 404s at boot), all four CAD windows
+(Form, Energie, Gebäude, Tragwerk Klassisch) render their grid and axis gizmo, each with a live
+628×326 canvas, and the title bar's example selector reads *Sechseckig geschnittener Betonwald links* —
+but **no geometry is drawn**. This reproduces after a clean restart, so it is a real defect and not
+the degraded-server state that produced the earlier 404 noise.
+
+It is explicitly **not** the action bridge: cad's bridge is present, its suite is 137/137 including the
+framework harness, and the example reaches the selector.
+
+**Prime suspect is this ticket's own D2 change** — the 12 IO registrations for kinds the demonstrator
+did not own were moved to 📐️cad and 🌍️gis. If a solid/mesh codec registration was dropped or landed
+under the wrong kind in that move, a document would load while its geometry could not be decoded,
+which is exactly this symptom (chrome and camera fine, nothing to draw). That hypothesis is
+**unverified** — the machine hit load average 190 from concurrent sessions and stopped serving
+reliably before it could be tested.
+
+Next step when the machine is usable: compare the pre-move registration list against what 📐️cad now
+registers, and confirm whether `3d.cad`'s solid/mesh importers are reachable from the demonstrator
+bundle's registry at boot.
+
 ## Flagged for the user — a 4,400-line unmounted ghost
 
 `🧰️framework/🛍️products/💻️os/🦀️component.rs` holds ~110 `semio_framework::` references and a full

@@ -19,7 +19,7 @@ use crate::apps::lowpoly::view::{resolve_active_object_id, selection_from_intera
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::{artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionRef, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
 };
@@ -482,6 +482,14 @@ pub fn create_lowpoly_app() -> App {
             .default_mode_id(edit::LOWPOLY_PLAY_MODE_EDIT)
             .window_kind_def(edit::windows::model::definition())
             .window_kind_def(paint_mode::windows::uv::definition())
+            .window_kind_action_refs(
+                edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN,
+                edit::windows::model::LOWPOLY_MAIN_ACTIONS.iter().map(|id| ActionRef::from(*id)).collect(),
+            )
+            .window_kind_action_refs(
+                paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV,
+                paint_mode::windows::uv::LOWPOLY_UV_ACTIONS.iter().map(|id| ActionRef::from(*id)).collect(),
+            )
             .default_layout(edit::layout())
             .named_layout(paint_mode::layout())
             .panel_tab_def(document_panel::definition())
@@ -767,10 +775,10 @@ mod tests {
         let main_window = definition.window_kinds.iter().find(|window| window.id == edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN).expect("main window declared");
         assert_eq!(main_window.interactions, vec![InteractionRef::new(MESH_INTERACTION_DOMAIN)]);
         for injected in ["interactionSelect", "interactionHover", "clearSelection", "selectAll", "setSelectionMode", "setInteractionGranularity"] {
-            assert!(definition.actions.iter().any(|action| action.id == injected), "framework must auto-inject {injected}");
+            assert!(main_window.actions.iter().any(|action| action.id == injected), "framework must auto-inject {injected}");
         }
         for deleted in ["setSelection", "toggleSelectionKind", "toggleSelectionTarget", "setSelectionMethod", "setSelectionModeDefault", "worldSelect", "worldHover", "setHover", "worldPick"] {
-            assert!(!definition.actions.iter().any(|action| action.id == deleted), "{deleted} must no longer be app-declared");
+            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == deleted), "{deleted} must no longer be app-declared");
         }
     }
     //#endregion 🔖️ManifestSanity

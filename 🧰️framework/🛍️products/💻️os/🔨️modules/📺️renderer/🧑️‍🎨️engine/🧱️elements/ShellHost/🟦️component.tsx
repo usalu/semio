@@ -24,7 +24,10 @@ import React, {
 } from "react";
 import {
   type ActionDescriptor,
+  type ActionInvocation,
   type AppDefinition,
+  type CommandAddress,
+  type CommandInvocation,
   buildContributionsJson,
   type ContextMenuItemSpec,
   createBrowserStoragePort,
@@ -104,7 +107,6 @@ import {
   decodeBackboneWorkerResponse,
   decodePackValue,
   type ArtifactActorMsg,
-  encodeActionWire,
   encodeBackboneMessage,
   encodeBackboneWorkerRequest,
   encodeMutationEnvelopesPack,
@@ -204,6 +206,7 @@ import {
   type ThemeAppearanceName,
   type ThemePaletteGroup,
   Toggle,
+  toggleDocumentFullscreen,
   TutorialBar,
   tutorialCameraAt,
   TutorialCaptions,
@@ -316,14 +319,21 @@ import {
   captureTutorialUiSnapshot,
   categoryTabIcon,
   classifyWindowLayoutChange,
+  commandAddressKey,
   commandCategories,
   commandCategoryLabel,
+  commandKeybindingChords,
+  commandOwnerPluginId,
+  detectCommandPlatform,
   dispatchOpenedFiles,
   dispatchOsCommand,
   downloadDataUrl,
   downloadMediaExport,
   flattenPanelTabLeaves,
   introductionTargetsWindow,
+  isEditableEventTarget,
+  isOsCommandAddress,
+  keyboardEventMatchesChord,
   loadPluginModuleResilient,
   makeEffectDispatchOne,
   mergeRecordPreservingIdentity,
@@ -425,6 +435,47 @@ export function useAppKeybindingsByActionId(): ReadonlyMap<string, string> {
 export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
   const keysByActionId = useAppKeybindingsByActionId();
   return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+}
+
+/** 🪟️ Builds the sole action wire shape from the exact target window instance and its owner chain. */
+function encodeWindowActionInvocation(
+  session: ActiveSession,
+  action: ActionDescriptor,
+  extraInstances: readonly ExtraWindowInstance[] = [],
+  requestedWindowId?: string,
+): string {
+  const instances = sessionWindowInstances(session.app, extraInstances);
+  const windowInstanceId = requestedWindowId ?? session.viewState.windowId ?? session.viewState.activeWindowKindId ?? instances[0]?.id ?? session.app.windowKinds[0]?.id ?? "";
+  const windowKindId = instances.find((instance) => instance.id === windowInstanceId)?.windowKindId ?? session.app.windowKinds.find((kind) => kind.id === windowInstanceId)?.id ?? session.app.windowKinds[0]?.id ?? "";
+  const invocation: ActionInvocation = {
+    address: {
+      pluginId: session.pluginId,
+      appId: session.app.id,
+      modeId: session.viewState.activeModeId ?? session.app.defaultModeId ?? session.app.modes[0]?.id ?? session.app.id,
+      windowKindId,
+      windowInstanceId,
+      actionId: action.action,
+    },
+    arguments: {
+      ...(typeof action.args === "object" && action.args != null ? (action.args as Record<string, unknown>) : {}),
+      windowId: windowInstanceId,
+    },
+  };
+  return JSON.stringify(invocation);
+}
+
+/** 🎛️ Builds an app-owned command wire without pretending host catalogue state is a window action. */
+function encodeAppCommandInvocation(pluginId: string, app: AppDefinition, commandId: string, args: Readonly<Record<string, unknown>>): string {
+  const invocation: CommandInvocation = {
+    address: { owner: { app: { pluginId, appId: app.id } }, commandId },
+    arguments: { ...args },
+  };
+  return JSON.stringify(invocation);
+}
+
+/** 📋️ Tests whether an app explicitly opts into a host-pushed command. */
+function appOwnsCommand(app: AppDefinition, commandId: string): boolean {
+  return (app.commands ?? []).some((command) => command.id === commandId);
 }
 
 //#region 🎥️TutorialOverlayHosts
@@ -756,6 +807,8 @@ function FrameworkOsShellInner({
   const backboneWorkerRef = useRef<Worker | null>(null);
   /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and operation-origin filtering. */
   const shellActorIdRef = useRef<string>(`client-${Math.random().toString(36).slice(2)}`);
+  const presenceConnectedAtMsRef = useRef(Date.now());
+  const presenceCursorRef = useRef<{ readonly x: number; readonly y: number } | undefined>(undefined);
   /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
   /** 🐚️ Unregisters this shell's `registerPluginBackboneRoute` entry for each open document id — called
@@ -824,6 +877,15 @@ function FrameworkOsShellInner({
     };
     backboneWorkerRef.current = worker;
     return worker;
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const trackPointer = (event: PointerEvent) => {
+      presenceCursorRef.current = { x: event.clientX, y: event.clientY };
+    };
+    window.addEventListener("pointermove", trackPointer, { passive: true });
+    return () => window.removeEventListener("pointermove", trackPointer);
   }, []);
 
   // 🐚️ Only a page-owning studio shell syncs to the real browser URL bar/history — an embedded shell
@@ -1127,7 +1189,7 @@ function FrameworkOsShellInner({
     const pluginEntry = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === active.pluginId);
     if (!pluginEntry) return;
     try {
-      const wire = encodeActionWire({ controllerId: active.app.controllerId, action, args });
+      const wire = encodeWindowActionInvocation(active, { controllerId: active.app.controllerId, action, args }, extraWindowInstancesRef.current);
       await pluginEntry.handle.handleAction(active.instanceId, wire, active.viewState);
       console.log("[DEBUG] space extension ledger op dispatched", { action, args });
     } catch (error) {
@@ -1752,7 +1814,7 @@ function FrameworkOsShellInner({
       // content alone — the content is derived purely from `loadedPlugins`, which stabilizes right after
       // boot, so a content-only key would only ever unlock ONE push for the process lifetime (the very
       // first `refreshUi` call, which always targets whatever session exists at boot — usually `home`,
-      // which doesn't implement either action and rejects it). Folding `instanceId` into the key makes a
+      // which doesn't own either catalogue command). Folding `instanceId` into the key makes a
       // session switch (new studio/space instance opened, same unchanged json) retrigger the push instead
       // of being silently swallowed by a guard that already considered this content "delivered".
       if (contributionsJson) {
@@ -1762,16 +1824,15 @@ function FrameworkOsShellInner({
           for (const pluginEntry of loadedPlugins) {
             if (!pluginEntry.manifest.apps?.length) continue;
             const isActive = pluginEntry.handle.pluginId === nextSession.pluginId;
+            const targetApp = isActive ? nextSession.app : pluginEntry.manifest.apps.find((app) => appOwnsCommand(app, "setContributions"));
+            if (!targetApp || !appOwnsCommand(targetApp, "setContributions") || !pluginEntry.handle.handleCommand) continue;
             const instanceId = isActive ? nextSession.instanceId : contributorInstancesRef.current.get(pluginEntry.handle.pluginId);
             if (instanceId == null) continue;
-            const controllerId = isActive
-              ? nextSession.app.controllerId
-              : ((pluginEntry.manifest.apps[0] as { controllerId?: string } | undefined)?.controllerId ?? nextSession.app.controllerId);
             try {
-              const wire = encodeActionWire({ controllerId, action: "setContributions", args: { json: contributionsJson } });
-              await pluginEntry.handle.handleAction(instanceId, wire, nextSession.viewState);
+              const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", { json: contributionsJson });
+              await pluginEntry.handle.handleCommand(instanceId, wire, nextSession.viewState);
             } catch (error) {
-              console.warn("[DEBUG] setContributions push skipped", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
+              console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
             }
           }
         }
@@ -1781,23 +1842,13 @@ function FrameworkOsShellInner({
         if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
           appRegistrationsJsonRef.current = appRegistrationsPushKey;
           const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
-          // 🪐️ `setAppRegistrations` mirrors `setContributions` immediately above exactly: an opt-in hint
-          // push, currently only implemented by the space app's `SpaceCommand::SetAppRegistrations`
-          // (populates its own linked-in copy of `semio_framework_os::APP_REGISTRATIONS` so
-          // `workflow_palette()`/`build_catalogue_tree` can list every loaded app). Not declared in any
-          // app's action catalog, so — same as `setContributions` — gate by swallowing the rejection every
-          // other app's `DocumentApp::command_from_action` default throws for an unknown id, rather than by
-          // app id, so this stays correct if a future app adds its own `SetAppRegistrations` variant
-          // without this call site needing to know about it.
-          // 🧵️ B1: MUST go through `handleAction` (kind:"action" → `dispatch_action` → `command_from_action`
-          // → `dispatch_typed_command_inner`) — `handleCommand` (kind:"command") always hard-errors now, see
-          // `VcsDocumentApp::dispatch_command`'s doc; there are no framework-reserved COMMANDS, only actions.
-          if (pluginEntry) {
+          // 🪐️ The space app explicitly declares this hidden app command; other apps never receive it.
+          if (pluginEntry?.handle.handleCommand && appOwnsCommand(nextSession.app, "setAppRegistrations")) {
             try {
-              const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setAppRegistrations", args: { json: appRegistrationsJson } });
-              await pluginEntry.handle.handleAction(nextSession.instanceId, wire, nextSession.viewState);
+              const wire = encodeAppCommandInvocation(nextSession.pluginId, nextSession.app, "setAppRegistrations", { json: appRegistrationsJson });
+              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, nextSession.viewState);
             } catch (error) {
-              console.warn("[DEBUG] setAppRegistrations push skipped", error instanceof Error ? error.message : String(error));
+              console.error("setAppRegistrations command failed", error instanceof Error ? error.message : String(error));
             }
           }
         }
@@ -2016,7 +2067,8 @@ function FrameworkOsShellInner({
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewModel) => {
     try {
       const document = JSON.parse(documentJson) as Record<string, unknown>;
-      await plugin.handleAction(pluginInstanceId, encodeActionWire({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
+      const targetSession: ActiveSession = { pluginId: plugin.pluginId, instanceId: pluginInstanceId, app, viewState };
+      await plugin.handleAction(pluginInstanceId, encodeWindowActionInvocation(targetSession, { controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
     } catch (syncError) {
       console.error("[DEBUG] spawned program document sync failed", syncError);
     }
@@ -2366,16 +2418,16 @@ function FrameworkOsShellInner({
       if (studioChanged) {
         openInstanceIdRef.current = null;
         console.log("[DEBUG] applyShellUri openSpace", spaceId);
-        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
+        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
         await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope));
       }
       if (openInstanceIdRef.current === (instanceId ?? null)) return;
       openInstanceIdRef.current = instanceId ?? null;
       if (instanceId) {
-        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+        const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
         await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
       } else {
-        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
+        const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
         const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], []);
         updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
         await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
@@ -2614,7 +2666,7 @@ function FrameworkOsShellInner({
           const viewState: ViewModel = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void program
-            .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
+            .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState)
             .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
             .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
         }
@@ -2638,7 +2690,7 @@ function FrameworkOsShellInner({
           const viewState: ViewModel = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
           void program
-            .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
+            .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, activeWindowIdRef.current ?? undefined), viewState)
             .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
             .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
         }
@@ -2743,7 +2795,7 @@ function FrameworkOsShellInner({
         },
         dispatchWindowId,
       );
-      const declaredAction = targetSession.app.actions?.some((entry) => entry.id === action.action) ?? false;
+      const declaredAction = targetSession.app.windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action.action));
       if (!declaredAction && !FRAMEWORK_RESERVED_ACTION_IDS.has(action.action)) {
         console.warn("[DEBUG] skipping undeclared action", action.action, targetSession.app.id);
         return;
@@ -2752,7 +2804,7 @@ function FrameworkOsShellInner({
       const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
       if (interactiveAction) beginInteractivePluginAction();
       return plugin
-        .handleAction(targetSession.instanceId, encodeActionWire(action), dispatchViewState)
+        .handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {
           console.error("[DEBUG] action failed", action.action, action.args, actionError);
@@ -3159,6 +3211,43 @@ function FrameworkOsShellInner({
       window.clearInterval(timer);
     };
   }, [hostSessionActive, studioSessionControllerId, ephemeral]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let publishing = false;
+    const identity = presenceClientIdentity(ephemeral);
+    const beat = async () => {
+      const worker = backboneWorkerRef.current;
+      if (!worker || publishing) return;
+      publishing = true;
+      try {
+        for (const [documentId, entry] of openDocumentSessionsRef.current) {
+          const snapshot = await entry.plugin.ephemeralSnapshot?.(entry.session.instanceId);
+          const request: BackboneWorkerRequest = {
+            kind: "send",
+            documentId,
+            message: {
+              kind: "presenceHeartbeat",
+              peer: {
+                actor: shellActorIdRef.current,
+                label: identity.name,
+                presencePack: snapshot?.presence,
+                connectedAtMs: presenceConnectedAtMsRef.current,
+                cursor: presenceCursorRef.current,
+                viewport: { x: window.scrollX, y: window.scrollY, zoom: window.devicePixelRatio || 1 },
+              },
+            },
+          };
+          worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+        }
+      } finally {
+        publishing = false;
+      }
+    };
+    void beat();
+    const timer = window.setInterval(() => void beat(), PRESENCE_HEARTBEAT_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [ephemeral]);
 
   usePanelChromeHotkeys({
     // 📱️ All eight anchor hotkeys collapse onto the single mobile panel toggle on mobile. Same `shell.panelToggle`
@@ -3782,6 +3871,7 @@ function FrameworkOsShellInner({
   // shell) for every keystroke on the page regardless of which shell the user was actually using.
   const handleAppKeydown = useCallback(
     (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
       if (!session) return;
       const parseKeys = (keys: string) =>
         keys
@@ -3807,7 +3897,9 @@ function FrameworkOsShellInner({
         if (needsAlt !== event.altKey) return false;
         return event.key.toLowerCase() === key;
       };
-      const actionById = new Map(session.app.actions.map((action) => [action.id, action]));
+      const focusedWindowId = activeWindowIdRef.current ?? session.viewState.windowId ?? session.viewState.activeWindowKindId;
+      const focusedWindowKindId = sessionWindowInstances(session.app, extraWindowInstancesRef.current).find((instance) => instance.id === focusedWindowId)?.windowKindId ?? focusedWindowId;
+      const actionById = new Map((session.app.windowKinds.find((kind) => kind.id === focusedWindowKindId)?.actions ?? []).map((action) => [action.id, action]));
       if (isEditableTarget(event.target)) return;
       // 🧰️🛠️ Escape deactivates the active window's active utility (P5), or — when no utility is active —
       // the active mode-level tool, when nothing is being typed.
@@ -3827,11 +3919,12 @@ function FrameworkOsShellInner({
       for (const binding of session.app.keybindings) {
         for (const chord of parseKeys(binding.keys)) {
           if (!matches(event, chord)) continue;
+          const definition = actionById.get(binding.action.action);
+          if (!definition) continue;
           event.preventDefault();
           // ✍️ Arg-carrying hotkeys never silent-fire defaults (P4): open the staged form, or — if that
           // form is already expanded in the active window — treat the hotkey as Execute (with validation).
-          const definition = actionById.get(binding.action.action);
-          if (definition && actionRequiresStagedForm(definition)) {
+          if (actionRequiresStagedForm(definition)) {
             const windowId = activeWindowIdRef.current;
             if (!windowId) return;
             const expanded = actionPaneExpandedByWindowIdRef.current[windowId] ?? null;
@@ -4018,6 +4111,14 @@ function FrameworkOsShellInner({
 
   const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
 
+  useEffect(() => {
+    const valid = new Set(resolvedCommands.map((entry) => commandAddressKey(entry.address)));
+    if (expandedCommandIdRef.current && !valid.has(expandedCommandIdRef.current)) dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
+    for (const commandKey of Object.keys(commandStagedArgsByCommandIdRef.current)) {
+      if (!valid.has(commandKey)) dispatch({ type: "RESET_COMMAND_ARGS", commandId: commandKey });
+    }
+  }, [resolvedCommands]);
+
   /**
    * 🎛️ Dispatches a resolved command: os-scope commands are handled locally (no program round trip);
    * plugin/app/mode-scope commands route through the active session's program `handleCommand`, mirroring
@@ -4025,22 +4126,26 @@ function FrameworkOsShellInner({
    * instance (no headless-instance routing for non-focused plugins yet).
    */
   const onCommand = useCallback(
-    (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
+    (address: CommandAddress, args?: Record<string, unknown>) => {
+      const commandId = address.commandId;
       // 🎥️ Same sandbox-start/recorder-arm side effects `START_TUTORIAL_ACTION_ID`/`RECORD_TUTORIAL_ACTION_ID`
       // need — routed through the `startTutorialRef`/`toggleTutorialRecordingRef` bridge since they need
       // more context (plugin bridge, sandbox snapshot) than a bare `dispatch` gives `dispatchOsCommand`.
-      if (source.kind === "os" && commandId === "os.playTutorial") {
+      if (isOsCommandAddress(address) && commandId === "os.playTutorial") {
         const tutorialId = typeof args?.tutorialId === "string" ? args.tutorialId : "";
         if (tutorialId) startTutorialRef.current(tutorialId);
         return;
       }
-      if (source.kind === "os" && commandId === "os.recordTutorial") {
+      if (isOsCommandAddress(address) && commandId === "os.recordTutorial") {
         toggleTutorialRecordingRef.current();
         return;
       }
-      if (source.kind === "os") {
+      if (isOsCommandAddress(address) && commandId === "os.toggleFullscreen") {
+        void toggleDocumentFullscreen(scope.rootRef.current ?? document.documentElement).catch((error) => console.error("Fullscreen request was rejected", error));
+      }
+      if (isOsCommandAddress(address)) {
         dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore, locks);
-        const label = resolvedCommands.find((entry) => entry.definition.id === commandId)?.definition.label ?? commandId;
+        const label = resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.label ?? commandId;
         noteShellCommand(commandId, label, args);
         return;
       }
@@ -4049,21 +4154,51 @@ function FrameworkOsShellInner({
       if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
         tutorialRecorderRef.current?.recordEvent({ kind: "command", command: commandId, args });
       }
-      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
-      if (!plugin?.handleAction) return;
+      const ownerPluginId = commandOwnerPluginId(address.owner);
+      if (!ownerPluginId || ownerPluginId !== session.pluginId) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === ownerPluginId)?.handle;
+      if (!plugin?.handleCommand) return;
       const dispatchViewState = injectActiveUtility(session.viewState);
-      // 🎯️ App palette commands share the action wire + `command_from_action` bridge — there are no
-      // framework-reserved COMMANDS, so `handleCommand`/`kind:"command"` always hard-errors pointing at
-      // the typed channel (see `VcsDocumentApp::dispatch_command`).
+      const invocation: CommandInvocation = { address, arguments: args ?? {} };
       void plugin
-        .handleAction(session.instanceId, encodeActionWire({ controllerId: session.app.controllerId, action: commandId, args }), dispatchViewState)
+        .handleCommand(session.instanceId, JSON.stringify(invocation), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
-        .catch((commandError) => {
-          console.error("[DEBUG] command failed", commandError);
-        });
+        .catch((error) => console.error("Command execution failed", error));
     },
     [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand],
   );
+
+  const handleCommandKeydown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.defaultPrevented || isEditableEventTarget(event.target)) return;
+      for (const entry of [...resolvedCommands].reverse()) {
+        if (!entry.definition.inPalette) continue;
+        const entryKey = commandAddressKey(entry.address);
+        const platform = detectCommandPlatform(typeof navigator !== "undefined" ? `${navigator.platform} ${navigator.userAgent}` : "");
+        const keys = commandKeybindingChords(entry.definition, platform).join(",");
+        if (!keys?.split(",").some((chord) => keyboardEventMatchesChord(event, chord.trim().toLowerCase()))) continue;
+        event.preventDefault();
+        const staged = commandStagedArgsByCommandIdRef.current[entryKey] ?? {};
+        const intent = resolveKeybindingIntent(entry.definition, expandedCommandIdRef.current === entryKey ? entry.definition.id : null, staged);
+        if (intent.kind === "fire") onCommand(entry.address);
+        else if (intent.kind === "execute") onCommand(entry.address, intent.args);
+        else {
+          const commandPath = [FRAMEWORK_CATEGORY_COMMAND_ID, `command.category.${entry.definition.category}`];
+          if (mobile) {
+            dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+            dispatch({ type: "SET_MOBILE_PANEL_PATH", value: commandPath });
+          } else {
+            dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-middle", value: true });
+            dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-middle", value: commandPath });
+          }
+          dispatch({ type: "SET_COMMAND_EXPANDED", value: entryKey });
+        }
+        return;
+      }
+    },
+    [mobile, onCommand, resolvedCommands],
+  );
+  useShellKeydown(scope.rootRef, handleCommandKeydown, [handleCommandKeydown]);
 
   const commandCategoryTabs = useMemo(() => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch), [resolvedCommands, commandCategoryList, onCommand]);
 
@@ -4623,63 +4758,16 @@ function FrameworkOsShellInner({
         onSelect: () => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: kind.id }),
       });
     }
-    const keysByActionId = new Map(session.app.keybindings.map((binding) => [binding.action.action, binding.keys]));
-    const declaredActionIds = new Set<string>();
-    // 📇️ First window kind whose resolved actions include this id (orphan/global actions fall through to
-    // the active window, then the first window) — the redirect target for arg-carrying palette entries.
-    const hostWindowForAction = (actionId: string): string | undefined => {
-      for (const kind of session.app.windowKinds) {
-        if (resolveWindowActions(session.app, kind).some((entry) => entry.id === actionId)) return kind.id;
-      }
-      return activeWindowId ?? session.app.windowKinds[0]?.id;
-    };
-    for (const action of session.app.actions ?? []) {
-      if (!action.inPalette) continue;
-      declaredActionIds.add(action.id);
-      const argCarrying = actionRequiresStagedForm(action);
-      const resolvedActionLabel = resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, uiTerminology, uiLocale));
-      items.push({
-        id: `action.${action.id}`,
-        // ✍️ Arg-carrying actions never fire from the palette (P3): the "…" entry activates the hosting
-        // window, unfolds its top-left Actions pane, and expands this action's staged form instead of dispatching.
-        label: argCarrying ? `${resolvedActionLabel}…` : resolvedActionLabel,
-        description: action.keys ?? keysByActionId.get(action.id),
-        category: action.category ?? (action.kind === "history" ? shellLabel("ui.ribbon.parent.history") : shellLabel("ui.ribbon.parent.actions")),
-        onSelect: () => {
-          if (argCarrying) {
-            const windowId = hostWindowForAction(action.id);
-            if (windowId) {
-              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowId });
-              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: false });
-              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId, value: action.id });
-            }
-            dispatch({ type: "SET_SEARCH_OPEN", value: false });
-            return;
-          }
-          onAction({ controllerId: session.app.controllerId, action: action.id });
-        },
-      });
-    }
-    for (const binding of session.app.keybindings) {
-      if (declaredActionIds.has(binding.action.action)) continue;
-      items.push({
-        id: `keybinding.${binding.keys}`,
-        label: binding.action.action,
-        description: binding.keys,
-        category: shellLabel("ui.ribbon.parent.actions"),
-        onSelect: () => onAction(binding.action),
-      });
-    }
     // 🎛️ Commands (os/plugin/app/mode) — the footer twin of the window-rail P3 redirect above: an
     // arg-carrying command never fires from the palette, it opens the bottom-middle command panel at its
     // category and expands its form instead.
-    for (const { definition, source } of resolvedCommands) {
+    for (const { definition, address } of resolvedCommands) {
       if (!definition.inPalette) continue;
       const argCarrying = (definition.args?.length ?? 0) > 0;
       items.push({
-        id: `command.${definition.id}`,
+        id: `command.${commandAddressKey(address).replaceAll(":", ".")}`,
         label: argCarrying ? `${definition.label}…` : definition.label,
-        description: definition.keys,
+        description: commandKeybindingChords(definition, detectCommandPlatform(typeof navigator !== "undefined" ? `${navigator.platform} ${navigator.userAgent}` : "")).join(",") || undefined,
         category: commandCategoryLabel(definition.category),
         onSelect: () => {
           if (argCarrying) {
@@ -4693,11 +4781,11 @@ function FrameworkOsShellInner({
               dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-middle", value: true });
               dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-middle", value: commandPath });
             }
-            dispatch({ type: "SET_COMMAND_EXPANDED", value: definition.id });
+            dispatch({ type: "SET_COMMAND_EXPANDED", value: commandAddressKey(address) });
             dispatch({ type: "SET_SEARCH_OPEN", value: false });
             return;
           }
-          onCommand(source, definition.id);
+          onCommand(address);
         },
       });
     }
@@ -5241,7 +5329,7 @@ function FrameworkOsShellInner({
             <Layout
               mobile={mobile}
               mobilePanel={mobilePanel}
-              navbar={<Navbar items={navbarItems} showFullscreenToggle={!mobile} />}
+              navbar={<Navbar items={navbarItems} showFullscreenToggle={!mobile} onFullscreenToggle={() => onCommand({ owner: "os", commandId: "os.toggleFullscreen" })} />}
               subnavbar={
                 activeTutorial ? (
                   <TutorialBar

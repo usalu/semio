@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 6;
+pub const CHANNEL_VERSION: u32 = 7;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -199,6 +199,13 @@ pub enum AppFrame {
     Children {
         in_reply_to: u64,
         entries: Vec<ChildPackEntry>,
+    },
+    /// 👥️ Typed guest ephemeral-lane snapshot. Presence is the app-defined `ArtifactPack` payload;
+    /// generations let hosts skip unchanged renderer work while transient remains local-only.
+    Ephemeral {
+        presence: Vec<u8>,
+        presence_generation: u64,
+        transient_generation: u64,
     },
 }
 //#endregion 🔖️AppFrame
@@ -592,6 +599,12 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             write_vec_child_pack(&mut out, entries);
         }
+        AppFrame::Ephemeral { presence, presence_generation, transient_generation } => {
+            out.push(17);
+            crate::os_spr::write_bytes(&mut out, presence);
+            crate::os_spr::write_varint_u64(&mut out, *presence_generation);
+            crate::os_spr::write_varint_u64(&mut out, *transient_generation);
+        }
     }
     out
 }
@@ -640,6 +653,11 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
             ops: crate::os_spr::read_str(bytes, &mut pos)?,
         },
         16 => AppFrame::Children { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos)? },
+        17 => AppFrame::Ephemeral {
+            presence: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            presence_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+        },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -885,6 +903,7 @@ mod tests {
         assert_frame_round_trips(&AppFrame::Draft { in_reply_to: 15, pack: vec![1], spr: vec![2], ops: "d".to_string() });
         assert_frame_round_trips(&AppFrame::Children { in_reply_to: 16, entries: sample_child_entries() });
         assert_frame_round_trips(&AppFrame::Children { in_reply_to: 17, entries: Vec::new() });
+        assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4 });
     }
 
     //#region 🔖️Children
@@ -1054,6 +1073,7 @@ mod tests {
             }),
             ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
             ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
+            ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4 }),
         ]
     }
 
@@ -1063,7 +1083,7 @@ mod tests {
     /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
     fn channel_command_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Hello" => "000603617070056163746f72020102",
+            "Hello" => "000703617070056163746f72020102",
             "ConfigCommand" => "01010109",
             "Command" => "0201010100",
             "CommandText" => "030102676f",
@@ -1092,7 +1112,7 @@ mod tests {
     /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
     fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Welcome" => "0006010101",
+            "Welcome" => "0007010101",
             "Done" => "0101",
             "Invocation" => "0201010100",
             "UiSection" => "03010101016b0100",
@@ -1109,6 +1129,7 @@ mod tests {
             "Emit" => "0e0101010000010200",
             "Draft" => "0f01010101020164",
             "Children" => "1001010173016301640101",
+            "Ephemeral" => "110201020304",
             other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }

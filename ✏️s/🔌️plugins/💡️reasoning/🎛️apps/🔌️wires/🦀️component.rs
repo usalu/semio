@@ -15,7 +15,7 @@
 //! every action dispatches through the single typed `WiresCommand` channel via `ArtifactApp::handle`.
 
 use crate::apps::wires::commands::delete_selection;
-use crate::apps::wires::commands::{set_active_example, WIRES_PLAY_EXAMPLE_METABOLISM_ID};
+use crate::apps::wires::commands::set_active_example::{self, WIRES_PLAY_EXAMPLE_METABOLISM_ID};
 use crate::apps::wires::commands::{force_layout, reorganize};
 use crate::apps::wires::commands::set_locale;
 use crate::apps::wires::commands::add_node;

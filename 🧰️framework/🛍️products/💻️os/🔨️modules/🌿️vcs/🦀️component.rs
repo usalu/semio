@@ -225,8 +225,7 @@ crate::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "modu
 //#region 🔖️CollectionDiff
 /// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
 ///
-/// 🎞️ Field-identical to `crate::os_spr::command::ItemPatch`, but kept local because the surrounding
-/// VCS `CollectionMutation` schema still diverges from spr (`index` vs `at`) — see that enum's note.
+/// 🎞️ Canonical collection patch entry for sparse collection diffs (re-exported by `crate::os_spr`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemPatch<TId, TPatch> {

@@ -7,7 +7,7 @@
 
 use crate::apps::puzzle5d::modes::edit;
 use crate::apps::puzzle5d::modes::edit::options as mode_options;
-use crate::apps::puzzle5d::modes::edit::windows::board2d::{actions, options, utilities};
+use crate::apps::puzzle5d::modes::edit::windows::board2d::{options, utilities};
 use crate::apps::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 use crate::apps::puzzle5d::{
     puzzle5d_grip_full_id, puzzle5d_scene_mode, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID,
@@ -36,7 +36,7 @@ pub fn definition(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSessi
         surface_kind: SurfaceKind::Board2d,
         icon_id: "layout-grid".into(),
         options: WindowOptions { measures: window_measures(envelope, precompute, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
-        actions: vec![actions::apply_board_events::reference(), actions::set_camera::reference()],
+        actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::fill::UTILITY_ID.into()],
         interactions: vec![semio_framework_plugin::InteractionRef::new(crate::apps::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
         params_schema: None,

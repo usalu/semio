@@ -54,6 +54,27 @@ describe("styling resolve", () => {
     );
   });
 
+  it("keeps accessibility glass fallbacks scoped to painted regions while gaps stay cut out", () => {
+    expect(uiCss).toMatch(
+      /@supports not \(\(-webkit-backdrop-filter: blur\(1px\)\) or \(backdrop-filter: blur\(1px\)\)\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{\s*background-color: var\(--surface-bg\);/,
+    );
+    expect(uiCss).toMatch(
+      /@media \(prefers-reduced-transparency: reduce\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{[\s\S]*?backdrop-filter: none;[\s\S]*?background-color: var\(--surface-bg\);[\s\S]*?\[data-window-silhouette-gap\] \{\s*background: transparent !important;\s*background-color: transparent !important;/,
+    );
+    expect(uiCss).toMatch(
+      /@media \(forced-colors: active\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{[\s\S]*?background-color: Canvas;\s*color: CanvasText;[\s\S]*?\[data-window-silhouette-border\] path \{\s*stroke: CanvasText !important;[\s\S]*?\[data-window-silhouette-gap\] \{\s*background: transparent !important;\s*background-color: transparent !important;\s*forced-color-adjust: none;/,
+    );
+  });
+
+  it("expands the clipped content plane without changing document or auto-size clearances", () => {
+    expect(uiCss).toMatch(
+      /\.window-silhouette-content-plane\s*\{\s*margin-block-start: calc\(-1 \* var\(--window-silhouette-top-clearance, 0px\)\);\s*margin-block-end: calc\(-1 \* var\(--window-silhouette-bottom-clearance, 0px\)\);\s*padding-block-start: var\(--window-silhouette-top-clearance, 0px\);\s*padding-block-end: var\(--window-silhouette-bottom-clearance, 0px\);/,
+    );
+    expect(uiCss).toMatch(
+      /\.window-silhouette-content-plane:has\(\s*\[data-window-content-layout="edgeless"\],\s*\[data-slot="window-dead-line-scroll"\]\s*\)\s*\{\s*padding-block-start: 0;\s*padding-block-end: 0;/,
+    );
+  });
+
   it("resolveColorHex resolves palette var refs headlessly", () => {
     clearColorResolveCache();
     expect(resolveColorHex("var(--color-secondary)", "gray")).toBe("#34d1bf");

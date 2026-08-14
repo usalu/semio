@@ -80,6 +80,8 @@ use wasm_bindgen_futures::spawn_local;
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
+#[cfg(not(target_arch = "wasm32"))]
+use winit::window::Fullscreen;
 use winit::window::{Window, WindowAttributes, WindowId};
 
 fn spawn_app_task<F>(future: F)
@@ -311,6 +313,33 @@ impl AppRuntime {
     }
 
     fn frame(&mut self) {
+        if std::mem::take(&mut self.shell.fullscreen_toggle_requested) {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let active = self.window.fullscreen().is_none();
+                self.window.set_fullscreen(if active { Some(Fullscreen::Borderless(None)) } else { None });
+                self.shell.fullscreen_active = active;
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                use winit::platform::web::WindowExtWebSys;
+                if let Some(canvas) = self.window.canvas() {
+                    let document = canvas.owner_document();
+                    let active = document.as_ref().is_some_and(|document| document.fullscreen_element().is_some());
+                    if active {
+                        if let Some(document) = document {
+                            document.exit_fullscreen();
+                        }
+                        self.shell.fullscreen_active = false;
+                    } else {
+                        match canvas.request_fullscreen() {
+                            Ok(()) => self.shell.fullscreen_active = true,
+                            Err(error) => web_sys::console::error_2(&"Fullscreen request was rejected".into(), &error),
+                        }
+                    }
+                }
+            }
+        }
         #[cfg(not(target_arch = "wasm32"))]
         {
             self.poll_native_plugin_hot_swap();

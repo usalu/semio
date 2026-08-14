@@ -27,7 +27,7 @@ use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
-    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
+    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
 };
 use semio_framework_plugin::app::InteractionView;
@@ -268,8 +268,8 @@ semio_framework_plugin::app_commands! {
     /// behavior, assembled from the `🎮️commands/*` payload modules. Each row states BOTH the manifest
     /// action id (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire
     /// keyword (the kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
-    /// `"animate.resetGrid" as "reset-grid"` is the row that proves it (mirrors the pre-B1
-    /// `handle_command`-only `"animate.resetGrid"` app-scope command). **Row order is the binary variant
+    /// `"resetGrid" as "reset-grid"` is the row that proves it. The app owner is carried by the
+    /// qualified command address rather than repeated in this local id. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
     pub enum PresentCommand for PresentSnapshot, PresentMutation, PresentConfig, PresentConfigMutation, ctx = PresentDispatchCtx {
         "seedGrid" as "seed-grid" => seed_grid::SeedGrid,
@@ -283,7 +283,7 @@ semio_framework_plugin::app_commands! {
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "clearTiles" as "clear-tiles" => clear_tiles::ClearTiles,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
-        "animate.resetGrid" as "reset-grid" => reset_grid::ResetGrid,
+        "resetGrid" as "reset-grid" => reset_grid::ResetGrid,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "setLocale" as "set-locale" => set_locale::SetLocale,
@@ -433,7 +433,7 @@ pub fn create_animate_present_app() -> App {
             ])
             // 🎛️ App-scope command — see `🎮️commands/🌐️seed-grid::reset_grid`'s doc comment for why this
             // isn't `seedGrid`/`clearTiles`.
-            .app_command("animate.resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document")
+            .app_command("resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document", ActionKind::Mutation)
             // 🕹️ The framework-owned "tiles" interaction domain (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document panel
             // tree (`.interaction_domain("tiles")`) and the tile-editor canvas's pick selection;
@@ -531,12 +531,12 @@ mod tests {
     fn app_manifest_declares_expected_operations_and_shell_actions() {
         use semio_framework_plugin::ActionKind;
         let definition = create_animate_present_app().definition;
-        let operation_ids: Vec<&str> = definition.actions.iter().filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
+        let operation_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
         for expected in ["seedGrid", "addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops", "setSource", "setFrame", "setActiveExample", "clearTiles", "engagementSubmit"] {
             assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
         }
-        assert!(definition.actions.iter().any(|action| action.id == "exportVideoFromDeck" && matches!(action.kind, ActionKind::Shell)));
-        assert!(definition.actions.iter().any(|action| action.id == "engagementInput" && matches!(action.kind, ActionKind::View)));
+        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "exportVideoFromDeck" && matches!(action.kind, ActionKind::Shell)));
+        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "engagementInput" && matches!(action.kind, ActionKind::View)));
     }
 
     //#region 🔖️ManifestSanity
@@ -711,7 +711,7 @@ mod tests {
             ("setActiveExample", "set-active-example"),
             ("clearTiles", "clear-tiles"),
             ("engagementSubmit", "engagement-submit"),
-            ("animate.resetGrid", "reset-grid"),
+            ("resetGrid", "reset-grid"),
             ("engagementInput", "engagement-input"),
             ("canvasPointerDown", "canvas-pointer-down"),
             ("setLocale", "set-locale"),

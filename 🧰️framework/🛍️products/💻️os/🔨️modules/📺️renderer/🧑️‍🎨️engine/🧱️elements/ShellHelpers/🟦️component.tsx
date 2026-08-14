@@ -27,11 +27,14 @@ import {
   type ActionArgDef,
   type ActionDefinition,
   type ActionDescriptor,
+  type ActionInvocation,
   type AppDefinition,
   type AppModeDefinition,
   type AppPanelTabDefinition,
   type AppWindowKindDefinition,
+  type CommandAddress,
   type CommandDefinition,
+  type CommandInvocation,
   type DerivedUtilitySpec,
   deriveUtilityNodes,
   type DialogDefinition,
@@ -63,6 +66,7 @@ import {
   type PluginUiRefreshResponse,
   type PluginUiRefreshSectionResponse,
   type PluginViewState,
+  type Platform,
   RECORD_TUTORIAL_ACTION_ID,
   resolvePluginHostConfig,
   resolveUiDirtyScope,
@@ -90,7 +94,6 @@ import {
   type WindowMeasure,
 } from "@semio-tech/framework";
 import {
-  encodeActionWire,
   packValueFromBase64,
   packValueToBase64,
 } from "@semio-tech/framework-os";
@@ -422,20 +425,47 @@ export function requestFileOpen(accept: string, readAs?: string, multiple?: bool
  * instance and feeds its own `requestedEffects` back through `applyHostEffects` recursively. */
 type EffectDispatchOne = (action: string, args?: Record<string, unknown>) => Promise<void>;
 
-/** 🔁️ Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure —
- * extracted so the D3/D2/D5 fan-out loops below are plain functions testable without React/plugin
- * wiring, while production callers get the exact same `handleAction` + recursive-effects behavior. */
+/** 🎯️ Encodes a host-effect callback as the same fully scoped JSON `ActionInvocation` every other
+ * renderer action uses; pack-base64 belongs inside the worker channel, never at `handleAction`'s edge. */
+export function encodeEffectActionInvocation(baseSession: ActiveSession, action: string, args?: Record<string, unknown>): string {
+  const windowKindId = baseSession.viewState.activeWindowKindId ?? baseSession.app.windowKinds[0]?.id ?? "";
+  const windowInstanceId = baseSession.viewState.windowId ?? windowKindId;
+  const invocation: ActionInvocation = {
+    address: {
+      pluginId: baseSession.pluginId,
+      appId: baseSession.app.id,
+      modeId: baseSession.viewState.activeModeId ?? baseSession.app.defaultModeId ?? baseSession.app.modes[0]?.id ?? baseSession.app.id,
+      windowKindId,
+      windowInstanceId,
+      actionId: action,
+    },
+    arguments: { ...args, windowId: windowInstanceId },
+  };
+  return JSON.stringify(invocation);
+}
+
+/** 🎯️ Encodes a recursively requested app command with its manifest owner. */
+export function encodeEffectCommandInvocation(baseSession: ActiveSession, commandId: string, args?: Record<string, unknown>): string {
+  const invocation: CommandInvocation = {
+    address: { owner: { app: { pluginId: baseSession.pluginId, appId: baseSession.app.id } }, commandId },
+    arguments: { ...args },
+  };
+  return JSON.stringify(invocation);
+}
+
+/** 🔁️ Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure;
+ * declared app commands re-enter the typed command channel and framework/window actions retain their
+ * scoped action channel. */
 export function makeEffectDispatchOne(
   pluginEntry: LoadedProgramState,
   baseSession: ActiveSession,
   applyEffects: (effects: readonly HostEffect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
 ): EffectDispatchOne {
   return async (action, args) => {
-    const response = await pluginEntry.handle.handleAction(
-      baseSession.instanceId,
-      encodeActionWire({ controllerId: baseSession.app.controllerId, action, args }),
-      baseSession.viewState,
-    );
+    const isAppCommand = (baseSession.app.commands ?? []).some((command) => command.id === action);
+    const response = isAppCommand && pluginEntry.handle.handleCommand
+      ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(baseSession, action, args), baseSession.viewState)
+      : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(baseSession, action, args), baseSession.viewState);
     await applyEffects(response.requestedEffects ?? [], baseSession, resolveUiDirtyScope(response.uiScope));
   };
 }
@@ -2625,7 +2655,7 @@ export type KeybindingIntent = { readonly kind: "fire" } | { readonly kind: "ope
  * unless that form is already the expanded one in the active window AND validation passes, in which case
  * the hotkey executes with the merged effective args. An already-open-but-invalid form stays open.
  */
-export function resolveKeybindingIntent(definition: ActionDefinition | undefined, expandedActionId: string | null, stagedArgs: Readonly<Record<string, unknown>>): KeybindingIntent {
+export function resolveKeybindingIntent(definition: Pick<ActionDefinition, "id" | "args"> | undefined, expandedActionId: string | null, stagedArgs: Readonly<Record<string, unknown>>): KeybindingIntent {
   if (!definition || !actionRequiresStagedForm(definition)) return { kind: "fire" };
   if (expandedActionId === definition.id) {
     const effective = effectiveActionArgs(definition.args, stagedArgs);
@@ -2827,22 +2857,62 @@ export function windowActionPaneNode(
 //#endregion 🧰️WindowActionPane
 
 //#region 🎛️CommandRegistry
-/** 🎛️ Where a resolved command came from — drives palette/footer category grouping and dispatch routing. */
+/** 🎛️ One command definition paired with its shared, fully qualified address. */
 export type ResolvedCommand = {
   readonly definition: CommandDefinition;
-  readonly source: { readonly kind: "os" } | { readonly kind: "plugin" } | { readonly kind: "app" } | { readonly kind: "mode"; readonly modeId: string };
+  readonly address: CommandAddress;
 };
+
+/** 📍️ Stable key for maps whose command ids may overlap across owners. */
+export function commandAddressKey(address: CommandAddress): string {
+  const owner = address.owner;
+  if (owner === "os") return `os:${address.commandId}`;
+  if ("plugin" in owner) return `plugin:${owner.plugin.pluginId}:${address.commandId}`;
+  if ("app" in owner) return `app:${owner.app.pluginId}:${owner.app.appId}:${address.commandId}`;
+  return `mode:${owner.mode.pluginId}:${owner.mode.appId}:${owner.mode.modeId}:${address.commandId}`;
+}
+
+/** 🪪️ Element-id-safe projection of the complete command address. */
+function commandElementKey(address: CommandAddress): string {
+  return commandAddressKey(address).replaceAll(":", ".");
+}
+
+/** 📍️ Whether an addressed command belongs to the operating-system catalog. */
+export function isOsCommandAddress(address: CommandAddress): boolean {
+  return address.owner === "os";
+}
+
+/** 📍️ Plugin segment of a non-OS command owner. */
+export function commandOwnerPluginId(owner: CommandAddress["owner"]): string | null {
+  if (owner === "os") return null;
+  if ("plugin" in owner) return owner.plugin.pluginId;
+  if ("app" in owner) return owner.app.pluginId;
+  return owner.mode.pluginId;
+}
+
+/** ⌨️ Detects the command-keybinding platform from a browser/host platform description. */
+export function detectCommandPlatform(value: string): Platform | undefined {
+  if (/mac|iphone|ipad/i.test(value)) return "macOs";
+  if (/win/i.test(value)) return "windows";
+  if (/linux|x11/i.test(value)) return "linux";
+  return undefined;
+}
+
+/** ⌨️ Resolves a command's portable chords for one host platform. */
+export function commandKeybindingChords(definition: Pick<CommandDefinition, "keybindings">, platform?: Platform): string[] {
+  return definition.keybindings.filter((binding) => binding.platform === undefined || binding.platform === platform).map((binding) => binding.chord);
+}
 
 /**
  * 🎛️ Aggregates every command visible for the current session: os built-ins, the active session's
- * plugin-scope commands, the app's App-scope commands, and Mode-scope commands referenced by the
- * active mode's `commands` refs. There are no window-level commands (see `CommandScope`) — unlike
+ * plugin-owned commands, app-owned commands, and commands owned by the active mode. Window-local
+ * verbs are actions and therefore never enter this global command resolver — unlike
  * `resolveWindowActions`/`resolveUtilities`, this never takes a window kind.
  */
 export function resolveCommands(
   osCommands: readonly CommandDefinition[],
-  activePluginManifest: Pick<PluginManifest, "commands"> | null | undefined,
-  app: Pick<AppDefinition, "commands" | "modes"> | null | undefined,
+  activePluginManifest: Pick<PluginManifest, "pluginId" | "commands"> | null | undefined,
+  app: Pick<AppDefinition, "id" | "commands" | "modes"> | null | undefined,
   activeModeId: string,
   overlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
   terminology: string = UI_TERMINOLOGY_NATIVE,
@@ -2858,16 +2928,18 @@ export function resolveCommands(
     label: resolveManifestLabel(definition.label, terminology, locale),
     args: definition.args.map((def) => resolveActionArgDef(def, definition.id, overlay, terminology, locale)),
   });
-  const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition: resolveDefinition(definition), source: { kind: "os" as const } }));
+  const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition: resolveDefinition(definition), address: { owner: "os", commandId: definition.id } }));
   for (const definition of activePluginManifest?.commands ?? []) {
-    resolved.push({ definition: resolveDefinition(definition), source: { kind: "plugin" as const } });
+    resolved.push({ definition: resolveDefinition(definition), address: { owner: { plugin: { pluginId: activePluginManifest!.pluginId } }, commandId: definition.id } });
   }
   if (!app) return resolved;
-  const activeMode = (app.modes as readonly AppModeDefinition[] | undefined)?.find((mode) => mode.id === activeModeId);
-  const modeCommandIds = new Set(activeMode?.commands ?? []);
+  const pluginId = activePluginManifest?.pluginId ?? "";
   for (const definition of app.commands ?? []) {
-    if (definition.scope === "app") resolved.push({ definition: resolveDefinition(definition), source: { kind: "app" as const } });
-    else if (definition.scope === "mode" && modeCommandIds.has(definition.id)) resolved.push({ definition: resolveDefinition(definition), source: { kind: "mode" as const, modeId: activeModeId } });
+    resolved.push({ definition: resolveDefinition(definition), address: { owner: { app: { pluginId, appId: app.id } }, commandId: definition.id } });
+  }
+  const activeMode = (app.modes as readonly AppModeDefinition[] | undefined)?.find((mode) => mode.id === activeModeId);
+  for (const definition of activeMode?.commands ?? []) {
+    resolved.push({ definition: resolveDefinition(definition), address: { owner: { mode: { pluginId, appId: app.id, modeId: activeModeId } }, commandId: definition.id } });
   }
   return resolved;
 }
@@ -2890,6 +2962,7 @@ export function commandCategories(commands: readonly ResolvedCommand[]): { reado
   const seen = new Set<string>();
   const categories: { readonly id: string; readonly label: string }[] = [];
   for (const { definition } of commands) {
+    if (!definition.inPalette) continue;
     if (seen.has(definition.category)) continue;
     seen.add(definition.category);
     categories.push({ id: definition.category, label: commandCategoryLabel(definition.category) });
@@ -2910,9 +2983,8 @@ export function driverDisplayLabel(driver: UiDriver): string {
 }
 
 /**
- * 🎛️ Os-level built-in commands — app introduction/theme/layout/locale/appearance/driver,
- * `scope: "os"`, handled
- * locally by the shell (never routed to a program). Rebuilt via `useMemo` since the theme and
+ * 🎛️ Os-owned built-in commands — app introduction/theme/layout/locale/appearance/driver,
+ * handled locally by the shell (never routed to a program). Rebuilt via `useMemo` since the theme and
  * terminology option lists are live state.
  */
 export function buildOsCommands(
@@ -2928,19 +3000,35 @@ export function buildOsCommands(
 ): CommandDefinition[] {
   const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
   const commands: CommandDefinition[] = [
-    ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), scope: "os" as const, category: "app", inPalette: true, args: [] }] : []),
+    {
+      id: "os.toggleFullscreen",
+      label: shellLabel("ui.fullscreen.toggle"),
+      category: "layout",
+      iconId: "maximize-2",
+      kind: "shell",
+      inPalette: true,
+      args: [],
+      keybindings: [
+        { chord: "f11", platform: "windows" },
+        { chord: "f11", platform: "linux" },
+        { chord: "control+meta+f", platform: "macOs" },
+      ],
+    },
+    ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), category: "app", iconId: "graduation-cap", kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
     // 🎥️ `os.playTutorial` only appears once at least one tutorial is declared (app-own or brand-own);
     // `os.recordTutorial` is dev/studio-only (see `isTutorialRecorderAvailable`) and needs no declared
     // tutorial at all — recording an app IS the authoring path for one.
     ...(tutorials.length > 0
-      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), scope: "os" as const, category: "app", inPalette: true, args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: resolveManifestLabel(tutorial.title, terminology, locale) })))] }]
+      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), category: "app", iconId: "play", kind: "shell" as const, inPalette: true, keybindings: [], args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: resolveManifestLabel(tutorial.title, terminology, locale) })))] }]
       : []),
-    ...(tutorialRecorderAvailable ? [{ id: "os.recordTutorial", label: shellLabel("ui.command.recordTutorial"), scope: "os" as const, category: "app", inPalette: true, args: [] }] : []),
+    ...(tutorialRecorderAvailable ? [{ id: "os.recordTutorial", label: shellLabel("ui.command.recordTutorial"), category: "app", iconId: "circle", kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
     {
       id: "os.setAppearance",
       label: shellLabel("ui.command.setAppearance"),
-      scope: "os",
       category: "appearance",
+      iconId: "sun-moon",
+      kind: "shell",
+      keybindings: [],
       inPalette: true,
       args: [
         selectCommandArg("appearance", shellLabel("ui.settings.tab.appearance"), [
@@ -2953,8 +3041,10 @@ export function buildOsCommands(
     {
       id: "os.setThemeId",
       label: shellLabel("ui.command.setTheme"),
-      scope: "os",
       category: "appearance",
+      iconId: "palette",
+      kind: "shell",
+      keybindings: [],
       inPalette: true,
       args: [
         selectCommandArg(
@@ -2967,8 +3057,10 @@ export function buildOsCommands(
     {
       id: "os.setLayout",
       label: shellLabel("ui.command.setLayout"),
-      scope: "os",
       category: "layout",
+      iconId: "layout-template",
+      kind: "shell",
+      keybindings: [],
       inPalette: true,
       args: [
         selectCommandArg("layout", shellLabel("ui.settings.tab.layout"), [
@@ -2977,12 +3069,14 @@ export function buildOsCommands(
         ]),
       ],
     },
-    { id: "os.resetDock", label: shellLabel("ui.settings.resetDock"), scope: "os", category: "layout", inPalette: true, args: [] },
+    { id: "os.resetDock", label: shellLabel("ui.settings.resetDock"), category: "layout", iconId: "undo", kind: "shell", inPalette: true, args: [], keybindings: [] },
     {
       id: "os.setLocale",
       label: shellLabel("ui.command.setLocale"),
-      scope: "os",
       category: "language",
+      iconId: "languages",
+      kind: "shell",
+      keybindings: [],
       inPalette: true,
       args: [
         selectCommandArg("locale", shellLabel("ui.settings.tab.language"), [
@@ -2994,8 +3088,10 @@ export function buildOsCommands(
     {
       id: "os.setTerminology",
       label: shellLabel("ui.command.setTerminology"),
-      scope: "os",
       category: "language",
+      iconId: "languages",
+      kind: "shell",
+      keybindings: [],
       inPalette: true,
       args: [
         selectCommandArg(
@@ -3008,8 +3104,10 @@ export function buildOsCommands(
     {
       id: "os.setDriver",
       label: shellLabel("ui.command.setDriver"),
-      scope: "os",
       category: "layout",
+      iconId: "settings",
+      kind: "shell",
+      keybindings: [],
       inPalette: true,
       args: [
         selectCommandArg(
@@ -3098,53 +3196,57 @@ export function buildCommandCategoryTree(
 ): TreePanelConfig {
   const argCarryingCommands = commands.filter((entry) => entry.definition.args.length > 0);
   const autoExpandedSingleton = argCarryingCommands.length === 1 ? argCarryingCommands[0] : undefined;
-  const expanded = (expandedCommandId ? commands.find((entry) => entry.definition.id === expandedCommandId) : undefined) ?? autoExpandedSingleton;
-  const effectiveExpandedId = expanded?.definition.id ?? null;
+  const expanded = (expandedCommandId ? commands.find((entry) => commandAddressKey(entry.address) === expandedCommandId) : undefined) ?? autoExpandedSingleton;
+  const effectiveExpandedId = expanded ? commandAddressKey(expanded.address) : null;
   const sections: TreeDataSection[] = [];
   if (expanded && expanded.definition.args.length > 0) {
-    const staged = stagedArgsByCommandId[expanded.definition.id] ?? {};
+    const expandedKey = commandAddressKey(expanded.address);
+    const expandedElementKey = commandElementKey(expanded.address);
+    const staged = stagedArgsByCommandId[expandedKey] ?? {};
     const effective = effectiveActionArgs(expanded.definition.args, staged);
     const missing = missingRequiredArgs(expanded.definition.args, effective);
     sections.push({
       id: `command.category.${expanded.definition.category}.form`,
       items: expanded.definition.args.map(
         (def): TreeDataItem => ({
-          id: `command.${expanded.definition.id}.arg.${def.id}`,
+          id: `command.${expandedElementKey}.arg.${def.id}`,
           label: def.label,
           description: def.description,
-          control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expanded.definition.id, def.id, value)),
+          control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expandedKey, def.id, value)),
         }),
       ),
       actions: [
         {
-          id: `command-${expanded.definition.id}-execute`,
+          id: `command-${expandedElementKey}-execute`,
           icon: <Icon icon="check" size="small" />,
           text: shellLabel("ui.common.execute"),
           disabled: missing.length > 0,
           onClick: () => onExecute(expanded, effective),
         },
         {
-          id: `command-${expanded.definition.id}-reset`,
+          id: `command-${expandedElementKey}-reset`,
           icon: <Icon icon="undo" size="small" />,
           text: shellLabel("ui.common.reset"),
-          onClick: () => onResetArgs(expanded.definition.id),
+          onClick: () => onResetArgs(expandedKey),
         },
       ],
     });
   }
-  const listCommands = commands.filter((entry) => entry.definition.id !== effectiveExpandedId);
+  const listCommands = commands.filter((entry) => commandAddressKey(entry.address) !== effectiveExpandedId);
   if (listCommands.length > 0) {
     sections.push({
       id: "command.category.list",
       items: listCommands.map((entry): TreeDataItem => {
         const argCarrying = entry.definition.args.length > 0;
+        const entryKey = commandAddressKey(entry.address);
+        const elementKey = commandElementKey(entry.address);
         const icon = entry.definition.iconId ? <Icon icon={entry.definition.iconId as IconName} size="small" /> : undefined;
-        if (!argCarrying) return { id: `command.${entry.definition.id}`, label: entry.definition.label, icon, onClick: () => onExecute(entry) };
+        if (!argCarrying) return { id: `command.${elementKey}`, label: entry.definition.label, icon, onClick: () => onExecute(entry) };
         return {
-          id: `command.${entry.definition.id}`,
+          id: `command.${elementKey}`,
           label: `${entry.definition.label}…`,
-          icon: <Icon icon={expandedCommandId === entry.definition.id ? "chevron-down" : "chevron-up"} size="small" />,
-          onClick: () => onToggleExpanded(expandedCommandId === entry.definition.id ? null : entry.definition.id),
+          icon: <Icon icon={expandedCommandId === entryKey ? "chevron-down" : "chevron-up"} size="small" />,
+          onClick: () => onToggleExpanded(expandedCommandId === entryKey ? null : entryKey),
         };
       }),
     });
@@ -3167,11 +3269,11 @@ export function buildCommandCategoryTabs(
   categories: readonly { readonly id: string; readonly label: string }[],
   expandedCommandIdRef: React.RefObject<string | null>,
   stagedArgsByCommandIdRef: React.RefObject<Readonly<Record<string, Readonly<Record<string, unknown>>>>>,
-  onCommand: (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => void,
+  onCommand: (address: CommandAddress, args?: Record<string, unknown>) => void,
   dispatch: (action: ShellAction) => void,
 ): PanelTabNode[] {
   return categories.map((category) => {
-    const categoryCommands = resolvedCommands.filter((entry) => entry.definition.category === category.id);
+    const categoryCommands = resolvedCommands.filter((entry) => entry.definition.inPalette && entry.definition.category === category.id);
     return singleTreeLeaf({
       id: `command.category.${category.id}`,
       icon: COMMAND_CATEGORY_ICON,
@@ -3182,7 +3284,7 @@ export function buildCommandCategoryTabs(
             categoryCommands,
             expandedCommandIdRef.current,
             stagedArgsByCommandIdRef.current,
-            (entry, executeArgs) => onCommand(entry.source, entry.definition.id, executeArgs),
+            (entry, executeArgs) => onCommand(entry.address, executeArgs),
             (commandId) => dispatch({ type: "SET_COMMAND_EXPANDED", value: commandId }),
             (commandId, argId, value) => dispatch({ type: "STAGE_COMMAND_ARG", commandId, argId, value }),
             (commandId) => dispatch({ type: "RESET_COMMAND_ARGS", commandId }),

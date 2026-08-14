@@ -384,6 +384,7 @@ mod tests {
             ],
             "fasteners": [],
         });
+        let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle5dSnapshot>(value.clone()).expect("typed puzzle5d fixture")).expect("canonical puzzle5d JSON");
         let operations = puzzle5d_document_delta_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::MovePart2d(_))));
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::CreatePart(_))));
@@ -394,11 +395,11 @@ mod tests {
             inverses.extend(Mutation::<Value>::inverse(operation, &forward));
             forward = Mutation::<Value>::diff(operation, &forward).apply(&forward);
         }
-        assert_eq!(forward, after);
+        assert_eq!(forward, canonical(&after));
         for inverse in inverses.iter().rev() {
             forward = Mutation::<Value>::diff(inverse, &forward).apply(&forward);
         }
-        assert_eq!(forward, before, "backwards operations must restore the pre-edit document");
+        assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }
 
     //#region 🔖️MutationLaws

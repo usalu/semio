@@ -9,7 +9,7 @@ use crate::apps::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
 use crate::apps::lowpoly::engine::LowpolyDocument;
 use crate::artifacts::lowpoly::schema::mesh_data_from_transfer;
 use semio_framework_plugin::{
-    build_world_3d_scene, world3d_camera_json, world3d_scene, ActionRef, InteractionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
+    build_world_3d_scene, world3d_camera_json, world3d_scene, InteractionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
         // 🎚️ `measures` stays empty here: measures are config-derived per frame by
         // `ArtifactApp::window_measures`, never frozen into the manifest.
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
-        actions: LOWPOLY_MAIN_ACTIONS.iter().map(|id| ActionRef::from(*id)).collect(),
+        actions: Vec::new(),
         utilities: ["move", "rotate", "scale", "brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" interaction domain —
         // only the Model window selects/hovers mesh components; the UV window paints textures.

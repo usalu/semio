@@ -1333,7 +1333,17 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
     let objects = resolver.resolve_all();
     let trailer = xref.trailer.clone();
 
-    Ok(PdfSnapshot { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version, pages, info, objects, trailer })
+    let mut snapshot = PdfSnapshot {
+        schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(),
+        declared_version,
+        pages,
+        info,
+        objects,
+        trailer,
+        source: None,
+    };
+    snapshot.source = Some(crate::ArtifactSource::capture(data, &snapshot.semantic_projection()).map_err(PdfEngineError::Malformed)?);
+    Ok(snapshot)
 }
 
 fn pdf_string_to_text(v: &PdfObject) -> Option<String> {
@@ -1404,6 +1414,15 @@ fn build_content_ops(text: &str) -> String {
 /// original `objects` graph is deliberately NOT re-emitted (see the snapshot's doc comment for
 /// why the round trip is asserted structurally, not byte-for-byte).
 pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
+    if let Some(source) = &snap.source {
+        return if source.matches(&snap.semantic_projection()).map_err(PdfEngineError::Malformed)? {
+            Ok(source.bytes.clone())
+        } else {
+            Err(PdfEngineError::Unsupported(
+                "dirty imported PDF cannot be exported until its semantic changes have a lossless writer".into(),
+            ))
+        };
+    }
     let mut next_num = 1u32;
     let mut alloc = || { let n = next_num; next_num += 1; n };
     let catalog_num = alloc();
@@ -1747,6 +1766,7 @@ mod tests {
             info: PdfInfo { title: Some("Test Doc".into()), author: Some("Ueli".into()), ..Default::default() },
             objects: Vec::new(),
             trailer: Vec::new(),
+            source: None,
         }
     }
 

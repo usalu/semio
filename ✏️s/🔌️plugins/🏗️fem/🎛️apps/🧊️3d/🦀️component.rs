@@ -781,7 +781,7 @@ mod tests {
         let definition = create_fem3d_app().definition;
         let window = definition.window_kinds.iter().find(|w| w.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
         assert_eq!(window.label.resolve(Terminology::Native, Locale::De), "Modell");
-        let action = definition.actions.iter().find(|a| a.id == "addFrame").expect("addFrame declared");
+        let action = window.actions.iter().find(|action| action.id == "addFrame").expect("addFrame declared");
         assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Rahmen hinzufügen");
         assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Add Frame");
     }

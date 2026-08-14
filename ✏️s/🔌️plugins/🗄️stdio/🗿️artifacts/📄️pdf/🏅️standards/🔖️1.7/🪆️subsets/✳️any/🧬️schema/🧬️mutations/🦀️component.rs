@@ -8,8 +8,8 @@
 
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
     self, PdfDiff, PdfPathSegment,
-    decode_option, dec_box, dec_dict_entry, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str,
-    encode_option, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str,
+    decode_option, dec_artifact_source, dec_box, dec_dict_entry, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str,
+    encode_option, enc_artifact_source, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str,
     split_top_level, strip_brackets,
 };
 /// 🧪️ P2-FG3: real recursive binary primitives backing the upgraded `OpBinary` impl below --
@@ -347,19 +347,20 @@ fn dec_indirect_object(s: &str) -> Result<PdfIndirectObject, String> {
 }
 fn enc_pdf_snapshot(s: &PdfSnapshot) -> String {
     format!(
-        "[{},{},[{}],{},[{}],[{}]]",
+        "[{},{},[{}],{},[{}],[{}],{}]",
         enc_str(&s.schema),
         enc_str(&s.declared_version),
         s.pages.iter().map(enc_pdf_page).collect::<Vec<_>>().join(","),
         enc_pdf_info(&s.info),
         s.objects.iter().map(enc_indirect_object).collect::<Vec<_>>().join(","),
         s.trailer.iter().map(enc_dict_entry).collect::<Vec<_>>().join(","),
+        encode_option(&s.source, enc_artifact_source),
     )
 }
 fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, declared_version, pages, info, objects, trailer] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 6 fields, got {}", parts.len()));
+    let [schema, declared_version, pages, info, objects, trailer, source] = parts.as_slice() else {
+        return Err(format!("snapshot: expected 7 fields, got {}", parts.len()));
     };
     Ok(PdfSnapshot {
         schema: dec_str(schema)?,
@@ -368,6 +369,7 @@ fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
         info: dec_pdf_info(info)?,
         objects: split_top_level(strip_brackets(objects)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_indirect_object).collect::<Result<Vec<_>, String>>()?,
         trailer: split_top_level(strip_brackets(trailer)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_dict_entry).collect::<Result<Vec<_>, String>>()?,
+        source: decode_option(source, dec_artifact_source)?,
     })
 }
 
@@ -603,6 +605,7 @@ mod tests {
                 PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(3) }], data: vec![1, 2, 3], raw_filter: None } },
             ],
             trailer: vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(oref(1, 0)) }, PdfDictEntry { key: "Size".into(), value: PdfObject::Int(3) }],
+            source: None,
         }
     }
 

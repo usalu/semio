@@ -20,6 +20,7 @@
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{
     ObjRef, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot,
 };
+use crate::ArtifactSource;
 use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
 use serde::{Deserialize, Serialize};
@@ -833,6 +834,9 @@ pub struct PdfDiff {
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trailer: Option<PdfDictDiff>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<Option<ArtifactSource>>,
 }
 
 impl MutationDiff<PdfSnapshot> for PdfDiff {
@@ -843,6 +847,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
         if let Some(pd) = &self.pages { next.pages = apply_pages_diff(pd, &base.pages); }
         if let Some(od) = &self.objects { next.objects = apply_objects_diff(od, &base.objects); }
         if let Some(td) = &self.trailer { next.trailer = apply_dict_diff(td, &base.trailer); }
+        if let Some(source) = &self.source { next.source = source.clone(); }
         next
     }
 
@@ -867,6 +872,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
             (a, None) => a,
             (Some(a), Some(b)) => { let m = absorb_dict_diff(a, b); if m.is_empty() { None } else { Some(m) } }
         };
+        if other.source.is_some() { self.source = other.source; }
     }
 }
 
@@ -886,11 +892,12 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
         let pages = { let d = pages_diff_between(&base.pages, &other.pages); if d.is_empty() { None } else { Some(d) } };
         let objects = { let d = objects_diff_between(&base.objects, &other.objects); if d.is_empty() { None } else { Some(d) } };
         let trailer = { let d = dict_diff_between(&base.trailer, &other.trailer); if d.is_empty() { None } else { Some(d) } };
-        PdfDiff { declared_version, info, pages, objects, trailer }
+        let source = (base.source != other.source).then(|| other.source.clone());
+        PdfDiff { declared_version, info, pages, objects, trailer, source }
     }
 
     fn is_empty(&self) -> bool {
-        self.declared_version.is_none() && self.info.is_none() && self.pages.is_none() && self.objects.is_none() && self.trailer.is_none()
+        self.declared_version.is_none() && self.info.is_none() && self.pages.is_none() && self.objects.is_none() && self.trailer.is_none() && self.source.is_none()
     }
 }
 
@@ -1009,6 +1016,16 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
+}
+pub(crate) fn enc_artifact_source(source: &ArtifactSource) -> String {
+    format!("[{},{}]", hex_encode(&source.bytes), hex_encode(&source.semantic_blake3))
+}
+pub(crate) fn dec_artifact_source(s: &str) -> Result<ArtifactSource, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [bytes, semantic_blake3] = parts.as_slice() else {
+        return Err(format!("artifact source: expected 2 fields, got {}", parts.len()));
+    };
+    Ok(ArtifactSource { bytes: hex_decode(bytes)?, semantic_blake3: hex_decode(semantic_blake3)? })
 }
 pub(crate) fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
@@ -1433,6 +1450,11 @@ pub(crate) fn enc_pdf_snapshot_bin(s: &PdfSnapshot, out: &mut Vec<u8>) {
     for entry in &s.trailer {
         enc_dict_entry_bin(entry, out);
     }
+    out.push(if s.source.is_some() { 1 } else { 0 });
+    if let Some(source) = &s.source {
+        write_bytes_lp(out, &source.bytes);
+        write_bytes_lp(out, &source.semantic_blake3);
+    }
 }
 pub(crate) fn dec_pdf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfSnapshot, String> {
     let schema = read_str_lp(reader)?;
@@ -1455,7 +1477,12 @@ pub(crate) fn dec_pdf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result
     for _ in 0..trailer_count {
         trailer.push(dec_dict_entry_bin(reader)?);
     }
-    Ok(PdfSnapshot { schema, declared_version, pages, info, objects, trailer })
+    let source = if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+        Some(ArtifactSource { bytes: read_bytes_lp(reader)?, semantic_blake3: read_bytes_lp(reader)? })
+    } else {
+        None
+    };
+    Ok(PdfSnapshot { schema, declared_version, pages, info, objects, trailer, source })
 }
 //#endregion 🔖️ObjectValueBinaryCodecs
 
@@ -1942,6 +1969,7 @@ fn print_pdf_diff(d: &PdfDiff) -> String {
     if let Some(v) = &d.pages { tokens.push(format!("pages={}", enc_pages_diff(v))); }
     if let Some(v) = &d.objects { tokens.push(format!("objects={}", enc_objects_diff(v))); }
     if let Some(v) = &d.trailer { tokens.push(format!("trailer={}", enc_dict_diff(v))); }
+    if let Some(v) = &d.source { tokens.push(format!("source={}", encode_option(v, enc_artifact_source))); }
     tokens.join(" ")
 }
 fn parse_pdf_diff(line: &str) -> Result<PdfDiff, String> {
@@ -1955,6 +1983,7 @@ fn parse_pdf_diff(line: &str) -> Result<PdfDiff, String> {
         else if let Some(rest) = token.strip_prefix("pages=") { d.pages = Some(dec_pages_diff(rest)?); }
         else if let Some(rest) = token.strip_prefix("objects=") { d.objects = Some(dec_objects_diff(rest)?); }
         else if let Some(rest) = token.strip_prefix("trailer=") { d.trailer = Some(dec_dict_diff(rest)?); }
+        else if let Some(rest) = token.strip_prefix("source=") { d.source = Some(decode_option(rest, dec_artifact_source)?); }
         else { return Err(format!("pdf diff: unknown token {token:?}")); }
     }
     Ok(d)
@@ -1980,13 +2009,21 @@ impl protocol::DiffCodec for PdfDiff {
         if self.info.is_some() { flags |= 0b00010; }
         if self.pages.is_some() { flags |= 0b00100; }
         if self.objects.is_some() { flags |= 0b01000; }
-        if self.trailer.is_some() { flags |= 0b10000; }
+        if self.trailer.is_some() { flags |= 0b010000; }
+        if self.source.is_some() { flags |= 0b100000; }
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(v) = &self.declared_version { write_str_lp(&mut out, v); }
         if let Some(v) = &self.info { enc_pdf_info_bin(v, &mut out); }
         if let Some(v) = &self.pages { enc_pages_diff_bin(v, &mut out); }
         if let Some(v) = &self.objects { enc_objects_diff_bin(v, &mut out); }
         if let Some(v) = &self.trailer { enc_dict_diff_bin(v, &mut out); }
+        if let Some(v) = &self.source {
+            out.push(if v.is_some() { 1 } else { 0 });
+            if let Some(source) = v {
+                write_bytes_lp(&mut out, &source.bytes);
+                write_bytes_lp(&mut out, &source.semantic_blake3);
+            }
+        }
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -1998,8 +2035,17 @@ impl protocol::DiffCodec for PdfDiff {
         let info = if flags & 0b00010 != 0 { Some(dec_pdf_info_bin(&mut reader).map_err(|e| malformed("diff info", reader.position(), e))?) } else { None };
         let pages = if flags & 0b00100 != 0 { Some(dec_pages_diff_bin(&mut reader).map_err(|e| malformed("diff pages", reader.position(), e))?) } else { None };
         let objects = if flags & 0b01000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", reader.position(), e))?) } else { None };
-        let trailer = if flags & 0b10000 != 0 { Some(dec_dict_diff_bin(&mut reader).map_err(|e| malformed("diff trailer", reader.position(), e))?) } else { None };
-        Ok(PdfDiff { declared_version, info, pages, objects, trailer })
+        let trailer = if flags & 0b010000 != 0 { Some(dec_dict_diff_bin(&mut reader).map_err(|e| malformed("diff trailer", reader.position(), e))?) } else { None };
+        let source = if flags & 0b100000 != 0 {
+            let present = reader.read_u8().map_err(|e| malformed("diff source presence", reader.position(), e.to_string()))?;
+            Some(if present != 0 {
+                Some(ArtifactSource {
+                    bytes: read_bytes_lp(&mut reader).map_err(|e| malformed("diff source bytes", reader.position(), e))?,
+                    semantic_blake3: read_bytes_lp(&mut reader).map_err(|e| malformed("diff source fingerprint", reader.position(), e))?,
+                })
+            } else { None })
+        } else { None };
+        Ok(PdfDiff { declared_version, info, pages, objects, trailer, source })
     }
 }
 //#endregion 🔖️TopLevel
@@ -2028,6 +2074,7 @@ mod handcrafted_diff_codec_tests {
                 PdfIndirectObject { id: oref(3, 0), value: PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Real(2.5), PdfObject::Ref(oref(1, 0))]) },
             ],
             trailer: vec![entry("Root", PdfObject::Ref(oref(1, 0))), entry("Size", PdfObject::Int(3))],
+            source: None,
         }
     }
 
@@ -2043,6 +2090,7 @@ mod handcrafted_diff_codec_tests {
                 PdfIndirectObject { id: oref(4, 0), value: PdfObject::Null },
             ],
             trailer: vec![entry("Root", PdfObject::Ref(oref(1, 0))), entry("Size", PdfObject::Int(4)), entry("Prev", PdfObject::Int(100))],
+            source: None,
         }
     }
 
@@ -2104,6 +2152,7 @@ mod tests {
                 PdfIndirectObject { id: oref(2, 0), value: PdfObject::Int(7) },
             ],
             trailer: vec![entry("Root", PdfObject::Ref(oref(1, 0))), entry("Size", PdfObject::Int(2)), entry("Extra", PdfObject::Bool(true))],
+            source: None,
         }
     }
 
@@ -2371,6 +2420,7 @@ mod tests {
                 PdfIndirectObject { id: oref(3, 0), value: PdfObject::Name("Added".into()) }, // added (base's obj id=2 is absent here -> removed)
             ],
             trailer: vec![entry("Root", PdfObject::Ref(oref(1, 0))), entry("Size", PdfObject::Int(3)), entry("Prev", PdfObject::Int(100))], // modified Size, added Prev
+            source: None,
         }
     }
 

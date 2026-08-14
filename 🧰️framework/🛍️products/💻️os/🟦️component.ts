@@ -342,7 +342,7 @@ export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope): Mutati
 export type ArtifactPresencePeer = {
   readonly actor: string;
   readonly label?: string;
-  readonly selectionJson?: string;
+  readonly presencePack?: readonly number[];
   readonly connectedAtMs: number;
   readonly userId?: string;
   readonly role?: string;
@@ -549,7 +549,7 @@ function readVecBytes(bytes: Uint8Array, pos: [number]): number[][] {
 }
 
 /** 🎯️ `actor str | presence bitmask u8 | connected_at_ms varint | fields present per bitmask
- * (label str? | selection_json str? | user_id str? | role str? | cursor f64,f64? | viewport
+ * (label str? | presence_pack bytes? | user_id str? | role str? | cursor f64,f64? | viewport
  * f64,f64,f64? | drag_ghost_json str?)` — the TS twin of `semio_framework_core::encode_presence_peer`
  * (`framework/core/rs/lib.rs`). This is what `ClientFrame::Presence.peer`/`ServerFrame::Presence.
  * peers[]` actually carry — real binary, not JSON bytes. */
@@ -558,7 +558,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   writeStr(out, peer.actor);
   let presence = 0;
   if (peer.label !== undefined) presence |= 1 << 0;
-  if (peer.selectionJson !== undefined) presence |= 1 << 1;
+  if (peer.presencePack !== undefined) presence |= 1 << 1;
   if (peer.userId !== undefined) presence |= 1 << 2;
   if (peer.role !== undefined) presence |= 1 << 3;
   if (peer.cursor !== undefined) presence |= 1 << 4;
@@ -567,7 +567,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   out.push(presence);
   writeVarintU64(out, peer.connectedAtMs);
   if (peer.label !== undefined) writeStr(out, peer.label);
-  if (peer.selectionJson !== undefined) writeStr(out, peer.selectionJson);
+  if (peer.presencePack !== undefined) writeBytes(out, peer.presencePack);
   if (peer.userId !== undefined) writeStr(out, peer.userId);
   if (peer.role !== undefined) writeStr(out, peer.role);
   if (peer.cursor !== undefined) {
@@ -592,13 +592,13 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   pos[0] += 1;
   const connectedAtMs = readVarintU64(bytes, pos);
   const label = presence & (1 << 0) ? readStr(bytes, pos) : undefined;
-  const selectionJson = presence & (1 << 1) ? readStr(bytes, pos) : undefined;
+  const presencePack = presence & (1 << 1) ? readBytes(bytes, pos) : undefined;
   const userId = presence & (1 << 2) ? readStr(bytes, pos) : undefined;
   const role = presence & (1 << 3) ? readStr(bytes, pos) : undefined;
   const cursor = presence & (1 << 4) ? { x: readF64(bytes, pos), y: readF64(bytes, pos) } : undefined;
   const viewport = presence & (1 << 5) ? { x: readF64(bytes, pos), y: readF64(bytes, pos), zoom: readF64(bytes, pos) } : undefined;
   const dragGhostJson = presence & (1 << 6) ? readStr(bytes, pos) : undefined;
-  return { actor, label, selectionJson, connectedAtMs, userId, role, cursor, viewport, dragGhostJson };
+  return { actor, label, presencePack, connectedAtMs, userId, role, cursor, viewport, dragGhostJson };
 }
 
 //#region 🔖️Combinators
@@ -1593,6 +1593,7 @@ export function decodeMutationEnvelopesPack(pack: string): MutationEnvelope[] {
 /** 🔍️ One UI section's cache-probe entry inside `AppCommand.RefreshUi` — `kind u8 | key str |
  * hash: (u64 | null)`. */
 export type SectionProbe = { readonly kind: number; readonly key: string; readonly hash: number | null };
+export type ChildPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly envelope_pack: readonly number[] };
 
 export type AppCommandValue =
   | { readonly Hello: { readonly channel_version: number; readonly app_id: string; readonly actor: string; readonly config: readonly number[] } }
@@ -1612,6 +1613,9 @@ export type AppCommandValue =
   | { readonly MediaIn: { readonly seq: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
   | { readonly MediaOut: { readonly seq: number; readonly port: string; readonly request: readonly number[] } }
   | { readonly MediaFingerprint: { readonly seq: number; readonly port: string } }
+  | { readonly PureCommand: { readonly seq: number; readonly command: readonly number[]; readonly document: readonly number[]; readonly document_spr: readonly number[]; readonly config: readonly number[]; readonly config_spr: readonly number[]; readonly draft: readonly number[]; readonly draft_spr: readonly number[] } }
+  | { readonly LoadChildren: { readonly seq: number; readonly entries: readonly ChildPackEntry[] } }
+  | { readonly ReadChildren: { readonly seq: number } }
   | "Bye";
 
 export type AppFrameValue =
@@ -1628,7 +1632,11 @@ export type AppFrameValue =
   | { readonly ContextMenu: { readonly in_reply_to: number; readonly items: readonly number[] } }
   | { readonly Media: { readonly in_reply_to: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
   | { readonly MediaFingerprint: { readonly in_reply_to: number; readonly port: string; readonly fingerprint: readonly number[] } }
-  | { readonly Error: { readonly in_reply_to: number | null; readonly fault: readonly number[] } };
+  | { readonly Error: { readonly in_reply_to: number | null; readonly fault: readonly number[] } }
+  | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[] } }
+  | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
+  | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
+  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number } };
 //#endregion 🔖️Types
 
 //#region 🔖️Combinators
@@ -1663,17 +1671,34 @@ function readVecSectionProbe(bytes: Uint8Array, pos: [number]): SectionProbe[] {
   for (let i = 0; i < count; i++) result.push(readSectionProbe(bytes, pos));
   return result;
 }
+function writeChildPackEntry(out: number[], entry: ChildPackEntry): void {
+  writeStr(out, entry.slot);
+  writeStr(out, entry.child_id);
+  writeStr(out, entry.dialect);
+  writeBytes(out, entry.envelope_pack);
+}
+function readChildPackEntry(bytes: Uint8Array, pos: [number]): ChildPackEntry {
+  return { slot: readStr(bytes, pos), child_id: readStr(bytes, pos), dialect: readStr(bytes, pos), envelope_pack: readBytes(bytes, pos) };
+}
+function writeVecChildPackEntry(out: number[], entries: readonly ChildPackEntry[]): void {
+  writeVarintU64(out, entries.length);
+  for (const entry of entries) writeChildPackEntry(out, entry);
+}
+function readVecChildPackEntry(bytes: Uint8Array, pos: [number]): ChildPackEntry[] {
+  const count = readVarintU64(bytes, pos);
+  return Array.from({ length: count }, () => readChildPackEntry(bytes, pos));
+}
 //#endregion 🔖️Combinators
 
 //#region 🔖️Codec
 const APP_COMMAND_TAGS = {
   Hello: 0, ConfigCommand: 1, Command: 2, CommandText: 3, RefreshUi: 4, ContextMenu: 5, ArtifactCommand: 6, ApplyEnvelopes: 7,
   LoadDocument: 8, ReadDocument: 9, LoadConfig: 10, ReadConfig: 11, AttachBackbone: 12, DetachBackbone: 13, MediaIn: 14, MediaOut: 15,
-  MediaFingerprint: 16, Bye: 17,
+  MediaFingerprint: 16, Bye: 17, PureCommand: 18, LoadChildren: 19, ReadChildren: 20,
 } as const;
 const APP_FRAME_TAGS = {
   Welcome: 0, Done: 1, Invocation: 2, UiSection: 3, Effects: 4, Events: 5, DocumentChanged: 6, Document: 7,
-  Config: 8, ConfigChanged: 9, ContextMenu: 10, Media: 11, MediaFingerprint: 12, Error: 13,
+  Config: 8, ConfigChanged: 9, ContextMenu: 10, Media: 11, MediaFingerprint: 12, Error: 13, Emit: 14, Draft: 15, Children: 16, Ephemeral: 17,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -1760,6 +1785,23 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     out.push(APP_COMMAND_TAGS.MediaFingerprint);
     writeVarintU64(out, cmd.MediaFingerprint.seq);
     writeStr(out, cmd.MediaFingerprint.port);
+  } else if ("PureCommand" in cmd) {
+    out.push(APP_COMMAND_TAGS.PureCommand);
+    writeVarintU64(out, cmd.PureCommand.seq);
+    writeBytes(out, cmd.PureCommand.command);
+    writeBytes(out, cmd.PureCommand.document);
+    writeBytes(out, cmd.PureCommand.document_spr);
+    writeBytes(out, cmd.PureCommand.config);
+    writeBytes(out, cmd.PureCommand.config_spr);
+    writeBytes(out, cmd.PureCommand.draft);
+    writeBytes(out, cmd.PureCommand.draft_spr);
+  } else if ("LoadChildren" in cmd) {
+    out.push(APP_COMMAND_TAGS.LoadChildren);
+    writeVarintU64(out, cmd.LoadChildren.seq);
+    writeVecChildPackEntry(out, cmd.LoadChildren.entries);
+  } else if ("ReadChildren" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadChildren);
+    writeVarintU64(out, cmd.ReadChildren.seq);
   } else {
     throw new Error("encodeAppCommand: unrecognized command variant");
   }
@@ -1838,6 +1880,12 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     }
     case APP_COMMAND_TAGS.MediaFingerprint:
       return { MediaFingerprint: { seq: readVarintU64(bytes, pos), port: readStr(bytes, pos) } };
+    case APP_COMMAND_TAGS.PureCommand:
+      return { PureCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos), document: readBytes(bytes, pos), document_spr: readBytes(bytes, pos), config: readBytes(bytes, pos), config_spr: readBytes(bytes, pos), draft: readBytes(bytes, pos), draft_spr: readBytes(bytes, pos) } };
+    case APP_COMMAND_TAGS.LoadChildren:
+      return { LoadChildren: { seq: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
+    case APP_COMMAND_TAGS.ReadChildren:
+      return { ReadChildren: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.Bye:
       return "Bye";
     default:
@@ -1915,6 +1963,29 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     out.push(APP_FRAME_TAGS.Error);
     writeOptU64(out, frame.Error.in_reply_to);
     writeBytes(out, frame.Error.fault);
+  } else if ("Emit" in frame) {
+    out.push(APP_FRAME_TAGS.Emit);
+    writeVarintU64(out, frame.Emit.in_reply_to);
+    writeBytes(out, frame.Emit.document_ops);
+    writeBytes(out, frame.Emit.config_ops);
+    writeBytes(out, frame.Emit.draft_ops);
+    writeBytes(out, frame.Emit.output);
+    writeBytes(out, frame.Emit.diagnostics);
+  } else if ("Draft" in frame) {
+    out.push(APP_FRAME_TAGS.Draft);
+    writeVarintU64(out, frame.Draft.in_reply_to);
+    writeBytes(out, frame.Draft.pack);
+    writeBytes(out, frame.Draft.spr);
+    writeStr(out, frame.Draft.ops);
+  } else if ("Children" in frame) {
+    out.push(APP_FRAME_TAGS.Children);
+    writeVarintU64(out, frame.Children.in_reply_to);
+    writeVecChildPackEntry(out, frame.Children.entries);
+  } else if ("Ephemeral" in frame) {
+    out.push(APP_FRAME_TAGS.Ephemeral);
+    writeBytes(out, frame.Ephemeral.presence);
+    writeVarintU64(out, frame.Ephemeral.presence_generation);
+    writeVarintU64(out, frame.Ephemeral.transient_generation);
   } else {
     throw new Error("encodeAppFrame: unrecognized frame variant");
   }
@@ -1997,6 +2068,14 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const fault = readBytes(bytes, pos);
       return { Error: { in_reply_to, fault } };
     }
+    case APP_FRAME_TAGS.Emit:
+      return { Emit: { in_reply_to: readVarintU64(bytes, pos), document_ops: readBytes(bytes, pos), config_ops: readBytes(bytes, pos), draft_ops: readBytes(bytes, pos), output: readBytes(bytes, pos), diagnostics: readBytes(bytes, pos) } };
+    case APP_FRAME_TAGS.Draft:
+      return { Draft: { in_reply_to: readVarintU64(bytes, pos), pack: readBytes(bytes, pos), spr: readBytes(bytes, pos), ops: readStr(bytes, pos) } };
+    case APP_FRAME_TAGS.Children:
+      return { Children: { in_reply_to: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
+    case APP_FRAME_TAGS.Ephemeral:
+      return { Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos) } };
     default:
       throw new Error(`decodeAppFrame: unknown tag ${bytes[0]}`);
   }
@@ -2027,7 +2106,7 @@ export function faultDisplayMessage(faultBytes: readonly number[], decodePackVal
   return `${code}: ${fault.message}`;
 }
 
-const APP_CHANNEL_VERSION = 4;
+const APP_CHANNEL_VERSION = 7;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
@@ -2377,6 +2456,11 @@ if (import.meta.vitest) {
   });
 
   describe("@semio-tech/framework-os AppChannelCodec", () => {
+    it("round-trips the app-typed presence pack through the document-presence wire", () => {
+      const peer: ArtifactPresencePeer = { actor: "actor-1", label: "One", presencePack: [1, 2, 3], connectedAtMs: 42, cursor: { x: 4, y: 5 }, viewport: { x: 6, y: 7, zoom: 2 } };
+      expect(decodePresencePeer(new Uint8Array(encodePresencePeer(peer)), [0])).toEqual(peer);
+    });
+
     const sampleCommands: readonly AppCommandValue[] = [
       { Hello: { channel_version: 3, app_id: "app.demo", actor: "actor-1", config: [1, 2, 3] } },
       { ConfigCommand: { seq: 1, command: [4, 5] } },
@@ -2395,11 +2479,14 @@ if (import.meta.vitest) {
       { MediaIn: { seq: 14, port: "in-1", descriptor: [1], data: [2, 3] } },
       { MediaOut: { seq: 15, port: "out-1", request: [4] } },
       { MediaFingerprint: { seq: 16, port: "fp-1" } },
+      { PureCommand: { seq: 17, command: [1], document: [2], document_spr: [3], config: [4], config_spr: [5], draft: [6], draft_spr: [7] } },
+      { LoadChildren: { seq: 18, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
+      { ReadChildren: { seq: 19 } },
       "Bye",
     ];
 
     const sampleFrames: readonly AppFrameValue[] = [
-      { Welcome: { channel_version: 4, instance: 7, manifest: [1, 2, 3] } },
+      { Welcome: { channel_version: 7, instance: 7, manifest: [1, 2, 3] } },
       { Done: { in_reply_to: 1 } },
       { Invocation: { in_reply_to: 2, output: [1], diagnostics: [] } },
       { UiSection: { in_reply_to: 3, kind: 1, key: "panel-a", hash: 42, body: [1, 2] } },
@@ -2414,6 +2501,10 @@ if (import.meta.vitest) {
       { MediaFingerprint: { in_reply_to: 9, port: "fp-1", fingerprint: [1, 2, 3, 4] } },
       { Error: { in_reply_to: 10, fault: [1, 2, 3] } },
       { Error: { in_reply_to: null, fault: [4, 5] } },
+      { Emit: { in_reply_to: 11, document_ops: [1], config_ops: [2], draft_ops: [3], output: [4], diagnostics: [5] } },
+      { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
+      { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
+      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4 } },
     ];
 
     it.each(sampleCommands.map((cmd) => [cmd] as const))("round-trips AppCommand %j", (cmd) => {
@@ -2424,15 +2515,17 @@ if (import.meta.vitest) {
       expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
     });
 
-    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... Bye=17)", () => {
+    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... ReadChildren=20)", () => {
       expect(encodeAppCommand({ Hello: { channel_version: 0, app_id: "", actor: "", config: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(1);
       expect(encodeAppCommand("Bye")[0]).toBe(17);
+      expect(encodeAppCommand({ ReadChildren: { seq: 0 } })[0]).toBe(20);
     });
 
-    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... Error=13)", () => {
+    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... Ephemeral=17)", () => {
       expect(encodeAppFrame({ Welcome: { channel_version: 0, instance: 0, manifest: [] } })[0]).toBe(0);
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [] } })[0]).toBe(13);
+      expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0 } })[0]).toBe(17);
     });
 
     /**
@@ -2447,7 +2540,7 @@ if (import.meta.vitest) {
      */
     it("matches protocol_channel's own golden hex fixture corpus, byte-for-byte", () => {
             const commandFixtures: readonly (readonly [string, AppCommandValue])[] = [
-        ["Hello", { Hello: { channel_version: 4, app_id: "app", actor: "actor", config: [1, 2] } }],
+        ["Hello", { Hello: { channel_version: 7, app_id: "app", actor: "actor", config: [1, 2] } }],
         ["ConfigCommand", { ConfigCommand: { seq: 1, command: [9] } }],
         ["Command", { Command: { seq: 1, command: [1], view_state: [] } }],
         ["CommandText", { CommandText: { seq: 1, line: "go" } }],
@@ -2465,9 +2558,12 @@ if (import.meta.vitest) {
         ["MediaOut", { MediaOut: { seq: 1, port: "p", request: [1] } }],
         ["MediaFingerprint", { MediaFingerprint: { seq: 1, port: "p" } }],
         ["Bye", "Bye"],
+        ["PureCommand", { PureCommand: { seq: 1, command: [1], document: [2], document_spr: [3], config: [4], config_spr: [5], draft: [6], draft_spr: [7] } }],
+        ["LoadChildren", { LoadChildren: { seq: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
+        ["ReadChildren", { ReadChildren: { seq: 1 } }],
       ];
             const commandGoldenHex: Readonly<Record<string, string>> = {
-        Hello: "000403617070056163746f72020102",
+        Hello: "000703617070056163746f72020102",
         ConfigCommand: "01010109",
         Command: "0201010100",
         CommandText: "030102676f",
@@ -2485,25 +2581,32 @@ if (import.meta.vitest) {
         MediaOut: "0f0101700101",
         MediaFingerprint: "10010170",
         Bye: "11",
+        PureCommand: "12010101010201030104010501060107",
+        LoadChildren: "1301010173016301640101",
+        ReadChildren: "1401",
       };
             const frameFixtures: readonly (readonly [string, AppFrameValue])[] = [
-        ["Welcome", { Welcome: { channel_version: 4, instance: 1, manifest: [1] } }],
+        ["Welcome", { Welcome: { channel_version: 7, instance: 1, manifest: [1] } }],
         ["Done", { Done: { in_reply_to: 1 } }],
         ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [] } }],
         ["UiSection", { UiSection: { in_reply_to: 1, kind: 1, key: "k", hash: 1, body: null } }],
         ["Effects", { Effects: { in_reply_to: null, effects: [[1]] } }],
         ["Events", { Events: { in_reply_to: null, events: [] } }],
         ["DocumentChanged", { DocumentChanged: { envelopes: [], origin: "o" } }],
-        ["Artifact", { Document: { in_reply_to: 1, pack: [1], spr: [2], ops: "o" } }],
+        ["Document", { Document: { in_reply_to: 1, pack: [1], spr: [2], ops: "o" } }],
         ["Config", { Config: { in_reply_to: 1, pack: [1], spr: [2], ops: "c" } }],
         ["ConfigChanged", { ConfigChanged: { envelopes: [], origin: "o" } }],
         ["ContextMenu", { ContextMenu: { in_reply_to: 1, items: [1] } }],
         ["Media", { Media: { in_reply_to: 1, port: "p", descriptor: [1], data: [2] } }],
         ["MediaFingerprint", { MediaFingerprint: { in_reply_to: 1, port: "p", fingerprint: [1] } }],
         ["Error", { Error: { in_reply_to: null, fault: [99] } }],
+        ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [] } }],
+        ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
+        ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
+        ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4 } }],
       ];
             const frameGoldenHex: Readonly<Record<string, string>> = {
-        Welcome: "0004010101",
+        Welcome: "0007010101",
         Done: "0101",
         Invocation: "0201010100",
         UiSection: "03010101016b0100",
@@ -2517,6 +2620,10 @@ if (import.meta.vitest) {
         Media: "0b01017001010102",
         MediaFingerprint: "0c0101700101",
         Error: "0d000163",
+        Emit: "0e0101010000010200",
+        Draft: "0f01010101020164",
+        Children: "1001010173016301640101",
+        Ephemeral: "110201020304",
       };
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
       for (const [label, value] of commandFixtures) expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandGoldenHex[label]);
@@ -2542,12 +2649,12 @@ if (import.meta.vitest) {
       const handle = fakeHandle((instanceId, commands) => {
         seen = commands;
         expect(instanceId).toBe(7);
-        return [{ Welcome: { channel_version: 3, instance: 7, manifest: [9, 9] } }];
+        return [{ Welcome: { channel_version: 7, instance: 7, manifest: [9, 9] } }];
       });
       const client = new AppChannelClient(handle, 7, "app.demo", "actor-1");
       const frame = await client.hello({ mode: "edit" });
-      expect(seen).toEqual([{ Hello: { channel_version: 3, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
-      expect(frame).toEqual({ Welcome: { channel_version: 3, instance: 7, manifest: [9, 9] } });
+      expect(seen).toEqual([{ Hello: { channel_version: 7, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
+      expect(frame).toEqual({ Welcome: { channel_version: 7, instance: 7, manifest: [9, 9] } });
     });
 
     it("hello() throws when the exchange returns no frame", async () => {

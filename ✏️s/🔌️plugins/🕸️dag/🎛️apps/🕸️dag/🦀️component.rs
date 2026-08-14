@@ -450,7 +450,7 @@ mod tests {
     fn every_declared_action_is_registered() {
         let definition = create_dag_app().definition;
         for command in ["addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "reorganize", "patchDagNodes", "nodeGraphViewport", "graphPointerDown"] {
-            assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
+            assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
         }
     }
 

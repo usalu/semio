@@ -1,0 +1,50 @@
+A2-A4 state-infrastructure verification
+
+PASS  bun nx run @semio-tech/framework:test --skip-nx-cache
+      Test Files  2 passed (2)
+      Tests       150 passed (150)
+
+PASS  git diff --check (state-infrastructure source/test files)
+
+PASS  focused Cargo sync heartbeat tests
+      2 passed; 0 failed; 885 filtered out
+
+PARTIAL  bun vitest run --config framework/os/typescript/vitest.config.ts
+         214 passed; 4 failed
+         failures: missing generated wire fixture files and generated workflow wasm module
+
+PASS  bun nx run @semio-tech/framework-renderer-react:lint --skip-nx-cache
+      region/host-contract lint passed
+
+PASS  CARGO_TARGET_DIR=<ticket>/🎯️target-a2-a4 \
+      bun nx run @semio-tech/framework-os-kernel:check --skip-nx-cache
+      Finished dev profile in 1m 08s; Nx target succeeded.
+
+BLOCKED BUDGET  bun nx run @semio-tech/framework-renderer-react:test-long --skip-nx-cache
+                Vitest produced no result before the 300000ms repository budget killed it.
+
+PASS  CARGO_TARGET_DIR=<ticket>/🎯️target-a2-a4 \
+      cargo check --manifest-path <framework-renderer-wgpu>/Cargo.toml --tests --message-format=short
+      Final target-specific native-sync confirmation: exit 0; zero errors; Finished in 10.17s.
+      Architecture repair progression: 54 -> 39 -> 14 -> 2 -> 0 errors.
+
+PASS  bun vitest run --config <framework-renderer-react>/vitest.config.ts \
+      <framework-renderer-react>/index.test.ts -t 'framework plugin runtime'
+      Final rerun: Test Files 1 passed; Tests 7 passed, 307 skipped; Duration 19.47s.
+      No heartbeat-specific React test is present; full long suite intentionally not rerun.
+
+PASS  CARGO_TARGET_DIR=<ticket>/🎯️target-a2-a4 \
+      cargo test --manifest-path <framework-os-kernel>/Cargo.toml --features sync \
+      presence_heartbeat -- --nocapture
+      Exit 0; 2 passed, 0 failed, 885 filtered out.
+
+PASS  CARGO_TARGET_DIR=<ticket>/🎯️target-a2-a4 \
+      bun nx run @semio-tech/framework-os-host-rs:check --skip-nx-cache
+      Finished dev profile in 7.07s; Nx target succeeded.
+
+PASS  CARGO_TARGET_DIR=<ticket>/🎯️target-a2-a4 \
+      cargo check --manifest-path <framework-os-host>/Cargo.toml --lib
+      Finished dev profile in 5m 53s.
+
+CONFIRMED DOWNSTREAM  app-conformance isolated matrix compiled the repaired shared host;
+                      Puzzle completed and Space passed the shared-host compile stage.

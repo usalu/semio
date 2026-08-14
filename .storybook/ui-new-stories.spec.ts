@@ -53,6 +53,7 @@ const NEW_UI_STORY_IDS: readonly string[] = [
   "🖱️ui⚛️react-providers--chrome-label-policy",
   "🖱️ui⚛️react-providers--flow",
   "🖱️ui⚛️react-providers--glass-tier",
+  "🖱️ui⚛️react-mode--content-through-glass",
 ];
 
 function significantConsoleErrors(messages: string[]): string[] {
@@ -114,3 +115,51 @@ test("celebrated panel tab icons paint conic ink through --icon-mask, not a rect
   expect(paint!.labelBackgroundClip).toBe("text");
   expect(paint!.labelWebkitTextFillColor === "rgba(0, 0, 0, 0)" || paint!.labelWebkitTextFillColor === "transparent").toBe(true);
 });
+
+// #region 🪟️SilhouetteAccessibilityFallbacks
+type SilhouetteFallbackPaint = {
+  readonly chipBackdrop: string;
+  readonly chipBackground: string;
+  readonly gapBackdrop: string;
+  readonly gapBackground: string;
+};
+
+async function readSilhouetteFallbackPaint(page: Page): Promise<SilhouetteFallbackPaint | null> {
+  return page.evaluate(() => {
+    const chip = document.querySelector("[data-window-silhouette-chip]");
+    const gap = document.querySelector("[data-window-silhouette-gap]");
+    if (!(chip instanceof HTMLElement) || !(gap instanceof HTMLElement)) return null;
+    const chipStyle = getComputedStyle(chip);
+    const gapStyle = getComputedStyle(gap);
+    return {
+      chipBackdrop: chipStyle.backdropFilter || chipStyle.getPropertyValue("-webkit-backdrop-filter"),
+      chipBackground: chipStyle.backgroundColor,
+      gapBackdrop: gapStyle.backdropFilter || gapStyle.getPropertyValue("-webkit-backdrop-filter"),
+      gapBackground: gapStyle.backgroundColor,
+    };
+  });
+}
+
+test("window silhouette keeps its gap transparent in reduced-transparency mode", async ({ page, context }) => {
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] });
+  await expectStoryMounts(page, "🖱️ui⚛️react-mode--content-through-glass");
+  const paint = await readSilhouetteFallbackPaint(page);
+  expect(paint).not.toBeNull();
+  expect(paint!.chipBackdrop).toBe("none");
+  expect(paint!.chipBackground).not.toBe("rgba(0, 0, 0, 0)");
+  expect(paint!.gapBackdrop).toBe("none");
+  expect(paint!.gapBackground).toBe("rgba(0, 0, 0, 0)");
+});
+
+test("window silhouette uses system paint without filling its gap in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await expectStoryMounts(page, "🖱️ui⚛️react-mode--content-through-glass");
+  const paint = await readSilhouetteFallbackPaint(page);
+  expect(paint).not.toBeNull();
+  expect(paint!.chipBackdrop).toBe("none");
+  expect(paint!.chipBackground).not.toBe("rgba(0, 0, 0, 0)");
+  expect(paint!.gapBackdrop).toBe("none");
+  expect(paint!.gapBackground).toBe("rgba(0, 0, 0, 0)");
+});
+// #endregion 🪟️SilhouetteAccessibilityFallbacks

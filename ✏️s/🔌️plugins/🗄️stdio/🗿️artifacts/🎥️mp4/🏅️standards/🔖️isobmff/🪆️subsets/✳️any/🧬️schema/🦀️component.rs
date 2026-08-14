@@ -2,6 +2,7 @@
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box, Mp4Ftyp, Mp4Snapshot, Mp4Track};
+use crate::ArtifactSource;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +20,9 @@ pub struct Mp4Artifact {
     #[state(artifact)]
     #[serde(default)]
     pub unknown_boxes: Vec<Mp4Box>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<ArtifactSource>,
 }
 
 impl Mp4Artifact {
@@ -28,16 +32,18 @@ impl Mp4Artifact {
             ftyp: self.ftyp.clone(),
             tracks: self.tracks.clone(),
             unknown_boxes: self.unknown_boxes.clone(),
+            source: self.source.clone(),
         }
     }
     pub fn from_snapshot(snapshot: Mp4Snapshot) -> Self {
-        Self { schema: snapshot.schema, ftyp: snapshot.ftyp, tracks: snapshot.tracks, unknown_boxes: snapshot.unknown_boxes }
+        Self { schema: snapshot.schema, ftyp: snapshot.ftyp, tracks: snapshot.tracks, unknown_boxes: snapshot.unknown_boxes, source: snapshot.source }
     }
     pub fn set_snapshot(&mut self, snapshot: Mp4Snapshot) {
         self.schema = snapshot.schema;
         self.ftyp = snapshot.ftyp;
         self.tracks = snapshot.tracks;
         self.unknown_boxes = snapshot.unknown_boxes;
+        self.source = snapshot.source;
     }
 }
 

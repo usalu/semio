@@ -72,7 +72,7 @@ engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/�
 kind = "static-dir"
 route = "/cad-fixture"
 app = "cad-play"
-root = "✏️s/🔌️plugins/📐️cad/🧫️fixtures"
+root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"
 
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"

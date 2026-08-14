@@ -73,6 +73,12 @@ pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &
         None,
         None,
         None,
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired to `BLOCK3D_INTERACTION_VORTEX`
+        // here — this shared scene builder's granularity vocabulary for a plain whole-object pick vs.
+        // this app's own vortex/grip picking is not yet verified; left unbound (OS `world` domain
+        // fallback) pending that check, flagged as outstanding.
+        None,
+        None,
     );
     build_world_3d_scene(BLOCK3D_PLAY_SURFACE_ID, BLOCK3D_PLAY_APP_ID, scene)
 }

@@ -1950,6 +1950,17 @@ pub fn create_puzzle5d_app() -> App {
             .interaction(puzzle5d_interaction_definition())
             .window_kind_interactions(board2d::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)])
             .window_kind_interactions(world3d::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)])
+            .window_kind_action_refs(board2d::WINDOW_KIND_ID, vec![board2d::actions::apply_board_events::reference(), board2d::actions::set_camera::reference()])
+            .window_kind_action_refs(
+                world3d::WINDOW_KIND_ID,
+                vec![
+                    world3d::actions::translate_selection::reference(),
+                    world3d::actions::rotate_selection::reference(),
+                    world3d::actions::scale_selection::reference(),
+                    world3d::actions::world_relocate::reference(),
+                    world3d::actions::set_camera::reference(),
+                ],
+            )
             // 🏗️ 3D-first 60/40 split — mirrors semio_compose_rs's design app (scene 60% / diagram 40%,
             // `semio_compose_rs/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
             // this app replaces.

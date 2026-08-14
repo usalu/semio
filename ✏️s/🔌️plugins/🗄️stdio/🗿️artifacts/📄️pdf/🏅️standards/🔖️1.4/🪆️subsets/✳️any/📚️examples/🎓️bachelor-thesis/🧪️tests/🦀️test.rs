@@ -28,8 +28,12 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encod
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilderConstruction as PdfBuilder;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::Pdf17Inference;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
-use protocol::Inference;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
+use protocol::{Inference, Mutation, MutationDiff};
+use protocol::command::DiffAlgebra;
 use semio_framework_plugin::ArtifactBuilder;
+use store::{ArtifactDsl, ArtifactPack};
 
 #[test]
 fn fixture_is_real_pdf_not_a_stub() {
@@ -84,6 +88,42 @@ fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
         assert_eq!(a.rotate, b.rotate);
         assert_eq!(a.text, b.text);
     }
+}
+
+#[test]
+fn lossless_source_law_bachelor_thesis_direct_dsl_pack_diff_and_inverse() {
+    let original = decode_pdf(FIXTURE_BYTES).expect("decode exact fixture");
+    let source = original.source.as_ref().expect("native PDF import must retain its exact source image");
+    assert_eq!(source.bytes, FIXTURE_BYTES);
+    assert!(source.matches(&original.semantic_projection()).expect("semantic fingerprint"));
+    assert_eq!(encode_pdf(&original).expect("unchanged source export"), FIXTURE_BYTES);
+
+    let dsl = original.print_dsl();
+    let from_dsl = PdfSnapshot::parse_dsl(&dsl).expect("snapshot DSL roundtrip");
+    assert_eq!(encode_pdf(&from_dsl).expect("DSL-restored source export"), FIXTURE_BYTES);
+
+    let pack = original.encode_pack().expect("snapshot pack roundtrip");
+    let from_pack = PdfSnapshot::decode_pack(&pack).expect("snapshot unpack");
+    assert_eq!(encode_pdf(&from_pack).expect("pack-restored source export"), FIXTURE_BYTES);
+
+    let empty = PdfDiff::between(&original, &original);
+    assert!(empty.is_empty());
+    assert_eq!(encode_pdf(&empty.apply(&original)).expect("self-diff export"), FIXTURE_BYTES);
+
+    let mut no_op = original.clone();
+    let no_op_diff = apply_pdf_mutation(&mut no_op, &PdfMutation::NoMutation);
+    assert!(no_op_diff.is_empty());
+    assert_eq!(encode_pdf(&no_op).expect("no-op mutation export"), FIXTURE_BYTES);
+
+    let mutation = PdfMutation::AppendPageContent { index: 0, text: "dirty".into() };
+    let mut dirty = original.clone();
+    apply_pdf_mutation(&mut dirty, &mutation);
+    assert!(matches!(encode_pdf(&dirty), Err(crate::artifacts::pdf::standards::v1_7::subsets::any::io::PdfEngineError::Unsupported(_))));
+    for inverse in mutation.inverse(&original) {
+        apply_pdf_mutation(&mut dirty, &inverse);
+    }
+    assert_eq!(dirty, original);
+    assert_eq!(encode_pdf(&dirty).expect("mutation inverse source export"), FIXTURE_BYTES);
 }
 
 #[test]

@@ -5,7 +5,6 @@ import type { IconName } from "@semio-tech/assets";
 import {
   type ActionArgDef,
   type ActionDefinition,
-  type AppActionRef,
   type ToolDefinition,
   type ToolRef,
   type UtilityCategory,
@@ -116,32 +115,16 @@ export function missingRequiredArgs(defs: readonly ActionArgDef[], effective: Re
 }
 
 /**
- * 📇️ Hand-written twin of Rust `resolve_window_actions`: explicit `windowKind.actions` refs resolve in
- * order, plus any panel-eligible app action referenced by no window kind (an orphan) appears on every
- * window — the scoping fallback that prevents blank panels mid-migration. History and `setActiveUtility`
- * are never panel-eligible orphans.
+ * 📇️ Returns the definitions owned by one window kind in declaration order.
  */
 export function resolveWindowActions(
-  app: { readonly actions?: readonly ActionDefinition[]; readonly windowKinds: readonly { readonly actions?: readonly AppActionRef[] }[] },
-  windowKind: { readonly actions?: readonly AppActionRef[] },
+  _app: { readonly windowKinds: readonly { readonly actions?: readonly ActionDefinition[] }[] },
+  windowKind: { readonly actions?: readonly ActionDefinition[] },
 ): ActionDefinition[] {
-  const actions = app.actions ?? [];
-  const referenced = new Set<string>();
-  for (const kind of app.windowKinds) {
-    for (const ref of kind.actions ?? []) referenced.add(ref);
-  }
-  const panelEligible = (action: ActionDefinition) => action.kind !== "history" && action.id !== SET_ACTIVE_UTILITY_ACTION_ID && action.id !== SET_ACTIVE_TOOL_ACTION_ID;
   const resolved: ActionDefinition[] = [];
   const seen = new Set<string>();
-  for (const ref of windowKind.actions ?? []) {
-    const action = actions.find((entry) => entry.id === ref);
+  for (const action of windowKind.actions ?? []) {
     if (action && !seen.has(action.id)) {
-      seen.add(action.id);
-      resolved.push(action);
-    }
-  }
-  for (const action of actions) {
-    if (panelEligible(action) && !referenced.has(action.id) && !seen.has(action.id)) {
       seen.add(action.id);
       resolved.push(action);
     }

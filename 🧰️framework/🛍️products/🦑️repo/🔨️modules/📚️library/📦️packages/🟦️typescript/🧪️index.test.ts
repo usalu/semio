@@ -127,8 +127,8 @@ describe("window completeness policy", () => {
     const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
     try {
       mkdirSync(mode, { recursive: true });
-      const required = loadTaxonomy().modeChildDirs;
-      expect(required).toEqual(["🪟️windows", "🎚️config", "👥️presence", "🫧️transient"]);
+      const required = loadTaxonomy().modeRequiredChildDirs;
+      expect(required).toEqual(["🪟️windows", "🎮️commands", "🎚️config", "👥️presence", "🫧️transient"]);
       expect(policyModeCompletenessBreaches(root, [crate]).filter((breach) => breach.kind === "taxonomy/mode-completeness")).toHaveLength(required.length);
       for (const child of required) {
         mkdirSync(join(mode, child), { recursive: true });
@@ -1337,7 +1337,11 @@ describe("loadTaxonomy", () => {
     expect("🎒️pack" in taxonomy.artifactSpecFilenames).toBe(false);
     expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "🎚️config", "👥️presence", "🫧️transient"]);
     expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "🎚️options", "🎚️config", "👥️presence", "🫧️transient"]);
-    expect(taxonomy.modeChildDirs).toEqual(["🪟️windows", "🎚️config", "👥️presence", "🫧️transient"]);
+    expect(taxonomy.modeChildDirs).toEqual(["🪟️windows", "🎮️commands", "🎚️config", "👥️presence", "🫧️transient"]);
+    expect(taxonomy.modeRequiredChildDirs).toEqual(["🪟️windows", "🎮️commands", "🎚️config", "👥️presence", "🫧️transient"]);
+    expect(taxonomy.pluginRequiredChildDirs).toEqual(["🎮️commands"]);
+    expect(taxonomy.osRequiredChildDirs).toEqual(["🎮️commands"]);
+    expect(taxonomy.appComponentDirs).toContain("🎮️commands");
     expect(taxonomy.transientChildDirs).toEqual(["🧬️schema"]);
     expect(taxonomy.appComponentDirs).toContain("🫧️transient");
     expect(taxonomy.appChildDirs).toContain("🫧️transient");
@@ -1356,7 +1360,8 @@ describe("loadTaxonomy", () => {
   test("declares direct plugin-root facets without a nested directory taxonomy field", () => {
     const taxonomy = loadTaxonomy();
     expect("pluginDirName" in taxonomy).toBe(false);
-    expect(taxonomy.pluginChildDirs).toEqual(["🎛️apps"]);
+    expect(taxonomy.pluginChildDirs).toEqual(["🎛️apps", "🎮️commands"]);
+    expect(taxonomy.osChildDirs).toEqual(["🎮️commands"]);
   });
 
   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
@@ -1476,6 +1481,12 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy(broken).some((problem) => problem.includes("areaStates"))).toBe(true);
   });
 
+  test("keeps plugin package-layout and taxonomy-tree graduation independently valid", () => {
+    const taxonomy = loadTaxonomy();
+    expect(validateTaxonomy({ ...taxonomy, pluginTaxonomyStates: {} }).some((problem) => problem.includes("is missing plugin area"))).toBe(true);
+    expect(validateTaxonomy({ ...taxonomy, pluginTaxonomyStates: { ...taxonomy.pluginTaxonomyStates, "🧪️unknown": "mixed" } }).some((problem) => problem.includes("non-plugin area"))).toBe(true);
+  });
+
   test("reports a completeness dir missing from the structural set", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, artifactChildDirs: taxonomy.artifactChildDirs.filter((dir) => dir !== "📡️spr") };
@@ -1511,6 +1522,12 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy(outsideAllowlist).some((problem) => problem.includes('"🧪️unknown" is missing from windowChildDirs'))).toBe(true);
   });
 
+  test("reports command facets missing from plugin and os ownership", () => {
+    const taxonomy = loadTaxonomy();
+    expect(validateTaxonomy({ ...taxonomy, pluginRequiredChildDirs: [] }).some((problem) => problem.includes("pluginRequiredChildDirs must be a non-empty array"))).toBe(true);
+    expect(validateTaxonomy({ ...taxonomy, osChildDirs: [] }).some((problem) => problem.includes('osRequiredChildDirs member "🎮️commands" is missing from osChildDirs'))).toBe(true);
+  });
+
   test("reports a state lane missing from any state-owning scope", () => {
     const taxonomy = loadTaxonomy();
     expect(validateTaxonomy(taxonomy).filter((problem) => problem.includes("state lane"))).toEqual([]);
@@ -1536,6 +1553,14 @@ describe("validateTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, pluginChildDirs: [] };
     expect(validateTaxonomy(broken).some((problem) => problem.includes("pluginChildDirs"))).toBe(true);
+  });
+
+  test("requires a commands facet at every command-owning scope", () => {
+    const taxonomy = loadTaxonomy();
+    for (const key of ["appChildDirs", "modeChildDirs", "pluginChildDirs", "osChildDirs"] as const) {
+      const broken = { ...taxonomy, [key]: taxonomy[key].filter((dir) => dir !== "🎮️commands") };
+      expect(validateTaxonomy(broken).some((problem) => problem.includes(`${key} must include "🎮️commands"`))).toBe(true);
+    }
   });
 
   test("rejects empty direct plugin-root facet declarations", () => {

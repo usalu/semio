@@ -9,7 +9,7 @@ import {
   runVitest,
   runWasmPackWebBuild,
   resolveTestLevel,
-} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 class CheckScript extends BundleScript {
   run(): void {

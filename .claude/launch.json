@@ -92,11 +92,11 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:shooting"],
       "env": {
-        "SHOOTING_PLAY_PORT": "6119",
-        "S_OS_PORT": "6119",
+        "SHOOTING_PLAY_PORT": "6019",
+        "S_OS_PORT": "6019",
         "SEMIO_RENDERER": "react"
       },
-      "port": 6119
+      "port": 6019
     },
     {
       "name": "s-react-dev",
@@ -166,11 +166,11 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:shooting"],
       "env": {
-        "SHOOTING_PLAY_PORT": "6120",
-        "S_OS_PORT": "6120",
+        "SHOOTING_PLAY_PORT": "6119",
+        "S_OS_PORT": "6119",
         "SEMIO_RENDERER": "wgpu"
       },
-      "port": 6120
+      "port": 6119
     },
     {
       "name": "writer-react-dev",
@@ -267,20 +267,20 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:forms"],
       "env": {
-        "FORMS_PLAY_PORT": "6558",
+        "FORMS_PLAY_PORT": "6058",
         "SEMIO_RENDERER": "react"
       },
-      "port": 6558
+      "port": 6058
     },
     {
       "name": "playbook-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:playbook"],
       "env": {
-        "S_OS_PORT": "16078",
+        "PLAYBOOK_PLAY_PORT": "6085",
         "SEMIO_RENDERER": "react"
       },
-      "port": 16078
+      "port": 6085
     },
     {
       "name": "procedural3d-react-dev",
@@ -327,20 +327,20 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:remodel"],
       "env": {
-        "REMODEL_PLAY_PORT": "6082",
+        "REMODEL_PLAY_PORT": "6063",
         "SEMIO_RENDERER": "react"
       },
-      "port": 6082
+      "port": 6063
     },
     {
       "name": "remodel-wgpu-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:remodel"],
       "env": {
-        "REMODEL_PLAY_PORT": "6182",
+        "REMODEL_PLAY_PORT": "6163",
         "SEMIO_RENDERER": "wgpu"
       },
-      "port": 6182
+      "port": 6163
     },
     {
       "name": "fem2d-react-dev",

@@ -1168,11 +1168,11 @@ mod tests {
     fn sequence_action_ids_resolve_to_labels_in_native_english_and_german() {
         let definition = create_sequence_app().definition;
         for (id, label) in [("run", "Run"), ("stop", "Stop"), ("reorganize", "Reorganize")] {
-            let action = definition.actions.iter().find(|action| action.id == id).expect("action");
+            let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == id).expect("action");
             assert_eq!(action.label.resolve(Terminology::Native, Locale::En), label, "{id} action label");
         }
         for (id, label) in [("run", "Ausführen"), ("stop", "Stopp"), ("reorganize", "Neu anordnen")] {
-            let action = definition.actions.iter().find(|action| action.id == id).expect("action");
+            let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == id).expect("action");
             assert_eq!(action.label.resolve(Terminology::Native, Locale::De), label, "{id} action label");
         }
     }

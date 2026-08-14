@@ -219,7 +219,9 @@ pub struct VectorVertex {
     pub color: [f32; 4],
 }
 
-#[derive(Clone, Copy, Debug)]
+//#region SilhouetteClip
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ScissorRect {
     pub x: u32,
     pub y: u32,
@@ -229,11 +231,11 @@ pub struct ScissorRect {
 
 impl ScissorRect {
     pub fn from_rect(rect: crate::wgpu::geometry::Rect, _screen_h: f32) -> Self {
-        let x = rect.x.max(0.0) as u32;
-        let y = rect.y.max(0.0) as u32;
-        let w = rect.w.max(0.0) as u32;
-        let h = rect.h.max(0.0) as u32;
-        Self { x, y, w, h }
+        let x = rect.x.max(0.0).floor() as u32;
+        let y = rect.y.max(0.0).floor() as u32;
+        let x2 = (rect.x + rect.w.max(0.0)).max(0.0).ceil() as u32;
+        let y2 = (rect.y + rect.h.max(0.0)).max(0.0).ceil() as u32;
+        Self { x, y, w: x2.saturating_sub(x), h: y2.saturating_sub(y) }
     }
 
     pub fn intersect(&self, other: &Self) -> Self {
@@ -245,9 +247,49 @@ impl ScissorRect {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ClipRegion {
+    pub scissors: Vec<ScissorRect>,
+}
+
+impl ClipRegion {
+    /// 🪟️ Builds a bounded orthogonal clip union; callers provide non-overlapping pieces.
+    pub fn from_rects(rects: &[crate::wgpu::geometry::Rect], screen_h: f32) -> Self {
+        let scissors = rects
+            .iter()
+            .map(|rect| ScissorRect::from_rect(*rect, screen_h))
+            .filter(|rect| rect.w > 0 && rect.h > 0)
+            .collect();
+        Self { scissors }
+    }
+
+    fn intersect(&self, other: &Self) -> Self {
+        let scissors = self
+            .scissors
+            .iter()
+            .flat_map(|left| other.scissors.iter().map(move |right| left.intersect(right)))
+            .filter(|rect| rect.w > 0 && rect.h > 0)
+            .collect();
+        Self { scissors }
+    }
+
+    fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
+        let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
+        self.scissors
+            .iter()
+            .map(|clip| clip.intersect(&viewport))
+            .map(|clip| scissor.map_or(clip, |parent| clip.intersect(&parent)))
+            .filter(|clip| clip.w > 0 && clip.h > 0)
+            .collect()
+    }
+}
+
+//#endregion SilhouetteClip
+
 #[derive(Default)]
 pub struct DrawLayer {
     pub scissor: Option<ScissorRect>,
+    pub clip: Option<ClipRegion>,
     pub foreground_of: Option<usize>,
     pub ui_instances: Vec<UiInstance>,
     pub raster_instances: Vec<(String, UiInstance)>,
@@ -261,13 +303,14 @@ pub struct DrawList {
     pub layers: Vec<DrawLayer>,
     pub glass_regions: Vec<GlassRegion>,
     scissor_stack: Vec<ScissorRect>,
+    clip_stack: Vec<ClipRegion>,
     glass_content_stack: Vec<usize>,
     screen_h: f32,
 }
 
 impl Default for DrawList {
     fn default() -> Self {
-        let mut list = Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 720.0 };
+        let mut list = Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 720.0 };
         list.layers.push(DrawLayer::default());
         list
     }
@@ -295,6 +338,7 @@ impl DrawList {
         self.layers.push(DrawLayer::default());
         self.glass_regions.clear();
         self.scissor_stack.clear();
+        self.clip_stack.clear();
         self.glass_content_stack.clear();
     }
 
@@ -304,13 +348,28 @@ impl DrawList {
             scissor = parent.intersect(&scissor);
         }
         self.scissor_stack.push(scissor);
-        self.layers.push(DrawLayer { scissor: Some(scissor), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: Some(scissor), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
     pub fn pop_scissor(&mut self) {
         self.scissor_stack.pop();
         let parent = self.scissor_stack.last().copied();
-        self.layers.push(DrawLayer { scissor: parent, foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+    }
+
+    /// 🪟️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
+    pub fn begin_silhouette_clip(&mut self, rects: &[crate::wgpu::geometry::Rect]) {
+        let mut clip = ClipRegion::from_rects(rects, self.screen_h);
+        if let Some(parent) = self.clip_stack.last() {
+            clip = parent.intersect(&clip);
+        }
+        self.clip_stack.push(clip.clone());
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: Some(clip), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+    }
+
+    pub fn end_silhouette_clip(&mut self) {
+        self.clip_stack.pop();
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
     pub fn push_scene_pass(&mut self, mut pass: ScenePass3d) {
@@ -365,12 +424,12 @@ impl DrawList {
 
     pub fn begin_glass_content(&mut self, region: usize) {
         self.glass_content_stack.push(region);
-        self.layers.push(DrawLayer { scissor: None, foreground_of: Some(region), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: Some(region), ..DrawLayer::default() });
     }
 
     pub fn end_glass_content(&mut self) {
         self.glass_content_stack.pop();
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
     pub fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
@@ -777,6 +836,7 @@ pub struct FrameBuffers {
     pub world_instances: GrowBuffer,
     pub world_lines: GrowBuffer,
     pub ui_instances: GrowBuffer,
+    pub mask_instances: GrowBuffer,
     pub vector_vertices: GrowBuffer,
     pub glass_instances: GrowBuffer,
 }
@@ -991,6 +1051,7 @@ impl RasterTextureTable {
 }
 
 pub(crate) struct UiPipelines {
+    mask_pipeline: wgpu::RenderPipeline,
     ui_pipeline: wgpu::RenderPipeline,
     vector_pipeline: wgpu::RenderPipeline,
     world_pipeline: wgpu::RenderPipeline,
@@ -1017,6 +1078,7 @@ pub(crate) struct UiPipelines {
 struct LayerBatch {
     layer_index: usize,
     scissor: Option<ScissorRect>,
+    clip: Option<ClipRegion>,
     ui_start: u32,
     ui_count: u32,
     vec_start: u32,
@@ -1059,7 +1121,7 @@ fn build_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInst
         all_ui.extend_from_slice(&layer.ui_instances);
         let vec_start = all_vec.len() as u32;
         all_vec.extend_from_slice(&layer.vector_vertices);
-        batches.push(LayerBatch { layer_index, scissor: layer.scissor, ui_start, ui_count: layer.ui_instances.len() as u32, vec_start, vec_count: layer.vector_vertices.len() as u32 });
+        batches.push(LayerBatch { layer_index, scissor: layer.scissor, clip: layer.clip.clone(), ui_start, ui_count: layer.ui_instances.len() as u32, vec_start, vec_count: layer.vector_vertices.len() as u32 });
     }
     (all_ui, all_vec, batches)
 }
@@ -1079,7 +1141,7 @@ fn build_overlay_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Ve
         all_ui.extend_from_slice(&layer.overlay_ui_instances);
         let vec_start = all_vec.len() as u32;
         all_vec.extend_from_slice(&layer.overlay_vector_vertices);
-        batches.push(LayerBatch { layer_index, scissor: layer.scissor, ui_start, ui_count: layer.overlay_ui_instances.len() as u32, vec_start, vec_count: layer.overlay_vector_vertices.len() as u32 });
+        batches.push(LayerBatch { layer_index, scissor: layer.scissor, clip: layer.clip.clone(), ui_start, ui_count: layer.overlay_ui_instances.len() as u32, vec_start, vec_count: layer.overlay_vector_vertices.len() as u32 });
     }
     (all_ui, all_vec, batches)
 }
@@ -1090,6 +1152,84 @@ fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect
     } else {
         pass.set_scissor_rect(0, 0, width as u32, height as u32);
     }
+}
+
+fn layer_scissors(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, width: f32, height: f32) -> Vec<Option<ScissorRect>> {
+    if let Some(clip) = clip {
+        return clip.effective_scissors(scissor, width, height).into_iter().map(Some).collect();
+    }
+    let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
+    match scissor.map(|value| value.intersect(&viewport)) {
+        Some(value) if value.w > 0 && value.h > 0 => vec![Some(value)],
+        Some(_) => Vec::new(),
+        None => vec![None],
+    }
+}
+
+fn content_stencil_state() -> wgpu::StencilState {
+    let face = wgpu::StencilFaceState { compare: wgpu::CompareFunction::Equal, fail_op: wgpu::StencilOperation::Keep, depth_fail_op: wgpu::StencilOperation::Keep, pass_op: wgpu::StencilOperation::Keep };
+    wgpu::StencilState { front: face, back: face, read_mask: 0xff, write_mask: 0x00 }
+}
+
+fn mask_stencil_state() -> wgpu::StencilState {
+    let face = wgpu::StencilFaceState { compare: wgpu::CompareFunction::Always, fail_op: wgpu::StencilOperation::Replace, depth_fail_op: wgpu::StencilOperation::Replace, pass_op: wgpu::StencilOperation::Replace };
+    wgpu::StencilState { front: face, back: face, read_mask: 0xff, write_mask: 0xff }
+}
+
+fn stencil_attachment<'a>(view: &'a wgpu::TextureView, depth_load: wgpu::LoadOp<f32>, stencil_load: wgpu::LoadOp<u32>) -> wgpu::RenderPassDepthStencilAttachment<'a> {
+    wgpu::RenderPassDepthStencilAttachment {
+        view,
+        depth_ops: Some(wgpu::Operations { load: depth_load, store: wgpu::StoreOp::Store }),
+        stencil_ops: Some(wgpu::Operations { load: stencil_load, store: wgpu::StoreOp::Store }),
+    }
+}
+
+fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
+    let first = *scissors.first()?;
+    let (mut x0, mut y0, mut x1, mut y1) = (first.x, first.y, first.x + first.w, first.y + first.h);
+    for scissor in &scissors[1..] {
+        x0 = x0.min(scissor.x);
+        y0 = y0.min(scissor.y);
+        x1 = x1.max(scissor.x + scissor.w);
+        y1 = y1.max(scissor.y + scissor.h);
+    }
+    Some(ScissorRect { x: x0, y: y0, w: x1 - x0, h: y1 - y0 })
+}
+
+fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Option<ScissorRect> {
+    match (a, b) {
+        (Some(a), Some(b)) => union_scissors(&[a, b]),
+        (Some(value), None) | (None, Some(value)) => Some(value),
+        (None, None) => None,
+    }
+}
+
+fn mask_instances(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, previous_bounds: Option<ScissorRect>, width: f32, height: f32) -> (Vec<UiInstance>, Option<ScissorRect>) {
+    let white = Rgba::new(1.0, 1.0, 1.0, 1.0);
+    let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
+    let pieces: Vec<ScissorRect> = layer_scissors(scissor, clip, width, height).into_iter().map(|piece| piece.unwrap_or(viewport)).collect();
+    let current_bounds = union_scissors(&pieces);
+    let Some(reset_bounds) = merge_scissor_bounds(previous_bounds, current_bounds) else {
+        return (Vec::new(), None);
+    };
+    let mut instances = vec![UiInstance::solid([reset_bounds.x as f32, reset_bounds.y as f32, reset_bounds.w as f32, reset_bounds.h as f32], white)];
+    instances.extend(pieces.into_iter().map(|piece| UiInstance::solid([piece.x as f32, piece.y as f32, piece.w as f32, piece.h as f32], white)));
+    (instances, current_bounds)
+}
+
+fn build_batch_masks(batches: &[LayerBatch], width: f32, height: f32) -> (Vec<UiInstance>, Vec<(u32, u32)>) {
+    let mut instances = Vec::new();
+    let mut ranges = Vec::with_capacity(batches.len());
+    let mut previous_bounds = None;
+    for batch in batches {
+        let start = instances.len() as u32;
+        let (batch_instances, current_bounds) = mask_instances(batch.scissor, batch.clip.as_ref(), previous_bounds, width, height);
+        let count = batch_instances.len() as u32;
+        instances.extend(batch_instances);
+        ranges.push((start, count));
+        previous_bounds = current_bounds;
+    }
+    (instances, ranges)
 }
 
 impl UiPipelines {
@@ -1128,10 +1268,20 @@ impl UiPipelines {
         let world_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_SHADER.into()) });
         let world_lines_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_lines_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_LINES_SHADER.into()) });
 
-        let depth_state =
-            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24Plus, depth_write_enabled: true, depth_compare: wgpu::CompareFunction::Less, stencil: wgpu::StencilState::default(), bias: wgpu::DepthBiasState::default() });
-        let overlay_depth_state =
-            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24Plus, depth_write_enabled: false, depth_compare: wgpu::CompareFunction::Always, stencil: wgpu::StencilState::default(), bias: wgpu::DepthBiasState::default() });
+        let depth_state = Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth24PlusStencil8,
+            depth_write_enabled: true,
+            depth_compare: wgpu::CompareFunction::Less,
+            stencil: content_stencil_state(),
+            bias: wgpu::DepthBiasState::default(),
+        });
+        let overlay_depth_state = Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth24PlusStencil8,
+            depth_write_enabled: false,
+            depth_compare: wgpu::CompareFunction::Always,
+            stencil: content_stencil_state(),
+            bias: wgpu::DepthBiasState::default(),
+        });
 
         let quad_vertices: &[f32] = &[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
         let quad_vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("ui_quad_vertices"), contents: bytemuck::cast_slice(quad_vertices), usage: wgpu::BufferUsages::VERTEX });
@@ -1178,6 +1328,45 @@ impl UiPipelines {
             ],
         });
         let ui_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("ui_pipeline_layout"), bind_group_layouts: &[&globals_bind_group_layout], push_constant_ranges: &[] });
+        let mask_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("silhouette_mask_pipeline"),
+            layout: Some(&ui_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &ui_shader,
+                entry_point: Some("vs_main"),
+                buffers: &[
+                    wgpu::VertexBufferLayout { array_stride: 8, step_mode: wgpu::VertexStepMode::Vertex, attributes: &[wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x2 }] },
+                    wgpu::VertexBufferLayout {
+                        array_stride: size_of::<UiInstance>() as wgpu::BufferAddress,
+                        step_mode: wgpu::VertexStepMode::Instance,
+                        attributes: &[
+                            wgpu::VertexAttribute { offset: 0, shader_location: 1, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 16, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 32, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 48, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
+                        ],
+                    },
+                ],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &ui_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format, blend: None, write_mask: wgpu::ColorWrites::empty() })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth24PlusStencil8,
+                depth_write_enabled: false,
+                depth_compare: wgpu::CompareFunction::Always,
+                stencil: mask_stencil_state(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
         let ui_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("ui_pipeline"),
             layout: Some(&ui_pipeline_layout),
@@ -1292,14 +1481,19 @@ impl UiPipelines {
             cache: None,
         });
         let translucent_depth_state = Some(wgpu::DepthStencilState {
-            format: wgpu::TextureFormat::Depth24Plus,
+            format: wgpu::TextureFormat::Depth24PlusStencil8,
             depth_write_enabled: false,
             depth_compare: wgpu::CompareFunction::LessEqual,
-            stencil: wgpu::StencilState::default(),
+            stencil: content_stencil_state(),
             bias: wgpu::DepthBiasState { constant: -2, slope_scale: -1.0, clamp: 0.0 },
         });
-        let world_line_depth_state =
-            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24Plus, depth_write_enabled: false, depth_compare: wgpu::CompareFunction::LessEqual, stencil: wgpu::StencilState::default(), bias: wgpu::DepthBiasState::default() });
+        let world_line_depth_state = Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth24PlusStencil8,
+            depth_write_enabled: false,
+            depth_compare: wgpu::CompareFunction::LessEqual,
+            stencil: content_stencil_state(),
+            bias: wgpu::DepthBiasState::default(),
+        });
         let world_pipeline_translucent = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_pipeline_translucent"),
             layout: Some(&world_pipeline_layout),
@@ -1479,6 +1673,7 @@ impl UiPipelines {
 
         let _ = queue;
         Self {
+            mask_pipeline,
             ui_pipeline,
             vector_pipeline,
             world_pipeline,
@@ -1528,7 +1723,7 @@ impl UiPipelines {
     }
 
     pub fn depth_format(&self) -> wgpu::TextureFormat {
-        wgpu::TextureFormat::Depth24Plus
+        wgpu::TextureFormat::Depth24PlusStencil8
     }
 
     fn prepare_world_passes(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>, Vec<WorldLineGpuVertex>, Vec<Option<usize>>) {
@@ -1618,12 +1813,22 @@ impl UiPipelines {
         line_buffer: Option<wgpu::BufferSlice<'a>>,
         screen_w: f32,
         screen_h: f32,
+        clip: Option<ScissorRect>,
     ) {
         let instance_stride = size_of::<World3dGpuInstance>() as u64;
         pass.set_pipeline(&self.world_pipeline);
         let viewport = prepared.viewport;
         pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
-        pass.set_scissor_rect(viewport[0] as u32, viewport[1] as u32, viewport[2] as u32, viewport[3] as u32);
+        let scene_scissor = ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 };
+        let scene_scissor = clip.map_or(scene_scissor, |clip| scene_scissor.intersect(&clip));
+        if scene_scissor.w == 0 || scene_scissor.h == 0 {
+            pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
+            set_pass_scissor(pass, clip, screen_w, screen_h);
+            pass.set_pipeline(&self.ui_pipeline);
+            pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+            return;
+        }
+        pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
         pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(slot)]);
         for draw_call in &prepared.draws {
             Self::draw_world_range(pass, mesh_store, draw_call, instance_buffer, instance_stride);
@@ -1646,7 +1851,7 @@ impl UiPipelines {
             }
         }
         pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
-        pass.set_scissor_rect(0, 0, screen_w as u32, screen_h as u32);
+        set_pass_scissor(pass, clip, screen_w, screen_h);
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
     }
@@ -1674,62 +1879,87 @@ impl UiPipelines {
         pass.draw(0..6, start..start + count);
     }
 
+    fn draw_silhouette_mask<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, mask_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32, width: f32, height: f32) {
+        if count == 0 {
+            pass.set_stencil_reference(1);
+            return;
+        }
+        set_pass_scissor(pass, None, width, height);
+        pass.set_pipeline(&self.mask_pipeline);
+        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+        pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+        pass.set_vertex_buffer(1, *mask_buffer);
+        pass.set_stencil_reference(0);
+        pass.draw(0..6, start..start + 1);
+        if count > 1 {
+            pass.set_stencil_reference(1);
+            pass.draw(0..6, start + 1..start + count);
+        }
+        pass.set_stencil_reference(1);
+    }
+
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    fn draw_raster_layers(
-        &self,
-        pass: &mut wgpu::RenderPass<'_>,
+    fn draw_raster_layers<'a>(
+        &'a self,
+        pass: &mut wgpu::RenderPass<'a>,
         raster_store: &RasterTextureTable,
         draw: &DrawList,
-        frame_buffers: &mut FrameBuffers,
+        frame_buffers: &'a mut FrameBuffers,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         width: f32,
         height: f32,
         filter: LayerBatchFilter,
     ) {
-        for layer in &draw.layers {
-            if !layer_matches_filter(layer, filter) {
-                continue;
-            }
-            if layer.raster_instances.is_empty() {
-                continue;
-            }
-            if let Some(scissor) = layer.scissor {
-                set_pass_scissor(pass, Some(scissor), width, height);
-            } else {
-                pass.set_scissor_rect(0, 0, width as u32, height as u32);
-            }
-            let mut batch_key: Option<String> = None;
-            let mut batch_instances: Vec<UiInstance> = Vec::new();
-            let mut flush = |key: &str, instances: &[UiInstance]| {
-                if instances.is_empty() {
-                    return;
-                }
-                let Some(rt) = raster_store.get(key) else {
-                    return;
-                };
-                pass.set_pipeline(&self.ui_pipeline);
-                pass.set_bind_group(0, &rt.bind_group, &[]);
-                let Some(buffer) = frame_buffers.ui_instances.upload(device, queue, instances, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "raster_instances") else {
-                    return;
-                };
-                pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
-                pass.set_vertex_buffer(1, buffer);
-                pass.draw(0..6, 0..instances.len() as u32);
-            };
-            for (key, instance) in &layer.raster_instances {
-                if batch_key.as_deref() != Some(key.as_str()) {
-                    if let Some(ref prior) = batch_key {
-                        flush(prior, &batch_instances);
+        let raster_layers: Vec<&DrawLayer> = draw.layers.iter().filter(|layer| layer_matches_filter(layer, filter) && !layer.raster_instances.is_empty()).collect();
+        let mut mask_data = Vec::new();
+        let mut mask_ranges = Vec::with_capacity(raster_layers.len());
+        let mut previous_bounds = None;
+        for layer in &raster_layers {
+            let start = mask_data.len() as u32;
+            let (instances, current_bounds) = mask_instances(layer.scissor, layer.clip.as_ref(), previous_bounds, width, height);
+            let count = instances.len() as u32;
+            mask_data.extend(instances);
+            mask_ranges.push((start, count));
+            previous_bounds = current_bounds;
+        }
+        let Some(mask_buffer) = frame_buffers.mask_instances.upload(device, queue, &mask_data, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "raster_silhouette_masks") else {
+            return;
+        };
+        for (layer_index, layer) in raster_layers.into_iter().enumerate() {
+                let (mask_start, mask_count) = mask_ranges[layer_index];
+                self.draw_silhouette_mask(pass, &mask_buffer, mask_start, mask_count, width, height);
+                let mut batch_key: Option<String> = None;
+                let mut batch_instances: Vec<UiInstance> = Vec::new();
+                let mut flush = |key: &str, instances: &[UiInstance]| {
+                    if instances.is_empty() {
+                        return;
                     }
-                    batch_key = Some(key.clone());
-                    batch_instances.clear();
+                    let Some(rt) = raster_store.get(key) else {
+                        return;
+                    };
+                    pass.set_pipeline(&self.ui_pipeline);
+                    pass.set_bind_group(0, &rt.bind_group, &[]);
+                    let Some(buffer) = frame_buffers.ui_instances.upload(device, queue, instances, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "raster_instances") else {
+                        return;
+                    };
+                    pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+                    pass.set_vertex_buffer(1, buffer);
+                    pass.draw(0..6, 0..instances.len() as u32);
+                };
+                for (key, instance) in &layer.raster_instances {
+                    if batch_key.as_deref() != Some(key.as_str()) {
+                        if let Some(ref prior) = batch_key {
+                            flush(prior, &batch_instances);
+                        }
+                        batch_key = Some(key.clone());
+                        batch_instances.clear();
+                    }
+                    batch_instances.push(*instance);
                 }
-                batch_instances.push(*instance);
-            }
-            if let Some(ref key) = batch_key {
-                flush(key, &batch_instances);
-            }
+                if let Some(ref key) = batch_key {
+                    flush(key, &batch_instances);
+                }
         }
         pass.set_scissor_rect(0, 0, width as u32, height as u32);
     }
@@ -1750,6 +1980,8 @@ impl UiPipelines {
         pass: &mut wgpu::RenderPass<'a>,
         draw: &DrawList,
         batches: &[LayerBatch],
+        mask_buffer: Option<&wgpu::BufferSlice<'a>>,
+        mask_ranges: &[(u32, u32)],
         ui_buffer: Option<&wgpu::BufferSlice<'a>>,
         vector_buffer: Option<&wgpu::BufferSlice<'a>>,
         world_prepared: Option<&[PreparedWorldPass]>,
@@ -1761,8 +1993,14 @@ impl UiPipelines {
         height: f32,
         depth_enabled: bool,
     ) {
-        for batch in batches {
-            set_pass_scissor(pass, batch.scissor, width, height);
+        for (batch_index, batch) in batches.iter().enumerate() {
+            if let Some((start, count)) = mask_ranges.get(batch_index).copied() {
+                if let Some(mask_buffer) = mask_buffer {
+                    self.draw_silhouette_mask(pass, mask_buffer, start, count, width, height);
+                } else {
+                    pass.set_stencil_reference(1);
+                }
+            }
             let mut layer_passes: Vec<(usize, usize, usize)> = draw.scene_passes.iter().enumerate().filter(|(_, scene)| scene.layer_index == batch.layer_index).map(|(index, scene)| (index, scene.ui_watermark, scene.vector_watermark)).collect();
             layer_passes.sort_by_key(|(_, ui, vec)| (*ui, *vec));
             if layer_passes.is_empty() {
@@ -1795,7 +2033,7 @@ impl UiPipelines {
                     if let (Some(prepared), Some(instance_buffer)) = (world_prepared, instance_buffer.as_ref()) {
                         if let Some(prepared_slot) = pass_index_map.get(pass_index).and_then(|slot| *slot) {
                             if let Some(scene) = prepared.get(prepared_slot) {
-                                self.draw_world_pass_at(pass, mesh_store, scene, prepared_slot as u32, *instance_buffer, line_buffer, width, height);
+                                self.draw_world_pass_at(pass, mesh_store, scene, prepared_slot as u32, *instance_buffer, line_buffer, width, height, None);
                             }
                         }
                     }
@@ -1862,6 +2100,8 @@ impl UiPipelines {
         };
         let world_prepared = prepared_holder.as_deref();
         let (all_ui, all_vec, batches) = build_layer_batches(draw, LayerBatchFilter::Backdrop);
+        let (mask_data, mask_ranges) = build_batch_masks(&batches, width, height);
+        let mask_buffer = frame_buffers.mask_instances.upload(device, queue, &mask_data, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "silhouette_masks");
         let ui_buffer = if all_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &all_ui, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "ui_instances") };
         let vector_buffer = if all_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &all_vec, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "vector_vertices") };
         let instance_buffer = frame_buffers.world_instances.slice();
@@ -1874,17 +2114,17 @@ impl UiPipelines {
                 ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color { r: 0.05, g: 0.05, b: 0.06, a: 1.0 }), store: wgpu::StoreOp::Store },
                 depth_slice: None,
             })],
-            depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment { view: depth, depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(1.0), store: wgpu::StoreOp::Store }), stencil_ops: None }),
+            depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Clear(1.0), wgpu::LoadOp::Clear(0))),
             timestamp_writes: None,
             occlusion_query_set: None,
         });
-        self.render_interleaved_layers(&mut pass, draw, &batches, ui_buffer.as_ref(), vector_buffer.as_ref(), world_prepared, &pass_index_map, instance_buffer, line_buffer, mesh_store, width, height, depth_view.is_some());
+        self.render_interleaved_layers(&mut pass, draw, &batches, mask_buffer.as_ref(), &mask_ranges, ui_buffer.as_ref(), vector_buffer.as_ref(), world_prepared, &pass_index_map, instance_buffer, line_buffer, mesh_store, width, height, depth_view.is_some());
         drop(pass);
         if draw.layers.iter().any(|layer| layer_matches_filter(layer, LayerBatchFilter::Backdrop) && !layer.raster_instances.is_empty()) {
             let mut raster_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("ui_raster_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene_view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
-                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment { view: depth, depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }), stencil_ops: None }),
+                depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
@@ -1892,16 +2132,18 @@ impl UiPipelines {
         }
         let (overlay_ui, overlay_vec, overlay_batches) = build_overlay_layer_batches(draw, LayerBatchFilter::Backdrop);
         if !overlay_ui.is_empty() || !overlay_vec.is_empty() {
+            let (overlay_mask_data, overlay_mask_ranges) = build_batch_masks(&overlay_batches, width, height);
+            let overlay_mask_buffer = frame_buffers.mask_instances.upload(device, queue, &overlay_mask_data, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "overlay_silhouette_masks");
             let overlay_ui_buffer = if overlay_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &overlay_ui, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "overlay_ui_instances") };
             let overlay_vector_buffer = if overlay_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &overlay_vec, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "overlay_vector_vertices") };
             let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("ui_overlay_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene_view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
-                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment { view: depth, depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }), stencil_ops: None }),
+                depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
-            self.render_interleaved_layers(&mut overlay_pass, draw, &overlay_batches, overlay_ui_buffer.as_ref(), overlay_vector_buffer.as_ref(), None, &[], None, None, mesh_store, width, height, depth_view.is_some());
+            self.render_interleaved_layers(&mut overlay_pass, draw, &overlay_batches, overlay_mask_buffer.as_ref(), &overlay_mask_ranges, overlay_ui_buffer.as_ref(), overlay_vector_buffer.as_ref(), None, &[], None, None, mesh_store, width, height, depth_view.is_some());
         }
     }
 
@@ -1939,6 +2181,8 @@ impl UiPipelines {
         if all_ui.is_empty() && all_vec.is_empty() && batches.is_empty() && world_prepared.is_none() {
             return;
         }
+        let (mask_data, mask_ranges) = build_batch_masks(&batches, width, height);
+        let mask_buffer = frame_buffers.mask_instances.upload(device, queue, &mask_data, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "glass_foreground_silhouette_masks");
         let ui_buffer = if all_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &all_ui, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "glass_foreground_ui_instances") };
         let vector_buffer = if all_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &all_vec, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "glass_foreground_vector_vertices") };
         let instance_buffer = frame_buffers.world_instances.slice();
@@ -1946,17 +2190,17 @@ impl UiPipelines {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("glass_foreground_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment { view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
-            depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment { view: depth, depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }), stencil_ops: None }),
+            depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
             timestamp_writes: None,
             occlusion_query_set: None,
         });
-        self.render_interleaved_layers(&mut pass, draw, &batches, ui_buffer.as_ref(), vector_buffer.as_ref(), world_prepared, &pass_index_map, instance_buffer, line_buffer, mesh_store, width, height, depth_view.is_some());
+        self.render_interleaved_layers(&mut pass, draw, &batches, mask_buffer.as_ref(), &mask_ranges, ui_buffer.as_ref(), vector_buffer.as_ref(), world_prepared, &pass_index_map, instance_buffer, line_buffer, mesh_store, width, height, depth_view.is_some());
         drop(pass);
         if draw.layers.iter().any(|layer| layer_matches_filter(layer, LayerBatchFilter::Foreground) && !layer.raster_instances.is_empty()) {
             let mut raster_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("glass_foreground_raster_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment { view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
-                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment { view: depth, depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }), stencil_ops: None }),
+                depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
@@ -1964,17 +2208,19 @@ impl UiPipelines {
         }
         let (overlay_ui, overlay_vec, overlay_batches) = build_overlay_layer_batches(draw, LayerBatchFilter::Foreground);
         if !overlay_ui.is_empty() || !overlay_vec.is_empty() {
+            let (overlay_mask_data, overlay_mask_ranges) = build_batch_masks(&overlay_batches, width, height);
+            let overlay_mask_buffer = frame_buffers.mask_instances.upload(device, queue, &overlay_mask_data, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "glass_foreground_overlay_silhouette_masks");
             let overlay_ui_buffer = if overlay_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &overlay_ui, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "glass_foreground_overlay_ui_instances") };
             let overlay_vector_buffer =
                 if overlay_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &overlay_vec, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "glass_foreground_overlay_vector_vertices") };
             let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("glass_foreground_overlay_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment { view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
-                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment { view: depth, depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }), stencil_ops: None }),
+                depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
-            self.render_interleaved_layers(&mut overlay_pass, draw, &overlay_batches, overlay_ui_buffer.as_ref(), overlay_vector_buffer.as_ref(), None, &[], None, None, mesh_store, width, height, depth_view.is_some());
+            self.render_interleaved_layers(&mut overlay_pass, draw, &overlay_batches, overlay_mask_buffer.as_ref(), &overlay_mask_ranges, overlay_ui_buffer.as_ref(), overlay_vector_buffer.as_ref(), None, &[], None, None, mesh_store, width, height, depth_view.is_some());
         }
     }
 
@@ -2008,7 +2254,7 @@ impl UiPipelines {
             let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("ui_overlay_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment { view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
-                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment { view: depth, depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }), stencil_ops: None }),
+                depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
@@ -2146,16 +2392,24 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn render_overlay<'a>(&'a self, device: &wgpu::Device, queue: &wgpu::Queue, pass: &mut wgpu::RenderPass<'a>, overlay: &DrawList, frame_buffers: &mut FrameBuffers, width: f32, height: f32) {
+    pub fn render_overlay<'a>(&'a self, device: &wgpu::Device, queue: &wgpu::Queue, pass: &mut wgpu::RenderPass<'a>, overlay: &DrawList, frame_buffers: &'a mut FrameBuffers, width: f32, height: f32) {
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
 
         let (all_ui, all_vec, batches) = build_layer_batches(overlay, LayerBatchFilter::Backdrop);
+        let (mask_data, mask_ranges) = build_batch_masks(&batches, width, height);
+        let mask_buffer = frame_buffers.mask_instances.upload(device, queue, &mask_data, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "top_overlay_silhouette_masks");
         let ui_buffer = if all_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &all_ui, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "overlay_ui_instances") };
         let vector_buffer = if all_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &all_vec, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "overlay_vector_vertices") };
 
-        for batch in &batches {
-            set_pass_scissor(pass, batch.scissor, width, height);
+        for (batch_index, batch) in batches.iter().enumerate() {
+            if let Some((start, count)) = mask_ranges.get(batch_index).copied() {
+                if let Some(mask_buffer) = mask_buffer.as_ref() {
+                    self.draw_silhouette_mask(pass, mask_buffer, start, count, width, height);
+                } else {
+                    pass.set_stencil_reference(1);
+                }
+            }
             if batch.ui_count > 0 {
                 if let Some(instance_buffer) = &ui_buffer {
                     pass.set_pipeline(&self.ui_pipeline);
@@ -2178,7 +2432,7 @@ impl UiPipelines {
 
 #[cfg(test)]
 mod tests {
-    use super::{ear_clip_polygon, mesh_content_version, DrawList, ScissorRect, WORLD_GLOBALS_SLOT_SIZE};
+    use super::{content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, ClipRegion, DrawList, ScissorRect, WORLD_GLOBALS_SLOT_SIZE};
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::theme::Rgba;
     use crate::wgpu::kernel_3d_scene::ScenePass3d;
@@ -2191,6 +2445,73 @@ mod tests {
         assert_eq!(c.w, 50);
         assert_eq!(c.h, 50);
     }
+
+    #[test]
+    fn scissor_covers_fractional_rect_edges_without_pixel_seams() {
+        assert_eq!(ScissorRect::from_rect(Rect::new(10.25, 20.75, 30.5, 40.5), 100.0), ScissorRect { x: 10, y: 20, w: 31, h: 42 });
+    }
+
+    //#region SilhouetteClipTests
+
+    #[test]
+    fn clip_region_preserves_disjoint_cutouts_and_intersects_scissor() {
+        let clip = ClipRegion::from_rects(&[Rect::new(0.0, 0.0, 40.0, 20.0), Rect::new(80.0, 0.0, 20.0, 20.0), Rect::new(0.0, 20.0, 100.0, 80.0)], 100.0);
+        let scissors = clip.effective_scissors(Some(ScissorRect { x: 10, y: 0, w: 80, h: 100 }), 100.0, 100.0);
+        assert_eq!(scissors, vec![ScissorRect { x: 10, y: 0, w: 30, h: 20 }, ScissorRect { x: 80, y: 0, w: 10, h: 20 }, ScissorRect { x: 10, y: 20, w: 80, h: 80 }]);
+    }
+
+    #[test]
+    fn draw_list_nests_and_restores_clip_regions() {
+        let mut draw = DrawList::default();
+        draw.begin_silhouette_clip(&[Rect::new(0.0, 0.0, 100.0, 100.0)]);
+        draw.begin_silhouette_clip(&[Rect::new(25.0, 25.0, 100.0, 100.0)]);
+        assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.as_slice()), Some([ScissorRect { x: 25, y: 25, w: 75, h: 75 }].as_slice()));
+        draw.end_silhouette_clip();
+        assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.as_slice()), Some([ScissorRect { x: 0, y: 0, w: 100, h: 100 }].as_slice()));
+        draw.end_silhouette_clip();
+        assert!(draw.layers.last().is_some_and(|layer| layer.clip.is_none()));
+    }
+
+    #[test]
+    fn glass_foreground_inherits_active_silhouette_clip() {
+        let mut draw = DrawList::default();
+        draw.begin_silhouette_clip(&[Rect::new(0.0, 0.0, 40.0, 20.0), Rect::new(0.0, 20.0, 100.0, 80.0)]);
+        let glass = draw.push_glass([0.0, 0.0, 40.0, 20.0], 0.0, crate::wgpu::theme::Theme::default().glass(crate::wgpu::theme::Level::Window));
+        draw.begin_glass_content(glass);
+        assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.len()), Some(2));
+    }
+
+    #[test]
+    fn silhouette_stencil_states_write_masks_then_require_equality() {
+        let mask = mask_stencil_state();
+        assert_eq!(mask.front.compare, wgpu::CompareFunction::Always);
+        assert_eq!(mask.front.pass_op, wgpu::StencilOperation::Replace);
+        assert_eq!(mask.write_mask, 0xff);
+        let content = content_stencil_state();
+        assert_eq!(content.front.compare, wgpu::CompareFunction::Equal);
+        assert_eq!(content.front.pass_op, wgpu::StencilOperation::Keep);
+        assert_eq!(content.write_mask, 0x00);
+    }
+
+    #[test]
+    fn silhouette_mask_reset_is_bounded_to_previous_and_current_unions() {
+        let previous = Some(ScissorRect { x: 10, y: 10, w: 30, h: 20 });
+        let clip = ClipRegion { scissors: vec![ScissorRect { x: 80, y: 15, w: 20, h: 25 }] };
+        let (instances, current) = mask_instances(None, Some(&clip), previous, 500.0, 400.0);
+        assert_eq!(instances[0].rect, [10.0, 10.0, 90.0, 30.0]);
+        assert_eq!(instances[1].rect, [80.0, 15.0, 20.0, 25.0]);
+        assert_eq!(current, Some(ScissorRect { x: 80, y: 15, w: 20, h: 25 }));
+    }
+
+    #[test]
+    fn empty_silhouette_clip_writes_no_visible_stencil_region() {
+        let empty = ClipRegion { scissors: Vec::new() };
+        let (instances, current) = mask_instances(None, Some(&empty), None, 500.0, 400.0);
+        assert!(instances.is_empty(), "a cleared pass needs neither a reset nor a reference-one mask draw");
+        assert_eq!(current, None);
+    }
+
+    //#endregion SilhouetteClipTests
 
     #[test]
     fn scissor_from_rect_uses_top_left_origin() {

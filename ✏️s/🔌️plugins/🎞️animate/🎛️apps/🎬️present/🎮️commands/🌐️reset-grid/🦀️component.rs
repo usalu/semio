@@ -9,8 +9,8 @@ use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-/// 🎛️ App-scope command — mirrors the pre-B1 `handle_command`-only `"animate.resetGrid"` action.
-/// Its manifest action id (`animate.resetGrid`) diverges from what the wire keyword (`reset-grid`)
+/// 🎛️ App-scope command addressed locally as `"resetGrid"`; the owner is carried separately.
+/// Its manifest command id (`resetGrid`) diverges from what the wire keyword (`reset-grid`)
 /// would suggest, which is exactly what `app_commands!`'s `"id" as "wire-key"` two-literal row
 /// exists for — see `crate::apps::present`'s invocation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

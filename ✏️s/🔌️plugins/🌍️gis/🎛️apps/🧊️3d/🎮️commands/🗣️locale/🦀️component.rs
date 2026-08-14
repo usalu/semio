@@ -42,7 +42,7 @@ mod tests {
     #[test]
     fn set_locale_is_not_declared_in_the_manifest() {
         let definition = crate::apps::gis3d::create_gis3d_app().definition;
-        assert!(!definition.actions.iter().any(|action| action.id == "setLocale"), "locale is host-pushed, never palette-staged");
+        assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "setLocale"), "locale is host-pushed, never palette-staged");
     }
 }
 //#endregion 🧪️Tests

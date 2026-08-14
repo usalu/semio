@@ -9,7 +9,7 @@
 use semio_framework::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::wgpu::{
-    chrome_item_bg, chrome_item_text, draw_text, even_window_layout, push_chrome_group_border, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Label, Level, Locale, LocalizedLabel, Rect, Rgba,
+    chrome_item_text, draw_text, even_window_layout, push_chrome_group_border, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Label, Level, Locale, LocalizedLabel, Rect, Rgba,
     Terminology, Theme, UiPresence, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
 
@@ -198,7 +198,7 @@ impl DockState {
                 let rect = bounds;
                 if let DockNode::Stack { windows, active } = node {
                     let layout = layout_stack_cap(windows, active, window_labels, atlas, theme, rect, true);
-                    silhouettes.insert(active.clone(), WindowSilhouette::new(rect, layout.gap_x - rect.x, rect.x + rect.w - (layout.gap_x + layout.gap_w), theme.control_height));
+                    silhouettes.insert(active.clone(), WindowSilhouette::from_measured_top(rect, layout.gap_x - rect.x, rect.x + rect.w - (layout.gap_x + layout.gap_w), theme.control_height));
                     out.push((path.clone(), stack_body_chrome_rect(rect, theme, windows, &layout), active.clone()));
                 }
             }
@@ -444,7 +444,6 @@ impl DockState {
     }
 
     pub fn register_hits(&self, ctx: &mut DockRenderContext<'_>, bounds: Rect) {
-        ctx.draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.canvas_clear);
         if let Some(path) = &self.maximized_stack {
             if let Some(node) = node_at(&self.root, path) {
                 let rect = bounds;
@@ -1043,8 +1042,6 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
     };
     let cap_y = bounds.y;
     let cap_rect = Rect::new(bounds.x, cap_y, bounds.w, tab_h);
-    let cap_glass = ctx.draw.push_glass([cap_rect.x, cap_rect.y, cap_rect.w, cap_rect.h], 0.0, theme.glass(Level::Window));
-    ctx.draw.begin_glass_content(cap_glass);
 
     let focus_label = if maximized { "Unfocus" } else { "Focus" };
     let focus_icon = if maximized { "minimize-2" } else { "maximize-2" };
@@ -1059,20 +1056,14 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
         let icon_id = ctx.window_icon_ids.get(window_id).map(String::as_str).unwrap_or("app-window");
         let tw = dock_tab_content_width(ctx.atlas, theme, label);
         let tab_rect = Rect::new(tab_x, cap_y, tw, tab_h);
+        let tab_glass = ctx.draw.push_glass([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], 0.0, theme.glass(Level::Window));
+        ctx.draw.begin_glass_content(tab_glass);
         let is_active = window_id == active;
         if is_active {
             active_tab_x = tab_x;
         }
         let stack_active_tab = is_active && globally_active;
         let hovered = tab_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
-        if stack_active_tab {
-            ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.selected);
-        } else if hovered {
-            ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.button_hover);
-        } else if per_tab_chrome && !is_active {
-            // 🪟️ Inactive sibling pills — fill only; outer outline is the stack silhouette.
-            ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.panel);
-        }
         let tint = if stack_active_tab {
             theme.active_foreground
         } else if hovered {
@@ -1083,16 +1074,15 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
         let icon_w = paint_dock_tab_icon(ctx, icon_id, tab_rect.x + theme.padding_standard, tab_rect, tint);
         dock_text(ctx, label, tab_rect.x + theme.padding_standard + icon_w, tab_rect.y + (tab_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, tint);
         ctx.input.register_hit(HitTarget { rect: tab_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
+        ctx.draw.end_glass_content();
         tab_x += tw;
     }
     let gap_x = tab_x;
     let controls_x = cap_rect.x + cap_rect.w - controls_w;
     let gap_w = (controls_x - gap_x).max(0.0);
-    let gap_rect = Rect::new(gap_x, cap_y, gap_w, tab_h);
-    // 🪟️ Gap stays inside the full-cap glass region (frosted cutout); no piecewise bottom stroke.
-    ctx.input.register_hit(HitTarget { rect: gap_rect, event: None, control_id: Some(format!("dock.stack.{}", path_str(path))), kind: HitKind::Window, drag_axis: None, drag_data: None });
-
     let controls_rect = Rect::new(controls_x, cap_y, controls_w, tab_h);
+    let controls_glass = ctx.draw.push_glass([controls_rect.x, controls_rect.y, controls_rect.w, controls_rect.h], 0.0, theme.glass(Level::Window));
+    ctx.draw.begin_glass_content(controls_glass);
     render_cap_action_group(ctx, controls_rect, &[("dock.focus", focus_icon, focus_label), ("dock.close", "x", "Close")], path, false);
     ctx.draw.end_glass_content();
 
@@ -1104,7 +1094,7 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
         ctx.draw.push_solid([body_rect.x, body_rect.y, body_rect.w, body_rect.h], theme.canvas_clear);
     }
     // 🪟️ One outline for tabs + glass cutout + controls + body (matches React ModeDockStackSilhouetteBorder).
-    push_window_silhouette_border(ctx.draw, WindowSilhouette::new(bounds, gap_x - bounds.x, controls_w, tab_h), stroke, border);
+    push_window_silhouette_border(ctx.draw, &WindowSilhouette::from_measured_top(bounds, gap_x - bounds.x, controls_w, tab_h), stroke, border);
 
     if body_fill {
         let content = body_rect.inset(theme.padding_standard);
@@ -1118,46 +1108,162 @@ struct StackCapLayout {
     gap_w: f32,
 }
 
-/// 🪟️ Dock-stack outer silhouette (tabs protrusion + gap cutout + controls protrusion + body).
+//#region WindowSilhouetteGeometry
+
+/// 🪟️ Normalized physical chip span in silhouette-local coordinates.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct WindowSilhouette {
-    pub bounds: Rect,
-    pub tabs_w: f32,
-    pub controls_w: f32,
-    pub cap_h: f32,
+pub struct WindowSilhouetteSpan {
+    pub left: f32,
+    pub right: f32,
 }
 
-impl WindowSilhouette {
-    /// 🪟️ Builds the silhouette from a stack's outer bounds and measured cap geometry.
-    pub fn new(bounds: Rect, tabs_w: f32, controls_w: f32, cap_h: f32) -> Self {
-        Self { bounds, tabs_w: tabs_w.max(0.0), controls_w: controls_w.max(0.0), cap_h: cap_h.max(0.0) }
+impl WindowSilhouetteSpan {
+    pub fn new(left: f32, right: f32) -> Self {
+        Self { left, right }
     }
 }
 
-/// 🪟️ Paints a hairline (or thicker) stroke along the dock-stack silhouette path.
-pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: WindowSilhouette, stroke: f32, color: Rgba) {
-    let b = silhouette.bounds;
-    let tabs = silhouette.tabs_w.min(b.w);
-    let controls = silhouette.controls_w.min((b.w - tabs).max(0.0));
-    let cap = silhouette.cap_h.min(b.h);
-    let gap_end = (b.x + b.w - controls).max(b.x + tabs);
-    // top of tabs
-    draw.push_solid([b.x, b.y, tabs, stroke], color);
-    // right drop of tabs into gap
-    draw.push_solid([b.x + tabs - stroke, b.y, stroke, cap], color);
-    // gap baseline
-    draw.push_solid([b.x + tabs, b.y + cap - stroke, (gap_end - b.x - tabs).max(0.0), stroke], color);
-    // left rise of controls
-    draw.push_solid([gap_end, b.y, stroke, cap], color);
-    // top of controls
-    draw.push_solid([gap_end, b.y, controls, stroke], color);
-    // right side
-    draw.push_solid([b.x + b.w - stroke, b.y, stroke, b.h], color);
-    // bottom
-    draw.push_solid([b.x, b.y + b.h - stroke, b.w, stroke], color);
-    // left side
-    draw.push_solid([b.x, b.y, stroke, b.h], color);
+/// 🪟️ Normalized top or bottom chrome band.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct WindowSilhouetteEdge {
+    pub depth: f32,
+    pub spans: Vec<WindowSilhouetteSpan>,
 }
+
+impl WindowSilhouetteEdge {
+    pub fn new(depth: f32, spans: Vec<WindowSilhouetteSpan>) -> Self {
+        Self { depth, spans }
+    }
+}
+
+/// 🪟️ Rust mirror of `window-silhouette-geometry/v1` using arbitrary merged top and bottom spans.
+#[derive(Clone, Debug, PartialEq)]
+pub struct WindowSilhouette {
+    pub bounds: Rect,
+    pub top: WindowSilhouetteEdge,
+    pub bottom: WindowSilhouetteEdge,
+}
+
+impl WindowSilhouette {
+    const CHIP_EPSILON: f32 = 0.5;
+
+    /// 🪟️ Builds and normalizes a v1 silhouette from physical top and bottom chip spans.
+    pub fn new(bounds: Rect, top: WindowSilhouetteEdge, bottom: WindowSilhouetteEdge) -> Self {
+        let width = bounds.w.max(0.0);
+        let height = bounds.h.max(0.0);
+        let top_depth = top.depth.max(0.0).min(height);
+        let bottom_depth = bottom.depth.max(0.0).min((height - top_depth).max(0.0));
+        Self {
+            bounds,
+            top: WindowSilhouetteEdge::new(top_depth, Self::normalize_spans(top.spans, width)),
+            bottom: WindowSilhouetteEdge::new(bottom_depth, Self::normalize_spans(bottom.spans, width)),
+        }
+    }
+
+    /// 🪟️ Projects the currently measured Dock tab and controls groups into the normalized v1 model.
+    pub fn from_measured_top(bounds: Rect, tabs_w: f32, controls_w: f32, depth: f32) -> Self {
+        let tabs_right = tabs_w.max(0.0).min(bounds.w);
+        let controls_left = (bounds.w - controls_w.max(0.0)).max(tabs_right).min(bounds.w);
+        Self::new(
+            bounds,
+            WindowSilhouetteEdge::new(depth, vec![WindowSilhouetteSpan::new(0.0, tabs_right), WindowSilhouetteSpan::new(controls_left, bounds.w)]),
+            WindowSilhouetteEdge::default(),
+        )
+    }
+
+    fn normalize_spans(spans: Vec<WindowSilhouetteSpan>, width: f32) -> Vec<WindowSilhouetteSpan> {
+        let mut spans: Vec<_> = spans
+            .into_iter()
+            .filter(|span| span.left.is_finite() && span.right.is_finite() && span.right > span.left)
+            .map(|span| WindowSilhouetteSpan::new(span.left.clamp(0.0, width), span.right.clamp(0.0, width)))
+            .filter(|span| span.right - span.left > Self::CHIP_EPSILON)
+            .collect();
+        spans.sort_by(|a, b| a.left.total_cmp(&b.left).then(a.right.total_cmp(&b.right)));
+        let mut merged: Vec<WindowSilhouetteSpan> = Vec::new();
+        for span in spans {
+            if let Some(last) = merged.last_mut() {
+                if span.left <= last.right + Self::CHIP_EPSILON {
+                    last.right = last.right.max(span.right);
+                    continue;
+                }
+            }
+            merged.push(span);
+        }
+        merged
+    }
+
+    //#region ContentClip
+
+    /// 🪟️ Returns the disjoint body-and-chip union used by paint, content, and hit clipping.
+    pub fn content_clip_rects(&self) -> Vec<Rect> {
+        let mut regions = Vec::with_capacity(1 + self.top.spans.len() + self.bottom.spans.len());
+        let body_h = (self.bounds.h - self.top.depth - self.bottom.depth).max(0.0);
+        if self.bounds.w > Self::CHIP_EPSILON && body_h > Self::CHIP_EPSILON {
+            regions.push(Rect::new(self.bounds.x, self.bounds.y + self.top.depth, self.bounds.w, body_h));
+        }
+        regions.extend(self.glass_regions());
+        regions
+    }
+
+    /// 🪟️ Returns only chip regions, suitable for glass compositing.
+    pub fn glass_regions(&self) -> Vec<Rect> {
+        let mut regions = Vec::with_capacity(self.top.spans.len() + self.bottom.spans.len());
+        if self.top.depth > Self::CHIP_EPSILON {
+            regions.extend(self.top.spans.iter().map(|span| Rect::new(self.bounds.x + span.left, self.bounds.y, span.right - span.left, self.top.depth)));
+        }
+        if self.bottom.depth > Self::CHIP_EPSILON {
+            let y = self.bounds.y + self.bounds.h - self.bottom.depth;
+            regions.extend(self.bottom.spans.iter().map(|span| Rect::new(self.bounds.x + span.left, y, span.right - span.left, self.bottom.depth)));
+        }
+        regions
+    }
+
+    /// 🪟️ Returns the normalized document-layout clearances `(top, bottom)`.
+    pub fn safe_clearances(&self) -> (f32, f32) {
+        (self.top.depth, self.bottom.depth)
+    }
+
+    /// 🪟️ Tests exact membership in the body-and-chip union, leaving all chrome gaps as cutouts.
+    pub fn contains(&self, x: f32, y: f32) -> bool {
+        x.is_finite() && y.is_finite() && self.content_clip_rects().iter().any(|region| region.contains(x, y))
+    }
+
+    //#endregion ContentClip
+}
+
+/// 🪟️ Paints a hairline (or thicker) stroke along the dock-stack silhouette path.
+pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: &WindowSilhouette, stroke: f32, color: Rgba) {
+    let b = silhouette.bounds;
+    let mut paint_edge = |edge: &WindowSilhouetteEdge, outer: f32, inner: f32| {
+        let mut cursor = 0.0;
+        for span in &edge.spans {
+            if span.left > cursor + WindowSilhouette::CHIP_EPSILON {
+                draw.push_solid([b.x + cursor, inner - stroke * 0.5, span.left - cursor, stroke], color);
+            }
+            draw.push_solid([b.x + span.left, outer - stroke * 0.5, span.right - span.left, stroke], color);
+            if span.left > WindowSilhouette::CHIP_EPSILON {
+                draw.push_solid([b.x + span.left - stroke * 0.5, outer.min(inner), stroke, (outer - inner).abs()], color);
+            }
+            if span.right < b.w - WindowSilhouette::CHIP_EPSILON {
+                draw.push_solid([b.x + span.right - stroke * 0.5, outer.min(inner), stroke, (outer - inner).abs()], color);
+            }
+            cursor = span.right;
+        }
+        if cursor < b.w - WindowSilhouette::CHIP_EPSILON {
+            draw.push_solid([b.x + cursor, inner - stroke * 0.5, b.w - cursor, stroke], color);
+        }
+    };
+    paint_edge(&silhouette.top, b.y, b.y + silhouette.top.depth);
+    paint_edge(&silhouette.bottom, b.y + b.h, b.y + b.h - silhouette.bottom.depth);
+    let left_top = if silhouette.top.spans.first().is_some_and(|span| span.left <= WindowSilhouette::CHIP_EPSILON) { b.y } else { b.y + silhouette.top.depth };
+    let left_bottom = if silhouette.bottom.spans.first().is_some_and(|span| span.left <= WindowSilhouette::CHIP_EPSILON) { b.y + b.h } else { b.y + b.h - silhouette.bottom.depth };
+    let right_top = if silhouette.top.spans.last().is_some_and(|span| span.right >= b.w - WindowSilhouette::CHIP_EPSILON) { b.y } else { b.y + silhouette.top.depth };
+    let right_bottom = if silhouette.bottom.spans.last().is_some_and(|span| span.right >= b.w - WindowSilhouette::CHIP_EPSILON) { b.y + b.h } else { b.y + b.h - silhouette.bottom.depth };
+    draw.push_solid([b.x, left_top, stroke, (left_bottom - left_top).max(0.0)], color);
+    draw.push_solid([b.x + b.w - stroke, right_top, stroke, (right_bottom - right_top).max(0.0)], color);
+}
+
+//#endregion WindowSilhouetteGeometry
 
 fn layout_stack_cap(windows: &[String], active: &str, labels: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect, maximized: bool) -> StackCapLayout {
     let focus_label = if maximized { "Unfocus" } else { "Focus" };
@@ -1204,10 +1310,6 @@ fn render_cap_action_group(ctx: &mut DockRenderContext<'_>, rect: Rect, buttons:
         let item_w = measure_cap_button(ctx.atlas, theme, icon_id, label);
         let item_rect = Rect::new(x, inner_y, item_w, inner_h);
         let hovered = item_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
-        let bg = chrome_item_bg(theme, false, hovered);
-        if bg.a > 0.0 {
-            ctx.draw.push_solid([item_rect.x, item_rect.y, item_rect.w, item_rect.h], bg);
-        }
         let icon_size = 14.0;
         let mut content_x = item_rect.x + theme.padding_standard;
         let icon_color = chrome_item_text(theme, false, hovered);
@@ -1281,7 +1383,7 @@ fn collect_stack_bodies(
         DockNode::Stack { windows, active } => {
             let maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
             let layout = layout_stack_cap(windows, active, window_labels, atlas, theme, bounds, maximized);
-            silhouettes.insert(active.clone(), WindowSilhouette::new(bounds, layout.gap_x - bounds.x, bounds.x + bounds.w - (layout.gap_x + layout.gap_w), theme.control_height));
+            silhouettes.insert(active.clone(), WindowSilhouette::from_measured_top(bounds, layout.gap_x - bounds.x, bounds.x + bounds.w - (layout.gap_x + layout.gap_w), theme.control_height));
             out.push((path.to_vec(), stack_body_chrome_rect(bounds, theme, windows, &layout), active.clone()));
         }
     }
@@ -1325,6 +1427,7 @@ mod tests {
                         icon_id: "app-window".into(),
                         options: WindowOptions::default(),
                         actions: vec![],
+                        interactions: vec![],
                         utilities: vec![],
                         params_schema: None,
                         artifact_snapshot_schema: None,
@@ -1337,7 +1440,7 @@ mod tests {
             .expect("sample_app tests always pass at least one window id"),
             panel_tabs: vec![PanelTabDefinition { kind: PanelTabKind::App("tab".into()), label: LocalizedLabel::data("Tab"), group: PanelGroup::Workbench, body_key: Some("tab.body".into()), children: vec![] }],
             keybindings: vec![],
-            actions: vec![],
+            interactions: vec![],
             utilities: vec![],
             tools: vec![],
             commands: vec![],
@@ -1409,6 +1512,69 @@ mod tests {
         let text_only = atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0;
         assert!(with_icon > text_only);
     }
+
+    //#region SilhouetteContentTests
+
+    #[test]
+    fn window_silhouette_clip_union_excludes_cap_gap() {
+        let silhouette = WindowSilhouette::from_measured_top(Rect::new(10.0, 20.0, 300.0, 200.0), 80.0, 60.0, 32.0);
+        assert_eq!(
+            silhouette.content_clip_rects(),
+            vec![Rect::new(10.0, 52.0, 300.0, 168.0), Rect::new(10.0, 20.0, 80.0, 32.0), Rect::new(250.0, 20.0, 60.0, 32.0)]
+        );
+        assert!(!silhouette.content_clip_rects().iter().any(|rect| rect.contains(150.0, 30.0)));
+    }
+
+    #[test]
+    fn window_silhouette_v1_matches_typescript_fixture_for_merging_bottom_and_containment() {
+        let normalized = WindowSilhouette::new(
+            Rect::new(0.0, 0.0, 200.0, 100.0),
+            WindowSilhouetteEdge::new(
+                24.0,
+                vec![WindowSilhouetteSpan::new(160.0, 220.0), WindowSilhouetteSpan::new(60.25, 90.0), WindowSilhouetteSpan::new(0.0, 60.0), WindowSilhouetteSpan::new(90.25, 120.0)],
+            ),
+            WindowSilhouetteEdge::new(16.0, vec![WindowSilhouetteSpan::new(80.0, 120.0), WindowSilhouetteSpan::new(0.0, 40.0)]),
+        );
+        assert_eq!(normalized.top.spans, vec![WindowSilhouetteSpan::new(0.0, 120.0), WindowSilhouetteSpan::new(160.0, 200.0)]);
+        let silhouette = WindowSilhouette::new(
+            Rect::new(0.0, 0.0, 200.0, 100.0),
+            WindowSilhouetteEdge::new(24.0, vec![WindowSilhouetteSpan::new(160.0, 200.0), WindowSilhouetteSpan::new(0.0, 60.0)]),
+            WindowSilhouetteEdge::new(16.0, vec![WindowSilhouetteSpan::new(80.0, 120.0), WindowSilhouetteSpan::new(0.0, 40.0)]),
+        );
+        assert_eq!(
+            silhouette.glass_regions(),
+            vec![Rect::new(0.0, 0.0, 60.0, 24.0), Rect::new(160.0, 0.0, 40.0, 24.0), Rect::new(0.0, 84.0, 40.0, 16.0), Rect::new(80.0, 84.0, 40.0, 16.0)]
+        );
+        assert_eq!(silhouette.safe_clearances(), (24.0, 16.0));
+        assert!(silhouette.contains(20.0, 12.0));
+        assert!(!silhouette.contains(140.0, 12.0));
+        assert!(silhouette.contains(100.0, 50.0));
+        assert!(!silhouette.contains(60.0, 92.0));
+        assert!(silhouette.contains(100.0, 92.0));
+    }
+
+    #[test]
+    fn dock_stack_glass_and_hits_exist_only_on_owned_chips() {
+        let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() };
+        let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+        let theme = Theme::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut draw = DrawList::default();
+        let labels = HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
+        let icon_ids = HashMap::new();
+        let layout = layout_stack_cap(&["a".into(), "b".into()], "a", &labels, &mut atlas, &theme, bounds, false);
+        let gap_point = (layout.gap_x + layout.gap_w * 0.5, bounds.y + theme.control_height * 0.5);
+        let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+        dock.paint_chrome(&mut ctx, bounds, false);
+        assert_eq!(draw.glass_regions.len(), 3, "two tab chips plus one controls chip");
+        assert!(!draw.glass_regions.iter().any(|region| Rect::new(region.rect[0], region.rect[1], region.rect[2], region.rect[3]).contains(gap_point.0, gap_point.1)));
+        assert!(!input.hit_targets.iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("dock.stack."))));
+    }
+
+    //#endregion SilhouetteContentTests
 
     #[test]
     fn resize_hits_win_over_later_scroll_region() {
@@ -1767,7 +1933,7 @@ mod tests {
     }
 
     //#region WindowActionsAndUtilitiesTests
-    use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, ActionRef, UtilityDefinition, UtilityRef};
+    use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, UtilityDefinition, UtilityRef};
     use ui_wgpu::wgpu::{KeyAction, PointerModifiers};
 
     fn mods(meta: bool, ctrl: bool, shift: bool, alt: bool) -> PointerModifiers {
@@ -1782,7 +1948,7 @@ mod tests {
         app.controller_id = "ctrl".into();
         app.utilities =
             vec![UtilityDefinition::new("utility.a", LocalizedLabel::data("Utility A"), "circle"), UtilityDefinition { allows_actions_while_active: true, ..UtilityDefinition::new("utility.b", LocalizedLabel::data("Utility B"), "square") }];
-        app.actions = vec![
+        let actions = vec![
             ActionDefinition::new_catalog("zeroArg", LocalizedLabel::data("Zero Arg"), ActionKind::View),
             ActionDefinition {
                 args: vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).required(), ActionArgDef { default: Some(semio_framework::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) }],
@@ -1794,7 +1960,7 @@ mod tests {
         for kind in app.window_kinds.iter_mut() {
             if kind.id == "main" {
                 kind.utilities = vec![UtilityRef::new("utility.a")];
-                kind.actions = vec![ActionRef::new("zeroArg"), ActionRef::new("withArgs")];
+                kind.actions = actions.clone();
             }
         }
         app
@@ -1835,7 +2001,7 @@ mod tests {
     #[test]
     fn required_arg_gates_execution_and_merges_defaults() {
         let app = actions_utilities_app();
-        let defs = &app.actions.iter().find(|a| a.id == "withArgs").unwrap().args;
+        let defs = &app.window_kinds.iter().find(|kind| kind.id == "main").unwrap().actions.iter().find(|action| action.id == "withArgs").unwrap().args;
         // Nothing staged → required `name` missing → no executable args (P2 gate).
         assert!(ShellState::resolved_execute_args(defs, &serde_json::Map::new()).is_none());
         // Stage the required arg → executes, merging the defaulted `flag`.

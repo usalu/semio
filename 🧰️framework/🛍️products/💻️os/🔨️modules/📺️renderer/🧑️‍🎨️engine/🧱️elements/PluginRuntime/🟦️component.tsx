@@ -25,7 +25,6 @@ import {
 import {
   AppChannelClient,
   type AppFrameValue,
-  decodeActionWire,
   decodeFaultFromWire,
   decodeMutationEnvelopesPack,
   decodePackValue,
@@ -67,6 +66,7 @@ export type PluginWasmHandle = {
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
   readonly detachBackbone?: (instanceId: number) => Promise<void>;
+  readonly ephemeralSnapshot?: (instanceId: number) => Promise<{ readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number } | null>;
   readonly dispose: () => void;
 };
 
@@ -109,8 +109,6 @@ function hashWireToHex(value: number): string {
 /** 🎛️ The fallback envelope `plugin_exchange`'s `dispatch_command_frame` decodes when an app hasn't
  * overridden `DocumentApp::handle_typed_command` yet (`{kind, name, args}`, `store::pack_rt`-wire-value
  * encoded) — see that function's doc comment in `framework/os/module/plugin/rs/lib.rs`. */
-type WireCommandEnvelope = { readonly kind: "action" | "command"; readonly name: string; readonly args: unknown };
-
 /** 🎯️ Shared by `handleAction`/`handleCommand`: encodes `envelope` + `viewState`, sends one
  * `AppCommand::Command` frame, and reassembles the `Invocation`/`Effects`/`Events` frames it produces
  * back into the `InvocationResponse` shape the rest of this file already consumes. `operations`/
@@ -159,8 +157,8 @@ function normalizeWireHostEffect(raw: unknown): HostEffect {
   return raw as HostEffect;
 }
 
-async function performCommand(client: AppChannelClient, envelope: WireCommandEnvelope, viewState: unknown): Promise<InvocationResponse> {
-  const frames = await client.command(encodePackValue(envelope), viewState);
+async function performInvocation(client: AppChannelClient, invocation: unknown, invocationKind: "action" | "command", viewState: unknown): Promise<InvocationResponse> {
+  const frames = await client.command(encodePackValue(invocation), viewState);
   let output: unknown = null;
   let diagnostics: InvocationResponse["diagnostics"] = [];
   let requestedEffects: HostEffect[] = [];
@@ -177,7 +175,7 @@ async function performCommand(client: AppChannelClient, envelope: WireCommandEnv
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault) throw new SemioFaultError(fault);
-      throw new Error(`[DEBUG] ${envelope.kind} '${envelope.name}' failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
+      throw new Error(`${invocationKind} failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
     }
   }
   return {
@@ -312,14 +310,8 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
       channels.delete(instanceId);
       await handle.destroyApp(instanceId);
     },
-    handleAction: (instanceId, actionJson, viewState) => {
-      const parsed = decodeActionWire(actionJson);
-      return performCommand(requireChannel(instanceId), { kind: "action", name: parsed.action, args: parsed.args }, viewState);
-    },
-    handleCommand: (instanceId, commandJson, viewState) => {
-      const parsed = decodeActionWire(commandJson);
-      return performCommand(requireChannel(instanceId), { kind: "command", name: parsed.action, args: parsed.args }, viewState);
-    },
+    handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), JSON.parse(actionJson), "action", viewState),
+    handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), JSON.parse(commandJson), "command", viewState),
     refreshUi: (instanceId, request) => performRefreshUi(requireChannel(instanceId), request),
     contextMenu: (instanceId, request) => performContextMenu(requireChannel(instanceId), request),
     applyMutations: async (instanceId, mutationsPack) => {
@@ -344,6 +336,11 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
       const frames = await requireChannel(instanceId).detachBackbone();
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) console.error(`[DEBUG] program ${pluginId}: detachBackbone failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+    },
+    ephemeralSnapshot: async (instanceId) => {
+      const frames = await requireChannel(instanceId).drain();
+      const frame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly Ephemeral: unknown }> => "Ephemeral" in candidate);
+      return frame ? { presence: frame.Ephemeral.presence, presenceGeneration: frame.Ephemeral.presence_generation, transientGeneration: frame.Ephemeral.transient_generation } : null;
     },
     dispose: () => lease.release(),
   };

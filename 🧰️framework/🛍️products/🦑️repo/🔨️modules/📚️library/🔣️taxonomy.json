@@ -308,6 +308,14 @@
   ],
   "modeChildDirs": [
     "🪟️windows",
+    "🎮️commands",
+    "🎚️config",
+    "👥️presence",
+    "🫧️transient"
+  ],
+  "modeRequiredChildDirs": [
+    "🪟️windows",
+    "🎮️commands",
     "🎚️config",
     "👥️presence",
     "🫧️transient"
@@ -410,7 +418,17 @@
     "⚡️implementation"
   ],
   "pluginChildDirs": [
-    "🎛️apps"
+    "🎛️apps",
+    "🎮️commands"
+  ],
+  "pluginRequiredChildDirs": [
+    "🎮️commands"
+  ],
+  "osChildDirs": [
+    "🎮️commands"
+  ],
+  "osRequiredChildDirs": [
+    "🎮️commands"
   ],
   "bannedNameStems": [
     "core",
@@ -455,6 +473,9 @@
   "pluginAreas": [
     "✏️s/🔌️plugins"
   ],
+  "pluginTaxonomyStates": {
+    "✏️s/🔌️plugins": "mixed"
+  },
   "areas": {
     "✏️s/🔌️plugins": "clean",
     "✏️s/🔨️modules": "mixed",

@@ -21,7 +21,7 @@ role = "plugin"
 [package.metadata.semio.storybook]
 id = "cad"
 titlePrefix = "📐️cad"
-sourceRoots = ["🎛️apps/📐️cad/⚙️engine/📺️renderer", "🗿️artifacts/📐️cad/📚️examples/🖼️assets", "🗿️artifacts/📐️cad/📚️examples/🧫️fixtures"]
+sourceRoots = ["🎛️apps/📐️cad/⚙️engine/📺️renderer", "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"]
 
 [[package.metadata.semio.playground]]
 variant = "cad"
@@ -37,7 +37,7 @@ ports = { react = 6020, wgpu = 6120 }
 kind = "static-dir"
 route = "/cad-fixture"
 app = "cad-play"
-root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🧫️fixtures"
+root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

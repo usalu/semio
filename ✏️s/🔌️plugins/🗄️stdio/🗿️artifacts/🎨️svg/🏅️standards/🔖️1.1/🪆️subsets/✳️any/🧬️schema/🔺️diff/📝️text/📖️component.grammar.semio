@@ -23,7 +23,8 @@ comment none
 # the framework's built-in `hex` MACRO -- see the mandatory-macro rationale in
 # `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2 (a hand-rolled `{INT|IDENT}*` production never
 # backtracks and would silently swallow a following bareword literal like `declaration`/`doctype`).
-document = declaration-tok? doctype-tok? root-tok?
+document = source-tok? declaration-tok? doctype-tok? root-tok?
+source-tok = "source" "=" opt-source
 declaration-tok = "declaration" "=" opt-declaration
 doctype-tok = "doctype" "=" opt-hex
 root-tok = "root" "=" node-diff
@@ -48,6 +49,8 @@ node-diff = "E" "[" opt-hex "," opt-attrs-diff "," opt-children-diff "]" | "T" "
 opt-attrs-diff = "[" "0" "]" | "[" "1" "," attrs-diff-body "]"
 opt-children-diff = "[" "0" "]" | "[" "1" "," children-diff-body "]"
 opt-xml-node = "[" "0" "]" | "[" "1" "," xml-node "]"
+opt-source = "[" "0" "]" | "[" "1" "," source-lit "]"
+source-lit = "[" hex "," hex "]"
 
 # `enc_attrs_diff`/`dec_attrs_diff` -- `[removed];[modified];[added]`, name-keyed
 # (`📖️grammar-recipe.md` §1.4's name-keyed collection-triple shape).

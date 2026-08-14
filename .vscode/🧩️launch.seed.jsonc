@@ -1596,6 +1596,17 @@
       }
     },
     {
+      "name": "⚖️gate📖️storybook",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-storybook",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400
+      }
+    },
+    {
       "name": "⚖️gate🗄️stdio-catalog",
       "type": "node-terminal",
       "request": "launch",

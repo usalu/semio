@@ -35,8 +35,10 @@ set-transform = "set-transform" "path" "=" path "transform" "=" opt-transform-li
 path = "[" path-item* "]"
 path-item = INT ","?
 
-# `enc_svg_snapshot`/`dec_svg_snapshot` -- `[hex(schema),opt(root),opt(doctype),opt(declaration)]`.
-snapshot-lit = "[" hex "," opt-xml-node "," opt-hex "," opt-declaration "]"
+# `enc_svg_snapshot`/`dec_svg_snapshot` -- semantic document plus persisted native provenance.
+snapshot-lit = "[" hex "," opt-xml-node "," opt-hex "," opt-declaration "," opt-source "]"
+opt-source = "[" "0" "]" | "[" "1" "," source-lit "]"
+source-lit = "[" hex "," hex "]"
 
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
 opt-hex = "[" "0" "]" | "[" "1" "," hex "]"

@@ -1,0 +1,22 @@
+Title:           
+Subject:         
+Keywords:        
+Author:          
+Creator:         LaTeX with hyperref
+Producer:        MiKTeX pdfTeX-1.40.21
+CreationDate:    Sun Jan  3 06:04:22 2021 CET
+ModDate:         Sun Jan  3 06:04:22 2021 CET
+Custom Metadata: yes
+Metadata Stream: no
+Tagged:          no
+UserProperties:  no
+Suspects:        no
+Form:            none
+JavaScript:      no
+Pages:           65
+Encrypted:       no
+Page size:       595.276 x 841.89 pts (A4)
+Page rot:        0
+File size:       6346331 bytes
+Optimized:       no
+PDF version:     1.5

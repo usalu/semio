@@ -8,6 +8,7 @@
 //! top-level format artifact, not a semio subset).
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Box, Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+use crate::ArtifactSource;
 use protocol::MutationDiff;
 use protocol::command::DiffAlgebra;
 use serde::{Deserialize, Serialize};
@@ -282,6 +283,8 @@ pub type Mp4UnknownBoxesDiff = IndexedDiff<Mp4Box, Mp4Box>;
 #[serde(rename_all = "camelCase")]
 pub struct Mp4Diff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<Option<ArtifactSource>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ftyp: Option<Mp4Ftyp>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tracks: Option<Mp4TracksDiff>,
@@ -298,6 +301,7 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
     fn apply(&self, base: &Mp4Snapshot) -> Mp4Snapshot {
         Mp4Snapshot {
             schema: base.schema.clone(),
+            source: self.source.clone().unwrap_or_else(|| base.source.clone()),
             ftyp: self.ftyp.clone().unwrap_or_else(|| base.ftyp.clone()),
             tracks: self.tracks.as_ref().map_or_else(|| base.tracks.clone(), |td| apply_indexed(&base.tracks, td, apply_track_diff)),
             unknown_boxes: self.unknown_boxes.as_ref().map_or_else(|| base.unknown_boxes.clone(), |bd| apply_indexed(&base.unknown_boxes, bd, apply_box_diff)),
@@ -305,6 +309,7 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
     }
 
     fn absorb(&mut self, other: Self) {
+        if other.source.is_some() { self.source = other.source; }
         if other.ftyp.is_some() { self.ftyp = other.ftyp; }
         match (&mut self.tracks, other.tracks) {
             (Some(existing), Some(other_tracks)) => absorb_indexed(existing, other_tracks, absorb_track_diff, apply_track_diff_mut),
@@ -324,6 +329,7 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
         let tracks_diff = between_indexed(&base.tracks, &other.tracks, between_track, track_diff_is_empty);
         let boxes_diff = between_indexed(&base.unknown_boxes, &other.unknown_boxes, between_box, box_diff_is_empty);
         Self {
+            source: (base.source != other.source).then(|| other.source.clone()),
             ftyp: (base.ftyp != other.ftyp).then(|| other.ftyp.clone()),
             tracks: (!tracks_diff.is_empty()).then_some(tracks_diff),
             unknown_boxes: (!boxes_diff.is_empty()).then_some(boxes_diff),
@@ -337,7 +343,7 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
         let after = self.apply(base);
         Self::between(&after, base)
     }
-    fn is_empty(&self) -> bool { self.ftyp.is_none() && self.tracks.is_none() && self.unknown_boxes.is_none() }
+    fn is_empty(&self) -> bool { self.source.is_none() && self.ftyp.is_none() && self.tracks.is_none() && self.unknown_boxes.is_none() }
 }
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
@@ -359,7 +365,7 @@ mod tests {
     }
 
     fn snap(tracks: Vec<Mp4Track>) -> Mp4Snapshot {
-        Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec![] }, tracks, unknown_boxes: vec![] }
+        Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec![] }, tracks, unknown_boxes: vec![], source: None }
     }
 
     //#region field_sweep + between_roundtrip_law
@@ -374,8 +380,10 @@ mod tests {
         b.tracks.remove(1);
         b.tracks.push(track(3, vec![sample(5)]));
         b.unknown_boxes.push(Mp4Box { fourcc: "free".into(), data: vec![0] });
+        b.source = Some(ArtifactSource::capture(&[1, 2, 3], &b.projection()).expect("capture source"));
 
         let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
+        assert!(d.source.is_some(), "source field must be covered by the sweep");
         assert!(d.ftyp.is_some(), "ftyp field must be covered by the sweep");
         assert!(d.tracks.is_some(), "tracks field must be covered by the sweep");
         assert!(d.unknown_boxes.is_some(), "unknown_boxes field must be covered by the sweep");
@@ -495,6 +503,33 @@ mod tests {
         assert_eq!(left.apply(&a), after);
         assert_eq!(right.apply(&a), after);
         assert_eq!(left.apply(&a), right.apply(&a), "absorb must be associative");
+    }
+
+    #[test]
+    fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
+        let bytes = std::fs::read(path).expect("read exact MP4 fixture");
+        let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
+
+        let empty = Mp4Diff::default();
+        assert!(empty.is_empty());
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&empty.apply(&base)), bytes);
+
+        let mut changed = base.clone();
+        changed.tracks[0].width += 1;
+        let diff = Mp4Diff::between(&base, &changed);
+        let after = diff.apply(&base);
+        let inverse = diff.inverse(&base);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&inverse.apply(&after)), bytes);
+
+        let mut absorbed = diff;
+        absorbed.absorb(inverse);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&absorbed.apply(&base)), bytes);
+
+        let authored = base.projection();
+        let remove_source = Mp4Diff::between(&base, &authored);
+        assert_eq!(remove_source.source, Some(None));
+        assert_eq!(remove_source.apply(&base), authored);
     }
     //#endregion
 }

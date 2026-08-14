@@ -435,6 +435,16 @@ pub fn create_home_app() -> App {
             .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Delete File System Node", "Dateisystemknoten löschen"))
             .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"))
             .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
+            .window_kind_action_refs(crate::apps::home::modes::explore::windows::main::S_HOME_WINDOW, vec![
+                "createStudio".into(),
+                "bindSpaceFile".into(),
+                "importSpace".into(),
+                "openSpace".into(),
+                "navigateVirtualFileSystemNode".into(),
+                "deleteVirtualFileSystemNode".into(),
+                "goHome".into(),
+                "setActivePanelTab".into(),
+            ])
             .keybinding("mod+n", "createStudio")
             .keybinding("mod+o", "importSpace"),
     );
@@ -462,7 +472,8 @@ mod tests {
     #[test]
     fn home_declares_create_space_action() {
         let app = create_home_app();
-        assert!(app.definition.actions.iter().any(|action| action.id == "createStudio"));
+        let main = app.definition.window_kinds.iter().find(|window| window.id == crate::apps::home::modes::explore::windows::main::S_HOME_WINDOW).expect("home main window");
+        assert!(main.actions.iter().any(|action| action.id == "createStudio"));
     }
 
     #[test]

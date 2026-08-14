@@ -147,6 +147,7 @@ export type UiTranslationSchema = {
     };
     readonly fullscreen: {
       readonly toggle: UiLabelValue;
+      readonly exit: UiLabelValue;
     };
     readonly mobilePanel: {
       readonly toggle: UiLabelValue;

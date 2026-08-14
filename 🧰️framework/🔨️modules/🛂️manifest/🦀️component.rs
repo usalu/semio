@@ -5,6 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use dsl::DslValue;
+use std::collections::BTreeMap;
 use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
 // 🔀️ ArtifactKindSpec/OsMediaCapability/MediaType/MediaClass/MediaForm/MediaWireFormat/MediaPortSpec/
 // PortMultiplicity/MediaCompat/AppIo/ArtifactPresentation/ConfigSpec/CommandGrammar/Media/MediaPayload/
@@ -26,6 +27,37 @@ use crate::{DomainSelection, InteractionDefinition, InteractionRef};
 pub struct Keybinding {
     pub keys: String,
     pub action: ActionDescriptor,
+}
+
+/// @emoji ⌨️ Operating system selector for a platform-specific keybinding.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum Platform {
+    MacOs,
+    Windows,
+    Linux,
+}
+
+/// @emoji ⌨️ One command chord, optionally restricted to a host platform.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PlatformKeybinding {
+    pub chord: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub platform: Option<Platform>,
+}
+
+impl PlatformKeybinding {
+    pub fn new(chord: impl Into<String>) -> Self {
+        Self { chord: chord.into(), platform: None }
+    }
+
+    pub fn for_platform(chord: impl Into<String>, platform: Platform) -> Self {
+        Self { chord: chord.into(), platform: Some(platform) }
+    }
 }
 
 /// @emoji 🗂️ Classifies a declared action by how it interacts with VCS history.
@@ -659,9 +691,8 @@ pub fn start_introduction_action_definition() -> ActionDefinition {
     }
 }
 
-/// 📇️ A validated reference into an app's `AppDefinition.actions` registry — prevents windows/modes
-/// from silently inheriting "every app action" by making the scoping explicit and typed. Distinct
-/// from `kernel::ActionId` (a dispatched-invocation identifier); this one names a *declaration*.
+/// 📇️ A relative action id used by declarations nested beneath an owning window kind.
+/// Distinct from `ActionAddress`, which qualifies a dispatched invocation down to a window instance.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
@@ -687,6 +718,29 @@ impl From<String> for ActionRef {
     fn from(value: String) -> Self {
         Self(value)
     }
+}
+
+/// @emoji 📍️ Fully qualified address of an action owned by one concrete window instance.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ActionAddress {
+    pub plugin_id: String,
+    pub app_id: String,
+    pub mode_id: String,
+    pub window_kind_id: String,
+    pub window_instance_id: String,
+    pub action_id: String,
+}
+
+/// @emoji 📨️ One addressed action invocation with named JSON arguments.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ActionInvocation {
+    pub address: ActionAddress,
+    #[cfg_attr(feature = "typegen", ts(type = "Record<string, unknown>"))]
+    pub arguments: BTreeMap<String, serde_json::Value>,
 }
 
 //#region 🔖️Utilities
@@ -770,20 +824,8 @@ impl From<String> for UtilityRef {
 //#endregion 🔖️Utilities
 
 //#region 🔖️Commands
-/// @emoji 🗂️ Where a command is offered. There are no window-level commands — window-scoped verbs
-/// stay `ActionDefinition`/`UtilityDefinition`; a command is scoped to the os shell, a program, an app, or
-/// one of an app's modes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase")]
-pub enum CommandScope {
-    Os,
-    Plugin,
-    App,
-    Mode,
-}
-
-/// @emoji 🎛️ Declares one command: a scoped, categorized verb offered in the footer command panel.
+/// @emoji 🎛️ Declares one command: a categorized verb offered in the footer command panel.
+/// Its owner and availability are derived from the containing OS, plugin, app, or mode definition.
 /// Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
 /// `ArtifactApp::handle_command`/`ActionEmit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -794,15 +836,14 @@ pub struct CommandDefinition {
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
     #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub label: LocalizedLabel,
-    pub scope: CommandScope,
     /// 🗂️ Footer category tab this command groups under (an open id, e.g. "document", "appearance").
     pub category: String,
     pub icon_id: IconName,
+    pub kind: ActionKind,
     /// 📝️ Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
     pub args: Vec<ActionArgDef>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub keys: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub keybindings: Vec<PlatformKeybinding>,
     #[serde(default)]
     pub in_palette: bool,
 }
@@ -811,26 +852,26 @@ impl CommandDefinition {
     pub fn new(
         id: impl Into<String>,
         label: impl Into<LocalizedLabel>,
-        scope: CommandScope,
         category: impl Into<String>,
         icon_id: impl Into<IconName>,
+        kind: ActionKind,
     ) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
-            scope,
             category: category.into(),
             icon_id: icon_id.into(),
+            kind,
             args: Vec::new(),
-            keys: None,
+            keybindings: Vec::new(),
             in_palette: true,
         }
     }
 
     /// @emoji 🎛️ Declares a command whose icon is resolved from {@link catalog_command_icon_id}.
-    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, scope: CommandScope, category: impl Into<String>) -> Self {
+    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
         let id = id.into();
-        Self::new(id.clone(), label, scope, category, catalog_command_icon_id(&id))
+        Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind)
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this command.
@@ -838,35 +879,51 @@ impl CommandDefinition {
         self.args = args.into_iter().collect();
         self
     }
+
+    /// @emoji ⌨️ Attaches one platform-aware command keybinding.
+    pub fn with_keybinding(mut self, keybinding: PlatformKeybinding) -> Self {
+        self.keybindings.push(keybinding);
+        self
+    }
 }
 
-/// 🎛️ A validated reference into an app's `AppDefinition.commands` registry — the command mirror of
-/// `ActionRef`/`UtilityRef`. Only ever names a `Mode`-scope command (see `ModeDefinition.commands`).
+/// @emoji 📍️ Hierarchical owner of a command definition.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(transparent)]
-pub struct CommandRef(String);
-
-impl CommandRef {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum CommandOwnerAddress {
+    Os,
+    Plugin { plugin_id: String },
+    App { plugin_id: String, app_id: String },
+    Mode { plugin_id: String, app_id: String, mode_id: String },
 }
 
-impl From<&str> for CommandRef {
-    fn from(value: &str) -> Self {
-        Self(value.to_string())
-    }
+/// @emoji 📍️ Fully qualified address of one command.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CommandAddress {
+    pub owner: CommandOwnerAddress,
+    pub command_id: String,
 }
 
-impl From<String> for CommandRef {
-    fn from(value: String) -> Self {
-        Self(value)
-    }
+/// @emoji 📨️ One addressed command invocation with named JSON arguments.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CommandInvocation {
+    pub address: CommandAddress,
+    #[cfg_attr(feature = "typegen", ts(type = "Record<string, unknown>"))]
+    pub arguments: BTreeMap<String, serde_json::Value>,
+}
+
+/// @emoji 💻️ Operating-system command catalog shared by every renderer.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct OsDefinition {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub commands: Vec<CommandDefinition>,
 }
 //#endregion 🔖️Commands
 
@@ -899,7 +956,7 @@ impl ToolDefinition {
 }
 
 /// @emoji 🛠️ A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
-/// `UtilityRef`/`CommandRef`, scoping tools to modes with a typed, resolvable id.
+/// `UtilityRef`, scoping tools to modes with a typed, resolvable id.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
@@ -1167,7 +1224,7 @@ pub enum IntroductionPlacement {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
 pub enum IntroductionInteractionKind {
-    /// 📇️ References `AppDefinition.actions`.
+    /// 📇️ References an action owned by the active window kind.
     Action(ActionRef),
     /// 🧰️ References `AppDefinition.utilities`.
     Utility(UtilityRef),
@@ -1702,7 +1759,7 @@ pub struct TutorialEvent {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialEventKind {
-    /// 📇️ An `AppDefinition.actions` dispatch, with its effective args.
+    /// 📇️ A relative dispatch to an action owned by the active window kind, with its effective args.
     Action {
         action: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2263,11 +2320,11 @@ pub struct DialogDefinition {
     #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub body: Option<LocalizedLabel>,
     pub args: Vec<ActionArgDef>,
-    /// 📇️ References `AppDefinition.actions` — dispatched with the merged effective args on submit.
+    /// 📇️ References an action owned by the active window kind, dispatched with merged args.
     pub submit_action: ActionRef,
     #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub submit_label: LocalizedLabel,
-    /// 📇️ Optional `AppDefinition.actions` reference dispatched on any dismissal (Escape, veil
+    /// 📇️ Optional active-window action reference dispatched on any dismissal (Escape, veil
     /// click, or the Cancel button).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -2339,10 +2396,9 @@ pub struct ModeDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub layout_id: Option<String>,
-    /// 🎛️ Mode-scope commands active while this mode is active — references `AppDefinition.commands`
-    /// ids (each of which must declare `scope: CommandScope::Mode`).
+    /// 🎛️ Commands owned by this mode and active only while it is active.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub commands: Vec<CommandRef>,
+    pub commands: Vec<CommandDefinition>,
 }
 
 /// 🚫️ A non-empty, order-preserving list — construction-time enforcement replaces what used to be a
@@ -2449,11 +2505,9 @@ pub struct WindowKindDefinition {
     /// 🎛️ Always-present chrome facets (was: separately-optional `measures`/`engagement`).
     #[serde(default)]
     pub options: WindowOptions,
-    /// 📇️ Actions this window kind accepts — references `AppDefinition.actions` ids. Mandatory,
-    /// may be empty, never absent; replaces the previous implicit "every app action applies to
-    /// every window" behavior.
+    /// 📇️ Actions owned by this window kind. Mandatory, may be empty, never absent.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actions: Vec<ActionRef>,
+    pub actions: Vec<ActionDefinition>,
     /// 🧰️ Utilities this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub utilities: Vec<UtilityRef>,
@@ -2596,16 +2650,13 @@ pub struct AppDefinition {
     pub window_kinds: WindowKinds,
     pub panel_tabs: Vec<PanelTabDefinition>,
     pub keybindings: Vec<Keybinding>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actions: Vec<ActionDefinition>,
     /// 🧰️ The interactive utilities this app exposes (referenced by `WindowKindDefinition.utilities`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub utilities: Vec<UtilityDefinition>,
     /// 🛠️ The mode-level tools this app exposes (referenced by `ModeDefinition.tools`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<ToolDefinition>,
-    /// 🎛️ App- and mode-scope commands this app exposes (referenced by `ModeDefinition.commands` for
-    /// `Mode`-scope entries; `App`-scope entries apply whenever the app is focused).
+    /// 🎛️ Commands owned by this app and active whenever it is focused.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub commands: Vec<CommandDefinition>,
     /// 🕹️ The interaction domains (hover + selection) this app exposes (referenced by
@@ -2721,39 +2772,13 @@ fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
         && action.id != SET_ACTIVE_TOOL_ACTION_ID
 }
 
-/// @emoji 📇️ Resolves the actions a window kind presents in its panel. Explicit `window_kind.actions`
-/// refs resolve in declared order; additionally, any panel-eligible app action referenced by *no*
-/// window kind is an "orphan" that appears on every window (the scoping fallback that prevents blank
-/// panels mid-migration — Architecture Decision 8). A window that scopes nothing therefore shows every
-/// orphan; once a plugin scopes an action to some window, it stops being an orphan and appears only
-/// where scoped. Unresolvable refs are skipped (the builder validates them at construction time).
+/// @emoji 📇️ Resolves the actions a window kind presents in its panel from its authoritative
+/// owned definitions, preserving declaration order and excluding framework-only rail actions.
 pub fn resolve_window_actions<'a>(
-    app: &'a AppDefinition,
-    window_kind: &WindowKindDefinition,
+    _app: &'a AppDefinition,
+    window_kind: &'a WindowKindDefinition,
 ) -> Vec<&'a ActionDefinition> {
-    let referenced: std::collections::HashSet<&str> = app
-        .window_kinds
-        .iter()
-        .flat_map(|window| window.actions.iter().map(ActionRef::as_str))
-        .collect();
-    let mut resolved: Vec<&'a ActionDefinition> = Vec::new();
-    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
-    for action_ref in &window_kind.actions {
-        if let Some(action) = app.actions.iter().find(|action| action.id == action_ref.as_str()) {
-            if seen.insert(action.id.as_str()) {
-                resolved.push(action);
-            }
-        }
-    }
-    for action in &app.actions {
-        if action_is_panel_eligible(action)
-            && !referenced.contains(action.id.as_str())
-            && seen.insert(action.id.as_str())
-        {
-            resolved.push(action);
-        }
-    }
-    resolved
+    window_kind.actions.iter().filter(|action| action_is_panel_eligible(action)).collect()
 }
 
 /// @emoji 🛠️ Resolves the tools the active mode presents, in declared order — references into
@@ -3512,9 +3537,10 @@ mod app_label_tests {
     use crate::ui::{
         app_window_label, child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args,
         resolve_app_breadcrumb, resolve_layout_for_mode, resolve_mode_tools,
-        resolve_window_actions, ActionArgControl, ActionArgDef,
-        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
-        CommandScope, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture, LocalizedLabel, Locale, Terminology,
+        resolve_window_actions, ActionAddress, ActionArgControl, ActionArgDef, ActionInvocation,
+        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandAddress, CommandDefinition, CommandInvocation,
+        CommandOwnerAddress, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture, LocalizedLabel, Locale, OsDefinition,
+        Platform, PlatformKeybinding, Terminology,
         IntroductionInteraction, IntroductionInteractionKind, IntroductionKeyModifier, IntroductionPoint, IntroductionPointerButton, IntroductionStepDefinition,
         Modes, NonEmptyVec, PanelGroup, PanelTabDefinition, PanelTabKind, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
@@ -3590,6 +3616,14 @@ mod app_label_tests {
     }
 
     fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
+        let owned_actions = if window_actions.is_empty() {
+            actions
+        } else {
+            window_actions
+                .iter()
+                .filter_map(|action_ref| actions.iter().find(|action| action.id == action_ref.as_str()).cloned())
+                .collect()
+        };
         AppDefinition {
             id: "a".into(),
             label: LocalizedLabel::data("A"),
@@ -3612,7 +3646,7 @@ mod app_label_tests {
                 surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
                 options: ui_wgpu::wgpu::WindowOptions::default(),
-                actions: window_actions,
+                actions: owned_actions,
                 utilities: Vec::new(),
                 interactions: Vec::new(),
                 params_schema: None,
@@ -3623,7 +3657,6 @@ mod app_label_tests {
             }),
             panel_tabs: vec![],
             keybindings: vec![],
-            actions,
             utilities: vec![],
             tools: vec![],
             commands: vec![],
@@ -3655,8 +3688,7 @@ mod app_label_tests {
         );
         let window = app.window_kinds.first();
         let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
-        // `add` is explicitly scoped here; `remove` is referenced by no window ⇒ orphan ⇒ also appears.
-        assert_eq!(resolved, vec!["add", "remove"]);
+        assert_eq!(resolved, vec!["add"], "window ownership replaces app-level orphan fallback");
     }
 
     #[test]
@@ -3735,7 +3767,8 @@ mod app_label_tests {
     fn resolve_window_actions_includes_injected_interaction_actions() {
         let mut app = app_with(vec![], vec![]);
         app.interactions = vec![sample_interaction_definition("graph")];
-        app.actions = interaction_action_definitions(&app);
+        let actions = interaction_action_definitions(&app);
+        app.window_kinds.first_mut().actions = actions;
         let window = app.window_kinds.first();
         let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
         for id in [
@@ -3746,7 +3779,7 @@ mod app_label_tests {
             SET_SELECTION_MODE_ACTION_ID,
             SET_INTERACTION_GRANULARITY_ACTION_ID,
         ] {
-            assert!(resolved.contains(&id), "{id} injected into app.actions but not resolved for its window");
+            assert!(resolved.contains(&id), "{id} injected into the owning window but not resolved");
         }
     }
 
@@ -3759,7 +3792,10 @@ mod app_label_tests {
 
     #[test]
     fn app_definition_and_window_kind_definition_serde_round_trip_interactions() {
-        let mut app = app_with(vec![], vec![ActionRef::new("noop")]);
+        let mut app = app_with(
+            vec![ActionDefinition::new_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View)],
+            vec![ActionRef::new("noop")],
+        );
         app.interactions = vec![sample_interaction_definition("graph")];
         app.window_kinds.first_mut().interactions = vec![InteractionRef::new("graph")];
         let json = serde_json::to_string(&app).unwrap();
@@ -4619,33 +4655,50 @@ mod app_label_tests {
 
     #[test]
     fn command_definition_round_trips_camel_case_with_defaults() {
-        let command = CommandDefinition::new_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), CommandScope::Os, "appearance");
+        let command = CommandDefinition::new_catalog("setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell)
+            .with_keybinding(PlatformKeybinding::for_platform("mod+shift+t", Platform::MacOs));
         let json = serde_json::to_string(&command).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
-        assert!(json.contains("\"scope\":\"os\""), "{json}");
         assert!(json.contains("\"category\":\"appearance\""), "{json}");
+        assert!(json.contains("\"kind\":\"shell\""), "{json}");
+        assert!(!json.contains("\"scope\""), "{json}");
         assert!(json.contains("\"inPalette\":true"), "{json}");
-        assert!(json.contains("\"iconId\":\"settings\""), "{json}");
-        assert!(!json.contains("keys"), "omitted when unset: {json}");
+        assert!(json.contains("\"keybindings\":[{\"chord\":\"mod+shift+t\",\"platform\":\"macOs\"}]"), "{json}");
         let round: CommandDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(round, command);
     }
 
 
     #[test]
-    fn command_ref_only_resolves_mode_scope_commands() {
-        // 🎛️ CommandScope has no Ord/discriminant helper beyond PartialEq — this pins the four
-        // variants' camelCase wire tags so a future variant addition can't silently reorder them.
-        for (scope, tag) in [
-            (CommandScope::Os, "\"os\""),
-            (CommandScope::Plugin, "\"plugin\""),
-            (CommandScope::App, "\"app\""),
-            (CommandScope::Mode, "\"mode\""),
-        ] {
-            assert_eq!(serde_json::to_string(&scope).unwrap(), tag);
-        }
-        assert_eq!(CommandRef::new("mode.focus").as_str(), "mode.focus");
-        assert_eq!(CommandRef::from("mode.focus").as_str(), "mode.focus");
+    fn command_and_action_invocations_round_trip_owner_qualified_addresses() {
+        let command = CommandInvocation {
+            address: CommandAddress {
+                owner: CommandOwnerAddress::Mode { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "generate".into() },
+                command_id: "addGeneration".into(),
+            },
+            arguments: [("name".into(), json!("A"))].into_iter().collect(),
+        };
+        let command_json = serde_json::to_string(&command).unwrap();
+        assert_eq!(command_json, r#"{"address":{"owner":{"mode":{"pluginId":"flow","appId":"flow","modeId":"generate"}},"commandId":"addGeneration"},"arguments":{"name":"A"}}"#);
+        assert_eq!(serde_json::from_str::<CommandInvocation>(&command_json).unwrap(), command);
+
+        let action = ActionInvocation {
+            address: ActionAddress {
+                plugin_id: "flow".into(),
+                app_id: "flow".into(),
+                mode_id: "edit".into(),
+                window_kind_id: "main".into(),
+                window_instance_id: "main-1".into(),
+                action_id: "select".into(),
+            },
+            arguments: [("id".into(), json!("node-1"))].into_iter().collect(),
+        };
+        let action_json = serde_json::to_string(&action).unwrap();
+        assert!(action_json.contains("\"windowInstanceId\":\"main-1\""), "{action_json}");
+        assert_eq!(serde_json::from_str::<ActionInvocation>(&action_json).unwrap(), action);
+
+        let os = OsDefinition { commands: vec![CommandDefinition::new_catalog("toggleFullscreen", LocalizedLabel::data("Toggle Full Screen"), "window", ActionKind::Shell)] };
+        assert_eq!(serde_json::from_str::<OsDefinition>(&serde_json::to_string(&os).unwrap()).unwrap(), os);
     }
 
     #[test]
@@ -4826,12 +4879,16 @@ mod app_label_tests {
         // NOT exported (recursive through `UiNode`, itself not yet typegen-derived — see comment
         // above): UiStackNode, UiGroupNode, UiFieldNode, UiSectionNode, UiInspectorFieldGroup.
         crate::ui::Keybinding::export().unwrap();
+        crate::ui::Platform::export().unwrap();
+        crate::ui::PlatformKeybinding::export().unwrap();
         crate::ui::ActionKind::export().unwrap();
         crate::ui::ActionArgOption::export().unwrap();
         crate::ui::ActionArgControl::export().unwrap();
         crate::ui::ActionArgDef::export().unwrap();
         crate::ui::ActionDefinition::export().unwrap();
         crate::ui::ActionRef::export().unwrap();
+        crate::ui::ActionAddress::export().unwrap();
+        crate::ui::ActionInvocation::export().unwrap();
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
         // definition family, re-exported at the crate root (not under `crate::ui`) — see the `use
         // crate::{InteractionDefinition, InteractionRef};` import above this file's 🔖️Manifest region.
@@ -4851,9 +4908,11 @@ mod app_label_tests {
         crate::ui::UtilityRef::export().unwrap();
         crate::ui::ToolDefinition::export().unwrap();
         crate::ui::ToolRef::export().unwrap();
-        crate::ui::CommandScope::export().unwrap();
         crate::ui::CommandDefinition::export().unwrap();
-        crate::ui::CommandRef::export().unwrap();
+        crate::ui::CommandOwnerAddress::export().unwrap();
+        crate::ui::CommandAddress::export().unwrap();
+        crate::ui::CommandInvocation::export().unwrap();
+        crate::ui::OsDefinition::export().unwrap();
         crate::ui::ModeDefinition::export().unwrap();
         crate::ui::WindowKindDefinition::export().unwrap();
         crate::ui::PanelGroup::export().unwrap();

@@ -782,7 +782,8 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`plugin build failed: ${target.pluginId}`);
   }
-  const artifact = join(repoRoot, "target", PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
+  const cargoTargetRoot = process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
+  const artifact = join(cargoTargetRoot, PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
   const outDir = join(pluginOutRoot, target.pluginId);
   mkdirSync(outDir, { recursive: true });
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
@@ -2291,7 +2292,7 @@ function compareParityRegion(reactPng: PNG, wgpuPng: PNG, node: ParityNode, outD
 //#endregion 🔖️PixelCompare
 
 //#region 🔖️Triage
-const PARITY_BOOT_TIMEOUT_MS = 45_000;
+const PARITY_BOOT_TIMEOUT_MS = Number(process.env.PARITY_RUNTIME_BOOT_TIMEOUT_MS ?? 180_000);
 
 /** 🪜️Boot-triage ladder — each rung is a distinct terminal status, never conflated with a structural/pixel mismatch. */
 async function triageParityBoot(page: import("playwright").Page, renderer: ParityRenderer, url: string): Promise<{ readonly status: BootStatus; readonly detail?: string }> {
@@ -2359,7 +2360,20 @@ type ProbeStep =
   | { readonly kind: "dragTo"; readonly fromPath: string; readonly toPath: string }
   | { readonly kind: "wheel"; readonly path: string; readonly deltaY: number }
   | { readonly kind: "settle"; readonly ms: number }
+  | { readonly kind: "stateTransition" }
   | { readonly kind: "expect"; readonly predicate: ProbeExpectPredicate };
+
+type ProbeStateSnapshot = {
+  readonly digest: string;
+  readonly nodeCount: number;
+};
+
+type ProbeStateEvidence = {
+  readonly actionPath: string;
+  readonly actionKind: string;
+  readonly react: { readonly before: ProbeStateSnapshot; readonly after: ProbeStateSnapshot; readonly changedPaths: readonly string[] };
+  readonly wgpu: { readonly before: ProbeStateSnapshot; readonly after: ProbeStateSnapshot; readonly changedPaths: readonly string[] };
+};
 
 type ProbeStepStatus = "PASS" | "FAIL" | "SKIP";
 type ProbeStepResult = {
@@ -2367,9 +2381,10 @@ type ProbeStepResult = {
   readonly step: ProbeStep;
   readonly status: ProbeStepStatus;
   readonly structural?: StructuralResult;
+  readonly state?: ProbeStateEvidence;
   readonly detail?: string;
 };
-type ProbeRunResult = { readonly status: "PASS" | "FAIL"; readonly steps: readonly ProbeStepResult[] };
+type ProbeRunResult = { readonly status: ProbeStepStatus; readonly steps: readonly ProbeStepResult[] };
 type ParityProbeSuite = { readonly name: string; readonly steps: readonly ProbeStep[] };
 
 function parityRectCenter(rect: ParityRect): readonly [number, number] {
@@ -2390,13 +2405,109 @@ function parityNodeMatches(dump: ParityDump, needle: string): readonly ParityNod
   return dump.nodes.filter((n) => n.path === needle || n.path.toLowerCase().includes(lower) || n.kind.toLowerCase().includes(lower));
 }
 
+//#region 🔖️StateTransitionProbe
+const STATE_PROBE_KIND_PRIORITY = ["toggle", "select", "slider", "button", "stack"] as const;
+const STATE_PROBE_MAX_CANDIDATES = 12;
+
+type StateProbeCandidate = { readonly path: string; readonly kind: string };
+
+function stateProbeCandidates(reactDump: ParityDump, wgpuDump: ParityDump): StateProbeCandidate[] {
+  const wgpuByPath = new Map(wgpuDump.nodes.map((node) => [node.path, node]));
+  const priority = new Map<string, number>(STATE_PROBE_KIND_PRIORITY.map((kind, index) => [kind, index]));
+  return reactDump.nodes
+    .filter((node) => {
+      const peer = wgpuByPath.get(node.path);
+      return Boolean(
+        peer &&
+          node.path.includes("#") &&
+          priority.has(node.kind) &&
+          peer.kind === node.kind &&
+          node.visible &&
+          peer.visible &&
+          !node.state.disabled &&
+          !peer.state.disabled &&
+          node.rect[2] > 0 &&
+          node.rect[3] > 0 &&
+          peer.rect[2] > 0 &&
+          peer.rect[3] > 0,
+      );
+    })
+    .map((node) => ({ path: node.path, kind: node.kind }))
+    .sort((a, b) => (priority.get(a.kind) ?? 99) - (priority.get(b.kind) ?? 99) || a.path.localeCompare(b.path))
+    .slice(0, STATE_PROBE_MAX_CANDIDATES);
+}
+
+function stateProbeNodeValue(node: ParityNode): string {
+  return JSON.stringify({ path: node.path, kind: node.kind, text: parityNormalizeText(node.text), visible: node.visible, disabled: node.state.disabled, selected: node.state.selected });
+}
+
+function stateProbeSnapshot(dump: ParityDump): ProbeStateSnapshot {
+  const serialized = dump.nodes.map(stateProbeNodeValue).sort().join("\n");
+  return { digest: Bun.hash(serialized).toString(16), nodeCount: dump.nodes.length };
+}
+
+function stateProbeChangedPaths(before: ParityDump, after: ParityDump): string[] {
+  const beforeByPath = new Map(before.nodes.map((node) => [node.path, stateProbeNodeValue(node)]));
+  const afterByPath = new Map(after.nodes.map((node) => [node.path, stateProbeNodeValue(node)]));
+  const paths = new Set([...beforeByPath.keys(), ...afterByPath.keys()]);
+  return [...paths].filter((path) => beforeByPath.get(path) !== afterByPath.get(path)).sort();
+}
+
+async function executeStateProbeCandidate(page: import("playwright").Page, renderer: ParityRenderer, candidate: StateProbeCandidate): Promise<{ readonly ok: boolean; readonly detail?: string }> {
+  const click = await executeParityStep(page, renderer, { kind: "click", path: candidate.path });
+  if (!click.ok) return click;
+  if (candidate.kind === "select") {
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+  } else if (candidate.kind === "slider") {
+    await page.keyboard.press("ArrowRight");
+  }
+  return { ok: true };
+}
+
+/** 🧭️ Drives an app-declared interactive `UiNode` shared by both renderers and proves that each
+ * renderer observes a semantic state change (topology, text, visibility, disabled, or selected).
+ * Framework chrome is excluded because only interpreter-owned `data-ui-path`/wgpu paths participate;
+ * `#id` further requires an explicit app declaration rather than an anonymous layout node. */
+async function runStateTransitionProbe(reactPage: import("playwright").Page, wgpuPage: import("playwright").Page): Promise<{ readonly status: ProbeStepStatus; readonly state?: ProbeStateEvidence; readonly detail?: string }> {
+  let reactBefore = await dumpReactStructure(reactPage);
+  let wgpuBefore = await dumpWgpuStructure(wgpuPage);
+  const candidates = stateProbeCandidates(reactBefore, wgpuBefore);
+  if (candidates.length === 0) return { status: "SKIP", detail: "no common enabled app-declared toggle/select/slider/button/activatable-stack node" };
+
+  const attempted: string[] = [];
+  for (const candidate of candidates) {
+    const [reactAction, wgpuAction] = await Promise.all([executeStateProbeCandidate(reactPage, "react", candidate), executeStateProbeCandidate(wgpuPage, "wgpu", candidate)]);
+    if (!reactAction.ok || !wgpuAction.ok) {
+      attempted.push(`${candidate.path}: ${reactAction.detail ?? "react ok"}; ${wgpuAction.detail ?? "wgpu ok"}`);
+      continue;
+    }
+    await Promise.all([reactPage.waitForTimeout(350), wgpuPage.waitForTimeout(350)]);
+    const [reactAfter, wgpuAfter] = await Promise.all([dumpReactStructure(reactPage), dumpWgpuStructure(wgpuPage)]);
+    const reactChangedPaths = stateProbeChangedPaths(reactBefore, reactAfter);
+    const wgpuChangedPaths = stateProbeChangedPaths(wgpuBefore, wgpuAfter);
+    const evidence: ProbeStateEvidence = {
+      actionPath: candidate.path,
+      actionKind: candidate.kind,
+      react: { before: stateProbeSnapshot(reactBefore), after: stateProbeSnapshot(reactAfter), changedPaths: reactChangedPaths },
+      wgpu: { before: stateProbeSnapshot(wgpuBefore), after: stateProbeSnapshot(wgpuAfter), changedPaths: wgpuChangedPaths },
+    };
+    if (reactChangedPaths.length > 0 && wgpuChangedPaths.length > 0) return { status: "PASS", state: evidence };
+    attempted.push(`${candidate.path}: react changed=${reactChangedPaths.length}, wgpu changed=${wgpuChangedPaths.length}`);
+    reactBefore = reactAfter;
+    wgpuBefore = wgpuAfter;
+  }
+  return { status: "FAIL", detail: `no candidate produced observable state on both renderers (${attempted.join(" | ")})` };
+}
+//#endregion 🔖️StateTransitionProbe
+
 /** 🕹️Executes one non-`expect` step against a single page, resolving click/drag/wheel targets from
  * a dump pulled from THAT SAME page immediately beforehand — never the other renderer's dump, and
  * never a stale one — so react/wgpu layout drift never desyncs which element gets hit. */
 async function executeParityStep(
   page: import("playwright").Page,
   renderer: ParityRenderer,
-  step: Exclude<ProbeStep, { readonly kind: "expect" }>,
+  step: Exclude<ProbeStep, { readonly kind: "expect" } | { readonly kind: "stateTransition" }>,
 ): Promise<{ readonly ok: boolean; readonly detail?: string }> {
   switch (step.kind) {
     case "click": {
@@ -2500,6 +2611,12 @@ async function runParityProbe(reactPage: import("playwright").Page, wgpuPage: im
       if (!outcome.ok) halted = true;
       continue;
     }
+    if (step.kind === "stateTransition") {
+      const outcome = await runStateTransitionProbe(reactPage, wgpuPage);
+      results.push({ index, step, status: outcome.status, state: outcome.state, detail: outcome.detail });
+      if (outcome.status === "FAIL") halted = true;
+      continue;
+    }
     const [reactOutcome, wgpuOutcome] = await Promise.all([executeParityStep(reactPage, "react", step), executeParityStep(wgpuPage, "wgpu", step)]);
     if (!reactOutcome.ok || !wgpuOutcome.ok) {
       results.push({ index, step, status: "FAIL", detail: [reactOutcome.detail, wgpuOutcome.detail].filter(Boolean).join(" | ") });
@@ -2512,7 +2629,7 @@ async function runParityProbe(reactPage: import("playwright").Page, wgpuPage: im
     results.push({ index, step, status: structural.status, structural });
     if (structural.status === "FAIL") halted = true;
   }
-  const status = results.some((r) => r.status === "FAIL") ? "FAIL" : "PASS";
+  const status = results.some((r) => r.status === "FAIL") ? "FAIL" : results.some((r) => r.status === "PASS") ? "PASS" : "SKIP";
   return { status, steps: results };
 }
 
@@ -2549,11 +2666,19 @@ const PARITY_SHELL_PROBE_SUITE: ParityProbeSuite = {
   ],
 };
 
+/** 🧭️Default catalog-wide state-management probe. Unlike `shell`, this drives an explicitly-id'd
+ * app surface node and records renderer-specific before/after digests plus every changed path. */
+const PARITY_STATE_PROBE_SUITE: ParityProbeSuite = {
+  name: "state",
+  steps: [{ kind: "stateTransition" }],
+};
+
 /** 🗂️Starter catalog — keyed by suite name so `ParityProbeScript`/`verifyParityVariant` can look one
  * up by string. A per-playground text/dnd/scene suite (dragging dock panels, typing into a text
  * editor host, orbiting a 3d scene) is a natural follow-up once `shell` is confirmed working
  * end-to-end against a real live boot — out of scope for this pass per the ticket's own brief. */
 const PARITY_PROBE_CATALOG: Readonly<Record<string, ParityProbeSuite>> = {
+  state: PARITY_STATE_PROBE_SUITE,
   shell: PARITY_SHELL_PROBE_SUITE,
 };
 //#endregion 🔖️ProbeCatalog
@@ -2597,13 +2722,71 @@ type ParityServerHandle = { readonly daemon: SpawnDaemonHandle; readonly port: n
  * ~40-60s a warm-cache boot takes. Default generously; `PARITY_BOOT_BUDGET_MS` overrides for CI/tuning. */
 const PARITY_DEV_SERVER_BOOT_BUDGET_MS = Number(process.env.PARITY_BOOT_BUDGET_MS ?? 900_000);
 
+/** 🧱️ Builds and stages one variant exactly once before either renderer starts. React's normal
+ * streaming boot and WGPU's blocking boot would otherwise launch duplicate Cargo builds against the
+ * shared target directory, spend most of their budget on file locks, and expose a listening port
+ * before the app program exists. */
+async function prebuildParityPlugin(variant: string): Promise<void> {
+  const devScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts");
+  const logPath = join(parityOutDir(), `prebuild-${variant}.log`);
+  const lockRoot = resolve(process.env.PARITY_CARGO_TARGET_DIR ?? parityOutDir());
+  const lockPath = join(lockRoot, ".semio-parity-prebuild-lock");
+  mkdirSync(lockRoot, { recursive: true });
+  const lockDeadline = Date.now() + PARITY_DEV_SERVER_BOOT_BUDGET_MS;
+  while (true) {
+    try {
+      mkdirSync(lockPath);
+      break;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      if (Date.now() >= lockDeadline) throw new Error(`plugin prebuild lock for ${variant} exceeded ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms (${lockPath})`);
+      await Bun.sleep(500);
+    }
+  }
+  try {
+    const logStream = createWriteStream(logPath);
+    const daemon = spawnDaemon("bun", [devScript, "plugin", variant], {
+      cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"),
+      env: {
+        ...process.env,
+        SEMIO_PLUGIN: variant,
+        CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS ?? "4",
+        ...(process.env.PARITY_CARGO_TARGET_DIR ? { CARGO_TARGET_DIR: process.env.PARITY_CARGO_TARGET_DIR } : {}),
+      },
+      stdio: "pipe",
+    });
+    daemon.child.stdout?.pipe(logStream);
+    daemon.child.stderr?.pipe(logStream);
+    const deadline = Date.now() + PARITY_DEV_SERVER_BOOT_BUDGET_MS;
+    while (daemon.child.exitCode === null && Date.now() < deadline) await Bun.sleep(500);
+    if (daemon.child.exitCode === null) {
+      daemon.kill();
+      logStream.end();
+      throw new Error(`plugin prebuild for ${variant} exceeded ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms (see ${logPath})`);
+    }
+    logStream.end();
+    if (daemon.child.exitCode !== 0) throw new Error(`plugin prebuild for ${variant} failed with code ${daemon.child.exitCode} (see ${logPath})`);
+  } finally {
+    rmSync(lockPath, { recursive: true, force: true });
+  }
+}
+
 async function startParityDevServer(renderer: ParityRenderer, variant: string, port: number): Promise<ParityServerHandle> {
   const devScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts");
   const logPath = join(parityOutDir(), `boot-${renderer}-${variant}.log`);
   const logStream = createWriteStream(logPath);
   const daemon = spawnDaemon("bun", [devScript, "dev"], {
     cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"),
-    env: { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, S_OS_PORT: String(port) },
+    env: {
+      ...process.env,
+      SKIP_PLUGIN_BUILD: "1",
+      SEMIO_PLUGIN: variant,
+      SEMIO_RENDERER: renderer,
+      SEMIO_PARITY_QUIET_CARGO: "1",
+      S_OS_PORT: String(port),
+      CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS ?? "4",
+      ...(process.env.PARITY_CARGO_TARGET_DIR ? { CARGO_TARGET_DIR: process.env.PARITY_CARGO_TARGET_DIR } : {}),
+    },
     stdio: "pipe",
   });
   daemon.child.stdout?.pipe(logStream);
@@ -2640,7 +2823,8 @@ function stopParityDevServer(handle: ParityServerHandle): void {
 
 //#region 🔖️Report
 function parityOutDir(): string {
-  const dir = process.env.PARITY_OUT_DIR ?? join(repoRoot, ".🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY");
+  const configured = process.env.PARITY_OUT_DIR ?? ".🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY";
+  const dir = resolve(repoRoot, configured);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -2648,8 +2832,11 @@ function parityOutDir(): string {
 function writeParityReport(reports: readonly ParityPlaygroundReport[]): void {
   const outDir = parityOutDir();
   writeFileSync(join(outDir, "parity-report-v2.json"), JSON.stringify(reports, null, 2), "utf8");
-  const lines = ["# Wgpu Parity Report (v2 harness)", "", `Generated: ${reports.length} playground(s)`, "", "| Variant | React Boot | Wgpu Boot | Structural | Pixel | Behavioral |", "|---|---|---|---|---|---|"];
-  for (const r of reports) lines.push(`| ${r.variant} | ${r.boot.react} | ${r.boot.wgpu} | ${r.structural?.status ?? "-"} | ${r.pixel?.status ?? "-"} | ${r.behavioral?.status ?? "-"} |`);
+  const lines = ["# Wgpu Parity Report (v2 harness)", "", `Generated: ${reports.length} playground(s)`, "", "| Variant | React Boot | Wgpu Boot | Structural | Pixel | State | Action | React Δ | Wgpu Δ |", "|---|---|---|---|---|---|---|---:|---:|"];
+  for (const r of reports) {
+    const evidence = r.behavioral?.steps.find((step) => step.state)?.state;
+    lines.push(`| ${r.variant} | ${r.boot.react} | ${r.boot.wgpu} | ${r.structural?.status ?? "-"} | ${r.pixel?.status ?? "-"} | ${r.behavioral?.status ?? "-"} | ${evidence ? `\`${evidence.actionKind}\` \`${evidence.actionPath}\`` : "-"} | ${evidence?.react.changedPaths.length ?? "-"} | ${evidence?.wgpu.changedPaths.length ?? "-"} |`);
+  }
   const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL");
   lines.push("", `**${reports.length - failed.length}/${reports.length} PASS**`);
   writeFileSync(join(outDir, "parity-report-v2.md"), lines.join("\n"), "utf8");
@@ -2665,6 +2852,7 @@ async function verifyParityVariant(variant: string, ports: { readonly react: num
   let wgpuServer: ParityServerHandle | undefined;
   try {
     if (!opts.skipDev) {
+      await prebuildParityPlugin(variant);
       reactServer = await startParityDevServer("react", variant, ports.react);
       wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
     }
@@ -2689,12 +2877,12 @@ async function verifyParityVariant(variant: string, ports: { readonly react: num
     const failingRegions = regions.filter((r) => r.ratio > r.threshold);
     // 🎬️Runs regardless of the structural/pixel outcome above (not gated on their PASS) — behavioral
     // parity is a distinct axis (interaction-driven dynamic state vs. static end-state), and a
-    // static mismatch elsewhere shouldn't hide whether the shell still opens/closes correctly. Wrapped
+    // static mismatch elsewhere shouldn't hide whether app state still transitions correctly. Wrapped
     // defensively: a probe-runner exception (e.g. a page closing mid-step) must not take down the
     // whole `verifyParityVariant` call, only degrade `behavioral` to a diagnosable FAIL.
     let behavioral: ProbeRunResult | undefined;
     try {
-      behavioral = await runParityProbe(reactPage, wgpuPage, PARITY_SHELL_PROBE_SUITE.steps);
+      behavioral = await runParityProbe(reactPage, wgpuPage, PARITY_STATE_PROBE_SUITE.steps);
     } catch (e) {
       behavioral = { status: "FAIL", steps: [{ index: 0, step: { kind: "settle", ms: 0 }, status: "FAIL", detail: `probe runner threw: ${String(e)}` }] };
     }
@@ -2755,7 +2943,7 @@ class ParityTriageScript extends BundleScript {
 class ParityProbeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const variant = segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
-    const suiteName = segments[1] || "shell";
+    const suiteName = segments[1] || "state";
     const suite = PARITY_PROBE_CATALOG[suiteName];
     if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);
     const ports = findFreeParityPortPair();
@@ -2808,7 +2996,12 @@ class ParitySweepScript extends BundleScript {
     const variants = playgroundCatalog.map((r) => r.variant).filter((_, i) => i % (shardCount ?? 1) === (shardIndex ?? 0));
     const reports: ParityPlaygroundReport[] = [];
     for (const variant of variants) {
-      const report = await verifyParityVariant(variant, parityPortsForShard(shardIndex ?? 0));
+      let report: ParityPlaygroundReport;
+      try {
+        report = await verifyParityVariant(variant, parityPortsForShard(shardIndex ?? 0));
+      } catch (error) {
+        report = { variant, boot: { react: "SERVER-FAIL", wgpu: "SERVER-FAIL", detail: String(error) }, durationMs: 0 };
+      }
       reports.push(report);
       console.log(`[DEBUG] sweep ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
     }
@@ -2941,6 +3134,38 @@ if (import.meta.vitest) {
       expect(marker).toEqual({ pluginId: "note", rebuiltAt: 1785789943669 });
       const event: PluginSourceEvent = { kind: "built", pluginId: marker.pluginId, rebuiltAt: marker.rebuiltAt };
       expect(event).toEqual({ kind: "built", pluginId: "note", rebuiltAt: 1785789943669 });
+    });
+  });
+
+  describe("catalog state transition probe", () => {
+    const node = (path: string, kind: string, selected = false): ParityNode => ({
+      path,
+      kind,
+      rect: [0, 0, 20, 20],
+      text: null,
+      color: null,
+      bg: null,
+      fontSize: null,
+      fontWeight: null,
+      visible: true,
+      state: { hovered: false, disabled: false, selected },
+    });
+    const dump = (nodes: readonly ParityNode[]): ParityDump => ({ viewport: { w: 100, h: 100, dpr: 1 }, focusPath: null, nodes });
+
+    it("selects only common explicitly-id'd app controls in semantic priority order", () => {
+      const react = dump([node("button[0]#run", "button"), node("toggle[1]#enabled", "toggle"), node("stack[2]", "stack")]);
+      const wgpu = dump([node("button[0]#run", "button"), node("toggle[1]#enabled", "toggle"), node("select[3]#mode", "select")]);
+      expect(stateProbeCandidates(react, wgpu)).toEqual([
+        { path: "toggle[1]#enabled", kind: "toggle" },
+        { path: "button[0]#run", kind: "button" },
+      ]);
+    });
+
+    it("records selected-state and topology changes but ignores focus-only movement", () => {
+      const before = dump([node("toggle[0]#enabled", "toggle")]);
+      const after = { ...dump([node("toggle[0]#enabled", "toggle", true), node("text[1]#status", "text")]), focusPath: "toggle[0]#enabled" };
+      expect(stateProbeChangedPaths(before, after)).toEqual(["text[1]#status", "toggle[0]#enabled"]);
+      expect(stateProbeSnapshot(before).digest).not.toBe(stateProbeSnapshot(after).digest);
     });
   });
 }

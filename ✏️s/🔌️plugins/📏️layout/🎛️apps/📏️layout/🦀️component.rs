@@ -346,7 +346,7 @@ pub fn create_layout_app() -> App {
             // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are
             // surface-discriminated (via `surfaceId`) or global, so they stay unscoped orphans and
             // appear on both windows.
-            .window_kind_actions(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![
+            .window_kind_action_refs(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![
                 "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(),
             ])
             // 🕹️ Domain "elements": frames on the Blueprint canvas (pages are never targets — canvas

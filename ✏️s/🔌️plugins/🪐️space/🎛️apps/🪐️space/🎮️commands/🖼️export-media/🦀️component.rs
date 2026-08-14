@@ -52,6 +52,7 @@ mod tests {
     fn export_media_emits_download_effect_and_import_requests_file_open() {
         use base64::Engine;
         crate::apps::space::testkit::seed_draw_plugin();
+        semio_s_plugin_stdio::manifest::register_stdio_format_descriptors();
         semio_framework_os::workflow::register_os_media_export_handler_kind("2d.drawing", "dwg", |_doc| {
             let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
             let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)?;

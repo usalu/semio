@@ -2749,6 +2749,18 @@ pub mod ui {
         /// themselves stay the last-known-good (stale) cache until the chain completes.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub status_json: Option<String>,
+        /// 🪟️ The `InteractionDefinition` id this window's `WindowKindDefinition.interactions` binds
+        /// (mirrors `UiTreeNode.interaction_domain`, extended to `Scene` surfaces) — set by the app's
+        /// own `render()`, which is the only party that knows both its `window_kind_id` and which
+        /// domain it bound there via `.window_kind_interactions(...)`. `None` means this window binds
+        /// no app domain, so pointer picks fall back to the OS's own shared `world` board domain.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub domain_id: Option<String>,
+        /// 🎯️ The bound domain's granularity id for a plain (non-component) pick/hover hit — e.g. CAD's
+        /// `"object"`. Ignored when `domain_id` is `None` (the `world` domain's own `"item"` granularity
+        /// applies instead).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub domain_granularity_id: Option<String>,
     }
 
     impl World3dScene {
@@ -2774,6 +2786,8 @@ pub mod ui {
                 terrain_json: None,
                 points_json: None,
                 status_json: None,
+                domain_id: None,
+                domain_granularity_id: None,
             }
         }
     }
@@ -4219,6 +4233,8 @@ pub mod ui {
                             terrain_json: None,
                             points_json: None,
                             status_json: None,
+                            domain_id: None,
+                            domain_granularity_id: None,
                         }),
                         node_graph: None,
                         text_editor: None,

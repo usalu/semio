@@ -17,7 +17,7 @@ use crate::apps::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::artifacts::playbook::op::{AddStep, PlaybookMutation};
 use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
-    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
+    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
     DomainTopology, InteractionTopology, TopologyNode,
 };
@@ -178,6 +178,7 @@ impl ArtifactApp for PlaybookPlayApp {
 pub fn create_playbook_play_app() -> App {
     App::from_builder(
         App::builder(PLAYBOOK_PLAY_APP_ID, LocalizedLabel::native("Playbook", "Playbook"))
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "playbook"])
             .artifact_kind(artifact_kind())
             .mode_def(builder::definition())

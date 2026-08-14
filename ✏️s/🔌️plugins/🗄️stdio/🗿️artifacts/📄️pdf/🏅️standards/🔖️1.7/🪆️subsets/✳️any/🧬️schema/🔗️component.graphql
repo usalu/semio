@@ -7,4 +7,5 @@ type PdfArtifact {
   info: PdfInfo! @state(class: ARTIFACT)
   objects: [PdfIndirectObject!]! @state(class: ARTIFACT)
   trailer: [PdfDictEntry!]! @state(class: ARTIFACT)
+  source: ArtifactSource @state(class: ARTIFACT)
 }

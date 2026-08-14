@@ -7,7 +7,7 @@
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../framework/product/os/module/plugin/registry/generated/plugins.ts";
+import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 
 const PLUGINS_STORY_TITLE_ID = "🛠️framework🖥️os-plugins";
 const READY_TIMEOUT_MS = 60_000;
@@ -71,3 +71,15 @@ for (const target of PLUGIN_BUILD_TARGETS) {
     expect(significantConsoleErrors(consoleErrors)).toEqual([]);
   });
 }
+
+//#region 🧪️WgpuStoryAdapter
+test("wgpu glass-content story receives its plugin argument and reaches a declared host outcome", async ({ page }) => {
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
+  await page.goto(`iframe.html?id=${encodeURIComponent("🛠️framework🖥️os-wgpu--glass-content")}&viewMode=story`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator("body")).not.toContainText("Couldn't find story matching");
+  await expect(page.getByTestId("wgpu-silhouette-visual-floor")).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("unknown program");
+  expect(pageErrors.map((error) => error.message)).toEqual([]);
+});
+//#endregion 🧪️WgpuStoryAdapter

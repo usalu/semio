@@ -20,6 +20,8 @@ import {
   createMemoryStoragePort,
   DockLayoutStore,
   DockUiStateStore,
+  NamedLayoutStore,
+  OsShellConfig,
   WindowPaneStateStore,
   type DockSkeleton,
   type DockUiState,
@@ -37,6 +39,7 @@ import {
   evictPluginModule,
   createLeasePool,
   ephemeralBox,
+  OsTransient,
   type EphemeralBox,
   type PluginCatalog,
 } from "../../🔨️modules/🎠️kernel/🟦️component.ts";
@@ -113,9 +116,9 @@ if (import.meta.vitest) {
       const storage = createMemoryStoragePort();
       const store = new DockLayoutStore(storage, "my-app");
       store.save(emptySkeleton());
-      expect(storage.get("semio.os.dock.my-app")).not.toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().dockLayouts.apps["my-app"]).toEqual(emptySkeleton());
       store.save(null);
-      expect(storage.get("semio.os.dock.my-app")).toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().dockLayouts.apps["my-app"]).toBeUndefined();
       expect(store.getSnapshot()).toBeNull();
     });
 
@@ -125,14 +128,13 @@ if (import.meta.vitest) {
       store.saveOs(emptySkeleton());
       store.save(emptySkeleton());
       store.reset();
-      expect(storage.get("semio.os.dock")).toBeNull();
-      expect(storage.get("semio.os.dock.my-app")).toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().dockLayouts).toEqual({ apps: {} });
       expect(store.getSnapshot()).toBeNull();
     });
 
     it("returns null on corrupt JSON rather than throwing", () => {
       const storage = createMemoryStoragePort();
-      storage.set("semio.os.dock", "{not json");
+      storage.set("semio.os.config", "{not json");
       const store = new DockLayoutStore(storage);
       expect(() => store.getSnapshot()).not.toThrow();
       expect(store.getSnapshot()).toBeNull();
@@ -140,17 +142,14 @@ if (import.meta.vitest) {
 
     it("discards a stale version-1 (corners) blob instead of migrating it", () => {
       const storage = createMemoryStoragePort();
-      storage.set("semio.os.dock", JSON.stringify({ version: 1, corners: { "top-left": [{ id: "a" }], "top-right": [], "bottom-left": [], "bottom-right": [] } }));
+      new OsShellConfig(storage).update((current) => ({ ...current, dockLayouts: { os: { version: 1, corners: { "top-left": [{ id: "a" }] } } as unknown as DockSkeleton, apps: {} } }));
       const store = new DockLayoutStore(storage);
       expect(store.getSnapshot()).toBeNull();
     });
 
     it("discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors", () => {
       const storage = createMemoryStoragePort();
-      storage.set(
-        "semio.os.dock",
-        JSON.stringify({ version: 2, anchors: { "top-left": [{ id: "a" }], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] } }),
-      );
+      new OsShellConfig(storage).update((current) => ({ ...current, dockLayouts: { os: { version: 2, anchors: {} } as unknown as DockSkeleton, apps: {} } }));
       const store = new DockLayoutStore(storage);
       expect(store.getSnapshot()).toBeNull();
     });
@@ -186,9 +185,9 @@ if (import.meta.vitest) {
       const storage = createMemoryStoragePort();
       const store = new DockUiStateStore(storage, "my-app");
       store.save(emptyUiState());
-      expect(storage.get("semio.os.dockUi.my-app")).not.toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().dockUi.apps["my-app"]).toEqual(emptyUiState());
       store.save(null);
-      expect(storage.get("semio.os.dockUi.my-app")).toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().dockUi.apps["my-app"]).toBeUndefined();
       expect(store.getSnapshot()).toBeNull();
     });
 
@@ -198,14 +197,13 @@ if (import.meta.vitest) {
       store.saveOs(emptyUiState());
       store.save(emptyUiState());
       store.reset();
-      expect(storage.get("semio.os.dockUi")).toBeNull();
-      expect(storage.get("semio.os.dockUi.my-app")).toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().dockUi).toEqual({ apps: {} });
       expect(store.getSnapshot()).toBeNull();
     });
 
     it("returns null on corrupt JSON rather than throwing", () => {
       const storage = createMemoryStoragePort();
-      storage.set("semio.os.dockUi", "{not json");
+      storage.set("semio.os.config", "{not json");
       const store = new DockUiStateStore(storage);
       expect(() => store.getSnapshot()).not.toThrow();
       expect(store.getSnapshot()).toBeNull();
@@ -213,28 +211,28 @@ if (import.meta.vitest) {
 
     it("discards a stale version-1 (corners) blob instead of migrating it", () => {
       const storage = createMemoryStoragePort();
-      storage.set("semio.os.dockUi", JSON.stringify({ version: 1, corners: { "top-left": { visible: true, size: 320 } } }));
+      new OsShellConfig(storage).update((current) => ({ ...current, dockUi: { os: { version: 1, corners: {} } as unknown as DockUiState, apps: {} } }));
       const store = new DockUiStateStore(storage);
       expect(store.getSnapshot()).toBeNull();
     });
 
     it("discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors", () => {
       const storage = createMemoryStoragePort();
-      storage.set("semio.os.dockUi", JSON.stringify({ version: 2, anchors: { "top-left": { visible: true, size: 320 } } }));
+      new OsShellConfig(storage).update((current) => ({ ...current, dockUi: { os: { version: 2, anchors: {} } as unknown as DockUiState, apps: {} } }));
       const store = new DockUiStateStore(storage);
       expect(store.getSnapshot()).toBeNull();
     });
 
-    it('uses a distinct key from DockLayoutStore for an app literally named "ui"', () => {
+    it('keeps dock layout and dock ui as distinct projections for an app literally named "ui"', () => {
       const storage = createMemoryStoragePort();
       new DockLayoutStore(storage, "ui").save({
         version: 3,
         anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
       });
       new DockUiStateStore(storage).saveOs(emptyUiState());
-      expect(storage.get("semio.os.dock.ui")).not.toBeNull();
-      expect(storage.get("semio.os.dockUi")).not.toBeNull();
-      expect(storage.get("semio.os.dock.ui")).not.toEqual(storage.get("semio.os.dockUi"));
+      const config = new OsShellConfig(storage).getSnapshot();
+      expect(config.dockLayouts.apps.ui).toBeDefined();
+      expect(config.dockUi.os).toEqual(emptyUiState());
     });
   });
 
@@ -268,9 +266,9 @@ if (import.meta.vitest) {
       const storage = createMemoryStoragePort();
       const store = new WindowPaneStateStore(storage, "my-app");
       store.save(emptyPaneState());
-      expect(storage.get("semio.os.paneUi.my-app")).not.toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().windowPanes.apps["my-app"]).toEqual(emptyPaneState());
       store.save(null);
-      expect(storage.get("semio.os.paneUi.my-app")).toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().windowPanes.apps["my-app"]).toBeUndefined();
       expect(store.getSnapshot()).toBeNull();
     });
 
@@ -280,14 +278,13 @@ if (import.meta.vitest) {
       store.saveOs(emptyPaneState());
       store.save(emptyPaneState());
       store.reset();
-      expect(storage.get("semio.os.paneUi")).toBeNull();
-      expect(storage.get("semio.os.paneUi.my-app")).toBeNull();
+      expect(new OsShellConfig(storage).getSnapshot().windowPanes).toEqual({ apps: {} });
       expect(store.getSnapshot()).toBeNull();
     });
 
     it("returns null on corrupt JSON rather than throwing", () => {
       const storage = createMemoryStoragePort();
-      storage.set("semio.os.paneUi", "{not json");
+      storage.set("semio.os.config", "{not json");
       const store = new WindowPaneStateStore(storage);
       expect(() => store.getSnapshot()).not.toThrow();
       expect(store.getSnapshot()).toBeNull();
@@ -295,9 +292,37 @@ if (import.meta.vitest) {
 
     it("discards a foreign-version blob instead of migrating it", () => {
       const storage = createMemoryStoragePort();
-      storage.set("semio.os.paneUi", JSON.stringify({ version: 2, windows: {} }));
+      new OsShellConfig(storage).update((current) => ({ ...current, windowPanes: { os: { version: 2, windows: {} } as unknown as WindowPaneUiState, apps: {} } }));
       const store = new WindowPaneStateStore(storage);
       expect(store.getSnapshot()).toBeNull();
+    });
+  });
+
+  describe("OsShellConfig", () => {
+    it("consolidates all four persisted shell projections into one config document", () => {
+      const values = new Map<string, string>();
+      const storage = {
+        get: (key: string) => values.get(key) ?? null,
+        set: (key: string, value: string) => void values.set(key, value),
+        remove: (key: string) => void values.delete(key),
+      };
+      const skeleton: DockSkeleton = {
+        version: 3,
+        anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+      };
+      new NamedLayoutStore("draw", storage).save({ id: "wide", label: "Wide", origin: "user", layout: { root: { kind: "stack", children: [] } } });
+      new DockLayoutStore(storage, "draw").save(skeleton);
+      new DockUiStateStore(storage, "draw").save({ version: 3, anchors: { "left-middle": { visible: true } } });
+      new WindowPaneStateStore(storage, "draw").save({ version: 1, windows: {} });
+      new OsShellConfig(storage).setPreference("ui.chrome.locale", "de");
+
+      expect([...values.keys()]).toEqual(["semio.os.config"]);
+      const snapshot = new OsShellConfig(storage).getSnapshot();
+      expect(snapshot.namedLayouts.draw?.[0]?.id).toBe("wide");
+      expect(snapshot.dockLayouts.apps.draw).toEqual(skeleton);
+      expect(snapshot.dockUi.apps.draw?.anchors["left-middle"]?.visible).toBe(true);
+      expect(snapshot.windowPanes.apps.draw).toEqual({ version: 1, windows: {} });
+      expect(snapshot.preferences["ui.chrome.locale"]).toBe("de");
     });
   });
 
@@ -482,6 +507,22 @@ if (import.meta.vitest) {
       expect(calls).toBe(0);
       box.current();
       expect(calls).toBe(1);
+    });
+
+    it("is owned by an isolatable, resettable OsTransient lane", () => {
+      const left = new OsTransient();
+      const right = new OsTransient();
+      const leftBox = left.box("cursor", { x: 1 });
+      leftBox.current.x = 2;
+      expect(left.box("cursor", { x: 99 })).toBe(leftBox);
+      expect(right.box("cursor", { x: 3 }).current.x).toBe(3);
+
+      const oldMap = left.map<string, number>("measurements");
+      oldMap.set("width", 42);
+      left.reset();
+      expect(left.map<string, number>("measurements")).not.toBe(oldMap);
+      expect(left.map<string, number>("measurements").size).toBe(0);
+      expect(oldMap.get("width")).toBe(42);
     });
   });
 

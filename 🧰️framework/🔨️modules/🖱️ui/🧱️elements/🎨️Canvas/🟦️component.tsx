@@ -28,7 +28,7 @@ import { modeDockTabClassName } from "../🏷️ClassNames/🟦️component.tsx"
 import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🏷️Label/🟦️component.tsx";
 import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🐚️ShellScope/🟦️component.tsx";
 import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
-import { createEvenWindowLayout, focusActiveSearchInput, modeDockChromeGridPlacement, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, WindowChromeSilhouetteBorder, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, windowBodyFrameActiveClass, windowBodyFrameClass, windowCapFrameActiveClass, windowCapFrameClass, windowControlsCapActiveClass, windowControlsCapActiveSplitClass, windowControlsCapClass, windowGapFrameActiveClass, windowGapFrameClass, type ModeDockChromeGrid, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type UiStatus, type PanelGhostValue } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { createEvenWindowLayout, focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, WindowChrome, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabClass, windowBodyFrameClass, windowCapFrameClass, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type UiStatus, type PanelGhostValue } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { CloseIcon, Maximize2Icon, Minimize2Icon, Icon, type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️component.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🎛️ButtonGroup/🟦️component.tsx";
@@ -911,32 +911,51 @@ interface ModeDockTabBarProps {
   activeId: string | undefined;
   activeWindowId: string | null;
   onSelectTab: (windowId: string) => void;
-  chromeGrid?: ModeDockChromeGrid;
-  chromeBody?: React.ReactNode;
   /** @emoji 📱️ Windows always take the full space on mobile — the Focus/Unfocus control is meaningless there and is hidden; Close stays. */
   mobile?: boolean;
 }
 
-const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab, chromeGrid, chromeBody, mobile = false }, ref) => {
+const modeDockTabDomId = (stackPath: ModeLayoutPath, windowId: string) => `mode-dock-tab-${encodeURIComponent(stackPath || "root")}-${encodeURIComponent(windowId)}`;
+const modeDockPanelDomId = (stackPath: ModeLayoutPath) => `mode-dock-panel-${encodeURIComponent(stackPath || "root")}`;
+
+const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
-  const dockFocusLabel = useLabel("ui.common.focus");
-  const dockUnfocusLabel = useLabel("ui.common.unfocus");
-  const dockCloseLabel = useLabel("ui.common.close");
-  const isMaximized = dock?.maximizedStackPath === stackPath;
-  const showMaximize = !mobile && Boolean(dock?.canMaximize);
   const modeDragActive = Boolean(dock?.dragState);
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
-  const perTabActiveChrome = Boolean(chromeGrid);
-  const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
-  const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
   const displayTabs = reactHostPort.useMemo(() => modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []), [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedInsertTabs]);
-  const displayChromeGrid =
-    displayTabs.length > 1
-      ? modeDockChromeGridPlacement(
-          displayTabs.map(({ id, title }) => ({ id, title })),
-          activeId,
-        )
-      : undefined;
+  const tabRefs = reactHostPort.useRef(new Map<string, HTMLButtonElement>());
+
+  const focusTab = (index: number) => {
+    const tab = tabs[(index + tabs.length) % tabs.length];
+    if (!tab) return;
+    tabRefs.current.get(tab.id)?.focus();
+  };
+
+  const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, tabIndex: number, windowId: string) => {
+    switch (event.key) {
+      case "ArrowLeft":
+        event.preventDefault();
+        focusTab(tabIndex - 1);
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        focusTab(tabIndex + 1);
+        break;
+      case "Home":
+        event.preventDefault();
+        focusTab(0);
+        break;
+      case "End":
+        event.preventDefault();
+        focusTab(tabs.length - 1);
+        break;
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        onSelectTab(windowId);
+        break;
+    }
+  };
 
   const renderGhostTab = (tab: { id: string; title: string; iconId: IconName }) => (
     <div data-slot="mode-dock-tab-insert-preview" className={modeDockTabInsertPreviewClass} aria-hidden>
@@ -949,30 +968,34 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     </div>
   );
 
-  const inactiveTabChromeClass = (stackIndex: number) => {
-    const isLastBeforeGap = perTabActiveChrome && stackIndex === tabs.length - 1;
-    return isLastBeforeGap ? modeDockInactiveTabBeforeGapClass : modeDockInactiveTabClass;
-  };
-
   const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => {
-    const tabActive = perTabActiveChrome ? activeId === tab.id && stackGloballyActive : activeWindowId === tab.id;
+    const tabActive = activeId === tab.id && stackGloballyActive;
     return (
-      <div
+      <button
+        type="button"
         key={tab.id}
         data-slot="mode-dock-tab"
         data-hover-scope
         data-window-id={tab.id}
         data-stack-active={activeId === tab.id ? "true" : undefined}
         data-active={activeWindowId === tab.id ? "true" : undefined}
+        id={modeDockTabDomId(stackPath, tab.id)}
+        role="tab"
+        aria-selected={activeId === tab.id}
+        aria-controls={modeDockPanelDomId(stackPath)}
+        tabIndex={activeId === tab.id ? 0 : -1}
+        ref={(element) => {
+          if (element) tabRefs.current.set(tab.id, element);
+          else tabRefs.current.delete(tab.id);
+        }}
         className={cn(
           "pointer-events-auto",
           modeDockTabClassName,
-          perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
-          perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
-          perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
-          !perTabActiveChrome && activeWindowId === tab.id && modeDockActiveTabFillClass,
+          tabActive ? modeDockActiveTabClass : modeDockInactiveTabClass,
+          activeWindowId === tab.id && modeDockActiveTabFillClass,
         )}
         onClick={() => onSelectTab(tab.id)}
+        onKeyDown={(event) => onTabKeyDown(event, stackIndex, tab.id)}
         onPointerUp={(event) => {
           if (event.button !== 0) return;
           dock?.clearPendingDrag?.(event.pointerId);
@@ -985,118 +1008,22 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           </span>
         </div>
         <DragHandle labelId="ui.tree.drag.sort" onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
-      </div>
+      </button>
     );
   };
 
-  const controlsCap = (
-    <div
-      data-slot="mode-dock-controls-cap"
-      data-window-silhouette-chip
-      data-dock="top"
-      className={cn(
-        "pointer-events-auto",
-        perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass,
-        glassClass,
-      )}
-    >
-      {showMaximize ? (
-        <button
-          type="button"
-          data-slot="mode-dock-maximize"
-          className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
-          onClick={() => dock?.toggleMaximize(stackPath)}
-        >
-          {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
-          <span className="text-tiny whitespace-nowrap">{isMaximized ? dockUnfocusLabel : dockFocusLabel}</span>
-        </button>
-      ) : null}
-      {activeId ? (
-        <button
-          type="button"
-          data-slot="mode-dock-close"
-          className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
-          onClick={() => dock?.closeWindow(activeId)}
-        >
-          <CloseIcon className="size-small" />
-          <span className="text-tiny whitespace-nowrap">{dockCloseLabel}</span>
-        </button>
-      ) : null}
-    </div>
-  );
-
-  const tabGap = (
-    <div
-      data-slot="mode-dock-tab-gap"
-      data-window-silhouette-gap
-      className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
-    />
-  );
-
-  if (perTabActiveChrome && displayChromeGrid && chromeBody) {
-    return (
-      <div data-slot="mode-dock-chrome-column" className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]" style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}>
-        <div
-          ref={ref}
-          data-slot="mode-dock-tabbar"
-          data-ui-reveal-region="window-cap"
-          className={cn("grid min-h-medium min-w-0 items-stretch bg-transparent", modeDragActive && dropZoneReadyClass)}
-          style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}
-        >
-          {displayTabs.map((tab, index) =>
-            tab.preview === "ghost" ? (
-              <div key={`ghost-${tab.id}`} className={cn("relative z-20 flex min-h-medium items-stretch justify-self-start", glassClass)} style={{ gridColumn: displayChromeGrid.tabCol(index) }}>
-                {renderGhostTab(tab)}
-              </div>
-            ) : (
-              <div
-                key={tab.id}
-                data-slot={activeId === tab.id && stackGloballyActive ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
-                className={cn(
-                  "relative flex min-h-medium items-stretch justify-self-start overflow-visible",
-                  activeId === tab.id && stackGloballyActive ? "z-10" : cn("z-20", glassClass),
-                )}
-                style={{ gridColumn: displayChromeGrid.tabCol(index) }}
-              >
-                {renderTab(
-                  tab,
-                  tabs.findIndex((row) => row.id === tab.id),
-                )}
-              </div>
-            ),
-          )}
-          <div className="relative z-0 flex min-h-medium min-w-0 items-stretch bg-transparent" style={{ gridColumn: displayChromeGrid.gapCol }}>
-            {tabGap}
-          </div>
-          <div className="relative z-10 flex min-h-medium items-stretch justify-self-end" style={{ gridColumn: displayChromeGrid.controlsCol }}>
-            {controlsCap}
-          </div>
-        </div>
-        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden" style={{ gridColumn: displayChromeGrid.bodyColumnSpan, gridRow: 2 }}>
-          {chromeBody}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
-      <div data-slot="mode-dock-tab-cap" data-window-silhouette-chip data-dock="top" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, glassClass, modeDragActive && dropZoneReadyClass)}>
-        <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
-          {displayTabs.map((tab) =>
-            tab.preview === "ghost" ? (
-              <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>
-            ) : (
-              renderTab(
-                tab,
-                tabs.findIndex((row) => row.id === tab.id),
-              )
-            ),
-          )}
-        </div>
-      </div>
-      {tabGap}
-      {controlsCap}
+    <div ref={ref} data-slot="mode-dock-tabs" role="tablist" className={cn("flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden", modeDragActive && dropZoneReadyClass)}>
+      {displayTabs.map((tab) =>
+        tab.preview === "ghost" ? (
+          <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>
+        ) : (
+          renderTab(
+            tab,
+            tabs.findIndex((row) => row.id === tab.id),
+          )
+        ),
+      )}
     </div>
   );
 });
@@ -1106,9 +1033,6 @@ ModeDockTabBar.displayName = "ModeDockTabBar";
 //#endregion 🧭️ModeDockTabBar
 
 //#region 🧭️ModeDockStack
-
-/** @emoji 🪟️ Mode-dock silhouette — delegates to {@link WindowChromeSilhouetteBorder} with the legacy slot name. */
-const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; active: boolean }> = ({ stack, active }) => <WindowChromeSilhouetteBorder stack={stack} active={active} silhouetteSlot="mode-dock-silhouette-border" />;
 
 interface ModeDockStackProps {
   stackPath: ModeLayoutPath;
@@ -1122,11 +1046,9 @@ interface ModeDockStackProps {
 const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId, mobile = false }) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const stackRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const [stackEl, setStackEl] = reactHostPort.useState<HTMLDivElement | null>(null);
   const [surfaceActive, surfaceActiveProps] = useSurfaceActive(stackRef);
   const setStackNode = reactHostPort.useCallback((element: HTMLDivElement | null) => {
     stackRef.current = element;
-    setStackEl(element);
   }, []);
   const tabBarRef = reactHostPort.useRef<HTMLDivElement>(null);
   const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -1146,11 +1068,22 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   // 🪟️ Layout focus (command routing / tab fills) stays on `activeWindowId`. The silhouette primary
   // stroke only follows surface selection — same click/focus lifecycle as panels and panes.
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
-  const chromeGrid = !mobile && tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
+  const dockFocusLabel = useLabel("ui.common.focus");
+  const dockUnfocusLabel = useLabel("ui.common.unfocus");
+  const dockCloseLabel = useLabel("ui.common.close");
+  const isMaximized = dock?.maximizedStackPath === stackPath;
+  const showMaximize = !mobile && Boolean(dock?.canMaximize);
 
   const stackBody = (
     <SurfaceScope level="base" fill="surface">
-      <div ref={bodyRef} data-slot="mode-dock-stack-body" data-level="base" className={cn("pointer-events-auto relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
+      <div
+        id={modeDockPanelDomId(stackPath)}
+        role="tabpanel"
+        aria-labelledby={activeId ? modeDockTabDomId(stackPath, activeId) : undefined}
+        tabIndex={0}
+        data-level="base"
+        className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      >
         {activeDescriptor
           ? (() => {
               const { children, engagement, ...windowProps } = activeDescriptor;
@@ -1169,17 +1102,50 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
     <SurfaceScope level="window">
-      <div ref={setStackNode} {...surfaceActiveProps} data-slot="mode-dock-stack" data-window-silhouette data-level="window" data-stack-path={stackPath} data-active={surfaceActive ? "true" : undefined} className="pointer-events-none relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent">
-        <ModeDockStackSilhouetteBorder stack={stackEl} active={surfaceActive} />
-        {chromeGrid ? (
-          <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
-        ) : (
-          <>
-            <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
-            {stackBody}
-          </>
-        )}
-      </div>
+      <WindowChrome
+        ref={setStackNode}
+        active={surfaceActive}
+        level="window"
+        stackSlot="mode-dock-stack"
+        capSlot="mode-dock-tabbar"
+        bodySlot="mode-dock-stack-body"
+        chipSlot="mode-dock-tab-cap"
+        controlsSlot="mode-dock-controls-cap"
+        silhouetteSlot="mode-dock-silhouette-border"
+        capRef={tabBarRef}
+        bodyRef={bodyRef}
+        stackBindProps={surfaceActiveProps}
+        stackDataAttrs={{ "data-stack-path": stackPath }}
+        stackClassName="pointer-events-none relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden bg-transparent"
+        bodyClassName={cn("pointer-events-auto flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", windowBodyFrameClass)}
+        bodySurfaceClassName={windowBodyFrameClass}
+        bodySurfaceLevel="base"
+        gapProps={{ "data-slot": "mode-dock-tab-gap" } as React.HTMLAttributes<HTMLDivElement>}
+        titleChips={<ModeDockTabBar stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />}
+        enlarge={
+          showMaximize
+            ? {
+                id: `framework.modeDock.${stackPath || "root"}.maximize`,
+                slot: "mode-dock-maximize",
+                icon: isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />,
+                label: isMaximized ? dockUnfocusLabel : dockFocusLabel,
+                onClick: () => dock?.toggleMaximize(stackPath),
+              }
+            : undefined
+        }
+        close={
+          activeId
+            ? {
+                id: `framework.modeDock.${stackPath || "root"}.close`,
+                slot: "mode-dock-close",
+                icon: <CloseIcon className="size-small" />,
+                label: dockCloseLabel,
+                onClick: () => dock?.closeWindow(activeId),
+              }
+            : undefined
+        }
+        body={stackBody}
+      />
     </SurfaceScope>
   );
 };

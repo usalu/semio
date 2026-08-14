@@ -6782,6 +6782,49 @@
   backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate));
   background-color: color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent);
 }
+
+/* #region 🪟️GlassAccessibilityFallbacks
+ * Accessibility and capability fallbacks replace each painted glass region independently. They
+ * never fill the silhouette host or cap row, so U-gaps remain real cutouts instead of degrading to
+ * a rectangular opaque surface when blur is unavailable or intentionally disabled. */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  :is(.ui-glass, .ui-veil) {
+    background-color: var(--surface-bg);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :is(.ui-glass, .ui-veil) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: var(--surface-bg);
+  }
+
+  [data-window-silhouette-gap] {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :is(.ui-glass, .ui-veil) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: Canvas;
+    color: CanvasText;
+  }
+
+  [data-window-silhouette-border] path {
+    stroke: CanvasText !important;
+  }
+
+  [data-window-silhouette-gap] {
+    background: transparent !important;
+    background-color: transparent !important;
+    forced-color-adjust: none;
+  }
+}
+/* #endregion 🪟️GlassAccessibilityFallbacks */
 /* #endregion 🪟️LevelGlassUtilities */
 
 /* Shell frame stroke is on [data-slot="chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
@@ -6815,6 +6858,27 @@
 [data-window-silhouette-border] {
   pointer-events: none;
 }
+
+/* #region 🌊️SilhouetteContentFlow
+ * The clipped content plane occupies the full top/body/bottom silhouette while its matching
+ * padding keeps ordinary document content below chrome at rest. Negative margins cancel that
+ * padding in layout, so auto-sized windows retain their pre-compositor intrinsic size. Edgeless
+ * scenes and dead-line scroll viewports intentionally consume the expanded bounds themselves. */
+.window-silhouette-content-plane {
+  margin-block-start: calc(-1 * var(--window-silhouette-top-clearance, 0px));
+  margin-block-end: calc(-1 * var(--window-silhouette-bottom-clearance, 0px));
+  padding-block-start: var(--window-silhouette-top-clearance, 0px);
+  padding-block-end: var(--window-silhouette-bottom-clearance, 0px);
+}
+
+.window-silhouette-content-plane:has(
+  [data-window-content-layout="edgeless"],
+  [data-slot="window-dead-line-scroll"]
+) {
+  padding-block-start: 0;
+  padding-block-end: 0;
+}
+/* #endregion 🌊️SilhouetteContentFlow */
 
 /* 🪟️ U-gap must punch through — never inherit cap/body glass or a stack rectangle fill. */
 [data-window-silhouette-gap] {

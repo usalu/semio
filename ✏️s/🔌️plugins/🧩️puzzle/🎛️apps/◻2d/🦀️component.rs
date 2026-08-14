@@ -1778,7 +1778,7 @@ mod tests {
         let overview_window = definition.window_kinds.iter().find(|window| window.id == overview::WINDOW_KIND_ID).expect("overview pane");
         let overview_utilities: Vec<&str> = overview_window.utilities.iter().map(|utility| utility.as_str()).collect();
         assert_eq!(overview_utilities, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID]);
-        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
+        assert!(overview_window.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
         // 🧰️ D-1: select/brush are this window's whole exclusive utility set, NOT a sub-collection, so
         // each carries `group: None` and renders as a flat utility bar icon (never one collapsed dropdown).
         for utility in &definition.utilities {
@@ -1794,7 +1794,7 @@ mod tests {
         let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
         assert_eq!(tool_ids, vec![fill::TOOL_ID]);
         assert_eq!(definition.modes[0].tools, vec![ToolRef::new(fill::TOOL_ID)]);
-        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
+        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
     }
 
     /// 🎥️ The camera is session-only runtime state, never a document field — a DWG import (which has

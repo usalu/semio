@@ -148,7 +148,9 @@ mod tests {
     fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
         let forward = apply_mutation(snapshot, mutation);
         let mut restored = forward.clone();
-        for back in mutation.inverse(snapshot) {
+        let mut backward = mutation.inverse(snapshot);
+        backward.reverse();
+        for back in backward {
             restored = apply_mutation(&restored, &back);
         }
         assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot");

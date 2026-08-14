@@ -21,7 +21,7 @@ use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::{artifact_kind, Procedural3dSnapshot, PROCEDURAL_3D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{
-    app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView,
+    app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView,
     DomainTopology, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
     MediaClass, MediaError, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, UtilityDefinition, WindowMeasure,
 };
@@ -406,6 +406,8 @@ impl ArtifactApp for Procedural3dPlayApp {
 pub fn create_procedural3d_app() -> App {
     App::from_builder(
         App::builder(PROCEDURAL_3D_PLAY_APP_ID, LocalizedLabel::native("Procedural 3D", "Procedural 3D")).document(["semio", "procedural", "3d"])
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
             .artifact_kind(artifact_kind())
             .icon_id("workflow")
             .mode_def(edit::definition())

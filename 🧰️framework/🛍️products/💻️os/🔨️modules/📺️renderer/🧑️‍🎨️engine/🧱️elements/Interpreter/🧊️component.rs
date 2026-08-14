@@ -568,6 +568,7 @@ fn composite_retained_draw_list(target: &mut ui_wgpu::wgpu::DrawList, retained: 
     for layer in &retained.layers {
         target.layers.push(ui_wgpu::wgpu::draw::DrawLayer {
             scissor: layer.scissor.map(|s| shift_scissor(s, offset_x, offset_y)),
+            clip: layer.clip.clone(),
             foreground_of: layer.foreground_of.map(|idx| idx + glass_base),
             ui_instances: layer.ui_instances.iter().map(|inst| shift_instance(inst, offset_x, offset_y)).collect(),
             raster_instances: layer.raster_instances.iter().map(|(key, inst)| (key.clone(), shift_instance(inst, offset_x, offset_y))).collect(),
@@ -1388,6 +1389,8 @@ mod render_plan_validator_tests {
                 terrain_json: None,
                 points_json: None,
                 status_json: None,
+                domain_id: None,
+                domain_granularity_id: None,
             },
         );
         let error = validate_ui_node(&node, &limits).expect_err("oversized mesh count should be rejected");

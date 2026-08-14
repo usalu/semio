@@ -14,7 +14,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { areaOf, BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry
@@ -44,18 +44,12 @@ export type PluginRegistryEntry = {
  * `26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY`. */
 const TAXONOMY = loadTaxonomy();
 
-/** @emoji 🔌️ `pluginAreas` isn't declared on the shared `Taxonomy` TS interface yet (it lives in
- * `🦑️repo/📚️library`'s discovery module, outside this ticket's file ownership) — read it here via a
- * narrow local cast instead of widening that shared type.
- * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT */
-type TaxonomyWithPluginAreas = typeof TAXONOMY & { readonly pluginAreas: readonly string[] };
-
 /** @emoji 🗺️ Every area root that may hold a plugin crate, cross-checked against `taxonomy.areas` at
  * load time so none of these literals can outlive a vocabulary rename. Membership across this array —
  * never equality against one hand-picked literal — is how every plugin-tree path test below decides
- * "is this under a plugin area"; an area's declared `AreaState` decides whether taxonomy findings warn
- * or fail (see `PLUGIN_AREAS_STATE`). */
-const PLUGIN_AREAS: readonly string[] = (TAXONOMY as TaxonomyWithPluginAreas).pluginAreas;
+ * "is this under a plugin area"; its dedicated taxonomy-tree state decides whether findings warn or
+ * fail (see `PLUGIN_AREAS_STATE`). */
+const PLUGIN_AREAS: readonly string[] = TAXONOMY.pluginAreas;
 if (!Array.isArray(PLUGIN_AREAS) || PLUGIN_AREAS.length === 0) throw new Error(`📇️registry: 🔣️taxonomy.json must declare a non-empty "pluginAreas" array`);
 for (const area of PLUGIN_AREAS) {
   if (!(area in TAXONOMY.areas)) throw new Error(`📇️registry: "${area}" is not a declared area in 🔣️taxonomy.json (${Object.keys(TAXONOMY.areas).join(", ")})`);
@@ -69,11 +63,9 @@ function mergeAreaStates(states: readonly AreaState[]): AreaState {
   return "clean";
 }
 
-/** @emoji 🗺️ Declared migration state across every plugin area — the per-area replacement for the
- * removed `LEGACY_LAYOUT_TOLERANT` boolean. `legacy`/`mixed` ⇒ taxonomy findings are warn-only; `clean`
- * ⇒ they fail the gate (the W10 finalization flip becomes a one-word vocabulary edit, not a code
- * change). */
-const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => areaOf(area, TAXONOMY) ?? "legacy"));
+/** @emoji 🌳️ Declared taxonomy-tree maturity across every plugin area, independent of the package-layout
+ * maturity in `areas`. `legacy`/`mixed` ⇒ findings are warn-only; `clean` ⇒ they fail the gate. */
+const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => TAXONOMY.pluginTaxonomyStates[area] ?? "legacy"));
 
 /** @emoji 🎛️ Taxonomy tree segment names, single-sourced from the vocabulary: anything deriving an
  * app-root path (the constitutional gate, example discovery, the window audit) shares one value. */
@@ -872,6 +864,11 @@ function listDirs(dir: string): string[] {
   return readdirSync(dir).filter((name) => statSync(join(dir, name)).isDirectory());
 }
 
+/** @emoji 🧱️ True when an inline Rust module's scope continues beyond its declaration line. */
+function moduleScopeContinues(line: string): boolean {
+  return (line.match(/\{/g) ?? []).length > (line.match(/\}/g) ?? []).length;
+}
+
 /** @emoji 🚦️ Structural audit of one migrated plugin's taxonomy tree, entirely against
  * `🔣️taxonomy.json`'s vocabulary. Severity is decided by the caller from the plugin area's declared
  * maturity: warn while it is `legacy`/`mixed`, hard failure once it is `clean`. */
@@ -1195,7 +1192,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
             declaredAbs.add(resolved);
             if (!existsSync(resolved)) danglingLeafPaths.push(rawTarget);
           }
-        } else {
+        } else if (moduleScopeContinues(line)) {
           baseStack.push(resolved);
         }
         continue;

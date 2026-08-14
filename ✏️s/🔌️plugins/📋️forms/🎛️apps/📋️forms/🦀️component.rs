@@ -31,7 +31,7 @@ use crate::artifacts::forms::op::FormMutation;
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ArtifactApp, ArtifactView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ArtifactApp, ArtifactView, CommandDefinition, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, UiNode,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
     DomainTopology, InteractionTopology, TopologyNode,
@@ -411,6 +411,7 @@ impl ArtifactApp for FormsPlayApp {
 pub fn create_forms_app() -> App {
     App::from_builder(
         App::builder(FORMS_PLAY_APP_ID, LocalizedLabel::native("Forms", "Formulare"))
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "forms"])
             .artifact_kind(ArtifactKindSpec {
                 id: "form.dictionary".into(),

@@ -7,6 +7,7 @@
 //! JSON-pack passthrough.
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::io as engine;
+use crate::ArtifactSource;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -114,6 +115,9 @@ pub struct Mp4Snapshot {
     #[state(artifact)]
     #[serde(default)]
     pub unknown_boxes: Vec<Mp4Box>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<ArtifactSource>,
 }
 
 fn default_schema() -> String { STDIO_MP4_DOCUMENT_SCHEMA.into() }
@@ -123,7 +127,16 @@ impl Default for Mp4Snapshot {
     /// for a genuinely valid box (unlike an empty string, which `⚙️engine::encode_mp4` would have
     /// to pad, breaking the empty-snapshot round trip below).
     fn default() -> Self {
-        Self { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, tracks: Vec::new(), unknown_boxes: Vec::new() }
+        Self { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, tracks: Vec::new(), unknown_boxes: Vec::new(), source: None }
+    }
+}
+
+impl Mp4Snapshot {
+    /// 🪞️ Clones the semantic projection without its native source image.
+    pub fn projection(&self) -> Self {
+        let mut projection = self.clone();
+        projection.source = None;
+        projection
     }
 }
 //#endregion 🔖️Snapshot
@@ -217,6 +230,7 @@ mod tests {
                 ],
             }],
             unknown_boxes: vec![Mp4Box { fourcc: "free".into(), data: vec![0, 0, 0, 0] }],
+            source: None,
         }
     }
 
@@ -225,7 +239,7 @@ mod tests {
         let snap = sample_snapshot();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
-        assert_eq!(snap, back);
+        assert_eq!(snap, back.projection());
     }
 
     #[test]
@@ -233,7 +247,7 @@ mod tests {
         let snap = sample_snapshot();
         let text = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
-        assert_eq!(snap, back);
+        assert_eq!(snap, back.projection());
     }
 
     #[test]
@@ -241,7 +255,22 @@ mod tests {
         let snap = Mp4Snapshot::default();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
-        assert_eq!(snap, back);
+        assert_eq!(snap, back.projection());
+    }
+
+    #[test]
+    fn exact_fixture_survives_pack_and_dsl_codecs() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
+        let bytes = std::fs::read(path).expect("read exact MP4 fixture");
+        let snapshot = engine::decode_mp4(&bytes).expect("decode exact MP4 fixture");
+
+        let pack = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode pack");
+        assert_eq!(engine::encode_mp4(&from_pack), bytes);
+
+        let dsl = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+        let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse dsl");
+        assert_eq!(engine::encode_mp4(&from_dsl), bytes);
     }
 }
 //#endregion 🔖️Tests

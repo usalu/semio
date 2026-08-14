@@ -283,6 +283,18 @@
         "forwardAllArgs": true
       }
     },
+    "test-storybook": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
     "test-quick": {
       "executor": "nx:run-commands",
       "dependsOn": [],

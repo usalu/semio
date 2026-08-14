@@ -19,9 +19,11 @@ use infinite_world::{
 };
 use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewModel};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 #[cfg(not(target_arch = "wasm32"))]
-use store_sync::{ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactSyncStatus, PersistenceBinding, RemoteState};
+use store_sync::{PresencePeer, PresencePoint, PresenceViewport};
+#[cfg(not(target_arch = "wasm32"))]
+use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 use ui_wgpu::wgpu::component::layout::WindowEngagementPossible;
 use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
@@ -88,7 +90,7 @@ pub struct SearchPaletteItem {
     /// 🗂️ Coarse command-source tag (os/plugin/app/mode) — `None` for the pre-existing panel/window/
     /// keybinding/action/studio entries, `Some(..)` for entries derived from `shell::ActionPanelAndUtilities`'s
     /// `ResolvedCommand` aggregation (see `command_search_items`).
-    pub category: Option<semio_framework::CommandScope>,
+    pub category: Option<semio_framework::manifest::CommandOwnerAddress>,
 }
 
 #[derive(Clone, Debug)]
@@ -122,6 +124,7 @@ fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String {
         semio_framework::ActionKind::History => "history",
         semio_framework::ActionKind::Clipboard => "clipboard",
         semio_framework::ActionKind::Shell => "shell",
+        semio_framework::ActionKind::Interaction => "interaction",
     }
     .to_string()
 }
@@ -382,6 +385,7 @@ pub struct ShellSyncChannel {
     pub plugin_id: String,
     pub cmd_tx: tokio::sync::mpsc::UnboundedSender<ArtifactActorMsg>,
     pub events: tokio::sync::broadcast::Receiver<ArtifactEvent>,
+    pub connected_at_ms: i64,
 }
 //#endregion 🔖️NativeSyncChannel
 
@@ -463,6 +467,8 @@ pub struct ShellState {
     pub split_resize_secondary_origin: Vec<f32>,
     pub measures_resize_window_id: Option<String>,
     pub deferred_actions: Vec<ActionDescriptor>,
+    pub fullscreen_toggle_requested: bool,
+    pub fullscreen_active: bool,
     pub active_utilities: Vec<UtilityNode>,
     /// @emoji 🧰️ Host-owned active utility per window kind (never a document field, never a VCS operation).
     /// Replaces the deleted `active_utility_id`/`find_active_utility_id` "first pressed toggle" heuristic.
@@ -746,6 +752,8 @@ impl ShellState {
             split_resize_secondary_origin: Vec::new(),
             measures_resize_window_id: None,
             deferred_actions: Vec::new(),
+            fullscreen_toggle_requested: false,
+            fullscreen_active: false,
             active_utilities: Vec::new(),
             active_utility_by_window: HashMap::new(),
             action_panel_folded: HashMap::new(),
@@ -1705,8 +1713,40 @@ impl ShellState {
             RemoteState::Detached => "offline".to_string(),
         };
         let persisted = if status.persisted { "saved" } else { "unsaved" };
-        let pending = if status.pendingOperations > 0 { format!(" · {} pending", status.pendingOperations) } else { String::new() };
+        let pending = if status.pending_mutations > 0 { format!(" · {} pending", status.pending_mutations) } else { String::new() };
         format!("{remote} · {persisted}{pending}")
+    }
+
+    /// 💓️ Publishes the newest renderer cursor and app-typed presence through the document host's
+    /// per-document coalescer. The channel drain also exposes transient generation for the native
+    /// renderer's next-frame invalidation contract without ever sharing transient contents.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn publish_presence_heartbeat(&mut self, input: &InputState<ActionDescriptor>) {
+        let Some(channel) = self.sync_channel.as_ref() else { return };
+        let document_id = channel.document_id.clone();
+        let instance_id = channel.instance_id;
+        let plugin_id = channel.plugin_id.clone();
+        let connected_at_ms = channel.connected_at_ms;
+        let presence_pack = self
+            .plugins
+            .iter()
+            .find(|plugin| plugin.plugin_id == plugin_id)
+            .and_then(|plugin| plugin.ephemeral_snapshot(instance_id).ok())
+            .map(|(presence, _, _)| presence);
+        let label = self.session.as_ref().map(|session| session.app.id.clone());
+        let peer = PresencePeer {
+            actor: format!("wgpu-{instance_id}"),
+            label,
+            presence_pack,
+            connected_at_ms,
+            user_id: None,
+            role: None,
+            cursor: Some(PresencePoint { x: input.pointer_x as f64, y: input.pointer_y as f64 }),
+            viewport: Some(PresenceViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
+            drag_ghost_json: None,
+            interaction: None,
+        };
+        self.document_host.presence_heartbeat(&document_id, chrome_now_ms() as u64, peer);
     }
     //#endregion 🔖️NativeBackboneSync
 
@@ -1725,13 +1765,13 @@ impl ShellState {
             let bindings = Self::parse_persistence_binding(&uri)?;
             self.detach_sync_backbone_internal();
             let actor_uri = format!("actor://{document_id}");
-            let channels = self.document_host.open(store_sync::ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor: format!("wgpu-{}", session.instance_id) });
+            let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor: format!("wgpu-{}", session.instance_id) });
             let events = self.document_host.subscribe(&document_id);
             runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)).map_err(|error| format!("register host backbone: {error}"))?;
             plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
             let cmd_tx = channels.cmd_tx.clone();
             let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
-            self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events });
+            self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
             self.sync_status = Some(ArtifactSyncStatus::default());
             self.sync_backbone_uri = Some(uri);
             self.sync_card_kind = None;
@@ -1889,7 +1929,41 @@ impl ShellState {
             return Ok(());
         };
         let program = self.plugins.iter().find(|p| p.manifest.apps.iter().any(|app| app.controller_id == action.controller_id)).or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id)).ok_or("action program missing")?;
-        let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
+        let requested_window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
+        let window_instance_id = requested_window_id
+            .map(str::to_string)
+            .or_else(|| session.view_state.window_id.clone())
+            .or_else(|| self.active_window_id.clone())
+            .unwrap_or_else(|| session.app.window_kinds.first().id.clone());
+        let window_kind_id = session
+            .view_state
+            .window_instances
+            .iter()
+            .find(|instance| instance.id == window_instance_id)
+            .map(|instance| instance.window_kind_id.clone())
+            .or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_instance_id).map(|kind| kind.id.clone()))
+            .ok_or_else(|| format!("action window instance {window_instance_id} has no declared kind"))?;
+        let mode_id = session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
+        let arguments = action
+            .args
+            .as_ref()
+            .map(dsl_value_as_json)
+            .and_then(|value| value.as_object().cloned())
+            .unwrap_or_default()
+            .into_iter()
+            .collect();
+        let invocation = semio_framework::manifest::ActionInvocation {
+            address: semio_framework::manifest::ActionAddress {
+                plugin_id: session.plugin_id.clone(),
+                app_id: session.app.id.clone(),
+                mode_id,
+                window_kind_id,
+                window_instance_id,
+                action_id: action.action.clone(),
+            },
+            arguments,
+        };
+        let action_json = serde_json::to_string(&invocation).map_err(|err| err.to_string())?;
         let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await?;
         // 🎓️ Advance-by-doing: this action was actually performed (the plugin call above succeeded), so
         // a tour step whose `advance` targets it moves on now — see `chrome_tour_note_action_performed`.
@@ -1939,6 +2013,48 @@ impl ShellState {
                     {
                         self.deferred_actions.push(descriptor);
                     }
+                }
+                _ => {}
+            }
+        }
+        let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
+        self.apply_mutations(&operations).await
+    }
+
+    /// 🎛️ Sends one owner-qualified non-OS command through the program command boundary.
+    pub async fn dispatch_command(&mut self, invocation: semio_framework::manifest::CommandInvocation) -> Result<(), String> {
+        if matches!(invocation.address.owner, semio_framework::manifest::CommandOwnerAddress::Os) {
+            return Err("os commands must be dispatched by the shell".into());
+        }
+        let Some(session) = self.session.clone() else {
+            return Ok(());
+        };
+        let owner_plugin_id = match &invocation.address.owner {
+            semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id }
+            | semio_framework::manifest::CommandOwnerAddress::App { plugin_id, .. }
+            | semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id, .. } => plugin_id,
+            semio_framework::manifest::CommandOwnerAddress::Os => unreachable!(),
+        };
+        if owner_plugin_id != &session.plugin_id {
+            return Err(format!("command owner plugin {owner_plugin_id} is not active"));
+        }
+        let program = self.plugins.iter().find(|entry| entry.plugin_id == *owner_plugin_id).ok_or("command program missing")?;
+        let command_json = serde_json::to_string(&invocation).map_err(|error| error.to_string())?;
+        let result = program.handle_command(session.instance_id, &command_json, &session.view_state).await?;
+        for effect in &result.requested_effects {
+            match effect {
+                semio_framework::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => self.apply_set_active_utility(window_id, utility_id),
+                semio_framework::kernel::HostEffect::Navigate { uri } => {
+                    self.push_uri(uri.clone());
+                    self.apply_shell_uri(uri).await?;
+                }
+                semio_framework::kernel::HostEffect::LoadDocument { pack, spr } => {
+                    if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
+                        plugin.load_app_document_pack(session.instance_id, pack, spr)?;
+                    }
+                }
+                semio_framework::kernel::HostEffect::DispatchAction { action, args, .. } => {
+                    self.deferred_actions.push(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action.clone(), args: args.clone() });
                 }
                 _ => {}
             }
@@ -2268,6 +2384,7 @@ fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wg
         ui_wgpu::wgpu::KeyAction::ArrowRight => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "ArrowRight".into(), modifiers: event_modifiers }),
         ui_wgpu::wgpu::KeyAction::ArrowUp => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "ArrowUp".into(), modifiers: event_modifiers }),
         ui_wgpu::wgpu::KeyAction::ArrowDown => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "ArrowDown".into(), modifiers: event_modifiers }),
+        ui_wgpu::wgpu::KeyAction::Function(number) => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: format!("F{number}"), modifiers: event_modifiers }),
         ui_wgpu::wgpu::KeyAction::Tab => Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: event_modifiers }),
         ui_wgpu::wgpu::KeyAction::Space(_) => None,
     }
@@ -2800,7 +2917,7 @@ impl ShellState {
             id if id.starts_with("shell.action.argtoggle::") => {
                 let parts: Vec<&str> = id.trim_start_matches("shell.action.argtoggle::").split("::").collect();
                 if let [window_id, action_id, arg_id] = parts.as_slice() {
-                    let current = self.staged_map_for(window_id, action_id).get(*arg_id).and_then(|value| value.as_bool()).or_else(|| self.arg_default(action_id, arg_id).and_then(|value| value.as_bool())).unwrap_or(false);
+                    let current = self.staged_map_for(window_id, action_id).get(*arg_id).and_then(|value| value.as_bool()).or_else(|| self.arg_default(window_id, action_id, arg_id).and_then(|value| value.as_bool())).unwrap_or(false);
                     self.stage_arg(window_id, action_id, arg_id, serde_json::Value::Bool(!current));
                 }
                 return Ok(true);
@@ -2870,7 +2987,7 @@ impl ShellState {
                 return Ok(true);
             }
             "ui.fullscreen.toggle" => {
-                toggle_fullscreen();
+                self.apply_os_command("os.toggleFullscreen", None).await?;
                 return Ok(true);
             }
             "space.canvas.home" => {
@@ -3424,10 +3541,10 @@ impl ShellState {
     }
 
     fn build_search_items(&self) -> Vec<SearchPaletteItem> {
+        let mut items = self.command_search_items();
         let Some(session) = &self.session else {
-            return Vec::new();
+            return items;
         };
-        let mut items = Vec::new();
         for tab in &session.app.panel_tabs {
             items.push(SearchPaletteItem {
                 id: format!("panel.{}", tab.id()),
@@ -3451,34 +3568,6 @@ impl ShellState {
         for binding in &session.app.keybindings {
             items.push(SearchPaletteItem { id: format!("keybinding.{}", binding.keys), label: binding.action.action.clone(), group: "Actions".into(), dispatch_action: Some(binding.action.clone()), action: None, category: None });
         }
-        // 📇️ Declared window-scoped actions (Architecture Decision 8, P3 — wgpu previously listed only
-        // keybindings). Zero-arg actions dispatch directly; arg-carrying actions redirect to the hosting
-        // window's Actions rail so they never fire with `args: None`.
-        for action in &session.app.actions {
-            if !action.in_palette || action.kind == semio_framework::ActionKind::History || action.id == semio_framework::SET_ACTIVE_UTILITY_ACTION_ID {
-                continue;
-            }
-            if action.args.is_empty() {
-                items.push(SearchPaletteItem {
-                    id: format!("action.{}", action.id),
-                    label: action.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
-                    group: "Actions".into(),
-                    dispatch_action: Some(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action.id.clone(), args: None }),
-                    action: None,
-                    category: None,
-                });
-            } else {
-                let window_id = action_host_window_id(&session.app, &action.id).unwrap_or_else(|| session.app.window_kinds.first().id.clone());
-                items.push(SearchPaletteItem {
-                    id: format!("action.{}", action.id),
-                    label: format!("{} …", action.label.resolve(self.active_terminology(), self.active_locale())),
-                    group: "Actions".into(),
-                    dispatch_action: None,
-                    action: Some(format!("action-panel:{window_id}:{}", action.id)),
-                    category: None,
-                });
-            }
-        }
         if let Some(controller_id) = self.host_controller_id() {
             for action in ["undo", "redo", "commitCheckpoint"] {
                 items.push(SearchPaletteItem {
@@ -3491,9 +3580,6 @@ impl ShellState {
                 });
             }
         }
-        // 🎛️ Os-level + plugin/app/mode-scope commands (`ResolvedCommand` aggregation — see
-        // `command_search_items` in `shell::ActionPanelAndUtilities`), tagged with their source category.
-        items.extend(self.command_search_items());
         items
     }
 
@@ -3550,6 +3636,9 @@ impl ShellState {
                     None => (rest.to_string(), None),
                 };
                 self.apply_os_command(&command_id, option_value.as_deref()).await?;
+            } else if let Some(command_json) = action.strip_prefix("command:") {
+                let invocation: semio_framework::manifest::CommandInvocation = serde_json::from_str(command_json).map_err(|error| error.to_string())?;
+                self.dispatch_command(invocation).await?;
             }
         }
         self.search_open = false;
@@ -3825,6 +3914,33 @@ impl ShellState {
             }
         }
         let idle = input.focused_id.is_none() && self.overlay_state == OverlayState::None && self.sync_card_kind.is_none() && self.dock_drag.is_none();
+        let fullscreen_chord = matches!(action, ui_wgpu::wgpu::KeyAction::Function(11))
+            || matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta);
+        if idle && fullscreen_chord {
+            self.dispatch_command(semio_framework::manifest::CommandInvocation {
+                address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::Os, command_id: "os.toggleFullscreen".into() },
+                arguments: BTreeMap::new(),
+            })
+            .await?;
+            return Ok(());
+        }
+        if idle && !is_reserved_shell_chord(&action, modifiers) {
+            let platform = command_host_platform();
+            let command = self.resolved_commands().into_iter().rev().find(|entry| {
+                entry.definition.in_palette
+                    && entry.definition.keybindings.iter().any(|binding| binding.platform.is_none_or(|declared| declared == platform) && key_event_matches_chord(&action, modifiers, &binding.chord))
+            });
+            if let Some(entry) = command {
+                if entry.definition.args.is_empty() {
+                    self.dispatch_command(semio_framework::manifest::CommandInvocation { address: entry.address, arguments: BTreeMap::new() }).await?;
+                } else {
+                    self.overlay_state = OverlayState::Search;
+                    self.search_query = entry.definition.label.resolve(self.active_terminology(), self.active_locale()).to_string();
+                    self.search_selected = 0;
+                }
+                return Ok(());
+            }
+        }
         // 🎯️🕹️ Content-focus routing (w2-input-wiring): whenever the active window's retained
         // content — not chrome — is the one holding focus, real keys belong there via
         // `interpreter::dispatch_ui_event` (Escape/Tab/edit keys/clipboard chords/text), taking
@@ -3882,13 +3998,13 @@ impl ShellState {
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
-        let action_def = session.app.actions.iter().find(|action| action.id == descriptor.action).cloned();
+        let window_id = self.active_window_id.clone().or_else(|| session.view_state.active_window_kind_id.clone()).unwrap_or_else(|| session.app.window_kinds.first().id.clone());
+        let action_def = window_action_definition(&session.app, &window_id, &descriptor.action).cloned();
         let has_args = action_def.as_ref().is_some_and(|action| !action.args.is_empty());
         if !has_args {
             return self.dispatch_action(descriptor).await;
         }
         let action_id = action_def.expect("checked has_args").id;
-        let window_id = action_host_window_id(&session.app, &action_id).unwrap_or_else(|| self.active_utility_bar_window_kind(&session).id.clone());
         let already_expanded = self.active_window_id.as_deref() == Some(window_id.as_str()) && self.action_panel_expanded.get(&window_id).map(String::as_str) == Some(action_id.as_str());
         if already_expanded {
             self.execute_staged_action(&window_id, &action_id).await
@@ -3963,6 +4079,28 @@ mod shell_input_tests {
         assert_eq!(resolve_playground_app_id("3d"), Some("puzzle3d-play"));
         assert_eq!(resolve_playground_app_id("puzzle5d"), Some("puzzle5d-play"));
     }
+
+    //#region SilhouetteContentTests
+
+    #[test]
+    fn only_known_scene_and_canvas_surfaces_start_at_full_silhouette_bounds() {
+        assert!(ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::World3d));
+        assert!(ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::Canvas2d));
+        assert!(ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::NodeGraph));
+        assert!(!ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::TextEditor));
+        assert!(!ShellState::window_content_is_edgeless(ui_wgpu::wgpu::SurfaceKind::Table));
+    }
+
+    #[test]
+    fn silhouette_hit_intersections_leave_the_cap_gap_empty() {
+        let silhouette = WindowSilhouette::from_measured_top(Rect::new(0.0, 0.0, 300.0, 200.0), 80.0, 60.0, 32.0);
+        let hits: Vec<Rect> = silhouette.content_clip_rects().iter().filter_map(|clip| ShellState::intersect_content_rect(*clip, silhouette.bounds)).collect();
+        assert_eq!(hits.len(), 3);
+        assert!(!hits.iter().any(|rect| rect.contains(150.0, 16.0)));
+        assert!(hits.iter().any(|rect| rect.contains(150.0, 100.0)));
+    }
+
+    //#endregion SilhouetteContentTests
 
     /// 🧪️ `dock_window_order` is a `Self`-less associated fn, so it's callable without constructing a
     /// full `ShellState` fixture (impractically large: 90+ fields, several without `Default`).
@@ -4552,6 +4690,15 @@ pub(crate) fn action_host_window_id(app: &semio_framework::AppDefinition, action
     app.window_kinds.iter().find(|kind| semio_framework::resolve_window_actions(app, kind).iter().any(|action| action.id == action_id)).map(|kind| kind.id.clone())
 }
 
+/// 🪟️ Resolves an action only from its addressed window kind owner.
+pub(crate) fn window_action_definition<'a>(
+    app: &'a semio_framework::AppDefinition,
+    window_kind_id: &str,
+    action_id: &str,
+) -> Option<&'a semio_framework::ActionDefinition> {
+    app.window_kinds.iter().find(|kind| kind.id == window_kind_id)?.actions.iter().find(|action| action.id == action_id)
+}
+
 /// 🔢️ Formats a number for a staged input/vec3 field — integers without a trailing `.0`.
 fn fmt_num(value: f64) -> String {
     if value.is_finite() && value == value.trunc() && value.abs() < 1e15 {
@@ -4630,6 +4777,9 @@ fn format_keybinding_shortcut(keys: &str) -> String {
 /// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav) that must win
 /// over app-declared keybindings (P4 — "reserved shell chords still win").
 pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> bool {
+    if matches!(action, ui_wgpu::wgpu::KeyAction::Function(11)) || matches!(action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta) {
+        return true;
+    }
     let accelerator = modifiers.meta || modifiers.ctrl;
     if !accelerator {
         return false;
@@ -4638,6 +4788,36 @@ pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifie
         ui_wgpu::wgpu::KeyAction::Char(c) => matches!(c.to_ascii_lowercase().as_str(), "p" | "f" | "b" | "[" | "]"),
         ui_wgpu::wgpu::KeyAction::ArrowUp => true,
         _ => false,
+    }
+}
+
+fn command_host_platform() -> semio_framework::manifest::Platform {
+    #[cfg(target_os = "macos")]
+    {
+        semio_framework::manifest::Platform::MacOs
+    }
+    #[cfg(target_os = "windows")]
+    {
+        semio_framework::manifest::Platform::Windows
+    }
+    #[cfg(all(not(target_os = "macos"), not(target_os = "windows"), not(target_arch = "wasm32")))]
+    {
+        semio_framework::manifest::Platform::Linux
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let platform = web_sys::window()
+            .and_then(|window| js_sys::Reflect::get(window.as_ref(), &"navigator".into()).ok())
+            .and_then(|navigator| js_sys::Reflect::get(&navigator, &"platform".into()).ok())
+            .and_then(|value| value.as_string())
+            .unwrap_or_default();
+        if platform.to_ascii_lowercase().contains("mac") {
+            semio_framework::manifest::Platform::MacOs
+        } else if platform.to_ascii_lowercase().contains("win") {
+            semio_framework::manifest::Platform::Windows
+        } else {
+            semio_framework::manifest::Platform::Linux
+        }
     }
 }
 
@@ -4684,6 +4864,7 @@ pub(crate) fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifie
         ui_wgpu::wgpu::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
         ui_wgpu::wgpu::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
         ui_wgpu::wgpu::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
+        ui_wgpu::wgpu::KeyAction::Function(number) => key_token == format!("f{number}"),
         ui_wgpu::wgpu::KeyAction::Space(_) => key_token == "space",
     }
 }
@@ -4803,7 +4984,7 @@ impl ShellState {
                 .staged_map_for(&window_id, &action_id)
                 .get(&arg_id)
                 .and_then(|value| value.as_array().cloned())
-                .or_else(|| self.arg_default(&action_id, &arg_id).and_then(|value| value.as_array().cloned()))
+                .or_else(|| self.arg_default(&window_id, &action_id, &arg_id).and_then(|value| value.as_array().cloned()))
                 .unwrap_or_else(|| vec![serde_json::json!(0.0), serde_json::json!(0.0), serde_json::json!(0.0)]);
             while current.len() < 3 {
                 current.push(serde_json::json!(0.0));
@@ -4814,7 +4995,7 @@ impl ShellState {
             self.stage_arg(&window_id, &action_id, &arg_id, serde_json::Value::Array(current));
             return true;
         }
-        let control = self.session.as_ref().and_then(|session| session.app.actions.iter().find(|action| action.id == action_id)).and_then(|action| action.args.iter().find(|arg| arg.id == arg_id)).map(|arg| arg.control.clone());
+        let control = self.session.as_ref().and_then(|session| window_action_definition(&session.app, &window_id, &action_id)).and_then(|action| action.args.iter().find(|arg| arg.id == arg_id)).map(|arg| arg.control.clone());
         let value = match control {
             Some(ActionArgControl::Number { .. }) | Some(ActionArgControl::Slider { .. }) => {
                 serde_json::json!(buffer.trim().parse::<f64>().unwrap_or(0.0))
@@ -4839,7 +5020,7 @@ impl ShellState {
         let action_id = parts.get(1).copied()?;
         let arg_id = parts.get(2).copied()?;
         let session = self.session.as_ref()?;
-        let arg = session.app.actions.iter().find(|action| action.id == action_id)?.args.iter().find(|arg| arg.id == arg_id)?;
+        let arg = window_action_definition(&session.app, window_id, action_id)?.args.iter().find(|arg| arg.id == arg_id)?;
         let effective = self.effective_arg_value(window_id, action_id, arg);
         if is_vec3 {
             let axis: usize = parts.get(3).and_then(|token| token.parse().ok()).unwrap_or(0);
@@ -4878,7 +5059,7 @@ impl ShellState {
         if !self.actions_enabled_for_window(&session.app, window_id) {
             return Ok(());
         }
-        let Some(action) = session.app.actions.iter().find(|action| action.id == action_id).cloned() else {
+        let Some(action) = window_action_definition(&session.app, window_id, action_id).cloned() else {
             return Ok(());
         };
         let staged = self.staged_map_for(window_id, action_id);
@@ -4909,11 +5090,16 @@ impl ShellState {
     /// `UiTheme` list, no desktop/tablet layout flag) — inventing that storage is out of this region's
     /// scope (`shell::ShellTypes` owns `ShellState`'s fields and is off-limits this wave).
     pub(crate) fn build_os_commands(&self) -> Vec<semio_framework::CommandDefinition> {
-        use semio_framework::{ActionArgDef, ActionArgOption, CommandDefinition, CommandScope};
+        use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
+        use semio_framework::manifest::Platform;
         let terminology_options: Vec<ActionArgOption> =
             self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
         vec![
-            CommandDefinition::new_catalog("os.setAppearance", LocalizedLabel::data("Set Appearance"), CommandScope::Os, "appearance").with_args([ActionArgDef::select(
+            CommandDefinition::new_catalog("os.toggleFullscreen", LocalizedLabel::native("Toggle Full Screen", "Vollbild umschalten"), "window", ActionKind::Shell)
+                .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Windows))
+                .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Linux))
+                .with_keybinding(PlatformKeybinding::for_platform("control+meta+f", Platform::MacOs)),
+            CommandDefinition::new_catalog("os.setAppearance", LocalizedLabel::data("Set Appearance"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Appearance"),
                 vec![
@@ -4923,21 +5109,21 @@ impl ShellState {
                 ],
             )
             .required()]),
-            CommandDefinition::new_catalog("os.setDriver", LocalizedLabel::data("Set Driver"), CommandScope::Os, "layout").with_args([ActionArgDef::select(
+            CommandDefinition::new_catalog("os.setDriver", LocalizedLabel::data("Set Driver"), "layout", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Driver"),
                 vec![ActionArgOption { value: "default".into(), label: LocalizedLabel::data("Default") }, ActionArgOption { value: "compact".into(), label: LocalizedLabel::data("Compact") }],
             )
             .required()]),
-            CommandDefinition::new_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), CommandScope::Os, "language").with_args([ActionArgDef::select(
+            CommandDefinition::new_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), "language", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Locale"),
                 vec![ActionArgOption { value: "en".into(), label: LocalizedLabel::data("English") }, ActionArgOption { value: "de".into(), label: LocalizedLabel::data("Deutsch") }],
             )
             .required()]),
-            CommandDefinition::new_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), CommandScope::Os, "language")
+            CommandDefinition::new_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell)
                 .with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
-            CommandDefinition::new_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), CommandScope::Os, "appearance").with_args([ActionArgDef::select(
+            CommandDefinition::new_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Theme"),
                 std::iter::once(ActionArgOption { value: "semio".into(), label: LocalizedLabel::data("Semio") })
@@ -4949,7 +5135,7 @@ impl ShellState {
                     .collect(),
             )
             .required()]),
-            CommandDefinition::new_catalog("os.resetDock", LocalizedLabel::data("Reset Dock Layout"), CommandScope::Os, "layout"),
+            CommandDefinition::new_catalog("os.resetDock", LocalizedLabel::data("Reset Dock Layout"), "layout", ActionKind::Shell),
         ]
     }
 
@@ -4959,10 +5145,10 @@ impl ShellState {
     pub(crate) fn resolved_commands(&self) -> Vec<ResolvedCommand> {
         let os_commands = self.build_os_commands();
         let Some(session) = self.session.as_ref() else {
-            return os_commands.into_iter().map(|definition| ResolvedCommand { definition, source: CommandSource::Os }).collect();
+            return os_commands.into_iter().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Os)).collect();
         };
         let active_mode_id = session.view_state.active_mode_id.as_deref().unwrap_or(session.app.default_mode_id.as_str());
-        resolve_commands(os_commands, self.active_plugin_manifest(), &session.app, active_mode_id)
+        resolve_commands(os_commands, self.active_plugin_manifest(), &session.plugin_id, &session.app, active_mode_id)
     }
 
     /// 🔍️ Flattens `resolved_commands()` into quick-search-palette entries. Zero-arg commands (any source)
@@ -4975,44 +5161,46 @@ impl ShellState {
     /// redirect would open a form with no way to actually execute; they still appear in
     /// `resolved_commands()`/`build_command_panel_ui()` for completeness.
     pub(crate) fn command_search_items(&self) -> Vec<SearchPaletteItem> {
-        let Some(session) = self.session.as_ref() else {
-            return Vec::new();
-        };
         let mut items = Vec::new();
         for entry in self.resolved_commands() {
-            let ResolvedCommand { definition, source } = entry;
-            let category = match &source {
-                CommandSource::Os => semio_framework::CommandScope::Os,
-                CommandSource::Plugin => semio_framework::CommandScope::Plugin,
-                CommandSource::App => semio_framework::CommandScope::App,
-                CommandSource::Mode(_) => semio_framework::CommandScope::Mode,
-            };
-            let group = command_category_label(&definition.category);
-            if definition.args.is_empty() {
-                let is_os = matches!(source, CommandSource::Os);
-                items.push(SearchPaletteItem {
-                    id: format!("command.{}", definition.id),
-                    label: definition.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
-                    group,
-                    dispatch_action: (!is_os).then(|| ActionDescriptor { controller_id: session.app.controller_id.clone(), action: definition.id.clone(), args: None }),
-                    action: is_os.then(|| format!("os-command:{}", definition.id)),
-                    category: Some(category),
-                });
+            let ResolvedCommand { definition, address } = entry;
+            if !definition.in_palette {
                 continue;
             }
-            if !matches!(source, CommandSource::Os) {
+            let category = address.owner.clone();
+            let group = command_category_label(&definition.category);
+            if definition.args.is_empty() {
+                let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
+                let invocation = semio_framework::manifest::CommandInvocation { address: address.clone(), arguments: BTreeMap::new() };
+                items.push(SearchPaletteItem {
+                    id: format!("command.{}", command_address_stable_key(&address)),
+                    label: definition.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
+                    group,
+                    dispatch_action: None,
+                    action: Some(if is_os { format!("os-command:{}", definition.id) } else { format!("command:{}", serde_json::to_string(&invocation).expect("command invocation serializes")) }),
+                    category: Some(category.clone()),
+                });
                 continue;
             }
             if let Some(arg) = definition.args.first() {
                 if let semio_framework::ActionArgControl::Select { options } = &arg.control {
                     for option in options {
+                        let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
+                        let invocation = semio_framework::manifest::CommandInvocation {
+                            address: address.clone(),
+                            arguments: BTreeMap::from([(arg.id.clone(), serde_json::Value::String(option.value.clone()))]),
+                        };
                         items.push(SearchPaletteItem {
-                            id: format!("command.{}.{}", definition.id, option.value),
+                            id: format!("command.{}.{}", command_address_stable_key(&address), option.value),
                             label: format!("{}: {}", definition.label.resolve(self.active_terminology(), self.active_locale()), option.label.resolve(self.active_terminology(), self.active_locale())),
                             group: group.clone(),
                             dispatch_action: None,
-                            action: Some(format!("os-command:{}:{}", definition.id, option.value)),
-                            category: Some(category),
+                            action: Some(if is_os {
+                                format!("os-command:{}:{}", definition.id, option.value)
+                            } else {
+                                format!("command:{}", serde_json::to_string(&invocation).expect("command invocation serializes"))
+                            }),
+                            category: Some(category.clone()),
                         });
                     }
                 }
@@ -5029,6 +5217,10 @@ impl ShellState {
     /// never invents a new mutation path.
     pub(crate) async fn apply_os_command(&mut self, command_id: &str, option_value: Option<&str>) -> Result<(), String> {
         match command_id {
+            "os.toggleFullscreen" => {
+                self.fullscreen_toggle_requested = true;
+                Ok(())
+            }
             "os.resetDock" => {
                 self.layout_override = None;
                 self.sync_dock();
@@ -5170,7 +5362,7 @@ impl ShellState {
     /// can reach `apply_os_command` for it), so it renders as a pointer to command search instead of a
     /// non-functional button.
     pub(crate) fn build_command_panel_ui(&self) -> UiNode {
-        let resolved = self.resolved_commands();
+        let resolved: Vec<_> = self.resolved_commands().into_iter().filter(|entry| entry.definition.in_palette).collect();
         let categories = command_categories(&resolved);
         let mut sections: Vec<UiNode> = Vec::new();
         for (category_id, category_label) in categories {
@@ -5251,43 +5443,62 @@ impl ShellState {
     // #endregion
 }
 
-/// 🗂️ Where a `ResolvedCommand` was sourced from — the wgpu mirror of `os-shell.tsx`'s
-/// `ResolvedCommand["source"]`. `Mode` carries the active mode id, mirroring `{ kind: "mode", modeId }`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum CommandSource {
-    Os,
-    Plugin,
-    App,
-    Mode(String),
-}
-
-/// 🎛️ One aggregated command plus where it came from — the wgpu mirror of `os-shell.tsx`'s
-/// `ResolvedCommand`.
+/// 🎛️ One aggregated command plus its fully-qualified owner address.
 #[derive(Clone, Debug)]
 pub(crate) struct ResolvedCommand {
     pub definition: semio_framework::CommandDefinition,
-    pub source: CommandSource,
+    pub address: semio_framework::manifest::CommandAddress,
+}
+
+impl ResolvedCommand {
+    fn new(definition: semio_framework::CommandDefinition, owner: semio_framework::manifest::CommandOwnerAddress) -> Self {
+        let command_id = definition.id.clone();
+        Self { definition, address: semio_framework::manifest::CommandAddress { owner, command_id } }
+    }
+}
+
+fn command_address_stable_key(address: &semio_framework::manifest::CommandAddress) -> String {
+    match &address.owner {
+        semio_framework::manifest::CommandOwnerAddress::Os => format!("os:{}", address.command_id),
+        semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id } => format!("plugin:{plugin_id}:{}", address.command_id),
+        semio_framework::manifest::CommandOwnerAddress::App { plugin_id, app_id } => format!("app:{plugin_id}:{app_id}:{}", address.command_id),
+        semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id, app_id, mode_id } => format!("mode:{plugin_id}:{app_id}:{mode_id}:{}", address.command_id),
+    }
 }
 
 /// 🎛️ Merges os-built-in, Plugin-scope, App-scope, and active-Mode-scope commands into one list — the
 /// wgpu mirror of `os-shell.tsx`'s `resolveCommands`. A `Mode`-scope command only resolves when
 /// `active_mode_id`'s `ModeDefinition.commands` references it, exactly like the React source.
-pub(crate) fn resolve_commands(os_commands: Vec<semio_framework::CommandDefinition>, plugin_manifest: Option<&semio_framework::PluginManifest>, app: &semio_framework::AppDefinition, active_mode_id: &str) -> Vec<ResolvedCommand> {
-    let mut resolved: Vec<ResolvedCommand> = os_commands.into_iter().map(|definition| ResolvedCommand { definition, source: CommandSource::Os }).collect();
+pub(crate) fn resolve_commands(
+    os_commands: Vec<semio_framework::CommandDefinition>,
+    plugin_manifest: Option<&semio_framework::PluginManifest>,
+    plugin_id: &str,
+    app: &semio_framework::AppDefinition,
+    active_mode_id: &str,
+) -> Vec<ResolvedCommand> {
+    let mut resolved: Vec<ResolvedCommand> = os_commands.into_iter().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Os)).collect();
     if let Some(manifest) = plugin_manifest {
-        resolved.extend(manifest.commands.iter().cloned().map(|definition| ResolvedCommand { definition, source: CommandSource::Plugin }));
+        resolved.extend(manifest.commands.iter().cloned().map(|definition| {
+            ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id: plugin_id.to_string() })
+        }));
     }
-    let mode_command_ids: std::collections::HashSet<&str> = app.modes.iter().find(|mode| mode.id == active_mode_id).map(|mode| mode.commands.iter().map(|command_ref| command_ref.as_str()).collect()).unwrap_or_default();
-    for definition in &app.commands {
-        match definition.scope {
-            semio_framework::CommandScope::App => {
-                resolved.push(ResolvedCommand { definition: definition.clone(), source: CommandSource::App });
-            }
-            semio_framework::CommandScope::Mode if mode_command_ids.contains(definition.id.as_str()) => {
-                resolved.push(ResolvedCommand { definition: definition.clone(), source: CommandSource::Mode(active_mode_id.to_string()) });
-            }
-            _ => {}
-        }
+    resolved.extend(app.commands.iter().cloned().map(|definition| {
+        ResolvedCommand::new(
+            definition,
+            semio_framework::manifest::CommandOwnerAddress::App { plugin_id: plugin_id.to_string(), app_id: app.id.clone() },
+        )
+    }));
+    if let Some(mode) = app.modes.iter().find(|mode| mode.id == active_mode_id) {
+        resolved.extend(mode.commands.iter().cloned().map(|definition| {
+            ResolvedCommand::new(
+                definition,
+                semio_framework::manifest::CommandOwnerAddress::Mode {
+                    plugin_id: plugin_id.to_string(),
+                    app_id: app.id.clone(),
+                    mode_id: mode.id.clone(),
+                },
+            )
+        }));
     }
     resolved
 }
@@ -5366,9 +5577,9 @@ pub(crate) fn fuzzy_match_score(query: &str, target: &str) -> Option<i64> {
 #[cfg(test)]
 mod command_registry_tests {
     use super::*;
-    use semio_framework::{ActionArgControl, AppDefinition, CommandDefinition, CommandScope, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds};
+    use semio_framework::{ActionArgControl, ActionKind, AppDefinition, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds};
 
-    fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<semio_framework::CommandRef>) -> AppDefinition {
+    fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefinition>) -> AppDefinition {
         AppDefinition {
             id: "test-app".into(),
             label: LocalizedLabel::data("Test App"),
@@ -5386,6 +5597,7 @@ mod command_registry_tests {
                 options: Default::default(),
                 actions: vec![],
                 utilities: vec![],
+                interactions: vec![],
                 params_schema: None,
                 artifact_snapshot_schema: None,
                 input_event_schema: None,
@@ -5395,10 +5607,10 @@ mod command_registry_tests {
             .expect("non-empty"),
             panel_tabs: vec![PanelTabDefinition { kind: PanelTabKind::App("tab".into()), label: LocalizedLabel::data("Tab"), group: PanelGroup::Workbench, body_key: Some("tab.body".into()), children: vec![] }],
             keybindings: vec![],
-            actions: vec![],
             utilities: vec![],
             tools: vec![],
             commands,
+            interactions: vec![],
             named_layouts: vec![],
             default_layout: None,
             terminologies: vec!["de".into()],
@@ -5423,7 +5635,14 @@ mod command_registry_tests {
     fn build_os_commands_covers_every_wired_setting() {
         let shell = test_shell_state();
         let ids: Vec<String> = shell.build_os_commands().into_iter().map(|command| command.id).collect();
-        assert_eq!(ids, vec!["os.setAppearance", "os.setDriver", "os.setLocale", "os.setTerminology", "os.setThemeId", "os.resetDock",]);
+        assert_eq!(ids, vec!["os.toggleFullscreen", "os.setAppearance", "os.setDriver", "os.setLocale", "os.setTerminology", "os.setThemeId", "os.resetDock",]);
+    }
+
+    #[test]
+    fn fullscreen_command_requests_the_host_transition() {
+        let mut shell = test_shell_state();
+        pollster::block_on(shell.apply_os_command("os.toggleFullscreen", None)).expect("fullscreen command");
+        assert!(shell.fullscreen_toggle_requested);
     }
 
     #[test]
@@ -5440,11 +5659,10 @@ mod command_registry_tests {
 
     #[test]
     fn resolve_commands_tags_every_source() {
-        let os_commands = vec![CommandDefinition::new_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), CommandScope::Os, "language")];
-        let app_command = CommandDefinition::new_catalog("app.export", LocalizedLabel::data("Export"), CommandScope::App, "app");
-        let mode_command = CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus Mode"), CommandScope::Mode, "mode");
-        let unreferenced_mode_command = CommandDefinition::new_catalog("mode.other", LocalizedLabel::data("Other Mode Command"), CommandScope::Mode, "mode");
-        let app = test_app(vec![app_command.clone(), mode_command.clone(), unreferenced_mode_command], vec![semio_framework::CommandRef::new("mode.focus")]);
+        let os_commands = vec![CommandDefinition::new_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), "language", ActionKind::Shell)];
+        let app_command = CommandDefinition::new_catalog("export", LocalizedLabel::data("Export"), "app", ActionKind::Mutation);
+        let mode_command = CommandDefinition::new_catalog("focus", LocalizedLabel::data("Focus Mode"), "mode", ActionKind::View);
+        let app = test_app(vec![app_command.clone()], vec![mode_command.clone()]);
         let plugin_manifest = PluginManifest {
             plugin_id: "plugin".into(),
             label: "Plugin".into(),
@@ -5453,19 +5671,53 @@ mod command_registry_tests {
             examples: vec![],
             capabilities: vec![],
             topic_contributions: vec![],
-            commands: vec![CommandDefinition::new_catalog("plugin.doThing", LocalizedLabel::data("Do Thing"), CommandScope::Plugin, "plugin")],
+            commands: vec![CommandDefinition::new_catalog("doThing", LocalizedLabel::data("Do Thing"), "plugin", ActionKind::Shell)],
          artifact_kinds: vec![] };
-        let resolved = resolve_commands(os_commands, Some(&plugin_manifest), &app, "default");
-        let sources: Vec<(&str, CommandSource)> = resolved.iter().map(|entry| (entry.definition.id.as_str(), entry.source.clone())).collect();
-        assert_eq!(sources, vec![("os.setLocale", CommandSource::Os), ("plugin.doThing", CommandSource::Plugin), ("app.export", CommandSource::App), ("mode.focus", CommandSource::Mode("default".into())),]);
+        let resolved = resolve_commands(os_commands, Some(&plugin_manifest), "plugin", &app, "default");
+        let sources: Vec<(&str, CommandOwnerAddress)> = resolved.iter().map(|entry| (entry.definition.id.as_str(), entry.address.owner.clone())).collect();
+        assert_eq!(sources, vec![
+            ("os.setLocale", CommandOwnerAddress::Os),
+            ("doThing", CommandOwnerAddress::Plugin { plugin_id: "plugin".into() }),
+            ("export", CommandOwnerAddress::App { plugin_id: "plugin".into(), app_id: "test-app".into() }),
+            ("focus", CommandOwnerAddress::Mode { plugin_id: "plugin".into(), app_id: "test-app".into(), mode_id: "default".into() }),
+        ]);
+    }
+
+    #[test]
+    fn identical_local_command_ids_have_collision_free_owner_keys() {
+        let local_id = "refresh";
+        let app = test_app(
+            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)],
+            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)],
+        );
+        let plugin_manifest = PluginManifest {
+            plugin_id: "plugin".into(),
+            label: "Plugin".into(),
+            version: "0.0.0".into(),
+            apps: vec![],
+            examples: vec![],
+            capabilities: vec![],
+            topic_contributions: vec![],
+            commands: vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Plugin"), "plugin", ActionKind::View)],
+            artifact_kinds: vec![],
+        };
+        let resolved = resolve_commands(
+            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Shell"), "general", ActionKind::Shell)],
+            Some(&plugin_manifest),
+            "plugin",
+            &app,
+            "default",
+        );
+        let keys: Vec<String> = resolved.iter().map(|entry| command_address_stable_key(&entry.address)).collect();
+        assert_eq!(keys, vec!["os:refresh", "plugin:plugin:refresh", "app:plugin:test-app:refresh", "mode:plugin:test-app:default:refresh"]);
     }
 
     #[test]
     fn command_categories_orders_by_first_appearance_and_dedupes() {
         let resolved = vec![
-            ResolvedCommand { definition: CommandDefinition::new_catalog("a", LocalizedLabel::data("A"), CommandScope::Os, "appearance"), source: CommandSource::Os },
-            ResolvedCommand { definition: CommandDefinition::new_catalog("b", LocalizedLabel::data("B"), CommandScope::Os, "layout"), source: CommandSource::Os },
-            ResolvedCommand { definition: CommandDefinition::new_catalog("c", LocalizedLabel::data("C"), CommandScope::Os, "appearance"), source: CommandSource::Os },
+            ResolvedCommand::new(CommandDefinition::new_catalog("a", LocalizedLabel::data("A"), "appearance", ActionKind::Shell), CommandOwnerAddress::Os),
+            ResolvedCommand::new(CommandDefinition::new_catalog("b", LocalizedLabel::data("B"), "layout", ActionKind::Shell), CommandOwnerAddress::Os),
+            ResolvedCommand::new(CommandDefinition::new_catalog("c", LocalizedLabel::data("C"), "appearance", ActionKind::Shell), CommandOwnerAddress::Os),
         ];
         assert_eq!(command_categories(&resolved), vec![("appearance".to_string(), "Appearance".to_string()), ("layout".to_string(), "Layout".to_string())]);
     }
@@ -5481,11 +5733,11 @@ mod command_registry_tests {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
         let items = shell.command_search_items();
-        let appearance_dark = items.iter().find(|item| item.id == "command.os.setAppearance.dark").expect("expanded dark option present");
+        let appearance_dark = items.iter().find(|item| item.id == "command.os:os.setAppearance.dark").expect("expanded dark option present");
         assert_eq!(appearance_dark.label, "Set Appearance: Dark");
         assert_eq!(appearance_dark.action.as_deref(), Some("os-command:os.setAppearance:dark"));
-        assert_eq!(appearance_dark.category, Some(CommandScope::Os));
-        let reset_dock = items.iter().find(|item| item.id == "command.os.resetDock").expect("zero-arg reset dock present");
+        assert_eq!(appearance_dark.category, Some(CommandOwnerAddress::Os));
+        let reset_dock = items.iter().find(|item| item.id == "command.os:os.resetDock").expect("zero-arg reset dock present");
         assert_eq!(reset_dock.action.as_deref(), Some("os-command:os.resetDock"));
         assert!(reset_dock.dispatch_action.is_none());
     }
@@ -5540,13 +5792,10 @@ mod command_registry_tests {
         let UiNode::Stack(panel) = shell.build_command_panel_ui() else {
             panic!("expected a stack root");
         };
-        // 🗂️ One section per distinct `CommandDefinition.category` among the six os commands
-        // (`build_os_commands`): appearance (setAppearance/setThemeId), layout (setDriver/resetDock),
-        // language (setLocale/setTerminology). Was asserting a stale `4` (an older "general" category
-        // — presumably from a since-removed `os.setExpertise`/`os.toggleCompact` pair per
-        // `report-w3-command-palette.md`'s now-outdated command table — no longer exists in
-        // `build_os_commands`, confirmed by grep); this test was failing before this pass touched it.
-        assert_eq!(panel.children.len(), 3);
+        // 🗂️ One section per distinct `CommandDefinition.category`: fullscreen is in window,
+        // appearance contains setAppearance/setThemeId, layout contains setDriver/resetDock, and
+        // language contains setLocale/setTerminology.
+        assert_eq!(panel.children.len(), 4);
     }
 
     #[test]
@@ -6146,7 +6395,7 @@ fn tutorial_bar_height(theme: &Theme) -> f32 {
 /// `World3dScene.camera_json`'s own wire format (`infinite_world`'s `WorldCameraRecord.fov` — see that
 /// crate's `camera.fov.unwrap_or(45.0) as f32 * PI / 180.0` conversion the other way), not
 /// `OrbitController.fov_y`'s radians.
-fn orbit_to_tutorial_camera(orbit: &semio_framework_3d::OrbitController) -> semio_framework::TutorialCameraState {
+fn orbit_to_tutorial_camera(orbit: &ui_wgpu::wgpu::OrbitController) -> semio_framework::TutorialCameraState {
     let camera = orbit.to_camera();
     semio_framework::TutorialCameraState::Orbit {
         position: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
@@ -6158,12 +6407,12 @@ fn orbit_to_tutorial_camera(orbit: &semio_framework_3d::OrbitController) -> semi
 
 /// 🎥️ `TutorialCameraState` → `OrbitController`. `Canvas` (the 2D infinite-canvas camera kind) has no
 /// orbit-controller equivalent — `None` (see the ticket's own scope note on 2D camera tracks).
-fn tutorial_camera_to_orbit(state: &semio_framework::TutorialCameraState) -> Option<semio_framework_3d::OrbitController> {
+fn tutorial_camera_to_orbit(state: &semio_framework::TutorialCameraState) -> Option<ui_wgpu::wgpu::OrbitController> {
     match state {
-        semio_framework::TutorialCameraState::Orbit { position, target, up, fov } => Some(semio_framework_3d::OrbitController::from_camera(&semio_framework_3d::Camera3d {
-            position: semio_framework_3d::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
-            target: semio_framework_3d::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
-            up: semio_framework_3d::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
+        semio_framework::TutorialCameraState::Orbit { position, target, up, fov } => Some(ui_wgpu::wgpu::OrbitController::from_camera(&ui_wgpu::wgpu::Camera3d {
+            position: ui_wgpu::wgpu::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
+            target: ui_wgpu::wgpu::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
+            up: ui_wgpu::wgpu::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
             fov_y: (fov.unwrap_or(45.0) as f32).to_radians(),
             near: 0.1,
             far: 1000.0,
@@ -6443,7 +6692,7 @@ fn tutorial_pending_op_for_edit(entry: &semio_framework::TutorialArtifactEvent, 
         K::Checkpoint { message } => TutorialPendingDocOp::HistoryAction { action_id: "checkpoint".into(), args: message.as_ref().map(|m| serde_json::json!({ "message": m })) },
         K::CheckoutCheckpoint { checkpoint_id } => TutorialPendingDocOp::HistoryAction { action_id: "checkoutCheckpoint".into(), args: Some(serde_json::json!({ "checkpointId": checkpoint_id })) },
         K::SwitchAlternative { alternative_id } => TutorialPendingDocOp::HistoryAction { action_id: "switchAlternative".into(), args: Some(serde_json::json!({ "alternativeId": alternative_id })) },
-        K::Load { document_dsl, previous_dsl } => TutorialPendingDocOp::LoadArtifactDsl(if forward { document_dsl.clone() } else { previous_dsl.clone() }),
+        K::Load { artifact_dsl, previous_dsl } => TutorialPendingDocOp::LoadArtifactDsl(if forward { artifact_dsl.clone() } else { previous_dsl.clone() }),
     }
 }
 //#endregion ✂️PendingDocOps
@@ -6489,8 +6738,8 @@ impl ShellState {
         // 🚧️ `last_envelope_dsl` is this shell's own best-effort stand-in for "the live document's full
         // `ArtifactEnvelope` JSON" — there is no other reachable accessor for it from here.
         let pre_sandbox_document_dsl = self.last_envelope_dsl.clone();
-        if let Some(document_dsl) = definition.base.document_dsl.clone() {
-            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadArtifactDsl(document_dsl));
+        if let Some(artifact_dsl) = definition.base.artifact_dsl.clone() {
+            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadArtifactDsl(artifact_dsl));
         } else if let Some(example_id) = definition.base.example_id.as_ref() {
             // 🚧️ No "load example by id" plugin-bridge primitive is reachable from here without
             // duplicating `apply_shell_uri`'s example-switch machinery — scoped out; the tutorial plays
@@ -6537,7 +6786,7 @@ impl ShellState {
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
-            base: semio_framework::TutorialBase { document_dsl: self.last_envelope_dsl.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
+            base: semio_framework::TutorialBase { artifact_dsl: self.last_envelope_dsl.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
             tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -6955,7 +7204,7 @@ mod tutorial_tests {
     //#region CameraConversionTests
     #[test]
     fn orbit_camera_round_trips_through_tutorial_camera_state() {
-        let orbit = semio_framework_3d::OrbitController { target: semio_framework_3d::Vec3::new(1.0, 2.0, 3.0), distance: 10.0, yaw: 0.4, pitch: 0.2, fov_y: 45.0_f32.to_radians() };
+        let orbit = ui_wgpu::wgpu::OrbitController { target: ui_wgpu::wgpu::Vec3::new(1.0, 2.0, 3.0), distance: 10.0, yaw: 0.4, pitch: 0.2, fov_y: 45.0_f32.to_radians() };
         let tutorial_camera = orbit_to_tutorial_camera(&orbit);
         let round_tripped = tutorial_camera_to_orbit(&tutorial_camera).expect("orbit camera state converts back");
         let original_pose = orbit.to_camera();
@@ -7068,7 +7317,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 1000,
             chapters: Vec::new(),
-            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework::TutorialBase { artifact_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -7100,7 +7349,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 1000,
             chapters: Vec::new(),
-            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework::TutorialBase { artifact_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -7132,7 +7381,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
-            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework::TutorialBase { artifact_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -7164,6 +7413,8 @@ mod tutorial_tests {
 impl ShellState {
     pub fn render_chrome(&mut self, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, gpu: &mut ui_wgpu::wgpu::GpuContext) {
         self.load_ui_prefs_once();
+        #[cfg(not(target_arch = "wasm32"))]
+        self.publish_presence_heartbeat(input);
         // 🗄️ See `persist_panel_layout_if_changed`'s doc comment: a render-loop dirty-check hook rather
         // than patching the `ui.panelToggle.*`/resize-end call sites individually.
         self.persist_panel_layout_if_changed();
@@ -7421,7 +7672,14 @@ impl ShellState {
             x += fixture_rect.w + theme.gap_standard;
         }
         let mut rx = width - theme.padding_standard;
-        let fullscreen_item = ChromeGroupItem { control_id: "ui.fullscreen.toggle", icon_id: Some("maximize-2"), label: Some(shell_chrome_string("fullscreen.toggle", is_de)), active: false, disabled: false, kind: HitKind::Toggle };
+        let fullscreen_item = ChromeGroupItem {
+            control_id: "ui.fullscreen.toggle",
+            icon_id: Some(if self.fullscreen_active { "minimize-2" } else { "maximize-2" }),
+            label: Some(if self.fullscreen_active { shell_chrome_string("fullscreen.exit", is_de) } else { shell_chrome_string("fullscreen.toggle", is_de) }),
+            active: self.fullscreen_active,
+            disabled: false,
+            kind: HitKind::Toggle,
+        };
         chrome_register_tooltip(fullscreen_item.control_id, fullscreen_item.label.unwrap_or_default());
         let fullscreen_w = measure_chrome_group_item(atlas, theme, &fullscreen_item);
         rx -= fullscreen_w;
@@ -7677,7 +7935,7 @@ impl ShellState {
         canvas = self.render_studio_canvas_bars(draw, atlas, icons, input, theme, canvas, &session);
         if self.space_mode {
             if let Some(spawned_ui) = self.spawned_ui.clone() {
-                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, canvas, &spawned_ui, "spawned", gpu);
+                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, canvas, canvas, &[canvas], &spawned_ui, "spawned", gpu);
                 return;
             }
         }
@@ -7698,9 +7956,21 @@ impl ShellState {
         for (_, content, window_id) in placements {
             self.window_content_rects.insert(window_id.clone(), content);
             let window_kind = session.app.window_kinds.iter().find(|kind| kind.id == window_id).cloned();
+            let silhouette = self.window_silhouettes.get(&window_id).cloned();
             let mut window_chip_hits: Vec<(Rect, String)> = Vec::new();
             if let Some(ui) = self.window_ui.get(&window_id).cloned() {
-                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, content, &ui, &window_id, gpu);
+                let content_layout = window_kind
+                    .as_ref()
+                    .filter(|kind| Self::window_content_is_edgeless(kind.surface_kind))
+                    .and(silhouette.clone())
+                    .map(|silhouette| silhouette.bounds)
+                    .unwrap_or(content);
+                let content_viewport = silhouette.as_ref().map(|silhouette| silhouette.bounds).unwrap_or(content);
+                let clip_rects = silhouette.as_ref().map(WindowSilhouette::content_clip_rects).unwrap_or_else(|| vec![content]);
+                let hit_regions: Vec<Rect> = clip_rects.iter().filter_map(|clip| Self::intersect_content_rect(*clip, content_viewport)).collect();
+                draw.begin_silhouette_clip(&clip_rects);
+                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, content_viewport, content_layout, &hit_regions, &ui, &window_id, gpu);
+                draw.end_silhouette_clip();
             }
             if let Some(kind) = window_kind {
                 let measures_outcome = self.render_window_measures_rail(draw, overlay, atlas, icons, input, theme, &content, &window_id, &kind, gpu);
@@ -7777,6 +8047,31 @@ impl ShellState {
         canvas
     }
 
+    //#region SilhouetteContent
+
+    fn window_content_is_edgeless(kind: ui_wgpu::wgpu::SurfaceKind) -> bool {
+        matches!(
+            kind,
+            ui_wgpu::wgpu::SurfaceKind::Canvas2d
+                | ui_wgpu::wgpu::SurfaceKind::World3d
+                | ui_wgpu::wgpu::SurfaceKind::NodeGraph
+                | ui_wgpu::wgpu::SurfaceKind::Paint2d
+                | ui_wgpu::wgpu::SurfaceKind::TiledMap
+                | ui_wgpu::wgpu::SurfaceKind::Board2d
+                | ui_wgpu::wgpu::SurfaceKind::IconRender
+                | ui_wgpu::wgpu::SurfaceKind::InkCanvas
+                | ui_wgpu::wgpu::SurfaceKind::GraphTimeline
+        )
+    }
+
+    fn intersect_content_rect(left: Rect, right: Rect) -> Option<Rect> {
+        let x = left.x.max(right.x);
+        let y = left.y.max(right.y);
+        let x2 = (left.x + left.w).min(right.x + right.w);
+        let y2 = (left.y + left.h).min(right.y + right.h);
+        (x2 > x && y2 > y).then(|| Rect::new(x, y, x2 - x, y2 - y))
+    }
+
     fn render_window_content(
         &mut self,
         draw: &mut DrawList,
@@ -7785,25 +8080,48 @@ impl ShellState {
         icons: &IconAtlas,
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
-        content: Rect,
+        viewport: Rect,
+        layout: Rect,
+        hit_regions: &[Rect],
         ui: &UiNode,
         window_id: &str,
         gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         let scroll_key = format!("window.{window_id}");
         let scroll_y = *self.scroll_offsets.get(&scroll_key).unwrap_or(&0.0);
-        draw.push_scissor(content);
-        input.register_hit(HitTarget { rect: content, event: None, control_id: Some(scroll_key.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-        let scrolled = Rect::new(content.x, content.y - scroll_y, content.w, content.h);
+        draw.push_scissor(viewport);
+        for rect in hit_regions.iter().copied().filter(|rect| rect.w > 0.0 && rect.h > 0.0) {
+            input.register_hit(HitTarget { rect, event: None, control_id: Some(scroll_key.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+        }
+        let generated_hit_start = input.hit_targets.len();
+        let pointer = (input.pointer_x, input.pointer_y);
+        if !hit_regions.iter().any(|rect| rect.contains(pointer.0, pointer.1)) {
+            input.pointer_x = -1_000_000.0;
+            input.pointer_y = -1_000_000.0;
+        }
+        let scrolled = Rect::new(layout.x, layout.y - scroll_y, layout.w, layout.h);
         let scroll_offsets = &mut self.scroll_offsets;
         let collapsed_sections = &mut self.collapsed_sections;
         let open_selects = &mut self.open_selects;
         let widget_maps = &mut self.widget_maps;
         let mut ctx = framework_widget_context(draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
-        ctx.pick_clip = Some(content);
+        ctx.pick_clip = Some(viewport);
         render_ui_node(ui, scrolled, &mut ctx, window_id, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
+        drop(ctx);
+        input.pointer_x = pointer.0;
+        input.pointer_y = pointer.1;
+        let generated_hits: Vec<_> = input.hit_targets.drain(generated_hit_start..).collect();
+        for hit in generated_hits {
+            for rect in hit_regions.iter().filter_map(|clip| Self::intersect_content_rect(hit.rect, *clip)) {
+                let mut clipped = hit.clone();
+                clipped.rect = rect;
+                input.register_hit(clipped);
+            }
+        }
         draw.pop_scissor();
     }
+
+    //#endregion SilhouetteContent
 
     fn render_overlay(&self, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         match &self.overlay_state {
@@ -8050,7 +8368,7 @@ impl ShellState {
                         .iter()
                         .any(|kind_id| *window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
             })
-            .map(|(_, silhouette)| *silhouette)
+            .map(|(_, silhouette)| silhouette.clone())
             .collect()
     }
 
@@ -8280,7 +8598,7 @@ impl ShellState {
             }
         } else {
             for silhouette in &introduce_silhouettes {
-                push_window_silhouette_border(overlay, *silhouette, thickness, theme.focus_ring);
+                push_window_silhouette_border(overlay, silhouette, thickness, theme.focus_ring);
             }
         }
 
@@ -9004,8 +9322,8 @@ impl ShellState {
         self.staged_action_args.get(&Self::staged_key(window_id, action_id)).and_then(|map| map.get(&arg.id).cloned()).or_else(|| arg.default.as_ref().map(dsl_value_as_json))
     }
 
-    fn arg_default(&self, action_id: &str, arg_id: &str) -> Option<serde_json::Value> {
-        self.session.as_ref()?.app.actions.iter().find(|action| action.id == action_id)?.args.iter().find(|arg| arg.id == arg_id)?.default.as_ref().map(dsl_value_as_json)
+    fn arg_default(&self, window_kind_id: &str, action_id: &str, arg_id: &str) -> Option<serde_json::Value> {
+        window_action_definition(&self.session.as_ref()?.app, window_kind_id, action_id)?.args.iter().find(|arg| arg.id == arg_id)?.default.as_ref().map(dsl_value_as_json)
     }
 
     /// 📝️ Renders the staged form for one expanded action and returns its consumed height. Every control
@@ -9333,6 +9651,8 @@ const UI_TERMINOLOGY_NATIVE: &str = "native";
 //#endregion 🔑️StorageKeys
 
 //#region 🗄️PrefsStore
+const OS_SHELL_CONFIG_STORAGE_KEY: &str = "semio.os.config";
+
 /// 🗄️ Cross-platform key-value persistence for uiPrefs. `web-sys`'s "Storage" feature isn't enabled
 /// on this crate (`Cargo.toml` is a reserved wave-3 choke point), so the wasm32 backend reaches
 /// `localStorage` via raw `js_sys::Reflect`/`js_sys::Function` calls against the already-enabled
@@ -9434,12 +9754,39 @@ thread_local! {
     static PREFS_STORE: std::cell::RefCell<FilePrefsStore> = std::cell::RefCell::new(FilePrefsStore::new());
 }
 
+fn empty_os_shell_config() -> serde_json::Value {
+    serde_json::json!({
+        "version": 1,
+        "preferences": {},
+        "namedLayouts": {},
+        "dockLayouts": { "apps": {} },
+        "dockUi": { "apps": {} },
+        "windowPanes": { "apps": {} }
+    })
+}
+
+fn prefs_get_from(store: &impl PrefsStore, key: &str) -> Option<String> {
+    let raw = store.get(OS_SHELL_CONFIG_STORAGE_KEY)?;
+    serde_json::from_str::<serde_json::Value>(&raw).ok()?.get("preferences")?.get(key)?.as_str().map(ToOwned::to_owned)
+}
+
+fn prefs_set_in(store: &mut impl PrefsStore, key: &str, value: &str) {
+    let mut config = store.get(OS_SHELL_CONFIG_STORAGE_KEY).and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok()).filter(|config| config.get("version").and_then(serde_json::Value::as_u64) == Some(1)).unwrap_or_else(empty_os_shell_config);
+    if !config.get("preferences").is_some_and(serde_json::Value::is_object) {
+        config["preferences"] = serde_json::json!({});
+    }
+    config["preferences"][key] = serde_json::Value::String(value.to_string());
+    if let Ok(raw) = serde_json::to_string(&config) {
+        store.set(OS_SHELL_CONFIG_STORAGE_KEY, &raw);
+    }
+}
+
 fn prefs_get(key: &str) -> Option<String> {
-    PREFS_STORE.with(|store| store.borrow().get(key))
+    PREFS_STORE.with(|store| prefs_get_from(&*store.borrow(), key))
 }
 
 fn prefs_set(key: &str, value: &str) {
-    PREFS_STORE.with(|store| store.borrow_mut().set(key, value));
+    PREFS_STORE.with(|store| prefs_set_in(&mut *store.borrow_mut(), key, value));
 }
 //#endregion 🗄️PrefsStore
 
@@ -9772,6 +10119,8 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("settings.theme.delete", true) => "Löschen",
         ("fullscreen.toggle", false) => "Fullscreen",
         ("fullscreen.toggle", true) => "Vollbild",
+        ("fullscreen.exit", false) => "Exit Fullscreen",
+        ("fullscreen.exit", true) => "Vollbild beenden",
         ("panelToggle.display", false) => "Display",
         ("panelToggle.display", true) => "Anzeige",
         ("panelToggle.workbench", false) => "Workbench",
@@ -9931,12 +10280,24 @@ mod ui_prefs_themes_i18n_tests {
         let path = dir.join("ui-prefs.json");
         let _ = std::fs::remove_file(&path);
         let mut store = FilePrefsStore { path: path.clone(), cache: HashMap::new() };
-        assert_eq!(store.get(UI_CHROME_APPEARANCE_STORAGE_KEY), None);
-        store.set(UI_CHROME_APPEARANCE_STORAGE_KEY, "dark");
-        assert_eq!(store.get(UI_CHROME_APPEARANCE_STORAGE_KEY), Some("dark".to_string()));
+        store.set(OS_SHELL_CONFIG_STORAGE_KEY, &serde_json::json!({
+            "version": 1,
+            "preferences": {},
+            "namedLayouts": { "draw": [{ "id": "wide" }] },
+            "dockLayouts": { "apps": {} },
+            "dockUi": { "apps": {} },
+            "windowPanes": { "apps": {} }
+        }).to_string());
+        assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), None);
+        prefs_set_in(&mut store, UI_CHROME_APPEARANCE_STORAGE_KEY, "dark");
+        assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), Some("dark".to_string()));
         let raw = std::fs::read_to_string(&path).expect("flush() must write the prefs file");
         let reloaded: HashMap<String, String> = serde_json::from_str(&raw).expect("valid JSON");
-        assert_eq!(reloaded.get(UI_CHROME_APPEARANCE_STORAGE_KEY), Some(&"dark".to_string()));
+        let config: serde_json::Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document")).expect("valid config JSON");
+        assert_eq!(config["preferences"][UI_CHROME_APPEARANCE_STORAGE_KEY], "dark");
+        assert_eq!(config["dockLayouts"]["apps"], serde_json::json!({}));
+        assert_eq!(config["namedLayouts"]["draw"][0]["id"], "wide", "preference writes must preserve sibling projections");
+        assert_eq!(reloaded.len(), 1, "wgpu preferences use the shared OS config authority");
         let _ = std::fs::remove_file(&path);
     }
 
@@ -10454,8 +10815,8 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn window_silhouette_border_emits_notched_outline_segments() {
         let mut draw = DrawList::default();
-        let silhouette = WindowSilhouette::new(Rect::new(10.0, 20.0, 200.0, 100.0), 60.0, 40.0, 24.0);
-        push_window_silhouette_border(&mut draw, silhouette, 2.0, Rgba::new(1.0, 0.0, 0.0, 1.0));
+        let silhouette = WindowSilhouette::from_measured_top(Rect::new(10.0, 20.0, 200.0, 100.0), 60.0, 40.0, 24.0);
+        push_window_silhouette_border(&mut draw, &silhouette, 2.0, Rgba::new(1.0, 0.0, 0.0, 1.0));
         let solids: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().map(|instance| instance.rect)).collect();
         assert!(solids.len() >= 8, "silhouette must paint every outline segment");
         // Gap baseline sits at y = bounds.y + cap_h - stroke
@@ -10934,25 +11295,6 @@ mod media_frames_tests {
     }
 }
 //#endregion RequestMediaFrames
-
-#[cfg(target_arch = "wasm32")]
-fn toggle_fullscreen() {
-    use wasm_bindgen::JsCast;
-    let Some(window) = web_sys::window() else {
-        return;
-    };
-    let Some(document) = window.document() else {
-        return;
-    };
-    if document.fullscreen_element().is_some() {
-        let _ = document.exit_fullscreen();
-    } else if let Some(element) = document.document_element() {
-        let _ = element.dyn_ref::<web_sys::HtmlElement>().map(|el| el.request_fullscreen());
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn toggle_fullscreen() {}
 
 #[cfg(test)]
 mod context_menu_keyboard_tests {

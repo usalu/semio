@@ -30,7 +30,7 @@ use flow::{
     CameraJson, FlowEvalSession, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
 };
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel,
+    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel,
     UiNode, WindowMeasure,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
     DomainTopology, InteractionTopology, TopologyNode,
@@ -492,6 +492,8 @@ pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, sessi
 pub fn create_flow_app() -> App {
     App::from_builder(
         App::builder(FLOW_PLAY_APP_ID, LocalizedLabel::native("Flow", "Flow"))
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
             .document(["semio", "flow"])
             .artifact_kind(crate::artifacts::flow::artifact_kind())
             .icon_id("flow")
@@ -541,11 +543,6 @@ pub fn create_flow_app() -> App {
             .action_with(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions"))
             .action_with(flow_internal_action("setCatalogueSections", LocalizedLabel::native("Set Catalogue Sections", "Katalogabschnitte festlegen"), ActionKind::View))
             .action_with(flow_internal_action("toggleAutomation", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
-            .action_with(flow_internal_action("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::View))
-            .action_with(flow_internal_action("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::View))
-            .action_with(flow_internal_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View))
-            .action_with(flow_internal_action("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::View))
-            .action_with(flow_internal_action("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::View))
             // 📝️ Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
             .action_args("addWidget", vec![ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                 ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),

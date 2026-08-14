@@ -61,6 +61,11 @@ type PdfInfo {
   producer: String
 }
 
+type ArtifactSource {
+  bytes: [Int!]!
+  semanticBlake3: [Int!]!
+}
+
 type PdfSnapshot {
   schema: String! @state(class: ARTIFACT)
   declaredVersion: String! @state(class: ARTIFACT)
@@ -68,4 +73,5 @@ type PdfSnapshot {
   info: PdfInfo! @state(class: ARTIFACT)
   objects: [PdfIndirectObject!]! @state(class: ARTIFACT)
   trailer: [PdfDictEntry!]! @state(class: ARTIFACT)
+  source: ArtifactSource @state(class: ARTIFACT)
 }

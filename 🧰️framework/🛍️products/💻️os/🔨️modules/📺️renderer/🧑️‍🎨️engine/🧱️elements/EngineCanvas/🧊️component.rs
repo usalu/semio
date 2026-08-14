@@ -10,7 +10,8 @@
 use crate::interpreter::FrameworkWidgetContext;
 use flow::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
-use framework_surface_node_graph::GraphHost;
+use framework_surface_node_graph::node_graph::GraphHost;
+use framework_surface_tiled_map::tiled_map::MapHost;
 use infinite_canvas as canvas;
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -66,7 +67,7 @@ fn flow_fixture_semantic_eq(left: &FlowFixture, right: &FlowFixture) -> bool {
 struct EngineSurface {
     node_graph: Option<NodeGraphEngine>,
     sync_cache: NodeGraphSyncCache,
-    map_host: Option<framework_surface_tiled_map::MapHost>,
+    map_host: Option<MapHost>,
     map_sync_cache: MapSyncCache,
     board_host: Option<puzzle::apps::puzzle2d::engine::BoardHost>,
     board_sync_cache: BoardSyncCache,
@@ -1115,7 +1116,7 @@ fn map_theme_json_from_ui_theme(theme: &Theme) -> String {
     .to_string()
 }
 
-fn sync_map_host(host: &mut framework_surface_tiled_map::MapHost, scene: &ui_wgpu::wgpu::TiledMapScene, cache: &mut MapSyncCache, pw: u32, ph: u32, dpr: f64, theme_json: &str) {
+fn sync_map_host(host: &mut MapHost, scene: &ui_wgpu::wgpu::TiledMapScene, cache: &mut MapSyncCache, pw: u32, ph: u32, dpr: f64, theme_json: &str) {
     let size_key = format!("{pw}x{ph}@{dpr}");
     if sync_field(&mut cache.size_key, &size_key) {
         host.set_size(pw, ph, dpr);
@@ -1146,18 +1147,31 @@ fn sync_map_host(host: &mut framework_surface_tiled_map::MapHost, scene: &ui_wgp
     if sync_field(&mut cache.layer_stroke_scale_json, &scene.layer_stroke_scale_json) {
         let _ = host.set_layer_stroke_scale_from_json(&scene.layer_stroke_scale_json);
     }
-    if sync_field(&mut cache.selection_json, &scene.selection_json) {
-        let _ = host.set_selection_json(&scene.selection_json);
-    }
-    if sync_field(&mut cache.hover_json, &scene.hover_json) {
-        let _ = host.set_hover_json(&scene.hover_json);
+    let selection_changed = sync_field(&mut cache.selection_json, &scene.selection_json);
+    let hover_changed = sync_field(&mut cache.hover_json, &scene.hover_json);
+    if selection_changed || hover_changed {
+        let selection = serde_json::from_str::<Value>(&scene.selection_json).unwrap_or_default();
+        let hover = serde_json::from_str::<Value>(&scene.hover_json).unwrap_or_default();
+        let hover_kind = hover.get("kind").and_then(Value::as_str);
+        let granularity = hover_kind.unwrap_or_else(|| if selection.get("routes").and_then(Value::as_array).is_some_and(|ids| !ids.is_empty()) { "route" } else { "position" });
+        let selection_key = if granularity == "route" { "routes" } else { "positions" };
+        let selected_ids = selection
+            .get(selection_key)
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        let hovered_id = hover.get("id").and_then(Value::as_str);
+        host.sync_interaction(granularity, &selected_ids, hovered_id);
     }
     if sync_field(&mut cache.theme_json, theme_json) {
         let _ = host.set_map_theme_from_json(theme_json);
     }
 }
 
-fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::wgpu::TiledMapScene, host: &mut framework_surface_tiled_map::MapHost) {
+fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::wgpu::TiledMapScene, host: &mut MapHost) {
     host.prepare_visible_tiles();
     let needs_raster = scene.render_mode == "image" || scene.render_mode == "combined";
     let needs_vector = scene.render_mode == "vector" || scene.render_mode == "combined";
@@ -1258,7 +1272,7 @@ pub fn paint_tiled_map(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.map_host.is_none() {
-            entry.map_host = Some(framework_surface_tiled_map::MapHost::new());
+            entry.map_host = Some(MapHost::new());
             entry.map_sync_cache = MapSyncCache::default();
         }
         let host = entry.map_host.as_mut().expect("map host");
@@ -1273,7 +1287,7 @@ pub fn paint_tiled_map(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.map", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
 
-pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut framework_surface_tiled_map::MapHost) -> R) -> Option<R> {
+pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut MapHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(surface_id)?;
@@ -1282,7 +1296,7 @@ pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut framework_surf
     })
 }
 
-pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&framework_surface_tiled_map::MapHost) -> R) -> Option<R> {
+pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&MapHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
@@ -1367,7 +1381,7 @@ pub fn parse_map_hover(hit_json: &str) -> Value {
     serde_json::from_str(hit_json).unwrap_or(Value::Null)
 }
 
-pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &framework_surface_tiled_map::MapHost) -> Vec<ActionDescriptor> {
+pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &MapHost) -> Vec<ActionDescriptor> {
     let selection = json!({
         "positions": host.selected_positions_json(),
         "routes": host.selected_routes_json(),

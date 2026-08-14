@@ -22,7 +22,7 @@ use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::{artifact_kind, Procedural2dSnapshot, PROCEDURAL_2D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{
-    app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView,
+    app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView,
     DomainTopology, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
     MediaClass, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
@@ -345,7 +345,9 @@ impl ArtifactApp for Procedural2dPlayApp {
 //#region 🔖️Manifest
 pub fn create_procedural2d_app() -> App {
     App::from_builder(
-        App::builder(PROCEDURAL2D_PLAY_APP_ID, LocalizedLabel::native("Procedural 2D", "Procedural 2D")).document(["semio", "procedural", "2d"])
+        App::builder(PROCEDURAL2D_PLAY_APP_ID, LocalizedLabel::native("Procedural 2D", "Procedural 2D"))
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
+            .document(["semio", "procedural", "2d"])
             .artifact_kind(artifact_kind())
             .icon_id("procedural2d")
             .mode_def(edit::definition())

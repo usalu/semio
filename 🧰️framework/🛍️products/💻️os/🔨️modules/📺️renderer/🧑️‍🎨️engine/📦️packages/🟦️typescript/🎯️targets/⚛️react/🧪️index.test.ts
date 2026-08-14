@@ -100,7 +100,7 @@ import {
   worldMeshMaterialRevision,
   worldVortexMaterialRevision,
   worldSuggestionMenuOwnsWindow,
-  resolveWorldSelectionMergeMode,
+  resolveWorldMergeMode,
   resolveWorldContextMenuTarget,
   shouldReattachWorldViewportCamera,
   worldCameraPoseApproxEqual,
@@ -170,6 +170,7 @@ import {
   applyGumballLivePreviewDeltaToPose,
   WindowActionPane,
   resolveCommands,
+  commandAddressKey,
   commandCategories,
   buildCommandCategoryTree,
   buildCommandCategoryTabs,
@@ -186,6 +187,8 @@ import {
   dispatchOsCommand,
   classifyWindowLayoutChange,
   buildNoteShellCommandAction,
+  encodeEffectActionInvocation,
+  encodeEffectCommandInvocation,
   TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
   mergeShellLockSources,
   parseSpacePanelState,
@@ -1134,7 +1137,7 @@ describe("framework plugin runtime", () => {
   });
 
   it("adaptPluginHandle.handleAction round-trips an action through AppCommand::Command and reassembles requestedEffects/uiScope-free InvocationResponse", async () => {
-    const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue, encodeActionWire } = await import("@semio-tech/framework-os");
+    const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 3,
@@ -1142,9 +1145,9 @@ describe("framework plugin runtime", () => {
       exchange: async (_instanceId: number, frames: Uint8Array[]) => {
         const [command] = frames.map(decodeAppCommand);
         if (!command || typeof command !== "object" || !("Command" in command)) throw new Error("expected a Command");
-        const envelope = decodePackValue(new Uint8Array(command.Command.command)) as { kind: string; name: string; args: unknown };
+        const invocation = decodePackValue(new Uint8Array(command.Command.command));
         return [
-          encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: envelope })), diagnostics: Array.from(encodePackValue([])) } }),
+          encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: invocation })), diagnostics: Array.from(encodePackValue([])) } }),
           encodeAppFrame({ Effects: { in_reply_to: command.Command.seq, effects: [Array.from(encodePackValue("requestSync"))] } }),
         ];
       },
@@ -1152,8 +1155,9 @@ describe("framework plugin runtime", () => {
     };
     const handle = await adaptPluginHandle("mock-action", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
     const instanceId = await handle.createApp("main");
-    const response = await handle.handleAction(instanceId, encodeActionWire({ controllerId: "c1", action: "addShot", args: { format: "png" } }), {});
-    expect(response.output).toEqual({ echo: { kind: "action", name: "addShot", args: { format: "png" } } });
+    const invocation = { address: { pluginId: "mock-action", appId: "main", modeId: "edit", windowKindId: "main", windowInstanceId: "main", actionId: "addShot" }, arguments: { format: "png" } };
+    const response = await handle.handleAction(instanceId, JSON.stringify(invocation), {});
+    expect(response.output).toEqual({ echo: invocation });
     expect(response.requestedEffects).toEqual(["requestSync"]);
   });
 
@@ -2531,9 +2535,9 @@ describe("framework renderer hosts", () => {
     // persistent toolbar toggle) — passed explicitly now via the `persistentMode` param instead of a
     // `globalThis` singleton, but the priority rule under test is unchanged: an explicitly *configured*
     // world-surface mode still wins over it.
-    expect(resolveWorldSelectionMergeMode("default", {}, "invertive")).toBe("default");
-    expect(resolveWorldSelectionMergeMode("default", { shiftKey: true }, "invertive")).toBe("additive");
-    expect(resolveWorldSelectionMergeMode("invertive", {}, "invertive")).toBe("invertive");
+    expect(resolveWorldMergeMode("replace", {}, "invertive")).toBe("replace");
+    expect(resolveWorldMergeMode("replace", { shiftKey: true }, "invertive")).toBe("additive");
+    expect(resolveWorldMergeMode("invertive", {}, "invertive")).toBe("invertive");
   });
 
   it("resolves mesh style by priority: disabled > celebrated > selected > highlighted > hovered > neutral", () => {
@@ -4241,18 +4245,16 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(translated.position).toEqual([3, -2, 1.5]);
   });
 
-  it("resolveWindowActions surfaces panel-eligible actions and excludes history/setActiveUtility orphans", () => {
+  it("resolveWindowActions surfaces only panel-eligible definitions owned by the window", () => {
     const actionsApp = {
       controllerId: "draw",
-      actions: [
+      windowKinds: [{ actions: [
         { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [] },
         { id: "undo", label: "Undo", kind: "history", iconId: "undo", inPalette: true, args: [] },
         { id: "setActiveUtility", label: "Set Active Utility", kind: "view", inPalette: false, args: [] },
-      ] as ActionDefinition[],
-      windowKinds: [{ actions: [] as string[] }],
+      ] as ActionDefinition[] }],
     };
-    const resolved = resolveWindowActions(actionsApp, { actions: [] as string[] });
-    // orphan operation appears; history + setActiveUtility are never panel-eligible orphans
+    const resolved = resolveWindowActions(actionsApp, actionsApp.windowKinds[0]!);
     expect(resolved.map((action) => action.id)).toEqual(["extrude"]);
   });
 
@@ -4284,36 +4286,51 @@ describe("registry-derived utilities and activation (P5)", () => {
 });
 
 describe("resolveCommands / commandCategories (footer command panel registry)", () => {
-  const osCommands: CommandDefinition[] = [{ id: "os.setThemeId", label: "Set Theme", scope: "os", category: "appearance", inPalette: true, args: [] }];
-  const pluginManifest = { commands: [{ id: "plugin.export", label: "Export", scope: "plugin", category: "document", inPalette: true, args: [] }] as CommandDefinition[] };
+  const command = (id: string, label: string, category: string): CommandDefinition => ({ id, label, category, iconId: "wrench", kind: "shell", inPalette: true, args: [], keybindings: [] });
+  const osCommands: CommandDefinition[] = [command("os.setThemeId", "Set Theme", "appearance")];
+  const pluginManifest = { pluginId: "fixture", commands: [command("export", "Export", "document")] };
   const app = {
-    commands: [
-      { id: "app.resetGrid", label: "Reset Grid", scope: "app", category: "document", inPalette: true, args: [] },
-      { id: "mode.focus", label: "Focus", scope: "mode", category: "view", inPalette: true, args: [] },
-      { id: "mode.paintOnly", label: "Paint Only", scope: "mode", category: "view", inPalette: true, args: [] },
-    ] as CommandDefinition[],
+    id: "canvas",
+    commands: [command("resetGrid", "Reset Grid", "document")],
     modes: [
-      { id: "edit", label: "Edit", commands: ["mode.focus"] },
-      { id: "paint", label: "Paint", commands: ["mode.paintOnly"] },
+      { id: "edit", label: "Edit", commands: [command("focus", "Focus", "view")] },
+      { id: "paint", label: "Paint", commands: [command("paintOnly", "Paint Only", "view")] },
     ] as AppModeDefinition[],
   };
 
   it("aggregates os + program + app-scope + active-mode's mode-scope commands, excluding other modes' mode-scope commands", () => {
     const resolved = resolveCommands(osCommands, pluginManifest, app, "edit");
-    expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId", "plugin.export", "app.resetGrid", "mode.focus"]);
-    expect(resolved.find((entry) => entry.definition.id === "os.setThemeId")?.source).toEqual({ kind: "os" });
-    expect(resolved.find((entry) => entry.definition.id === "app.resetGrid")?.source).toEqual({ kind: "app" });
-    expect(resolved.find((entry) => entry.definition.id === "mode.focus")?.source).toEqual({ kind: "mode", modeId: "edit" });
+    expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId", "export", "resetGrid", "focus"]);
+    expect(resolved.find((entry) => entry.definition.id === "os.setThemeId")?.address).toEqual({ owner: "os", commandId: "os.setThemeId" });
+    expect(resolved.find((entry) => entry.definition.id === "resetGrid")?.address).toEqual({ owner: { app: { pluginId: "fixture", appId: "canvas" } }, commandId: "resetGrid" });
+    expect(resolved.find((entry) => entry.definition.id === "focus")?.address).toEqual({ owner: { mode: { pluginId: "fixture", appId: "canvas", modeId: "edit" } }, commandId: "focus" });
   });
 
   it("switching the active mode swaps which mode-scope commands resolve", () => {
     const resolved = resolveCommands(osCommands, pluginManifest, app, "paint");
-    expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId", "plugin.export", "app.resetGrid", "mode.paintOnly"]);
+    expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId", "export", "resetGrid", "paintOnly"]);
   });
 
   it("resolves only os commands with no session (null program manifest / app)", () => {
     const resolved = resolveCommands(osCommands, null, null, "");
     expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId"]);
+  });
+
+  it("owner-qualifies identical local command ids into collision-free UI keys", () => {
+    const duplicateId = "refresh";
+    const resolved = resolveCommands(
+      [command(duplicateId, "Refresh Shell", "general")],
+      { pluginId: "fixture", commands: [command(duplicateId, "Refresh Plugin", "general")] },
+      {
+        id: "canvas",
+        commands: [command(duplicateId, "Refresh App", "general")],
+        modes: [{ id: "edit", label: "Edit", commands: [command(duplicateId, "Refresh Mode", "general")] }] as AppModeDefinition[],
+      },
+      "edit",
+    );
+    const keys = resolved.map((entry) => commandAddressKey(entry.address));
+    expect(new Set(keys).size).toBe(4);
+    expect(keys).toEqual(["os:refresh", "plugin:fixture:refresh", "app:fixture:canvas:refresh", "mode:fixture:canvas:edit:refresh"]);
   });
 
   it("commandCategories orders and dedupes categories by first appearance", () => {
@@ -4399,7 +4416,7 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
 
 describe("Introduce App command", () => {
   it("is available only for apps with an introduction", () => {
-    expect(buildOsCommands([], [], true).find((command) => command.id === "os.introduceApp")).toMatchObject({ label: "Introduce App", scope: "os", category: "app", args: [] });
+    expect(buildOsCommands([], [], true).find((command) => command.id === "os.introduceApp")).toMatchObject({ label: "Introduce App", category: "app", args: [] });
     expect(buildOsCommands([], [], false).some((command) => command.id === "os.introduceApp")).toBe(false);
   });
 
@@ -4415,7 +4432,7 @@ describe("Play/Record Tutorial commands", () => {
     expect(buildOsCommands([], [], false).some((command) => command.id === "os.playTutorial")).toBe(false);
     const withTutorials = buildOsCommands([], [], false, undefined, undefined, [{ id: "welcome-tour", title: "Welcome Tour" }]);
     const playTutorial = withTutorials.find((command) => command.id === "os.playTutorial");
-    expect(playTutorial).toMatchObject({ label: "Play Tutorial", scope: "os", category: "app" });
+    expect(playTutorial).toMatchObject({ label: "Play Tutorial", category: "app" });
     expect(playTutorial?.args[0]).toMatchObject({ id: "tutorialId", required: true, control: { kind: "select", options: [{ value: "welcome-tour", label: "Welcome Tour" }] } });
   });
 
@@ -4679,25 +4696,26 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 });
 
 describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel)", () => {
-  const zeroArgCommand: ResolvedCommand = { definition: { id: "os.resetDock", label: "Reset Dock", scope: "os", category: "layout", inPalette: true, args: [] }, source: { kind: "os" } };
+  const definition = (id: string, label: string, category: string, args: CommandDefinition["args"] = []): CommandDefinition => ({ id, label, category, args, iconId: "wrench", kind: "shell", keybindings: [], inPalette: true });
+  const zeroArgCommand: ResolvedCommand = { definition: definition("os.resetDock", "Reset Dock", "layout"), address: { owner: "os", commandId: "os.resetDock" } };
   const argCommand: ResolvedCommand = {
-    definition: { id: "os.setThemeId", label: "Set Theme", scope: "os", category: "appearance", inPalette: true, args: [{ id: "themeId", label: "Theme", control: { kind: "text" }, required: true }] },
-    source: { kind: "os" },
+    definition: definition("os.setThemeId", "Set Theme", "appearance", [{ id: "themeId", label: "Theme", control: { kind: "text" }, required: true }]),
+    address: { owner: "os", commandId: "os.setThemeId" },
   };
   const secondArgCommand: ResolvedCommand = {
-    definition: { id: "os.setAppearance", label: "Set Appearance", scope: "os", category: "appearance", inPalette: true, args: [{ id: "appearance", label: "Appearance", control: { kind: "text" }, required: true }] },
-    source: { kind: "os" },
+    definition: definition("os.setAppearance", "Set Appearance", "appearance", [{ id: "appearance", label: "Appearance", control: { kind: "text" }, required: true }]),
+    address: { owner: "os", commandId: "os.setAppearance" },
   };
   const singletonArgCommand: ResolvedCommand = {
-    definition: { id: "os.setDriver", label: "Set Driver", scope: "os", category: "general", inPalette: true, args: [{ id: "driver", label: "Driver", control: { kind: "text" }, required: true }] },
-    source: { kind: "os" },
+    definition: definition("os.setDriver", "Set Driver", "general", [{ id: "driver", label: "Driver", control: { kind: "text" }, required: true }]),
+    address: { owner: "os", commandId: "os.setDriver" },
   };
 
   it("a zero-arg command row fires onExecute directly on click; only one command-list section is present when nothing is expanded", () => {
     const onExecute = vi.fn();
     const tree = buildCommandCategoryTree([zeroArgCommand], null, {}, onExecute, vi.fn(), vi.fn(), vi.fn());
     expect(tree.sections).toHaveLength(1);
-    const row = tree.sections[0]!.items!.find((item) => item.id === "command.os.resetDock")!;
+    const row = tree.sections[0]!.items!.find((item) => item.id === "command.os.os.resetDock")!;
     expect(row.label).toBe("Reset Dock");
     row.onClick?.({} as never, {} as never);
     expect(onExecute).toHaveBeenCalledWith(zeroArgCommand);
@@ -4707,25 +4725,25 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     const tree = buildCommandCategoryTree([singletonArgCommand], null, {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
     expect(tree.sections).toHaveLength(1);
     expect(tree.sections[0]!.id).toBe("command.category.general.form");
-    expect(tree.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.setDriver.arg.driver"]);
-    expect(tree.sections[0]!.actions?.map((action) => action.id)).toEqual(["command-os.setDriver-execute", "command-os.setDriver-reset"]);
+    expect(tree.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.os.setDriver.arg.driver"]);
+    expect(tree.sections[0]!.actions?.map((action) => action.id)).toEqual(["command-os.os.setDriver-execute", "command-os.os.setDriver-reset"]);
   });
 
   it("an arg-carrying command row toggles expansion instead of executing, and a synthetic arg-form section only appears while expanded", () => {
     const onToggleExpanded = vi.fn();
     const collapsedTree = buildCommandCategoryTree([argCommand, secondArgCommand], null, {}, vi.fn(), onToggleExpanded, vi.fn(), vi.fn());
     expect(collapsedTree.sections).toHaveLength(1);
-    const collapsedRow = collapsedTree.sections[0]!.items!.find((item) => item.id === "command.os.setThemeId")!;
+    const collapsedRow = collapsedTree.sections[0]!.items!.find((item) => item.id === "command.os.os.setThemeId")!;
     expect(collapsedRow.label).toBe("Set Theme…");
     collapsedRow.onClick?.({} as never, {} as never);
-    expect(onToggleExpanded).toHaveBeenCalledWith("os.setThemeId");
+    expect(onToggleExpanded).toHaveBeenCalledWith("os:os.setThemeId");
 
-    const expandedTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os.setThemeId", {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
+    const expandedTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os:os.setThemeId", {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
     expect(expandedTree.sections).toHaveLength(2);
     const formItems = expandedTree.sections[0]!.items!;
-    expect(formItems.find((item) => item.id === "command.os.setThemeId.arg.themeId")?.label).toBe("Theme");
-    expect(expandedTree.sections[0]!.actions?.map((action) => action.id)).toEqual(["command-os.setThemeId-execute", "command-os.setThemeId-reset"]);
-    expect(expandedTree.sections[1]!.items?.map((item) => item.id)).toEqual(["command.os.setAppearance"]);
+    expect(formItems.find((item) => item.id === "command.os.os.setThemeId.arg.themeId")?.label).toBe("Theme");
+    expect(expandedTree.sections[0]!.actions?.map((action) => action.id)).toEqual(["command-os.os.setThemeId-execute", "command-os.os.setThemeId-reset"]);
+    expect(expandedTree.sections[1]!.items?.map((item) => item.id)).toEqual(["command.os.os.setAppearance"]);
   });
 
   it("Execute is disabled until the required arg is staged, and calling it passes the effective (staged) args; Reset dispatches onResetArgs", () => {
@@ -4733,18 +4751,18 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     const onStageArg = vi.fn();
     const onResetArgs = vi.fn();
 
-    const missingTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os.setThemeId", {}, onExecute, vi.fn(), onStageArg, onResetArgs);
-    const missingExecute = missingTree.sections[0]!.actions!.find((action) => action.id === "command-os.setThemeId-execute")!;
+    const missingTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os:os.setThemeId", {}, onExecute, vi.fn(), onStageArg, onResetArgs);
+    const missingExecute = missingTree.sections[0]!.actions!.find((action) => action.id === "command-os.os.setThemeId-execute")!;
     expect(missingExecute.disabled).toBe(true);
 
-    const stagedTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os.setThemeId", { "os.setThemeId": { themeId: "semio" } }, onExecute, vi.fn(), onStageArg, onResetArgs);
-    const stagedExecute = stagedTree.sections[0]!.actions!.find((action) => action.id === "command-os.setThemeId-execute")!;
-    const stagedReset = stagedTree.sections[0]!.actions!.find((action) => action.id === "command-os.setThemeId-reset")!;
+    const stagedTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os:os.setThemeId", { "os:os.setThemeId": { themeId: "semio" } }, onExecute, vi.fn(), onStageArg, onResetArgs);
+    const stagedExecute = stagedTree.sections[0]!.actions!.find((action) => action.id === "command-os.os.setThemeId-execute")!;
+    const stagedReset = stagedTree.sections[0]!.actions!.find((action) => action.id === "command-os.os.setThemeId-reset")!;
     expect(stagedExecute.disabled).toBe(false);
     stagedExecute.onClick();
     expect(onExecute).toHaveBeenCalledWith(argCommand, { themeId: "semio" });
     stagedReset.onClick();
-    expect(onResetArgs).toHaveBeenCalledWith("os.setThemeId");
+    expect(onResetArgs).toHaveBeenCalledWith("os:os.setThemeId");
   });
 
   it("buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands", () => {
@@ -4763,10 +4781,10 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     const layoutLeaf = tabs[0]!;
     expect(layoutLeaf.kind).toBe("leaf");
     const resolved = layoutLeaf.kind === "leaf" ? (layoutLeaf.trees[0]!.tree as { resolveTree: () => { sections: { items?: { id: string }[] }[] } }).resolveTree() : { sections: [] };
-    expect(resolved.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.resetDock"]);
+    expect(resolved.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.os.resetDock"]);
 
     // Executing routes through the injected onCommand with the command's own source.
-    const executeRow = resolved.sections[0]!.items!.find((item: { id: string }) => item.id === "command.os.resetDock") as unknown as { onClick: (event: never, context: never) => void };
+    const executeRow = resolved.sections[0]!.items!.find((item: { id: string }) => item.id === "command.os.os.resetDock") as unknown as { onClick: (event: never, context: never) => void };
     executeRow.onClick({} as never, {} as never);
     expect(onCommand).toHaveBeenCalledWith({ kind: "os" }, "os.resetDock", undefined);
   });
@@ -4775,6 +4793,29 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
 describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames)", () => {
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("encodes recursive host-effect actions as fully scoped JSON at the runtime boundary", () => {
+    const baseSession = {
+      pluginId: "demonstrator",
+      app: { id: "cad-play", defaultModeId: "edit", modes: [{ id: "edit" }], windowKinds: [{ id: "shape" }] },
+      viewState: { activeModeId: "edit", activeWindowKindId: "shape", windowId: "shape-2" },
+    } as unknown as Parameters<typeof encodeEffectActionInvocation>[0];
+    expect(JSON.parse(encodeEffectActionInvocation(baseSession, "dispatchNext", { jobId: "job-1" }))).toEqual({
+      address: {
+        pluginId: "demonstrator",
+        appId: "cad-play",
+        modeId: "edit",
+        windowKindId: "shape",
+        windowInstanceId: "shape-2",
+        actionId: "dispatchNext",
+      },
+      arguments: { jobId: "job-1", windowId: "shape-2" },
+    });
+    expect(JSON.parse(encodeEffectCommandInvocation(baseSession, "flowEvalTick"))).toEqual({
+      address: { owner: { app: { pluginId: "demonstrator", appId: "cad-play" } }, commandId: "flowEvalTick" },
+      arguments: {},
+    });
   });
 
   it("scheduleDispatchAction (D2): fires dispatchOne with action/args only after delayMs elapses", () => {

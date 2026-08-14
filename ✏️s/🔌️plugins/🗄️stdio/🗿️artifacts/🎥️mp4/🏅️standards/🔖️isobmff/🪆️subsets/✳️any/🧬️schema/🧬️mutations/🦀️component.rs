@@ -29,7 +29,7 @@ pub enum Mp4Mutation {
 }
 
 fn track_diff_for(track_index: usize, inner: Mp4TrackDiff) -> Mp4Diff {
-    Mp4Diff { ftyp: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: track_index, diff: inner }], added: vec![] }), unknown_boxes: None }
+    Mp4Diff { source: None, ftyp: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: track_index, diff: inner }], added: vec![] }), unknown_boxes: None }
 }
 
 fn sample_diff_for(track_index: usize, samples: IndexedDiff<Mp4Sample, Mp4SampleDiff>) -> Mp4Diff {
@@ -43,12 +43,12 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
         match self {
             Mp4Mutation::NoMutation => Mp4Diff::default(),
             Mp4Mutation::SetSnapshot { snapshot } => <Mp4Diff as protocol::command::DiffAlgebra<Mp4Snapshot>>::between(base, snapshot),
-            Mp4Mutation::SetFtyp { ftyp } => Mp4Diff { ftyp: Some(ftyp.clone()), tracks: None, unknown_boxes: None },
+            Mp4Mutation::SetFtyp { ftyp } => Mp4Diff { source: None, ftyp: Some(ftyp.clone()), tracks: None, unknown_boxes: None },
             Mp4Mutation::InsertTrack { index, track } => {
-                Mp4Diff { ftyp: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: track.clone() }] }), unknown_boxes: None }
+                Mp4Diff { source: None, ftyp: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: track.clone() }] }), unknown_boxes: None }
             }
             Mp4Mutation::RemoveTrack { index } => {
-                Mp4Diff { ftyp: None, tracks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), unknown_boxes: None }
+                Mp4Diff { source: None, ftyp: None, tracks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), unknown_boxes: None }
             }
             Mp4Mutation::SetTrackDimensions { track_index, width, height } => track_diff_for(*track_index, Mp4TrackDiff { width: Some(*width), height: Some(*height), ..Mp4TrackDiff::default() }),
             Mp4Mutation::SetTrackCodec { track_index, codec } => track_diff_for(*track_index, Mp4TrackDiff { codec: Some(codec.clone()), ..Mp4TrackDiff::default() }),
@@ -60,9 +60,9 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
                 sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: Mp4SampleDiff { data: None, duration: None, cts_offset: None, sync: Some(*sync) } }], added: vec![] })
             }
             Mp4Mutation::AddUnknownBox { index, item } => {
-                Mp4Diff { ftyp: None, tracks: None, unknown_boxes: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }) }
+                Mp4Diff { source: None, ftyp: None, tracks: None, unknown_boxes: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }) }
             }
-            Mp4Mutation::RemoveUnknownBox { index } => Mp4Diff { ftyp: None, tracks: None, unknown_boxes: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }) },
+            Mp4Mutation::RemoveUnknownBox { index } => Mp4Diff { source: None, ftyp: None, tracks: None, unknown_boxes: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }) },
         }
     }
 
@@ -155,6 +155,7 @@ mod tests {
                 samples: vec![Mp4Sample { data: vec![1, 2, 3], duration: 33, cts_offset: 0, sync: true }],
             }],
             unknown_boxes: vec![Mp4Box { fourcc: "free".into(), data: vec![0, 0] }],
+            source: None,
         }
     }
 
@@ -252,6 +253,30 @@ mod tests {
             let decoded = Mp4Mutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m);
         }
+    }
+
+    #[test]
+    fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserve_source() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
+        let bytes = std::fs::read(path).expect("read exact MP4 fixture");
+        let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
+
+        let mut unchanged = base.clone();
+        apply_mp4_mutation(&mut unchanged, &Mp4Mutation::NoMutation);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&unchanged), bytes);
+
+        let mutation = Mp4Mutation::SetSampleSync { track_index: 0, index: 0, sync: !base.tracks[0].samples[0].sync };
+        let inverse = mutation.inverse(&base);
+        let mut round_trip = base.clone();
+        apply_mp4_mutation(&mut round_trip, &mutation);
+        apply_mp4_mutation(&mut round_trip, &inverse[0]);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&round_trip), bytes);
+
+        let set_snapshot = Mp4Mutation::SetSnapshot { snapshot: base };
+        let encoded = set_snapshot.encode_op().expect("encode exact source set-snapshot");
+        let decoded = Mp4Mutation::decode_op(&encoded).expect("decode exact source set-snapshot");
+        let Mp4Mutation::SetSnapshot { snapshot } = decoded else { panic!("expected set-snapshot") };
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&snapshot), bytes);
     }
 }
 //#endregion 🔖️Tests

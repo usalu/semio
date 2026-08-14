@@ -14,6 +14,8 @@ generated
 reports
 **dist*
 target*
+🎯️target/
+🎯️target-*/
 .tmp*
 #--------------------------------------PRINT--------------------------------------
 print/asset/font/
@@ -87,6 +89,7 @@ test-results
 **/🤖️generated.*
 **/🔌️plugin-modules/
 **/🔌️extension-modules/
+**/📺️renderer-modules/
 **/*.wasm
 **/*.cwasm
 **/*_component.js
@@ -112,6 +115,7 @@ test-results
 .astro
 #--------------------------------------STORYBOOK--------------------------------------
 storybook-static
+🎭️storybook-*/
 #--------------------------------------TEX--------------------------------------
 *.aux
 *.lof

@@ -101,5 +101,27 @@ mod tests {
             assert!(!app.io.document_schema.is_empty(), "app {} declares no document schema", app.id);
         }
     }
+
+    #[test]
+    fn contribution_consumers_declare_the_hidden_app_command() {
+        let consumers: Vec<String> = test_bundle()
+            .manifest
+            .apps
+            .iter()
+            .filter(|app| app.commands.iter().any(|command| command.id == "setContributions"))
+            .map(|app| app.id.clone())
+            .collect();
+        assert_eq!(consumers, vec!["procedural3d-play", "cad-play", "sourcing-curate", "process3d-play"]);
+        for app in test_bundle().manifest.apps {
+            if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
+                assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);
+                assert_eq!(command.args.iter().map(|arg| arg.id.as_str()).collect::<Vec<_>>(), vec!["json"]);
+            }
+        }
+        let procedural = test_bundle().manifest.apps.into_iter().find(|app| app.id == "procedural3d-play").expect("procedural pane");
+        let tick = procedural.commands.iter().find(|command| command.id == "flowEvalTick").expect("recursive evaluation command");
+        assert!(!tick.in_palette);
+        assert!(tick.args.is_empty());
+    }
 }
 //#endregion 🧪️Tests

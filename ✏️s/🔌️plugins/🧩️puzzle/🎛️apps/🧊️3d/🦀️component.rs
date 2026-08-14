@@ -3289,7 +3289,7 @@ mod tests {
     #[test]
     fn every_declared_action_round_trips_through_the_command_enum() {
         let definition = create_puzzle3d_app().definition;
-        for action in &definition.actions {
+        for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
             let Some(command) = Puzzle3dCommand::from_action(&action.id, None, None) else {
                 continue;
             };
@@ -3305,7 +3305,8 @@ mod tests {
         let app = create_puzzle3d_app();
         let def = &app.definition;
         let (terminology, locale) = (Terminology::Reuse, Locale::De);
-        let action = |id: &str| def.actions.iter().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
+        let actions = || def.window_kinds.iter().flat_map(|window| window.actions.iter());
+        let action = |id: &str| actions().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
         assert_eq!(def.modes.iter().find(|entry| entry.id == "edit").expect("edit mode").label.resolve(terminology, locale), "Bearbeiten");
         assert_eq!(def.window_kinds.iter().find(|entry| entry.id == main::WINDOW_KIND_ID).expect("window kind").label.resolve(terminology, locale), "Aggregator");
         let dialog = def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog");
@@ -3330,7 +3331,7 @@ mod tests {
             semio_framework_plugin::SET_SELECTION_MODE_ACTION_ID,
             semio_framework_plugin::SET_INTERACTION_GRANULARITY_ACTION_ID,
         ];
-        for entry in &def.actions {
+        for entry in actions() {
             if framework_interaction_actions.contains(&entry.id.as_str()) {
                 continue;
             }
@@ -3345,7 +3346,7 @@ mod tests {
         let app = create_puzzle3d_app();
         let def = &app.definition;
         let (terminology, locale) = (Terminology::Native, Locale::En);
-        let action = |id: &str| def.actions.iter().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
+        let action = |id: &str| def.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
         assert_eq!(def.modes.iter().find(|entry| entry.id == "edit").expect("edit mode").label.resolve(terminology, locale), "Edit");
         assert_eq!(def.window_kinds.iter().find(|entry| entry.id == main::WINDOW_KIND_ID).expect("window kind").label.resolve(terminology, locale), "Puzzle 3D");
         assert_eq!(def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog").title.resolve(terminology, locale), "Add Object");
@@ -3394,7 +3395,7 @@ mod tests {
         let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
         assert_eq!(tool_ids, vec![fill_tool::TOOL_ID]);
         assert_eq!(definition.modes[0].tools, vec![ToolRef::new(fill_tool::TOOL_ID)]);
-        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
+        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
     }
     //#endregion 🔖️Manifest
 
@@ -3657,7 +3658,7 @@ mod tests {
     fn camera_actions_are_view_actions_that_emit_no_artifact_mutations() {
         let app_definition = create_puzzle3d_app();
         for action_id in ["setCamera", "setProjection", "setProjectionParam", "focusSelection"] {
-            let def = app_definition.definition.actions.iter().find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("{action_id} declared"));
+            let def = app_definition.definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("{action_id} declared"));
             assert_eq!(def.kind, ActionKind::View, "{action_id} must be a View action — camera is session-only, never a VCS edit");
         }
         let mut live = app_with_registry();
@@ -4162,7 +4163,7 @@ mod tests {
     #[test]
     fn fill_build_tick_is_a_view_action_with_narrow_ui_scope() {
         let definition = create_puzzle3d_app().definition;
-        let def = definition.actions.iter().find(|entry| entry.id == "fillBuildTick").expect("fillBuildTick declared");
+        let def = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == "fillBuildTick").expect("fillBuildTick declared");
         assert_eq!(def.kind, ActionKind::View, "fillBuildTick must stay a View action — it only advances background planning");
         let mut live = app();
         dispatch(&mut live, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");

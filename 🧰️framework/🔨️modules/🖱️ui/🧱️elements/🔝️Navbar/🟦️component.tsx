@@ -40,12 +40,13 @@ export interface NavbarProps {
   items: NavbarItem[];
   className?: string;
   showFullscreenToggle?: boolean;
+  onFullscreenToggle?: () => void;
 }
 
 /**
  * Navbar holds the data fields for a Navbar record.
  **/
-function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) {
+function Navbar({ items, className, showFullscreenToggle = true, onFullscreenToggle }: NavbarProps) {
   const parent = useSurface();
   const paints = shellFloorPaints(parent);
   const bgClass = shellFloorFillClass(parent);
@@ -59,7 +60,7 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
             {item.content}
           </div>
         ))}
-        {showFullscreenToggle ? <NavbarTrailingFullscreenSlot /> : null}
+        {showFullscreenToggle ? <NavbarTrailingFullscreenSlot onToggle={onFullscreenToggle} /> : null}
       </div>
       {centeredItems.map((item, index) => (
         <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">

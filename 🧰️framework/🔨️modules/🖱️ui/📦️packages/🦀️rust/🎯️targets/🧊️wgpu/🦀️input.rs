@@ -104,6 +104,7 @@ pub enum KeyAction {
     ArrowRight,
     ArrowUp,
     ArrowDown,
+    Function(u8),
     Tab,
     Space(bool),
 }

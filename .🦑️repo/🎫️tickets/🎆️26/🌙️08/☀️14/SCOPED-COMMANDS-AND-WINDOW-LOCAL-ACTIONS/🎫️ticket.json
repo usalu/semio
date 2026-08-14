@@ -1,0 +1,10 @@
+{
+  "title": "Scoped Commands and Window Local Actions",
+  "emoji": "🎮️",
+  "status": "closed",
+  "description": "Implemented containment-derived OS, plugin, app, and mode command ownership; owner-qualified command and exact-window action dispatch; structured shortcut resolution; React/WGPU registry parity; Flow Generate and Animate migrations; and canonical cross-platform fullscreen.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪3a2bb470ef2949cc9414ee63fc89dddf"
+  ]
+}

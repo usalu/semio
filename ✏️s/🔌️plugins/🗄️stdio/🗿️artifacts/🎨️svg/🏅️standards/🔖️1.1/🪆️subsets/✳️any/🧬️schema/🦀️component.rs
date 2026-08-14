@@ -15,6 +15,9 @@ pub struct SvgArtifact {
     #[state(artifact)]
     #[serde(default)]
     pub doc: crate::artifacts::xml::schema::snapshot::XmlDocument,
+    #[state(artifact)]
+    #[serde(default)]
+    pub source: Option<crate::ArtifactSource>,
 }
 //#endregion 🔖️Artifact
 
@@ -31,6 +34,7 @@ impl SvgArtifact {
         SvgSnapshot {
             schema: self.schema.clone(),
             doc: self.doc.clone(),
+            source: self.source.clone(),
         }
     }
 
@@ -39,6 +43,7 @@ impl SvgArtifact {
         Self {
             schema: snapshot.schema,
             doc: snapshot.doc,
+            source: snapshot.source,
         }
     }
 
@@ -46,6 +51,7 @@ impl SvgArtifact {
     pub fn set_snapshot(&mut self, snapshot: SvgSnapshot) {
         self.schema = snapshot.schema;
         self.doc = snapshot.doc;
+        self.source = snapshot.source;
     }
 }
 //#endregion 🔖️Conversions
@@ -801,13 +807,17 @@ pub fn demo_svg_snapshot() -> SvgSnapshot {
             XmlNode::CData { text: "raw markup".into() },
         ],
     };
-    SvgSnapshot {
+    let mut snapshot = SvgSnapshot {
         schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
         doc: XmlDocument {
             declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
             doctype: Some("<!DOCTYPE svg>".into()),
             root: Some(root),
         },
-    }
+        source: None,
+    };
+    let bytes = crate::artifacts::svg::schema::snapshot::write_svg_xml(&snapshot.doc).into_bytes();
+    snapshot.source = Some(crate::ArtifactSource::capture(&bytes, &snapshot.semantic_projection()).expect("svg demo source capture"));
+    snapshot
 }
 //#endregion 🔖️DocumentHelpers

@@ -607,6 +607,49 @@ where
 //#endregion 🔖️SyncSession
 
 //#region 🔖️Host
+/// @emoji 💓️ Maximum generic host heartbeat frequency. Presence is lossy, last-writer-wins state:
+/// callers may offer cursor/viewport/app-presence updates as often as input arrives, while the host
+/// publishes only the newest complete peer snapshot at ten hertz.
+pub const PRESENCE_HEARTBEAT_INTERVAL_MS: u64 = 100;
+
+/// @emoji 💓️ Per-document last-writer-wins presence producer. The producer owns cadence rather than
+/// every renderer/app inventing a timer: offers inside the minimum interval replace `pending`, the
+/// first offer publishes immediately, and a later offer publishes the newest complete snapshot.
+#[derive(Clone, Debug)]
+pub struct PresenceHeartbeatProducer {
+    interval_ms: u64,
+    last_sent_at_ms: Option<u64>,
+    pending: Option<PresencePeer>,
+}
+
+impl Default for PresenceHeartbeatProducer {
+    fn default() -> Self {
+        Self::new(PRESENCE_HEARTBEAT_INTERVAL_MS)
+    }
+}
+
+impl PresenceHeartbeatProducer {
+    pub fn new(interval_ms: u64) -> Self {
+        Self { interval_ms: interval_ms.max(1), last_sent_at_ms: None, pending: None }
+    }
+
+    /// @emoji 📡️ Offers the newest whole peer snapshot and returns it only when this document's
+    /// cadence permits a publish. A backward-moving clock conservatively waits for the next interval.
+    pub fn offer(&mut self, now_ms: u64, peer: PresencePeer) -> Option<PresencePeer> {
+        self.pending = Some(peer);
+        let due = self.last_sent_at_ms.is_none_or(|last| now_ms.saturating_sub(last) >= self.interval_ms);
+        if !due {
+            return None;
+        }
+        self.last_sent_at_ms = Some(now_ms);
+        self.pending.take()
+    }
+
+    pub fn pending(&self) -> Option<&PresencePeer> {
+        self.pending.as_ref()
+    }
+}
+
 /// @emoji 🎛️ The channels {@link ArtifactHost::open} hands back to a caller: attach `channel_backbone`
 /// to your `ArtifactStore`, and send control messages (or wakes) on `cmd_tx`.
 pub struct ArtifactChannels {
@@ -619,6 +662,7 @@ pub struct ArtifactChannels {
 struct OpenDocument {
     cmd_tx: mpsc::UnboundedSender<ArtifactActorMsg>,
     events: broadcast::Sender<ArtifactEvent>,
+    presence: PresenceHeartbeatProducer,
     #[cfg(not(target_arch = "wasm32"))]
     join: Option<std::thread::JoinHandle<()>>,
 }
@@ -650,6 +694,7 @@ impl ArtifactHost {
         let entry = OpenDocument {
             cmd_tx: cmd_tx.clone(),
             events: event_tx,
+            presence: PresenceHeartbeatProducer::default(),
             #[cfg(not(target_arch = "wasm32"))]
             join,
         };
@@ -675,6 +720,16 @@ impl ArtifactHost {
         if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(document_id) {
             let _ = document.cmd_tx.send(message);
         }
+    }
+
+    /// @emoji 💓️ Offers a generic cursor/viewport/app-presence heartbeat for one open document.
+    /// Returns `true` only when the host actually queued a publish; faster offers are coalesced onto
+    /// the document's producer and cannot flood the preview lane.
+    pub fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
+        let mut documents = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(document) = documents.get_mut(document_id) else { return false };
+        let Some(peer) = document.presence.offer(now_ms, peer) else { return false };
+        document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer }).is_ok()
     }
 
     /// @emoji ✂️ Stops a document's actor (flushing pending outbound operations first) and, on native, joins
@@ -2514,6 +2569,54 @@ mod tests {
         assert_eq!(interaction.domains.len(), 1);
         assert_eq!(interaction.domains[0].selected, vec!["n1".to_string()], "selection still broadcasts");
         assert!(interaction.domains[0].hovered.is_empty(), "hover suppressed by its own broadcast:false");
+    }
+
+    #[test]
+    fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
+        let mut producer = PresenceHeartbeatProducer::new(100);
+        let mut first = sample_presence_peer_with_interaction();
+        first.cursor = Some(crate::os_spr::PresencePoint { x: 1.0, y: 2.0 });
+        assert_eq!(producer.offer(1_000, first.clone()), Some(first));
+
+        let mut intermediate = sample_presence_peer_with_interaction();
+        intermediate.cursor = Some(crate::os_spr::PresencePoint { x: 3.0, y: 4.0 });
+        assert_eq!(producer.offer(1_040, intermediate), None);
+
+        let mut latest = sample_presence_peer_with_interaction();
+        latest.cursor = Some(crate::os_spr::PresencePoint { x: 5.0, y: 6.0 });
+        assert_eq!(producer.offer(1_099, latest.clone()), None);
+        assert_eq!(producer.pending(), Some(&latest));
+        assert_eq!(producer.offer(1_100, latest.clone()), Some(latest));
+        assert!(producer.pending().is_none());
+    }
+
+    #[test]
+    fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
+        let host = ArtifactHost::new();
+        let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel();
+        let (events, _) = broadcast::channel(1);
+        host.inner.lock().unwrap().insert(
+            "doc".into(),
+            OpenDocument {
+                cmd_tx,
+                events,
+                presence: PresenceHeartbeatProducer::default(),
+                #[cfg(not(target_arch = "wasm32"))]
+                join: None,
+            },
+        );
+
+        let first = sample_presence_peer_with_interaction();
+        assert!(host.presence_heartbeat("doc", 500, first.clone()));
+        assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if peer == first));
+
+        let mut latest = sample_presence_peer_with_interaction();
+        latest.viewport = Some(crate::os_spr::PresenceViewport { x: 2.0, y: 3.0, zoom: 4.0 });
+        assert!(!host.presence_heartbeat("doc", 550, latest.clone()));
+        assert!(cmd_rx.try_recv().is_err(), "sub-interval offer must not publish");
+        assert!(host.presence_heartbeat("doc", 600, latest.clone()));
+        assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if peer == latest));
+        assert!(!host.presence_heartbeat("missing", 700, sample_presence_peer_with_interaction()));
     }
     //#endregion 🧪️PresenceInteraction
 

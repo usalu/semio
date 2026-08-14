@@ -6,10 +6,10 @@ use crate::artifacts::svg::schema::diff::{
     SvgDiff, SvgElementDiff, SvgNodeDiff,
 };
 use crate::artifacts::svg::schema::diff::{
-    decode_option, dec_declaration, dec_str, dec_xml_node, encode_option, enc_declaration, enc_str, enc_xml_node,
+    decode_option, dec_artifact_source, dec_declaration, dec_str, dec_xml_node, encode_option, enc_artifact_source, enc_declaration, enc_str, enc_xml_node,
     split_top_level, strip_brackets,
 };
-use crate::artifacts::svg::schema::diff::{dec_declaration_bin, dec_xml_node_bin, enc_declaration_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
+use crate::artifacts::svg::schema::diff::{dec_artifact_source_bin, dec_declaration_bin, dec_xml_node_bin, enc_artifact_source_bin, enc_declaration_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
 use crate::artifacts::svg::schema::snapshot::{
     element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string,
     NodePath, TransformOp, ViewBox,
@@ -147,8 +147,8 @@ impl Mutation<SvgSnapshot> for SvgMutation {
         match self {
             SvgMutation::NoMutation => SvgDiff::default(),
             SvgMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            SvgMutation::SetDeclaration { declaration } => SvgDiff { declaration: Some(declaration.clone()), doctype: None, root: None },
-            SvgMutation::SetDoctype { doctype } => SvgDiff { declaration: None, doctype: Some(doctype.clone()), root: None },
+            SvgMutation::SetDeclaration { declaration } => SvgDiff { source: None, declaration: Some(declaration.clone()), doctype: None, root: None },
+            SvgMutation::SetDoctype { doctype } => SvgDiff { source: None, declaration: None, doctype: Some(doctype.clone()), root: None },
             SvgMutation::InsertElement { parent, index, node } => diff_at_path(
                 parent,
                 SvgNodeDiff::Element(SvgElementDiff {
@@ -306,16 +306,17 @@ fn dec_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
 }
 fn enc_svg_snapshot(s: &SvgSnapshot) -> String {
     format!(
-        "[{},{},{},{}]",
+        "[{},{},{},{},{}]",
         enc_str(&s.schema),
         encode_option(&s.doc.root, enc_xml_node),
         encode_option(&s.doc.doctype, |v| enc_str(v)),
         encode_option(&s.doc.declaration, enc_declaration),
+        encode_option(&s.source, enc_artifact_source),
     )
 }
 fn dec_svg_snapshot(s: &str) -> Result<SvgSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, root, doctype, declaration] = parts.as_slice() else { return Err(format!("svg snapshot: expected 4 fields, got {}", parts.len())) };
+    let [schema, root, doctype, declaration, source] = parts.as_slice() else { return Err(format!("svg snapshot: expected 5 fields, got {}", parts.len())) };
     Ok(SvgSnapshot {
         schema: dec_str(schema)?,
         doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
@@ -323,6 +324,7 @@ fn dec_svg_snapshot(s: &str) -> Result<SvgSnapshot, String> {
             doctype: decode_option(doctype, dec_str)?,
             declaration: decode_option(declaration, dec_declaration)?,
         },
+        source: decode_option(source, dec_artifact_source)?,
     })
 }
 
@@ -528,13 +530,18 @@ fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
     if let Some(declaration) = &s.doc.declaration {
         enc_declaration_bin(declaration, out);
     }
+    out.push(if s.source.is_some() { 1 } else { 0 });
+    if let Some(source) = &s.source {
+        enc_artifact_source_bin(source, out);
+    }
 }
 fn dec_svg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
     let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
-    Ok(SvgSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration } })
+    let source = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_artifact_source_bin(reader)?) } else { None };
+    Ok(SvgSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration }, source })
 }
 //#endregion 🔖️OpBinaryCodec
 
@@ -743,13 +750,21 @@ mod tests {
     use crate::artifacts::svg::schema::snapshot::write_svg_xml;
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument};
     use protocol::command::DiffAlgebra;
-    use protocol::MutationDiff;
+    use protocol::{DiffCodec, MutationDiff};
 
     fn fixture() -> SvgSnapshot {
         <SvgSnapshot as store::ArtifactDsl>::parse_dsl(
             r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#,
         )
         .unwrap()
+    }
+
+    fn exact_fixture_bytes() -> Vec<u8> {
+        std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/artifacts.svg")).expect("read temp/artifacts.svg")
+    }
+
+    fn exact_fixture() -> SvgSnapshot {
+        SvgSnapshot::import_utf8(&exact_fixture_bytes()).expect("import temp/artifacts.svg")
     }
 
     #[test]
@@ -877,11 +892,12 @@ mod tests {
                     ],
                 }),
             },
+            source: None,
         }
     }
 
     fn sweep_b() -> SvgSnapshot {
-        SvgSnapshot {
+        let mut snapshot = SvgSnapshot {
             schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
                 declaration: None,
@@ -906,7 +922,10 @@ mod tests {
                     ],
                 }),
             },
-        }
+            source: None,
+        };
+        snapshot.source = Some(crate::ArtifactSource::capture(b"svg-sweep-b", &snapshot.semantic_projection()).expect("capture sweep source"));
+        snapshot
     }
     //#endregion 🔖️Fixtures
 
@@ -1010,6 +1029,7 @@ mod tests {
                     ],
                 }),
             },
+            source: None,
         }
     }
 
@@ -1147,7 +1167,8 @@ mod tests {
         let re_encoded = write_svg_xml(&doc);
         assert_eq!(re_encoded, text);
 
-        let snap = SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc };
+        let snap = SvgSnapshot::import_utf8(text.as_bytes()).expect("import fixture");
+        assert_eq!(snap.doc, doc);
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
@@ -1173,6 +1194,7 @@ mod tests {
         // tri-state scalars exercise `Some(None)`.
         assert_eq!(diff_ab.declaration, Some(None));
         assert_eq!(diff_ab.doctype, Some(None));
+        assert!(diff_ab.source.is_some());
         assert!(diff_ab.root.is_some());
 
         let SvgNodeDiffT::Element(root_diff) = diff_ab.root.as_ref().unwrap() else { panic!("expected element diff") };
@@ -1213,5 +1235,83 @@ mod tests {
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
+
+    //#region 🔖️LosslessNativeSource
+    #[test]
+    fn exact_native_direct_pack_and_dsl_roundtrips() {
+        let original = exact_fixture_bytes();
+        let imported = SvgSnapshot::import_utf8(&original).expect("direct import");
+        assert_eq!(imported.export_utf8().expect("direct export"), original);
+
+        let packed = store::ArtifactPack::encode_pack(&imported);
+        let unpacked = <SvgSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("pack decode");
+        assert_eq!(unpacked, imported);
+        assert_eq!(unpacked.export_utf8().expect("pack export"), original);
+
+        let printed = store::ArtifactDsl::print_dsl(&imported);
+        let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("dsl parse");
+        assert_eq!(parsed, imported);
+        assert_eq!(parsed.export_utf8().expect("dsl export"), original);
+    }
+
+    #[test]
+    fn exact_native_between_noop_inverse_and_absorb_roundtrips() {
+        let original = exact_fixture_bytes();
+        let imported = exact_fixture();
+
+        let self_diff = <SvgDiff as DiffAlgebra<SvgSnapshot>>::between(&imported, &imported);
+        assert!(self_diff.is_empty());
+        let after_self = MutationDiff::apply(&self_diff, &imported);
+        assert_eq!(after_self.export_utf8().expect("self export"), original);
+
+        let mut after_noop = imported.clone();
+        apply_svg_mutation(&mut after_noop, &SvgMutation::NoMutation);
+        assert_eq!(after_noop.export_utf8().expect("noop export"), original);
+
+        let mutation = SvgMutation::SetAttribute { path: vec![], name: "data-semio-roundtrip".into(), value: Some("changed".into()) };
+        let d1 = Mutation::diff(&mutation, &imported);
+        let changed = MutationDiff::apply(&d1, &imported);
+        let changed_bytes = changed.export_utf8().expect("changed export");
+        assert_ne!(changed_bytes, original);
+        parse_svg_xml(std::str::from_utf8(&changed_bytes).expect("changed UTF-8")).expect("changed SVG parses");
+
+        let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse mutation");
+        let d2 = Mutation::diff(&inverse_mutation, &changed);
+        let restored = MutationDiff::apply(&d2, &changed);
+        assert_eq!(restored, imported);
+        assert_eq!(restored.export_utf8().expect("inverse export"), original);
+
+        let mut absorbed = d1;
+        MutationDiff::absorb(&mut absorbed, d2);
+        let absorbed_result = MutationDiff::apply(&absorbed, &imported);
+        assert_eq!(absorbed_result, imported);
+        assert_eq!(absorbed_result.export_utf8().expect("absorbed export"), original);
+    }
+
+    #[test]
+    fn exact_native_source_survives_diff_and_set_snapshot_codecs() {
+        let original = exact_fixture_bytes();
+        let imported = exact_fixture();
+        let projection = imported.semantic_projection();
+
+        let diff = <SvgDiff as DiffAlgebra<SvgSnapshot>>::between(&projection, &imported);
+        let text_diff = SvgDiff::parse_diff(&diff.print_diff()).expect("diff text decode");
+        let binary_diff = SvgDiff::decode_diff(&diff.encode_diff().expect("diff binary encode")).expect("diff binary decode");
+        assert_eq!(text_diff, diff);
+        assert_eq!(binary_diff, diff);
+        let restored_source = MutationDiff::apply(&binary_diff, &projection);
+        assert_eq!(restored_source, imported);
+        assert_eq!(restored_source.export_utf8().expect("diff export"), original);
+
+        let mutation = SvgMutation::SetSnapshot { snapshot: imported.clone() };
+        let text_op = SvgMutation::parse_op(&mutation.print_op()).expect("op text decode");
+        let binary_op = SvgMutation::decode_op(&mutation.encode_op().expect("op binary encode")).expect("op binary decode");
+        assert_eq!(text_op, mutation);
+        assert_eq!(binary_op, mutation);
+        let applied = MutationDiff::apply(&Mutation::diff(&binary_op, &projection), &projection);
+        assert_eq!(applied, imported);
+        assert_eq!(applied.export_utf8().expect("set snapshot export"), original);
+    }
+    //#endregion 🔖️LosslessNativeSource
 }
 //#endregion 🧪️Tests

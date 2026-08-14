@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn set_active_example_is_operation_under_registry_kind_discipline() {
         let definition = crate::apps::gis2d::create_gis2d_app().definition;
-        let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
+        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
         assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits document-mutating operations, so it is a Mutation");
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
 

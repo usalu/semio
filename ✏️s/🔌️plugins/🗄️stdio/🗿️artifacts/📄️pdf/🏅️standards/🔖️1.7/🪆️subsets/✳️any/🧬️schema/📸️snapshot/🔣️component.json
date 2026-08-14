@@ -57,6 +57,14 @@
         "creator": { "type": "string" },
         "producer": { "type": "string" }
       }
+    },
+    "ArtifactSource": {
+      "type": "object",
+      "required": ["bytes", "semanticBlake3"],
+      "properties": {
+        "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+        "semanticBlake3": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+      }
     }
   },
   "type": "object",
@@ -67,6 +75,7 @@
     "pages": { "type": "array", "items": { "$ref": "#/$defs/PdfPage" }, "x-semio-state": "artifact" },
     "info": { "$ref": "#/$defs/PdfInfo", "x-semio-state": "artifact" },
     "objects": { "type": "array", "items": { "$ref": "#/$defs/PdfIndirectObject" }, "x-semio-state": "artifact" },
-    "trailer": { "type": "array", "items": { "$ref": "#/$defs/PdfDictEntry" }, "x-semio-state": "artifact" }
+    "trailer": { "type": "array", "items": { "$ref": "#/$defs/PdfDictEntry" }, "x-semio-state": "artifact" },
+    "source": { "$ref": "#/$defs/ArtifactSource", "x-semio-state": "artifact" }
   }
 }

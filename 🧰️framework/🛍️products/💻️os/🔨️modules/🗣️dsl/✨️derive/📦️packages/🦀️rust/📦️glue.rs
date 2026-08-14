@@ -352,9 +352,8 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
         } else if let Some(from) = lang_from {
             let embed_lang_key = plans
                 .iter()
-                .find(|p| p.ident.to_string() == *from)
-                .map(|p| p.key.clone())
-                .unwrap_or_else(|| to_kebab(from));
+                .find(|p| p.ident == *from)
+                .map_or_else(|| to_kebab(from), |p| p.key.clone());
             Some(quote! { ::dsl::Shape::EmbedFrom(#embed_lang_key) })
         } else if let Some(l) = lang {
             Some(quote! { ::dsl::Shape::Embed(#l) })

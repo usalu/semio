@@ -10,6 +10,7 @@
 
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use crate::ArtifactSource;
 
 /// 🏷️ Document schema id for `stdio.pdf` (1.7) -- deliberately distinct from 1.4's flat
 /// `stdio.pdf` (avoids colliding with 1.4's own `store::register_document_codec` registration,
@@ -180,6 +181,9 @@ pub struct PdfSnapshot {
     #[state(artifact)]
     #[serde(default)]
     pub trailer: Vec<PdfDictEntry>,
+    #[state(artifact)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<ArtifactSource>,
 }
 
 impl Default for PdfSnapshot {
@@ -191,7 +195,15 @@ impl Default for PdfSnapshot {
             info: PdfInfo::default(),
             objects: Vec::new(),
             trailer: Vec::new(),
+            source: None,
         }
+    }
+}
+
+impl PdfSnapshot {
+    /// 🪞️ Returns the deterministic semantic projection paired with imported native bytes.
+    pub fn semantic_projection(&self) -> Self {
+        Self { source: None, ..self.clone() }
     }
 }
 
@@ -282,6 +294,7 @@ pub fn demo_pdf17_snapshot() -> PdfSnapshot {
         info: PdfInfo::default(),
         objects: Vec::new(),
         trailer: Vec::new(),
+        source: None,
     };
     let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
     crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")

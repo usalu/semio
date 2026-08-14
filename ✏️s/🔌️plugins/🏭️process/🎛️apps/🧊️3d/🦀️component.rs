@@ -23,7 +23,7 @@ use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, Menu, OsMediaCapability,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ArtifactKindSpec, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, Menu, OsMediaCapability,
     SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
@@ -447,6 +447,7 @@ impl ArtifactApp for Process3dPlayApp {
 pub fn create_process3d_app() -> App {
     App::from_builder(
         App::builder(PROCESS_3D_PLAY_APP_ID, LocalizedLabel::native("Process 3D", "Process 3D"))
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "process", "3d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.process".into(),

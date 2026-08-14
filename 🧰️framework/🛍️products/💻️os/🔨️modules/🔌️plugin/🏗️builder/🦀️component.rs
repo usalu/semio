@@ -1,6 +1,6 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{App, ArtifactApp, ArtifactDeclaration, Plugin, PluginApp};
+use crate::app::{App, ArtifactApp, ArtifactDeclaration, Plugin, PluginApp, PluginCommandHandler};
 use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -28,7 +28,7 @@ pub struct PluginBuilder<State> {
     setup: Vec<fn()>,
     artifacts: Vec<ArtifactDeclaration>,
     capabilities: Vec<CapabilityRequirement>,
-    commands: Vec<CommandDefinition>,
+    commands: Vec<(CommandDefinition, PluginCommandHandler)>,
     artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
     apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
     app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)>,
@@ -132,9 +132,9 @@ impl PluginBuilder<Ready> {
         })
     }
 
-    /// 🎮️ Declares a plugin-scope command.
-    pub fn plugin_command(mut self, command: CommandDefinition) -> Self {
-        self.commands.push(command);
+    /// 🎮️ Declares a plugin-owned command and its program-level handler.
+    pub fn plugin_command(mut self, command: CommandDefinition, handler: PluginCommandHandler) -> Self {
+        self.commands.push((command, handler));
         self
     }
 
@@ -188,8 +188,8 @@ impl PluginBuilder<Ready> {
         for capability in self.capabilities {
             plugin = plugin.capability(capability);
         }
-        for command in self.commands {
-            plugin = plugin.plugin_command(command);
+        for (command, handler) in self.commands {
+            plugin = plugin.plugin_command(command, handler);
         }
         for kind in self.artifact_kinds {
             plugin = plugin.artifact_kind(kind);

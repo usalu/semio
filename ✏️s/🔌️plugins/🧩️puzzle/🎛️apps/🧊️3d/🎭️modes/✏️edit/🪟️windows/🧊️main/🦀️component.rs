@@ -475,6 +475,14 @@ pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, 
             None,
             None,
             None,
+            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired here — this app
+            // already emits its own `interactionSelect`/`interactionHover` for `PUZZLE3D_INTERACTION_DOMAIN`
+            // ("vortex") from bespoke vortex-fit pick logic elsewhere in this crate, independent of the
+            // OS `♾️infinite` surface's generic `pick_select_action`/`pick_hover_action`; binding this
+            // scene's plain-pick fallback to the same domain without first confirming the two paths
+            // can't double-emit is left as a follow-up, not attempted here.
+            None,
+            None,
         ),
     )
 }

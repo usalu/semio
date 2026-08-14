@@ -139,7 +139,7 @@
     "lint": "bun ./📜️script.ts lint",
     "format": "bun ./📜️script.ts format",
     "test": "bun ./📜️script.ts test",
-    "test:storybook": "bun ./📜️script.ts test storybook",
+    "test:storybook": "bun nx run workspace:test-storybook",
     "build": "bun ./📜️script.ts build",
     "build:cad:concrete-forest": "bun nx run @semio-tech/framework-os-dev:build -- cad fixture concrete",
     "build:puzzle:3d:concrete-forest": "bun nx run @semio-tech/framework-os-dev:build -- puzzle3d fixture concrete",

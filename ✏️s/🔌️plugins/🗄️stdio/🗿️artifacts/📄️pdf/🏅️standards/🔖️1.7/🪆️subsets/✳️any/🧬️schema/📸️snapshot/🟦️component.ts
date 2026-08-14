@@ -55,6 +55,12 @@ export interface PdfInfo {
   producer?: string;
 }
 
+/** 🧬️ Exact imported PDF bytes paired with their semantic fingerprint. */
+export interface ArtifactSource {
+  bytes: number[];
+  semanticBlake3: number[];
+}
+
 /** 🧬️ `stdio.pdf` (1.7) persistent snapshot. */
 export interface PdfSnapshot {
   /** @state artifact */ schema: string;
@@ -63,4 +69,5 @@ export interface PdfSnapshot {
   /** @state artifact */ info: PdfInfo;
   /** @state artifact */ objects: PdfIndirectObject[];
   /** @state artifact */ trailer: PdfDictEntry[];
+  /** @state artifact */ source?: ArtifactSource;
 }

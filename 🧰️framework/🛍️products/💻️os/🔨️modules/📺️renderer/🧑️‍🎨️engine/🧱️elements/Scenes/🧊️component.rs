@@ -4865,7 +4865,7 @@ pub struct TiledMapSurface {
     pub selection_method: String,
 }
 
-fn query_map_feature_hits(host: &framework_surface_tiled_map::MapHost, method: &str, points: &[(f32, f32)], crossing: bool) -> (Vec<String>, Vec<String>) {
+fn query_map_feature_hits(host: &framework_surface_tiled_map::tiled_map::MapHost, method: &str, points: &[(f32, f32)], crossing: bool) -> (Vec<String>, Vec<String>) {
     if method == "lasso" && points.len() >= 3 {
         let payload: Vec<[f64; 2]> = points.iter().map(|(x, y)| [*x as f64, *y as f64]).collect();
         let points_json = serde_json::to_string(&payload).unwrap_or_else(|_| "[]".into());

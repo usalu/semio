@@ -18,7 +18,7 @@ use crate::apps::imperative::engine::imperative_io;
 use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::{ImperativeSnapshot, Step, IMPERATIVE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
-    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
     DomainTopology, InteractionTopology, TopologyNode,
 };
@@ -197,6 +197,7 @@ impl ArtifactApp for ImperativePlayApp {
 pub fn create_imperative_app() -> App {
     App::from_builder(
         App::builder(IMPERATIVE_PLAY_APP_ID, LocalizedLabel::native("Imperative", "Imperativ"))
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "imperative"])
             .artifact_kind(crate::artifacts::imperative::artifact_kind())
             .icon_id("imperative")

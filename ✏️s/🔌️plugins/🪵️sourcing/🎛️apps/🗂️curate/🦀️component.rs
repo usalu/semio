@@ -14,7 +14,7 @@ use crate::apps::curate::terminology::sourcing_curate_labels;
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, CommandDefinition, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use semio_framework_plugin::app::InteractionView;
@@ -95,6 +95,63 @@ use crate::apps::curate::commands::set_contributions;
 use crate::apps::curate::commands::{set_active_example, set_artifact_json, stock_from_catalogue};
 use crate::apps::curate::commands::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
 use crate::apps::curate::commands::set_locale;
+
+/// 🎯️ Host action id + JSON args → the closed `SourcingCurateCommand` vocabulary — the production
+/// bridge between the manifest's *declared* action surface (`🔖️Manifest`, camelCase arg names) and
+/// the typed command channel that actually dispatches.
+///
+/// Chrome built by the `🎭️modes` nodes addresses this app by action id (`sourcing_action`), and
+/// several of those rows carry `None` args because the host fills them at dispatch time from the
+/// interaction itself (a text input's `value`, a slider's `delta`, a drop's `objectId`) — so every
+/// field is read defensively and coerced, never assumed present.
+///
+/// Without this, `ArtifactApp::command_from_action`'s default rejects every app-owned action and the
+/// pane cannot even load its own example. See `📐️cad`'s `cad_command_from_action` twin.
+fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
+    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_str).map(str::to_string);
+    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_f64);
+    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_bool);
+    let text_of = |key: &str| -> Option<String> {
+        args.and_then(|value| value.get(key)).and_then(|value| match value {
+            serde_json::Value::String(text) => Some(text.clone()),
+            serde_json::Value::Bool(flag) => Some(flag.to_string()),
+            serde_json::Value::Number(number) => Some(number.to_string()),
+            _ => None,
+        })
+    };
+    let json_field = |key: &str| -> String {
+        match args.and_then(|value| value.get(key)) {
+            Some(serde_json::Value::String(text)) => text.clone(),
+            Some(other) => other.to_string(),
+            None => args.map(serde_json::Value::to_string).unwrap_or_default(),
+        }
+    };
+    let object_id = || str_field("objectId").unwrap_or_default();
+    Ok(match action {
+        "setDocument" => SourcingCurateCommand::SetArtifactJson(set_artifact_json::SetArtifactJson { json: json_field("json") }),
+        "setActiveExample" => SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
+        "stockFromCatalogue" => SourcingCurateCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}),
+        "curateAdd" => SourcingCurateCommand::CurateAdd(curate_add::CurateAdd { object_id: object_id() }),
+        "curateSetCount" => SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id(), delta: f64_field("delta"), value: f64_field("value") }),
+        "curateRemove" => SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id: object_id() }),
+        "dropOnPool" => SourcingCurateCommand::DropOnPool(drop_on_pool::DropOnPool { object_id: object_id() }),
+        "dropOnCurated" => SourcingCurateCommand::DropOnCurated(drop_on_curated::DropOnCurated { object_id: object_id() }),
+        "setFilterQuery" => SourcingCurateCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: text_of("value").unwrap_or_default() }),
+        "setFilterModule" => SourcingCurateCommand::SetFilterModule(set_filter_module::SetFilterModule { module_id: str_field("moduleId").unwrap_or_default(), enabled: bool_field("enabled").unwrap_or(false) }),
+        "setFilterTypology" => SourcingCurateCommand::SetFilterTypology(set_filter_typology::SetFilterTypology { path: str_field("path").or_else(|| text_of("value")).unwrap_or_default() }),
+        "setFilterMinAvailability" => SourcingCurateCommand::SetFilterMinAvailability(set_filter_min_availability::SetFilterMinAvailability { delta: f64_field("delta"), value: f64_field("value") }),
+        "sortTable" => SourcingCurateCommand::SortTable(sort_table::SortTable { column_id: str_field("columnId").unwrap_or_default(), direction: str_field("direction").unwrap_or_default() }),
+        "setLocale" => SourcingCurateCommand::SetLocale(set_locale::SetLocale { value: text_of("value").unwrap_or_default() }),
+        "setContributions" => SourcingCurateCommand::SetContributions(set_contributions::SetContributions { json: json_field("json") }),
+        other => {
+            return Err(Fault::new(
+                semio_framework_plugin::FaultOrigin::App,
+                semio_framework_plugin::FaultCode::new("app.command.unsupported"),
+                format!("action '{other}' is not a sourcing curate command"),
+            ))
+        }
+    })
+}
 //#endregion 🔖️Commands
 
 //#region 🔖️SourcingCurateApp
@@ -175,6 +232,13 @@ impl ArtifactApp for SourcingCurateApp {
         command.command_id()
     }
 
+    /// 🎯️ Production action bridge — see `sourcing_curate_command_from_action`. Overriding this is
+    /// mandatory for any app that declares its own actions: the trait default only admits the
+    /// framework-reserved ids and rejects everything else.
+    fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
+        sourcing_curate_command_from_action(action, args)
+    }
+
     fn handle(command: &SourcingCurateCommand, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
@@ -234,6 +298,7 @@ fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefin
 pub fn create_sourcing_curate_app() -> App {
     App::from_builder(
         App::builder(SOURCING_CURATE_APP_ID, LocalizedLabel::native("Curate", "Kuratieren"))
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "sourcing", "curate"])
             .artifact_kind(crate::artifacts::curate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
@@ -396,6 +461,46 @@ mod tests {
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
         assert_eq!(ids.len(), 15, "every SourcingCurateCommand row must be covered by every_command()");
+    }
+
+    /// ⚖️ LAW: the PRODUCTION action bridge covers every declared row. `ArtifactApp`'s default
+    /// `command_from_action` rejects app-owned actions outright, so an app that declares actions but
+    /// never overrides it ships a UI whose every control faults — which is exactly how this pane's
+    /// `setActiveExample` (and with it the whole `demo-stock` example) was dead in the demonstrator.
+    /// Asserted through `<SourcingCurateApp as ArtifactApp>` — NOT the free function — because the
+    /// trait method is the seam the host actually calls.
+    #[test]
+    fn the_production_action_bridge_admits_every_declared_command() {
+        for command in every_command() {
+            let action = command.command_id();
+            let built = <SourcingCurateApp as ArtifactApp>::command_from_action(action, None)
+                .unwrap_or_else(|fault| panic!("action '{action}' is declared but the production bridge rejects it: {fault:?}"));
+            assert_eq!(built.command_id(), action, "the bridge routed '{action}' to the wrong command");
+        }
+    }
+
+    /// ⚖️ LAW: the framework's own conformance harness — it walks the actions this app's window kinds
+    /// actually RENDER, stages each one's declared args exactly as the host does, and knows which ids
+    /// are framework-injected (`undo`/`copy`/`recordTutorial`/…) and must be skipped. Strictly stronger
+    /// than enumerating the command rows: it catches an action that chrome declares but no command row
+    /// backs.
+    #[test]
+    fn every_rendered_action_bridges_through_the_framework_harness() {
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<SourcingCurateApp>(create_sourcing_curate_app);
+    }
+
+    /// ⚖️ LAW: the bridge reads the manifest's OWN arg names — `setActiveExample` declares a select
+    /// arg keyed `exampleId` (`🔖️Manifest`), and the payload field is `example_id`; the two
+    /// vocabularies are joined here and nowhere else.
+    #[test]
+    fn the_action_bridge_reads_the_declared_arg_names() {
+        let built = <SourcingCurateApp as ArtifactApp>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID })))
+            .expect("setActiveExample must convert");
+        assert_eq!(built, SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }));
+        let filter = <SourcingCurateApp as ArtifactApp>::command_from_action("setFilterModule", Some(&serde_json::json!({ "moduleId": "walls", "enabled": true })))
+            .expect("setFilterModule must convert");
+        assert_eq!(filter, SourcingCurateCommand::SetFilterModule(set_filter_module::SetFilterModule { module_id: "walls".into(), enabled: true }));
+        assert!(<SourcingCurateApp as ArtifactApp>::command_from_action("noSuchAction", None).is_err(), "an undeclared action must fault, not silently no-op");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row — the

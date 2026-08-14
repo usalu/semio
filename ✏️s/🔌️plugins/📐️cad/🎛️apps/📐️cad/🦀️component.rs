@@ -36,7 +36,7 @@ use base64::Engine as _;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView,
+    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView,
     Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
     SET_ACTIVE_UTILITY_ACTION_ID,
 };
@@ -863,12 +863,13 @@ fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadComm
         "engagementPossibleSelect" => CadCommand::EngagementPossibleSelect(engagement_possible_select::EngagementPossibleSelect { pane: str_field("pane"), possible_id: str_field("possibleId").unwrap_or_default() }),
         "engagementRepeatLast" => CadCommand::EngagementRepeatLast(engagement_repeat_last::EngagementRepeatLast { pane: str_field("pane") }),
         "engagementAbort" => CadCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
-        "worldPointerDown" | "engagementPointerDown" => CadCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { pane: str_field("pane"), surface_id: str_field("surfaceId"), x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
+        "worldPointerDown" => CadCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { pane: str_field("pane"), surface_id: str_field("surfaceId"), x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
         "worldPointerMove" => CadCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
         "toggleSun" => CadCommand::ToggleSun(toggle_sun::ToggleSun {}),
         "setSunAzimuth" => CadCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_field("value").unwrap_or(0.0) }),
         "setSunElevation" => CadCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_field("value").unwrap_or(0.0) }),
         "setSunIntensity" => CadCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: f64_field("value").unwrap_or(0.0) }),
+        "setContributions" => CadCommand::SetContributions(set_contributions::SetContributions { json: str_field("json").unwrap_or_else(|| "[]".into()) }),
         other => return Err(Fault::from(format!("unknown cad action '{other}'"))),
     })
 }
@@ -1129,6 +1130,7 @@ pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefini
 pub fn create_cad_app() -> App {
     App::from_builder(
         App::builder(CAD_PLAY_APP_ID, LocalizedLabel::native("CAD", "CAD")).document(["semio", "cad"])
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .artifact_kind(artifact_kind())
             .icon_id("box")
             .terminology("reuse")
@@ -1168,7 +1170,6 @@ pub fn create_cad_app() -> App {
             .action_with(ActionDefinition::new_catalog("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new_catalog("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("engagementPointerDown", LocalizedLabel::native("Engagement Pointer Down", "Eingabe-Zeiger gedrückt"), ActionKind::View).in_palette(false))
             .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
             .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
             .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
@@ -1438,7 +1439,18 @@ mod tests {
     fn production_action_bridge_loads_the_declared_example() {
         let command = <CadPlayApp as ArtifactApp>::command_from_action("setActiveExample", Some(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT }))).expect("declared example action");
         assert!(matches!(command, CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id }) if example_id == CAD_EXAMPLE_FOREST_LEFT));
+        let contributions = <CadPlayApp as ArtifactApp>::command_from_action("setContributions", Some(&json!({ "json": "[{\"id\":\"cad\"}]" }))).expect("declared host command");
+        assert!(matches!(contributions, CadCommand::SetContributions(set_contributions::SetContributions { json }) if json == "[{\"id\":\"cad\"}]"));
         assert!(<CadPlayApp as ArtifactApp>::command_from_action("notACadAction", None).is_err());
+    }
+
+    /// ⚖️ LAW: the one-action spot check above is not enough — this is the framework's own harness,
+    /// which walks EVERY action this app's window kinds render, stages each one's declared args the way
+    /// the host does, and skips the framework-injected ids. It is what catches the next
+    /// `setActiveExample`: chrome that declares an action no command row backs.
+    #[test]
+    fn every_rendered_action_bridges_through_the_framework_harness() {
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<CadPlayApp>(create_cad_app);
     }
 
     /// ⚖️ Text and binary are two projections of the same command, and every printed line starts with
@@ -1648,7 +1660,7 @@ mod tests {
         assert_eq!(utility_ids, vec![CAD_DISLOCATE_UTILITY_ID]);
         // 🧰️ The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
         // cad must NOT also declare it as an Mutation.
-        let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
+        let set_active_utility = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
         assert_eq!(set_active_utility.kind, ActionKind::View);
         // 🚦️ Transform utilities gate the action panel while active (the default) — cad declares no
         // passive `allows_actions_while_active` view utilities.
@@ -1716,17 +1728,16 @@ mod tests {
             "engagementAbort",
             "worldPointerDown",
             "worldPointerMove",
-            "engagementPointerDown",
             "setDislocateOption",
         ];
         for action_id in hidden_actions {
-            let action = definition.actions.iter().find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("action {action_id} missing from manifest"));
+            let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("action {action_id} missing from manifest"));
             assert!(!action.in_palette, "internal action {action_id} must have in_palette: false");
         }
 
         let palette_user_actions = ["addObject", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection"];
         for action_id in palette_user_actions {
-            let action = definition.actions.iter().find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("user action {action_id} missing from manifest"));
+            let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("user action {action_id} missing from manifest"));
             assert!(action.in_palette, "user action {action_id} must have in_palette: true");
         }
     }

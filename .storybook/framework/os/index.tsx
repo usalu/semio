@@ -6,8 +6,8 @@
 // #endregion 🧲️Header
 
 import { useEffect, useMemo, useState } from "react";
-import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "../../../framework/product/os/module/renderer/js/react/index.tsx";
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../framework/product/os/module/plugin/registry/generated/plugins.ts";
+import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "@semio-tech/framework-renderer-react";
+import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
 import { createBrowserStoragePort } from "@semio-tech/framework-core";
 
@@ -46,9 +46,9 @@ function resolveTargetPlugin(pluginId: string): PluginBuildTarget | undefined {
 }
 
 /** @emoji 🖥️ Boots the real `FrameworkOsShell` filtered to one plugin — the app-boot story mechanism
- * "filters for starting apps" refers to. Keyed by `program` so switching the Storybook `program` control
+ * "filters for starting apps" refers to. Keyed by `plugin` so switching the Storybook `plugin` control
  * fully remounts the shell (plugin runtimes are module-singletons and must not be reused across boots). */
-export function OsBootHost({ program, appId, locks }: OsBootHostProps) {
+export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
   const target = resolveTargetPlugin(plugin);
   const moduleUrl = target ? pluginModuleUrl(target.pluginId, target.wasmOut) : undefined;
   const available = usePluginArtifactAvailable(moduleUrl ?? "");
@@ -119,7 +119,7 @@ function navigatorGpuUnavailableReason(): string | undefined {
 /** @emoji 🧊️ Boots the real `@semio-tech/framework-renderer-wgpu` raw-wgpu host for one registry program,
  * with a graceful fallback when WebGPU itself is unavailable (headless CI Chromium without `--enable-unsafe-webgpu`,
  * Safari/Firefox, …) and when the plugin has no prebuilt artifact — mirrors {@link OsBootHost}'s artifact probe. */
-export function WgpuBootHost({ program }: WgpuBootHostProps) {
+export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
   const target = resolveTargetPlugin(plugin);
   const gpuUnavailableReason = navigatorGpuUnavailableReason();
   const [state, setState] = useState<WgpuBootState>({ kind: "booting" });

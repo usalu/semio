@@ -2144,8 +2144,23 @@ Achieve the following end to end:
 - A running hub with
   - users that can create and share spaces.
   - spaces are persisted in db.
-  - presence inside an app is shared peer to peer between all active users.
+  - space share presence inside an app with the same artifact peer to peer between all active users.
   - 
+
+---
+
+Collaboration in spaces is 
+
+---
+
+All well known artifacts must cleanly roundtrip through import and export.
+Use these files to test the snapshot, diff, mutation, io system etc.
+Only stop once the export is identical to the import.
+temp/📄️bachelor-thesis.pdf
+temp/architectural_example.dwg
+temp/artifacts.svg
+temp/bauen-mit-bestand.mp4
+temp/domai-specific-programmaning-language-for-architects.pptx
 
 ---
 

@@ -1,0 +1,8 @@
+{
+  "title": "Flow Content Through Glass Chips",
+  "emoji": "🪟️",
+  "status": "open",
+  "description": "Make active window content flow beneath glass chips while preserving true transparent cutouts across React and WGPU silhouette surfaces.",
+  "goal": "🎯r2603",
+  "sessions": []
+}

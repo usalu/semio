@@ -622,7 +622,7 @@ mod tests {
         let scoped: Vec<&str> = scene.utilities.iter().map(|utility| utility.as_str()).collect();
         assert_eq!(scoped, ["move", "rotate", "scale"], "utilities scoped to the scene window kind");
         for command in ["loadRequest", "importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
-            assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
+            assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
         }
         let mut app = shooting_app();
         let engagements = app.window_engagements();

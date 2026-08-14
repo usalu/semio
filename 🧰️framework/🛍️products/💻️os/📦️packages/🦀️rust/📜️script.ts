@@ -1,10 +1,19 @@
-import { createScript } from "../../../../../../📜️script.ts";
+#!/usr/bin/env bun
+/** 🦀️ `@semio-tech/framework-os-kernel` task router. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
-export default createScript(import.meta, {
-  check: async ({ cargo }) => {
-    await cargo(["check", "--manifest-path", "Cargo.toml"]);
-  },
-  test: async ({ cargo }) => {
-    await cargo(["test", "--manifest-path", "Cargo.toml", "--lib"]);
-  },
-});
+class CheckScript extends BundleScript {
+  run(): void {
+    runCargo(["check", "--manifest-path", "Cargo.toml"], this.root);
+  }
+}
+
+class TestScript extends BundleScript {
+  run(): void {
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--lib"], this.root);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });

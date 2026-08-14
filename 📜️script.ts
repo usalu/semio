@@ -1149,7 +1149,7 @@ export class TestScript extends Script {
     });
     try {
       await this.waitForUrl(new URL("🌐️index.html", baseUrl).href, 120000);
-      runCmd("bunx", ["playwright", "test", ".storybook/puzzle-2d.spec.ts", "--config", ".storybook/playwright.config.ts"], {
+      runCmd("bunx", ["playwright", "test", "--config", ".storybook/playwright.config.ts"], {
         cwd: this.root,
         env: {
           ...process.env,
@@ -4306,16 +4306,18 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
 
 /**
  * 📏️Mode completeness: the twin of {@link policyWindowCompletenessBreaches} one level up. A mode is a
- * state-owning scope, so it declares every `modeChildDirs` member explicitly — its `🪟️windows`
+ * state-owning scope, so it declares every `modeRequiredChildDirs` member explicitly — its `🪟️windows`
  * collection plus its own three state lanes (`🎚️config` persisted-local, `👥️presence`
  * ephemeral-shared, `🫧️transient` ephemeral-local). An empty child is valid and carries only the
  * tracked `windowEmptyFacetFilename` marker; an absent child is not, and a child that is both empty
  * and populated is a contradiction. Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION
  * wave A0: before it, `modeChildDirs` did not exist at all and a mode declared no children whatsoever.
+ * Optional structural capabilities such as `🎮️commands` remain in `modeChildDirs` without forcing
+ * an empty marker into every mode.
  */
 export function policyModeCompletenessBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const required: readonly string[] = taxonomy.modeChildDirs ?? [];
+  const required: readonly string[] = taxonomy.modeRequiredChildDirs ?? taxonomy.modeChildDirs ?? [];
   const breaches: BreachRecord[] = [];
   if (required.length === 0) return breaches;
   for (const crate of crates) {

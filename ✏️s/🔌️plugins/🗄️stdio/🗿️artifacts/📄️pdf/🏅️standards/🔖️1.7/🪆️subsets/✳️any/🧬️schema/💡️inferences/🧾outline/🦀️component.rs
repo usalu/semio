@@ -41,6 +41,7 @@ mod tests {
             info: PdfInfo { title: Some("My Document".into()), ..Default::default() },
             objects: vec![],
             trailer: vec![],
+            source: None,
         };
         let outline = Pdf17Outline::compute(&snapshot);
         assert_eq!(outline.page_count, 2);

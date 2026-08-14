@@ -60,6 +60,11 @@ message PdfInfo {
   optional string producer = 6;
 }
 
+message ArtifactSource {
+  bytes bytes = 1;
+  bytes semantic_blake3 = 2;
+}
+
 message PdfSnapshot {
   string schema = 1;
   string declared_version = 2;
@@ -67,4 +72,5 @@ message PdfSnapshot {
   PdfInfo info = 4;
   repeated PdfIndirectObject objects = 5;
   repeated PdfDictEntry trailer = 6;
+  optional ArtifactSource source = 7;
 }

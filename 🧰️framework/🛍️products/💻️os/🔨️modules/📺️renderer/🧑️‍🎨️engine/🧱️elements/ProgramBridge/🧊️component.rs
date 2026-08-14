@@ -43,8 +43,6 @@ mod wasm_program_exchange {
     const SECTION_KIND_ENGAGEMENTS: u8 = 2;
     const SECTION_KIND_MEASURES: u8 = 3;
 
-    const DOCUMENT_COMMAND_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
-
     static SEQ: AtomicU64 = AtomicU64::new(1);
 
     fn next_seq() -> u64 {
@@ -66,7 +64,7 @@ mod wasm_program_exchange {
     }
 
     fn app_frame_fault_summary(fault: &[u8]) -> String {
-        let fault = os_dsl::decode_fault_bytes(fault);
+        let fault = dsl_core::os_dsl::decode_fault_bytes(fault);
         format!("{}: {}", fault.code.0, fault.message)
     }
 
@@ -139,8 +137,8 @@ mod wasm_program_exchange {
         }
         Ok(InvocationResult {
             output,
-            operations: Vec::new(),
-            inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), operations: Vec::new(), inverse_operations: Vec::new() },
+            mutations: Vec::new(),
+            inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
             diagnostics,
             requested_effects,
             events,
@@ -149,18 +147,21 @@ mod wasm_program_exchange {
     }
 
     pub fn handle_action(runtime: &WasmPluginRuntime, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
-        let action: serde_json::Value = serde_json::from_str(action_json).map_err(|error| error.to_string())?;
-        let action_name = action.get("action").and_then(|value| value.as_str()).unwrap_or("");
-        let args = action.get("args").cloned();
+        let invocation: semio_framework::manifest::ActionInvocation = serde_json::from_str(action_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
-        let commands = if DOCUMENT_COMMAND_ACTION_IDS.contains(&action_name) {
-            let envelope = serde_json::json!({ "action": action_name, "args": args });
-            vec![AppCommand::ArtifactCommand { seq, command: encode_wire(&envelope)? }]
-        } else {
-            let envelope = serde_json::json!({ "kind": "action", "name": action_name, "args": args });
-            vec![AppCommand::Command { seq, command: encode_wire(&envelope)?, view_state: pack_view_state(view_state)? }]
-        };
+        let commands = vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }];
         let frames = exchange(runtime, instance_id, commands)?;
+        invocation_from_frames(&frames, seq)
+    }
+
+    pub fn handle_command(runtime: &WasmPluginRuntime, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
+        let invocation: semio_framework::manifest::CommandInvocation = serde_json::from_str(command_json).map_err(|error| error.to_string())?;
+        let seq = next_seq();
+        let frames = exchange(
+            runtime,
+            instance_id,
+            vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }],
+        )?;
         invocation_from_frames(&frames, seq)
     }
 
@@ -187,6 +188,17 @@ mod wasm_program_exchange {
         let seq = next_seq();
         let frames = exchange(runtime, instance_id, vec![AppCommand::DetachBackbone { seq }])?;
         expect_done(&frames, seq)
+    }
+
+    pub fn ephemeral_snapshot(runtime: &WasmPluginRuntime, instance_id: u32) -> Result<(Vec<u8>, u64, u64), String> {
+        let frames = exchange(runtime, instance_id, Vec::new())?;
+        frames
+            .into_iter()
+            .find_map(|frame| match frame {
+                AppFrame::Ephemeral { presence, presence_generation, transient_generation } => Some((presence, presence_generation, transient_generation)),
+                _ => None,
+            })
+            .ok_or_else(|| "plugin sent no Ephemeral frame".to_string())
     }
 
     pub fn render_with_document(runtime: &WasmPluginRuntime, instance_id: u32, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
@@ -331,6 +343,15 @@ impl ProgramBridgeEntry {
         }
     }
 
+    pub async fn handle_command(&self, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+        match &self.backend {
+            #[cfg(target_arch = "wasm32")]
+            ProgramBridgeBackend::Js(handle) => handle_command_js(handle, instance_id, command_json, view_state).await,
+            #[cfg(not(target_arch = "wasm32"))]
+            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::handle_command(runtime, instance_id, command_json, view_state),
+        }
+    }
+
     /// 🖱️ On-demand context menu rows for the given surface hit and selection snapshot.
     pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::wgpu::ContextMenuItemSpec>, String> {
         match &self.backend {
@@ -407,6 +428,15 @@ impl ProgramBridgeEntry {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
+    pub fn ephemeral_snapshot(&self, instance_id: u32) -> Result<(Vec<u8>, u64, u64), String> {
+        match &self.backend {
+            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::ephemeral_snapshot(runtime, instance_id),
+            #[cfg(target_arch = "wasm32")]
+            _ => Err("ephemeral_snapshot unavailable".into()),
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn apply_mutations(&self, instance_id: u32, operations: &[u8]) -> Result<(), String> {
         match &self.backend {
             ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::apply_mutations(runtime, instance_id, operations),
@@ -440,9 +470,9 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
     let action = Reflect::get(handle.as_ref(), &JsValue::from_str("handleAction")).ok().and_then(|v| v.dyn_into::<Function>().ok());
     let Some(action) = action else {
         return Ok(semio_framework::kernel::InvocationResult {
-            output: DslValue::Null,
-            operations: vec![],
-            inverse_group: semio_framework::kernel::UndoGroup { invocation_id: semio_framework::kernel::InvocationId(String::new()), operations: vec![], inverse_operations: vec![] },
+            output: semio_framework::DslValue::Null,
+            mutations: vec![],
+            inverse_group: semio_framework::kernel::UndoGroup { invocation_id: semio_framework::kernel::InvocationId(String::new()), mutations: vec![], inverse_mutations: vec![], member_edits: vec![] },
             diagnostics: vec![],
             requested_effects: vec![],
             events: vec![],
@@ -458,6 +488,22 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "handle_action promise failed")? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handle_action result not string".to_string())?;
     serde_json::from_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+    let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
+    let context_json = serde_json::json!({ "viewState": view_state, "actor": "local" }).to_string();
+    let result = command
+        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json))
+        .map_err(|_| "handleCommand failed")?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+        JsFuture::from(promise.clone()).await.map_err(|_| "handleCommand promise failed")?
+    } else {
+        result
+    };
+    let text = resolved.as_string().ok_or_else(|| "handleCommand result not string".to_string())?;
+    serde_json::from_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handleCommand result parse failed: {error}"))
 }
 
 #[cfg(target_arch = "wasm32")]

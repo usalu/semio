@@ -551,7 +551,7 @@ mod tests {
         assert_eq!(selects, ["selectDirect", "selectMarquee"]);
         let composite_window = definition.window_kinds.iter().find(|window| window.id == NOTE_PLAY_WINDOW_COMPOSITE).expect("composite window");
         assert_eq!(composite_window.utilities.len(), definition.utilities.len(), "every utility is scoped to the composite canvas");
-        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, Kind::View)));
+        assert!(composite_window.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, Kind::View)));
     }
     //#endregion 🔖️ManifestSanity
 

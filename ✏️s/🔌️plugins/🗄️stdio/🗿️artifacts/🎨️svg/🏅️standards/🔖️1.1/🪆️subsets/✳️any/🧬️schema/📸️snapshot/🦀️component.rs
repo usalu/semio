@@ -15,11 +15,14 @@ pub struct SvgSnapshot {
     #[state(artifact)]
     #[serde(default)]
     pub doc: XmlDocument,
+    #[state(artifact)]
+    #[serde(default)]
+    pub source: Option<crate::ArtifactSource>,
 }
 
 impl Default for SvgSnapshot {
     fn default() -> Self {
-        Self {
+        let mut snapshot = Self {
             schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
                 root: Some(XmlNode::Element {
@@ -30,7 +33,11 @@ impl Default for SvgSnapshot {
                 doctype: None,
                 declaration: None,
             },
-        }
+            source: None,
+        };
+        let bytes = write_svg_xml(&snapshot.doc).into_bytes();
+        snapshot.source = Some(crate::ArtifactSource::capture(&bytes, &snapshot.semantic_projection()).expect("svg default source capture"));
+        snapshot
     }
 }
 //#endregion 🔖️Snapshot
@@ -50,6 +57,34 @@ pub fn parse_svg_xml(text: &str) -> Result<XmlDocument, String> {
 
 pub fn write_svg_xml(doc: &XmlDocument) -> String {
     xml_document_to_text(doc)
+}
+
+impl SvgSnapshot {
+    /// 🧠️ Returns the deterministic semantic state without native lexical provenance.
+    pub fn semantic_projection(&self) -> Self {
+        let mut projection = self.clone();
+        projection.source = None;
+        projection
+    }
+
+    /// 📥️ Parses SVG UTF-8 and captures the exact imported native bytes.
+    pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
+        let text = std::str::from_utf8(bytes).map_err(|error| format!("svg source is not UTF-8: {error}"))?;
+        let mut snapshot = Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)?, source: None };
+        snapshot.source = Some(crate::ArtifactSource::capture(bytes, &snapshot.semantic_projection())?);
+        Ok(snapshot)
+    }
+
+    /// 📤️ Replays matching native bytes and otherwise emits the deliberate XML normal form.
+    pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
+        let projection = self.semantic_projection();
+        if let Some(source) = &self.source {
+            if source.matches(&projection)? {
+                return Ok(source.bytes.clone());
+            }
+        }
+        Ok(write_svg_xml(&self.doc).into_bytes())
+    }
 }
 //#endregion 🔖️SvgCodec
 
@@ -1190,11 +1225,10 @@ impl store::ArtifactDsl for SvgSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let doc = parse_svg_xml(body).map_err(|e| store::TextError::new(format!("svg parse: {e}"), dsl::TextSpan::at(1, 1)))?;
-        Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
+        Self::import_utf8(body.as_bytes()).map_err(|e| store::TextError::new(format!("svg parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = write_svg_xml(&self.doc);
+        let body = String::from_utf8(self.export_utf8().expect("svg semantic fingerprint")).expect("svg source is UTF-8");
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Dsl,
@@ -1215,7 +1249,7 @@ impl store::ArtifactDsl for SvgSnapshot {
 impl store::ArtifactPack for SvgSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = write_svg_xml(&self.doc).into_bytes();
+        let raw = self.export_utf8().map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
@@ -1234,9 +1268,7 @@ impl store::ArtifactPack for SvgSnapshot {
             )));
         }
         let _ = options;
-        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let doc = parse_svg_xml(text).map_err(store::PackError::Schema)?;
-        Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
+        Self::import_utf8(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

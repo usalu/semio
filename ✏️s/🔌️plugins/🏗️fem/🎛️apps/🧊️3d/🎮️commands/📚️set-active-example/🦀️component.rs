@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn set_active_example_is_declared_as_operation_3d() {
         let definition = crate::apps::fem3d::create_fem3d_app().definition;
-        let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
+        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
         assert!(matches!(action.kind, ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     }

@@ -1,0 +1,18 @@
+Geometry validation log — 2026-08-14 Europe/Berlin
+
+SUCCESS (before relocation into Chrome):
+  bun nx run @semio-tech/ui-react:typecheck
+  Exit status: 0
+  Result: completed with no TypeScript errors.
+
+COMMAND INVOCATION FAILURE (not a test assertion failure):
+  bun nx run @semio-tech/ui-react:test-long -- --run -t 'windowSilhouette|silhouette'
+  Result: Nx delegated through a shell after removing quoting; the `|` was interpreted as a shell pipe.
+  Observed diagnostic: /bin/sh: silhouette: command not found
+
+NOT RUN after relocation/freeze:
+  Typecheck after moving the contract into Chrome.
+  Geometry-focused tests after moving the contract into Chrome.
+
+Known reason current validation cannot pass until handoff cleanup:
+  The React barrel imports the geometry contract from Chrome but still contains the old duplicate declarations from WINDOW_SILHOUETTE_PATH_INSET through createWindowSilhouetteGeometry.

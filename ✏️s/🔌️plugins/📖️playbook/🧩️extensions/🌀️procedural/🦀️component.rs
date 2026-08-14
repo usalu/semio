@@ -972,9 +972,9 @@ mod tests {
     fn export_solid_declares_only_format_arg_and_materializes_default() {
         use semio_framework_plugin::app::AppActionRegistry;
         let definition = create_module_app().definition;
-        let import = definition.actions.iter().find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
+        let import = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
         assert!(import.args.iter().all(|arg| arg.id == "format"), "only `format` is a user-facing arg; `data` is file-callback populated");
-        let export = definition.actions.iter().find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
+        let export = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
         assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
         let registry = AppActionRegistry::from_definition(&definition);
         let mut app = VcsArtifactApp::with_registry(ModuleApp, registry);

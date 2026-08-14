@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn open_source_is_a_shell_action_that_emits_no_operations() {
         let definition = crate::apps::gis2d::create_gis2d_app().definition;
-        let action = definition.actions.iter().find(|action| action.id == "openSource").expect("openSource declared");
+        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "openSource").expect("openSource declared");
         assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Shell));
         let mut app = crate::apps::gis2d::testkit::app_with_registry();
         assert!(dispatch(&mut app, Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: "nope".into() })).mutations.is_empty());

@@ -376,6 +376,12 @@ pub struct World3dState {
     scene_brush_preview_json: Option<String>,
     scene_interaction_json: Option<String>,
     scene_engagement_preview_json: Option<String>,
+    /// 🪟️ The app-bound `InteractionDefinition` id for this window (see `World3dScene.domain_id`'s
+    /// doc comment) — `None` means this window binds no app domain, so plain picks/hover target the
+    /// OS's own shared `world` board domain (see `resolved_domain_id`).
+    bound_domain_id: Option<String>,
+    /// 🎯️ The bound domain's granularity id for a plain (non-component) pick/hover hit.
+    bound_domain_granularity_id: Option<String>,
     vortices: Vec<WorldVortexRecord>,
     attractions: Vec<WorldAttractionRecord>,
     target_volumes: Vec<WorldTargetVolumeRecord>,
@@ -464,6 +470,8 @@ impl World3dState {
             scene_brush_preview_json: None,
             scene_interaction_json: None,
             scene_engagement_preview_json: None,
+            bound_domain_id: None,
+            bound_domain_granularity_id: None,
             vortices: Vec::new(),
             attractions: Vec::new(),
             target_volumes: Vec::new(),
@@ -1946,6 +1954,8 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         state.environment = WorldEnvironmentRecord::default();
         state.scene_terrain_json = None;
         state.terrain_style = None;
+        state.bound_domain_id = None;
+        state.bound_domain_granularity_id = None;
         return;
     };
     let unchanged = state.scene_camera_json.as_deref() == Some(world.camera_json.as_str())
@@ -1962,7 +1972,9 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         && state.scene_lod_json.as_deref() == world.lod_json.as_deref()
         && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref()
         && state.scene_environment_json.as_deref() == world.environment_json.as_deref()
-        && state.scene_terrain_json.as_deref() == world.terrain_json.as_deref();
+        && state.scene_terrain_json.as_deref() == world.terrain_json.as_deref()
+        && state.bound_domain_id.as_deref() == world.domain_id.as_deref()
+        && state.bound_domain_granularity_id.as_deref() == world.domain_granularity_id.as_deref();
     if unchanged {
         return;
     }
@@ -1978,7 +1990,9 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         && state.scene_lod_json.as_deref() == world.lod_json.as_deref()
         && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref()
         && state.scene_environment_json.as_deref() == world.environment_json.as_deref()
-        && state.scene_terrain_json.as_deref() == world.terrain_json.as_deref();
+        && state.scene_terrain_json.as_deref() == world.terrain_json.as_deref()
+        && state.bound_domain_id.as_deref() == world.domain_id.as_deref()
+        && state.bound_domain_granularity_id.as_deref() == world.domain_granularity_id.as_deref();
     if geometry_unchanged {
         let selection_changed = state.scene_selection_json.as_deref() != Some(world.selection_json.as_str());
         let vortices_changed = state.scene_vortices_json.as_deref() != world.vortices_json.as_deref();
@@ -2025,6 +2039,8 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.scene_chunking_json = world.chunking_json.clone();
     state.scene_environment_json = world.environment_json.clone();
     state.scene_terrain_json = world.terrain_json.clone();
+    state.bound_domain_id = world.domain_id.clone();
+    state.bound_domain_granularity_id = world.domain_granularity_id.clone();
     state.lod = world.lod_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_else(default_lod_record);
     state.chunking = world.chunking_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
     state.environment = world.environment_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
@@ -2669,13 +2685,27 @@ fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Ve
 }
 
 //#region 🔖️WorldInteractionDomain
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3c: the OS `world` domain — plain
-/// (non-component) 3D-world object picking/hover, declared once here so any app mounting a world3d
-/// surface can push it onto its `AppDefinition.interactions` (wave 4). Granularity `"item"` targets are
-/// `"{surfaceId}/{objectId}"`, split by [`HierarchyProvider::PathDelimited`] — `"surface"` covers a
-/// future whole-surface selection, not emitted by pointer picking today. Component-level (vertex/edge/
-/// face) picking is a separate, unconverted mechanism (`worldPick`/`setSelection`) — out of this wave's
-/// named scope (see the module's W3c task brief).
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the OS's own bare-board `world`
+/// domain — plain (non-component) 3D-world object picking/hover for a world3d window that binds NO
+/// app `InteractionDefinition`. Granularity `"item"` targets are `"{surfaceId}/{objectId}"`, split by
+/// [`HierarchyProvider::PathDelimited`] — the cross-surface addressing a shared, multi-board OS domain
+/// needs (`"surface"` covers a future whole-surface selection, not emitted by pointer picking today).
+///
+/// Most world3d apps bind their OWN domain instead (`WindowKindDefinition.interactions` /
+/// `.window_kind_interactions(...)`) — e.g. CAD's `"cad"` domain with `HierarchyProvider::Flat`. That
+/// binding reaches this file only through `World3dScene.domain_id`/`domain_granularity_id` (set by the
+/// app's own `render()`, the only party that knows both its `window_kind_id` and which domain it bound
+/// there — mirrors `UiTreeNode.interaction_domain`/`PanelTreeBuilder::interaction_domain`, extended to
+/// `Scene` surfaces), captured onto `World3dState.bound_domain_id`/`bound_domain_granularity_id` by
+/// `sync_world3d_state`. `resolved_domain_id`/`resolved_domain_granularity_id`/`resolved_item_id` below
+/// are what every plain pick/hover emit site actually reads — never `WORLD_INTERACTION_DOMAIN_ID`
+/// directly, so a bound app domain and this OS domain never both light up for the same click (the
+/// two-selection-universe bug this indirection exists to prevent). A bound domain is inherently
+/// single-surface-scoped (one app document per window), so its ids are always bare — no `surfaceId/`
+/// prefix, unlike `world`'s own multi-surface `PathDelimited` shape.
+///
+/// Component-level (vertex/edge/face) picking is a separate, unconverted mechanism (`worldPick`/
+/// `setSelection`) — out of this file's scope (see the module's W3c task brief).
 pub const WORLD_INTERACTION_DOMAIN_ID: &str = "world";
 const WORLD_ITEM_GRANULARITY_ID: &str = "item";
 const WORLD_ITEM_PATH_DELIMITER: &str = "/";
@@ -2700,6 +2730,18 @@ pub fn world_interaction_definition() -> InteractionDefinition {
     }
 }
 
+/// 🪟️ The interaction domain a plain pick/hover on this surface targets: the app-bound domain from
+/// `World3dScene.domain_id`, falling back to the OS's own `world` board domain when unbound.
+fn resolved_domain_id(state: &World3dState) -> &str {
+    state.bound_domain_id.as_deref().unwrap_or(WORLD_INTERACTION_DOMAIN_ID)
+}
+
+/// 🎯️ The granularity id to stamp on a plain pick/hover target — the app-declared granularity when a
+/// domain is bound, else the `world` domain's own `"item"` granularity.
+fn resolved_domain_granularity_id(state: &World3dState) -> &str {
+    state.bound_domain_granularity_id.as_deref().unwrap_or(WORLD_ITEM_GRANULARITY_ID)
+}
+
 fn world_item_target_id(surface_id: &str, object_id: &str) -> String {
     format!("{surface_id}{WORLD_ITEM_PATH_DELIMITER}{object_id}")
 }
@@ -2709,6 +2751,27 @@ fn world_item_target_id(surface_id: &str, object_id: &str) -> String {
 /// this file's single-surface pointer handlers) are dropped rather than mis-parsed.
 fn world_item_id_for_surface<'a>(state: &World3dState, target_id: &'a str) -> Option<&'a str> {
     target_id.strip_prefix(&state.surface_id).and_then(|rest| rest.strip_prefix(WORLD_ITEM_PATH_DELIMITER))
+}
+
+/// 🧮️ Builds the wire target id for a plain pick/hover hit: a bare object id when a real app domain is
+/// bound (`HierarchyProvider::Flat`-style, single-surface-scoped), else `world_item_target_id`'s
+/// `"surfaceId/id"` `PathDelimited` shape for the shared `world` domain.
+fn resolved_item_id(state: &World3dState, object_id: &str) -> String {
+    if state.bound_domain_id.is_some() {
+        object_id.to_string()
+    } else {
+        world_item_target_id(&state.surface_id, object_id)
+    }
+}
+
+/// 🔤️ Inverse of [`resolved_item_id`], for parsing ids back out of an incoming action's targets during
+/// optimistic local preview.
+fn parse_resolved_item_id<'a>(state: &World3dState, target_id: &'a str) -> Option<&'a str> {
+    if state.bound_domain_id.is_some() {
+        Some(target_id)
+    } else {
+        world_item_id_for_surface(state, target_id)
+    }
 }
 
 fn merge_mode_wire_str(merge: MergeMode) -> &'static str {
@@ -2775,28 +2838,29 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
                 state.component_ids = merge_string_ids(&state.component_ids, &[id], merge);
             }
         }
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3c: replaces the deleted
-        // ad-hoc `worldSelect`/`worldHover` command strings with the framework interaction verbs
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: replaces the deleted ad-hoc
+        // `worldSelect`/`worldHover` command strings with the framework interaction verbs
         // (`domainId`/`targets`/`merge`/`method`, `domainId`/`channel`/`targets`) — see
-        // `world_interaction_definition`. This is still the OPTIMISTIC LOCAL PREVIEW only; the
-        // framework's `next_selection`/`next_hover` machine (not this file) is the source of truth
-        // once the round-trip settles.
-        "interactionSelect" if args.get("domainId").and_then(|value| value.as_str()) == Some(WORLD_INTERACTION_DOMAIN_ID) => {
+        // `resolved_domain_id` (the domain this surface actually targets: its bound app domain, or the
+        // OS `world` fallback). This is still the OPTIMISTIC LOCAL PREVIEW only; the framework's
+        // `next_selection`/`next_hover` machine (not this file) is the source of truth once the
+        // round-trip settles.
+        "interactionSelect" if args.get("domainId").and_then(|value| value.as_str()) == Some(resolved_domain_id(state)) => {
             let merge = args.get("merge").and_then(|value| value.as_str()).unwrap_or("replace");
             let ids: Vec<String> = args
                 .get("targets")
                 .and_then(|value| value.as_array())
-                .map(|targets| targets.iter().filter_map(|target| target.get("id").and_then(dsl_id_to_string)).filter_map(|id| world_item_id_for_surface(state, &id).map(str::to_string)).collect())
+                .map(|targets| targets.iter().filter_map(|target| target.get("id").and_then(dsl_id_to_string)).filter_map(|id| parse_resolved_item_id(state, &id).map(str::to_string)).collect())
                 .unwrap_or_default();
             state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
         }
-        "interactionHover" if args.get("domainId").and_then(|value| value.as_str()) == Some(WORLD_INTERACTION_DOMAIN_ID) => {
+        "interactionHover" if args.get("domainId").and_then(|value| value.as_str()) == Some(resolved_domain_id(state)) => {
             state.local_hover_id = args
                 .get("targets")
                 .and_then(|value| value.as_array())
                 .and_then(|targets| targets.first())
                 .and_then(|target| target.get("id").and_then(dsl_id_to_string))
-                .and_then(|id| world_item_id_for_surface(state, &id).map(str::to_string));
+                .and_then(|id| parse_resolved_item_id(state, &id).map(str::to_string));
         }
         "setSelection" => {
             if let Some(mode) = args.get("mode").and_then(|value| value.as_str()) {
@@ -2879,12 +2943,13 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
         return None;
     }
     state.local_hover_id = hit.clone();
-    // 🕹️ `interactionHover` — empty `targets` clears the channel (see `HoverInput`/`next_hover`).
+    // 🕹️ `interactionHover` — empty `targets` clears the channel (see `HoverInput`/`next_hover`);
+    // `domainId`/target id shape follow this surface's resolved (app-bound or `world`-fallback) domain.
     let targets = match &hit {
-        Some(id) => json!([{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": world_item_target_id(&state.surface_id, id) }]),
+        Some(id) => json!([{ "granularity": resolved_domain_granularity_id(state), "id": resolved_item_id(state, id) }]),
         None => json!([]),
     };
-    Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "interactionHover".into(), args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "channel": "pointer", "targets": targets })) })
+    Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "interactionHover".into(), args: action_args(json!({ "domainId": resolved_domain_id(state), "channel": "pointer", "targets": targets })) })
 }
 
 fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: bool, ctrl: bool) -> Option<ActionDescriptor> {
@@ -2940,12 +3005,12 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
         });
     }
     let hit = pick_instance_at(state, x, y, inner);
-    let targets: Vec<serde_json::Value> = hit.into_iter().map(|id| json!({ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": world_item_target_id(&state.surface_id, &id) })).collect();
+    let targets: Vec<serde_json::Value> = hit.into_iter().map(|id| json!({ "granularity": resolved_domain_granularity_id(state), "id": resolved_item_id(state, &id) })).collect();
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "interactionSelect".into(),
         args: action_args(json!({
-            "domainId": WORLD_INTERACTION_DOMAIN_ID,
+            "domainId": resolved_domain_id(state),
             "targets": targets,
             "merge": merge,
             "method": selection_method_wire_str(SelectionMethod::Pick),
@@ -3033,12 +3098,12 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     // 🕹️ Marquee/lasso stays GEOMETRIC here — `screen_select_instances` above is the surface's own
     // hit-test, this just batches its raw hits into ONE `interactionSelect`; the merge/mode algebra is
     // the os-kernel `next_selection` machine's job, not this file's.
-    let targets: Vec<serde_json::Value> = ids.iter().map(|id| json!({ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": world_item_target_id(&state.surface_id, id) })).collect();
+    let targets: Vec<serde_json::Value> = ids.iter().map(|id| json!({ "granularity": resolved_domain_granularity_id(state), "id": resolved_item_id(state, id) })).collect();
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "interactionSelect".into(),
         args: action_args(json!({
-            "domainId": WORLD_INTERACTION_DOMAIN_ID,
+            "domainId": resolved_domain_id(state),
             "targets": targets,
             "merge": merge,
             "method": selection_method_wire_str(SelectionMethod::Rectangle),
@@ -3763,6 +3828,13 @@ mod tests {
     }
 
     fn scene_with_selection(selection_json: &str) -> UiComponentSceneNode {
+        scene_with_selection_and_domain(selection_json, None)
+    }
+
+    /// 🪟️ Like `scene_with_selection`, but also stamps `World3dScene.domain_id`/`domain_granularity_id`
+    /// when `domain` is `Some((domain_id, granularity_id))` — exercises the app-bound-domain path of
+    /// `resolved_domain_id`/`resolved_domain_granularity_id`/`resolved_item_id`.
+    fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &str)>) -> UiComponentSceneNode {
         UiComponentSceneNode {
             presence: UiPresence::default(),
             surface_id: "surface-1".into(),
@@ -3791,6 +3863,8 @@ mod tests {
                 terrain_json: None,
                 points_json: None,
                 status_json: None,
+                domain_id: domain.map(|(id, _)| id.to_string()),
+                domain_granularity_id: domain.map(|(_, granularity)| granularity.to_string()),
             }),
             node_graph: None,
             text_editor: None,
@@ -4048,6 +4122,102 @@ mod tests {
             &ActionDescriptor { controller_id: "controller-1".into(), action: "interactionHover".into(), args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "channel": "pointer", "targets": [] })) },
         );
         assert!(state.local_hover_id.is_none(), "empty targets clears hover");
+    }
+
+    #[test]
+    fn pick_select_emits_bare_id_into_bound_app_domain_when_window_binds_one() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.bound_domain_id = Some("cad".into());
+        state.bound_domain_granularity_id = Some("object".into());
+        state.meshes.insert("mesh-1".into(), topology_mesh());
+        state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
+        let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+        state.bounds = inner;
+        state.pick_bounds = inner;
+        let camera = state.orbit.to_camera();
+        let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("object projects");
+        let action = pick_select_action(&state, screen[0], screen[1], inner, false, false).expect("pick action");
+        assert_eq!(action.action, "interactionSelect");
+        let args = action.args.expect("args");
+        assert_eq!(args["domainId"], json!("cad"), "targets the window's bound app domain, not the OS `world` fallback");
+        let targets = args["targets"].as_array().expect("targets array");
+        assert_eq!(targets[0]["granularity"], json!("object"), "uses the bound domain's own granularity, not `item`");
+        assert_eq!(targets[0]["id"], json!("obj-1"), "bare id — a bound domain is single-surface-scoped, no surfaceId/ prefix");
+    }
+
+    #[test]
+    fn pick_hover_emits_bare_id_into_bound_app_domain() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.bound_domain_id = Some("cad".into());
+        state.bound_domain_granularity_id = Some("object".into());
+        state.meshes.insert("mesh-1".into(), topology_mesh());
+        state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
+        let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+        state.bounds = inner;
+        state.pick_bounds = inner;
+        let camera = state.orbit.to_camera();
+        let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), Vec3::ZERO, inner.w, inner.h).expect("object projects");
+        let action = pick_hover_action(&mut state, screen[0], screen[1], inner).expect("hover action");
+        let args = action.args.expect("args");
+        assert_eq!(args["domainId"], json!("cad"));
+        let targets = args["targets"].as_array().expect("targets array");
+        assert_eq!(targets[0]["granularity"], json!("object"));
+        assert_eq!(targets[0]["id"], json!("obj-1"));
+    }
+
+    #[test]
+    fn marquee_select_emits_bare_ids_into_bound_app_domain() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.bound_domain_id = Some("features".into());
+        state.bound_domain_granularity_id = Some("pin".into());
+        state.meshes.insert("mesh-1".into(), topology_mesh());
+        state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
+        state.marquee_points = vec![[0.0, 0.0], [400.0, 400.0]];
+        let action = marquee_select_action(&mut state, Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 }, false, false).expect("marquee action");
+        let args = action.args.expect("args");
+        assert_eq!(args["domainId"], json!("features"));
+        let targets = args["targets"].as_array().expect("targets array");
+        assert_eq!(targets[0]["granularity"], json!("pin"));
+        assert_eq!(targets[0]["id"], json!("obj-1"));
+    }
+
+    #[test]
+    fn apply_world_action_preview_respects_bound_app_domain_and_ignores_other_domains() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.bound_domain_id = Some("cad".into());
+        state.bound_domain_granularity_id = Some("object".into());
+        // 🚫️ An action for the OS `world` fallback domain must NOT apply once this window is bound to
+        // its own app domain — otherwise the same click could ever light up two selection universes.
+        apply_world_action_preview(
+            &mut state,
+            &ActionDescriptor {
+                controller_id: "controller-1".into(),
+                action: "interactionSelect".into(),
+                args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "targets": [{ "granularity": WORLD_ITEM_GRANULARITY_ID, "id": "surface-1/obj-1" }], "merge": "replace", "method": "pick" })),
+            },
+        );
+        assert!(state.selected_ids.is_empty(), "an unbound-domain action must not apply once this window binds its own domain");
+
+        apply_world_action_preview(
+            &mut state,
+            &ActionDescriptor {
+                controller_id: "controller-1".into(),
+                action: "interactionSelect".into(),
+                args: action_args(json!({ "domainId": "cad", "targets": [{ "granularity": "object", "id": "obj-1" }], "merge": "replace", "method": "pick" })),
+            },
+        );
+        assert_eq!(state.selected_ids, vec!["obj-1".to_string()], "bare id applies as-is — no surfaceId/ stripping for a bound domain");
+    }
+
+    #[test]
+    fn sync_world3d_state_captures_scene_bound_domain() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        let scene = scene_with_selection_and_domain("{}", Some(("cad", "object")));
+        sync_world3d_state(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+        assert_eq!(state.bound_domain_id.as_deref(), Some("cad"));
+        assert_eq!(state.bound_domain_granularity_id.as_deref(), Some("object"));
+        assert_eq!(resolved_domain_id(&state), "cad");
+        assert_eq!(resolved_domain_granularity_id(&state), "object");
     }
     //#endregion 🔖️WorldInteractionVerbs
 

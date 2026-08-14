@@ -501,7 +501,7 @@ mod tests {
         // calls.
         let definition = create_fem2d_app().definition;
         for id in ids {
-            assert!(definition.actions.iter().any(|action| action.id == id), "command_id {id} must be a declared action");
+            assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == id), "command_id {id} must be a declared action");
         }
     }
 
@@ -629,10 +629,10 @@ mod tests {
         let window_model = definition.window_kinds.iter().find(|window| window.id == model_window::WINDOW_KIND_ID).expect("model window kind declared");
         assert_eq!(window_model.label.resolve(Terminology::Native, Locale::En), "Model");
         assert_eq!(window_model.label.resolve(Terminology::Native, Locale::De), "Modell");
-        let add_node_action = definition.actions.iter().find(|action| action.id == "addNode").expect("addNode action declared");
+        let add_node_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "addNode").expect("addNode action declared");
         assert_eq!(add_node_action.label.resolve(Terminology::Native, Locale::En), "Add Node");
         assert_eq!(add_node_action.label.resolve(Terminology::Native, Locale::De), "Knoten hinzufügen");
-        let set_locale_action = definition.actions.iter().find(|action| action.id == "setLocale").expect("setLocale action declared");
+        let set_locale_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setLocale").expect("setLocale action declared");
         assert_eq!(set_locale_action.label.resolve(Terminology::Native, Locale::En), "Set Locale");
         assert_eq!(set_locale_action.label.resolve(Terminology::Native, Locale::De), "Sprache festlegen");
     }
