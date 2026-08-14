@@ -15,7 +15,6 @@ use crate::apps::architect::commands::exchange::{export_program, export_register
 use crate::apps::architect::commands::graph::{node_graph_edit, node_graph_viewport};
 use crate::apps::architect::commands::register::{add_register_item, patch_register_item, remove_register_item, select_register};
 use crate::apps::architect::commands::search::query;
-use crate::apps::architect::commands::selection::set_selection;
 use crate::apps::architect::commands::template::apply;
 use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
 use crate::apps::architect::presence::{ArchitectPresence, ArchitectPresenceMutation};
@@ -25,7 +24,10 @@ use crate::apps::architect::modes::{report as report_mode, review as review_mode
 use crate::apps::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::{empty_plugin, sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+};
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -38,6 +40,19 @@ pub fn architect_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(ARCHITECT_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ "program" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction
+/// domain this app declares: `HierarchyProvider::Flat` (the 68 registers are flat lists of
+/// `EntityId`-keyed rows, no parent/child nesting), one granularity ("entity") covering every
+/// register kind uniformly (mirrors note's single "block" granularity over several block kinds).
+/// The document panel's element rows are the sole real pick surface today (`📌️panels/📄️artifact`);
+/// the register/graph/trace windows lost their per-selection detail entirely (`render` carries no
+/// `InteractionView` — see each window's own doc comment) rather than being force-wired to a
+/// surface (`BlockListScene`/`NodeGraphScene`) that cannot show it yet.
+pub const ARCHITECT_INTERACTION_PROGRAM: &str = "program";
+pub const ARCHITECT_INTERACTION_GRANULARITY_ENTITY: &str = "entity";
+//#endregion 🔖️Interaction
 
 //#region 🔖️ResetDocument
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (the whole-document
@@ -1139,7 +1154,6 @@ semio_framework_plugin::app_commands! {
     /// `String`-typed and are parsed inside each handler — mirrors `gis2d`'s `positions_json`/`camera_json`
     /// convention for the same reason (their shapes have no `dsl::DslField` binding of their own).
     pub enum ArchitectCommand for ProgramSnapshot, ProgramMutation, ArchitectConfig, ArchitectConfigMutation {
-        "setSelection" as "set-selection" => set_selection::SetSelection,
         "selectRegister" as "select-register" => select_register::SelectRegister,
         "addRegisterItem" as "add-register-item" => add_register_item::AddRegisterItem,
         "removeRegisterItem" as "remove-register-item" => remove_register_item::RemoveRegisterItem,
@@ -1207,9 +1221,6 @@ impl ArtifactApp for ArchitectPlayApp {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
         match action {
-            "setSelection" => Ok(ArchitectCommand::SetSelection(set_selection::SetSelection {
-                ids: args.and_then(|value| value.get("ids")).and_then(Value::as_array).map(|ids| ids.iter().filter_map(|value| value.as_str().map(str::to_string)).collect()).unwrap_or_default(),
-            })),
             "selectRegister" => Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: parse_register_id(args).unwrap_or_default() })),
             "addRegisterItem" => Ok(ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem {
                 register_id: parse_register_id(args).unwrap_or_default(),
@@ -1260,7 +1271,13 @@ impl ArtifactApp for ArchitectPlayApp {
         }
     }
 
-    fn handle(command: &ArchitectCommand, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no `ArchitectCommand` row reads
+    /// the "program" domain's selection — the document panel's own tree click (its sole real pick
+    /// surface) is intercepted by the framework's injected `interactionSelect` before it ever
+    /// reaches `handle` (see `dispatch_action`'s reserved-verb interception), and every remaining
+    /// command derives its ids from explicit args, not the live selection (mirrors `note`'s
+    /// `app_commands!`-dispatched leaves that never needed `InteractionView` either).
+    fn handle(command: &ArchitectCommand, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -1272,7 +1289,7 @@ impl ArtifactApp for ArchitectPlayApp {
             graph_window::ARCHITECT_BODY_GRAPH => graph_window::render(program, config),
             register_window::ARCHITECT_BODY_REGISTER => register_window::render(program, config),
             report_window::ARCHITECT_BODY_REPORT => report_window::render(config),
-            trace_window::ARCHITECT_BODY_TRACE => trace_window::render(program, config),
+            trace_window::ARCHITECT_BODY_TRACE => trace_window::render(program),
             document_panel::ARCHITECT_BODY_DOCUMENT => document_panel::render(program, config),
             catalogue_panel::ARCHITECT_BODY_CATALOGUE => catalogue_panel::render(),
             inspection_panel::ARCHITECT_BODY_INSPECTION => inspection_panel::render(program, config),
@@ -1317,7 +1334,6 @@ pub fn create_architect_app() -> App {
             .view_action("runAnalysis", LocalizedLabel::native("Run Analysis", "Analyse ausführen"))
             .view_action("runReport", LocalizedLabel::native("Run Report", "Bericht erzeugen"))
             .view_action("search", LocalizedLabel::native("Search", "Suchen"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .shell_action("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"))
             .shell_action("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setAdjacencyFilter", LocalizedLabel::native("Set Adjacency Filter", "Adjazenzfilter setzen"), ActionKind::View) })
@@ -1378,6 +1394,21 @@ pub fn create_architect_app() -> App {
             .action_args("runReport", vec![ActionArgDef::select("reportKind", LocalizedLabel::native("Report", "Bericht"), report_kind_picker_options())])
             .action_args("search", vec![ActionArgDef::text("query", LocalizedLabel::native("Query", "Suchanfrage"))])
             .action_args("importProgram", vec![ActionArgDef::text("payload", LocalizedLabel::native("ProgramSnapshot DSL", "Programm-DSL"))])
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "program" interaction
+            // domain — one granularity ("entity") over the 68 flat registers, `HierarchyProvider::Flat`
+            // (no parent/child nesting), single-select Pick/Replace only (the document panel's element
+            // rows are the sole real pick surface today — see its own doc comment). Scoped to the graph
+            // window (the node-graph canvas, this app's closest analog to a primary editing surface),
+            // mirroring `dag`'s main window's identical declaration.
+            .interaction(InteractionDefinition {
+                id: ARCHITECT_INTERACTION_PROGRAM.into(),
+                label: LocalizedLabel::native("Program", "Programm"),
+                granularities: vec![GranularityDefinition { id: ARCHITECT_INTERACTION_GRANULARITY_ENTITY.into(), label: LocalizedLabel::native("Entity", "Entität"), icon_id: "circle".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
+            })
+            .window_kind_interactions(graph_window::ARCHITECT_WINDOW_GRAPH, vec![InteractionRef::new(ARCHITECT_INTERACTION_PROGRAM)])
             .default_layout(edit_mode::layout()),
     )
     .example("sample", LocalizedLabel::native("Sample Clinic", "Beispielklinik"), serde_json::to_string(&sample_plugin()).expect("sample_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "cylinder")
@@ -1412,8 +1443,15 @@ pub(crate) mod testkit {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    /// 🔀️ Drives a typed `ArchitectCommand` straight through `handle` against a bare
-    /// `ArchitectPlayApp` — mirrors `cad`'s `drive`/`drive_with_config` harness.
+    /// 🔀️ Drives a typed `ArchitectCommand` straight through `ArchitectCommand::dispatch` — mirrors
+    /// `cad`'s `drive`/`drive_with_config` harness.
+    ///
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches through
+    /// `ArchitectCommand::dispatch` directly instead of `ArtifactApp::handle` — `handle`'s
+    /// `interaction: &semio_framework_plugin::app::InteractionView<'_>` parameter has `pub(crate)`
+    /// fields in that crate, so this crate's own tests cannot construct one; no `ArchitectCommand`
+    /// row reads the "program" domain's live selection (see `handle`'s own doc comment), so
+    /// `dispatch`'s plain 2-arg shape (no `ctx`) already carries everything every handler needs.
     pub fn drive(command: &ArchitectCommand, program: &ProgramSnapshot) -> Emit<ProgramMutation, ArchitectConfigMutation> {
         drive_with_config(command, program, &ArchitectPlayApp::initial_config())
     }
@@ -1422,10 +1460,7 @@ pub(crate) mod testkit {
         let history = HistoryView::empty();
         let doc = ArtifactView::new(program, &history);
         let cfg = ConfigView { snapshot: config };
-        let draft_snapshot = NoDraft::default();
-        let draft = DraftView { snapshot: &draft_snapshot };
-        let engines = EngineHandles::empty();
-        ArchitectPlayApp::handle(command, &doc, &cfg, &draft, &engines).expect("handle")
+        command.dispatch(&doc, &cfg).expect("dispatch")
     }
 
     /// 🧮️ Folds an `Emit`'s `config_mutations` onto a base `ArchitectConfig` — mirrors what
@@ -1461,7 +1496,6 @@ mod tests {
     /// 🎯️ One value per `app_commands!` row — the fixture behind the wire laws below.
     fn every_command() -> Vec<ArchitectCommand> {
         vec![
-            ArchitectCommand::SetSelection(set_selection::SetSelection { ids: vec!["a".into(), "b".into()] }),
             ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }),
             ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: None }),
             ArchitectCommand::RemoveRegisterItem(remove_register_item::RemoveRegisterItem { register_id: "elements".into(), entity_id: "e1".into() }),
@@ -1494,7 +1528,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 22, "every ArchitectCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 21, "every ArchitectCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -1513,30 +1547,28 @@ mod tests {
     #[test]
     fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &ArchitectCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        assert_eq!(hex(&ArchitectCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() })), "01000001000c00");
-        assert_eq!(hex(&ArchitectCommand::SetSelection(set_selection::SetSelection { ids: vec!["a".into(), "b".into()] })), "0100020161016201000c0206000601");
         assert_eq!(
             hex(&ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: None })),
-            "01020204526f6f6d08656c656d656e747302000601010600"
+            "01010204526f6f6d08656c656d656e747302000601010600"
         );
         assert_eq!(
             hex(&ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: Some("t1".into()) })),
-            "01020304526f6f6d08656c656d656e747302743103000601010600020602"
+            "01010304526f6f6d08656c656d656e747302743103000601010600020602"
         );
-        assert_eq!(hex(&ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {})), "01070000");
-        assert_eq!(hex(&ArchitectCommand::RunValidation(run_validation::RunValidation {})), "010b0000");
-        assert_eq!(hex(&ArchitectCommand::ExportProgram(export_program::ExportProgram {})), "010e0000");
-        assert_eq!(hex(&ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})), "010f0000");
+        assert_eq!(hex(&ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {})), "01060000");
+        assert_eq!(hex(&ArchitectCommand::RunValidation(run_validation::RunValidation {})), "010a0000");
+        assert_eq!(hex(&ArchitectCommand::ExportProgram(export_program::ExportProgram {})), "010d0000");
+        assert_eq!(hex(&ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})), "010e0000");
         assert_eq!(
             hex(&ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true })),
-            "01130201610162030006000106010302"
+            "01120201610162030006000106010302"
         );
         assert_eq!(
             hex(&ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: Some("required".into()), cycle: false })),
-            "01130301610162087265717569726564040006000106010206020301"
+            "01120301610162087265717569726564040006000106010206020301"
         );
-        assert_eq!(hex(&ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: None })), "01150000");
-        assert_eq!(hex(&ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: Some("required".into()) })), "01150108726571756972656401000600");
+        assert_eq!(hex(&ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: None })), "01140000");
+        assert_eq!(hex(&ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: Some("required".into()) })), "01140108726571756972656401000600");
     }
 
     /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
@@ -1626,13 +1658,18 @@ mod tests {
         assert!(!testkit::config_after(&emit, &initial).last_result_json.is_empty());
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: search no longer auto-selects
+    /// its hits (selection is framework-owned `InteractionState` now, only ever mutated by the
+    /// framework's own injected `interactionSelect` handling, never by an app command's `Emit` —
+    /// mirrors `note`'s `add-block` precedent) — it still records the hits in `last_result_json` and
+    /// the query in `search_history_json`.
     #[test]
     fn search_finds_sample_elements() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp::initial_config();
         let emit = testkit::drive_with_config(&ArchitectCommand::Search(query::Search { query: "Reception".into() }), &program, &initial);
         let config = testkit::config_after(&emit, &initial);
-        assert!(!config.selected_ids.is_empty());
+        assert!(!config.last_result_json.is_empty());
         assert!(!config.search_history_json.is_empty());
     }
 
@@ -1705,11 +1742,32 @@ mod tests {
     /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
+    ///
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `setSelection` (the old
+    /// app-declared View action this test used to dispatch) is deleted — selection is the
+    /// framework's own injected `interactionSelect` verb now, never an app command. `selectRegister`
+    /// is the remaining view action closest in shape (config-only, no document mutation).
     #[test]
     fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
-        let result = testkit::dispatch(&mut app, ArchitectCommand::SetSelection(set_selection::SetSelection { ids: vec!["e1".into()] }));
-        assert!(result.mutations.is_empty(), "setSelection is a view action and must never reach document operations under kind discipline");
+        let result = testkit::dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }));
+        assert!(result.mutations.is_empty(), "selectRegister is a view action and must never reach document operations under kind discipline");
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: end-to-end proof the "program"
+    /// domain's real pick surface (the document panel's element rows) actually drives the framework's
+    /// injected `interactionSelect` — dispatches it directly (the only way a downstream crate can
+    /// populate a genuine `InteractionView`, see `testkit::drive`'s own doc comment), then confirms
+    /// the SAME element row renders `"selected":true` (mirrors `note`'s `select_blocks` proof).
+    #[test]
+    fn interaction_select_stamps_the_picked_element_as_selected_in_the_document_panel() {
+        let mut app = testkit::app_with_registry();
+        let element_id = app.snapshot().expect("snapshot").elements[0].header.id.to_string();
+        let targets = serde_json::to_string(&[serde_json::json!({ "granularity": ARCHITECT_INTERACTION_GRANULARITY_ENTITY, "id": element_id })]).expect("targets json");
+        app.handle_action("interactionSelect", Some(&json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" })), &semio_framework_plugin::testkit::meta("test")).expect("interactionSelect");
+        let rendered = testkit::render(&mut app, document_panel::ARCHITECT_BODY_DOCUMENT);
+        assert!(rendered.contains(&element_id), "the rendered tree must still list the picked element");
+        assert!(rendered.contains("\"selected\":true"), "the picked element must be stamped selected by the framework wrapper");
     }
     //#endregion 🔖️Behavior
 }

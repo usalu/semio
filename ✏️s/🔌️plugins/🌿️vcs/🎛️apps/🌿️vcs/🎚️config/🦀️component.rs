@@ -2,10 +2,12 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.vcsdemo` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so selection/locale edits are VCS'd exactly like document
-//! content. Absorbs the old `VcsPlayApp::selected_checkpoint_ids` `RefCell` field (multi-selected
-//! checkpoint ids in the document tree) plus the `locale` field the UI used to read off the deleted
-//! `ViewModel` (mirrors `shooting_engine::ShootingConfig`'s identical `locale` field/doc).
+//! `ArtifactStore` (with a real `backwards`), so locale edits are VCS'd exactly like document content.
+//! Multi-selected checkpoint ids (formerly `VcsPlayApp::selected_checkpoint_ids`, then this struct's own
+//! `selected_checkpoint_ids` field) are now the framework-owned "history" interaction domain (ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, see `VCS_INTERACTION_HISTORY`'s doc comment) —
+//! this struct keeps only the `locale` field the UI used to read off the deleted `ViewModel` (mirrors
+//! `shooting_engine::ShootingConfig`'s identical `locale` field/doc).
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -17,8 +19,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "vcs.config")]
 #[dsl(layout = "lines")]
 pub struct VcsDemoConfig {
-    /// 👁️ Multi-selected checkpoint ids in the document tree — was `VcsPlayApp::selected_checkpoint_ids`.
-    pub selected_checkpoint_ids: Vec<String>,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
 }
@@ -88,7 +88,7 @@ impl store::ArtifactPack for VcsDemoConfig {
 
 impl Default for VcsDemoConfig {
     fn default() -> Self {
-        Self { selected_checkpoint_ids: Vec::new(), locale: "en-US".into() }
+        Self { locale: "en-US".into() }
     }
 }
 
@@ -107,8 +107,6 @@ pub enum VcsDemoConfigMutation {
         #[dsl(block)]
         config: VcsDemoConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { checkpoint_ids: Vec<String> },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }
@@ -192,7 +190,6 @@ impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
         let mut next = base.clone();
         match self {
             VcsDemoConfigMutation::Snapshot { config } => return config.clone(),
-            VcsDemoConfigMutation::SetSelection { checkpoint_ids } => next.selected_checkpoint_ids = checkpoint_ids.clone(),
             VcsDemoConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         next
@@ -210,9 +207,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn vcs_demo_config_default_is_empty_selection_and_english_locale() {
+    fn vcs_demo_config_default_is_english_locale() {
         let config = VcsDemoConfig::default();
-        assert!(config.selected_checkpoint_ids.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
@@ -220,7 +216,7 @@ mod tests {
     /// non-default fixture must survive `ArtifactDsl`/`ArtifactPack` byte-for-byte.
     #[test]
     fn vcs_demo_config_dsl_pack_round_trips() {
-        let config = VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into(), "checkpoint-2".into()], locale: "de-DE".into() };
+        let config = VcsDemoConfig { locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
@@ -228,8 +224,7 @@ mod tests {
     /// SCHEMA-FLOW-CONFIG-ON-NODE).
     #[test]
     fn vcs_demo_config_operation_op_text_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "de-DE".into() } });
-        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetSelection { checkpoint_ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] });
+        store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig { locale: "de-DE".into() } });
         store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
@@ -237,7 +232,7 @@ mod tests {
     /// the forward op exactly restores the original — the "whole-config-snapshot-undo" law.
     #[test]
     fn vcs_demo_config_operation_backwards_restores_the_base_config() {
-        let base = VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "en-US".into() };
+        let base = VcsDemoConfig { locale: "en-US".into() };
         let operation = VcsDemoConfigMutation::SetLocale { value: "de-DE".into() };
         let forward = operation.diff(&base);
         assert_eq!(forward.locale, "de-DE");

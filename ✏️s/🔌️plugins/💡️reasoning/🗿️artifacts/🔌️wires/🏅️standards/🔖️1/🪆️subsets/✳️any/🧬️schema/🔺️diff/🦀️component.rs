@@ -22,8 +22,6 @@ pub struct WiresDiff {
     pub camera: Option<DslValue>,
     #[state(artifact)]
     pub meta: Option<DslValue>,
-    #[state(presence)]
-    pub selected_ids: Option<WiresStringList>,
     #[state(artifact)]
     pub drag_node_id: Option<Option<String>>,
     #[state(artifact)]
@@ -34,12 +32,3 @@ pub struct WiresDiff {
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
-
-//#region 🔖️DeltaHelpers
-/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct WiresStringList {
-    pub values: Vec<String>,
-}
-//#endregion 🔖️DeltaHelpers

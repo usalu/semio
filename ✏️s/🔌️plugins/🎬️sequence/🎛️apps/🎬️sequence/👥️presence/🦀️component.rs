@@ -6,13 +6,15 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of sequence view state (selection, layout orientation, node-graph camera).
+/// 👥️ Shareable live subset of sequence view state (layout orientation, node-graph camera). 🕹️ ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection no longer lives here — it
+/// broadcasts automatically via the framework's typed `PresenceInteraction` (assembled from the
+/// "steps" domain's `InteractionState`, zero app code).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "sequence.presence")]
 #[dsl(layout = "lines")]
 pub struct SequencePresence {
-    pub selected_step_ids: Vec<String>,
     pub orientation: String,
     #[dsl(block)]
     pub camera: SequenceCamera,
@@ -20,7 +22,7 @@ pub struct SequencePresence {
 
 impl Default for SequencePresence {
     fn default() -> Self {
-        Self { selected_step_ids: Vec::new(), orientation: "leftRight".into(), camera: SequenceCamera::default() }
+        Self { orientation: "leftRight".into(), camera: SequenceCamera::default() }
     }
 }
 

@@ -3,16 +3,6 @@
   "title": "PlaybookPresence",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "selectedIds"
-  ],
-  "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    }
-  }
+  "required": [],
+  "properties": {}
 }

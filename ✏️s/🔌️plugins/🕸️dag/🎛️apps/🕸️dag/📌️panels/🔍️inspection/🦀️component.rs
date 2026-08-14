@@ -198,9 +198,7 @@ pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabel
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::dag::commands::set_selection;
-    use crate::apps::dag::testkit::{dispatch, new_app, render as render_body};
-    use crate::apps::dag::DagCommand;
+    use crate::apps::dag::testkit::{new_app, render as render_body};
 
     #[test]
     fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
@@ -215,12 +213,18 @@ mod tests {
         assert!(render_body(&mut app, DAG_PLAY_BODY_INSPECTOR).contains("Select a node"));
     }
 
+    /// 🕹️ `render` carries no `InteractionView` (`DagPlayApp::render` always calls this panel's own
+    /// `render` with an empty selection now — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM,
+    /// matching `space`'s identical gap), so this exercises the panel's OWN rendering logic directly
+    /// with an explicit selection, the way `space`'s inspector test does, rather than driving it
+    /// end-to-end through a (now selection-blind) app dispatch.
     #[test]
     fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
-        let mut app = new_app();
-        let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
-        dispatch(&mut app, DagCommand::SetSelection(set_selection::SetSelection { ids: vec![node_id.clone()] }));
-        let json = render_body(&mut app, DAG_PLAY_BODY_INSPECTOR);
+        let document = crate::artifacts::dag::default_snapshot();
+        let node_id = document.nodes().first().map(|node| node.id.clone()).expect("node");
+        let labels = crate::apps::dag::terminology::dag_play_labels(&crate::apps::dag::config::DagConfig::default());
+        let node = render(&document, &[node_id.clone()], labels);
+        let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(&node_id));
         assert!(json.contains("Name") || json.contains("Kind"));
     }

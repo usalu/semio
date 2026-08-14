@@ -21,6 +21,9 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        // 🕹️ Populated post-hoc by `create_vcs_app`'s `.window_kind_interactions(..)` call (the
+        // "history" domain — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

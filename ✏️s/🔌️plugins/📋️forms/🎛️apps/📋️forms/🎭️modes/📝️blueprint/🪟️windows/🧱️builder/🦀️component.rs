@@ -27,6 +27,8 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        // 🕹️ Populated post-hoc by `create_forms_app`'s `.window_kind_interactions(..)` call.
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
@@ -36,17 +38,15 @@ fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
     crate::playbook::PlaybookBuilderConfig { action_namespace: "forms-blueprint", controller_id: crate::apps::forms::FORMS_PLAY_APP_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactApp::render` carries no
+/// `InteractionView` (a known SDK gap — matches `gis2d`'s and `note`'s inspection panel precedent), so
+/// this block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`)
+/// can no longer be driven from live framework selection — it always renders with none highlighted now.
 pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     let contributions = crate::apps::forms::parse_contributions(config);
     let palette: Vec<BlockPaletteEntry> = crate::apps::forms::catalogue_kinds(&contributions, labels).into_iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind, label, icon_id }).collect();
     let builder_config = forms_playbook_builder_config();
-    crate::playbook::render_playbook_builder(
-        FORMS_PLAY_SURFACE_BLUEPRINT,
-        &crate::artifacts::forms::mutations::as_playbook_spec(spec),
-        &palette,
-        config.selected_ids.first().map(String::as_str),
-        &builder_config,
-    )
+    crate::playbook::render_playbook_builder(FORMS_PLAY_SURFACE_BLUEPRINT, &crate::artifacts::forms::mutations::as_playbook_spec(spec), &palette, None, &builder_config)
 }
 //#endregion 🔖️Render
 

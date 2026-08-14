@@ -1,6 +1,7 @@
 //! 🔵️ 🔵️ Wires play app commands command — `add-node`.
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
+use crate::apps::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
 use crate::artifacts::wires::schema::fixture_nodes;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
@@ -14,6 +15,9 @@ pub struct AddNode {
     pub kind: String,
 }
 
+/// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+/// the newly created node is selected via a requested `interactionSelect` effect instead of a
+/// `WiresConfigMutation::SetSelection`.
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
@@ -29,7 +33,7 @@ pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &C
         "handles": []
     }))
     .expect("node serializes");
-    Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::create_node(node)], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![id] }], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::create_node(node)], effects: vec![wires_select_effect(&[id], WIRES_GRANULARITY_NODE, "replace")], ..Default::default() })
 }
 
 //#region 🧪️Tests

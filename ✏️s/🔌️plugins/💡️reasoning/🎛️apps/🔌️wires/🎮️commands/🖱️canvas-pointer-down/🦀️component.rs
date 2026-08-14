@@ -1,7 +1,7 @@
 //! 🖱️ 🖱️ Wires play app commands command — `canvas-pointer-down`.
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::schema::{fixture_camera, node_position};
+use crate::apps::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
 use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
@@ -16,10 +16,18 @@ pub struct CanvasPointerDown {
     pub y: f64,
 }
 
+/// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+/// a hit no longer writes `WiresConfigMutation::SetSelection` directly, it asks the host to
+/// redispatch `interactionSelect` for the "graph" domain's "node" granularity — the in-flight drag
+/// state (`SetDrag`) stays a plain config mutation since it is genuinely app-specific.
 pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     match payload.id.as_deref().filter(|id| find_board_node(document, id).is_some()) {
-        Some(id) => Ok(Emit::config(vec![WiresConfigMutation::SetSelection { ids: vec![id.to_string()] }, WiresConfigMutation::SetDrag { node_id: Some(id.to_string()), last_x: payload.x, last_y: payload.y }])),
+        Some(id) => Ok(Emit {
+            config_mutations: vec![WiresConfigMutation::SetDrag { node_id: Some(id.to_string()), last_x: payload.x, last_y: payload.y }],
+            effects: vec![wires_select_effect(&[id.to_string()], WIRES_GRANULARITY_NODE, "replace")],
+            ..Default::default()
+        }),
         None => Ok(Emit::default()),
     }
 }
@@ -28,11 +36,12 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::wires::commands::add_node;
+    use crate::apps::wires::commands::{add_node, canvas_pointer_move, canvas_pointer_up};
     use crate::apps::wires::testkit::{dispatch, new_app};
     use crate::apps::wires::WiresCommand;
     use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-    use semio_framework_plugin::{testkit, PluginApp};
+    use semio_framework_plugin::{testkit, PluginApp, INTERACTION_SELECT_ACTION_ID};
+    use semio_framework::kernel::HostEffect;
 
     #[test]
     fn pointer_drag_translates_node_by_screen_delta() {
@@ -48,6 +57,29 @@ mod tests {
         app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         let node = find_board_node(&app.snapshot().expect("snapshot"), "node-1").expect("node-1").clone();
         assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(0.0));
+    }
+
+    /// 🕹️ A hit requests `interactionSelect` for the "graph" domain's "node" granularity instead of
+    /// mutating config directly.
+    #[test]
+    fn pointer_down_requests_a_select_effect_for_the_hit_node() {
+        let mut app = new_app();
+        dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
+        let result = dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }));
+        let effect = result.requested_effects.iter().find(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
+        let HostEffect::DispatchAction { args, .. } = effect else { unreachable!() };
+        let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
+        assert_eq!(args["domainId"], "graph");
+        assert_eq!(args["merge"], "replace");
+        assert!(args["targets"].as_str().expect("targets json").contains("node-1"));
+    }
+
+    #[test]
+    fn pointer_down_on_empty_space_requests_no_select_effect() {
+        let mut app = new_app();
+        let result = dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 0.0, y: 0.0 }));
+        assert!(result.requested_effects.is_empty());
+        assert!(result.mutations.is_empty());
     }
 }
 //#endregion 🧪️Tests

@@ -19,8 +19,6 @@ pub struct SequenceArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub content: SequenceContentChild,
-    #[state(presence)]
-    pub selected_step_ids: Vec<String>,
     #[state(config)]
     pub last_run_json: String,
     #[state(config)]
@@ -38,7 +36,6 @@ impl Default for SequenceArtifact {
         Self {
             schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
             content: crate::artifacts::sequence::sequence_content_child_handle_and_cache(Vec::new(), Vec::new()),
-            selected_step_ids: Vec::new(),
             last_run_json: String::new(),
             orientation: "leftRight".into(),
             camera: SequenceCamera::default(),
@@ -58,7 +55,6 @@ impl SequenceArtifact {
         Self {
             schema: snapshot.schema,
             content: snapshot.content,
-            selected_step_ids: Vec::new(),
             last_run_json: String::new(),
             orientation: "leftRight".into(),
             camera: SequenceCamera::default(),

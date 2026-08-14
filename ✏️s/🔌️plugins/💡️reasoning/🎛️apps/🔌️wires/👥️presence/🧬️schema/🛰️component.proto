@@ -2,11 +2,9 @@ syntax = "proto3";
 package semio.app.reasoning.wires;
 message WiresPresence {
   // @state presence
-  repeated string selected_ids = 1;
+  optional string drag_node_id = 1;
   // @state presence
-  optional string drag_node_id = 2;
+  double drag_last_x = 2;
   // @state presence
-  double drag_last_x = 3;
-  // @state presence
-  double drag_last_y = 4;
+  double drag_last_y = 3;
 }

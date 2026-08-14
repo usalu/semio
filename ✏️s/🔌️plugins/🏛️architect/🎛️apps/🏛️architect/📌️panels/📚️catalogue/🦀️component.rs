@@ -48,7 +48,6 @@ pub fn render() -> UiNode {
             ),
             tree_section("architect-catalogue.registers", Some("Registers".into()), register_items),
         ],
-        None,
     )
 }
 //#endregion 🔖️Render

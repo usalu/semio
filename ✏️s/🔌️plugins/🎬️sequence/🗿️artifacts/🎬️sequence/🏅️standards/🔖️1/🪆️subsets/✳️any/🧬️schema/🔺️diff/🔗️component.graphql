@@ -4,13 +4,11 @@ type SequenceDiff {
   schema: String @state(class: ARTIFACT)
   steps: SequenceStepsDelta @state(class: ARTIFACT)
   edges: SequenceEdgesDelta @state(class: ARTIFACT)
-  selectedStepIds: SequenceStringList @state(class: PRESENCE)
   lastRunJson: String @state(class: CONFIG)
   orientation: String @state(class: CONFIG)
   camera: SequenceCamera @state(class: CONFIG)
   locale: String @state(class: CONFIG)
 }
-type SequenceStringList { values: [String!]! }
 type SequenceStepsDelta { added: [SequenceStep!]! removed: [String!]! patched: [SequenceStepPatchEntry!]! reordered: [String!] }
 type SequenceEdgesDelta { added: [SequenceEdge!]! removed: [String!]! patched: [SequenceEdgePatchEntry!]! reordered: [String!] }
 type SequenceStepPatchEntry { id: String! patch: SequenceStepPatch! }
@@ -23,6 +21,6 @@ type SequenceEdgePatch { from: String to: String }
 type SequenceCamera { x: Float! y: Float! zoom: Float! }
 type SequenceArtifact {
   schema: String! steps: [SequenceStep!]! edges: [SequenceEdge!]!
-  selectedStepIds: [String!]! lastRunJson: String! orientation: String! camera: SequenceCamera! locale: String!
+  lastRunJson: String! orientation: String! camera: SequenceCamera! locale: String!
 }
 scalar JSON

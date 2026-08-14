@@ -9,12 +9,11 @@ use crate::apps::architect::ARCHITECT_APP_ID;
 use crate::artifacts::program::registers::AdjacencyKind;
 use crate::artifacts::program::{EntityId, ProgramSnapshot};
 use semio_framework_plugin::{
-    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_tree_stamp_presence, ActionDescriptor, Label, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiStackNode,
+    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ActionDescriptor, Label, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiStackNode,
     UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
 };
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::collections::HashSet;
 
 //#region 🔖️Tree
 pub fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
@@ -29,11 +28,12 @@ pub fn tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiT
     UiTreeSectionNode { id: id.into(), label: label.map(Label::data), default_open: Some(true), presence: UiPresence::default(), items }
 }
 
-pub fn tree_node(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
-    if let Some(ids) = selected_ids {
-        ui_tree_stamp_presence(&mut sections, &ids.into_iter().collect::<HashSet<_>>(), &HashSet::new());
-    }
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None, menu: None })
+/// 🌳️ A plain, non-selectable tree — every remaining caller (catalogue/report/adjacency/trace) has
+/// no interaction domain to bind (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); the
+/// one tree that IS selectable (the document panel's element list) is built directly via the SDK's
+/// `PanelTreeBuilder` instead, so this helper no longer takes a `selected_ids` param.
+pub fn tree_node(sections: Vec<UiTreeSectionNode>) -> UiNode {
+    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), interaction_domain: None, drop_action: None, menu: None })
 }
 
 /// 🧱️ A horizontal stack — the adjacency matrix's glyph-strip + pair-tree pairing.

@@ -2,7 +2,5 @@ syntax = "proto3";
 package semio.app.vcs.vcs;
 message VcsDemoConfig {
   // @state config
-  repeated string selected_checkpoint_ids = 1;
-  // @state config
-  string locale = 2;
+  string locale = 1;
 }

@@ -368,8 +368,6 @@ pub mod apps {
             pub mod node_graph;
             #[path = "../../🎛️apps/🎬️sequence/🎮️commands/🔄️layout/🦀️component.rs"]
             pub mod layout;
-            #[path = "../../🎛️apps/🎬️sequence/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
             #[path = "../../🎛️apps/🎬️sequence/🎮️commands/🏃️run/🦀️component.rs"]
             pub mod playback;
             #[path = "../../🎛️apps/🎬️sequence/🎮️commands/🗣️locale/🦀️component.rs"]

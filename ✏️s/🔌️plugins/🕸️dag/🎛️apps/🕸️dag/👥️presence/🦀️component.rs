@@ -5,30 +5,22 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live node-graph view state (peer selection, hover targets, viewport camera).
+/// 👥️ Shareable live node-graph view state — viewport camera only; peer selection/hover now ride the
+/// framework's own typed `PresenceInteraction` for the `graph` domain (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), not this app-opaque facet.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "dag.presence")]
 #[dsl(layout = "lines")]
 pub struct DagPresence {
-    pub selected_node_ids: Vec<String>,
     pub camera_x: f64,
     pub camera_y: f64,
     pub camera_zoom: f64,
-    pub hovered_node_id: Option<String>,
-    pub hovered_edge_id: Option<String>,
 }
 
 impl Default for DagPresence {
     fn default() -> Self {
-        Self {
-            selected_node_ids: Vec::new(),
-            camera_x: 0.0,
-            camera_y: 0.0,
-            camera_zoom: 1.0,
-            hovered_node_id: None,
-            hovered_edge_id: None,
-        }
+        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0 }
     }
 }
 

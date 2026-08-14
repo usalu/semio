@@ -9,8 +9,6 @@ export interface WiresDiff {
   wiresFixture?: DslValue;
   /** @state artifact */
   boardFixture?: DslValue;
-  /** @state presence */
-  selectedIds?: WiresStringList;
   /** @state artifact */
   dragNodeId?: string | null;
   /** @state artifact */
@@ -26,8 +24,6 @@ export interface WiresArtifact {
   wiresFixture: DslValue;
   /** @state artifact */
   boardFixture: DslValue;
-  /** @state presence */
-  selectedIds: string[];
   /** @state artifact */
   dragNodeId?: string;
   /** @state artifact */
@@ -36,8 +32,4 @@ export interface WiresArtifact {
   dragLastY: number;
   /** @state config */
   locale: string;
-}
-
-export interface WiresStringList {
-  values: string[];
 }

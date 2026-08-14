@@ -14,6 +14,10 @@ pub struct AddBlock {
     pub step_id: Option<String>,
 }
 
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new block used to also become the
+// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
+// framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
+// forms' `add-question`/note's `add-block`).
 pub fn handle(payload: &AddBlock, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let steps = spec.steps();
@@ -21,7 +25,7 @@ pub fn handle(payload: &AddBlock, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg
         return Ok(Emit::default());
     };
     let block_id = format!("block-{}", steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
-    Ok(Emit { artifact_mutations: vec![add_block_operation(&step_id, default_block(block_id.clone(), &payload.kind), None)], config_mutations: vec![PlaybookConfigMutation::SetSelectedIds { ids: vec![block_id] }], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![add_block_operation(&step_id, default_block(block_id, &payload.kind), None)], ..Default::default() })
 }
 
 //#region 🧪️Tests
@@ -31,11 +35,13 @@ mod tests {
     use AddBlock;
     use crate::apps::playbook::testkit::{dispatch, playbook_app, playbook_app_with_registry};
     use crate::apps::playbook::PlaybookCommand;
-    use move_block::MoveBlock;
-    use remove_block::RemoveBlock;
+    use crate::apps::playbook::commands::move_block::MoveBlock;
+    use crate::apps::playbook::commands::remove_block::RemoveBlock;
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new block is no longer
+    /// auto-selected by this command (selection is framework-owned now) — only the document edit itself.
     #[test]
-    fn add_block_action_appends_and_selects_block() {
+    fn add_block_action_appends_block() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
         let projection = app.snapshot().expect("projection");
@@ -53,8 +59,12 @@ mod tests {
         assert_eq!(projection.steps()[0].blocks.last().unwrap().kind, "text", "kind default materialized from the registry");
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no config-owned selection to check
+    /// anymore — a deleted block's id, if selected, is pruned by the framework's own
+    /// `revalidate_interaction_state_after_document_change` against `interaction_topology`, covered by
+    /// `interaction_topology_covers_every_step_and_block` in the app root's own tests.
     #[test]
-    fn remove_block_clears_it_from_selection() {
+    fn remove_block_action_removes_it_from_the_document() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
         let steps = app.snapshot().expect("projection").steps();

@@ -370,8 +370,6 @@ pub mod apps {
             pub mod text_edit;
             #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🩹️edit/🦀️component.rs"]
             pub mod edit;
-            #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
             #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
             #[path = "../../🎛️apps/🌿️vcs/🎮️commands/🖱️no-operation/🦀️component.rs"]

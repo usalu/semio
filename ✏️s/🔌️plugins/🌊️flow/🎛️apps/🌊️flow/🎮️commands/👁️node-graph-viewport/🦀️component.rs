@@ -31,6 +31,7 @@ mod tests {
 
     #[test]
     fn set_preview_off_toggles_ids_on_and_off_the_scene() {
+        use crate::apps::flow::commands::set_preview_off;
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: vec!["slider".into()], value: true }));
         assert_eq!(preview_off_ids(&mut app), json!(["slider"]));

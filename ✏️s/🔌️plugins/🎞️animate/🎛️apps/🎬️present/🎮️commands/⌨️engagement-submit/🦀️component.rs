@@ -1,7 +1,7 @@
 //! ⌨️ ⌨️ Animate present app commands command — `engagement-submit`.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
-use crate::apps::present::{new_tile_id, tile_morph_prompt_effect};
+use crate::apps::present::{interaction_select_effect, new_tile_id, tile_morph_prompt_effect, PresentDispatchCtx};
 use crate::artifacts::present::schema::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
@@ -16,16 +16,17 @@ pub struct EngagementSubmit {
     pub value: String,
 }
 
-pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let trimmed = payload.value.trim();
     let (deck_source, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
     if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows, columns, gap: 0.0, key_prefix: "tile" });
-        let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+        let selected: Vec<String> = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
         return Ok(Emit {
             artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })],
-            config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
+            config_mutations: vec![PresentConfigMutation::SetEngagementInput { value: String::new() }],
+            effects: vec![interaction_select_effect(&selected, "replace")],
             ..Default::default()
         });
     }
@@ -35,13 +36,15 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot
             let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
             Ok(Emit {
                 artifact_mutations: vec![PresentMutation::CreateTile(CreateTile { index: deck_tiles.len(), tile })],
-                config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: vec![id] }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
+                config_mutations: vec![PresentConfigMutation::SetEngagementInput { value: String::new() }],
+                effects: vec![interaction_select_effect(&[id], "replace")],
                 ..Default::default()
             })
         }
         "clear" => Ok(Emit {
             artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() })],
-            config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: Vec::new() }, PresentConfigMutation::SetEngagementInput { value: String::new() }],
+            config_mutations: vec![PresentConfigMutation::SetEngagementInput { value: String::new() }],
+            effects: vec![interaction_select_effect(&[], "replace")],
             ..Default::default()
         }),
         "copy" | "copy prompt" => Ok(Emit { config_mutations: vec![PresentConfigMutation::SetEngagementInput { value: String::new() }], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() }),
@@ -53,6 +56,7 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::present::commands::engagement_input;
     use crate::apps::present::testkit::{dispatch, present_app};
     use crate::apps::present::PresentCommand;
     use semio_framework_plugin::HostEffect;

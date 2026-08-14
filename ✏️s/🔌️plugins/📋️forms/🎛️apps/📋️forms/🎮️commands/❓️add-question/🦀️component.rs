@@ -194,17 +194,19 @@ pub struct AddQuestion {
     pub step_id: Option<String>,
 }
 
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new question used to also become
+// the selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
+// framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
+// note's `add-block`).
 pub fn handle(payload: &AddQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let Some(step_id) = payload.step_id.clone().or_else(|| forms_steps(spec).first().map(|step| step.id.clone())) else {
         return Ok(Emit::default());
     };
     let question = default_question_for_kind(&payload.kind, create_form_id("q"));
-    let mut config_mutations = reset_try_config_mutations();
-    config_mutations.push(FormsConfigMutation::SetSelection { ids: vec![question.id.clone()] });
     Ok(Emit {
         artifact_mutations: vec![FormMutation::CreateBlock(crate::artifacts::forms::mutations::create_block::mutation::CreateBlock { step_id, block: question, index: None })],
-        config_mutations,
+        config_mutations: reset_try_config_mutations(),
         ..Default::default()
     })
 }
@@ -216,10 +218,10 @@ mod tests {
     use crate::apps::forms::testkit::{dispatch, forms_app};
     use crate::apps::forms::FormsCommand;
     use AddQuestion;
-    use drop_question_kind::DropQuestionKind;
-    use move_question::MoveQuestion;
-    use patch_questions::PatchQuestions;
-    use remove_question::RemoveQuestion;
+    use crate::apps::forms::commands::drop_question_kind::DropQuestionKind;
+    use crate::apps::forms::commands::move_question::MoveQuestion;
+    use crate::apps::forms::commands::patch_questions::PatchQuestions;
+    use crate::apps::forms::commands::remove_question::RemoveQuestion;
 
     #[test]
     fn add_question_action_appends_question() {
@@ -235,15 +237,15 @@ mod tests {
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }), |app| crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).len(), before, before + 1);
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the dropped question is no longer
+    /// auto-selected by this command (selection is framework-owned now) — only the document edit itself.
     #[test]
-    fn drop_question_kind_inserts_and_selects() {
+    fn drop_question_kind_inserts_the_question() {
         let mut app = forms_app();
         let step_id = forms_steps(&app.snapshot().expect("projection"))[0].id.clone();
         dispatch(&mut app, FormsCommand::DropQuestionKind(DropQuestionKind { kind: "slider".into(), target_id: crate::artifacts::forms::schema::forms_play_step_tree_id(&step_id), drop_position: "inside".into() }));
         let spec = app.snapshot().expect("projection");
         assert!(forms_steps(&spec)[0].blocks.iter().any(|question| question.kind == "slider"));
-        let blueprint = crate::apps::forms::testkit::render(&mut app, crate::apps::forms::FORMS_PLAY_BODY_BLUEPRINT);
-        assert!(blueprint.contains(r#""selectedId":"#));
     }
 
     #[test]
@@ -257,7 +259,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_question_clears_it_from_the_selection() {
+    fn remove_question_removes_it_from_the_document() {
         let mut app = forms_app();
         let question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
         dispatch(&mut app, FormsCommand::RemoveQuestion(RemoveQuestion { question_id: question_id.clone() }));

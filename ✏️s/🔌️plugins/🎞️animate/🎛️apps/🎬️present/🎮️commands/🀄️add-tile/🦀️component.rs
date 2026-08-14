@@ -1,18 +1,12 @@
 //! 🀄️ 🀄️ Animate present app commands command — `add-tile`.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
-use crate::apps::present::{new_tile_id, valid_tile_ids};
-use crate::artifacts::present::schema::clamp_tile_crop;
+use crate::apps::present::{interaction_select_effect, new_tile_id, PresentDispatchCtx};
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
-use crate::artifacts::present::mutations::delete_tile::mutation::DeleteTile as DeleteTileMutation;
-use crate::artifacts::present::mutations::delete_tiles::mutation::DeleteTiles;
-use crate::artifacts::present::mutations::rename_tile::mutation::RenameTile;
-use crate::artifacts::present::mutations::resize_tile_crop::mutation::ResizeTileCrop;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{FigureTileDraft, FigureTileFrame, PresentSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "add-tile")]
@@ -21,23 +15,22 @@ pub struct AddTile {
     pub crop: Option<FigureTileFrame>,
 }
 
-pub fn handle(payload: &AddTile, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &AddTile, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let id = new_tile_id("tile");
     let crop = payload.crop.clone().unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
     let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
     let tile_count = crate::artifacts::present::present_working_scene(deck).1.len();
-    Ok(Emit {
-        artifact_mutations: vec![PresentMutation::CreateTile(CreateTile { index: tile_count, tile })],
-        config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: vec![id] }],
-        ..Default::default()
-    })
+    let mut emit = Emit::mutations(vec![PresentMutation::CreateTile(CreateTile { index: tile_count, tile })]);
+    emit.effects.push(interaction_select_effect(&[id], "replace"));
+    Ok(emit)
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::present::commands::{delete_selection, delete_tile, patch_tile_crops, rename_tiles};
     use crate::apps::present::testkit::{dispatch, present_app, present_app_with_registry};
     use crate::apps::present::PresentCommand;
     use semio_framework_plugin::testkit::meta;
@@ -69,23 +62,21 @@ mod tests {
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].crop.width, 0.2);
     }
 
+    /// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
+    /// MECHANISM); selects the live tile through the real `interactionSelect` action (the only way a
+    /// downstream crate can populate a genuine `InteractionView`, see
+    /// `🎮️commands/🀄️delete-selection`'s own tests for the equivalent single-tile case).
     #[test]
-    fn delete_selection_removes_selected_tiles_and_clears_selection() {
-        let mut app = present_app();
+    fn delete_selection_removes_only_the_selected_tile() {
+        use semio_framework_plugin::{InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
+        use crate::apps::present::{PRESENT_INTERACTION_DOMAIN, PRESENT_INTERACTION_GRANULARITY};
+        let mut app = present_app_with_registry();
         seed_2x2(&mut app);
         let first_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
-        app.dispatch_typed(PresentCommand::SetSelectedIds(crate::apps::present::commands::set_selected_ids::SetSelectedIds { ids: vec![first_id] }), &meta("local")).expect("select");
+        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: PRESENT_INTERACTION_GRANULARITY.into(), id: first_id }]).expect("targets");
+        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&serde_json::json!({ "domainId": PRESENT_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), &meta("local")).expect("select");
         app.dispatch_typed(PresentCommand::DeleteSelection(delete_selection::DeleteSelection {}), &meta("local")).expect("delete selection");
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 3, "only the selected tile is removed");
-    }
-
-    #[test]
-    fn delete_selection_with_no_selection_is_a_no_op() {
-        let mut app = present_app();
-        seed_2x2(&mut app);
-        app.dispatch_typed(PresentCommand::SetSelectedIds(crate::apps::present::commands::set_selected_ids::SetSelectedIds { ids: vec![] }), &meta("local")).expect("clear selection");
-        app.dispatch_typed(PresentCommand::DeleteSelection(delete_selection::DeleteSelection {}), &meta("local")).expect("delete selection");
-        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "nothing selected means nothing deleted");
     }
 
     #[test]

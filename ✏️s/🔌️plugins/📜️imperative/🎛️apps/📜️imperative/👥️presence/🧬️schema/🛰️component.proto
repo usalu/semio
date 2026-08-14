@@ -1,6 +1,5 @@
 syntax = "proto3";
 package semio.app.imperative.imperative;
 message ImperativePresence {
-  // @state presence
-  repeated string selected_step_ids = 1;
+  reserved 1;
 }

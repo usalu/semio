@@ -4,13 +4,11 @@ export interface SequenceDiff {
   /** @state artifact */ schema?: string;
   /** @state artifact */ steps?: SequenceStepsDelta;
   /** @state artifact */ edges?: SequenceEdgesDelta;
-  /** @state presence */ selectedStepIds?: SequenceStringList;
   /** @state config */ lastRunJson?: string;
   /** @state config */ orientation?: string;
   /** @state config */ camera?: SequenceCamera;
   /** @state config */ locale?: string;
 }
-export interface SequenceStringList { values: string[]; }
 export interface SequenceStepsDelta { added: SequenceStep[]; removed: string[]; patched: SequenceStepPatchEntry[]; reordered?: string[]; }
 export interface SequenceEdgesDelta { added: SequenceEdge[]; removed: string[]; patched: SequenceEdgePatchEntry[]; reordered?: string[]; }
 export interface SequenceStepPatchEntry { id: string; patch: SequenceStepPatch; }
@@ -23,5 +21,5 @@ export interface SequenceEdgePatch { from?: string; to?: string; }
 export interface SequenceCamera { x: number; y: number; zoom: number; }
 export interface SequenceArtifact {
   schema: string; steps: SequenceStep[]; edges: SequenceEdge[];
-  selectedStepIds: string[]; lastRunJson: string; orientation: string; camera: SequenceCamera; locale: string;
+  lastRunJson: string; orientation: string; camera: SequenceCamera; locale: string;
 }

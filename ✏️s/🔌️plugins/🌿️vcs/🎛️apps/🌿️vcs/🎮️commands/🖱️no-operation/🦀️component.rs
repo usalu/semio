@@ -17,6 +17,7 @@ pub fn handle(_payload: &NoMutation, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg:
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel};
     use crate::apps::vcs::VcsCommand;
 
     #[test]

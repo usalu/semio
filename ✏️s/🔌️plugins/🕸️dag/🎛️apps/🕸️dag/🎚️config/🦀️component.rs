@@ -27,8 +27,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "dag.config")]
 #[dsl(layout = "lines")]
 pub struct DagConfig {
-    /// 👁️ Selected node ids — was `DagPlayRuntime::selected_node_ids`.
-    pub selected_node_ids: Vec<String>,
     /// 🎥️ Viewport camera x — was `DagPlayRuntime::camera.x`.
     pub camera_x: f64,
     /// 🎥️ Viewport camera y — was `DagPlayRuntime::camera.y`.
@@ -107,7 +105,7 @@ impl Default for DagConfig {
         // 🎥️ Matches `DagCamera`'s own implicit default (`x: 0.0, y: 0.0, zoom: 1.0`, see `DagFixture`'s
         // `Default` impl in the kernel crate) without needing to parse the bundled demo document just to
         // read a trivial camera default.
-        Self { selected_node_ids: Vec::new(), camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, locale: "en-US".into() }
+        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, locale: "en-US".into() }
     }
 }
 
@@ -134,8 +132,6 @@ pub enum DagConfigMutation {
         #[dsl(block)]
         config: DagConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { node_ids: Vec<String> },
     #[dsl(key = "camera")]
     SetCamera { x: f64, y: f64, zoom: f64 },
     #[dsl(key = "locale")]
@@ -221,7 +217,6 @@ impl Mutation<DagConfig> for DagConfigMutation {
         let mut next = base.clone();
         match self {
             DagConfigMutation::Snapshot { config } => return config.clone(),
-            DagConfigMutation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
             DagConfigMutation::SetCamera { x, y, zoom } => {
                 next.camera_x = *x;
                 next.camera_y = *y;
@@ -246,7 +241,6 @@ mod tests {
     #[test]
     fn dag_config_default_matches_dag_camera_implicit_default() {
         let config = DagConfig::default();
-        assert!(config.selected_node_ids.is_empty());
         assert_eq!((config.camera_x, config.camera_y, config.camera_zoom), (0.0, 0.0, 1.0));
         assert_eq!(dag_config_camera(&config), DagCamera { x: 0.0, y: 0.0, zoom: 1.0 });
         assert_eq!(config.locale, "en-US");
@@ -255,25 +249,23 @@ mod tests {
     /// 🎞️ A fixture exercising every field — the dsl/pack round-trip law for `DagConfig`.
     #[test]
     fn dag_config_dsl_pack_round_trip() {
-        let config = DagConfig { selected_node_ids: vec!["n1".into(), "n2".into()], camera_x: 12.5, camera_y: -3.0, camera_zoom: 2.25, locale: "de-DE".into() };
+        let config = DagConfig { camera_x: 12.5, camera_y: -3.0, camera_zoom: 2.25, locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
     #[test]
     fn dag_config_operation_text_binary_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::Snapshot { config: DagConfig { selected_node_ids: vec!["n1".into()], camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } });
-        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetSelection { node_ids: vec!["n1".into(), "n2".into()] });
-        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetSelection { node_ids: Vec::new() });
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::Snapshot { config: DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } });
         store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetCamera { x: 12.5, y: -3.0, zoom: 2.25 });
         store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     #[test]
     fn dag_config_operation_backwards_restores_the_pre_operation_snapshot() {
-        let base = DagConfig { selected_node_ids: vec!["n1".into()], camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "en-US".into() };
-        let operation = DagConfigMutation::SetSelection { node_ids: vec!["n2".into()] };
+        let base = DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "en-US".into() };
+        let operation = DagConfigMutation::SetCamera { x: 9.0, y: 8.0, zoom: 7.0 };
         let forward = operation.diff(&base);
-        assert_eq!(forward.selected_node_ids, vec!["n2".to_string()]);
+        assert_eq!((forward.camera_x, forward.camera_y, forward.camera_zoom), (9.0, 8.0, 7.0));
         let backwards = operation.inverse(&base);
         assert_eq!(backwards, vec![DagConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);

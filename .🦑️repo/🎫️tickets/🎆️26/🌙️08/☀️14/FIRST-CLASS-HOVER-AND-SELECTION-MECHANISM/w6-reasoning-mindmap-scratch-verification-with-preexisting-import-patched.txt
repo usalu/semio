@@ -1,0 +1,44 @@
+Scratch verification only — NOT a committed fix.
+
+To prove the interaction migration itself is correct despite the crate's pre-existing,
+unrelated compile error (unresolved import WIRES_PLAY_EXAMPLE_METABOLISM_ID, confirmed via
+`git log --date=iso` to predate this ticket's work in this crate), the import line in
+🎛️apps/🔌️wires/🦀️component.rs was TEMPORARILY changed from:
+
+    use crate::apps::wires::commands::{set_active_example, WIRES_PLAY_EXAMPLE_METABOLISM_ID};
+
+to:
+
+    use crate::apps::wires::commands::set_active_example::{self, WIRES_PLAY_EXAMPLE_METABOLISM_ID};
+
+(WIRES_PLAY_EXAMPLE_METABOLISM_ID is defined inside the set_active_example module and was never
+re-exported at the commands-module level — a pre-existing drift from the "Semantic Command Names"
+refactor, commit 865fa1cc5b, unrelated to hover/selection.)
+
+With that scratch patch applied:
+
+`cargo check -p semio-s-plugin-reasoning-mindmap` — 0 errors, 23 warnings (all pre-existing,
+none touch interaction code).
+
+`cargo test -p semio-s-plugin-reasoning-mindmap` — 80 passed; 1 failed; 0 ignored.
+The one failure: artifacts::wires::standards::v1::subsets::any::schema::mutations::component::
+tests::set_node_root_round_trip — a content-addressed child-handle hash mismatch in the
+pre-existing (untouched by this ticket) set-node-root mutation's inverse law, confirmed
+deterministic across 2 direct reruns. `git log --date=iso` on that mutation's files (last
+touched commit 1cf6018596, 2026-08-13 15:56) confirms it predates this ticket's work in this
+crate. Not fixed — out of scope (no hover/selection involvement).
+
+Every interaction-migration test passed, including the new ones added by this ticket:
+  - apps::wires::commands::canvas_pointer_down::tests::pointer_down_requests_a_select_effect_for_the_hit_node
+  - apps::wires::commands::canvas_pointer_down::tests::pointer_down_on_empty_space_requests_no_select_effect
+  - apps::wires::commands::delete_selection::tests::handle_alone_deletes_nothing_without_a_live_selection
+  - apps::wires::commands::delete_selection::tests::delete_selection_removes_the_live_selected_node
+  - apps::wires::component::tests::graph_interaction_domain_is_declared_flat_and_scoped_to_the_canvas_window
+  - apps::wires::component::tests::wires_select_action_args_shapes_interaction_select_payload
+  - apps::wires::component::tests::commands_keep_their_pre_migration_wire_bytes (updated pinned
+    ordinals for CanvasPointerUp/SetLocale after setSelection/documentSelect row deletion)
+
+The scratch patch was REVERTED after this verification — the real, final files in this crate
+still carry the original, unresolved, pre-existing import exactly as found. See
+w6-reasoning-mindmap-final-cargo-check.txt / w6-reasoning-mindmap-final-cargo-test.txt for the
+real (unpatched) acceptance command output.

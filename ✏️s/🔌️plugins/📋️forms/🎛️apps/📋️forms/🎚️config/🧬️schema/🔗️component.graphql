@@ -1,5 +1,4 @@
 type FormsConfig {
-  selectedIds: [String!]! @state(class: CONFIG)
   currentStepIndex: Int! @state(class: CONFIG)
   tryValuesJson: String! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)

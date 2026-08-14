@@ -1,0 +1,118 @@
+=== cargo check -p semio-s-plugin-playbook ===
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:9
+   |
+10 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `serde_to_json_value` is never used
+  --> ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:16:4
+   |
+16 | fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
+   |    ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `json_value_to_serde` is never used
+  --> ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:18:4
+   |
+18 | fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-playbook` (lib) generated 18 warnings (run `cargo fix --lib -p semio-s-plugin-playbook` to apply 14 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1m 22s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 3`
+
+=== cargo test -p semio-s-plugin-playbook ===
+warning: `semio-s-plugin-playbook` (lib test) generated 27 warnings (15 duplicates) (run `cargo fix --lib -p semio-s-plugin-playbook --tests` to apply 10 suggestions)
+warning: `semio-s-plugin-playbook` (lib) generated 18 warnings (1 duplicate) (run `cargo fix --lib -p semio-s-plugin-playbook` to apply 14 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 5.10s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, semio-s-plugin-playbook v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 7`
+     Running unittests 📦️glue.rs (target/debug/deps/semio_s_plugin_playbook-b13c3a4ff4c43a7a)
+
+running 73 tests
+test apps::playbook::commands::add_step::tests::remove_step_with_empty_id_is_a_no_op ... ok
+test apps::playbook::commands::set_locale::tests::set_locale_is_a_view_command_without_operations ... ok
+test apps::playbook::commands::set_locale::tests::set_locale_changes_the_kind_arg_label_via_render ... ok
+test apps::playbook::commands::add_step::tests::add_step_action_appends_step ... ok
+test apps::playbook::commands::add_block::tests::add_block_action_appends_block ... ok
+test apps::playbook::component::tests::an_unknown_body_key_renders_a_diagnostic_instead_of_panicking ... ok
+test apps::playbook::component::tests::command_ids_are_unique ... ok
+test apps::playbook::component::tests::import_media_rejects_unknown_ports_and_malformed_payloads ... ok
+test apps::playbook::component::tests::import_media_creates_the_imported_step_and_a_note_block ... ok
+test apps::playbook::component::tests::blocks_interaction_domain_is_declared_topology_pick_only_on_the_builder_window ... ok
+test apps::playbook::commands::add_step::tests::update_playbook_title_coalesces_into_one_undo_step ... ok
+test apps::playbook::commands::add_block::tests::remove_block_action_removes_it_from_the_document ... ok
+test apps::playbook::component::tests::playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind ... ok
+test apps::playbook::component::tests::every_printed_op_line_starts_with_the_rows_wire_keyword ... ok
+test apps::playbook::component::tests::import_media_reuses_the_imported_step_on_a_second_import ... ok
+test apps::playbook::component::tests::playbook_play_app_declares_builder_window_only ... ok
+test apps::playbook::config::component::tests::config_mutations_apply_and_restore_every_field ... ok
+test apps::playbook::commands::add_step::tests::remove_and_move_step_actions ... ok
+test apps::playbook::commands::add_block::tests::move_block_relocates_between_steps ... ok
+test apps::playbook::config::component::tests::playbook_config_default_matches_the_existing_runtime_defaults ... ok
+test apps::playbook::engine::tests::playbook_io_declares_the_extra_chapters_in_port ... ok
+test apps::playbook::config::component::tests::playbook_config_dsl_round_trips_default_and_populated ... ok
+test apps::playbook::component::tests::undo_redo_round_trip_through_the_wrapper ... ok
+test apps::playbook::component::tests::interaction_topology_covers_every_step_and_block ... ok
+test apps::playbook::config::component::tests::playbook_config_operation_binary_matches_text ... ok
+test apps::playbook::modes::builder::component::tests::the_default_layout_lists_the_builder_window ... ok
+test apps::playbook::modes::builder::windows::builder::component::tests::definition_declares_the_block_list_surface_and_body_key ... ok
+test apps::playbook::terminology::tests::labels_resolve_native_english_and_german_from_the_config_locale ... ok
+test apps::playbook::modes::builder::windows::builder::component::tests::render_builder_emits_playbook_list_component_scene ... ok
+test apps::playbook::modes::builder::windows::builder::component::tests::render_builder_palette_includes_topic_contributed_block_kinds ... ok
+test artifacts::playbook::component::tests::artifact_kind_uses_the_playbook_media_kind_as_both_id_and_schema ... ok
+test apps::playbook::config::component::tests::playbook_config_pack_round_trips ... ok
+test apps::playbook::component::tests::every_command_round_trips_through_text_and_binary ... ok
+test artifacts::playbook::component::tests::block_fields_roundtrip ... ok
+test artifacts::playbook::component::tests::document_projection_round_trips_titles_and_descriptions_only ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::component::document_helpers_tests::default_block_sets_kind_and_label ... ok
+test artifacts::playbook::component::tests::flow_content_round_trips_every_step_field_losslessly ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::inferences::component::tests::default_snapshot_has_one_empty_step ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::inferences::topology::component::tests::a_direct_cycle_between_two_blocks_is_reported ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::inferences::component::tests::topology_orders_the_conditioned_block_after_its_dependency ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::inferences::component::tests::inference_determinism_law ... ok
+test apps::playbook::component::tests::the_manifest_stitches_every_taxonomy_node ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::inferences::topology::component::tests::sequential_steps_without_conditions_stay_cycle_free_with_increasing_depth ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::binary::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test apps::playbook::commands::add_block::tests::add_block_materializes_declared_kind_default ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::add_block_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::change_title_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::dispatch_registers_semantic_descriptors ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::add_step_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::move_block_cross_step_diff_never_falls_back_to_a_whole_artifact_replacement ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::move_block_cross_step_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::move_step_diff_absorb_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::move_block_same_step_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::remove_block_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::move_step_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::remove_step_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::text::tests::apply_playbook_add_step_roundtrip ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::text::tests::change_title_op_sets_title ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::replace_block_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::component::tests::update_step_inverse_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::snapshot::binary::tests::command_envelope_round_trip_holds_for_an_applied_operation ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::snapshot::binary::tests::facade_generator_example_pack_round_trips ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::snapshot::binary::tests::pack_round_trips_the_empty_snapshot ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::snapshot::binary::tests::facade_generator_example_pack_agrees_with_dsl ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::snapshot::text::tests::dsl_round_trips_the_empty_snapshot ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::snapshot::text::tests::facade_generator_example_matches_the_handcrafted_spec ... ok
+test examples::art_playbook_demo_tests::primary_asset_is_nonempty ... ok
+test examples::art_playbook_demo_tests::inference_default_law ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::snapshot::text::tests::facade_generator_example_dsl_round_trips ... ok
+test examples::art_playbook_demo_tests::inference_determinism_law ... ok
+test apps::playbook::component::tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+test artifacts::playbook::standards::v1::subsets::any::schema::mutations::text::tests::op_text_round_trips_for_every_kind ... ok
+
+test result: ok. 73 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests semio_s_plugin_playbook
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

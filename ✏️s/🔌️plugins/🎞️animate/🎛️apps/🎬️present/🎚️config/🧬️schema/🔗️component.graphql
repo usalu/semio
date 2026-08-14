@@ -1,5 +1,4 @@
 type PresentConfig {
-  selectedIds: [String!]! @state(class: CONFIG)
   engagementInput: String! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
 }

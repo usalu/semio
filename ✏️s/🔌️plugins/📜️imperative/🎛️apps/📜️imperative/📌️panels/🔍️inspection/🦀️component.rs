@@ -1,11 +1,8 @@
-//! 🔍️ Imperative play app panel — inspection: read-only detail fields for the selected step.
+//! 🔍️ Imperative play app panel — inspection: read-only summary of the document.
 
 use crate::apps::imperative::terminology::ImperativeLabels;
-use crate::artifacts::imperative::{ImperativeSnapshot, Step};
-use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use crate::artifacts::imperative::ImperativeSnapshot;
+use semio_framework_plugin::{ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_INSPECTOR: &str = "imperative.play.inspection";
@@ -24,39 +21,21 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &ImperativeSnapshot, selected: &[String], labels: &ImperativeLabels) -> UiNode {
-    if selected.is_empty() {
-        return ui_declarative_sections_to_tree(&[UiSectionNode {
-            id: "imperative-play-inspector.empty".into(),
-            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-            default_open: Some(true),
-            children: vec![ui_text(labels.inspector_empty_hint)],
-            presence: UiPresence::default(),
-            menu: None,
-        }]);
-    }
+/// ⚠️ Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the per-selected-step field group
+/// (id/kind/params, resolved from `ImperativeConfig::selected_step_ids`) this panel used to build is
+/// deleted along with that field — selection is framework-owned state now and
+/// `ArtifactApp::render(body_key, doc, cfg)` is never given an `InteractionView` (only
+/// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
+/// `🖍️draw`'s `📌️panels/🔍️properties/🦀️component.rs`: falls through to a step-count summary until a
+/// resolved-selection render path exists.
+pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    let steps: Vec<&Step> = selected.iter().filter_map(|id| path.steps.iter().find(|step| &step.id == id)).collect();
-    if steps.is_empty() {
-        return ui_declarative_sections_to_tree(&[UiSectionNode {
-            id: "imperative-play-inspector.missing".into(),
-            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-            default_open: Some(true),
-            children: vec![ui_text(labels.inspector_step_not_found)],
-            presence: UiPresence::default(),
-            menu: None,
-        }]);
-    }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "imperative-play-inspector.step".into(),
+        id: "imperative-play-inspector.summary".into(),
         label: Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
         default_open: Some(true),
         presence: UiPresence::default(),
-        fields: vec![
-            ui_inspector_readonly_field("imperative-play-inspector.id", labels.inspector_id, steps[0].id.clone()),
-            ui_inspector_readonly_field("imperative-play-inspector.kind", labels.inspector_kind, steps[0].kind.clone()),
-            ui_inspector_readonly_field("imperative-play-inspector.params", labels.inspector_params, serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into())),
-        ],
+        fields: vec![ui_inspector_readonly_field("imperative-play-inspector.steps", labels.inspector_steps, path.steps.len().to_string())],
     }])
 }
 //#endregion 🔖️Render
@@ -68,9 +47,9 @@ mod tests {
     use crate::apps::imperative::testkit::{imperative_app, render as render_body};
 
     #[test]
-    fn inspection_shows_empty_hint_without_selection() {
+    fn inspection_shows_step_count_summary() {
         let mut app = imperative_app();
-        assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_INSPECTOR).contains("imperative-play-inspector.empty"));
+        assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_INSPECTOR).contains("imperative-play-inspector.steps"));
     }
 }
 //#endregion 🧪️Tests

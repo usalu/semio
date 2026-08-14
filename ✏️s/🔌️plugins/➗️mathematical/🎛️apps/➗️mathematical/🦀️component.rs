@@ -23,6 +23,7 @@ use crate::apps::mathematical::modes::edit;
 use crate::apps::mathematical::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph, MathematicalSnapshot, MATH_DOCUMENT_SCHEMA};
+use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, SurfaceKind, UiComponentSceneNode, UiPresence,
     ui_text, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
@@ -252,7 +253,7 @@ impl ArtifactApp for MathematicalPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &MathematicalCommand, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &MathematicalCommand, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

@@ -1,8 +1,9 @@
-//! 🔍️ Wires play app panel — the inspector: selected node fields, or a document-wide summary.
+//! 🔍️ Wires play app panel — the inspector: a document-wide summary (was field editors for the
+//! current selection; see `render`'s doc comment for why that's gone).
 
-use crate::artifacts::wires::schema::{fixture_json_string, fixture_nodes, wires_identities};
+use crate::artifacts::wires::schema::{fixture_json_string, fixture_nodes};
 use crate::artifacts::wires::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
-use semio_framework_plugin::{ui_inspector_readonly_field, ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use serde_json::Value;
 
 //#region 🔖️Constants
@@ -22,26 +23,21 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WiresSnapshot, selected: &[String]) -> UiNode {
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: this used to switch on
+/// `config.selected_ids` to show one selected node's fields (id, identity label, kind, position).
+/// Selection is now framework-owned (`InteractionView`, threaded only into `handle`/`copy_fragment`/
+/// `cut_operations`) and `ArtifactApp::render` never gained that parameter, so this panel has no live
+/// selection to render against and always falls through to the document summary below — the same gap
+/// layout's/gis2d's/puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed
+/// here (framework file, out of this crate's remit).
+pub fn render(document: &WiresSnapshot) -> UiNode {
     let board = crate::artifacts::wires::wires_working_board(document);
-    let selected_nodes: Vec<&dsl::DslValue> = selected.iter().filter_map(|id| fixture_nodes(&board).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
-    if selected_nodes.is_empty() {
-        let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
-        return ui_stack_vertical(vec![
-            ui_text(Label::data(format!("Schema: {MINDMAP_WIRES_SCHEMA}"))),
-            ui_text(Label::data(format!("Identities: {}", extension.as_ref().map_or(0, |ext| ext.mindmap.topics.len())))),
-            ui_text(Label::data(format!("Relationships: {}", extension.as_ref().map_or(0, |ext| ext.relationships.len())))),
-            ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&board).len()))),
-        ]);
-    }
-    let node = selected_nodes[0];
-    let identity = wires_identities(&document.wires_fixture).iter().find(|identity| identity.get("nodeId").and_then(|value| value.as_str()) == node.get("id").and_then(|value| value.as_str()));
+    let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
     ui_stack_vertical(vec![
-        ui_inspector_readonly_field("wires-play-inspector.id", Label::data("Id"), node.get("id").and_then(|value| value.as_str()).unwrap_or("").to_string()),
-        ui_inspector_readonly_field("wires-play-inspector.identity-label", Label::data("Identity"), identity.and_then(|row| row.get("label")).and_then(|value| value.as_str()).unwrap_or("—").to_string()),
-        ui_inspector_readonly_field("wires-play-inspector.node-kind", Label::data("Identity Kind"), node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("—").to_string()),
-        ui_inspector_readonly_field("wires-play-inspector.x", Label::data("X"), node.get("x").and_then(|value| value.as_f64()).map_or_else(|| "—".into(), |value| value.to_string())),
-        ui_inspector_readonly_field("wires-play-inspector.y", Label::data("Y"), node.get("y").and_then(|value| value.as_f64()).map_or_else(|| "—".into(), |value| value.to_string())),
+        ui_text(Label::data(format!("Schema: {MINDMAP_WIRES_SCHEMA}"))),
+        ui_text(Label::data(format!("Identities: {}", extension.as_ref().map_or(0, |ext| ext.mindmap.topics.len())))),
+        ui_text(Label::data(format!("Relationships: {}", extension.as_ref().map_or(0, |ext| ext.relationships.len())))),
+        ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&board).len()))),
     ])
 }
 //#endregion 🔖️Render

@@ -16,15 +16,20 @@ use crate::apps::imperative::terminology::imperative_labels;
 use crate::artifacts::imperative::schema::default_snapshot;
 use crate::apps::imperative::engine::imperative_io;
 use crate::artifacts::imperative::mutations::ImperativeMutation;
-use crate::artifacts::imperative::{ImperativeSnapshot, IMPERATIVE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode};
+use crate::artifacts::imperative::{ImperativeSnapshot, Step, IMPERATIVE_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{
+    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+    DomainTopology, InteractionTopology, TopologyNode,
+};
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
-pub use main::IMPERATIVE_PLAY_BODY_MAIN;
+pub use main::{IMPERATIVE_PLAY_BODY_MAIN, IMPERATIVE_PLAY_WINDOW_MAIN};
 pub use script::IMPERATIVE_PLAY_BODY_SCRIPT;
 pub use catalogue_panel::IMPERATIVE_PLAY_BODY_CATALOGUE;
 pub use document_panel::IMPERATIVE_PLAY_BODY_DOCUMENT;
@@ -36,6 +41,34 @@ pub fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor 
     ActionDescriptor { controller_id: IMPERATIVE_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ "steps" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
+/// this app declares: `HierarchyProvider::Topology` over the document's own `Step::bodies` nesting
+/// (`control.if`/`control.while` control-flow blocks), transitive (selecting/hovering a control step
+/// covers the steps nested in its bodies).
+pub const IMPERATIVE_INTERACTION_STEPS: &str = "steps";
+
+/// 🌳️ `steps` domain topology from the document's own `Step::bodies` nesting — row-id-prefixed ids
+/// (matching the document panel tree's own item ids, see `document_panel::step_row_id`'s doc comment),
+/// so `validate_state` prunes deleted steps and range/transitive selection walk the real control-flow
+/// tree, including steps nested inside `control.if`/`control.while` bodies.
+fn imperative_steps_topology(document: &ImperativeSnapshot) -> DomainTopology {
+    fn visit(steps: &[Step], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
+        for step in steps {
+            let id = document_panel::step_row_id(&step.id);
+            out.push(TopologyNode { id: id.clone(), granularity: "step".into(), parent: parent.map(str::to_string) });
+            for body in step.bodies.values() {
+                visit(&body.steps, Some(id.as_str()), out);
+            }
+        }
+    }
+    let path = crate::artifacts::imperative::imperative_working_scene(document).path;
+    let mut ordered = Vec::new();
+    visit(&path.steps, None, &mut ordered);
+    DomainTopology { ordered }
+}
+//#endregion 🔖️Interaction
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -54,7 +87,6 @@ semio_framework_plugin::app_commands! {
         "moveStepAt" as "move-step-at" => move_step_at::MoveStepAt,
         "setStepParams" as "set-step-params" => set_step_params::SetStepParams,
         "setStepParamsAt" as "set-step-params-at" => set_step_params_at::SetStepParamsAt,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
         "run" as "run" => run::Run,
         "setLocale" as "locale" => set_locale::SetLocale,
         "setContributions" as "contributions" => set_contributions::SetContributions,
@@ -65,7 +97,7 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::apps::imperative::commands::set_contributions;
 use crate::apps::imperative::commands::{add_step, add_step_at, move_step, move_step_at, remove_step, remove_step_at, set_step_params, set_step_params_at};
-use crate::apps::imperative::commands::{run, set_locale, set_selection};
+use crate::apps::imperative::commands::{run, set_locale};
 //#endregion 🔖️Commands
 
 //#region 🔖️ImperativePlayApp
@@ -109,8 +141,16 @@ impl ArtifactApp for ImperativePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &ImperativeCommand, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &ImperativeCommand, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
+    }
+
+    /// 🕹️ `steps` domain: `HierarchyProvider::Topology` from the document's own `Step::bodies` nesting —
+    /// see `imperative_steps_topology`'s doc comment.
+    fn interaction_topology(doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> InteractionTopology {
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(IMPERATIVE_INTERACTION_STEPS.to_string(), imperative_steps_topology(doc.snapshot));
+        InteractionTopology { domains }
     }
 
     /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
@@ -141,9 +181,9 @@ impl ArtifactApp for ImperativePlayApp {
         match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => main::render(document, &config.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => script::render(document),
-            IMPERATIVE_PLAY_BODY_DOCUMENT => document_panel::render(document, &config.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(document, &config.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(document, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -178,8 +218,8 @@ pub fn create_imperative_app() -> App {
             .mutation("moveStepAt", LocalizedLabel::native("Move Step At", "Schritt bei Position verschieben"))
             .mutation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
             .mutation("setStepParamsAt", LocalizedLabel::native("Set Step Params At", "Schrittparameter bei Position festlegen"))
-            // 👁️ Ephemeral view state / runtime effect — selection is scratch, `run` evaluates into config.
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            // 👁️ Ephemeral view state / runtime effect — `run` evaluates into config. Step selection/
+            // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
             .view_action("run", LocalizedLabel::native("Run", "Ausführen"))
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 📝️ Staged argument form for the panel-visible create action (the step kind is a choice).
@@ -194,6 +234,26 @@ pub fn create_imperative_app() -> App {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `steps` interaction
+            // domain — one granularity ("step"), `HierarchyProvider::Topology` from the document's own
+            // `Step::bodies` nesting (`imperative_steps_topology`/`ImperativePlayApp::interaction_topology`),
+            // both hover and selection transitive (selecting/hovering a control step covers the steps
+            // nested in its bodies). Multi-select via Pick (document panel tree rows only — no canvas).
+            .interaction(InteractionDefinition {
+                id: IMPERATIVE_INTERACTION_STEPS.into(),
+                label: LocalizedLabel::native("Steps", "Schritte"),
+                granularities: vec![GranularityDefinition { id: "step".into(), label: LocalizedLabel::native("Step", "Schritt"), icon_id: "square".into() }],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: true,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(IMPERATIVE_PLAY_WINDOW_MAIN, vec![InteractionRef::new(IMPERATIVE_INTERACTION_STEPS)])
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS /
             // WORKFLOWS-END-TO-END-TYPED-PORTS) — `imperative_io()` is this port information's single
             // source of truth, reused here rather than duplicated.
@@ -270,7 +330,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 12, "every ImperativeCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 11, "every ImperativeCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -328,7 +388,6 @@ mod tests {
             ImperativeCommand::MoveStepAt(move_step_at::MoveStepAt { id: "step-1".into(), index: 2, owner: None, slot: None }),
             ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params: params.clone() }),
             ImperativeCommand::SetStepParamsAt(set_step_params_at::SetStepParamsAt { id: "step-1".into(), owner: Some("step-if".into()), slot: Some("then".into()), params }),
-            ImperativeCommand::SetSelection(set_selection::SetSelection { ids: vec!["step-1".into(), "step-2".into()] }),
             ImperativeCommand::Run(run::Run {}),
             ImperativeCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             ImperativeCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
@@ -350,6 +409,58 @@ mod tests {
         assert!(json.contains("computation.imperative"), "artifact kind missing from the manifest");
     }
     //#endregion 🔖️ManifestSanity
+
+    //#region 🔖️Interaction
+    /// 🕹️ The `steps` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
+    /// selection, and scoped to the main window kind — the manifest side of ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+    #[test]
+    fn steps_interaction_domain_is_declared_topology_and_transitive_on_the_main_window() {
+        let definition = create_imperative_app().definition;
+        let steps = definition.interactions.iter().find(|interaction| interaction.id == IMPERATIVE_INTERACTION_STEPS).expect("steps interaction domain declared");
+        assert!(matches!(steps.hierarchy, HierarchyProvider::Topology));
+        assert!(steps.hover.transitive, "steps hover must be transitive so a control step's hover covers its nested body steps");
+        assert!(steps.selection.transitive, "steps selection must be transitive so a control step's selection covers its nested body steps");
+        let main_window = definition.window_kinds.iter().find(|window| window.id == IMPERATIVE_PLAY_WINDOW_MAIN).expect("main window kind declared");
+        assert!(main_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == IMPERATIVE_INTERACTION_STEPS), "main window must reference the steps interaction domain");
+    }
+
+    /// 🌳️ `interaction_topology` walks a `control.if` step's `bodies["then"]` nesting into
+    /// `TopologyNode.parent` links — the owner step has no parent, the nested step's parent is the
+    /// owner's own row id.
+    #[test]
+    fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
+        let mut app = imperative_app();
+        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
+        let owner_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
+        dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) }));
+        let document = app.snapshot().expect("projection");
+        let config = ImperativeConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
+        let steps = topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology");
+        let owner_row_id = document_panel::step_row_id(&owner_id);
+        let owner_node = steps.ordered.iter().find(|node| node.id == owner_row_id).expect("owner node present");
+        assert!(owner_node.parent.is_none(), "top-level owner step has no parent");
+        let nested = steps.ordered.iter().find(|node| node.parent.as_deref() == Some(owner_row_id.as_str())).expect("nested step present under owner");
+        assert_eq!(nested.granularity, "step");
+    }
+
+    /// 🌱️ A document with no steps has an empty `steps` topology — every stale `steps` selection id
+    /// gets pruned.
+    #[test]
+    fn interaction_topology_is_empty_for_a_document_with_no_steps() {
+        let document = ImperativeSnapshot::default();
+        let config = ImperativeConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
+        assert!(topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology").ordered.is_empty());
+    }
+    //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
     #[test]

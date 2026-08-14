@@ -4,7 +4,7 @@ message SequenceArtifact {
   string schema = 1; // @state artifact
   repeated SequenceStep steps = 2; // @state artifact
   repeated SequenceEdge edges = 3; // @state artifact
-  repeated string selected_step_ids = 4; // @state presence
+  reserved 4;
   string last_run_json = 5; // @state config
   string orientation = 6; // @state config
   SequenceCamera camera = 7; // @state config

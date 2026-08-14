@@ -1,0 +1,30 @@
+test apps::flow::panels::catalogue::tests::catalogue_lists_module_operators ... ok
+test examples::art_flow_demo_tests::inference_default_law ... ok
+test apps::flow::panels::inspection::tests::empty_inspector_no_longer_shows_canvas_settings ... ok
+test apps::flow::panels::document::tests::document_lists_widgets ... ok
+test apps::flow::modes::generate::commands::add_generation::tests::adding_a_generation_populates_the_form_and_emits_no_artifact_mutations ... ok
+test artifacts::flow::standards::v1::subsets::any::schema::mutations::binary::tests::flow_document_text_round_trips_store_with_applied_operation ... ok
+test apps::flow::panels::catalogue::tests::every_built_in_extension_is_listed_in_the_installed_section ... ok
+test apps::flow::component::tests::two_instances_converge_on_disjoint_edits ... ok
+
+failures:
+
+---- apps::flow::commands::delete_selection::tests::delete_selection_action_removes_selected_synapses stdout ----
+
+thread 'apps::flow::commands::delete_selection::tests::delete_selection_action_removes_selected_synapses' (320712556) panicked at ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/./././../../🎛️apps/🌊️flow/🎮️commands/🗂️delete-selection/🦀️component.rs:63:9:
+deleteSelection must emit operations for an edge
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- apps::flow::component::tests::host_from_snapshot_deletes_edge_selected_by_synapse_domain stdout ----
+
+thread 'apps::flow::component::tests::host_from_snapshot_deletes_edge_selected_by_synapse_domain' (320712589) panicked at ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/././../../🎛️apps/🌊️flow/🦀️component.rs:899:9:
+s1 must resolve through host_from_snapshot edge map
+
+
+failures:
+    apps::flow::commands::delete_selection::tests::delete_selection_action_removes_selected_synapses
+    apps::flow::component::tests::host_from_snapshot_deletes_edge_selected_by_synapse_domain
+
+test result: FAILED. 93 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p semio-s-plugin-flow --lib`

@@ -2703,8 +2703,6 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🏛️architect/🎮️commands/🗂️selection/🦀️component.rs"]
-            pub mod selection;
             #[path = "../../🎛️apps/🏛️architect/🎮️commands/📋️register/🦀️component.rs"]
             pub mod register;
             #[path = "../../🎛️apps/🏛️architect/🎮️commands/↔️adjacency/🦀️component.rs"]

@@ -1,12 +1,6 @@
 /** 🧬️ FlowConfig */
 export interface FlowConfig {
   /** @state config */
-  selectedNodeIds: string[];
-  /** @state config */
-  selectedEdgeIds: string[];
-  /** @state config */
-  selectedHandleIds: string[];
-  /** @state config */
   previewOffNodeIds: string[];
   /** @state config */
   camera: CameraJson;

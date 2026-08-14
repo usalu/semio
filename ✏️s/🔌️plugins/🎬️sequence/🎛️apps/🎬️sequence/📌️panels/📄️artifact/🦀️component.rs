@@ -2,10 +2,10 @@
 
 use crate::apps::sequence::sequence_action;
 use crate::apps::sequence::terminology::SequenceLabels;
-use crate::apps::sequence::{control_slots, is_control_kind};
+use crate::apps::sequence::{control_slots, is_control_kind, SEQUENCE_INTERACTION_STEPS};
 use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiControlNode, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiControlNode, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use serde_json::json;
 
@@ -37,8 +37,14 @@ fn slot_label(slot_name: &str, labels: &SequenceLabels) -> Label {
     }
 }
 
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: item ids are the SAME canonical raw
+/// step ids `SequencePlayApp::interaction_topology` declares for the "steps" domain (and the main
+/// node-graph canvas's own `NodeGraphNodeRecord.id`) — the framework stamps this tree's
+/// selection/hover presence from that domain (`.interaction_domain`) and prunes stale ids through
+/// that same topology, so no per-item click action is declared here anymore (clicks are translated
+/// into `interactionSelect` generically).
 fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> UiTreeItemNode {
-    let mut item = tree_item_with_action(format!("sequence-play-document.step.{}", step.id), Label::data(format!("{} ({})", step.id, step.kind)), Some(step.kind.clone()), sequence_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))));
+    let mut item = tree_item_desc(step.id.clone(), Label::data(format!("{} ({})", step.id, step.kind)), Some(step.kind.clone()));
     if is_control_kind(&step.kind) {
         item.control = Some(UiControlNode::Toggle(UiToggleNode {
             id: format!("sequence-play-document.collapse.{}", step.id),
@@ -60,8 +66,6 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
                     presence: UiPresence::default(),
                     default_open: Some(true),
                     action: None,
-                    hover_action: None,
-                    unhover_action: None,
                     actions: None,
                     draggable: None,
                     drag_data: None,
@@ -82,13 +86,13 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
+pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = fixture.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, fixture, labels)).collect();
     let edge_items: Vec<UiTreeItemNode> = fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), Label::data(format!("{} → {}", edge.from, edge.to)), Some(edge.id.clone()))).collect();
     PanelTreeBuilder::new("sequence-play-document")
         .section_or_placeholder("sequence-play-document.steps", Some(labels.steps.into()), true, step_items, labels.none)
         .section_or_placeholder("sequence-play-document.edges", Some(labels.flow_edges.into()), false, edge_items, labels.none)
-        .selected(selected.iter().map(|id| format!("sequence-play-document.step.{id}")).collect())
+        .interaction_domain(SEQUENCE_INTERACTION_STEPS)
         .build()
 }
 //#endregion 🔖️Render

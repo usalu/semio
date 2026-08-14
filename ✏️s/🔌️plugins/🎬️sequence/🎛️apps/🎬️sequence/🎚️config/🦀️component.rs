@@ -12,18 +12,18 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ B1: sequence's real `ArtifactApp::Config` — absorbs every former `SequencePlayRuntime` field
-/// (`selected_step_ids`/`last_run_json`/`orientation`) plus the node-graph viewport camera
-/// (session-only, never a document field) and the locale the pre-B1 host-pushed `ViewModel` used to
-/// carry (see `crate::apps::sequence::terminology::sequence_play_labels`) — same "absorb every
-/// runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
+/// (`last_run_json`/`orientation`) plus the node-graph viewport camera (session-only, never a document
+/// field) and the locale the pre-B1 host-pushed `ViewModel` used to carry (see
+/// `crate::apps::sequence::terminology::sequence_play_labels`) — same "absorb every runtime field"
+/// shape `shooting_engine::ShootingConfig` established for the pilot. 🕹️ ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_step_ids` no longer lives here —
+/// selection is framework-owned now, read via `InteractionView::selection("steps")`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "sequencecfg")]
 #[dsl(id = "sequence.config")]
 #[dsl(layout = "lines")]
 pub struct SequenceConfig {
-    /// 👁️ Selected step ids — was `SequencePlayRuntime::selected_step_ids`.
-    pub selected_step_ids: Vec<String>,
     /// 🏃️ Last `run` command's `RunResult` JSON, rendered under the compiled script — was
     /// `SequencePlayRuntime::last_run_json`.
     pub last_run_json: String,
@@ -105,7 +105,7 @@ impl store::ArtifactPack for SequenceConfig {
 
 impl Default for SequenceConfig {
     fn default() -> Self {
-        Self { selected_step_ids: Vec::new(), last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
+        Self { last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
     }
 }
 
@@ -124,8 +124,6 @@ pub enum SequenceConfigMutation {
         #[dsl(block)]
         config: SequenceConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { step_ids: Vec<String> },
     #[dsl(key = "last-run")]
     SetLastRun { json: String },
     #[dsl(key = "orientation")]
@@ -218,7 +216,6 @@ impl Mutation<SequenceConfig> for SequenceConfigMutation {
         let mut next = base.clone();
         match self {
             SequenceConfigMutation::Snapshot { config } => return config.clone(),
-            SequenceConfigMutation::SetSelection { step_ids } => next.selected_step_ids = step_ids.clone(),
             SequenceConfigMutation::SetLastRun { json } => next.last_run_json = json.clone(),
             SequenceConfigMutation::SetOrientation { value } => next.orientation = value.clone(),
             SequenceConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
@@ -241,7 +238,6 @@ mod tests {
     #[test]
     fn sequence_config_default_matches_the_existing_runtime_defaults() {
         let config = SequenceConfig::default();
-        assert!(config.selected_step_ids.is_empty());
         assert!(config.last_run_json.is_empty());
         assert_eq!(config.orientation, "leftRight");
         assert_eq!(config.locale, "en-US");
@@ -249,7 +245,7 @@ mod tests {
 
     #[test]
     fn sequence_config_dsl_round_trips() {
-        let config = SequenceConfig { selected_step_ids: vec!["step-1".into()], last_run_json: "{}".into(), orientation: "topBottom".into(), camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 }, locale: "de-DE".into() };
+        let config = SequenceConfig { last_run_json: "{}".into(), orientation: "topBottom".into(), camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 }, locale: "de-DE".into() };
         let text = store::ArtifactDsl::print_dsl(&config);
         let parsed = <SequenceConfig as store::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
         assert_eq!(parsed, config);
@@ -257,7 +253,7 @@ mod tests {
 
     #[test]
     fn sequence_config_pack_round_trips() {
-        let config = SequenceConfig { selected_step_ids: vec!["step-2".into()], last_run_json: "{\"ok\":true}".into(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() };
+        let config = SequenceConfig { last_run_json: "{\"ok\":true}".into(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() };
         let bytes = store::ArtifactPack::encode_pack(&config);
         let decoded = <SequenceConfig as store::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
         assert_eq!(decoded, config);
@@ -271,13 +267,6 @@ mod tests {
         let restored = backwards[0].diff(&forward);
         assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
         forward
-    }
-
-    #[test]
-    fn config_set_selection_round_trips() {
-        let config = SequenceConfig::default();
-        let next = round_trip_config(&config, &SequenceConfigMutation::SetSelection { step_ids: vec!["step-1".into()] });
-        assert_eq!(next.selected_step_ids, vec!["step-1".to_string()]);
     }
 
     #[test]
@@ -312,7 +301,6 @@ mod tests {
     #[test]
     fn config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::Snapshot { config: SequenceConfig::default() });
-        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetSelection { step_ids: vec!["step-1".into(), "step-2".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLastRun { json: "{}".into() });
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetOrientation { value: "leftRight".into() });
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetCamera { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } });

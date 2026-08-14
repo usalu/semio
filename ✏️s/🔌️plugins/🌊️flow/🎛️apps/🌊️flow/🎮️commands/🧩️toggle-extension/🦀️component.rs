@@ -31,17 +31,17 @@ mod tests {
     fn toggle_extension_and_run_action_reorganizes_fixture() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
-        let ignored = dispatch(&mut app, FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }));
+        let ignored = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::apps::flow::commands::run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }));
         assert!(ignored.mutations.is_empty(), "disabled automation action must be a no-operation");
         dispatch(&mut app, FlowCommand::ToggleExtension(ToggleExtension { id: "auto-layout".into(), enabled: true }));
-        dispatch(&mut app, FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }));
+        dispatch(&mut app, FlowCommand::RunExtensionAction(crate::apps::flow::commands::run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }));
         assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before, "reorganize keeps every widget");
     }
 
     #[test]
     fn an_unknown_extension_action_id_is_a_no_operation() {
         let mut app = flow_app();
-        let result = dispatch(&mut app, FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "third.party.nope".into() }));
+        let result = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::apps::flow::commands::run_extension_action::RunExtensionAction { action_id: "third.party.nope".into() }));
         assert!(result.mutations.is_empty());
     }
 }

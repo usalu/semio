@@ -47,14 +47,14 @@ mod tests {
     #[test]
     fn set_proximity_distance_updates_scene_lod_json() {
         let mut app = flow_app();
-        dispatch(&mut app, FlowCommand::SetProximityDistance(set_proximity_distance::SetProximityDistance { value: 96.0 }));
+        dispatch(&mut app, FlowCommand::SetProximityDistance(crate::apps::flow::commands::set_proximity_distance::SetProximityDistance { value: 96.0 }));
         assert!(render(&mut app, FLOW_PLAY_BODY_MAIN).contains("96"));
     }
 
     #[test]
     fn negative_proximity_distances_clamp_to_zero() {
         let mut app = flow_app();
-        let result = dispatch(&mut app, FlowCommand::SetProximityDistance(set_proximity_distance::SetProximityDistance { value: -10.0 }));
+        let result = dispatch(&mut app, FlowCommand::SetProximityDistance(crate::apps::flow::commands::set_proximity_distance::SetProximityDistance { value: -10.0 }));
         assert!(result.mutations.is_empty(), "a view command emits no document operations");
         assert!(!render(&mut app, FLOW_PLAY_BODY_MAIN).contains("-10"));
     }

@@ -1,7 +1,4 @@
 type FlowConfig {
-  selectedNodeIds: [String!]! @state(class: CONFIG)
-  selectedEdgeIds: [String!]! @state(class: CONFIG)
-  selectedHandleIds: [String!]! @state(class: CONFIG)
   previewOffNodeIds: [String!]! @state(class: CONFIG)
   camera: CameraJson! @state(class: CONFIG)
   lodMode: String! @state(class: CONFIG)

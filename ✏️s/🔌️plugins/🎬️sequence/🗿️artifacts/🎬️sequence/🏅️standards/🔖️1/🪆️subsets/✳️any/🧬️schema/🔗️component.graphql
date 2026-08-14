@@ -3,7 +3,6 @@ type SequenceArtifact {
   schema: String! @state(class: ARTIFACT)
   steps: [SequenceStep!]! @state(class: ARTIFACT)
   edges: [SequenceEdge!]! @state(class: ARTIFACT)
-  selectedStepIds: [String!]! @state(class: PRESENCE)
   lastRunJson: String! @state(class: CONFIG)
   orientation: String! @state(class: CONFIG)
   camera: SequenceCamera! @state(class: CONFIG)

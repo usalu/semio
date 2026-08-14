@@ -1,8 +1,6 @@
 /** 🧬️ SequenceConfig */
 export interface SequenceConfig {
   /** @state config */
-  selectedStepIds: string[];
-  /** @state config */
   lastRunJson: string;
   /** @state config */
   orientation: string;

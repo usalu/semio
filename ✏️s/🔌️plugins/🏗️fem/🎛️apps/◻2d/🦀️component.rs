@@ -19,7 +19,8 @@ use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::app_surface::{DisplayMode, ResultDisplay};
 use crate::model::{Dof, ElementResult};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ConfigSpec, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind,
     UiNode,
 };
@@ -285,7 +286,7 @@ impl ArtifactApp for Fem2dPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Fem2dCommand, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Fem2dCommand, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

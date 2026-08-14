@@ -3,13 +3,8 @@
   "title": "SequencePresence",
   "type": "object",
   "additionalProperties": false,
-  "required": ["selectedStepIds", "orientation", "camera"],
+  "required": ["orientation", "camera"],
   "properties": {
-    "selectedStepIds": {
-      "type": "array",
-      "items": { "type": "string" },
-      "x-semio-state": "presence"
-    },
     "orientation": {
       "type": "string",
       "x-semio-state": "presence"

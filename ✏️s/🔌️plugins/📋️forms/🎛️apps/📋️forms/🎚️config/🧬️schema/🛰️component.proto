@@ -2,13 +2,11 @@ syntax = "proto3";
 package semio.app.forms.forms;
 message FormsConfig {
   // @state config
-  repeated string selected_ids = 1;
+  uint32 current_step_index = 1;
   // @state config
-  uint32 current_step_index = 2;
+  string try_values_json = 2;
   // @state config
-  string try_values_json = 3;
+  string locale = 3;
   // @state config
-  string locale = 4;
-  // @state config
-  string contributions_json = 5;
+  string contributions_json = 4;
 }

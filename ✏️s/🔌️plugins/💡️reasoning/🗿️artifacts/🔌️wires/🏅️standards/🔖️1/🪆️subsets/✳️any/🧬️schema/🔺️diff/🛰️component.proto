@@ -10,30 +10,23 @@ message WiresDiff {
   optional DslValue wires_fixture = 2;
   // @state artifact
   optional DslValue board_fixture = 3;
-  // @state presence
-  optional WiresStringList selected_ids = 4;
   // @state artifact
-  optional string drag_node_id = 5;
+  optional string drag_node_id = 4;
   // @state artifact
-  optional double drag_last_x = 6;
+  optional double drag_last_x = 5;
   // @state artifact
-  optional double drag_last_y = 7;
+  optional double drag_last_y = 6;
   // @state config
-  optional string locale = 8;
+  optional string locale = 7;
 }
 
 message WiresArtifact {
   DslValue wires_fixture = 1;
   DslValue board_fixture = 2;
-  repeated string selected_ids = 3;
-  optional string drag_node_id = 4;
-  double drag_last_x = 5;
-  double drag_last_y = 6;
-  string locale = 7;
-}
-
-message WiresStringList {
-  repeated string values = 1;
+  optional string drag_node_id = 3;
+  double drag_last_x = 4;
+  double drag_last_y = 5;
+  string locale = 6;
 }
 
 message DslValue {}

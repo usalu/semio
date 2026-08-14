@@ -1,8 +1,7 @@
 syntax = "proto3";
 package semio.app.sequence.sequence;
 message SequenceConfig {
-  // @state config
-  repeated string selected_step_ids = 1;
+  reserved 1;
   // @state config
   string last_run_json = 2;
   // @state config

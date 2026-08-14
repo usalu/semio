@@ -4,34 +4,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedNodeIds",
-    "selectedEdgeIds",
-    "selectedHandleIds",
     "previewOffNodeIds",
     "camera"
   ],
   "properties": {
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "selectedEdgeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "selectedHandleIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
     "previewOffNodeIds": {
       "type": "array",
       "items": {

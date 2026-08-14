@@ -1,8 +1,6 @@
 /** 🧬️ FormsConfig */
 export interface FormsConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
   currentStepIndex: number;
   /** @state config */
   tryValuesJson: string;

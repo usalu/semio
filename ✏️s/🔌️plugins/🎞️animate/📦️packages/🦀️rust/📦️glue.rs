@@ -488,8 +488,6 @@ pub mod apps {
             pub mod engagement_submit;
             #[path = "../../🎛️apps/🎬️present/🎮️commands/⌨️engagement-input/🦀️component.rs"]
             pub mod engagement_input;
-            #[path = "../../🎛️apps/🎬️present/🎮️commands/👁️set-selected-ids/🦀️component.rs"]
-            pub mod set_selected_ids;
             #[path = "../../🎛️apps/🎬️present/🎮️commands/👁️canvas-pointer-down/🦀️component.rs"]
             pub mod canvas_pointer_down;
             #[path = "../../🎛️apps/🎬️present/🎮️commands/👁️no-operation/🦀️component.rs"]

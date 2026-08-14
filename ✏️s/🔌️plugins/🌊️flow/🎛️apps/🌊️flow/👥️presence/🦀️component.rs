@@ -6,15 +6,16 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of flow view state (graph selection, preview toggles, node-graph camera).
+/// 👥️ Shareable live APP-SPECIFIC subset of flow view state — preview toggles + the node-graph camera
+/// only. Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_node_ids`/
+/// `selected_edge_ids`/`selected_handle_ids` deleted — the "graph" interaction domain's selection is
+/// now broadcast generically by the framework (`PresenceInteraction`/`PresenceDomain`), for every peer,
+/// with no per-app mirror needed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "flow.presence")]
 #[dsl(layout = "lines")]
 pub struct FlowPresence {
-    pub selected_node_ids: Vec<String>,
-    pub selected_edge_ids: Vec<String>,
-    pub selected_handle_ids: Vec<String>,
     pub preview_off_node_ids: Vec<String>,
     #[dsl(block)]
     pub camera: CameraJson,
@@ -23,9 +24,6 @@ pub struct FlowPresence {
 impl Default for FlowPresence {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
-            selected_edge_ids: Vec::new(),
-            selected_handle_ids: Vec::new(),
             preview_off_node_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         }

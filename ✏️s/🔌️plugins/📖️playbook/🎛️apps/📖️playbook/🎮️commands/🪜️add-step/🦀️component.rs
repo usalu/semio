@@ -22,10 +22,10 @@ mod tests {
     use AddStep;
     use crate::apps::playbook::testkit::{dispatch, playbook_app};
     use crate::apps::playbook::PlaybookCommand;
-    use move_step::MoveStep;
-    use remove_step::RemoveStep;
+    use crate::apps::playbook::commands::move_step::MoveStep;
+    use crate::apps::playbook::commands::remove_step::RemoveStep;
     use semio_framework_plugin::PluginApp;
-    use update_playbook::UpdatePlaybook;
+    use crate::apps::playbook::commands::update_playbook::UpdatePlaybook;
 
     #[test]
     fn add_step_action_appends_step() {

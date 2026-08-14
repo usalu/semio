@@ -70,9 +70,9 @@ mod tests {
     use super::*;
     use crate::apps::forms::testkit::{dispatch, forms_app};
     use crate::apps::forms::FormsCommand;
-    use add_vector_field::AddVectorField;
+    use crate::apps::forms::commands::add_vector_field::AddVectorField;
     use PatchVectorField;
-    use remove_vector_field::RemoveVectorField;
+    use crate::apps::forms::commands::remove_vector_field::RemoveVectorField;
 
     fn vector_question_id(app: &mut crate::apps::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::apps::forms::commands::add_question::AddQuestion { kind: "vector".into(), step_id: None }));

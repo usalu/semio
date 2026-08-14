@@ -6,7 +6,6 @@ enum AdjacencyKind {
 }
 
 type ArchitectPresence {
-  selectedIds: [String!]! @state(class: PRESENCE)
   activeRegister: String! @state(class: PRESENCE)
   adjacencyKindFilter: AdjacencyKind @state(class: PRESENCE)
   graphCameraX: Float! @state(class: PRESENCE)

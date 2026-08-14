@@ -49,7 +49,8 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, FormsSnapshot>,
     let Some(next) = next else {
         return Ok(Emit::default());
     };
-    let mut config_mutations = reset_try_config_mutations();
-    config_mutations.push(FormsConfigMutation::SetSelection { ids: Vec::new() });
-    Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations, ..Default::default() })
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer clears a config-owned
+    // selection here — swapping in a whole new document prunes every stale "fields" selection id
+    // automatically via `revalidate_interaction_state_after_document_change`.
+    Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations: reset_try_config_mutations(), ..Default::default() })
 }

@@ -1,0 +1,25 @@
+  --> ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/./././../../🎛️apps/🔌️wires/📌️panels/🔍️inspection/🦀️component.rs:51:9
+   |
+51 | pub use infinite_board_normal_undirected as graph;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+   = note: for more information, see issue #127909 <https://github.com/rust-lang/rust/issues/127909>
+   = note: `-W pub-use-of-private-extern-crate` implied by `-W future-incompatible`
+   = help: to override `-W future-incompatible` add `#[allow(pub_use_of_private_extern_crate)]`
+help: consider making the `extern crate` item publicly accessible
+  --> ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/📦️glue.rs:12:1
+   |
+12 | pub extern crate infinite_canvas as infinite_board_normal_undirected;
+   | +++
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:9
+   |
+10 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some errors have detailed explanations: E0365, E0432.
+For more information about an error, try `rustc --explain E0365`.
+warning: `semio-s-plugin-reasoning-mindmap` (lib) generated 23 warnings
+error: could not compile `semio-s-plugin-reasoning-mindmap` (lib) due to 1 previous error; 24 warnings emitted

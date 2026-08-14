@@ -11,25 +11,23 @@ enum AdjacencyKind {
 
 message ArchitectConfig {
   // @state config
-  repeated string selected_ids = 1;
+  string active_register = 1;
   // @state config
-  string active_register = 2;
+  string search_query = 2;
   // @state config
-  string search_query = 3;
+  string search_history_json = 3;
   // @state config
-  string search_history_json = 4;
+  string active_report_json = 4;
   // @state config
-  string active_report_json = 5;
+  string last_result_json = 5;
   // @state config
-  string last_result_json = 6;
+  string last_analysis_json = 6;
   // @state config
-  string last_analysis_json = 7;
+  optional AdjacencyKind adjacency_kind_filter = 7;
   // @state config
-  optional AdjacencyKind adjacency_kind_filter = 8;
+  double graph_camera_x = 8;
   // @state config
-  double graph_camera_x = 9;
+  double graph_camera_y = 9;
   // @state config
-  double graph_camera_y = 10;
-  // @state config
-  double graph_camera_zoom = 11;
+  double graph_camera_zoom = 10;
 }

@@ -85,17 +85,14 @@ pub struct RemoveStep {
     pub id: String,
 }
 
-pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no selection pruning here anymore —
+// the removed step's id is auto-pruned from the `steps` interaction domain's selection by the
+// framework (`validate_state` against `ImperativePlayApp::interaction_topology`) right after this
+// document mutation lands.
+pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let config = cfg.snapshot;
     if resolve_contains(document, None, None, &payload.id) {
-        let mut ids = config.selected_step_ids.clone();
-        ids.retain(|step_id| step_id != &payload.id);
-        Ok(Emit {
-            artifact_mutations: vec![delete_step(PathRef::default(), payload.id.clone())],
-            config_mutations: vec![ImperativeConfigMutation::SetSelectedSteps { ids }],
-            ..Default::default()
-        })
+        Ok(Emit::mutations(vec![delete_step(PathRef::default(), payload.id.clone())]))
     } else {
         Ok(Emit::default())
     }

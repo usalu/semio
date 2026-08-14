@@ -195,6 +195,10 @@ pub struct DropQuestionKind {
     pub drop_position: String,
 }
 
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the dropped question used to also
+// become the selection here — selection is framework-owned `InteractionState` now, only ever mutated
+// by the framework's own injected `interactionSelect` handling, never by an app command's `Emit`
+// (mirrors note's `add-block`).
 pub fn handle(payload: &DropQuestionKind, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let Some(step_id) = resolve_step_id_from_tree_target(spec, &payload.target_id) else {
@@ -202,11 +206,9 @@ pub fn handle(payload: &DropQuestionKind, doc: &ArtifactView<'_, FormsSnapshot>,
     };
     let index = resolve_question_insert_index(spec, &step_id, &payload.target_id, &payload.drop_position);
     let question = default_question_for_kind(&payload.kind, create_form_id("q"));
-    let mut config_mutations = reset_try_config_mutations();
-    config_mutations.push(FormsConfigMutation::SetSelection { ids: vec![question.id.clone()] });
     Ok(Emit {
         artifact_mutations: vec![FormMutation::CreateBlock(crate::artifacts::forms::mutations::create_block::mutation::CreateBlock { step_id, block: question, index })],
-        config_mutations,
+        config_mutations: reset_try_config_mutations(),
         ..Default::default()
     })
 }

@@ -2,9 +2,7 @@ syntax = "proto3";
 package semio.app.animate.present;
 message PresentConfig {
   // @state config
-  repeated string selected_ids = 1;
+  string engagement_input = 1;
   // @state config
-  string engagement_input = 2;
-  // @state config
-  string locale = 3;
+  string locale = 2;
 }

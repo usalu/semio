@@ -14,7 +14,9 @@
 //! body-key → node, `🔖️Io`/`🔌️Registration` regions below, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::apps::present::commands::{engagement, grid, shell, source, tile, view};
+use crate::apps::present::commands::{
+    add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example, set_frame, set_locale, set_source,
+};
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
 use crate::apps::present::modes::main;
 use crate::apps::present::modes::main::windows::tile_editor;
@@ -24,7 +26,11 @@ use crate::artifacts::present::schema::build_tile_morph_prompt;
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use semio_framework_plugin::{
+    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+};
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashSet;
@@ -43,6 +49,39 @@ pub fn animate_present_action(action: &str, args: Option<Value>) -> ActionDescri
     semio_framework_plugin::ActionFactory::new(PRESENT_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ "tiles" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
+/// this app declares: `HierarchyProvider::Flat` over the tile grid (a document panel tree binds it
+/// directly; the canvas hit-tests a click and asks the framework to apply it, mirroring `🖍️draw`'s
+/// "strokes" domain).
+pub const PRESENT_INTERACTION_DOMAIN: &str = "tiles";
+pub const PRESENT_INTERACTION_GRANULARITY: &str = "tile";
+
+/// 🕹️ Per-dispatch scratch: the "tiles" domain's current selection, resolved once by
+/// `ArtifactApp::handle` from `InteractionView` and threaded to every leaf command handler —
+/// `app_commands!`'s generated `dispatch` has no way to thread `InteractionView` itself.
+pub struct PresentDispatchCtx {
+    pub selected_ids: Vec<String>,
+}
+
+/// 🕹️ JSON-encodes `ids` as the `Vec<InteractionTarget>` string the framework's `interactionSelect`
+/// action requires in its `targets` arg — every hit id shares the domain's one granularity.
+fn interaction_targets_json(ids: &[String]) -> String {
+    serde_json::to_string(&ids.iter().map(|id| serde_json::json!({ "granularity": PRESENT_INTERACTION_GRANULARITY, "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
+}
+
+/// 🕹️ Requests the shell to redispatch the framework-owned `interactionSelect` verb through its
+/// normal action funnel — the only way `canvas-pointer-down`'s hit test can drive selection now that
+/// it is framework-owned state, never a `PresentConfigMutation` (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> HostEffect {
+    HostEffect::ReplayShellCommand {
+        action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
+        args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "domainId": PRESENT_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }))),
+    }
+}
+//#endregion 🔖️Interaction
 
 //#region 🔖️Io
 /// 🔌️ Relocated verbatim from the former artifact-tree `⚙️engine` (ticket
@@ -232,7 +271,7 @@ semio_framework_plugin::app_commands! {
     /// `"animate.resetGrid" as "reset-grid"` is the row that proves it (mirrors the pre-B1
     /// `handle_command`-only `"animate.resetGrid"` app-scope command). **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum PresentCommand for PresentSnapshot, PresentMutation, PresentConfig, PresentConfigMutation {
+    pub enum PresentCommand for PresentSnapshot, PresentMutation, PresentConfig, PresentConfigMutation, ctx = PresentDispatchCtx {
         "seedGrid" as "seed-grid" => seed_grid::SeedGrid,
         "addTile" as "add-tile" => add_tile::AddTile,
         "deleteTile" as "delete-tile" => delete_tile::DeleteTile,
@@ -245,7 +284,6 @@ semio_framework_plugin::app_commands! {
         "clearTiles" as "clear-tiles" => clear_tiles::ClearTiles,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "animate.resetGrid" as "reset-grid" => reset_grid::ResetGrid,
-        "setSelectedIds" as "set-selected-ids" => set_selected_ids::SetSelectedIds,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "setLocale" as "set-locale" => set_locale::SetLocale,
@@ -254,15 +292,6 @@ semio_framework_plugin::app_commands! {
         "exportVideoFromDeck" as "export-video-from-deck" => export_video_from_deck::ExportVideoFromDeck,
     }
 }
-
-// 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
-// payload module is imported here under its own flat name.
-use engagement::{engagement_input, engagement_submit};
-use grid::{clear_tiles, reset_grid, seed_grid};
-use shell::{copy_prompt, export_video_from_deck};
-use source::{set_active_example, set_frame, set_source};
-use tile::{add_tile, delete_selection, delete_tile, patch_tile_crops, rename_tiles};
-use view::{canvas_pointer_down, no_operation, set_locale, set_selected_ids};
 //#endregion 🔖️Commands
 
 //#region 🔖️AnimatePresentPlayApp
@@ -325,20 +354,26 @@ impl ArtifactApp for AnimatePresentPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &PresentCommand, doc: &ArtifactView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    fn handle(command: &PresentCommand, doc: &ArtifactView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
+        let mut ctx = PresentDispatchCtx { selected_ids: interaction.selection(PRESENT_INTERACTION_DOMAIN).ids.clone() };
+        command.dispatch(doc, cfg, &mut ctx)
     }
 
+    /// 🕹️ `render(body_key, doc, cfg)` is never given an `InteractionView` (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM — only `handle`/`copy_fragment`/
+    /// `cut_operations` are), so the per-tile crop/name editors this panel used to build from
+    /// `config.selected_ids` are gone from `inspection::render`; the client renders the tile-selected
+    /// canvas highlight itself from the framework's own interaction state now (matches `🖍️draw`'s
+    /// canvas render, same reason).
     fn render(body_key: &str, doc: &ArtifactView<'_, PresentSnapshot>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
         let deck = doc.snapshot;
         let config = cfg.snapshot;
-        let selected = &config.selected_ids;
         let labels = animate_present_labels(config);
         match body_key {
-            PRESENT_PLAY_BODY_MAIN => tile_editor::render(deck, selected),
-            PRESENT_PLAY_BODY_DOCUMENT => artifact::render(deck, selected, labels),
+            PRESENT_PLAY_BODY_MAIN => tile_editor::render(deck),
+            PRESENT_PLAY_BODY_DOCUMENT => artifact::render(deck, labels),
             PRESENT_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
-            PRESENT_PLAY_BODY_DETAILS => inspection::render(deck, selected, labels),
+            PRESENT_PLAY_BODY_DETAILS => inspection::render(deck, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -377,8 +412,10 @@ pub fn create_animate_present_app() -> App {
             // 🐚️ Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
             .shell_action("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"))
             .shell_action("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"))
-            // 👁️ Ephemeral view state — selection, engagement draft, locale.
-            .view_action("setSelectedIds", LocalizedLabel::native("Set Selected Ids", "Auswahl-IDs festlegen"))
+            // 👁️ Ephemeral view state — engagement draft, locale. Selection/hover are framework-owned
+            // now (see `.interaction(...)` below): interactionSelect/interactionHover/clearSelection/
+            // selectAll/setSelectionMode/setInteractionGranularity auto-inject, never declared here
+            // (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
             .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
             .view_action("noMutation", LocalizedLabel::native("No Operation", "Keine Aktion"))
@@ -397,6 +434,26 @@ pub fn create_animate_present_app() -> App {
             // 🎛️ App-scope command — see `🎮️commands/🌐️seed-grid::reset_grid`'s doc comment for why this
             // isn't `seedGrid`/`clearTiles`.
             .app_command("animate.resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document")
+            // 🕹️ The framework-owned "tiles" interaction domain (ticket
+            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document panel
+            // tree (`.interaction_domain("tiles")`) and the tile-editor canvas's pick selection;
+            // auto-injects interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
+            // setInteractionGranularity, replacing the deleted bespoke `setSelectedIds` view action.
+            .interaction(InteractionDefinition {
+                id: PRESENT_INTERACTION_DOMAIN.into(),
+                label: LocalizedLabel::native("Tiles", "Kacheln"),
+                granularities: vec![GranularityDefinition { id: PRESENT_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Tile", "Kachel"), icon_id: "square".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(tile_editor::PRESENT_PLAY_WINDOW_MAIN, vec![InteractionRef::new(PRESENT_INTERACTION_DOMAIN)])
             .config(AnimatePresentPlayApp::config_spec())
             .io(present_io()),
     )
@@ -479,7 +536,7 @@ mod tests {
             assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
         }
         assert!(definition.actions.iter().any(|action| action.id == "exportVideoFromDeck" && matches!(action.kind, ActionKind::Shell)));
-        assert!(definition.actions.iter().any(|action| action.id == "setSelectedIds" && matches!(action.kind, ActionKind::View)));
+        assert!(definition.actions.iter().any(|action| action.id == "engagementInput" && matches!(action.kind, ActionKind::View)));
     }
 
     //#region 🔖️ManifestSanity
@@ -492,6 +549,19 @@ mod tests {
             assert!(json.contains(body), "panel body {body} missing from the manifest");
         }
         assert!(json.contains(PRESENT_DOCUMENT_SCHEMA), "artifact kind missing from the manifest");
+    }
+
+    /// 🕹️ The `tiles` domain is declared `HierarchyProvider::Flat`, non-transitive, broadcast, and
+    /// bound to the tile-editor window (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    #[test]
+    fn the_manifest_declares_the_tiles_interaction_domain() {
+        let definition = create_animate_present_app().definition;
+        let domain = definition.interactions.iter().find(|interaction| interaction.id == PRESENT_INTERACTION_DOMAIN).expect("tiles interaction domain declared");
+        assert!(matches!(domain.hierarchy, HierarchyProvider::Flat));
+        assert!(domain.selection.broadcast);
+        assert!(!domain.selection.transitive);
+        let canvas_window = definition.window_kinds.iter().find(|window| window.id == tile_editor::PRESENT_PLAY_WINDOW_MAIN).expect("tile-editor window declared");
+        assert!(canvas_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == PRESENT_INTERACTION_DOMAIN));
     }
     //#endregion 🔖️ManifestSanity
 
@@ -613,7 +683,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 19, "every PresentCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 18, "every PresentCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -629,7 +699,7 @@ mod tests {
     /// keyword at all and no longer parses).
     #[test]
     fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
-        let expected_keywords: [(&str, &str); 19] = [
+        let expected_keywords: [(&str, &str); 18] = [
             ("seedGrid", "seed-grid"),
             ("addTile", "add-tile"),
             ("deleteTile", "delete-tile"),
@@ -642,7 +712,6 @@ mod tests {
             ("clearTiles", "clear-tiles"),
             ("engagementSubmit", "engagement-submit"),
             ("animate.resetGrid", "reset-grid"),
-            ("setSelectedIds", "set-selected-ids"),
             ("engagementInput", "engagement-input"),
             ("canvasPointerDown", "canvas-pointer-down"),
             ("setLocale", "set-locale"),
@@ -690,7 +759,6 @@ mod tests {
             PresentCommand::ClearTiles(clear_tiles::ClearTiles {}),
             PresentCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "2x2".into() }),
             PresentCommand::ResetGrid(reset_grid::ResetGrid {}),
-            PresentCommand::SetSelectedIds(set_selected_ids::SetSelectedIds { ids: vec!["t1".into()] }),
             PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "add".into() }),
             PresentCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) }),
             PresentCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),

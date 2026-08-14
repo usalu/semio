@@ -3,10 +3,10 @@
 //!
 //! This is APP state, not document state: it lives at app level rather than under `🗿️artifacts/` because
 //! nothing in it survives into the `.imperative` document. It still round-trips through a real
-//! `ArtifactStore` (with a real `backwards`), so selection/run-output/locale edits are VCS'd exactly like
-//! document content — absorbing the former app-struct `RefCell` (`ImperativePlayRuntime`'s
-//! `selected_step_ids`/`run_output_json`) plus the locale the UI used to read off the deleted
-//! `ViewModel`.
+//! `ArtifactStore` (with a real `backwards`), so run-output/locale edits are VCS'd exactly like document
+//! content — absorbing the former app-struct `RefCell` (`ImperativePlayRuntime`'s `run_output_json`) plus
+//! the locale the UI used to read off the deleted `ViewModel`. Step selection is no longer here: it is the
+//! framework-owned `steps` interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 
 use serde::{Deserialize, Serialize};
 
@@ -17,8 +17,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "imperative.config")]
 #[dsl(layout = "lines")]
 pub struct ImperativeConfig {
-    /// 👁️ Selected step ids — was `ImperativePlayRuntime::selected_step_ids`.
-    pub selected_step_ids: Vec<String>,
     /// 📤️ Last `run` output, JSON-encoded scope — was `ImperativePlayRuntime::run_output_json`.
     pub run_output_json: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
@@ -97,7 +95,7 @@ fn default_contributions_json() -> String {
 
 impl Default for ImperativeConfig {
     fn default() -> Self {
-        Self { selected_step_ids: Vec::new(), run_output_json: String::new(), locale: "en-US".into(), contributions_json: default_contributions_json() }
+        Self { run_output_json: String::new(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
 
@@ -118,8 +116,6 @@ pub enum ImperativeConfigMutation {
         #[dsl(block)]
         config: ImperativeConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelectedSteps { ids: Vec<String> },
     #[dsl(key = "run-output")]
     SetRunOutput { json: String },
     #[dsl(key = "locale")]
@@ -207,7 +203,6 @@ impl protocol::Mutation<ImperativeConfig> for ImperativeConfigMutation {
         let mut next = base.clone();
         match self {
             ImperativeConfigMutation::Snapshot { config } => return config.clone(),
-            ImperativeConfigMutation::SetSelectedSteps { ids } => next.selected_step_ids = ids.clone(),
             ImperativeConfigMutation::SetRunOutput { json } => next.run_output_json = json.clone(),
             ImperativeConfigMutation::SetLocale { value } => next.locale = value.clone(),
             ImperativeConfigMutation::SetContributions { json } => {
@@ -230,16 +225,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn imperative_config_default_is_empty_english_selection() {
+    fn imperative_config_default_is_empty_english() {
         let config = ImperativeConfig::default();
-        assert!(config.selected_step_ids.is_empty());
         assert!(config.run_output_json.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
     #[test]
     fn imperative_config_dsl_round_trips() {
-        let config = ImperativeConfig { selected_step_ids: vec!["step-1".into(), "step-2".into()], run_output_json: r#"{"counter":1}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
+        let config = ImperativeConfig { run_output_json: r#"{"counter":1}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
@@ -248,20 +242,9 @@ mod tests {
     fn config_operation_snapshot_diff_ignores_base() {
         let base = ImperativeConfig::default();
         let mut snapshot = base.clone();
-        snapshot.selected_step_ids = vec!["step-1".into()];
+        snapshot.run_output_json = r#"{"counter":1}"#.into();
         let operation = ImperativeConfigMutation::Snapshot { config: snapshot.clone() };
         assert_eq!(protocol::Mutation::diff(&operation, &base), snapshot);
-    }
-
-    #[test]
-    fn config_operation_set_selected_steps_round_trips() {
-        let base = ImperativeConfig::default();
-        let operation = ImperativeConfigMutation::SetSelectedSteps { ids: vec!["step-1".into(), "step-2".into()] };
-        let next = protocol::Mutation::diff(&operation, &base);
-        assert_eq!(next.selected_step_ids, vec!["step-1".to_string(), "step-2".to_string()]);
-        let backwards = protocol::Mutation::inverse(&operation, &base);
-        assert_eq!(backwards, vec![ImperativeConfigMutation::Snapshot { config: base }]);
-        store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]

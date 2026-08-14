@@ -86,15 +86,14 @@ pub struct AddStep {
     pub index: Option<usize>,
 }
 
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no auto-select of the new step
+// anymore — selection is the framework-owned `steps` interaction domain, reachable only through the
+// injected `interactionSelect` verb, not an ordinary command's `config_mutations`.
 pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
     let document = doc.snapshot;
     let id = next_step_id(document);
-    let step = Step { id: id.clone(), kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
+    let step = Step { id, kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
     // 🪆️ `create-step` is append-only (no index field, matching `apply_steps_delta`'s `added`
     // handling, which already ignored the old `CollectionMutation::Add`'s index the same way).
-    Ok(Emit {
-        artifact_mutations: vec![create_step(PathRef::default(), step)],
-        config_mutations: vec![ImperativeConfigMutation::SetSelectedSteps { ids: vec![id] }],
-        ..Default::default()
-    })
+    Ok(Emit::mutations(vec![create_step(PathRef::default(), step)]))
 }

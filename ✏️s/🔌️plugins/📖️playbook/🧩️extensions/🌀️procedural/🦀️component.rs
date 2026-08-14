@@ -5,10 +5,11 @@ use flow::{export_solid_json, import_solid_json, tessellate_geometry};
 use flow::playbook::{visible_blocks, PlaybookBlock};
 use protocol::{Mutation, MutationDiff};
 use semio_framework::mesh_from_indexed;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
     ArtifactApp, ArtifactView, Emit, ExtensionBundle, Plugin, Fault, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewModel, WorldSunConfig,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -774,7 +775,7 @@ impl ArtifactApp for ModuleApp {
         }
     }
 
-    fn handle(command: &Command, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Command, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Command::ExportSolid { format } => {
                 let mut payload = doc.snapshot.clone();

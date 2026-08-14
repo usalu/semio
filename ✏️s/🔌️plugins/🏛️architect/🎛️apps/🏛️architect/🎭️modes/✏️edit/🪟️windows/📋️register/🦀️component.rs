@@ -30,6 +30,10 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `BlockListScene` has no
+        // `interaction_domain` field for the wrapper to stamp, so this window is not scoped to the
+        // "program" domain (mirrors the graph window's declaration, not this one).
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
@@ -74,9 +78,12 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
         "iconId": "square",
     })])
     .unwrap_or_else(|_| "[]".into());
-    let selected_id = cfg.selected_ids.first().cloned();
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactApp::render` carries no
+    // `InteractionView` and `BlockListScene` has no `interaction_domain` field for the wrapper to
+    // stamp post-render either (unlike `UiNode::Tree`) — `selected_id` is left at `None`, matching
+    // `dag`'s/`space`'s identical `NodeGraphScene` gap.
     let mut scene = empty_component_scene(ARCHITECT_BODY_REGISTER, SurfaceKind::BlockList);
-    scene.block_list = Some(BlockListScene { steps_json, palette_json, selected_id, dragging_id: None });
+    scene.block_list = Some(BlockListScene { steps_json, palette_json, selected_id: None, dragging_id: None });
     UiNode::ComponentScene(scene)
 }
 //#endregion 🔖️Render

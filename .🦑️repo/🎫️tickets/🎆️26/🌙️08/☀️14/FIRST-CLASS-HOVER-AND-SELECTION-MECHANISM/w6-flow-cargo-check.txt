@@ -1,0 +1,25 @@
+3 | use crate::apps::flow::commands::evaluate::evaluate_result;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::apps::flow::commands::reorganize::reorganize_operations`
+ --> ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/./././../../🎛️apps/🌊️flow/🎮️commands/🧩️set-contributions/🦀️component.rs:4:5
+  |
+4 | use crate::apps::flow::commands::reorganize::reorganize_operations;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `json`
+  --> ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/./././././../../🎛️apps/🌊️flow/🎭️modes/🧬️generate/🎮️commands/🧬️add-generation/🦀️component.rs:10:18
+   |
+10 | use serde_json::{json, Value};
+   |                  ^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:19:9
+   |
+19 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-flow` (lib) generated 25 warnings (run `cargo fix --lib -p semio-s-plugin-flow` to apply 23 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 26.48s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 9`

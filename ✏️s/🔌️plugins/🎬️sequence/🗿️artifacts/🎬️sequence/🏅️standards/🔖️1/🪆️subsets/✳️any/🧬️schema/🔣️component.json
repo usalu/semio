@@ -3,12 +3,11 @@
   "title": "SequenceArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "steps", "edges", "selectedStepIds", "lastRunJson", "orientation", "camera", "locale"],
+  "required": ["schema", "steps", "edges", "lastRunJson", "orientation", "camera", "locale"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "artifact" },
     "steps": { "type": "array", "items": { "$ref": "#/$defs/SequenceStep" }, "x-semio-state": "artifact" },
     "edges": { "type": "array", "items": { "$ref": "#/$defs/SequenceEdge" }, "x-semio-state": "artifact" },
-    "selectedStepIds": { "type": "array", "items": { "type": "string" }, "x-semio-state": "presence" },
     "lastRunJson": { "type": "string", "x-semio-state": "config" },
     "orientation": { "type": "string", "x-semio-state": "config" },
     "camera": { "$ref": "#/$defs/SequenceCamera", "x-semio-state": "config" },

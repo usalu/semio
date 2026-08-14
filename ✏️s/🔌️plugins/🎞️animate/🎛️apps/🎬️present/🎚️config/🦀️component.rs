@@ -20,8 +20,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "present.config")]
 #[dsl(layout = "lines")]
 pub struct PresentConfig {
-    /// 👁️ Selected tile ids — was `AnimatePresentPlayRuntime::selected_ids`.
-    pub selected_ids: Vec<String>,
     /// ⌨️ In-progress engagement-bar input draft — was `AnimatePresentPlayRuntime::engagement_input`.
     pub engagement_input: String,
     /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewModel.locale`.
@@ -93,7 +91,7 @@ impl store::ArtifactPack for PresentConfig {
 
 impl Default for PresentConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), engagement_input: String::new(), locale: "en-US".into() }
+        Self { engagement_input: String::new(), locale: "en-US".into() }
     }
 }
 
@@ -108,8 +106,6 @@ store::impl_whole_record_config!(PresentConfig);
 /// snapshot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum PresentConfigMutation {
-    #[dsl(key = "selection")]
-    SetSelectedIds { ids: Vec<String> },
     #[dsl(key = "engagement-input")]
     SetEngagementInput { value: String },
     #[dsl(key = "locale")]
@@ -194,7 +190,6 @@ impl Mutation<PresentConfig> for PresentConfigMutation {
     fn diff(&self, base: &PresentConfig) -> PresentConfig {
         let mut next = base.clone();
         match self {
-            PresentConfigMutation::SetSelectedIds { ids } => next.selected_ids = ids.clone(),
             PresentConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             PresentConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
@@ -203,7 +198,6 @@ impl Mutation<PresentConfig> for PresentConfigMutation {
 
     fn inverse(&self, base: &PresentConfig) -> Vec<Self> {
         match self {
-            PresentConfigMutation::SetSelectedIds { .. } => vec![PresentConfigMutation::SetSelectedIds { ids: base.selected_ids.clone() }],
             PresentConfigMutation::SetEngagementInput { .. } => vec![PresentConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
             PresentConfigMutation::SetLocale { .. } => vec![PresentConfigMutation::SetLocale { value: base.locale.clone() }],
         }
@@ -219,14 +213,13 @@ mod tests {
     #[test]
     fn present_config_default_matches_the_existing_runtime_defaults() {
         let config = PresentConfig::default();
-        assert!(config.selected_ids.is_empty());
         assert!(config.engagement_input.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
     #[test]
     fn present_config_dsl_round_trips() {
-        let config = PresentConfig { selected_ids: vec!["t1".into()], engagement_input: "2x2".into(), locale: "de-DE".into() };
+        let config = PresentConfig { engagement_input: "2x2".into(), locale: "de-DE".into() };
         let text = store::ArtifactDsl::print_dsl(&config);
         let parsed = <PresentConfig as store::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
         assert_eq!(parsed, config);
@@ -234,7 +227,7 @@ mod tests {
 
     #[test]
     fn present_config_pack_round_trips() {
-        let config = PresentConfig { selected_ids: vec!["t2".into()], engagement_input: "add".into(), locale: "en-US".into() };
+        let config = PresentConfig { engagement_input: "add".into(), locale: "en-US".into() };
         let bytes = store::ArtifactPack::encode_pack(&config);
         let decoded = <PresentConfig as store::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
         assert_eq!(decoded, config);
@@ -248,13 +241,6 @@ mod tests {
         let restored = backwards[0].diff(&forward);
         assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
         forward
-    }
-
-    #[test]
-    fn config_set_selected_ids_round_trips() {
-        let config = PresentConfig::default();
-        let next = round_trip_config(&config, &PresentConfigMutation::SetSelectedIds { ids: vec!["t1".into()] });
-        assert_eq!(next.selected_ids, vec!["t1".to_string()]);
     }
 
     #[test]
@@ -273,7 +259,6 @@ mod tests {
 
     #[test]
     fn config_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetSelectedIds { ids: vec!["t1".into(), "t2".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetEngagementInput { value: "add".into() });
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetLocale { value: "en-US".into() });
     }

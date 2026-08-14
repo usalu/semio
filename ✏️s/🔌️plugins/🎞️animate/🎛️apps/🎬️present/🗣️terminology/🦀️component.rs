@@ -11,19 +11,8 @@ semio_framework_plugin::app_labels! {
     pub struct AnimatePresentLabels {
         tiles_section: native_en "Tiles", native_de "Kacheln", reuse_en "Tiles", reuse_de "Kacheln";
         no_tiles: native_en "(no tiles — seed a grid)", native_de "(keine Kacheln — Raster erzeugen)", reuse_en "(no tiles — seed a grid)", reuse_de "(keine Kacheln — Raster erzeugen)";
-        details_select_tile: native_en "Select a tile in the canvas or workbench document.", native_de "Wählen Sie eine Kachel in der Leinwand oder im Werkbankdokument aus.", reuse_en "Select a tile in the canvas or workbench document.", reuse_de "Wählen Sie eine Kachel in der Leinwand oder im Werkbankdokument aus.";
-        details_tile_not_found: native_en "Selected tile not found.", native_de "Ausgewählte Kachel nicht gefunden.", reuse_en "Selected tile not found.", reuse_de "Ausgewählte Kachel nicht gefunden.";
-        field_name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
-        field_id: native_en "Id", native_de "ID", reuse_en "Id", reuse_de "ID";
-        selected_suffix: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
-        delete_tile: native_en "Delete tile", native_de "Kachel löschen", reuse_en "Delete tile", reuse_de "Kachel löschen";
-        delete_selection: native_en "Delete selection", native_de "Auswahl löschen", reuse_en "Delete selection", reuse_de "Auswahl löschen";
-        group_crop: native_en "Crop", native_de "Zuschnitt", reuse_en "Crop", reuse_de "Zuschnitt";
-        field_x: native_en "X", native_de "X", reuse_en "X", reuse_de "X";
-        field_y: native_en "Y", native_de "Y", reuse_en "Y", reuse_de "Y";
-        field_width: native_en "Width", native_de "Breite", reuse_en "Width", reuse_de "Breite";
-        field_height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
-        group_identity: native_en "Identity", native_de "Identität", reuse_en "Identity", reuse_de "Identität";
+        details_schema_field: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        details_tiles_field: native_en "Tiles", native_de "Kacheln", reuse_en "Tiles", reuse_de "Kacheln";
         catalogue_tile_templates: native_en "Tile templates", native_de "Kachelvorlagen", reuse_en "Tile templates", reuse_de "Kachelvorlagen";
         catalogue_seed_desc: native_en "Seed morph tiles from figure templates.", native_de "Morph-Kacheln aus Abbildungsvorlagen erzeugen.", reuse_en "Seed morph tiles from figure templates.", reuse_de "Morph-Kacheln aus Abbildungsvorlagen erzeugen.";
         catalogue_seed_2x2: native_en "Split 2×2 grid", native_de "2×2-Raster teilen", reuse_en "Split 2×2 grid", reuse_de "2×2-Raster teilen";
@@ -64,6 +53,39 @@ mod tests {
     fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(animate_present_labels(&PresentConfig::default()).tiles_section.as_str(), "Tiles");
         assert_eq!(animate_present_labels(&PresentConfig { locale: "de-DE".into(), ..PresentConfig::default() }).tiles_section.as_str(), "Kacheln");
+    }
+
+    /// 🌱️ Relocated from the deleted `set-selected-ids` command's test mod (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — exercises the same app-wide label
+    /// resolution, unrelated to selection.
+    #[test]
+    fn animate_present_labels_resolve_native_by_default() {
+        use crate::apps::present::testkit::{present_app, render};
+        use crate::apps::present::{PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DETAILS};
+        let mut app = present_app();
+        let catalogue = render(&mut app, PRESENT_PLAY_BODY_CATALOGUE);
+        assert!(catalogue.contains("Tile templates"));
+        assert!(catalogue.contains("Split 2×2 grid"));
+        assert!(catalogue.contains("Active source"));
+        assert!(!catalogue.contains("Kachelvorlagen"));
+        let _ = PRESENT_PLAY_BODY_DETAILS;
+    }
+
+    #[test]
+    fn animate_present_labels_translate_panels_in_german() {
+        use crate::apps::present::commands::set_locale;
+        use crate::apps::present::testkit::{dispatch, present_app, render};
+        use crate::apps::present::{PresentCommand, PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DOCUMENT};
+        let mut app = present_app();
+        dispatch(&mut app, PresentCommand::SetLocale(set_locale::SetLocale { value: "de".into() }));
+        let catalogue_json = render(&mut app, PRESENT_PLAY_BODY_CATALOGUE);
+        assert!(catalogue_json.contains("Kachelvorlagen"));
+        assert!(catalogue_json.contains("2×2-Raster teilen"));
+        assert!(catalogue_json.contains("Aktive Quelle"));
+        assert!(!catalogue_json.contains("Tile templates"));
+
+        let document_json = render(&mut app, PRESENT_PLAY_BODY_DOCUMENT);
+        assert!(document_json.contains("Kacheln"));
     }
 }
 //#endregion 🧪️Tests

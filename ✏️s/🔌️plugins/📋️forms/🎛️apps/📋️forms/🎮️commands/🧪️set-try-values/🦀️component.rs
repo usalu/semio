@@ -56,7 +56,7 @@ mod tests {
         assert!(json.contains(r#""min":13.0"#) || json.contains(r#""min":13"#));
         assert!(json.contains(r#""max":120.0"#) || json.contains(r#""max":120"#));
         dispatch(&mut app, FormsCommand::SetTryValues(SetTryValues { values_json: r#"{"full-name":"Ada"}"#.into() }));
-        dispatch(&mut app, FormsCommand::NextStep(next_step::NextStep {}));
+        dispatch(&mut app, FormsCommand::NextStep(crate::apps::forms::commands::next_step::NextStep {}));
         let second_json = render(&mut app, FORMS_PLAY_BODY_TRY);
         assert!(second_json.contains(r#""unit":"%""#));
     }
@@ -75,9 +75,9 @@ mod tests {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
         assert!(render(&mut app, FORMS_PLAY_BODY_TRY).contains("Step 1 / 3"));
-        dispatch(&mut app, FormsCommand::NextStep(next_step::NextStep {}));
+        dispatch(&mut app, FormsCommand::NextStep(crate::apps::forms::commands::next_step::NextStep {}));
         assert!(render(&mut app, FORMS_PLAY_BODY_TRY).contains("Step 2 / 3"));
-        dispatch(&mut app, FormsCommand::PreviousStep(previous_step::PreviousStep {}));
+        dispatch(&mut app, FormsCommand::PreviousStep(crate::apps::forms::commands::previous_step::PreviousStep {}));
         assert!(render(&mut app, FORMS_PLAY_BODY_TRY).contains("Step 1 / 3"));
     }
 

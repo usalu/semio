@@ -8,20 +8,14 @@ message WiresArtifact {
   DslValue wires_fixture = 1;
   // @state artifact
   DslValue board_fixture = 2;
-  // @state presence
-  repeated string selected_ids = 3;
   // @state artifact
-  optional string drag_node_id = 4;
+  optional string drag_node_id = 3;
   // @state artifact
-  double drag_last_x = 5;
+  double drag_last_x = 4;
   // @state artifact
-  double drag_last_y = 6;
+  double drag_last_y = 5;
   // @state config
-  string locale = 7;
-}
-
-message WiresStringList {
-  repeated string values = 1;
+  string locale = 6;
 }
 
 message DslValue {}

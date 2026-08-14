@@ -1,48 +1,13 @@
 //! 🕸️ 🕸️ DAG play app commands command — `node-graph-edit`.
 
-use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
-use crate::artifacts::dag::schema;
-use crate::artifacts::dag::mutations::{connect_nodes, dag_snapshot_mutations, disconnect_nodes, move_node};
+use crate::apps::dag::config::{DagConfig, DagConfigMutation};
+use crate::artifacts::dag::mutations::{connect_nodes, dag_snapshot_mutations};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
-use infinite_board_port_directed_dag::{dag_document_from_fixture, dag_fixture_from_document, DagFixture, DagHost, DagLayoutOptions};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::apps::dag::commands::delete_selection::delete_selection_result;
+use infinite_board_port_directed_dag::{dag_document_from_fixture, DagFixture};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-
-//#region 🔖️Shared
-/// 🗑️ Builds the removal `DagMutation`s plus the config op that CLEARS the whole selection, or `None`
-/// when nothing in `node_ids` exists to remove — shared by `delete_selection::DeleteSelection` and
-/// `node_graph_edit::DagNodeGraphEditOp::DeleteSelection` (both were the same `handle_action`
-/// "deleteSelection" logic, reachable from two different action ids pre-migration).
-/// `remove_node::RemoveNode` deliberately does NOT use this helper: it only pulls the removed id out of
-/// the selection, never clears it outright.
-fn delete_selection_result(document: &DagSnapshot, node_ids: &[String]) -> Option<(Vec<DagMutation>, DagConfigMutation)> {
-    let removes = crate::artifacts::dag::schema::remove_nodes_operations(document, node_ids);
-    if removes.is_empty() {
-        None
-    } else {
-        Some((removes, DagConfigMutation::SetSelection { node_ids: Vec::new() }))
-    }
-}
-//#endregion 🔖️Shared
-
-//#region 🔖️DeleteSelection
-//#endregion 🔖️DeleteSelection
-
-//#region 🔖️NodeGraphEdit
-//#endregion 🔖️NodeGraphEdit
-
-//#region 🔖️ConnectMediaPorts
-//#endregion 🔖️ConnectMediaPorts
-
-//#region 🔖️Disconnect
-//#endregion 🔖️Disconnect
-
-//#region 🔖️MoveMediaNode
-//#endregion 🔖️MoveMediaNode
-
-//#region 🔖️Reorganize
-//#endregion 🔖️Reorganize
 
 /// 🎯️ One batched edit inside a `NodeGraphEdit` — mirrors the pre-migration `nodeGraphEdit` action's
 /// `operations` JSON array (`"setFixture"`/`"deleteSelection"`/`"connect"` sub-kinds), now closed and
@@ -64,9 +29,20 @@ pub struct NodeGraphEdit {
     pub operations: Vec<DagNodeGraphEditOp>,
 }
 
+/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg)` is framework-fixed at this exact 3-arg shape (no
+/// `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — reachable only
+/// through that macro-generated path (`DagPlayApp::handle` always routes this command through `apply`
+/// below instead), so its `DeleteSelection` sub-op degrades to treating the selection as empty.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    apply_to(payload, doc, cfg, &[])
+}
+
+pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    apply_to(payload, doc, cfg, &interaction.selection("graph").ids)
+}
+
+fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let config = cfg.snapshot;
     let mut artifact_mutations: Vec<DagMutation> = Vec::new();
     let mut config_mutations: Vec<DagConfigMutation> = Vec::new();
     for sub_operation in &payload.operations {
@@ -78,9 +54,8 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg:
                 }
             }
             DagNodeGraphEditOp::DeleteSelection => {
-                if let Some((removes, clear_selection)) = delete_selection_result(document, &config.selected_node_ids) {
+                if let Some(removes) = delete_selection_result(document, selected) {
                     artifact_mutations.extend(removes);
-                    config_mutations.push(clear_selection);
                 }
             }
             DagNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
@@ -99,15 +74,19 @@ mod tests {
     use super::DagNodeGraphEditOp;
     use super::*;
     use crate::apps::dag::testkit;
-    use crate::apps::dag::commands::set_selection;
+    use crate::apps::dag::commands::{connect_media_ports, disconnect, move_media_node};
     use crate::apps::dag::DagCommand;
-    use semio_framework_plugin::PluginApp;
+    use semio_framework_plugin::{testkit::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
+    use serde_json::json;
 
     /// 🧪️ `nodeGraphEdit` batches multiple sub-edits (connect + delete-selection here) into a single
-    /// typed command — mirrors the pre-migration JSON `operations` array, now closed and typed.
+    /// typed command — mirrors the pre-migration JSON `operations` array, now closed and typed. The
+    /// `graph` domain's live selection (populated via the framework's own `interactionSelect` action —
+    /// the only way a downstream crate can populate a genuine `InteractionView`) drives the batched
+    /// delete-selection sub-op — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
     #[test]
     fn node_graph_edit_batches_connect_then_delete_selection() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::new_app_with_registry();
         let (source_id, target_id) = {
             let projection = app.snapshot().expect("projection");
             let nodes = projection.nodes();
@@ -116,14 +95,15 @@ mod tests {
         let edges_before = app.snapshot().expect("projection").edges().len();
         app.dispatch_typed(
             DagCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }] }),
-            &semio_framework_plugin::testkit::meta("local"),
+            &meta("local"),
         )
         .expect("batched connect");
         assert!(app.snapshot().expect("projection").edges().len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
 
-        app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: vec![source_id] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
+        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: source_id }]).expect("targets");
+        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" })), &meta("local")).expect("interactionSelect");
         let nodes_before = app.snapshot().expect("projection").nodes().len();
-        app.dispatch_typed(DagCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![DagNodeGraphEditOp::DeleteSelection] }), &semio_framework_plugin::testkit::meta("local")).expect("batched delete");
+        app.dispatch_typed(DagCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![DagNodeGraphEditOp::DeleteSelection] }), &meta("local")).expect("batched delete");
         assert_eq!(app.snapshot().expect("projection").nodes().len(), nodes_before - 1);
     }
 

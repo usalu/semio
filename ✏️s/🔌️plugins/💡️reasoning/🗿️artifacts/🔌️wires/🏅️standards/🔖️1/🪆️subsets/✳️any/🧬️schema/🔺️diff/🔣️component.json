@@ -20,10 +20,6 @@
       "type": "object",
       "x-semio-state": "artifact"
     },
-    "selectedIds": {
-      "$ref": "#/$defs/WiresStringList",
-      "x-semio-state": "presence"
-    },
     "dragNodeId": {
       "oneOf": [
         {
@@ -48,24 +44,6 @@
     "locale": {
       "type": "string",
       "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "WiresStringList": {
-      "title": "WiresStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
     }
   }
 }

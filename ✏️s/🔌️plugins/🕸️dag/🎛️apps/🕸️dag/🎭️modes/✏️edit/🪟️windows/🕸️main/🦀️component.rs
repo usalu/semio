@@ -30,16 +30,22 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        // 🕹️ Populated post-hoc by `create_dag_app`'s `.window_kind_interactions(..)` call — the
+        // `graph` domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &DagSnapshot, camera: &DagCamera, selected: &[String], _labels: &DagPlayLabels) -> UiNode {
+/// 🕹️ `render` carries no `InteractionView` (see `DagPlayApp::render`'s own doc comment) and
+/// `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
+/// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
+/// (empty/none), matching `space`'s workflow window's identical gap.
+pub fn render(document: &DagSnapshot, camera: &DagCamera, _labels: &DagPlayLabels) -> UiNode {
     let (nodes, edges) = document_to_workflow(document);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
-    let selection = selected.to_vec();
-    build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, crate::apps::dag::DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), selection, ..NodeGraphScene::base(nodes, edges, viewport) })
+    build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, crate::apps::dag::DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 

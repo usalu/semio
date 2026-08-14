@@ -17,7 +17,7 @@
 use crate::apps::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
 use crate::apps::dag::commands::set_locale;
 use crate::apps::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
-use crate::apps::dag::commands::{graph_pointer_down, node_graph_hover, node_graph_select, node_graph_viewport, select_node, set_selection};
+use crate::apps::dag::commands::{graph_pointer_down, node_graph_viewport};
 use crate::apps::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::apps::dag::modes::edit;
 use crate::apps::dag::modes::edit::windows::{compiled, main};
@@ -25,14 +25,19 @@ use crate::apps::dag::panels::{catalogue as catalogue_panel, document as documen
 use crate::apps::dag::terminology::{dag_play_labels, is_de_locale};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode,
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, DomainTopology, Emit, Fault, GranularityDefinition,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
 use store::EngineHandles;
 use serde_json::Value;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_APP_ID: &str = "dag-play";
+/// 🕹️ The `graph` interaction domain id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
+/// node/edge selection + transitive hover over the DAG's own edge-derived parent links.
+pub const DAG_PLAY_INTERACTION_DOMAIN: &str = "graph";
 pub use main::{DAG_PLAY_BODY_MAIN, DAG_PLAY_WINDOW_MAIN};
 pub use compiled::{DAG_PLAY_BODY_COMPILED, DAG_PLAY_WINDOW_COMPILED};
 pub use document_panel::DAG_PLAY_BODY_DOCUMENT;
@@ -66,10 +71,6 @@ semio_framework_plugin::app_commands! {
         "renameDagNode" as "rename-dag-node" => rename_dag_node::RenameDagNode,
         "reorganize" as "reorganize" => reorganize::Reorganize,
         "patchDagNodes" as "patch-dag-nodes" => patch_dag_nodes::PatchDagNodes,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "selectNode" as "select-node" => select_node::SelectNode,
-        "nodeGraphSelect" as "node-graph-select" => node_graph_select::NodeGraphSelect,
-        "nodeGraphHover" as "node-graph-hover" => node_graph_hover::NodeGraphHover,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "graphPointerDown" as "graph-pointer-down" => graph_pointer_down::GraphPointerDown,
         "setLocale" as "locale" => set_locale::SetLocale,
@@ -147,31 +148,75 @@ impl ArtifactApp for DagPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &DagCommand, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    /// 🕹️ `deleteSelection`/`nodeGraphEdit` read the `graph` interaction domain directly (bypassing the
+    /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)` signature
+    /// is framework-fixed and has no `interaction` slot) — ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+    fn handle(command: &DagCommand, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
+        match command {
+            DagCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
+            DagCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
+            _ => command.dispatch(doc, cfg),
+        }
     }
 
+    /// 🕹️ `render` carries no `InteractionView` (`ArtifactApp`'s breaking pass only added it to
+    /// `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the main
+    /// node-graph canvas and the inspector both degrade to "nothing selected" until a future wave
+    /// threads interaction into render; the document tree instead binds `interaction_domain("graph")`
+    /// so the framework's own post-render stamp paints its selection/hover, no app code needed.
+    /// Flagged as a discovered framework gap, not worked around here (matches `space`'s identical gap).
     fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
-        let selected = &config.selected_node_ids;
         let camera = dag_config_camera(config);
         let labels = dag_play_labels(config);
         match body_key {
-            DAG_PLAY_BODY_MAIN => main::render(document, &camera, selected, labels),
+            DAG_PLAY_BODY_MAIN => main::render(document, &camera, labels),
             DAG_PLAY_BODY_COMPILED => compiled::render(document, &camera),
-            DAG_PLAY_BODY_DOCUMENT => document_panel::render(document, selected, labels),
+            DAG_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(document, selected, labels),
+            DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(document, &[], labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
+    /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render`), so the
+    /// selection-dependent rows below always take the "nothing selected" branch — `request.surface`'s
+    /// own click-carried selection (independent of `graph`'s live state) still drives the menu.
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let labels = dag_play_labels(cfg.snapshot);
         let is_de = is_de_locale(cfg.snapshot);
-        let selected = &cfg.snapshot.selected_node_ids;
-        dag_context_menu_items(registry, labels, is_de, selected, request)
+        dag_context_menu_items(registry, labels, is_de, &[], request)
+    }
+
+    /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every node's parent is the source of its first
+    /// incoming edge (`None` for a root with no incoming edge), and every edge is registered as a
+    /// sibling child of that same source node — so hovering/selecting a node transitively covers its
+    /// downstream nodes AND edges (the DAG's actual data-flow direction), while `validate_state` prunes
+    /// a deleted node/edge id out of `graph`'s selection the moment it disappears from the document. A
+    /// join (a node with multiple incoming edges) picks its FIRST incoming edge's source as the single
+    /// parent — `TopologyNode` has one parent slot, so a true multi-parent DAG only gets one branch of
+    /// its transitive closure; a documented approximation, matching `PathDelimited`'s own precedent.
+    fn interaction_topology(doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> InteractionTopology {
+        let document = doc.snapshot;
+        let nodes = document.nodes();
+        let edges = document.edges();
+        // 🧵️ `DagFixtureEdge.source`/`.target` are "nodeId@portId" endpoint strings (defaulting to the
+        // "out" port when bare) — `split_endpoint` peels the node id back off before it can be matched
+        // against a plain `DagNodeSpec.id`.
+        let node_id_of = |endpoint: &str| crate::artifacts::dag::schema::split_endpoint(endpoint).0;
+        let mut ordered = Vec::with_capacity(nodes.len() + edges.len());
+        for node in &nodes {
+            let parent = edges.iter().find(|edge| node_id_of(&edge.target) == node.id).map(|edge| node_id_of(&edge.source));
+            ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent });
+        }
+        for edge in &edges {
+            ordered.push(TopologyNode { id: edge.id.clone(), granularity: "edge".into(), parent: Some(node_id_of(&edge.source)) });
+        }
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(DAG_PLAY_INTERACTION_DOMAIN.to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 }
 //#endregion 🔖️DagPlayApp
@@ -206,11 +251,11 @@ pub fn create_dag_app() -> App {
             .action_with(ActionDefinition::new_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Mutation).with_category("actions"))
             .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
             .mutation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
-            // 👁️ Ephemeral view state — selection and camera/viewport.
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .view_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"))
-            .view_action("nodeGraphSelect", LocalizedLabel::native("Node Graph Select", "Knotengraph auswählen"))
-            .view_action("nodeGraphHover", LocalizedLabel::native("Node Graph Hover", "Knotengraph-Hover"))
+            // 👁️ Ephemeral view state — camera/viewport. Selection/hover no longer declared here: the
+            // framework auto-injects interactionSelect/interactionHover/clearSelection/selectAll/
+            // setSelectionMode/setInteractionGranularity for every domain declared via `.interaction(...)`
+            // below (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM — never declare those
+            // actions yourself).
             .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
             .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
             .keybinding("delete,backspace", "deleteSelection")
@@ -225,6 +270,27 @@ pub fn create_dag_app() -> App {
                     ActionArgOption::new("preview", LocalizedLabel::native("Preview", "Vorschau")),
                 ]).default_value("computation"),
             ])
+            // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+            // one `graph` domain over the node graph, node/edge granularities, `HierarchyProvider::Topology`
+            // from the DAG's own edges (see `DagPlayApp::interaction_topology`), transitive HOVER only (a
+            // hovered node lights up everything downstream, a nice "what does this feed?" highlight) —
+            // selection stays NON-transitive: a downstream node is a dependent, not a structural child (no
+            // AST-style containment), so clicking one node must not silently drag every node it feeds into
+            // the selection (and so `deleteSelection` never cascade-deletes downstream nodes the user never
+            // clicked). `nodeGraphSelect`'s old marquee behavior is now the framework's own
+            // `SelectionMethod::Rectangle` method, no app geometry needed.
+            .interaction(InteractionDefinition {
+                id: DAG_PLAY_INTERACTION_DOMAIN.into(),
+                label: LocalizedLabel::native("Graph", "Graph"),
+                granularities: vec![
+                    GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "box".into() },
+                    GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "git-commit-horizontal".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
+            })
+            .window_kind_interactions(DAG_PLAY_WINDOW_MAIN, vec![InteractionRef::new(DAG_PLAY_INTERACTION_DOMAIN)])
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
             // dag has no user-visible config defaults to expose, so `config_spec()` stays the trait
             // default `ConfigSpec::empty()`; declaring it explicitly here still keeps this app's typed
@@ -294,10 +360,6 @@ mod tests {
             DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: "n1".into(), value: "renamed".into() }),
             DagCommand::Reorganize(reorganize::Reorganize {}),
             DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() }),
-            DagCommand::SetSelection(set_selection::SetSelection { ids: vec!["n1".into()] }),
-            DagCommand::SelectNode(select_node::SelectNode { node_id: "n1".into() }),
-            DagCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["n1".into(), "n2".into()] }),
-            DagCommand::NodeGraphHover(node_graph_hover::NodeGraphHover {}),
             DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { x: 1.0, y: 2.0, zoom: 1.5 }),
             DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
             DagCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
@@ -309,7 +371,7 @@ mod tests {
     #[test]
     fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
         let commands = every_command();
-        assert_eq!(commands.len(), 17, "every DagCommand row must be covered by every_command()");
+        assert_eq!(commands.len(), 13, "every DagCommand row must be covered by every_command()");
         let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();
@@ -340,10 +402,6 @@ mod tests {
             ("rename-dag-node", DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: "n1".into(), value: "renamed".into() })),
             ("reorganize", DagCommand::Reorganize(reorganize::Reorganize {})),
             ("patch-dag-nodes", DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into()], field: "value".into(), value: "5".into() })),
-            ("set-selection", DagCommand::SetSelection(set_selection::SetSelection { ids: vec!["n1".into()] })),
-            ("select-node", DagCommand::SelectNode(select_node::SelectNode { node_id: "n1".into() })),
-            ("node-graph-select", DagCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["n1".into()] })),
-            ("node-graph-hover", DagCommand::NodeGraphHover(node_graph_hover::NodeGraphHover {})),
             ("node-graph-viewport", DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { x: 1.0, y: 2.0, zoom: 1.0 })),
             ("graph-pointer-down", DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
             ("locale", DagCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })),
@@ -389,17 +447,44 @@ mod tests {
     }
 
     #[test]
-    fn every_declared_action_is_registered_and_set_selection_is_a_view_action() {
+    fn every_declared_action_is_registered() {
         let definition = create_dag_app().definition;
-        for command in [
-            "addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "reorganize", "patchDagNodes", "setSelection", "selectNode", "nodeGraphSelect", "nodeGraphHover",
-            "nodeGraphViewport", "graphPointerDown",
-        ] {
+        for command in ["addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "reorganize", "patchDagNodes", "nodeGraphViewport", "graphPointerDown"] {
             assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
         }
+    }
+
+    /// 🕹️ `graph` is declared once, node/edge granularities, `Topology` hierarchy, scoped to the main
+    /// window — the framework auto-injects the six interaction actions for it (never app-declared).
+    #[test]
+    fn declares_the_graph_interaction_domain_scoped_to_the_main_window() {
+        let definition = create_dag_app().definition;
+        let interaction = definition.interactions.iter().find(|def| def.id == DAG_PLAY_INTERACTION_DOMAIN).expect("graph domain declared");
+        assert_eq!(interaction.granularities.iter().map(|granularity| granularity.id.as_str()).collect::<Vec<_>>(), vec!["node", "edge"]);
+        assert!(matches!(interaction.hierarchy, HierarchyProvider::Topology));
+        assert!(interaction.hover.transitive, "hovering a node must cover its downstream descendants");
+        assert!(!interaction.selection.transitive, "selection must NOT cascade into downstream nodes — a dependent is not a structural child");
+        let main_window = definition.window_kinds.iter().find(|window| window.id == DAG_PLAY_WINDOW_MAIN).expect("main window declared");
+        assert!(main_window.interactions.contains(&InteractionRef::new(DAG_PLAY_INTERACTION_DOMAIN)));
+    }
+
+    /// 🌳️ `interaction_topology` derives every node's parent from its first incoming edge's source, and
+    /// registers every edge as a sibling child of that same source — enough structure for
+    /// `validate_state` to prune a stale selection the moment `removeNode`/`disconnect` deletes its
+    /// target, and for transitive hover to cover a node's downstream nodes and edges.
+    #[test]
+    fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
         let mut app: DagApp = new_app_with_registry();
-        let result = app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: Vec::new() }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
-        assert!(result.mutations.is_empty(), "setSelection (View) emits no operations even under registry enforcement");
+        let snapshot = app.snapshot().expect("snapshot");
+        let node_id = snapshot.nodes().first().expect("seed node").id.clone();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let cfg_snapshot = DagConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let topology = DagPlayApp::interaction_topology(&doc, &cfg);
+        let domain = topology.domains.get(DAG_PLAY_INTERACTION_DOMAIN).expect("graph domain topology present");
+        assert!(domain.ordered.iter().any(|node| node.id == node_id && node.granularity == "node"), "every seed node is registered");
+        assert_eq!(domain.ordered.iter().filter(|node| node.granularity == "edge").count(), snapshot.edges().len(), "every seed edge is registered");
     }
     //#endregion 🔖️ManifestSanity
 
@@ -414,7 +499,9 @@ mod tests {
 
         let mut app: DagApp = new_app_with_registry();
         let node_ids: Vec<String> = app.snapshot().expect("projection").nodes().iter().map(|node| node.id.clone()).collect();
-        app.dispatch_typed(DagCommand::SetSelection(set_selection::SetSelection { ids: node_ids.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("setSelection");
+        // 🕹️ The click-carried `request.surface.selection` drives the menu directly —
+        // `dag_context_menu_items`'s own `selected` fallback param is always `&[]` now (`render`/
+        // `context_menu` carry no `InteractionView`, ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
         let request = ContextMenuRequest {
             menu: UiMenuRef { id: "nodeGraph".into(), args: None },
             surface: Some(ContextMenuSurfaceTarget {

@@ -14,6 +14,7 @@ use crate::artifacts::vdi3805::op::Vdi3805Mutation;
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::presence::{NormPresence, NormPresenceMutation};
+use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
@@ -85,7 +86,7 @@ impl ArtifactApp for Vdi3805PlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Vdi3805Command, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Vdi3805Command, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NormConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

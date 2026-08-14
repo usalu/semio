@@ -1,9 +1,9 @@
 //! 🖼️ 🖼️ Animate present app commands command — `set-source`.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
+use crate::apps::present::{interaction_select_effect, PresentDispatchCtx};
 use crate::artifacts::present::mutations::replace_source::mutation::ReplaceSource;
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
-use crate::artifacts::present::mutations::resize_source_frame::mutation::ResizeSourceFrame;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{default_present_snapshot, FigureTileFrame, FigureTileSource, PresentSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -16,23 +16,24 @@ pub struct SetSource {
     pub source: FigureTileSource,
 }
 
-pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
     let replaced = payload.source.src != deck_source.src;
     let mut operations = vec![PresentMutation::ReplaceSource(ReplaceSource { new_source: payload.source.clone() })];
-    let mut config_mutations = Vec::new();
+    let mut emit_effects = Vec::new();
     if replaced {
         operations.push(PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() }));
-        config_mutations.push(PresentConfigMutation::SetSelectedIds { ids: Vec::new() });
+        emit_effects.push(interaction_select_effect(&[], "replace"));
     }
-    Ok(Emit { artifact_mutations: operations, config_mutations, ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, effects: emit_effects, ..Default::default() })
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::present::commands::{set_active_example, set_frame};
     use crate::apps::present::testkit::{dispatch, present_app};
     use crate::apps::present::PresentCommand;
 
@@ -88,7 +89,8 @@ mod tests {
         let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "demo".into() }, &doc, &cfg).expect("handle");
+        let mut ctx = PresentDispatchCtx { selected_ids: Vec::new() };
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "demo".into() }, &doc, &cfg, &mut ctx).expect("handle");
         let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
@@ -103,7 +105,8 @@ mod tests {
         let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "other".into() }, &doc, &cfg).expect("handle");
+        let mut ctx = PresentDispatchCtx { selected_ids: Vec::new() };
+        let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "other".into() }, &doc, &cfg, &mut ctx).expect("handle");
         assert!(emit.effects.is_empty());
         assert!(emit.artifact_mutations.is_empty());
     }

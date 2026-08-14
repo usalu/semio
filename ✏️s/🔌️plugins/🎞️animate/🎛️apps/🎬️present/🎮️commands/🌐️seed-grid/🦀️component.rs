@@ -1,6 +1,7 @@
 //! 🌐️ 🌐️ Animate present app commands command — `seed-grid`.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
+use crate::apps::present::{interaction_select_effect, PresentDispatchCtx};
 use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;
@@ -15,18 +16,21 @@ pub struct SeedGrid {
     pub columns: u32,
 }
 
-pub fn handle(payload: &SeedGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &SeedGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
-    let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-    Ok(Emit { artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
+    let selected: Vec<String> = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+    let mut emit = Emit::mutations(vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })]);
+    emit.effects.push(interaction_select_effect(&selected, "replace"));
+    Ok(emit)
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::present::commands::clear_tiles;
     use crate::apps::present::testkit::{dispatch, present_app};
     use crate::apps::present::PresentCommand;
     use semio_framework_plugin::testkit::meta;
@@ -53,10 +57,12 @@ mod tests {
         let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let mut ctx = PresentDispatchCtx { selected_ids: Vec::new() };
         let emit = crate::apps::present::commands::set_active_example::handle(
             &crate::apps::present::commands::set_active_example::SetActiveExample { example_id: "demo".into() },
             &doc,
             &cfg,
+            &mut ctx,
         )
         .expect("handle");
         let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
@@ -66,19 +72,18 @@ mod tests {
         assert!(crate::artifacts::present::present_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no seeded tiles");
     }
 
+    /// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
+    /// MECHANISM); `clearTiles` clears the document, and its `interactionSelect` effect asks the
+    /// framework to clear the "tiles" domain's selection too (asserted directly on the effect — the
+    /// in-process test harness never applies `effects` to itself).
     #[test]
-    fn clear_tiles_action_empties_tiles_and_selection() {
-        use crate::apps::present::PRESENT_PLAY_BODY_DETAILS;
-        use semio_framework_plugin::{PluginApp, ViewModel};
+    fn clear_tiles_action_empties_tiles_and_requests_a_selection_clear() {
+        use semio_framework_plugin::HostEffect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 }));
-        let first_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
-        dispatch(&mut app, PresentCommand::SetSelectedIds(crate::apps::present::commands::set_selected_ids::SetSelectedIds { ids: vec![first_id] }));
-        dispatch(&mut app, PresentCommand::ClearTiles(clear_tiles::ClearTiles {}));
+        let result = dispatch(&mut app, PresentCommand::ClearTiles(clear_tiles::ClearTiles {}));
         assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
-        let node = app.render(PRESENT_PLAY_BODY_DETAILS, None, &ViewModel::default()).expect("render details");
-        let json_str = serde_json::to_string(&node).unwrap();
-        assert!(json_str.contains("Select a tile"), "selection was cleared alongside tiles");
+        assert!(matches!(result.requested_effects.as_slice(), [HostEffect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
     }
 }
 //#endregion 🧪️Tests

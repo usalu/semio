@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn resolving_a_node_output_re_arms_the_tick_chain() {
         let mut app = flow_app();
-        let result = dispatch(&mut app, FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }));
+        let result = dispatch(&mut app, FlowCommand::FlowEvalResolve(crate::apps::flow::commands::flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }));
         assert!(result.mutations.is_empty(), "resolving is not a document edit");
     }
 

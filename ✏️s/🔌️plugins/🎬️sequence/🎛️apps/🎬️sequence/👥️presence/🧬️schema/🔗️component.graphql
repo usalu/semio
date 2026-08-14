@@ -1,5 +1,4 @@
 type SequencePresence {
-  selectedStepIds: [String!]! @state(class: PRESENCE)
   orientation: String! @state(class: PRESENCE)
   camera: SequenceCamera! @state(class: PRESENCE)
 }

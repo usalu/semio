@@ -47,9 +47,10 @@ pub fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg
         return Ok(Emit::default());
     };
     let next = crate::artifacts::forms::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps);
-    let mut config_mutations = reset_try_config_mutations();
-    config_mutations.push(FormsConfigMutation::SetSelection { ids: Vec::new() });
-    Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations, ..Default::default() })
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer clears a config-owned
+    // selection here — swapping in a whole new document prunes every stale "fields" selection id
+    // automatically via `revalidate_interaction_state_after_document_change`.
+    Ok(Emit { artifact_mutations: replace_spec_operations(doc.snapshot, &next), config_mutations: reset_try_config_mutations(), ..Default::default() })
 }
 
 //#region 🧪️Tests
@@ -58,7 +59,7 @@ mod tests {
     use super::*;
     use crate::apps::forms::testkit::{dispatch, forms_app};
     use crate::apps::forms::FormsCommand;
-    use set_active_example::SetActiveExample;
+    use crate::apps::forms::commands::set_active_example::SetActiveExample;
     use SetSpecJson;
 
     #[test]

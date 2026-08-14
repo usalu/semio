@@ -1,14 +1,25 @@
 //! 📄️ Imperative play app panel — the document tree: the top-level steps of the current path.
 
 use crate::apps::imperative::terminology::ImperativeLabels;
-use crate::apps::imperative::imperative_action;
+use crate::apps::imperative::IMPERATIVE_INTERACTION_STEPS;
 use crate::artifacts::imperative::ImperativeSnapshot;
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_DOCUMENT: &str = "imperative.play.document";
+const IMPERATIVE_PLAY_DOCUMENT_NAMESPACE: &str = "imperative-play-document";
 //#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ Canonical `steps` domain `InteractionTarget` id for a step — the SAME id this tree's own items
+/// use, so the framework's post-render presence stamping (`stamp_and_cache_interaction_ui`) can match
+/// tree items to their live selection/hover state; also reused by
+/// `ImperativePlayApp::interaction_topology` so the topology walks the identical id space (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub fn step_row_id(id: &str) -> String {
+    format!("{IMPERATIVE_PLAY_DOCUMENT_NAMESPACE}.step.{id}")
+}
+//#endregion 🔖️Interaction
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
@@ -23,18 +34,22 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &ImperativeSnapshot, selected: &[String], labels: &ImperativeLabels) -> UiNode {
-    let builder = PanelTreeBuilder::new("imperative-play-document");
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: item ids are the SAME canonical
+/// `step_row_id` targets `ImperativePlayApp::interaction_topology` declares for the `steps` domain —
+/// the framework stamps this tree's selection/hover presence from that domain (`.interaction_domain`)
+/// and prunes stale ids through that same topology, so no per-item click action is declared here
+/// anymore (clicks are translated into `interactionSelect` generically).
+pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     let step_items: Vec<UiTreeItemNode> = path
         .steps
         .iter()
         .enumerate()
-        .map(|(index, step)| tree_item_with_action(builder.item_id("step", &step.id), Label::data(format!("{}. {}", index + 1, step.kind)), Some(step.id.clone()), imperative_action("setSelection", Some(json!({ "ids": [step.id.clone()] })))))
+        .map(|(index, step)| tree_item_desc(step_row_id(&step.id), Label::data(format!("{}. {}", index + 1, step.kind)), Some(step.id.clone())))
         .collect();
-    builder
+    PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)
         .section_or_placeholder("imperative-play-document.steps", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, step_items, labels.document_empty)
-        .selected(selected.iter().map(|id| format!("imperative-play-document.step.{id}")).collect())
+        .interaction_domain(IMPERATIVE_INTERACTION_STEPS)
         .build()
 }
 //#endregion 🔖️Render

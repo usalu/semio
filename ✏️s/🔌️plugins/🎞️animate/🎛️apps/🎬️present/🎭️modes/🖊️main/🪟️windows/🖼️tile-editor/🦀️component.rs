@@ -28,6 +28,7 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
@@ -52,8 +53,13 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
     (frame.x * scale, frame.y * scale, frame.width * scale, frame.height * scale)
 }
 
-/// 🖼️ Renders the actual source figure (image) as the backdrop layer, with crop tiles drawn on top of it.
-fn deck_to_canvas_layers(deck: &PresentSnapshot, selected: &[String]) -> String {
+/// 🖼️ Renders the actual source figure (image) as the backdrop layer, with crop tiles drawn on top of
+/// it. `config` no longer carries `selected_ids` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
+/// MECHANISM: selection is framework-owned state, and `ArtifactApp::render` is never given an
+/// `InteractionView`) — the selection overlay this used to bake into every tile's `kind` is gone; the
+/// client renders that highlight itself from the framework's own interaction state now (matches
+/// `🖍️draw`'s canvas render, same reason).
+fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
     const SCALE: f64 = 1000.0;
     let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
     let mut layers = Vec::new();
@@ -71,16 +77,15 @@ fn deck_to_canvas_layers(deck: &PresentSnapshot, selected: &[String]) -> String 
     });
     for tile in &tiles {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
-        let selected_flag = selected.contains(&tile.id);
-        layers.push(TileCanvasLayer { id: tile.id.clone(), kind: if selected_flag { "tile-selected" } else { "tile" }.into(), name: tile.name.clone(), x, y, width, height, data_url: None });
+        layers.push(TileCanvasLayer { id: tile.id.clone(), kind: "tile".into(), name: tile.name.clone(), x, y, width, height, data_url: None });
     }
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Render
-pub fn render(deck: &PresentSnapshot, selected: &[String]) -> UiNode {
-    build_canvas_2d_scene(PRESENT_PLAY_SURFACE_MAIN, PRESENT_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck, selected) })
+pub fn render(deck: &PresentSnapshot) -> UiNode {
+    build_canvas_2d_scene(PRESENT_PLAY_SURFACE_MAIN, PRESENT_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck) })
 }
 //#endregion 🔖️Render
 
@@ -112,7 +117,7 @@ mod tests {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(crate::apps::present::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
         let deck = app.snapshot().expect("projection");
-        let layers_json = deck_to_canvas_layers(&deck, &[]);
+        let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
         let (source, _) = crate::artifacts::present::present_working_scene(&deck);
         assert!(!source.src.trim().is_empty());
@@ -132,7 +137,7 @@ mod tests {
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
         source.src = String::new();
         let deck = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);
-        let layers_json = deck_to_canvas_layers(&deck, &[]);
+        let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
         let source_layer = layers.first().expect("source layer present");
         assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
@@ -145,7 +150,7 @@ mod tests {
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
         source.kind = "pdf".into();
         let deck = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);
-        let layers_json = deck_to_canvas_layers(&deck, &[]);
+        let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
         let source_layer = layers.first().expect("source layer present");
         assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));

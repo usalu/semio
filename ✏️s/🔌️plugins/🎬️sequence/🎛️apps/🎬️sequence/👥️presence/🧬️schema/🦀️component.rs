@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.sequence.sequence.presence")]
 pub struct SequencePresence {
-    #[state(presence)] pub selected_step_ids: Vec<String>,
     #[state(presence)] pub orientation: String,
     #[state(presence)] pub camera: SequenceCamera,
 }

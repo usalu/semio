@@ -28,6 +28,8 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        // 🕹️ Populated post-hoc by `create_playbook_play_app`'s `.window_kind_interactions(..)` call.
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
@@ -69,9 +71,13 @@ fn playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
     crate::playbook::PlaybookBuilderConfig { action_namespace: "playbook-builder", controller_id: PLAYBOOK_PLAY_CONTROLLER_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactApp::render` carries no
+/// `InteractionView` (a known SDK gap — matches `forms`'/`note`'s render-surface precedent), so this
+/// block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`) can no
+/// longer be driven from live framework selection — it always renders with none highlighted now.
 pub fn render(spec: &PlaybookSnapshot, config: &PlaybookConfig) -> UiNode {
     let kernel = spec.as_kernel();
-    crate::playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, &kernel, &build_palette(config), config.selected_ids.first().map(String::as_str), &playbook_builder_config())
+    crate::playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, &kernel, &build_palette(config), None, &playbook_builder_config())
 }
 //#endregion 🔖️Render
 

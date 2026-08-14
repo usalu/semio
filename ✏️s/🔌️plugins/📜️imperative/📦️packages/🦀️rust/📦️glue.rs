@@ -337,8 +337,6 @@ pub mod apps {
             pub mod set_step_params;
             #[path = "../../🎛️apps/📜️imperative/🎮️commands/🔧️set-step-params-at/🦀️component.rs"]
             pub mod set_step_params_at;
-            #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️set-selection/🦀️component.rs"]
-            pub mod set_selection;
             #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️run/🦀️component.rs"]
             pub mod run;
             #[path = "../../🎛️apps/📜️imperative/🎮️commands/👁️set-locale/🦀️component.rs"]

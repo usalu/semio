@@ -6,7 +6,6 @@ enum AdjacencyKind {
 }
 
 type ArchitectConfig {
-  selectedIds: [String!]! @state(class: CONFIG)
   activeRegister: String! @state(class: CONFIG)
   searchQuery: String! @state(class: CONFIG)
   searchHistoryJson: String! @state(class: CONFIG)

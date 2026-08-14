@@ -1,6 +1,7 @@
 //! 🔗️ 🔗️ Wires play app commands command — `add-relationship`.
 
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
+use crate::apps::wires::{wires_select_effect, WIRES_GRANULARITY_EDGE};
 use crate::artifacts::wires::schema::fixture_edges;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
@@ -14,6 +15,9 @@ pub struct AddRelationship {
     pub kind: String,
 }
 
+/// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+/// the newly created edge is selected via a requested `interactionSelect` effect instead of a
+/// `WiresConfigMutation::SetSelection`.
 pub fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "owns" } else { payload.kind.as_str() };
@@ -32,7 +36,7 @@ pub fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, 
         "targetIdentityId": 2
     }))
     .expect("relationship serializes");
-    Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::connect_nodes(edge, relationship)], config_mutations: vec![WiresConfigMutation::SetSelection { ids: vec![edge_id] }], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::connect_nodes(edge, relationship)], effects: vec![wires_select_effect(&[edge_id], WIRES_GRANULARITY_EDGE, "replace")], ..Default::default() })
 }
 
 //#region 🧪️Tests

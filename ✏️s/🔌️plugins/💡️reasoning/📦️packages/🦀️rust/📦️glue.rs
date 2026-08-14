@@ -436,10 +436,6 @@ pub mod apps {
             pub mod canvas_pointer_move;
             #[path = "../../🎛️apps/🔌️wires/🎮️commands/🖱️canvas-pointer-up/🦀️component.rs"]
             pub mod canvas_pointer_up;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗂️document-select/🦀️component.rs"]
-            pub mod document_select;
             #[path = "../../🎛️apps/🔌️wires/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }

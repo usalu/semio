@@ -1,11 +1,10 @@
 //! 📄️ Forms play app panel — the document tree: steps and their questions.
 
-use crate::apps::forms::forms_action;
+use crate::apps::forms::{forms_action, FORMS_INTERACTION_FIELDS};
 use crate::apps::forms::terminology::FormsLabels;
 use crate::artifacts::forms::schema::forms_play_step_tree_id;
 use crate::artifacts::forms::{forms_steps, FormsSnapshot};
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_DOCUMENT: &str = "forms.play.document";
@@ -24,7 +23,13 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(spec: &FormsSnapshot, selected_ids: &[String], labels: &FormsLabels) -> UiNode {
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: item ids are the SAME canonical
+/// `fields` domain target ids `FormsPlayApp::interaction_topology` declares — steps at the "section"
+/// granularity via `forms_play_step_tree_id`, questions at the "field" granularity via their own raw
+/// id — the framework stamps this tree's selection/hover presence from that domain
+/// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
+/// action is declared here anymore (clicks are translated into `interactionSelect` generically).
+pub fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = forms_steps(spec)
         .iter()
         .map(|step| {
@@ -35,7 +40,7 @@ pub fn render(spec: &FormsSnapshot, selected_ids: &[String], labels: &FormsLabel
                     icon_id: Some("help-circle".into()),
                     draggable: Some(true),
                     menu: None,
-                    ..tree_item_with_action(question.id.clone(), Label::data(question.label.clone()), Some(question.kind.clone()), forms_action("setSelection", Some(json!({ "ids": [question.id.clone()] }))))
+                    ..tree_item_desc(question.id.clone(), Label::data(question.label.clone()), Some(question.kind.clone()))
                 })
                 .collect();
             UiTreeItemNode {
@@ -44,14 +49,13 @@ pub fn render(spec: &FormsSnapshot, selected_ids: &[String], labels: &FormsLabel
                 draggable: Some(true),
                 items: Some(question_items),
                 menu: None,
-                ..tree_item_with_action(forms_play_step_tree_id(&step.id), Label::data(step.title.clone()), Some(format!("{} questions", step.blocks.len())), forms_action("setSelection", Some(json!({ "ids": [] }))))
+                ..tree_item_desc(forms_play_step_tree_id(&step.id), Label::data(step.title.clone()), Some(format!("{} questions", step.blocks.len())))
             }
         })
         .collect();
     PanelTreeBuilder::new("forms-play-document")
         .section_or_placeholder("forms-play-document.steps", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, step_items, labels.no_steps_tree_item)
-        .selected(selected_ids.to_vec())
-        .selection_change(forms_action("setSelection", None))
+        .interaction_domain(FORMS_INTERACTION_FIELDS)
         .drop_action(forms_action("dropQuestionKind", None))
         .build()
 }

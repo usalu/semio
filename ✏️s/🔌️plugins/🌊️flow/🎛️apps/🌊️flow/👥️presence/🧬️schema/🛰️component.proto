@@ -2,15 +2,9 @@ syntax = "proto3";
 package semio.app.flow.flow;
 message FlowPresence {
   // @state presence
-  repeated string selected_node_ids = 1;
+  repeated string preview_off_node_ids = 1;
   // @state presence
-  repeated string selected_edge_ids = 2;
-  // @state presence
-  repeated string selected_handle_ids = 3;
-  // @state presence
-  repeated string preview_off_node_ids = 4;
-  // @state presence
-  CameraJson camera = 5;
+  CameraJson camera = 2;
 }
 
 message CameraJson {

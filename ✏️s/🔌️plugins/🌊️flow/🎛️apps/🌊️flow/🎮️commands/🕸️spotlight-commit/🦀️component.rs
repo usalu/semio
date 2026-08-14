@@ -1,10 +1,10 @@
 //! 🕸️ 🎯️ Flow play app commands command — `spotlight-commit`.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::apps::flow::{host_operations, sync_host_selection};
+use crate::apps::flow::{flow_graph_selection_domains, host_operations, sync_host_selection, FLOW_INTERACTION_GRAPH};
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️FlowNodeGraphEditOp
@@ -23,9 +23,11 @@ pub enum FlowNodeGraphEditOp {
 //#endregion 🔖️FlowNodeGraphEditOp
 
 //#region 🔖️SharedDispatch
-fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp]) -> Emit<FlowMutation, FlowConfigMutation> {
-    let selected = config.selected_node_ids.clone();
-    let mut clear_selection = false;
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_nodes` is the "graph"
+/// domain's live node selection (read by the caller via `InteractionView`) — no `SetSelection` config
+/// mutation afterwards, the framework auto-prunes deleted ids out of `graph`'s selection via
+/// `interaction_topology`.
+fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp], selected_nodes: &[String]) -> Emit<FlowMutation, FlowConfigMutation> {
     let artifact_mutations = host_operations(fixture, config, session, |host| {
         let mut changed = false;
         for sub_operation in operations {
@@ -38,9 +40,8 @@ fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowConfig, session: 
                     }
                 }
                 FlowNodeGraphEditOp::DeleteSelection => {
-                    sync_host_selection(host, &selected);
+                    sync_host_selection(host, selected_nodes);
                     if host.delete_selection().is_ok() {
-                        clear_selection = true;
                         changed = true;
                     }
                 }
@@ -53,16 +54,9 @@ fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowConfig, session: 
         }
         changed
     });
-    let config_mutations = if clear_selection { vec![FlowConfigMutation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }] } else { Vec::new() };
-    Emit { artifact_mutations, config_mutations, ..Default::default() }
+    Emit::mutations(artifact_mutations)
 }
 //#endregion 🔖️SharedDispatch
-
-//#region 🔖️NodeGraphEdit
-//#endregion 🔖️NodeGraphEdit
-
-//#region 🔖️SpotlightCommit
-//#endregion 🔖️SpotlightCommit
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct SpotlightCommit {
@@ -70,6 +64,17 @@ pub struct SpotlightCommit {
     pub operations: Vec<FlowNodeGraphEditOp>,
 }
 
+/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, session)` is framework-fixed at this exact 4-arg
+/// shape (no `interaction` slot), so it still requires a `handle` of this signature to exist even though
+/// it is reachable only through that macro-generated path (`FlowPlayApp::handle` always routes this
+/// command through `apply` below instead) — degrades to treating the selection as empty.
 pub fn handle(payload: &SpotlightCommit, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    Ok(node_graph_edit_result(doc.snapshot, cfg.snapshot, session, &payload.operations))
+    Ok(node_graph_edit_result(doc.snapshot, cfg.snapshot, session, &payload.operations, &[]))
+}
+
+/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, session)` has no `interaction` slot (see
+/// `delete_selection::apply`'s doc comment) — `FlowPlayApp::handle` routes this command through `apply`.
+pub fn apply(payload: &SpotlightCommit, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    let (nodes, _edges) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
+    Ok(node_graph_edit_result(doc.snapshot, cfg.snapshot, session, &payload.operations, &nodes))
 }

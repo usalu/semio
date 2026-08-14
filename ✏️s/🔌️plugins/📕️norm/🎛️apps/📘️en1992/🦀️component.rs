@@ -14,6 +14,7 @@ use crate::artifacts::en1992::op::En1992Mutation;
 use crate::artifacts::en1992::En1992Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::presence::{NormPresence, NormPresenceMutation};
+use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
@@ -85,7 +86,7 @@ impl ArtifactApp for En1992PlayApp {
         command.command_id()
     }
 
-    fn handle(command: &En1992Command, doc: &ArtifactView<'_, En1992Snapshot>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<En1992Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &En1992Command, doc: &ArtifactView<'_, En1992Snapshot>, cfg: &ConfigView<'_, NormConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<En1992Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

@@ -63,9 +63,10 @@ pub fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceL
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::sequence::testkit::{dispatch, new_app, render as render_body};
-    use crate::apps::sequence::commands::selection::set_selection::SetSelection;
-    use crate::apps::sequence::SequenceCommand;
+    use crate::apps::sequence::config::SequenceConfig;
+    use crate::apps::sequence::terminology::sequence_play_labels;
+    use crate::apps::sequence::testkit::{new_app, render as render_body};
+    use semio_framework_plugin::PluginApp;
 
     #[test]
     fn inspection_shows_prompt_when_nothing_selected() {
@@ -73,11 +74,19 @@ mod tests {
         assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_INSPECTOR).contains("Select a step"));
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactApp::render` carries no
+    /// `InteractionView` (only `handle`/`copy_fragment`/`cut_operations` gained one — see this
+    /// ticket's `w3b-summary.md`), so the live app can never feed this panel a real selection today —
+    /// `SequencePlayApp::render` always calls this with an empty slice, a documented framework gap
+    /// (the same one `space`'s node-graph canvas rendering and context menu carry). This exercises
+    /// `render`'s own selected-step branch directly instead of through the app's dispatch/render loop.
     #[test]
     fn inspection_shows_selected_step_kind() {
         let mut app = new_app();
-        dispatch(&mut app, SequenceCommand::SetSelection(SetSelection { step_ids: vec!["step-1".into()] }));
-        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_INSPECTOR).contains("state.set"));
+        let fixture = app.snapshot().expect("projection").to_fixture();
+        let labels = sequence_play_labels(&SequenceConfig::default());
+        let node = render(&fixture, &["step-1".to_string()], labels);
+        assert!(serde_json::to_string(&node).unwrap().contains("state.set"));
     }
 }
 //#endregion 🧪️Tests

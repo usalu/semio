@@ -8,7 +8,8 @@
 //! `VcsCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::apps::vcs::commands::{canvas, counter, locale, patch, selection};
+use crate::apps::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, set_locale, text_edit};
+use crate::apps::vcs::commands::edit as edit_command;
 use crate::apps::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::apps::vcs::presence::{VcsDemoPresence, VcsDemoPresenceMutation};
 use crate::apps::vcs::modes::edit;
@@ -16,7 +17,9 @@ use crate::apps::vcs::modes::edit::windows::{editor, history};
 use crate::apps::vcs::panels::{document as document_panel, inspection as inspection_panel};
 use crate::apps::vcs::terminology::vcs_play_labels;
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 
@@ -33,6 +36,17 @@ pub fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(VCS_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ "history" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
+/// this app declares: multi-select highlighting over the seeded checkpoint history, `Flat` (checkpoints
+/// have no selectable-entity nesting — the DAG's `parent_id` links only matter to the swimlane graph
+/// layout, not to selection range/closure), one granularity `"commit"`. Distinct from the per-row
+/// `checkoutCheckpoint`/`switchAlternative` click actions the document tree already declares (those are
+/// navigation — they change the working checkpoint/alternative — not entity selection), which stay as
+/// ordinary actions.
+pub const VCS_INTERACTION_HISTORY: &str = "history";
+//#endregion 🔖️Interaction
 
 //#region 🔌️Registration
 /// 🗂️ Registers `VcsSnapshot`'s pack<->dsl codec under its real `document_schema()` string so
@@ -135,7 +149,6 @@ semio_framework_plugin::app_commands! {
         "patchSnapshot" as "patch-snapshot" => patch_snapshot::PatchSnapshot,
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "edit" as "edit" => edit_command::Edit,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
         "setLocale" as "locale" => set_locale::SetLocale,
         "noMutation" as "no-operation" => no_operation::NoMutation,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
@@ -144,14 +157,6 @@ semio_framework_plugin::app_commands! {
         "canvasWheel" as "canvas-wheel" => canvas_wheel::CanvasWheel,
     }
 }
-
-// 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
-// payload module is imported here under its own flat name.
-use canvas::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, no_operation};
-use counter::increment_counter;
-use locale::set_locale;
-use patch::{edit as edit_command, patch_snapshot, text_edit};
-use selection::set_selection;
 //#endregion 🔖️Commands
 
 //#region 🔖️DocumentHelpers
@@ -170,9 +175,10 @@ use selection::set_selection;
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️VcsPlayApp
-/// 🧪️ B1: unit struct — the former `VcsPlayApp::selected_checkpoint_ids` `RefCell` field now lives in
-/// `crate::apps::vcs::config::VcsDemoConfig` (see `ArtifactApp::Config`), written through
-/// `VcsDemoConfigMutation`s.
+/// 🧪️ B1: unit struct — the former `VcsPlayApp::selected_checkpoint_ids` `RefCell` field passed through
+/// `crate::apps::vcs::config::VcsDemoConfig` before becoming the framework-owned "history" interaction
+/// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, see `VCS_INTERACTION_HISTORY`'s
+/// doc comment); `locale` is the only field left in `Config`, written through `VcsDemoConfigMutation`s.
 #[derive(Default)]
 pub struct VcsPlayApp;
 
@@ -204,7 +210,7 @@ impl ArtifactApp for VcsPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &VcsCommand, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &VcsCommand, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -213,7 +219,7 @@ impl ArtifactApp for VcsPlayApp {
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels),
             VCS_PLAY_BODY_HISTORY => history::render(doc.history),
-            VCS_PLAY_BODY_DOCUMENT => document_panel::render(doc.history, &cfg.snapshot.selected_checkpoint_ids, labels),
+            VCS_PLAY_BODY_DOCUMENT => document_panel::render(doc.history, labels),
             VCS_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, labels),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -240,7 +246,6 @@ pub fn create_vcs_app() -> App {
             .mutation("patchSnapshot", LocalizedLabel::native("Patch Projection", "Projektion aktualisieren"))
             .mutation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("noMutation", LocalizedLabel::native("No-operation", "Keine Aktion"))
             .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
             .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
@@ -249,6 +254,27 @@ pub fn create_vcs_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(edit::layout())
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "history" interaction
+            // domain — one granularity ("commit"), `HierarchyProvider::Flat` (see `VCS_INTERACTION_HISTORY`'s
+            // doc comment for why this is entity selection, not navigation, and why it is Flat). Multi-select
+            // via Pick (tree rows) only — no canvas/marquee surface exists for checkpoints — all five merges
+            // since the document tree is a plain ordered list (shift-range over the seeded history reads
+            // naturally). Replaces the deleted bespoke `setSelection` action/config field/command.
+            .interaction(InteractionDefinition {
+                id: VCS_INTERACTION_HISTORY.into(),
+                label: LocalizedLabel::native("History", "Verlauf"),
+                granularities: vec![GranularityDefinition { id: "commit".into(), label: LocalizedLabel::native("Commit", "Commit"), icon_id: "git-commit".into() }],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(history::VCS_PLAY_WINDOW_HISTORY, vec![InteractionRef::new(VCS_INTERACTION_HISTORY)])
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
             // this app has no user-visible sticky defaults, so `config_spec()` stays the trait default
             // `ConfigSpec::empty()`; declared anyway for parity with every other converted app.
@@ -423,7 +449,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 11, "every VcsCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 10, "every VcsCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -466,7 +492,6 @@ mod tests {
             VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "title".into(), value: "Renamed".into() }),
             VcsCommand::TextEdit(text_edit::TextEdit { text: "{}".into() }),
             VcsCommand::Edit(edit_command::Edit { text: "{}".into() }),
-            VcsCommand::SetSelection(set_selection::SetSelection { ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] }),
             VcsCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             VcsCommand::NoMutation(no_operation::NoMutation {}),
             VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
@@ -503,6 +528,25 @@ mod tests {
         assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
     }
     //#endregion 🔖️ManifestSanity
+
+    //#region 🔖️Interaction
+    /// 🕹️ The "history" domain is declared `HierarchyProvider::Flat`, Pick-only, and scoped to the
+    /// history window kind — see `VCS_INTERACTION_HISTORY`'s doc comment for why this is entity
+    /// selection over checkpoints, not the per-row `checkoutCheckpoint`/`switchAlternative` navigation.
+    #[test]
+    fn history_interaction_domain_is_declared_flat_and_scoped_to_the_history_window() {
+        let definition = create_vcs_app().definition;
+        let history_domain = definition.interactions.iter().find(|interaction| interaction.id == VCS_INTERACTION_HISTORY).expect("history interaction domain declared");
+        assert!(matches!(history_domain.hierarchy, HierarchyProvider::Flat));
+        assert!(!history_domain.selection.transitive, "checkpoints have no selectable-entity nesting");
+        assert_eq!(history_domain.granularities.len(), 1);
+        assert_eq!(history_domain.granularities[0].id, "commit");
+        let history_window = definition.window_kinds.iter().find(|window| window.id == history::VCS_PLAY_WINDOW_HISTORY).expect("history window kind declared");
+        assert!(history_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == VCS_INTERACTION_HISTORY), "history window must reference the history interaction domain");
+        let editor_window = definition.window_kinds.iter().find(|window| window.id == editor::VCS_PLAY_WINDOW_EDITOR).expect("editor window kind declared");
+        assert!(editor_window.interactions.is_empty(), "the editor window has no checkpoint tree, so no interaction domain is scoped to it");
+    }
+    //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
     #[test]

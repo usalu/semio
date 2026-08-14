@@ -26,6 +26,9 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the report is a read-only
+        // rendering of the last generated `ProgramReport` — it has no selectable entities.
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
@@ -56,7 +59,6 @@ pub fn render(cfg: &ArchitectConfig) -> UiNode {
             .into_iter()
             .chain(sections)
             .collect(),
-        None,
     )
 }
 //#endregion 🔖️Render

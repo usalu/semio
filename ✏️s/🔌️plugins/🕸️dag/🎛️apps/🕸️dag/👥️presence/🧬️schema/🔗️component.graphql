@@ -1,8 +1,5 @@
 type DagPresence {
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
   cameraX: Float! @state(class: PRESENCE)
   cameraY: Float! @state(class: PRESENCE)
   cameraZoom: Float! @state(class: PRESENCE)
-  hoveredNodeId: String @state(class: PRESENCE)
-  hoveredEdgeId: String @state(class: PRESENCE)
 }

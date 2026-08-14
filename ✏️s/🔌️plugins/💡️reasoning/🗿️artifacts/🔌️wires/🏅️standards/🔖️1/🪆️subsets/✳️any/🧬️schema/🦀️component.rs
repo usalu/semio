@@ -20,8 +20,6 @@ pub struct WiresArtifact {
     pub camera: DslValue,
     #[state(artifact)]
     pub meta: DslValue,
-    #[state(presence)]
-    pub selected_ids: Vec<String>,
     #[state(artifact)]
     pub drag_node_id: Option<String>,
     #[state(artifact)]
@@ -41,7 +39,6 @@ impl Default for WiresArtifact {
             content: crate::artifacts::wires::wires_content_child_handle_and_cache(Vec::new(), Vec::new()),
             camera: crate::artifacts::wires::empty_camera(),
             meta: DslValue::Null,
-            selected_ids: Vec::new(),
             drag_node_id: None,
             drag_last_x: 0.0,
             drag_last_y: 0.0,

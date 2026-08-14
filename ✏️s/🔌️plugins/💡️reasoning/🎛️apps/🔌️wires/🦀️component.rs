@@ -21,16 +21,19 @@ use crate::apps::wires::commands::set_locale;
 use crate::apps::wires::commands::add_node;
 use crate::apps::wires::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
 use crate::apps::wires::commands::add_relationship;
-use crate::apps::wires::commands::{document_select, set_selection};
 use crate::apps::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::apps::wires::modes::edit;
 use crate::apps::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework::kernel::HostEffect;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode};
+use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ui_text, ActionDescriptor, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, UiNode,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+    INTERACTION_SELECT_ACTION_ID,
+};
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
-use serde_json::Value;
+use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
@@ -56,6 +59,36 @@ pub fn reset_wires_document_effect(document: &WiresSnapshot) -> HostEffect {
     HostEffect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ The one framework-owned interaction domain wires declares — identities (nodes) and
+/// relationships (edges) on the mindmap canvas plus the document tree's identity/relationship rows
+/// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `Flat`: the mindmap graph
+/// (`infinite_board_normal_undirected`) is a normal undirected identity/relationship graph — no
+/// parent/child structure exists anywhere in `WiresSnapshot`/the fixture schema to build a topology
+/// from, unlike writer's AST or procedural's DAG, so this crate's own migration deliberately disagrees
+/// with the original per-crate brief's "Topology over parent links" guess.
+pub const WIRES_INTERACTION_GRAPH: &str = "graph";
+pub const WIRES_GRANULARITY_NODE: &str = "node";
+pub const WIRES_GRANULARITY_EDGE: &str = "edge";
+
+/// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` at `granularity` — shared by
+/// the canvas pointer/add commands (wrapped into a `HostEffect::DispatchAction`) and any document-tree
+/// row whose click should select a real canvas identity/relationship.
+pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) -> Value {
+    let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect();
+    json!({ "domainId": WIRES_INTERACTION_GRAPH, "targets": serde_json::to_string(&targets).unwrap_or_default(), "merge": merge, "method": "pick" })
+}
+
+/// 🕹️ Wraps [`wires_select_action_args`] into the redispatch effect a canvas gesture's own `handle`
+/// returns — `dispatch_action` intercepts the six framework interaction verbs BEFORE routing to
+/// `ArtifactApp::handle`, so a plain config mutation can no longer express a selection change; the app
+/// asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
+/// hit-testing and emit one batched `interactionSelect`").
+pub fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> HostEffect {
+    HostEffect::DispatchAction { action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(wires_select_action_args(ids, granularity, merge))), delay_ms: 0 }
+}
+//#endregion 🔖️Interaction
 
 //#region 🔌️Registration
 /// 🗂️ Registers `WiresSnapshot`'s pack↔dsl codec so `framework/sync`'s `FolderEndpoint::Pack`
@@ -154,8 +187,6 @@ semio_framework_plugin::app_commands! {
         "forceLayout" as "force-layout" => force_layout::ForceLayout,
         "reorganize" as "reorganize" => reorganize::Reorganize,
         "canvasPointerMove" as "pointer-move" => canvas_pointer_move::CanvasPointerMove,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "documentSelect" as "document-select" => document_select::DocumentSelect,
         "canvasPointerDown" as "pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerUp" as "pointer-up" => canvas_pointer_up::CanvasPointerUp,
         "setLocale" as "locale" => set_locale::SetLocale,
@@ -196,8 +227,15 @@ impl ArtifactApp for ReasoningWiresPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &WiresCommand, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    /// 🕹️ `deleteSelection` reads the "graph" interaction domain directly (bypassing the
+    /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)`
+    /// signature is framework-fixed and has no `interaction` slot) — ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+    fn handle(command: &WiresCommand, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
+        match command {
+            WiresCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
+            _ => command.dispatch(doc, cfg),
+        }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
@@ -205,9 +243,9 @@ impl ArtifactApp for ReasoningWiresPlayApp {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::apps::wires::terminology::WiresLabels>(&cfg.snapshot.locale);
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => edit::windows::canvas::render(&crate::artifacts::wires::wires_working_board(document), &document.wires_fixture),
-            WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, &cfg.snapshot.selected_ids, labels),
+            WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels),
-            WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, &cfg.snapshot.selected_ids),
+            WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -237,11 +275,28 @@ pub fn create_wires_app() -> App {
             .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
             .mutation("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"))
             .mutation("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
-            // 👁️ Ephemeral view state — selection and in-flight drag.
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
-            .view_action("documentSelect", LocalizedLabel::native("Document Select", "Dokument auswählen"))
+            // 👁️ Ephemeral view state — in-flight drag. Selection/hover are framework-owned now
+            // (domain "graph") — no app-declared verbs; `interactionSelect`/`interactionHover`/
+            // `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity` auto-inject
+            // below via `.interaction(...)`.
             .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
             .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"))
+            // 🕹️ Domain "graph": identities (node) and relationships (edge) — `Flat` (the mindmap graph
+            // has no parent/child structure to build a topology from, see `WIRES_INTERACTION_GRAPH`'s
+            // doc comment); single-select, pick-only, replace-only merge (matches the pre-migration
+            // click-to-select behaviour this crate hand-rolled).
+            .interaction(InteractionDefinition {
+                id: WIRES_INTERACTION_GRAPH.into(),
+                label: LocalizedLabel::native("Graph", "Graph"),
+                granularities: vec![
+                    GranularityDefinition { id: WIRES_GRANULARITY_NODE.into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() },
+                    GranularityDefinition { id: WIRES_GRANULARITY_EDGE.into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+                ],
+                hierarchy: HierarchyProvider::Flat,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
+            })
+            .window_kind_interactions(WIRES_PLAY_WINDOW_CANVAS, vec![InteractionRef::new(WIRES_INTERACTION_GRAPH)])
             // 🎯️ Typed channel surface (B1 pure-trait conversion) — `config_spec()`'s single source of
             // truth (the trait default `ConfigSpec::empty()`: none of `WiresConfig`'s fields are
             // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
@@ -258,7 +313,7 @@ pub fn create_wires_app() -> App {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app as new_test_app};
+    use semio_framework_plugin::testkit::{meta, new_app as new_test_app, new_app_with_registry};
     use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type WiresApp = VcsArtifactApp<ReasoningWiresPlayApp>;
@@ -266,6 +321,12 @@ pub(crate) mod testkit {
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn new_app() -> WiresApp {
         new_test_app::<ReasoningWiresPlayApp>()
+    }
+
+    /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
+    /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
+    pub fn app_with_registry() -> WiresApp {
+        new_app_with_registry::<ReasoningWiresPlayApp>(create_wires_app)
     }
 
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
@@ -305,7 +366,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 12, "every WiresCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 10, "every WiresCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -332,8 +393,6 @@ mod tests {
             ("forceLayout", "force-layout"),
             ("reorganize", "reorganize"),
             ("canvasPointerMove", "pointer-move"),
-            ("setSelection", "set-selection"),
-            ("documentSelect", "document-select"),
             ("canvasPointerDown", "pointer-down"),
             ("canvasPointerUp", "pointer-up"),
             ("setLocale", "locale"),
@@ -348,14 +407,19 @@ mod tests {
 
     /// ⚖️ The wire bytes/text pinned from the pre-merge 7-crate baseline (see the ticket's
     /// `🧪️wire-baseline-before.txt`) — a regression here is a real format break, not a fixture mismatch.
+    /// `setSelection`/`documentSelect` dissolved into the framework's own "graph" interaction domain
+    /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) and no longer exist as `WiresCommand`
+    /// rows, which shifts every later row's binary ordinal by 2 — `CanvasPointerUp`'s and `SetLocale`'s
+    /// pinned hex below are updated for the new ordinals (8 and 9); `SetActiveExample` is unaffected
+    /// (ordinal 0, before the deleted rows).
     #[test]
     fn commands_keep_their_pre_migration_wire_bytes() {
         let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
         let _ = node;
         let cases: [(WiresCommand, &str, &str); 3] = [
             (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
-            (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up pointer-up", "010a0000"),
-            (WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), "locale locale value=de-DE", "010b010564652d444501000600"),
+            (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up pointer-up", "01080000"),
+            (WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), "locale locale value=de-DE", "0109010564652d444501000600"),
         ];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);
@@ -374,14 +438,39 @@ mod tests {
             WiresCommand::ForceLayout(force_layout::ForceLayout {}),
             WiresCommand::Reorganize(reorganize::Reorganize {}),
             WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
-            WiresCommand::SetSelection(set_selection::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] }),
-            WiresCommand::DocumentSelect(document_select::DocumentSelect { ids: vec!["node-2".into()] }),
             WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
             WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
             WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ]
     }
     //#endregion 🔖️CommandSurface
+
+    //#region 🔖️Interaction
+    /// 🕹️ The "graph" domain is declared `HierarchyProvider::Flat`, single-select/pick/replace-only,
+    /// and scoped to the canvas window (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    #[test]
+    fn graph_interaction_domain_is_declared_flat_and_scoped_to_the_canvas_window() {
+        let definition = create_wires_app().definition;
+        let graph = definition.interactions.iter().find(|interaction| interaction.id == WIRES_INTERACTION_GRAPH).expect("graph interaction domain declared");
+        assert!(matches!(graph.hierarchy, HierarchyProvider::Flat));
+        assert_eq!(graph.granularities.len(), 2);
+        assert!(!graph.selection.transitive, "graph has no hierarchy to close a transitive selection over");
+        let canvas_window = definition.window_kinds.iter().find(|window| window.id == WIRES_PLAY_WINDOW_CANVAS).expect("canvas window kind declared");
+        assert!(canvas_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == WIRES_INTERACTION_GRAPH), "canvas window must reference the graph interaction domain");
+    }
+
+    /// 🕹️ `wires_select_action_args` shapes the exact JSON the framework's `interactionSelect` action
+    /// expects: `domainId`/`targets` (a JSON-stringified `Vec<InteractionTarget>`)/`merge`/`method`.
+    #[test]
+    fn wires_select_action_args_shapes_interaction_select_payload() {
+        let args = wires_select_action_args(&["node-1".to_string()], WIRES_GRANULARITY_NODE, "replace");
+        assert_eq!(args["domainId"], WIRES_INTERACTION_GRAPH);
+        assert_eq!(args["merge"], "replace");
+        assert_eq!(args["method"], "pick");
+        assert!(args["targets"].as_str().expect("targets json").contains("node-1"));
+        assert!(args["targets"].as_str().expect("targets json").contains(WIRES_GRANULARITY_NODE));
+    }
+    //#endregion 🔖️Interaction
 
     //#region 🔖️ManifestSanity
     #[test]

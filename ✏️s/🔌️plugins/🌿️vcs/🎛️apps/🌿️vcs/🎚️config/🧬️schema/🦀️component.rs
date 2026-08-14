@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.vcs.vcs.config")]
 pub struct VcsDemoConfig {
-    #[state(config)] pub selected_checkpoint_ids: Vec<String>,
     #[state(config)] pub locale: String,
 }
 

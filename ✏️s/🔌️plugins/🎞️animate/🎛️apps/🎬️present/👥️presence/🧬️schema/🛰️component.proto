@@ -1,6 +1,3 @@
 syntax = "proto3";
 package semio.app.animate.present;
-message PresentPresence {
-  // @state presence
-  repeated string selected_ids = 1;
-}
+message PresentPresence {}

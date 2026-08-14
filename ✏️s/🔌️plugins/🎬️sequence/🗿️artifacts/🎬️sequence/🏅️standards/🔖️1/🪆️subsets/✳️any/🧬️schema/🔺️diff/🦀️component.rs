@@ -20,8 +20,6 @@ pub struct SequenceDiff {
     pub schema: Option<String>,
     #[state(artifact)]
     pub content: Option<SequenceContentChild>,
-    #[state(presence)]
-    pub selected_step_ids: Option<SequenceStringList>,
     #[state(config)]
     pub last_run_json: Option<String>,
     #[state(config)]
@@ -32,12 +30,3 @@ pub struct SequenceDiff {
     pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
-
-//#region 🔖️DeltaHelpers
-/// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct SequenceStringList {
-    pub values: Vec<String>,
-}
-//#endregion 🔖️DeltaHelpers

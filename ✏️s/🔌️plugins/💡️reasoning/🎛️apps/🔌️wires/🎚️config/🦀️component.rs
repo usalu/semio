@@ -18,8 +18,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "wires.config")]
 #[dsl(layout = "lines")]
 pub struct WiresConfig {
-    /// 👁️ Selected node/edge ids — was `WiresPlayRuntime::selected_ids`.
-    pub selected_ids: Vec<String>,
     /// 🖱️ In-flight pointer-drag target node id — was `WiresDragState::node_id`
     /// (`WiresPlayRuntime::drag`); `None` means no drag is in progress.
     pub drag_node_id: Option<String>,
@@ -96,7 +94,7 @@ impl store::ArtifactPack for WiresConfig {
 
 impl Default for WiresConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0, locale: "en-US".into() }
+        Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0, locale: "en-US".into() }
     }
 }
 
@@ -113,8 +111,6 @@ store::impl_whole_record_config!(WiresConfig);
 /// `MutationDiff<WiresConfig>` that returns that snapshot verbatim, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum WiresConfigMutation {
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "drag")]
     SetDrag { node_id: Option<String>, last_x: f64, last_y: f64 },
     #[dsl(key = "locale")]
@@ -199,7 +195,6 @@ impl Mutation<WiresConfig> for WiresConfigMutation {
     fn diff(&self, base: &WiresConfig) -> WiresConfig {
         let mut next = base.clone();
         match self {
-            WiresConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             WiresConfigMutation::SetDrag { node_id, last_x, last_y } => {
                 next.drag_node_id = node_id.clone();
                 next.drag_last_x = *last_x;
@@ -212,7 +207,6 @@ impl Mutation<WiresConfig> for WiresConfigMutation {
 
     fn inverse(&self, base: &WiresConfig) -> Vec<Self> {
         match self {
-            WiresConfigMutation::SetSelection { .. } => vec![WiresConfigMutation::SetSelection { ids: base.selected_ids.clone() }],
             WiresConfigMutation::SetDrag { .. } => vec![WiresConfigMutation::SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y }],
             WiresConfigMutation::SetLocale { .. } => vec![WiresConfigMutation::SetLocale { value: base.locale.clone() }],
         }
@@ -226,10 +220,11 @@ mod tests {
     use super::*;
 
     //#region 🔖️ConfigTests
+    /// 🕹️ Selection lives in the framework-owned "graph" interaction domain now (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `WiresConfig` only carries drag/locale.
     #[test]
-    fn wires_config_default_matches_no_selection_no_drag_and_en_locale() {
+    fn wires_config_default_matches_no_drag_and_en_locale() {
         let config = WiresConfig::default();
-        assert!(config.selected_ids.is_empty());
         assert!(config.drag_node_id.is_none());
         assert_eq!(config.locale, "en-US");
     }
@@ -237,17 +232,12 @@ mod tests {
     /// 🔁️ B1 dsl/pack round-trip law for `WiresConfig` — a non-default fixture exercising every field.
     #[test]
     fn wires_config_dsl_pack_round_trip() {
-        let config = WiresConfig { selected_ids: vec!["node-1".into(), "edge-1".into()], drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25, locale: "de-DE".into() };
+        let config = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25, locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
     //#endregion 🔖️ConfigTests
 
     //#region 🔖️ConfigOperationTests
-    #[test]
-    fn config_selection_op_text_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] });
-    }
-
     #[test]
     fn config_drag_op_text_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
@@ -263,11 +253,11 @@ mod tests {
     /// in-kind inverse, not a whole-config replace.
     #[test]
     fn config_backwards_restores_the_same_field_from_base() {
-        let base = WiresConfig { selected_ids: vec!["node-1".into()], ..Default::default() };
-        let forward = WiresConfigMutation::SetSelection { ids: vec!["node-2".into()] };
+        let base = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 1.0, drag_last_y: 2.0, ..Default::default() };
+        let forward = WiresConfigMutation::SetDrag { node_id: Some("node-2".into()), last_x: 5.0, last_y: 6.0 };
         let inverse = forward.inverse(&base);
-        assert_eq!(inverse, vec![WiresConfigMutation::SetSelection { ids: base.selected_ids.clone() }]);
-        assert_eq!(forward.diff(&base), WiresConfig { selected_ids: vec!["node-2".into()], ..base });
+        assert_eq!(inverse, vec![WiresConfigMutation::SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y }]);
+        assert_eq!(forward.diff(&base), WiresConfig { drag_node_id: Some("node-2".into()), drag_last_x: 5.0, drag_last_y: 6.0, ..base });
     }
     //#endregion 🔖️ConfigOperationTests
 }

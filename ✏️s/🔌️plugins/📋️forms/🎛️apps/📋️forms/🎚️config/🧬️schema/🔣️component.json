@@ -4,20 +4,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "currentStepIndex",
     "tryValuesJson",
     "locale",
     "contributionsJson"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "currentStepIndex": {
       "type": "integer",
       "minimum": 0,

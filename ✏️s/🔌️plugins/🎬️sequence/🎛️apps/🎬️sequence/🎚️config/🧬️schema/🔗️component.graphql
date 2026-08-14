@@ -1,5 +1,4 @@
 type SequenceConfig {
-  selectedStepIds: [String!]! @state(class: CONFIG)
   lastRunJson: String! @state(class: CONFIG)
   orientation: String! @state(class: CONFIG)
   camera: SequenceCamera! @state(class: CONFIG)

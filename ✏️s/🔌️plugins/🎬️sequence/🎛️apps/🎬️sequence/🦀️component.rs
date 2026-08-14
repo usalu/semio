@@ -15,7 +15,6 @@ use crate::apps::sequence::commands::layout::{reorganize, set_orientation};
 use crate::apps::sequence::commands::locale::set_locale;
 use crate::apps::sequence::commands::node_graph::{node_graph_edit, set_viewport};
 use crate::apps::sequence::commands::playback::{run_command, stop_command};
-use crate::apps::sequence::commands::selection::set_selection;
 use crate::apps::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
 use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::apps::sequence::presence::{SequencePresence, SequencePresenceMutation};
@@ -27,8 +26,9 @@ use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::op::sequence_snapshot_mutations;
 use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, DslValue, Emit,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, DslValue, Emit,
     Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
+    DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 use store::EngineHandles;
 use serde_json::{json, Value};
@@ -50,6 +50,12 @@ pub use document_panel::SEQUENCE_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::SEQUENCE_PLAY_BODY_INSPECTOR;
 pub use main::SEQUENCE_PLAY_BODY_MAIN;
 pub use script::SEQUENCE_PLAY_BODY_SCRIPT;
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "steps" interaction domain — one
+/// granularity ("step"), `HierarchyProvider::Topology` from each step's own `SlotRef.owner`
+/// control-flow nesting (see `SequencePlayApp::interaction_topology`). Ids are the steps' own raw
+/// document ids — the SAME ids the main node-graph canvas's `NodeGraphNodeRecord.id` and the document
+/// panel tree's row ids both use, so a selection made through either surface resolves identically.
+pub const SEQUENCE_INTERACTION_STEPS: &str = "steps";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
@@ -835,7 +841,6 @@ semio_framework_plugin::app_commands! {
         "setStepCollapsed" as "set-step-collapsed" => set_step_collapsed::SetStepCollapsed,
         "reorganize" as "reorganize" => reorganize::Reorganize,
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
         "setOrientation" as "set-orientation" => set_orientation::SetOrientation,
         "run" as "run" => run_command::Run,
         "stop" as "stop" => stop_command::Stop,
@@ -906,8 +911,27 @@ impl ArtifactApp for SequencePlayApp {
         command.command_id()
     }
 
-    fn handle(command: &SequenceCommand, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
-        command.dispatch(doc, cfg)
+    /// 🕹️ `deleteSelection`/`nodeGraphEdit` read the "steps" interaction domain directly (bypassing
+    /// the `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)`
+    /// signature is framework-fixed and has no `interaction` slot) — ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+    fn handle(command: &SequenceCommand, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
+        match command {
+            SequenceCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
+            SequenceCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
+            _ => command.dispatch(doc, cfg),
+        }
+    }
+
+    /// 🕹️ `steps`'s `HierarchyProvider::Topology` — every step is registered at the "step"
+    /// granularity, parented to its control-flow slot owner (`SlotRef.owner`) when nested inside a
+    /// `then`/`else`/`body` slot, or as a root otherwise — mirrors the document panel's own nesting
+    /// (`build_step_tree_item`) so a deleted step's id auto-prunes out of the live selection.
+    fn interaction_topology(doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> InteractionTopology {
+        let ordered = doc.snapshot.to_fixture().steps.iter().map(|step| TopologyNode { id: step.id.clone(), granularity: "step".into(), parent: step.slot.as_ref().map(|slot| slot.owner.clone()) }).collect();
+        let mut domains = BTreeMap::new();
+        domains.insert(SEQUENCE_INTERACTION_STEPS.to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 
     /// 🧮️ This app's typed configuration spec — the layout orientation `reorganize` reads.
@@ -926,47 +950,59 @@ impl ArtifactApp for SequencePlayApp {
             SEQUENCE_PLAY_BODY_MAIN => main::render(fixture, config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(fixture, config),
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(fixture),
-            SEQUENCE_PLAY_BODY_DOCUMENT => document_panel::render(&live, &config.selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_DOCUMENT => document_panel::render(&live, labels),
             SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels),
-            SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &config.selected_step_ids, labels),
+            // 🕹️ `render` carries no `InteractionView` (same gap as `context_menu` below — see ticket
+            // 26/08/14's w3b-summary.md), so this always takes the "nothing selected" branch rather
+            // than reading a stale/wrong selection.
+            SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    /// 🗂️ Grouped disclosure: `run`/`stop`/`addStep` stay top-level (the most frequent verbs);
-    /// `reorganize` folds into the `transform` group and a single-node hit's `setStepCollapsed` folds
-    /// into the `selection` group; `deleteSelection` stays a direct destructive item last —
-    /// `organize_context_menu` (applied automatically at the `VcsArtifactApp::context_menu` funnel)
-    /// sorts the groups into `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive
-    /// separator itself.
+    /// 🕹️ `context_menu` carries no `InteractionView` (same gap as `render` above — see ticket
+    /// 26/08/14's w3b-summary.md), so the selection-dependent rows built by
+    /// `sequence_context_menu_items` below always take the "nothing selected" branch here rather than
+    /// reading a stale/wrong selection.
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
-
         let is_de = cfg.snapshot.locale.starts_with("de");
-        let selected = cfg.snapshot.selected_step_ids.clone();
-        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-
-        let mut menu = Menu::of(registry).action("run").action("stop").action("addStep").group("transform", |m| m.action("reorganize"));
-
-        if nodes.len() == 1 {
-            let id = nodes[0].clone();
-            menu = menu.group("selection", |m| {
-                m.item(ContextMenuItemSpec {
-                    id: "setStepCollapsed".into(),
-                    label: Some(if is_de { "Schritt einklappen".into() } else { "Toggle Collapsed".into() }),
-                    icon: Some("chevrons-up-down".into()),
-                    action: Some("setStepCollapsed".into()),
-                    args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": id }))),
-                    ..Default::default()
-                })
-            });
-        }
-
-        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::Direct) {
-            menu = menu.item(spec);
-        }
-        menu.build()
+        sequence_context_menu_items(registry, is_de, request.surface.as_ref(), &[])
     }
+}
+
+/// 🗂️ Grouped disclosure: `run`/`stop`/`addStep` stay top-level (the most frequent verbs);
+/// `reorganize` folds into the `transform` group and a single-node hit's `setStepCollapsed` folds
+/// into the `selection` group; `deleteSelection` stays a direct destructive item last —
+/// `organize_context_menu` (applied automatically at the `VcsArtifactApp::context_menu` funnel)
+/// sorts the groups into `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive separator
+/// itself. Factored out of `ArtifactApp::context_menu` (which carries no `InteractionView` — ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) so a test can exercise the selection-dependent
+/// rows directly with a real `selected` slice, matching `space`'s own precedent.
+fn sequence_context_menu_items(registry: &AppActionRegistry, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
+    use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+
+    let (nodes, edges) = selection_domains_from_surface(surface, selected, &[]);
+
+    let mut menu = Menu::of(registry).action("run").action("stop").action("addStep").group("transform", |m| m.action("reorganize"));
+
+    if nodes.len() == 1 {
+        let id = nodes[0].clone();
+        menu = menu.group("selection", |m| {
+            m.item(ContextMenuItemSpec {
+                id: "setStepCollapsed".into(),
+                label: Some(if is_de { "Schritt einklappen".into() } else { "Toggle Collapsed".into() }),
+                icon: Some("chevrons-up-down".into()),
+                action: Some("setStepCollapsed".into()),
+                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": id }))),
+                ..Default::default()
+            })
+        });
+    }
+
+    if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::Direct) {
+        menu = menu.item(spec);
+    }
+    menu.build()
 }
 //#endregion 🔖️SequencePlayApp
 
@@ -1003,8 +1039,8 @@ pub fn create_sequence_app() -> App {
             .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
             .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
             .view_action("setViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
-            // 👁️ Ephemeral view state — selection, run output, layout orientation, locale.
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            // 👁️ Ephemeral view state — run output, layout orientation, locale. Selection is no
+            // longer declared here: framework-owned, injected via `.interaction(...)` below.
             .view_action("setOrientation", LocalizedLabel::native("Set Orientation", "Ausrichtung festlegen"))
             .action_with(ActionDefinition::new_catalog("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View).with_category("actions"))
             .action_with(ActionDefinition::new_catalog("stop", LocalizedLabel::native("Stop", "Stopp"), ActionKind::View).with_category("actions"))
@@ -1027,6 +1063,26 @@ pub fn create_sequence_app() -> App {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
+            // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+            // one domain over the step graph, `HierarchyProvider::Topology` (see
+            // `SequencePlayApp::interaction_topology` above) from each step's own control-flow slot
+            // nesting — `transitive: false` matches the pre-migration behavior exactly (deleting a
+            // selected control step never cascaded into its `then`/`else`/`body` children).
+            .interaction(InteractionDefinition {
+                id: SEQUENCE_INTERACTION_STEPS.into(),
+                label: LocalizedLabel::native("Steps", "Schritte"),
+                granularities: vec![GranularityDefinition { id: "step".into(), label: LocalizedLabel::native("Step", "Schritt"), icon_id: "box".into() }],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(main::SEQUENCE_PLAY_WINDOW_MAIN, vec![InteractionRef::new(SEQUENCE_INTERACTION_STEPS)])
             .config(SequencePlayApp::config_spec())
             .io(sequence_io()),
     )
@@ -1062,6 +1118,17 @@ pub(crate) mod testkit {
 
     pub fn render(app: &mut SequenceApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
+    /// injected `interactionSelect` verb, dispatched against the "steps" domain declared on this app —
+    /// requires `new_app_with_registry_wired()` (a bare `new_app()` has no declared interaction
+    /// domains to select against). `ids` are the steps' own raw document ids — the SAME ids the
+    /// "steps" domain's topology/the document panel tree/the main node-graph canvas all use.
+    pub fn select_steps(app: &mut SequenceApp, ids: &[&str]) {
+        let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "step", "id": id })).collect();
+        let targets = serde_json::to_string(&target_list).expect("targets json");
+        app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
     }
 }
 //#endregion 🧪️Testkit
@@ -1132,12 +1199,14 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️ContextMenuTests
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactApp::context_menu`
+    /// carries no `InteractionView` (a documented framework gap — see `sequence_context_menu_items`'s
+    /// own doc comment), so this exercises that free function directly with a real `selected` slice
+    /// instead of going through the app's live (always-empty) `context_menu` trait method.
     #[test]
     fn context_menu_stays_within_nine_rows_and_ends_with_destructive_delete() {
-        let mut app = new_app_with_registry_wired();
-        dispatch(&mut app, SequenceCommand::SetSelection(set_selection::SetSelection { step_ids: vec!["step-1".into()] }));
-        let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-        let items = app.context_menu(&request);
+        let registry = AppActionRegistry::from_definition(&create_sequence_app().definition);
+        let items = sequence_context_menu_items(&registry, false, None, &["step-1".to_string()]);
         assert!(items.len() <= 9, "expected <= 9 top-level rows, got {} ({items:?})", items.len());
         let last = items.last().expect("at least one row");
         assert_eq!(last.id, "delete-selection");
@@ -1206,7 +1275,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 18, "every SequenceCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 17, "every SequenceCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -1244,7 +1313,6 @@ mod tests {
             SequenceCommand::SetStepCollapsed(set_step_collapsed::SetStepCollapsed { id: "step-1".into() }),
             SequenceCommand::Reorganize(reorganize::Reorganize {}),
             SequenceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
-            SequenceCommand::SetSelection(set_selection::SetSelection { step_ids: vec!["step-1".into(), "step-2".into()] }),
             SequenceCommand::SetOrientation(set_orientation::SetOrientation { value: "topBottom".into() }),
             SequenceCommand::Run(run_command::Run {}),
             SequenceCommand::Stop(stop_command::Stop {}),

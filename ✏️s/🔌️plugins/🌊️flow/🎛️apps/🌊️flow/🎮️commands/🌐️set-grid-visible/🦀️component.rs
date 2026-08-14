@@ -61,9 +61,9 @@ mod tests {
     #[test]
     fn grid_factor_clamps_to_the_slider_range() {
         let mut app = flow_app();
-        dispatch(&mut app, FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 1000.0 }));
+        dispatch(&mut app, FlowCommand::SetGridFactor(crate::apps::flow::commands::set_grid_factor::SetGridFactor { value: 1000.0 }));
         assert_eq!(grid_factor(&mut app), 50.0);
-        dispatch(&mut app, FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 0.0 }));
+        dispatch(&mut app, FlowCommand::SetGridFactor(crate::apps::flow::commands::set_grid_factor::SetGridFactor { value: 0.0 }));
         assert_eq!(grid_factor(&mut app), 0.5);
     }
 }

@@ -467,14 +467,6 @@ pub mod apps {
             pub mod move_media_node;
             #[path = "../../🎛️apps/🕸️dag/🎮️commands/🕸️reorganize/🦀️component.rs"]
             pub mod reorganize;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️select-node/🦀️component.rs"]
-            pub mod select_node;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️node-graph-select/🦀️component.rs"]
-            pub mod node_graph_select;
-            #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️node-graph-hover/🦀️component.rs"]
-            pub mod node_graph_hover;
             #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
             #[path = "../../🎛️apps/🕸️dag/🎮️commands/🗂️graph-pointer-down/🦀️component.rs"]

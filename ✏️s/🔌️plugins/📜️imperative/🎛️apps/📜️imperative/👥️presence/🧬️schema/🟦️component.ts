@@ -1,5 +1,2 @@
 /** 🧬️ ImperativePresence */
-export interface ImperativePresence {
-  /** @state presence */
-  selectedStepIds: string[];
-}
+export interface ImperativePresence {}

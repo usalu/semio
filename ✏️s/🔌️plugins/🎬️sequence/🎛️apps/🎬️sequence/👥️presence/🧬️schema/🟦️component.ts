@@ -1,8 +1,6 @@
 /** 🧬️ SequencePresence */
 export interface SequencePresence {
   /** @state presence */
-  selectedStepIds: string[];
-  /** @state presence */
   orientation: string;
   /** @state presence */
   camera: SequenceCamera;

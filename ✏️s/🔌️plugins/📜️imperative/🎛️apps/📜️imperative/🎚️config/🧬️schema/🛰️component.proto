@@ -1,8 +1,7 @@
 syntax = "proto3";
 package semio.app.imperative.imperative;
 message ImperativeConfig {
-  // @state config
-  repeated string selected_step_ids = 1;
+  reserved 1;
   // @state config
   string run_output_json = 2;
   // @state config

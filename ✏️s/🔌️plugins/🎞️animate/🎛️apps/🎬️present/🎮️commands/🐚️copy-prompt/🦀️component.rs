@@ -1,7 +1,7 @@
 //! 🐚️ 🐚️ Animate present app commands command — `copy-prompt`.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
-use crate::apps::present::tile_morph_prompt_effect;
+use crate::apps::present::{tile_morph_prompt_effect, PresentDispatchCtx};
 use crate::apps::present::engine::export_video_from_scene;
 use crate::apps::present::engine::PresentScene;
 use crate::artifacts::present::op::PresentMutation;
@@ -23,7 +23,7 @@ fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<
 #[dsl(keyword = "copy-prompt")]
 pub struct CopyPrompt {}
 
-pub fn handle(_payload: &CopyPrompt, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(_payload: &CopyPrompt, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     Ok(Emit::effect(tile_morph_prompt_effect(doc.snapshot)))
 }
 
@@ -31,6 +31,7 @@ pub fn handle(_payload: &CopyPrompt, doc: &ArtifactView<'_, PresentSnapshot>, _c
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::present::commands::export_video_from_deck;
     use crate::apps::present::testkit::{present_app, present_app_with_registry};
     use crate::apps::present::PresentCommand;
     use semio_framework_plugin::testkit::meta;

@@ -14,6 +14,7 @@ use crate::artifacts::din4108::op::Din4108Mutation;
 use crate::artifacts::din4108::Din4108Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::presence::{NormPresence, NormPresenceMutation};
+use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, App, AppIo, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, LocalizedLabel, Media, MediaError, UiNode};
 use store::EngineHandles;
 
@@ -85,7 +86,7 @@ impl ArtifactApp for Din4108PlayApp {
         command.command_id()
     }
 
-    fn handle(command: &Din4108Command, doc: &ArtifactView<'_, Din4108Snapshot>, cfg: &ConfigView<'_, NormConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Din4108Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &Din4108Command, doc: &ArtifactView<'_, Din4108Snapshot>, cfg: &ConfigView<'_, NormConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Din4108Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

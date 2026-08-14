@@ -1,0 +1,40 @@
+test examples::art_imperative_demo_tests::inference_default_law ... ok
+test examples::art_imperative_demo_tests::inference_determinism_law ... ok
+test examples::art_imperative_demo_tests::primary_asset_is_nonempty ... ok
+test artifacts::imperative::standards::v1::subsets::any::schema::snapshot::text::tests::flow_content_round_trips_nested_control_bodies ... ok
+test artifacts::imperative::standards::v1::subsets::any::schema::snapshot::text::tests::text_content_round_trips_dictionary_and_atom_variants ... ok
+test extensions::control::tests::catalogue_includes_control_kinds ... ok
+test extensions::effect::tests::state_increment_updates_counter ... ok
+test extensions::logic::tests::logic_compare_gt ... ok
+test extensions::effect::tests::catalogue_json_includes_input_channels ... ok
+test extensions::effect::tests::bundle_contributes_core_module_for_imperative_play ... ok
+test extensions::math::tests::math_add_writes_into_scope ... ok
+test extensions::text::tests::text_concat_writes_into_scope ... ok
+test extensions::text::tests::text_length_writes_into_scope ... ok
+test extensions::text::tests::catalogue_json_lists_text_operators ... ok
+test extensions::text::tests::text_uppercase_writes_into_scope ... ok
+test apps::imperative::engine::tests::host_remove_step_true_when_removed ... ok
+test apps::imperative::engine::tests::host_add_step_clamps_out_of_range_index ... ok
+test apps::imperative::engine::tests::host_set_step_params_at_rejects_invalid_json_and_unknown_step ... ok
+test apps::imperative::engine::tests::host_set_step_params_updates_existing_step ... ok
+test apps::imperative::modes::edit::windows::main::tests::run_command_expands_scope_into_readable_rows_without_truncation ... ok
+test apps::imperative::modes::edit::windows::script::tests::renders_script_editor ... ok
+test apps::imperative::engine::tests::host_load_json_and_to_json_round_trip ... ok
+
+failures:
+
+---- artifacts::imperative::standards::v1::subsets::any::schema::mutations::component::tests::delete_step_inverse_law stdout ----
+
+thread 'artifacts::imperative::standards::v1::subsets::any::schema::mutations::component::tests::delete_step_inverse_law' (320707134) panicked at 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:535:5:
+assertion `left == right` failed: applying mutation.inverse(base) (reversed) after mutation must restore base
+  left: ImperativeSnapshot { schema: "imperative.document", flow: ArtifactChild { child_id: "imperative-flow-e377ceae1ea2a2bc", target: ArtifactRef { artifact_id: "imperative-flow-e377ceae1ea2a2bc", dialect: ArtifactDialect { artifact_kind: "s.stdio.semio", standard: "v1", subset: "flow" } } }, text: ArtifactChild { child_id: "imperative-text-c3e5832617e11d8a", target: ArtifactRef { artifact_id: "imperative-text-c3e5832617e11d8a", dialect: ArtifactDialect { artifact_kind: "s.stdio.semio", standard: "v1", subset: "text" } } } }
+ right: ImperativeSnapshot { schema: "imperative.document", flow: ArtifactChild { child_id: "imperative-flow-3faf9c3be6d96916", target: ArtifactRef { artifact_id: "imperative-flow-3faf9c3be6d96916", dialect: ArtifactDialect { artifact_kind: "s.stdio.semio", standard: "v1", subset: "flow" } } }, text: ArtifactChild { child_id: "imperative-text-c3e5832617e11d8a", target: ArtifactRef { artifact_id: "imperative-text-c3e5832617e11d8a", dialect: ArtifactDialect { artifact_kind: "s.stdio.semio", standard: "v1", subset: "text" } } } }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    artifacts::imperative::standards::v1::subsets::any::schema::mutations::component::tests::delete_step_inverse_law
+
+test result: FAILED. 95 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p semio-s-plugin-imperative --lib`

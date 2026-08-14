@@ -5,19 +5,20 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of animate present view state (peer tile selection).
+/// 👥️ Shareable live subset of animate present view state. Tile selection/hover broadcast through
+/// the framework's typed `PresenceInteraction` now (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM's "tiles" domain, `broadcast: true`) — this app
+/// has no OTHER app-specific ephemeral field left to carry, so the facet is genuinely empty.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "present.presence")]
 #[dsl(id = "present.presence")]
 #[dsl(layout = "lines")]
-pub struct PresentPresence {
-    pub selected_ids: Vec<String>,
-}
+pub struct PresentPresence {}
 
 impl Default for PresentPresence {
     fn default() -> Self {
-        Self { selected_ids: Vec::new() }
+        Self {}
     }
 }
 

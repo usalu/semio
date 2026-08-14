@@ -1,13 +1,8 @@
 //! 🔍️ Animate present app panel — the inspector: field editors for the selected tile(s).
 
-use crate::apps::present::animate_present_action;
 use crate::apps::present::terminology::AnimatePresentLabels;
-use crate::artifacts::present::{FigureTileDraft, PresentSnapshot};
-use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode,
-    UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
-};
-use serde_json::json;
+use crate::artifacts::present::{PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ui_inspector_groups_to_tree, ui_inspector_readonly_field, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_BODY_DETAILS: &str = "animate.present.play.details";
@@ -20,122 +15,25 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn inspector_crop_field(tile_ids: &[String], field: &str, label: impl Into<Label>, values: &[f64]) -> UiNode {
-    let mixed = ui_inspector_mixed_number(values);
-    UiNode::Field(UiFieldNode {
-        id: format!("animate.present.play.tile.crop.{field}"),
-        label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            id: format!("animate.present.play.tile.crop.{field}.input"),
-            input_kind: "number".into(),
-            value: if mixed.uniform { format!("{:.6}", values.first().copied().unwrap_or(0.0)) } else { String::new() },
-            placeholder: if mixed.uniform { None } else { Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER)) },
-            commit: Some("blur".into()),
-            on_change: animate_present_action("patchTileCrops", Some(json!({ "ids": tile_ids, "field": field }))),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            presence: UiPresence::default(),
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
+/// ⚠️ Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the per-selected-tile field group
+/// (crop x/y/width/height, name, delete) this panel used to build from `config.selected_ids` is
+/// deleted along with that field — selection is framework-owned state now and
+/// `ArtifactApp::render(body_key, doc, cfg)` is never given an `InteractionView` (only
+/// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
+/// `🖍️draw`'s `properties` panel (`🎛️apps/🖍️draw/📌️panels/🔍️properties/🦀️component.rs`): falls through
+/// to a schema/tile-count summary until a resolved-selection render path exists.
+pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
+    let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        id: "animate-present-play-inspector.empty".into(),
+        label: semio_framework_plugin::Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
+        default_open: Some(true),
         presence: UiPresence::default(),
-        menu: None,
-    })
-}
-
-pub fn render(deck: &PresentSnapshot, selected: &[String], labels: &AnimatePresentLabels) -> UiNode {
-    if selected.is_empty() {
-        return ui_declarative_sections_to_tree(&[UiSectionNode {
-            id: "animate.present.play.details.empty".into(),
-            presence: UiPresence::default(),
-            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-            default_open: Some(true),
-            children: vec![ui_text(labels.details_select_tile)],
-            menu: None,
-        }]);
-    }
-    let (_, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
-    let tiles: Vec<&FigureTileDraft> = selected.iter().filter_map(|id| deck_tiles.iter().find(|tile| &tile.id == id)).collect();
-    if tiles.is_empty() {
-        return ui_declarative_sections_to_tree(&[UiSectionNode {
-            id: "animate.present.play.details.not-found".into(),
-            presence: UiPresence::default(),
-            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-            default_open: Some(true),
-            children: vec![ui_text(labels.details_tile_not_found)],
-            menu: None,
-        }]);
-    }
-    let tile_ids: Vec<String> = tiles.iter().map(|tile| tile.id.clone()).collect();
-    let name_mixed = ui_inspector_mixed_text(&tiles.iter().map(|tile| tile.name.clone()).collect::<Vec<_>>());
-    let mut identity_fields: Vec<UiNode> = vec![UiNode::Field(UiFieldNode {
-        id: "animate.present.play.tile.name".into(),
-        label: labels.field_name.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            id: "animate.present.play.tile.name.input".into(),
-            input_kind: "text".into(),
-            value: name_mixed.value,
-            placeholder: name_mixed.placeholder.map(Label::data),
-            commit: Some("blur".into()),
-            on_change: animate_present_action("renameTiles", Some(json!({ "ids": tile_ids }))),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            presence: UiPresence::default(),
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        presence: UiPresence::default(),
-        menu: None,
-    })];
-    identity_fields.push(ui_inspector_readonly_field(
-        "animate.present.play.tile.id",
-        labels.field_id,
-        if tile_ids.len() == 1 { tile_ids.first().cloned().unwrap_or_default() } else { format!("{} {}", tile_ids.len(), labels.selected_suffix.as_str()) },
-    ));
-    if tile_ids.len() == 1 {
-        identity_fields.push(UiNode::Button(UiButtonNode {
-            id: Some(format!("animate.present.play.tile.{}.delete", tile_ids[0])),
-            icon_id: "trash-2".into(),
-            label: labels.delete_tile.into(),
-            action: animate_present_action("deleteTile", Some(json!({ "id": tile_ids[0] }))),
-            style: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }));
-    }
-    identity_fields.push(UiNode::Button(UiButtonNode {
-        id: Some("animate.present.play.details.delete-selection".into()),
-        icon_id: "trash-2".into(),
-        label: labels.delete_selection.into(),
-        action: animate_present_action("deleteSelection", None),
-        style: None,
-        presence: UiPresence::default(),
-        menu: None,
-    }));
-    let groups = vec![
-        UiInspectorFieldGroup {
-            id: "animate.present.play.details.crop".into(),
-            label: labels.group_crop.into(),
-            default_open: None,
-            presence: UiPresence::default(),
-            fields: vec![
-                inspector_crop_field(&tile_ids, "x", labels.field_x, &tiles.iter().map(|tile| tile.crop.x).collect::<Vec<_>>()),
-                inspector_crop_field(&tile_ids, "y", labels.field_y, &tiles.iter().map(|tile| tile.crop.y).collect::<Vec<_>>()),
-                inspector_crop_field(&tile_ids, "width", labels.field_width, &tiles.iter().map(|tile| tile.crop.width).collect::<Vec<_>>()),
-                inspector_crop_field(&tile_ids, "height", labels.field_height, &tiles.iter().map(|tile| tile.crop.height).collect::<Vec<_>>()),
-            ],
-        },
-        UiInspectorFieldGroup { id: "animate.present.play.details.identity".into(), label: labels.group_identity.into(), default_open: None, presence: UiPresence::default(), fields: identity_fields },
-    ];
-    ui_inspector_groups_to_tree(&groups)
+        fields: vec![
+            ui_inspector_readonly_field("animate-present-play-inspector.schema", labels.details_schema_field, PRESENT_DOCUMENT_SCHEMA),
+            ui_inspector_readonly_field("animate-present-play-inspector.tiles", labels.details_tiles_field, tiles.len().to_string()),
+        ],
+    }])
 }
 //#endregion 🔖️Render
 
@@ -152,10 +50,13 @@ mod tests {
         assert_eq!(definition.body_key.as_deref(), Some(PRESENT_PLAY_BODY_DETAILS));
     }
 
+    /// 🕹️ `render` has no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
+    /// MECHANISM), so the panel is a schema/tile-count summary regardless of selection now.
     #[test]
-    fn empty_selection_prompts_to_select_a_tile() {
+    fn details_panel_reports_schema_and_tile_count() {
         let mut app = present_app();
-        assert!(render_body(&mut app, PRESENT_PLAY_BODY_DETAILS).contains("Select a tile"));
+        let json_str = render_body(&mut app, PRESENT_PLAY_BODY_DETAILS);
+        assert!(json_str.contains(PRESENT_DOCUMENT_SCHEMA));
     }
 }
 //#endregion 🧪️Tests

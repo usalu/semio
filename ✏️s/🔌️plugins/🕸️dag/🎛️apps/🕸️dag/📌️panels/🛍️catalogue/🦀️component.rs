@@ -27,9 +27,10 @@ pub fn render(labels: &DagPlayLabels) -> UiNode {
             items: kinds.iter().map(|(kind, label)| tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), *label, Some((*kind).into()), dag_action("addNode", Some(json!({ "kind": kind }))))).collect(),
         }],
         presence: UiPresence::default(),
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
+        // 🕹️ A palette, not entity selection — declares no interaction domain (ticket
+        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); rows keep their plain per-item
+        // `addNode` action above.
+        interaction_domain: None,
         drop_action: None,
         menu: None,
     })

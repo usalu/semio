@@ -1,19 +1,17 @@
 //! 📄️ Wires play app panel — the document tree: identities and relationships of the current fixture.
 
 use crate::apps::wires::terminology::WiresLabels;
-use crate::apps::wires::wires_action;
-use crate::artifacts::wires::schema::{dsl_id, fixture_edges, fixture_nodes, wires_identities, wires_relationships};
+use crate::apps::wires::{wires_action, wires_select_action_args, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH};
+use crate::artifacts::wires::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{
     tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    INTERACTION_SELECT_ACTION_ID,
 };
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_BODY_DOCUMENT: &str = "reasoning.wires.document";
 const WIRES_PLAY_DOCUMENT_NAMESPACE: &str = "wires-play-document";
-const WIRES_DOCUMENT_IDENTITY_PREFIX: &str = "wires-play-document.identity.";
-const WIRES_DOCUMENT_RELATIONSHIP_PREFIX: &str = "wires-play-document.relationship.";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -56,23 +54,12 @@ fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str, label
     Some(format!("{}: {source} → {target}", crate::apps::wires::terminology::relationship_kind_display_name(kind, labels)))
 }
 
-fn document_tree_selected_ids(board: &dsl::DslValue, selected: &[String]) -> Vec<String> {
-    let namespace = PanelTreeBuilder::new(WIRES_PLAY_DOCUMENT_NAMESPACE);
-    selected
-        .iter()
-        .filter_map(|id| {
-            if fixture_nodes(board).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
-                return Some(namespace.item_id("identity", id));
-            }
-            if fixture_edges(board).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
-                return Some(namespace.item_id("relationship", id));
-            }
-            None
-        })
-        .collect()
-}
-
-pub fn render(document: &WiresSnapshot, selected: &[String], labels: &WiresLabels) -> UiNode {
+/// 🕹️ Row `id` is the BARE identity/edge id (not a namespaced row id) — the framework's
+/// `.interaction_domain(WIRES_INTERACTION_GRAPH)` presence stamping matches `state.selection`/`.hover`
+/// ids against a row's own `id` verbatim, and canvas hit-testing resolves those exact bare ids too;
+/// a prefixed row id would desync tree/canvas cross-highlighting (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub fn render(document: &WiresSnapshot, labels: &WiresLabels) -> UiNode {
     let wires = &document.wires_fixture;
     let board = &crate::artifacts::wires::wires_working_board(document);
     let identity_items: Vec<UiTreeItemNode> = wires_identities(wires)
@@ -82,7 +69,12 @@ pub fn render(document: &WiresSnapshot, selected: &[String], labels: &WiresLabel
             let label = identity.get("label")?.as_str()?;
             let identity_kind = identity.get("identityKind").and_then(|value| value.as_str());
             let description = identity_kind.and_then(|kind| wires_identity_kind_name(wires, kind)).filter(|kind_name| kind_name != label);
-            Some(tree_item_with_action(format!("{WIRES_DOCUMENT_IDENTITY_PREFIX}{node_id}"), Label::data(label), description, wires_action("setSelection", Some(json!({ "ids": [node_id] })))))
+            Some(tree_item_with_action(
+                node_id,
+                Label::data(label),
+                description,
+                wires_action(INTERACTION_SELECT_ACTION_ID, Some(wires_select_action_args(&[node_id.to_string()], WIRES_GRANULARITY_NODE, "replace"))),
+            ))
         })
         .collect();
     let relationship_items: Vec<UiTreeItemNode> = fixture_edges(board)
@@ -90,18 +82,20 @@ pub fn render(document: &WiresSnapshot, selected: &[String], labels: &WiresLabel
         .filter_map(|edge| {
             let edge_id = edge.get("id")?.as_str()?;
             Some(tree_item_with_action(
-                format!("{WIRES_DOCUMENT_RELATIONSHIP_PREFIX}{edge_id}"),
+                edge_id,
                 Label::data(wires_relationship_document_label(wires, edge_id, labels).unwrap_or_else(|| edge_id.into())),
                 None,
-                wires_action("setSelection", Some(json!({ "ids": [edge_id] }))),
+                wires_action(INTERACTION_SELECT_ACTION_ID, Some(wires_select_action_args(&[edge_id.to_string()], WIRES_GRANULARITY_EDGE, "replace"))),
             ))
         })
         .collect();
+    // 🕹️ `.selected()`/`.highlighted()`/`.selection_change()` deleted — the framework stamps this
+    // tree's presence from the "graph" `InteractionState` post-render and would overwrite whatever
+    // this function stamped anyway.
     PanelTreeBuilder::new(WIRES_PLAY_DOCUMENT_NAMESPACE)
         .section_or_placeholder("wires-play-document.identities", Some(labels.identities.into()), true, identity_items, Label::data("(none)"))
         .section_or_placeholder("wires-play-document.relationships", Some(labels.relationships.into()), false, relationship_items, Label::data("(none)"))
-        .selected(document_tree_selected_ids(board, selected))
-        .selection_change(wires_action("setSelection", None))
+        .interaction_domain(WIRES_INTERACTION_GRAPH)
         .build()
 }
 //#endregion 🔖️Render

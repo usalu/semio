@@ -30,6 +30,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
+        interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -84,7 +85,11 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSes
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let fixture_json = serde_json::to_string(fixture).ok();
-    let selection = config.selected_node_ids.clone();
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "graph" domain's live selection
+    // is framework-owned `InteractionState` now, and `ArtifactApp::render` is not threaded an
+    // `InteractionView` this wave — the scene's selection payload drops to empty rather than showing
+    // stale app-local state (a real known gap, mirrors lowpoly's identical `render`/status-line note).
+    let selection: Vec<String> = Vec::new();
     let flow_extras = flow_backed_node_graph_extras(&fixture.to_fixture(), &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     build_node_graph_scene(

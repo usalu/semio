@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.architect.architect.config")]
 pub struct ArchitectConfig {
-    #[state(config)] pub selected_ids: Vec<String>,
     #[state(config)] pub active_register: String,
     #[state(config)] pub search_query: String,
     #[state(config)] pub search_history_json: String,

@@ -1,5 +1,4 @@
 type DagConfig {
-  selectedNodeIds: [String!]! @state(class: CONFIG)
   cameraX: Float! @state(class: CONFIG)
   cameraY: Float! @state(class: CONFIG)
   cameraZoom: Float! @state(class: CONFIG)

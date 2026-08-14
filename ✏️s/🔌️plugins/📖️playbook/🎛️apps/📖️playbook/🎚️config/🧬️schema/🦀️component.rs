@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.playbook.playbook.config")]
 pub struct PlaybookConfig {
-    #[state(config)] pub selected_ids: Vec<String>,
     #[state(config)] pub locale: String,
     #[state(config)] pub contributions_json: String,
 }

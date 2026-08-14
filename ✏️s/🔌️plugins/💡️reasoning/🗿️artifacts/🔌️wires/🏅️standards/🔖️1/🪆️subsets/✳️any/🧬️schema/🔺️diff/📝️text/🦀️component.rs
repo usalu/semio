@@ -1,6 +1,6 @@
 //! 🔺️ Wires artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::wires::schema::diff::{WiresDiff, WiresStringList};
+use crate::artifacts::wires::schema::diff::WiresDiff;
 use crate::artifacts::wires::schema::{array_mut, entity_id};
 use crate::artifacts::wires::schema::WiresArtifact;
 use crate::artifacts::wires::WiresSnapshot;
@@ -69,9 +69,6 @@ impl WiresDiff {
         if let Some(meta) = &self.meta {
             next.meta = meta.clone();
         }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
         if let Some(value) = &self.drag_node_id {
             next.drag_node_id = value.clone();
         }
@@ -129,12 +126,6 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
         take!(drag_last_x);
         take!(drag_last_y);
         take!(locale);
-        if let Some(list) = other.selected_ids {
-            match &mut self.selected_ids {
-                Some(dst) => dst.values = list.values,
-                None => self.selected_ids = Some(list),
-            }
-        }
     }
 }
 //#endregion 🔖️Apply

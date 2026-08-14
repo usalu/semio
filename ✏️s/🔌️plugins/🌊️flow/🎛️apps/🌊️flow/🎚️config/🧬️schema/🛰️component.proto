@@ -2,35 +2,29 @@ syntax = "proto3";
 package semio.app.flow.flow;
 message FlowConfig {
   // @state config
-  repeated string selected_node_ids = 1;
+  repeated string preview_off_node_ids = 1;
   // @state config
-  repeated string selected_edge_ids = 2;
+  CameraJson camera = 2;
   // @state config
-  repeated string selected_handle_ids = 3;
+  string lod_mode = 3;
   // @state config
-  repeated string preview_off_node_ids = 4;
+  double proximity_distance = 4;
   // @state config
-  CameraJson camera = 5;
+  bool grid_visible = 5;
   // @state config
-  string lod_mode = 6;
+  bool grid_snap_enabled = 6;
   // @state config
-  double proximity_distance = 7;
+  double grid_factor = 7;
   // @state config
-  bool grid_visible = 8;
+  string catalogue_sections_json = 8;
   // @state config
-  bool grid_snap_enabled = 9;
+  string automation_enabled_json = 9;
   // @state config
-  double grid_factor = 10;
+  string contributions_json = 10;
   // @state config
-  string catalogue_sections_json = 11;
+  string generation_json = 11;
   // @state config
-  string automation_enabled_json = 12;
-  // @state config
-  string contributions_json = 13;
-  // @state config
-  string generation_json = 14;
-  // @state config
-  string locale = 15;
+  string locale = 12;
 }
 
 message CameraJson {

@@ -1,0 +1,25 @@
+   --> ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/./../../🧩️extensions/🧠️logic/🦀️component.rs:152:4
+    |
+152 | fn bundle() -> semio_framework_plugin::ExtensionBundle {
+    |    ^^^^^^
+
+warning: function `bundle` is never used
+  --> ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/./../../🧩️extensions/🎮️control/🦀️component.rs:70:4
+   |
+70 | fn bundle() -> semio_framework_plugin::ExtensionBundle {
+   |    ^^^^^^
+
+warning: function `next_step_id` is never used
+  --> ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/./././../../🎛️apps/📜️imperative/🎮️commands/🔧️set-step-params/🦀️component.rs:16:4
+   |
+16 | fn next_step_id(document: &ImperativeSnapshot) -> String {
+   |    ^^^^^^^^^^^^
+
+warning: function `next_step_id` is never used
+  --> ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/./././../../🎛️apps/📜️imperative/🎮️commands/🔧️set-step-params-at/🦀️component.rs:16:4
+   |
+16 | fn next_step_id(document: &ImperativeSnapshot) -> String {
+   |    ^^^^^^^^^^^^
+
+warning: `semio-s-plugin-imperative` (lib) generated 54 warnings (run `cargo fix --lib -p semio-s-plugin-imperative` to apply 36 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.43s

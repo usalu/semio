@@ -84,7 +84,7 @@ pub mod import_program_request {
 }
 
 pub mod import_program {
-    use crate::apps::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::apps::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -96,12 +96,10 @@ pub mod import_program {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportProgram, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportProgram, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(next_program) = crate::artifacts::program::dsl::parse(&payload.payload) else {
             return Ok(Emit::default());
         };
-        let mut next = cfg.snapshot.clone();
-        next.selected_ids.clear();
-        Ok(Emit { effects: vec![crate::apps::architect::reset_document_effect(&next_program)], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { effects: vec![crate::apps::architect::reset_document_effect(&next_program)], ..Default::default() })
     }
 }

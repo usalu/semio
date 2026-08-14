@@ -28,6 +28,7 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition

@@ -7,7 +7,7 @@
 //! `PlaybookCommand::dispatch`, `render` → body-key → node, plus `import_media`'s `"chapters:in"`
 //! importer (an app-level `ArtifactApp` trait override, not a command).
 
-use crate::apps::playbook::commands::{block, contribution, selection, step, locale};
+use crate::apps::playbook::commands::{add_block, add_step, move_block, move_step, remove_block, remove_step, set_contributions, set_locale, update_playbook};
 use crate::apps::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::apps::playbook::modes::builder;
 use crate::apps::playbook::modes::builder::windows::builder as builder_window;
@@ -16,7 +16,12 @@ use crate::artifacts::playbook::schema::default_block;
 use crate::apps::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::artifacts::playbook::op::{AddStep, PlaybookMutation};
 use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode};
+use semio_framework_plugin::{
+    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, App, ConfigView, ArtifactApp, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+    DomainTopology, InteractionTopology, TopologyNode,
+};
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -44,20 +49,40 @@ semio_framework_plugin::app_commands! {
         "removeBlock" as "remove-block" => remove_block::RemoveBlock,
         "moveBlock" as "move-block" => move_block::MoveBlock,
         "updatePlaybook" as "update-playbook" => update_playbook::UpdatePlaybook,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
         "setLocale" as "locale" => set_locale::SetLocale,
         "setContributions" as "contributions" => set_contributions::SetContributions,
     }
 }
-
-// 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
-// payload module is imported here under its own flat name.
-use step::{add_step, move_step, remove_step, update_playbook};
-use block::{add_block, move_block, remove_block};
-use selection::set_selection;
-use locale::set_locale;
-use contribution::set_contributions;
 //#endregion 🔖️Commands
+
+//#region 🔖️Interaction
+/// 🕹️ "blocks" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
+/// this app declares: `HierarchyProvider::Topology` over the document's own step/block nesting (steps
+/// are the "step" granularity, blocks are the "block" granularity, default) — replaces the deleted
+/// `PlaybookConfig::selected_ids`/`set-selection` command/`PlaybookPresence::selected_ids`. Pick-only
+/// (the block-list builder is a flat clickable list, no canvas marquee surface); not transitive —
+/// the pre-migration `selected_ids` never auto-expanded a step selection onto its blocks, so this
+/// keeps that exact semantic instead of inventing new cascading-selection behavior.
+pub const PLAYBOOK_INTERACTION_BLOCKS: &str = "blocks";
+pub const PLAYBOOK_INTERACTION_GRANULARITY_BLOCK: &str = "block";
+pub const PLAYBOOK_INTERACTION_GRANULARITY_STEP: &str = "step";
+
+/// 🌳️ `blocks` domain topology from the document's own step/block nesting — step ids and block ids
+/// share the same flat id namespace `PlaybookConfig::selected_ids` used to (`remove-block`'s old manual
+/// prune matched on either), so `validate_state` prunes a deleted step's OR block's id automatically
+/// after every document dispatch (`revalidate_interaction_state_after_document_change`), replacing the
+/// deleted hand-rolled prune in `remove_block::handle`.
+fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
+    let mut ordered = Vec::new();
+    for step in spec.steps() {
+        ordered.push(TopologyNode { id: step.id.clone(), granularity: PLAYBOOK_INTERACTION_GRANULARITY_STEP.into(), parent: None });
+        for block in step.blocks {
+            ordered.push(TopologyNode { id: block.id.clone(), granularity: PLAYBOOK_INTERACTION_GRANULARITY_BLOCK.into(), parent: Some(step.id.clone()) });
+        }
+    }
+    DomainTopology { ordered }
+}
+//#endregion 🔖️Interaction
 
 //#region 🔖️PlaybookPlayApp
 /// 🧪️ B1: unit struct — the former app-struct `RefCell<Vec<String>>` selection now lives in
@@ -100,8 +125,16 @@ impl ArtifactApp for PlaybookPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &PlaybookCommand, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &PlaybookCommand, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
+    }
+
+    /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own step/block nesting —
+    /// see `playbook_blocks_topology`'s doc comment.
+    fn interaction_topology(doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> InteractionTopology {
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(PLAYBOOK_INTERACTION_BLOCKS.to_string(), playbook_blocks_topology(doc.snapshot));
+        InteractionTopology { domains }
     }
 
     /// 🎞️ `"chapters:in"` (Text×Document, `Many`) — decodes a `writer`-shaped chapter payload (see
@@ -158,7 +191,6 @@ pub fn create_playbook_play_app() -> App {
             .mutation("removeBlock", LocalizedLabel::native("Remove Block", "Baustein entfernen"))
             .mutation("moveBlock", LocalizedLabel::native("Move Block", "Baustein verschieben"))
             .mutation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).
             .action_args("addBlock", vec![
                 ActionArgDef::select(
@@ -168,6 +200,31 @@ pub fn create_playbook_play_app() -> App {
                 )
                 .default_value("text"),
             ])
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "blocks" interaction
+            // domain — two granularities ("block" default, "step"), `HierarchyProvider::Topology` from
+            // the document's own step/block nesting (`playbook_blocks_topology`/
+            // `PlaybookPlayApp::interaction_topology`). Selection is pick-only (no canvas marquee
+            // surface exists for this domain); the framework auto-injects interactionSelect/
+            // interactionHover/clearSelection/selectAll/setSelectionMode/setInteractionGranularity,
+            // replacing the deleted `setSelection` view action.
+            .interaction(InteractionDefinition {
+                id: PLAYBOOK_INTERACTION_BLOCKS.into(),
+                label: LocalizedLabel::native("Blocks", "Bausteine"),
+                granularities: vec![
+                    GranularityDefinition { id: PLAYBOOK_INTERACTION_GRANULARITY_BLOCK.into(), label: LocalizedLabel::native("Block", "Baustein"), icon_id: "square".into() },
+                    GranularityDefinition { id: PLAYBOOK_INTERACTION_GRANULARITY_STEP.into(), label: LocalizedLabel::native("Step", "Schritt"), icon_id: "list-ordered".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(PLAYBOOK_PLAY_WINDOW_BUILDER, vec![InteractionRef::new(PLAYBOOK_INTERACTION_BLOCKS)])
             // 🎯️ Typed channel surface (mirrors `writer_ui::create_writer_app`'s identical wiring) —
             // `crate::apps::playbook::engine::playbook_io()` is the single source of truth for both
             // the trait's `io()` override and this manifest declaration.
@@ -213,7 +270,7 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::apps::playbook::testkit::playbook_app;
+    use crate::apps::playbook::testkit::{dispatch, playbook_app};
     use crate::artifacts::playbook::op::AddBlock;
     use semio_framework_plugin::testkit;
     use semio_framework_plugin::{ArtifactApp, MediaClass, MediaForm};
@@ -229,7 +286,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 10, "every PlaybookCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 9, "every PlaybookCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -268,7 +325,6 @@ mod tests {
             PlaybookCommand::RemoveBlock(remove_block::RemoveBlock { step_id: "s".into(), block_id: "b".into() }),
             PlaybookCommand::MoveBlock(move_block::MoveBlock { block_id: "b".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 0 }),
             PlaybookCommand::UpdatePlaybook(update_playbook::UpdatePlaybook { value: "Recipe".into() }),
-            PlaybookCommand::SetSelection(set_selection::SetSelection { ids: vec!["a".into(), "b".into()] }),
             PlaybookCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         ]
@@ -292,6 +348,38 @@ mod tests {
         assert_eq!(app.definition.window_kinds[0].body_key, PLAYBOOK_PLAY_BODY_BUILDER);
     }
     //#endregion 🔖️ManifestSanity
+
+    //#region 🔖️Interaction
+    #[test]
+    fn blocks_interaction_domain_is_declared_topology_pick_only_on_the_builder_window() {
+        let app = create_playbook_play_app();
+        let domain = app.definition.interactions.iter().find(|interaction| interaction.id == PLAYBOOK_INTERACTION_BLOCKS).expect("blocks interaction domain declared");
+        assert!(matches!(domain.hierarchy, HierarchyProvider::Topology));
+        assert_eq!(domain.selection.methods, vec![SelectionMethod::Pick]);
+        assert!(!domain.selection.transitive, "selecting a step must not implicitly select its blocks — no pre-migration code ever did that");
+        let builder_window = app.definition.window_kinds.iter().find(|window| window.id == PLAYBOOK_PLAY_WINDOW_BUILDER).expect("builder window declared");
+        assert!(builder_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == PLAYBOOK_INTERACTION_BLOCKS), "builder window must reference the blocks interaction domain");
+    }
+
+    /// 🌳️ `interaction_topology` walks every step and every one of its blocks into a `TopologyNode`, so
+    /// `validate_state` can prune a deleted step's OR block's id out of a stale selection.
+    #[test]
+    fn interaction_topology_covers_every_step_and_block() {
+        let mut app = playbook_app();
+        dispatch(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}));
+        let step_id = app.snapshot().expect("projection").steps()[0].id.clone();
+        dispatch(&mut app, PlaybookCommand::AddBlock(add_block::AddBlock { kind: "text".into(), step_id: Some(step_id.clone()) }));
+        let spec = app.snapshot().expect("projection");
+        let block_id = spec.steps().iter().find(|step| step.id == step_id).expect("step present").blocks[0].id.clone();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let cfg = PlaybookConfig::default();
+        let doc = ArtifactView::new(&spec, &history);
+        let topology = PlaybookPlayApp::interaction_topology(&doc, &ConfigView { snapshot: &cfg });
+        let blocks = topology.domains.get(PLAYBOOK_INTERACTION_BLOCKS).expect("blocks domain present in topology");
+        assert!(blocks.ordered.iter().any(|node| node.id == step_id && node.granularity == PLAYBOOK_INTERACTION_GRANULARITY_STEP && node.parent.is_none()));
+        assert!(blocks.ordered.iter().any(|node| node.id == block_id && node.granularity == PLAYBOOK_INTERACTION_GRANULARITY_BLOCK && node.parent.as_deref() == Some(step_id.as_str())));
+    }
+    //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
     #[test]

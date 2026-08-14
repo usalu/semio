@@ -5,13 +5,12 @@ message SequenceDiff {
   optional string schema = 2; // @state artifact
   optional SequenceStepsDelta steps = 3; // @state artifact
   optional SequenceEdgesDelta edges = 4; // @state artifact
-  optional SequenceStringList selected_step_ids = 5; // @state presence
+  reserved 5;
   optional string last_run_json = 6; // @state config
   optional string orientation = 7; // @state config
   optional SequenceCamera camera = 8; // @state config
   optional string locale = 9; // @state config
 }
-message SequenceStringList { repeated string values = 1; }
 message SequenceStepsDelta { repeated SequenceStep added = 1; repeated string removed = 2; repeated SequenceStepPatchEntry patched = 3; repeated string reordered = 4; }
 message SequenceEdgesDelta { repeated SequenceEdge added = 1; repeated string removed = 2; repeated SequenceEdgePatchEntry patched = 3; repeated string reordered = 4; }
 message SequenceStepPatchEntry { string id = 1; SequenceStepPatch patch = 2; }
@@ -23,6 +22,7 @@ message SequenceStepPatch { optional string params_json = 1; optional double x =
 message SequenceEdgePatch { optional string from = 1; optional string to = 2; }
 message SequenceCamera { double x = 1; double y = 2; double zoom = 3; }
 message SequenceArtifact {
+  reserved 4;
   string schema = 1; repeated SequenceStep steps = 2; repeated SequenceEdge edges = 3;
-  repeated string selected_step_ids = 4; string last_run_json = 5; string orientation = 6; SequenceCamera camera = 7; string locale = 8;
+  string last_run_json = 5; string orientation = 6; SequenceCamera camera = 7; string locale = 8;
 }

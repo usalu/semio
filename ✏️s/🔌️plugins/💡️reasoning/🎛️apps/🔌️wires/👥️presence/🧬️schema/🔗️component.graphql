@@ -1,5 +1,4 @@
 type WiresPresence {
-  selectedIds: [String!]! @state(class: PRESENCE)
   dragNodeId: String @state(class: PRESENCE)
   dragLastX: Float! @state(class: PRESENCE)
   dragLastY: Float! @state(class: PRESENCE)

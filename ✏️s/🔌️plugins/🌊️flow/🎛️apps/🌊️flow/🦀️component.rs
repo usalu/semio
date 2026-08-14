@@ -10,10 +10,10 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::apps::flow::commands::{
-    add_widget, clear_selection, connect_media_ports, context_menu_at, delete_selection, disconnect, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, graph_pointer_down,
-    move_media_node, node_graph_edit, node_graph_hover, node_graph_select, node_graph_viewport, open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, replace_image,
-    reorganize, run_extension_action, select_all, select_node, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale,
-    set_lod_mode, set_preview_off, set_proximity_distance, set_selection, spotlight_commit, toggle_extension,
+    add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection,
+    move_media_node, node_graph_edit, node_graph_viewport, open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, replace_image,
+    reorganize, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale,
+    set_lod_mode, set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
 };
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::apps::flow::presence::{FlowPresence, FlowPresenceMutation};
@@ -32,7 +32,10 @@ use flow::{
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactApp, ArtifactView, Emit, Fault, HostEffect, Label, LocalizedLabel,
     UiNode, WindowMeasure,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+    DomainTopology, InteractionTopology, TopologyNode,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -59,6 +62,39 @@ fn flow_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> Ac
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the single "graph" interaction
+/// domain this app declares — node/edge/handle granularities over the node-graph canvas.
+pub const FLOW_INTERACTION_GRAPH: &str = "graph";
+
+/// 🕹️ The document panel tree's own row id prefix for "node"-granularity targets (widgets) — see
+/// `document_panel::render`'s doc comment; `interaction_topology` registers the SAME ids.
+const FLOW_GRAPH_NODE_TARGET_PREFIX: &str = "flow-play-document.widget.";
+/// 🕹️ Same as `FLOW_GRAPH_NODE_TARGET_PREFIX`, for "edge"-granularity targets (synapses).
+const FLOW_GRAPH_EDGE_TARGET_PREFIX: &str = "flow-play-document.synapse.";
+
+/// 🕹️ The "graph" domain's row id for a widget (node granularity).
+pub fn flow_graph_node_target_id(widget_id: &str) -> String {
+    format!("{FLOW_GRAPH_NODE_TARGET_PREFIX}{widget_id}")
+}
+
+/// 🕹️ The "graph" domain's row id for a synapse (edge granularity).
+pub fn flow_graph_edge_target_id(synapse_id: &str) -> String {
+    format!("{FLOW_GRAPH_EDGE_TARGET_PREFIX}{synapse_id}")
+}
+
+/// 🕹️ Splits the "graph" domain's live `InteractionTarget` ids into (widget ids, synapse ids) — the
+/// reverse of `flow_graph_node_target_id`/`flow_graph_edge_target_id`, mirroring note's
+/// `block_id_from_tree_row_id`. "handle" targets have no persisted document data to resolve against —
+/// no live UI populates them yet (the shared `NodeGraph` canvas renderer that would is framework layer,
+/// unmigrated this wave) — so they never appear in either returned list.
+pub fn flow_graph_selection_domains(selected: &[String]) -> (Vec<String>, Vec<String>) {
+    let nodes = selected.iter().filter_map(|id| id.strip_prefix(FLOW_GRAPH_NODE_TARGET_PREFIX).map(str::to_string)).collect();
+    let edges = selected.iter().filter_map(|id| id.strip_prefix(FLOW_GRAPH_EDGE_TARGET_PREFIX).map(str::to_string)).collect();
+    (nodes, edges)
+}
+//#endregion 🔖️Interaction
 
 //#region 🔌️Registration
 /// 🗂️ Registers `FlowSnapshot`'s pack↔dsl codec under `FLOW_DOCUMENT_SCHEMA` so `framework/sync`'s folder
@@ -141,6 +177,14 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies, and
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal: appending
     /// is safe, reordering is a wire-format break.**
+    ///
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `setSelection`/`clearSelection`/
+    /// `selectAll`/`selectNode`/`nodeGraphSelect`/`nodeGraphHover`/`graphPointerDown` are deleted — the
+    /// framework auto-injects `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/
+    /// `setSelectionMode`/`setInteractionGranularity` for the declared "graph" domain instead (see
+    /// `🔖️Manifest`). `deleteSelection`/`focusSelection`/`nodeGraphEdit`/`spotlightCommit` read that
+    /// domain's live selection via `InteractionView` — `FlowPlayApp::handle` routes them through their
+    /// own `apply` (this macro's generated `dispatch(doc, cfg, session)` has no `interaction` slot).
     pub enum FlowCommand for FlowSnapshot, FlowMutation, FlowConfig, FlowConfigMutation, ctx = FlowEvalSession {
         "addWidget" as "add-widget" => add_widget::AddWidget,
         "removeWidget" as "remove-widget" => remove_widget::RemoveWidget,
@@ -156,20 +200,13 @@ semio_framework_plugin::app_commands! {
         "runExtensionAction" as "run-extension-action" => run_extension_action::RunExtensionAction,
         "setContributions" as "set-contributions" => set_contributions::SetContributions,
         "evaluate" as "evaluate" => evaluate::Evaluate,
-        "selectAll" as "select-all" => select_all::SelectAll,
         "focusSelection" as "focus-selection" => focus_selection::FocusSelection,
-        "setSelection" as "set-selection" => set_selection::SetSelection,
-        "selectNode" as "select-node" => select_node::SelectNode,
-        "nodeGraphSelect" as "node-graph-select" => node_graph_select::NodeGraphSelect,
-        "nodeGraphHover" as "node-graph-hover" => node_graph_hover::NodeGraphHover,
-        "graphPointerDown" as "graph-pointer-down" => graph_pointer_down::GraphPointerDown,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "setLodMode" as "set-lod-mode" => set_lod_mode::SetLodMode,
         "setProximityDistance" as "set-proximity-distance" => set_proximity_distance::SetProximityDistance,
         "setGridVisible" as "set-grid-visible" => set_grid_visible::SetGridVisible,
         "setGridSnapEnabled" as "set-grid-snap-enabled" => set_grid_snap_enabled::SetGridSnapEnabled,
         "setGridFactor" as "set-grid-factor" => set_grid_factor::SetGridFactor,
-        "clearSelection" as "clear-selection" => clear_selection::ClearSelection,
         "contextMenuAt" as "context-menu-at" => context_menu_at::ContextMenuAt,
         "setPreviewOff" as "set-preview-off" => set_preview_off::SetPreviewOff,
         "openSpotlight" as "open-spotlight" => open_spotlight::OpenSpotlight,
@@ -198,12 +235,13 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
 
     let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
     let groups = surface.map_or(&[][..], |target| target.selection.as_slice());
-    let mut nodes: Vec<String> = groups.iter().filter(|group| group.domain == "node").flat_map(|group| group.ids.iter().cloned()).collect();
-    let mut edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
-    if nodes.is_empty() && edges.is_empty() {
-        nodes = config.selected_node_ids.clone();
-        edges = config.selected_edge_ids.clone();
-    }
+    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "graph" domain's live selection
+    // is framework-owned `InteractionState` now, and `ArtifactApp::context_menu` is not threaded an
+    // `InteractionView` this wave — there is no config-side fallback left to read, so an empty `surface`
+    // (no hit-test/selection groups carried on the request) means no selection, a real known gap rather
+    // than a stale-state read.
+    let nodes: Vec<String> = groups.iter().filter(|group| group.domain == "node").flat_map(|group| group.ids.iter().cloned()).collect();
+    let edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
     let has_selection = !nodes.is_empty() || !edges.is_empty();
     let all_preview_off = !nodes.is_empty() && nodes.iter().all(|id| config.preview_off_node_ids.contains(id));
     let is_image = nodes.len() == 1
@@ -304,8 +342,36 @@ impl ArtifactApp for FlowPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &FlowCommand, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
-        with_process_flow_eval_session(|session| command.dispatch(doc, cfg, session))
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `deleteSelection`/`focusSelection`/
+    /// `nodeGraphEdit`/`spotlightCommit` read the "graph" interaction domain directly (bypassing the
+    /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg, session)`
+    /// signature is framework-fixed and has no `interaction` slot) — mirrors `space`'s equivalent routing.
+    fn handle(command: &FlowCommand, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
+        with_process_flow_eval_session(|session| match command {
+            FlowCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, session, interaction),
+            FlowCommand::FocusSelection(payload) => focus_selection::apply(payload, doc, cfg, session, interaction),
+            FlowCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, session, interaction),
+            FlowCommand::SpotlightCommit(payload) => spotlight_commit::apply(payload, doc, cfg, session, interaction),
+            _ => command.dispatch(doc, cfg, session),
+        })
+    }
+
+    /// 🕹️ `graph`'s `HierarchyProvider::Topology`: every widget/synapse is registered at its own
+    /// granularity, every one a root — the outer widget list has no real parent/child membership (a
+    /// `Widget::Cluster`'s own `tree` is a private, self-contained nested sub-graph, not exposed at this
+    /// domain), so this deliberately does NOT declare transitive hover/selection (see `🔖️Manifest`'s
+    /// `.interaction(...)` doc comment for why that diverges from the ticket's headline example).
+    /// `Topology` (rather than `Flat`) is still the right choice purely for the pruning it buys:
+    /// `validate_state` drops stale ids of a domain it has membership info for, and `Flat` domains are
+    /// skipped entirely (see the design doc's `HierarchyProvider::Flat` note). "handle" targets have no
+    /// persisted document data to register — see `flow_graph_selection_domains`'s doc comment.
+    fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>) -> InteractionTopology {
+        let live = doc.snapshot.to_fixture();
+        let mut ordered: Vec<TopologyNode> = live.widgets.iter().map(|widget| TopologyNode { id: flow_graph_node_target_id(crate::artifacts::flow::schema::widget_id(widget)), granularity: "node".into(), parent: None }).collect();
+        ordered.extend(live.synapses.iter().map(|synapse| TopologyNode { id: flow_graph_edge_target_id(&synapse.id), granularity: "edge".into(), parent: None }));
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(FLOW_INTERACTION_GRAPH.to_string(), DomainTopology { ordered });
+        InteractionTopology { domains }
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
@@ -325,9 +391,9 @@ impl ArtifactApp for FlowPlayApp {
             FLOW_PLAY_BODY_GENERATIONS => generations::render(config, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
             FLOW_PLAY_BODY_GENERATE_FORM => form::render(fixture, config),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(config),
-            FLOW_PLAY_BODY_DOCUMENT => document_panel::render(fixture, &config.selected_node_ids, labels),
+            FLOW_PLAY_BODY_DOCUMENT => document_panel::render(fixture, labels),
             FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, config, session, labels),
-            FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(fixture, &config.selected_node_ids, labels),
+            FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         })
     }
@@ -405,14 +471,16 @@ pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges:
     host.dag.set_selection_domains_json(&json.to_string());
 }
 
-/// 🔍️ The camera that frames the current node selection, or `None` when nothing is selected.
-pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> Option<CameraJson> {
-    if config.selected_node_ids.is_empty() {
+/// 🔍️ The camera that frames the given node selection (the "graph" domain's live selection, read by
+/// the caller via `InteractionView` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), or
+/// `None` when nothing is selected.
+pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, selected_node_ids: &[String]) -> Option<CameraJson> {
+    if selected_node_ids.is_empty() {
         return None;
     }
     let mut host = host_from_snapshot(fixture, config, session);
     host.dag.set_viewport(1280, 800, 1.0);
-    host.dag.set_selection(&config.selected_node_ids);
+    host.dag.set_selection(selected_node_ids);
     host.focus_selection_camera(1.2)
 }
 //#endregion 🔖️Selection
@@ -455,22 +523,18 @@ pub fn create_flow_app() -> App {
             .mutation("spotlightCommit", LocalizedLabel::native("Spotlight Commit", "Spotlight bestätigen"))
             // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("runExtensionAction", LocalizedLabel::native("Run Extension Action", "Erweiterungsaktion ausführen"), ActionKind::Mutation) })
-            // 👁️ Ephemeral view/config actions — mutate config, emit no document operations.
+            // 👁️ Ephemeral view/config actions — mutate config, emit no document operations. Selection/
+            // hover verbs (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
+            // `nodeGraphHover`/`graphPointerDown`) are no longer declared here: framework-owned, injected
+            // via `.interaction(...)` below (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
-            .action_with(ActionDefinition::new_catalog("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::View).with_category("selection"))
             .action_with(ActionDefinition::new_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view"))
-            .action_with(flow_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
-            .action_with(flow_internal_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"), ActionKind::View))
-            .action_with(flow_internal_action("nodeGraphSelect", LocalizedLabel::native("Node Graph Select", "Knotengraph auswählen"), ActionKind::View))
-            .action_with(flow_internal_action("nodeGraphHover", LocalizedLabel::native("Node Graph Hover", "Knotengraph-Hover"), ActionKind::View))
-            .action_with(flow_internal_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View))
             .action_with(flow_internal_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View))
             .action_with(flow_internal_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View))
             .action_with(flow_internal_action("setProximityDistance", LocalizedLabel::native("Set Proximity Distance", "Näheabstand festlegen"), ActionKind::View))
             .action_with(flow_internal_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Raster sichtbar"), ActionKind::View))
             .action_with(flow_internal_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View))
             .action_with(flow_internal_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View))
-            .action_with(flow_internal_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::View).with_category("selection"))
             .action_with(flow_internal_action("contextMenuAt", LocalizedLabel::native("Context Menu At", "Kontextmenü an Position"), ActionKind::View))
             .action_with(flow_internal_action("setPreviewOff", LocalizedLabel::native("Set Preview Off", "Vorschau deaktivieren"), ActionKind::View).with_category("view"))
             .action_with(flow_internal_action("openSpotlight", LocalizedLabel::native("Open Spotlight", "Spotlight öffnen"), ActionKind::View).with_category("create"))
@@ -490,8 +554,41 @@ pub fn create_flow_app() -> App {
             .default_value("inputSlider")])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .keybinding("mod+a", "selectAll")
+            // 🕹️ `mod+a`/`escape` are no longer declared here — the framework auto-injects `selectAll`/
+            // `clearSelection` (with these SAME keys) for every app with at least one `.interaction(...)`
+            // domain, see `interaction_action_definitions`.
             .keybinding("delete,backspace", "deleteSelection")
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "graph" domain — node/
+            // edge/handle granularities over the node-graph canvas. `HierarchyProvider::Topology` purely
+            // for `validate_state`'s pruning of deleted widget/synapse ids (see
+            // `FlowPlayApp::interaction_topology`'s doc comment) — the outer widget list has no real
+            // parent/child membership to walk (a `Widget::Cluster`'s own nested `tree` is a private,
+            // self-contained sub-graph, never exposed as top-level "graph" members), so — DIVERGING from
+            // this ticket's headline "flow" example, which describes transitive hover from group-node
+            // membership that the real fixture model does not have — both hover and selection stay
+            // non-transitive here; a future wave adding real group-node containment to the top-level
+            // widget list should flip both flags. Multi-select via Pick (document tree rows; the node-
+            // graph canvas's own marquee/click wiring is a separate, framework-layer, unmigrated-this-wave
+            // renderer — see `flow_graph_selection_domains`'s doc comment) and Rectangle, all five merges.
+            .interaction(InteractionDefinition {
+                id: FLOW_INTERACTION_GRAPH.into(),
+                label: LocalizedLabel::native("Graph", "Graph"),
+                granularities: vec![
+                    GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() },
+                    GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "spline".into() },
+                    GranularityDefinition { id: "handle".into(), label: LocalizedLabel::native("Handle", "Anfasser"), icon_id: "move".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec::default(),
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: false,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(main::FLOW_PLAY_WINDOW_MAIN, vec![InteractionRef::new(FLOW_INTERACTION_GRAPH)])
             // 🎯️ Flow has no user-visible config defaults to expose, so `config_spec()` stays the trait
             // default `ConfigSpec::empty()`; declaring it explicitly keeps the typed channel surface
             // consistent with the sibling apps' convention.
@@ -572,6 +669,19 @@ pub(crate) mod testkit {
     pub fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
         app.window_measures().get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
+
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is the framework's injected
+    /// `interactionSelect` verb now, dispatched against the "graph" domain declared on this app —
+    /// requires `flow_app_with_registry()` (a bare `flow_app()` has no declared interaction domains to
+    /// select against). `node_ids`/`edge_ids` are raw widget/synapse ids, converted to the row-id-
+    /// prefixed `InteractionTarget` ids the document panel tree/`interaction_topology` both use (see
+    /// `flow_graph_node_target_id`/`flow_graph_edge_target_id`).
+    pub fn select_graph(app: &mut FlowApp, node_ids: &[&str], edge_ids: &[&str]) {
+        let mut targets: Vec<serde_json::Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
+        targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
+        let targets_json = serde_json::to_string(&targets).expect("targets json");
+        app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" })), &meta("test")).expect("interactionSelect");
+    }
 }
 //#endregion 🧪️Testkit
 
@@ -599,7 +709,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 41, "every FlowCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 34, "every FlowCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -635,8 +745,14 @@ mod tests {
                 "add-widget kind=neuron neuron-kind=math.add",
                 "010002086d6174682e616464066e6575726f6e02000601010600",
             ),
-            (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: None }), "set-grid-visible", "01180000"),
-            (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }), "set-grid-visible pressed=true", "011800010002"),
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `SetGridVisible`'s binary
+            // ordinal shifted 24 (0x18) → 18 (0x12) — seven rows ahead of it in `FlowCommand`
+            // (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
+            // `nodeGraphHover`/`graphPointerDown`) were deleted (framework-injected now), a real,
+            // documented wire-format break (row order IS the ordinal — deleting from the middle is not
+            // the safe "append only" case the row-order doc comment calls out).
+            (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: None }), "set-grid-visible", "01120000"),
+            (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }), "set-grid-visible pressed=true", "011200010002"),
         ];
         for (command, text, hex) in cases {
             let encoded = protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
@@ -661,29 +777,22 @@ mod tests {
             FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "n1".into(), value: "renamed".into() }),
             FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
                 operations: vec![
-                    node_graph::FlowNodeGraphEditOp::SetSnapshot { snapshot_json: "{}".into() },
-                    node_graph::FlowNodeGraphEditOp::DeleteSelection,
-                    node_graph::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
+                    node_graph_edit::FlowNodeGraphEditOp::SetSnapshot { snapshot_json: "{}".into() },
+                    node_graph_edit::FlowNodeGraphEditOp::DeleteSelection,
+                    node_graph_edit::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
                 ],
             }),
             FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit {
-                operations: vec![node_graph::FlowNodeGraphEditOp::DeleteSelection] }),
+                operations: vec![spotlight_commit::FlowNodeGraphEditOp::DeleteSelection] }),
             FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
             FlowCommand::Evaluate(evaluate::Evaluate {}),
-            FlowCommand::SelectAll(select_all::SelectAll {}),
             FlowCommand::FocusSelection(focus_selection::FocusSelection {}),
-            FlowCommand::SetSelection(set_selection::SetSelection { ids: vec!["n1".into()], edge_ids: vec!["e1".into()], handle_ids: Vec::new() }),
-            FlowCommand::SelectNode(select_node::SelectNode { node_id: "n1".into() }),
-            FlowCommand::NodeGraphSelect(node_graph_select::NodeGraphSelect { node_ids: vec!["n1".into(), "n2".into()] }),
-            FlowCommand::NodeGraphHover(node_graph_hover::NodeGraphHover {}),
-            FlowCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
             FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 } }),
             FlowCommand::SetLodMode(set_lod_mode::SetLodMode { value: "micro".into() }),
             FlowCommand::SetProximityDistance(set_proximity_distance::SetProximityDistance { value: 48.0 }),
             FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }),
             FlowCommand::SetGridSnapEnabled(set_grid_snap_enabled::SetGridSnapEnabled { pressed: None }),
             FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 10.0 }),
-            FlowCommand::ClearSelection(clear_selection::ClearSelection {}),
             FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: "n1".into() }),
             FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: vec!["n1".into()], value: true }),
             FlowCommand::OpenSpotlight(open_spotlight::OpenSpotlight {}),
@@ -718,6 +827,43 @@ mod tests {
         assert!(json.contains("computation.flow"), "artifact kind missing from the manifest");
     }
     //#endregion 🔖️ManifestSanity
+
+    //#region 🔖️Interaction
+    /// 🕹️ The "graph" domain is declared `HierarchyProvider::Topology`, scoped to the main canvas window
+    /// kind, non-transitive (see the `.interaction(...)` doc comment for why), with node/edge/handle
+    /// granularities and all five merges.
+    #[test]
+    fn graph_interaction_domain_is_declared_topology_and_scoped_to_the_main_window() {
+        let definition = create_flow_app().definition;
+        let graph = definition.interactions.iter().find(|interaction| interaction.id == FLOW_INTERACTION_GRAPH).expect("graph interaction domain declared");
+        assert!(matches!(graph.hierarchy, HierarchyProvider::Topology));
+        assert!(!graph.hover.transitive, "graph's outer widget list has no real group membership to walk transitively");
+        assert!(!graph.selection.transitive);
+        let granularity_ids: Vec<&str> = graph.granularities.iter().map(|granularity| granularity.id.as_str()).collect();
+        assert_eq!(granularity_ids, ["node", "edge", "handle"]);
+        let main_window = definition.window_kinds.iter().find(|window| window.id == main::FLOW_PLAY_WINDOW_MAIN).expect("main window kind declared");
+        assert!(main_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == FLOW_INTERACTION_GRAPH), "main window must reference the graph interaction domain");
+    }
+
+    /// 🌳️ `interaction_topology` registers every widget/synapse as a root at its own granularity —
+    /// the same row-id-prefixed targets the document panel tree renders (see
+    /// `document_panel::render`'s doc comment).
+    #[test]
+    fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
+        let document = FlowSnapshot::default();
+        let config = FlowConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = FlowPlayApp::interaction_topology(&doc, &cfg);
+        let graph = topology.domains.get(FLOW_INTERACTION_GRAPH).expect("graph domain present in topology");
+        let live = document.to_fixture();
+        assert_eq!(graph.ordered.len(), live.widgets.len() + live.synapses.len());
+        assert!(graph.ordered.iter().all(|node| node.parent.is_none()), "every node/edge is a root — no real group membership at this level");
+        assert!(graph.ordered.iter().any(|node| node.id == flow_graph_node_target_id("slider") && node.granularity == "node"));
+        assert!(graph.ordered.iter().any(|node| node.id == flow_graph_edge_target_id("s1") && node.granularity == "edge"));
+    }
+    //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
     #[test]
@@ -789,27 +935,44 @@ mod tests {
         assert!(!menu_json.contains("setPreviewOff"), "empty canvas must omit preview: {menu_json}");
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection is framework-owned
+    /// `InteractionState` now and `ArtifactApp::context_menu` is not threaded an `InteractionView` this
+    /// wave (see `flow_context_menu_items`'s doc comment) — the request's own `surface.selection` groups
+    /// are the only way to feed a selection into the menu, mirroring what the real click caller carries.
+    fn node_selection_surface(node_ids: &[&str]) -> semio_framework_plugin::ContextMenuSurfaceTarget {
+        semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: "main".into(),
+            kind: "nodeGraph".into(),
+            hits: vec![],
+            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: node_ids.iter().map(|id| id.to_string()).collect() }],
+            text: None,
+        }
+    }
+
     #[test]
     fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mutates_scene() {
         let mut app = flow_app_with_registry();
-        dispatch(&mut app, FlowCommand::SetSelection(set_selection::SetSelection { ids: vec!["slider".into()], edge_ids: Vec::new(), handle_ids: Vec::new() }));
-        let menu = context_menu_items(&mut app, None).to_string();
+        let menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).to_string();
         assert!(menu.contains("setPreviewOff"), "menu should expose preview toggle: {menu}");
         assert!(menu.contains("Hide preview") || menu.contains("eye-off"), "menu should offer hide preview: {menu}");
         assert!(menu.contains("focusSelection"), "menu should expose zoom to selection: {menu}");
         assert!(menu.contains(r#""checked":true"#), "preview checked when visible: {menu}");
         dispatch(&mut app, FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: vec!["slider".into()], value: true }));
-        let after_menu = context_menu_items(&mut app, None).to_string();
+        let after_menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).to_string();
         assert!(after_menu.contains("Show preview") || after_menu.contains(r#""icon":"eye""#), "menu should offer show preview: {after_menu}");
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `contextMenuAt` no longer sets
+    /// selection (a genuine no-operation now, see `context_menu_at::apply`'s doc comment) — the request's
+    /// own `surface.selection` groups carry the clicked target instead, mirroring what the real caller
+    /// (right-clicking a node) supplies alongside the `contextMenuAt` dispatch.
     #[test]
     fn context_menu_at_selects_target_and_enables_preview() {
         let mut app = flow_app_with_registry();
         let before = context_menu_items(&mut app, None).to_string();
         assert!(!before.contains(r#""id":"delete-selection""#), "preview starts without delete: {before}");
         dispatch(&mut app, FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: "slider".into() }));
-        let after = context_menu_items(&mut app, None).to_string();
+        let after = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).to_string();
         assert!(after.contains("setPreviewOff"), "menu keeps preview: {after}");
         assert!(after.contains(r#""ids":["slider"]"#) || after.contains("slider"), "preview args target the clicked node: {after}");
     }
@@ -820,10 +983,6 @@ mod tests {
         let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).to_string();
         assert!(!empty.contains(r#""id":"delete-selection""#), "empty must omit delete: {empty}");
 
-        dispatch(
-            &mut app,
-            FlowCommand::SetSelection(set_selection::SetSelection { ids: (1..=8).map(|i| format!("n{i}")).collect(), edge_ids: (1..=13).map(|i| format!("e{i}")).collect(), handle_ids: Vec::new() }),
-        );
         let menu = context_menu_items(
             &mut app,
             Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -844,16 +1003,15 @@ mod tests {
     }
 
     #[test]
-    fn context_menu_for_edge_hit_uses_config_edge_selection() {
+    fn context_menu_for_edge_hit_uses_surface_edge_selection() {
         let mut app = flow_app_with_registry();
-        dispatch(&mut app, FlowCommand::SetSelection(set_selection::SetSelection { ids: Vec::new(), edge_ids: vec!["syn-1".into()], handle_ids: Vec::new() }));
         let menu = context_menu_items(
             &mut app,
             Some(semio_framework_plugin::ContextMenuSurfaceTarget {
                 surface_id: "main".into(),
                 kind: "nodeGraph".into(),
                 hits: vec![semio_framework_plugin::ContextMenuHit { domain: "edge".into(), id: "syn-1".into(), label: None }],
-                selection: vec![],
+                selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: vec!["syn-1".into()] }],
                 text: None,
             }),
         )
@@ -865,10 +1023,6 @@ mod tests {
     #[test]
     fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         let mut app = flow_app_with_registry();
-        dispatch(
-            &mut app,
-            FlowCommand::SetSelection(set_selection::SetSelection { ids: (1..=8).map(|i| format!("n{i}")).collect(), edge_ids: (1..=13).map(|i| format!("e{i}")).collect(), handle_ids: Vec::new() }),
-        );
         let request = ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
             surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {

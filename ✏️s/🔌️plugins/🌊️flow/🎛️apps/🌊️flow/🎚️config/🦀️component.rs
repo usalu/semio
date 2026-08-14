@@ -33,12 +33,6 @@ use std::collections::HashMap;
 #[dsl(id = "flow.config")]
 #[dsl(layout = "lines")]
 pub struct FlowConfig {
-    /// 👁️ Selected widget ids.
-    pub selected_node_ids: Vec<String>,
-    /// 👁️ Selected synapse ids.
-    pub selected_edge_ids: Vec<String>,
-    /// 👁️ Selected handle ids.
-    pub selected_handle_ids: Vec<String>,
     /// 👁️ Widget ids with their live-eval preview disabled.
     pub preview_off_node_ids: Vec<String>,
     /// 🎥️ The node-graph viewport camera.
@@ -133,9 +127,6 @@ impl store::ArtifactPack for FlowConfig {
 impl Default for FlowConfig {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
-            selected_edge_ids: Vec::new(),
-            selected_handle_ids: Vec::new(),
             preview_off_node_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             lod_mode: FLOW_LOD_MODE_AUTOMATIC.into(),
@@ -190,8 +181,6 @@ pub enum FlowConfigMutation {
         #[dsl(block)]
         config: FlowConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { node_ids: Vec<String>, edge_ids: Vec<String>, handle_ids: Vec<String> },
     #[dsl(key = "preview-off")]
     SetPreviewOff { node_ids: Vec<String> },
     #[dsl(key = "camera")]
@@ -298,11 +287,6 @@ impl Mutation<FlowConfig> for FlowConfigMutation {
         let mut next = base.clone();
         match self {
             FlowConfigMutation::Snapshot { config } => return config.clone(),
-            FlowConfigMutation::SetSelection { node_ids, edge_ids, handle_ids } => {
-                next.selected_node_ids = node_ids.clone();
-                next.selected_edge_ids = edge_ids.clone();
-                next.selected_handle_ids = handle_ids.clone();
-            }
             FlowConfigMutation::SetPreviewOff { node_ids } => next.preview_off_node_ids = node_ids.clone(),
             FlowConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             FlowConfigMutation::SetLodMode { value } => next.lod_mode = value.clone(),
@@ -352,9 +336,6 @@ mod tests {
     #[test]
     fn flow_config_dsl_pack_round_trip() {
         let config = FlowConfig {
-            selected_node_ids: vec!["n1".into(), "n2".into()],
-            selected_edge_ids: vec!["e1".into()],
-            selected_handle_ids: vec!["h1".into()],
             preview_off_node_ids: vec!["n2".into()],
             camera: CameraJson { x: 12.5, y: -3.0, zoom: 2.25 },
             lod_mode: "micro".into(),
@@ -373,9 +354,7 @@ mod tests {
 
     #[test]
     fn flow_config_operation_text_binary_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::Snapshot { config: FlowConfig { selected_node_ids: vec!["n1".into()], locale: "de-DE".into(), ..FlowConfig::default() } });
-        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetSelection { node_ids: vec!["n1".into(), "n2".into()], edge_ids: vec!["e1".into()], handle_ids: vec!["h1".into()] });
-        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::Snapshot { config: FlowConfig { locale: "de-DE".into(), ..FlowConfig::default() } });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetPreviewOff { node_ids: vec!["n1".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLodMode { value: "micro".into() });
@@ -391,10 +370,10 @@ mod tests {
 
     #[test]
     fn flow_config_operation_backwards_restores_the_pre_operation_snapshot() {
-        let base = FlowConfig { selected_node_ids: vec!["n1".into()], locale: "en-US".into(), ..FlowConfig::default() };
-        let operation = FlowConfigMutation::SetSelection { node_ids: vec!["n2".into()], edge_ids: Vec::new(), handle_ids: Vec::new() };
+        let base = FlowConfig { locale: "en-US".into(), ..FlowConfig::default() };
+        let operation = FlowConfigMutation::SetPreviewOff { node_ids: vec!["n2".into()] };
         let forward = operation.diff(&base);
-        assert_eq!(forward.selected_node_ids, vec!["n2".to_string()]);
+        assert_eq!(forward.preview_off_node_ids, vec!["n2".to_string()]);
         let backwards = operation.inverse(&base);
         assert_eq!(backwards, vec![FlowConfigMutation::Snapshot { config: base.clone() }]);
         let restored = backwards[0].diff(&forward);

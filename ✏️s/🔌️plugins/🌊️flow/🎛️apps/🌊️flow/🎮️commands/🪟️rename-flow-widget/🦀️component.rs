@@ -1,13 +1,11 @@
 //! 🪟️ 🧩️ Flow play app commands command — `rename-flow-widget`.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::apps::flow::host_operations;
 use crate::artifacts::flow::schema::widget_id;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
-use flow::{ FlowEvalSession, Widget};
+use flow::{FlowEvalSession, Widget};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct RenameFlowWidget {
@@ -53,15 +51,16 @@ fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Optio
     Some(FlowSnapshot::from_fixture(fixture))
 }
 
-pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the renamed widget used to also
+/// re-point the selection at its NEW id here; selection is framework-owned `InteractionState` now, only
+/// ever mutated by the framework's own injected `interactionSelect` handling — a rename that changes a
+/// selected widget's id leaves that id stale in `graph`'s selection (pruned by `interaction_topology` on
+/// the next dispatch, same as any other deleted-then-recreated id), an accepted UX regression for this
+/// wave (mirrors note's `add-block`/`rename-flow-widget` no longer being able to steer selection).
+pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let fixture = doc.snapshot;
-    let config = cfg.snapshot;
     match renamed_fixture(fixture, &payload.old_id, &payload.value) {
-        Some(next) => Ok(Emit {
-            artifact_mutations: crate::artifacts::flow::schema::mutations::snapshot_operations(fixture, &next),
-            config_mutations: vec![FlowConfigMutation::SetSelection { node_ids: vec![payload.value.trim().to_string()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
-            ..Default::default()
-        }),
+        Some(next) => Ok(Emit::mutations(crate::artifacts::flow::schema::mutations::snapshot_operations(fixture, &next))),
         None => Ok(Emit::default()),
     }
 }

@@ -1,6 +1,4 @@
 syntax = "proto3";
 package semio.app.playbook.playbook;
 message PlaybookPresence {
-  // @state presence
-  repeated string selected_ids = 1;
 }

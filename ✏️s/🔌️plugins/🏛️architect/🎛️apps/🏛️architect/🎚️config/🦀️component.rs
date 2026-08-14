@@ -19,7 +19,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(extension = "architectcfg")]
 #[dsl(layout = "lines")]
 pub struct ArchitectConfig {
-    pub selected_ids: Vec<String>,
     pub active_register: String,
     pub search_query: String,
     /// 🔎️ `Vec<SearchQuery>` serialized as JSON — `SearchQuery` has no `dsl::DslField` binding of its
@@ -106,7 +105,6 @@ impl store::ArtifactPack for ArchitectConfig {
 impl Default for ArchitectConfig {
     fn default() -> Self {
         Self {
-            selected_ids: Vec::new(),
             active_register: String::new(),
             search_query: String::new(),
             search_history_json: String::new(),

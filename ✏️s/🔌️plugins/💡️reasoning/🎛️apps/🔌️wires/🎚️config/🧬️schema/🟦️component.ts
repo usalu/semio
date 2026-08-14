@@ -1,8 +1,6 @@
 /** 🧬️ WiresConfig */
 export interface WiresConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
   dragNodeId?: string;
   /** @state config */
   dragLastX: number;

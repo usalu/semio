@@ -1,3 +1,2 @@
 type ImperativePresence {
-  selectedStepIds: [String!]! @state(class: PRESENCE)
 }

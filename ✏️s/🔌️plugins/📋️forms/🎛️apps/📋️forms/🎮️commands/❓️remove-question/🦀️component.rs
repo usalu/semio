@@ -14,17 +14,18 @@ pub struct RemoveQuestion {
     pub question_id: String,
 }
 
-pub fn handle(payload: &RemoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer prunes the deleted question
+// out of a config-owned selection list here — the framework's own `revalidate_interaction_state_after_
+// document_change` prunes the "fields" domain's selection against `interaction_topology` after every
+// document dispatch, so a deleted question's id is pruned automatically.
+pub fn handle(payload: &RemoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
-    let config = cfg.snapshot;
     let Some(location) = locate_question(spec, &payload.question_id) else {
         return Ok(Emit::default());
     };
-    let mut config_mutations = reset_try_config_mutations();
-    config_mutations.push(FormsConfigMutation::SetSelection { ids: config.selected_ids.iter().filter(|id| **id != payload.question_id).cloned().collect() });
     Ok(Emit {
         artifact_mutations: vec![FormMutation::DeleteBlock(crate::artifacts::forms::mutations::delete_block::mutation::DeleteBlock { step_id: location.step_id, id: payload.question_id.clone() })],
-        config_mutations,
+        config_mutations: reset_try_config_mutations(),
         ..Default::default()
     })
 }

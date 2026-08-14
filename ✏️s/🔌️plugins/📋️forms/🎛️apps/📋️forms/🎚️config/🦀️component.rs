@@ -10,6 +10,9 @@
 //! carrying the open `TopicContribution` (`"forms.questionKind"` topic) shape, backing extension question
 //! kinds in the blueprint builder, try wizard, and extension question rendering; the host now pushes
 //! contributions into config via `SetContributions`, mirroring how it now pushes locale via `SetLocale`).
+//! 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_ids` moved OUT of here into
+//! the framework-owned `InteractionState` (the "fields" domain declared on `create_forms_app`) — see
+//! `crate::apps::forms::FORMS_INTERACTION_FIELDS`.
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -27,8 +30,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(id = "forms.config")]
 #[dsl(layout = "lines")]
 pub struct FormsConfig {
-    /// 👁️ Selected blueprint step/question ids — was `FormsPlayRuntime::selected_ids`.
-    pub selected_ids: Vec<String>,
     /// 👁️ The Try wizard's active step index — was `FormsPlayRuntime::current_step_index`.
     pub current_step_index: u32,
     /// 👁️ The Try wizard's in-progress answer overrides (JSON object text, question id -> value) — was
@@ -106,7 +107,7 @@ impl store::ArtifactPack for FormsConfig {
 
 impl Default for FormsConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), current_step_index: 0, try_values_json: "{}".into(), locale: "en-US".into(), contributions_json: "[]".into() }
+        Self { current_step_index: 0, try_values_json: "{}".into(), locale: "en-US".into(), contributions_json: "[]".into() }
     }
 }
 
@@ -124,8 +125,6 @@ pub enum FormsConfigMutation {
         #[dsl(block)]
         config: FormsConfig,
     },
-    #[dsl(key = "selection")]
-    SetSelection { ids: Vec<String> },
     #[dsl(key = "step-index")]
     SetStepIndex { index: u32 },
     #[dsl(key = "try-values")]
@@ -215,7 +214,6 @@ impl Mutation<FormsConfig> for FormsConfigMutation {
         let mut next = base.clone();
         match self {
             FormsConfigMutation::Snapshot { config } => return config.clone(),
-            FormsConfigMutation::SetSelection { ids } => next.selected_ids = ids.clone(),
             FormsConfigMutation::SetStepIndex { index } => next.current_step_index = *index,
             FormsConfigMutation::SetTryValues { json } => next.try_values_json = json.clone(),
             FormsConfigMutation::SetLocale { value } => next.locale = value.clone(),
@@ -238,7 +236,6 @@ mod tests {
     #[test]
     fn forms_config_default_matches_the_existing_runtime_defaults() {
         let config = FormsConfig::default();
-        assert!(config.selected_ids.is_empty());
         assert_eq!(config.current_step_index, 0);
         assert_eq!(config.try_values_json, "{}");
         assert_eq!(config.locale, "en-US");
@@ -247,7 +244,7 @@ mod tests {
 
     #[test]
     fn forms_config_dsl_and_pack_round_trip() {
-        let config = FormsConfig { selected_ids: vec!["q1".into(), "q2".into()], current_step_index: 2, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
+        let config = FormsConfig { current_step_index: 2, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
@@ -266,7 +263,6 @@ mod tests {
     #[test]
     fn config_mutations_apply_and_restore_every_field() {
         let base = FormsConfig::default();
-        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetSelection { ids: vec!["q1".into()] }).selected_ids, vec!["q1".to_string()]);
         assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetStepIndex { index: 2 }).current_step_index, 2);
         assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetTryValues { json: r#"{"a":1}"#.into() }).try_values_json, r#"{"a":1}"#);
         assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
@@ -275,9 +271,8 @@ mod tests {
 
     #[test]
     fn config_snapshot_op_text_round_trips() {
-        let config = FormsConfig { selected_ids: vec!["q1".into(), "q2".into()], current_step_index: 1, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
+        let config = FormsConfig { current_step_index: 1, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::Snapshot { config });
-        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetSelection { ids: vec!["a".into()] });
         store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetStepIndex { index: 3 });
         store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetLocale { value: "en-US".into() });
     }

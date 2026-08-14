@@ -22,11 +22,7 @@ semio_framework_plugin::app_labels! {
         action_control_while: native_en "While", native_de "Solange", reuse_en "While", reuse_de "Solange";
         action_math_add: native_en "Add", native_de "Addieren", reuse_en "Add", reuse_de "Addieren";
         document_empty: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
-        inspector_empty_hint: native_en "Select a step in the document.", native_de "Wählen Sie einen Schritt im Dokument aus.", reuse_en "Select a step in the document.", reuse_de "Wählen Sie einen Schritt im Dokument aus.";
-        inspector_step_not_found: native_en "Step not found", native_de "Schritt nicht gefunden", reuse_en "Step not found", reuse_de "Schritt nicht gefunden";
-        inspector_id: native_en "Id", native_de "ID", reuse_en "Id", reuse_de "ID";
-        inspector_kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
-        inspector_params: native_en "Params", native_de "Parameter", reuse_en "Params", reuse_de "Parameter";
+        inspector_steps: native_en "Steps", native_de "Schritte", reuse_en "Steps", reuse_de "Schritte";
     }
 }
 //#endregion 🔖️Labels

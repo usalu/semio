@@ -1,13 +1,10 @@
 //! 📄️ DAG play app panel — the node/edge outline tree.
 
 use crate::apps::dag::terminology::DagPlayLabels;
-use crate::apps::dag::dag_action;
+use crate::apps::dag::DAG_PLAY_INTERACTION_DOMAIN;
 use crate::artifacts::dag::DagSnapshot;
 use infinite_board_port_directed_dag::dag_node_kind_tag;
-use semio_framework_plugin::{
-    tree_item, tree_item_desc, tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_desc, PanelTreeBuilder, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_DOCUMENT: &str = "dag.play.document";
@@ -20,40 +17,24 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: item ids are the SAME raw node/edge
+/// ids `DagPlayApp::interaction_topology` registers for the `graph` domain — the framework stamps this
+/// tree's selection/hover presence from that domain (`.interaction_domain`) and prunes stale ids
+/// through that same topology, so no per-item click action is declared here anymore (clicks are
+/// translated into `interactionSelect` generically).
+pub fn render(document: &DagSnapshot, labels: &DagPlayLabels) -> UiNode {
     let scene = crate::artifacts::dag::dag_working_scene(document);
     let node_items: Vec<UiTreeItemNode> = scene
         .nodes
         .iter()
-        .map(|node| {
-            tree_item_with_action(
-                format!("dag-play-document.node.{}", node.id),
-                semio_framework_plugin::Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
-                Some(dag_node_kind_tag(&node.kind).into()),
-                dag_action("setSelection", Some(json!({ "ids": [node.id.clone()] }))),
-            )
-        })
+        .map(|node| tree_item_desc(node.id.clone(), semio_framework_plugin::Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }), Some(dag_node_kind_tag(&node.kind).into())))
         .collect();
-    let edge_items: Vec<UiTreeItemNode> = scene.edges.iter().map(|edge| tree_item_desc(format!("dag-play-document.edge.{}", edge.id), semio_framework_plugin::Label::data(format!("{} → {}", edge.source, edge.target)), Some(edge.id.clone()))).collect();
-    let mut sections = vec![
-        UiTreeSectionNode {
-            id: "dag-play-document.nodes".into(),
-            label: Some(labels.nodes.into()),
-            default_open: Some(true),
-            presence: UiPresence::default(),
-            items: if node_items.is_empty() { vec![tree_item("dag-play-document.nodes.empty", labels.empty)] } else { node_items },
-        },
-        UiTreeSectionNode {
-            id: "dag-play-document.edges".into(),
-            label: Some(labels.edges.into()),
-            default_open: Some(false),
-            presence: UiPresence::default(),
-            items: if edge_items.is_empty() { vec![tree_item("dag-play-document.edges.empty", labels.empty)] } else { edge_items },
-        },
-    ];
-    let selected_ids: std::collections::HashSet<String> = selected.iter().map(|id| format!("dag-play-document.node.{id}")).collect();
-    semio_framework_plugin::ui_tree_stamp_presence(&mut sections, &selected_ids, &std::collections::HashSet::new());
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None, menu: None })
+    let edge_items: Vec<UiTreeItemNode> = scene.edges.iter().map(|edge| tree_item_desc(edge.id.clone(), semio_framework_plugin::Label::data(format!("{} → {}", edge.source, edge.target)), Some(edge.id.clone()))).collect();
+    PanelTreeBuilder::new("dag-play-document")
+        .section_or_placeholder("dag-play-document.nodes", Some(labels.nodes.into()), true, node_items, labels.empty)
+        .section_or_placeholder("dag-play-document.edges", Some(labels.edges.into()), false, edge_items, labels.empty)
+        .interaction_domain(DAG_PLAY_INTERACTION_DOMAIN)
+        .build()
 }
 //#endregion 🔖️Render
 

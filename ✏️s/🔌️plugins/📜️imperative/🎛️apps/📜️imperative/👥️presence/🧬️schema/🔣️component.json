@@ -3,16 +3,6 @@
   "title": "ImperativePresence",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "selectedStepIds"
-  ],
-  "properties": {
-    "selectedStepIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    }
-  }
+  "required": [],
+  "properties": {}
 }

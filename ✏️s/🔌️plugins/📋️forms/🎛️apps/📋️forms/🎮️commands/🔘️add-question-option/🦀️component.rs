@@ -63,7 +63,7 @@ mod tests {
     use crate::apps::forms::testkit::{dispatch, forms_app};
     use crate::apps::forms::FormsCommand;
     use AddQuestionOption;
-    use remove_question_option::RemoveQuestionOption;
+    use crate::apps::forms::commands::remove_question_option::RemoveQuestionOption;
 
     fn single_or_multi_question_id(app: &mut crate::apps::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::apps::forms::commands::add_question::AddQuestion { kind: "single".into(), step_id: None }));

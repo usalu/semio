@@ -4,18 +4,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "locale",
     "contributionsJson"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "locale": {
       "type": "string",
       "x-semio-state": "config"

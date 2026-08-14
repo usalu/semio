@@ -368,8 +368,6 @@ pub mod apps {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📋️forms/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
             #[path = "../../🎛️apps/📋️forms/🎮️commands/🧪️set-try-value/🦀️component.rs"]
             pub mod set_try_value;
             #[path = "../../🎛️apps/📋️forms/🎮️commands/🧪️set-try-values/🦀️component.rs"]

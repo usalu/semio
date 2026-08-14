@@ -4,17 +4,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedCheckpointIds",
     "locale"
   ],
   "properties": {
-    "selectedCheckpointIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "locale": {
       "type": "string",
       "x-semio-state": "config"

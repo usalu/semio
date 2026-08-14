@@ -15,7 +15,7 @@
 use crate::apps::forms::commands::{
     add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options,
     patch_questions, patch_step, patch_vector_field, previous_step, remove_question, remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example,
-    set_contributions, set_locale, set_selection, set_spec_json, set_try_value, set_try_values, submit, update_form,
+    set_contributions, set_locale, set_spec_json, set_try_value, set_try_values, submit, update_form,
 };
 use crate::apps::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::apps::forms::presence::{FormsPresence, FormsPresenceMutation};
@@ -29,11 +29,14 @@ use crate::artifacts::forms::op::FormMutation;
 // artifact's own `dsl` submodule under the bare name would shadow it (see the identical note in the
 // artifact's `🧬️schema/🦀️component.rs`).
 use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
+use crate::artifacts::forms::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ArtifactApp, ArtifactView, ConfigView, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, UiNode,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+    DomainTopology, InteractionTopology, TopologyNode,
 };
+use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -52,6 +55,33 @@ pub fn forms_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(FORMS_PLAY_APP_ID).action(action, args)
 }
 //#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ "fields" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
+/// this app declares: `HierarchyProvider::Topology` over the document's own step/question nesting
+/// (steps are the "section" granularity, questions are the "field" granularity), transitive (selecting/
+/// hovering a step covers its questions).
+pub const FORMS_INTERACTION_FIELDS: &str = "fields";
+pub const FORMS_INTERACTION_GRANULARITY_FIELD: &str = "field";
+pub const FORMS_INTERACTION_GRANULARITY_SECTION: &str = "section";
+
+/// 🌳️ `fields` domain topology from the document's own step/question nesting — step ids are the SAME
+/// row-id-prefixed ids the document panel tree renders (`forms_play_step_tree_id`), question ids are
+/// raw question ids (matching both the document panel tree's item ids and every question-editing
+/// command's own id vocabulary), so `validate_state` prunes deleted steps/questions and range/
+/// transitive selection walk the real document structure.
+fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
+    let mut ordered = Vec::new();
+    for step in forms_steps(spec) {
+        let step_id = crate::artifacts::forms::schema::forms_play_step_tree_id(&step.id);
+        ordered.push(TopologyNode { id: step_id.clone(), granularity: FORMS_INTERACTION_GRANULARITY_SECTION.into(), parent: None });
+        for question in step.blocks {
+            ordered.push(TopologyNode { id: question.id, granularity: FORMS_INTERACTION_GRANULARITY_FIELD.into(), parent: Some(step_id.clone()) });
+        }
+    }
+    DomainTopology { ordered }
+}
+//#endregion 🔖️Interaction
 
 //#region 🔖️Values
 /// 🔠️ `config.try_values_json`'s parsed form — the Try wizard's in-progress answer overrides (question id
@@ -213,7 +243,6 @@ semio_framework_plugin::app_commands! {
     /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
     pub enum FormsCommand for FormsSnapshot, FormMutation, FormsConfig, FormsConfigMutation {
-        "setSelection" as "selection" => set_selection::SetSelection,
         "setTryValue" as "try-value" => set_try_value::SetTryValue,
         "setTryValues" as "try-values" => set_try_values::SetTryValues,
         "resetTry" as "reset-try" => reset_try::ResetTry,
@@ -324,8 +353,16 @@ impl ArtifactApp for FormsPlayApp {
         command.command_id()
     }
 
-    fn handle(command: &FormsCommand, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
+    fn handle(command: &FormsCommand, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
+    }
+
+    /// 🕹️ `fields` domain: `HierarchyProvider::Topology` from the document's own step/question nesting —
+    /// see `forms_fields_topology`'s doc comment.
+    fn interaction_topology(doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> InteractionTopology {
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(FORMS_INTERACTION_FIELDS.to_string(), forms_fields_topology(doc.snapshot));
+        InteractionTopology { domains }
     }
 
     //#region 🔖️Media
@@ -358,9 +395,9 @@ impl ArtifactApp for FormsPlayApp {
         match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, labels),
-            FORMS_PLAY_BODY_DOCUMENT => document_panel::render(spec, &config.selected_ids, labels),
+            FORMS_PLAY_BODY_DOCUMENT => document_panel::render(spec, labels),
             FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels),
-            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, labels),
+            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -418,7 +455,6 @@ pub fn create_forms_app() -> App {
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Mutation) })
-            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .view_action("setTryValue", LocalizedLabel::native("Set Try Value", "Testwert festlegen"))
             .view_action("setTryValues", LocalizedLabel::native("Set Try Values", "Testwerte festlegen"))
             .view_action("resetTry", LocalizedLabel::native("Reset Try", "Test zurücksetzen"))
@@ -445,6 +481,31 @@ pub fn create_forms_app() -> App {
             .action_args("setSpecJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Spec JSON", "Spezifikations-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "fields" interaction
+            // domain — two granularities ("field" default, "section"), `HierarchyProvider::Topology`
+            // from the document's own step/question nesting (`forms_fields_topology`/
+            // `FormsPlayApp::interaction_topology`), both hover and selection transitive (selecting/
+            // hovering a step covers its questions). Selection is pick-only (no canvas marquee surface
+            // exists for this domain today); the framework auto-injects interactionSelect/
+            // interactionHover/clearSelection/selectAll/setSelectionMode/setInteractionGranularity.
+            .interaction(InteractionDefinition {
+                id: FORMS_INTERACTION_FIELDS.into(),
+                label: LocalizedLabel::native("Fields", "Felder"),
+                granularities: vec![
+                    GranularityDefinition { id: FORMS_INTERACTION_GRANULARITY_FIELD.into(), label: LocalizedLabel::native("Field", "Feld"), icon_id: "help-circle".into() },
+                    GranularityDefinition { id: FORMS_INTERACTION_GRANULARITY_SECTION.into(), label: LocalizedLabel::native("Section", "Abschnitt"), icon_id: "list-tree".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: true,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(builder::FORMS_PLAY_WINDOW_BLUEPRINT, vec![InteractionRef::new(FORMS_INTERACTION_FIELDS)])
             // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`forms_io()`
             // are this same information's single source of truth, reused here rather than duplicated.
             .config(FormsPlayApp::config_spec())
@@ -509,7 +570,7 @@ pub(crate) mod testkit {
     /// 🧩️ A standalone `buildingComponent` question, for tests that exercise `render_extension_question`
     /// directly without going through a full document.
     pub fn building_component_question() -> FormQuestion {
-        let mut question = question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
+        let mut question = crate::apps::forms::commands::add_question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
         question.params = Some(crate::artifacts::forms::schema::value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
@@ -536,7 +597,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 28, "every FormsCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 27, "every FormsCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -550,7 +611,7 @@ mod tests {
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
     /// kebab-cased command id for most rows, except the documented divergences copied VERBATIM from the
     /// pre-migration `forms_protocol::FormsCommand`'s own `#[dsl(key = ..)]` attributes (host-pushed
-    /// `setLocale`/`setContributions`, and the shortened `selection`/`try-value`/`try-values`/
+    /// `setLocale`/`setContributions`, and the shortened `try-value`/`try-values`/
     /// `spec-json`/`active-example` keys — preserving these exactly is what makes the wire format
     /// byte-identical across the migration; see TEMPLATE.md §5.1).
     #[test]
@@ -560,7 +621,6 @@ mod tests {
             let expected = match id {
                 "setLocale" => "locale".to_string(),
                 "setContributions" => "contributions".to_string(),
-                "setSelection" => "selection".to_string(),
                 "setTryValue" => "try-value".to_string(),
                 "setTryValues" => "try-values".to_string(),
                 "setSpecJson" => "spec-json".to_string(),
@@ -575,7 +635,6 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<FormsCommand> {
         vec![
-            FormsCommand::SetSelection(set_selection::SetSelection { ids: vec!["q1".into()] }),
             FormsCommand::SetTryValue(set_try_value::SetTryValue { key: "q1".into(), value_json: Some("\"Ada\"".into()), option_value: None, vector_index: None, param_key: None }),
             FormsCommand::SetTryValues(set_try_values::SetTryValues { values_json: r#"{"name":"Ada"}"#.into() }),
             FormsCommand::ResetTry(reset_try::ResetTry {}),
@@ -630,6 +689,53 @@ mod tests {
         assert_eq!(app.definition.modes[0].id, blueprint::FORMS_PLAY_MODE_BLUEPRINT);
     }
     //#endregion 🔖️ManifestSanity
+
+    //#region 🔖️Interaction
+    /// 🕹️ The `fields` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
+    /// selection, and scoped to the blueprint (builder) window kind.
+    #[test]
+    fn fields_interaction_domain_is_declared_topology_and_transitive_on_the_blueprint_window() {
+        let definition = create_forms_app().definition;
+        let fields = definition.interactions.iter().find(|interaction| interaction.id == FORMS_INTERACTION_FIELDS).expect("fields interaction domain declared");
+        assert!(matches!(fields.hierarchy, HierarchyProvider::Topology));
+        assert!(fields.hover.transitive, "fields hover must be transitive so a hovered step covers its questions");
+        assert!(fields.selection.transitive, "fields selection must be transitive so a selected step covers its questions");
+        let builder_window = definition.window_kinds.iter().find(|window| window.id == builder::FORMS_PLAY_WINDOW_BLUEPRINT).expect("blueprint window kind declared");
+        assert!(builder_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == FORMS_INTERACTION_FIELDS), "blueprint window must reference the fields interaction domain");
+    }
+
+    /// 🌳️ `interaction_topology` walks the document's own step/question nesting into `TopologyNode.parent`
+    /// links — a step has no parent, every question's parent is its owning step's row id.
+    #[test]
+    fn interaction_topology_walks_step_nesting_into_parent_links() {
+        let document = crate::artifacts::forms::schema::building_component_spec();
+        let config = FormsConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = FormsPlayApp::interaction_topology(&doc, &cfg);
+        let fields = topology.domains.get(FORMS_INTERACTION_FIELDS).expect("fields domain present in topology");
+        let steps = forms_steps(&document);
+        let question_count: usize = steps.iter().map(|step| step.blocks.len()).sum();
+        assert!(!steps.is_empty() && question_count > 0, "the building-component fixture must have steps and questions to make this assertion meaningful");
+        assert_eq!(fields.ordered.len(), steps.len() + question_count, "topology must cover every step and every question");
+    }
+
+    /// 🌱️ A document with a step but no questions still contributes its (parent-less) section node —
+    /// only the field-granularity nodes are absent.
+    #[test]
+    fn interaction_topology_has_a_section_node_and_no_field_nodes_for_a_document_with_no_questions() {
+        let document = crate::artifacts::forms::schema::empty_forms_snapshot();
+        let config = FormsConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let topology = FormsPlayApp::interaction_topology(&doc, &cfg);
+        let fields = topology.domains.get(FORMS_INTERACTION_FIELDS).expect("fields domain present in topology");
+        assert!(!fields.ordered.is_empty(), "the empty document's own single step still contributes a section node");
+        assert!(fields.ordered.iter().all(|node| node.granularity == FORMS_INTERACTION_GRANULARITY_SECTION), "an empty document has sections but no fields");
+    }
+    //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
     #[test]

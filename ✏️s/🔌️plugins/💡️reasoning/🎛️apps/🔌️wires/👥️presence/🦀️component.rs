@@ -1,4 +1,7 @@
-//! 👥️ Wires presence — shareable live ephemeral state (peer selection + in-flight canvas drag).
+//! 👥️ Wires presence — shareable live ephemeral state (in-flight canvas drag). Peer selection/hover
+//! is framework-owned now (`graph` interaction domain, ticket
+//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) and broadcasts via the typed
+//! `PresenceInteraction` field, not this app-opaque presence facet.
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -12,7 +15,6 @@ use store::ArtifactPack;
 #[dsl(extension = "reasoning.wirespresence")]
 #[dsl(layout = "lines")]
 pub struct WiresPresence {
-    pub selected_ids: Vec<String>,
     pub drag_node_id: Option<String>,
     pub drag_last_x: f64,
     pub drag_last_y: f64,
@@ -20,7 +22,7 @@ pub struct WiresPresence {
 
 impl Default for WiresPresence {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0 }
+        Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0 }
     }
 }
 

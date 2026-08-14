@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires.config")]
 pub struct WiresConfig {
-    #[state(config)] pub selected_ids: Vec<String>,
     #[state(config)] pub drag_node_id: Option<String>,
     #[state(config)] pub drag_last_x: f64,
     #[state(config)] pub drag_last_y: f64,

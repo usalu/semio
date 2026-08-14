@@ -1,16 +1,11 @@
 syntax = "proto3";
 package semio.app.dag.dag;
 message DagPresence {
-  // @state presence
-  repeated string selected_node_ids = 1;
+  reserved 1, 5, 6;
   // @state presence
   double camera_x = 2;
   // @state presence
   double camera_y = 3;
   // @state presence
   double camera_zoom = 4;
-  // @state presence
-  optional string hovered_node_id = 5;
-  // @state presence
-  optional string hovered_edge_id = 6;
 }

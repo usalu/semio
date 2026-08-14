@@ -1,10 +1,9 @@
 //! 📄️ Animate present app panel — the document tree: tiles of the current deck.
 
-use crate::apps::present::animate_present_action;
 use crate::apps::present::terminology::AnimatePresentLabels;
+use crate::apps::present::PRESENT_INTERACTION_DOMAIN;
 use crate::artifacts::present::PresentSnapshot;
-use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_BODY_DOCUMENT: &str = "animate.present.play.document";
@@ -17,65 +16,16 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn tree_item(id: impl Into<String>, label: impl Into<Label>) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description: None,
-        icon_id: None,
-        presence: UiPresence::default(),
-        default_open: None,
-        action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        dimmed: None,
-        menu: None,
-    }
-}
-
-pub fn render(deck: &PresentSnapshot, selected: &[String], labels: &AnimatePresentLabels) -> UiNode {
+/// 🕹️ No per-row selection `action`: the tree is bound to the `tiles` interaction domain via
+/// `.interaction_domain(...)` below, so the framework auto-injects `interactionSelect` for row
+/// clicks — never declare that yourself (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
     let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
-    let items: Vec<UiTreeItemNode> = tiles
-        .iter()
-        .map(|tile| UiTreeItemNode {
-            id: tile.id.clone(),
-            label: Label::data(tile.name.clone()),
-            description: Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)),
-            icon_id: None,
-            presence: UiPresence::selected(selected.contains(&tile.id)),
-            default_open: None,
-            action: Some(animate_present_action("setSelectedIds", Some(json!({ "ids": [tile.id] })))),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            dimmed: None,
-            menu: None,
-        })
-        .collect();
-    UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "animate-present-play.tiles".into(),
-            presence: UiPresence::default(),
-            label: Some(labels.tiles_section.into()),
-            default_open: Some(true),
-            items: if items.is_empty() { vec![tree_item("empty", labels.no_tiles)] } else { items },
-        }],
-        presence: UiPresence::default(),
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: Some(animate_present_action("setSelectedIds", Some(json!({ "ids": [] })))),
-        drop_action: None,
-        menu: None,
-    })
+    let items: Vec<UiTreeItemNode> = tiles.iter().map(|tile| tree_item_desc(tile.id.clone(), Label::data(tile.name.clone()), Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))).collect();
+    PanelTreeBuilder::new("animate-present-play")
+        .section_or_placeholder("animate-present-play.tiles", Some(labels.tiles_section.into()), true, items, labels.no_tiles)
+        .interaction_domain(PRESENT_INTERACTION_DOMAIN)
+        .build()
 }
 //#endregion 🔖️Render
 

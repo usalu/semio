@@ -27,9 +27,6 @@ impl SequenceDiff {
         if let Some(content) = &self.content {
             next.content = content.clone();
         }
-        if let Some(list) = &self.selected_step_ids {
-            next.selected_step_ids = list.values.clone();
-        }
         if let Some(value) = &self.last_run_json {
             next.last_run_json = value.clone();
         }
@@ -75,7 +72,6 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
         }
         take!(schema);
         take!(content);
-        take!(selected_step_ids);
         take!(last_run_json);
         take!(orientation);
         take!(camera);

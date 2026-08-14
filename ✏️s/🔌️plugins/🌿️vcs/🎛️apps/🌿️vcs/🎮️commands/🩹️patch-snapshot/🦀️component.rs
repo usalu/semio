@@ -91,6 +91,7 @@ pub fn handle(payload: &PatchSnapshot, _doc: &ArtifactView<'_, VcsSnapshot>, _cf
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::vcs::commands::{edit, text_edit};
     use crate::apps::vcs::testkit::{app, dispatch};
     use crate::apps::vcs::VcsCommand;
 

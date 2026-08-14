@@ -1,7 +1,7 @@
 //! 📄️ VCS play app panel — the document tree: checkpoints and alternatives of the seeded history.
 
 use crate::apps::vcs::terminology::VcsPlayLabels;
-use crate::apps::vcs::vcs_action;
+use crate::apps::vcs::{vcs_action, VCS_INTERACTION_HISTORY};
 use semio_framework_plugin::{
     tree_item_with_action, HistoryView, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
@@ -29,7 +29,12 @@ pub fn definition() -> PanelTabDefinition {
 /// and which alternative ids reference each row); alternative rows are labeled by id since
 /// `HistoryColumn` doesn't carry alternative display names (`vcs_kernel::Alternative.name` isn't part of
 /// the `ArtifactApp`-visible `HistoryView` contract — a real gap, noted for whoever revisits this).
-pub fn render(history: &HistoryView, selected: &[String], labels: &VcsPlayLabels) -> UiNode {
+///
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the tree is bound to the "history"
+/// interaction domain (`VCS_INTERACTION_HISTORY`'s doc comment) — the framework now owns and stamps
+/// checkpoint multi-select highlighting, replacing the deleted `selected`/`setSelection` plumbing.
+/// Per-row `checkoutCheckpoint`/`switchAlternative` clicks stay app actions (navigation, not selection).
+pub fn render(history: &HistoryView, labels: &VcsPlayLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("vcs-play-document");
     let checkpoint_items: Vec<UiTreeItemNode> = history
         .columns
@@ -70,12 +75,10 @@ pub fn render(history: &HistoryView, selected: &[String], labels: &VcsPlayLabels
             }
         })
         .collect();
-    let selected_ids: Vec<String> = selected.iter().map(|id| builder.item_id("checkpoint", id)).collect();
     builder
         .section_or_placeholder("vcs-play-document.checkpoints", Some(labels.document.into()), true, checkpoint_items, labels.no_checkpoints)
         .section("vcs-play-document.alternatives", Some(labels.alternatives.into()), true, alternative_items)
-        .selected(selected_ids)
-        .selection_change(vcs_action("setSelection", None))
+        .interaction_domain(VCS_INTERACTION_HISTORY)
         .build()
 }
 //#endregion 🔖️Render

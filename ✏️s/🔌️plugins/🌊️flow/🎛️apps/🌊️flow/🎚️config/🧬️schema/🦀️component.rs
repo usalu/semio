@@ -7,9 +7,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow.config")]
 pub struct FlowConfig {
-    #[state(config)] pub selected_node_ids: Vec<String>,
-    #[state(config)] pub selected_edge_ids: Vec<String>,
-    #[state(config)] pub selected_handle_ids: Vec<String>,
     #[state(config)] pub preview_off_node_ids: Vec<String>,
     #[state(config)] pub camera: CameraJson,
     #[state(config)] pub lod_mode: String,

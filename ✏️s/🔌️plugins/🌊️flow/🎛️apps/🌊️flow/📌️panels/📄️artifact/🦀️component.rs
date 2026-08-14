@@ -1,13 +1,12 @@
 //! 📄️ Flow play app panel — the document tree: widgets and synapses of the current fixture.
 
-use crate::apps::flow::flow_action;
+use crate::apps::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH};
 use crate::apps::flow::terminology::FlowPlayLabels;
 use crate::artifacts::flow::schema::{widget_id, widget_kind_label, widget_tree_label};
 use crate::artifacts::flow::FlowSnapshot;
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_DOCUMENT: &str = "flow.play.document";
@@ -26,21 +25,21 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: item ids are the SAME canonical
+/// `flow_graph_node_target_id`/`flow_graph_edge_target_id` targets `FlowPlayApp::interaction_topology`
+/// declares for the "graph" domain — the framework stamps this tree's selection/hover presence from
+/// that domain (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item
+/// click action is declared here anymore (clicks are translated into `interactionSelect` generically).
+pub fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> UiNode {
     let live = fixture.to_fixture();
-    let widget_items: Vec<UiTreeItemNode> = live
-        .widgets
-        .iter()
-        .map(|widget| {
-            tree_item_with_action(format!("flow-play-document.widget.{}", widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()), flow_action("setSelection", Some(json!({ "ids": [widget_id(widget)] }))))
-        })
-        .collect();
+    let widget_items: Vec<UiTreeItemNode> =
+        live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()))).collect();
     let synapse_items: Vec<UiTreeItemNode> =
-        live.synapses.iter().map(|synapse| tree_item_desc(format!("flow-play-document.synapse.{}", synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
+        live.synapses.iter().map(|synapse| tree_item_desc(flow_graph_edge_target_id(&synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
     PanelTreeBuilder::new("flow-play-document")
         .section_or_placeholder("flow-play-document.widgets", Some(labels.widgets.into()), true, widget_items, labels.none_placeholder)
         .section_or_placeholder("flow-play-document.synapses", Some(labels.synapses.into()), false, synapse_items, labels.none_placeholder)
-        .selected(selected.iter().map(|id| format!("flow-play-document.widget.{id}")).collect())
+        .interaction_domain(FLOW_INTERACTION_GRAPH)
         .build()
 }
 //#endregion 🔖️Render

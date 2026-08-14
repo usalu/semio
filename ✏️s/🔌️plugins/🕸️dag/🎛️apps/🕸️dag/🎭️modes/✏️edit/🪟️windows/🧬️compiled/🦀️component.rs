@@ -31,6 +31,8 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        // 🕹️ The compiled-DSL window is read-only text — no interaction domain scoped to it.
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition

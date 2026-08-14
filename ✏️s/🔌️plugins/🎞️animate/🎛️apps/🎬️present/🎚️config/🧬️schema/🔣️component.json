@@ -4,18 +4,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "engagementInput",
     "locale"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "engagementInput": {
       "type": "string",
       "x-semio-state": "config"

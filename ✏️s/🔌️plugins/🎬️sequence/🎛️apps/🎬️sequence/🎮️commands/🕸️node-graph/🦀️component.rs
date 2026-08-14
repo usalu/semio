@@ -4,7 +4,7 @@ use crate::apps::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::apps::sequence::ops_from_host_mutation;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceCamera, SequenceSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -18,11 +18,8 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        let fixture = doc.snapshot;
+    fn edit_with_selection(payload: &NodeGraphEdit, fixture: &SequenceSnapshot, selected: &[String]) -> Emit<SequenceMutation, SequenceConfigMutation> {
         let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
-        let selected = cfg.snapshot.selected_step_ids.clone();
-        let mut cleared = false;
         let ops = ops_from_host_mutation(fixture, |host| {
             for operation in &sub_operations {
                 match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
@@ -32,10 +29,8 @@ pub mod node_graph_edit {
                         }
                     }
                     "deleteSelection" => {
-                        for step_id in &selected {
-                            if host.remove_step(step_id) {
-                                cleared = true;
-                            }
+                        for step_id in selected {
+                            host.remove_step(step_id);
                         }
                     }
                     "connect" => {
@@ -49,11 +44,20 @@ pub mod node_graph_edit {
                 }
             }
         });
-        if cleared {
-            Ok(Emit { artifact_mutations: ops, config_mutations: vec![SequenceConfigMutation::SetSelection { step_ids: Vec::new() }], ..Default::default() })
-        } else {
-            Ok(Emit::mutations(ops))
-        }
+        Emit::mutations(ops)
+    }
+
+    /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg)` is framework-fixed at this exact 3-arg
+    /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
+    /// reachable only through that macro-generated path (`SequencePlayApp::handle` always routes this
+    /// command through `apply` below instead), so its `"deleteSelection"` sub-operation degrades to
+    /// treating the selection as empty; every other sub-operation (`setFixture`/`connect`) is unaffected.
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(edit_with_selection(payload, doc.snapshot, &[]))
+    }
+
+    pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+        Ok(edit_with_selection(payload, doc.snapshot, &interaction.selection(crate::apps::sequence::SEQUENCE_INTERACTION_STEPS).ids))
     }
 }
 //#endregion 🔖️NodeGraphEdit
@@ -78,7 +82,7 @@ pub mod set_viewport {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::apps::sequence::testkit::{dispatch, new_app};
+    use crate::apps::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired, select_steps};
     use crate::apps::sequence::SequenceCommand;
     use crate::artifacts::sequence::SequenceCamera;
     use semio_framework_plugin::{PluginApp, ViewModel};
@@ -98,10 +102,14 @@ mod tests {
         assert_eq!(payload["nodeGraph"]["viewport"]["zoom"], json!(2.0));
     }
 
+    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
+    /// injected `interactionSelect` verb against the "steps" domain — requires a registry-wired app
+    /// (see `select_steps`'s own doc comment) so `NodeGraphEdit::apply` (not the macro-dispatched
+    /// `handle`, which always sees an empty selection) reads the live selection.
     #[test]
     fn node_graph_edit_delete_selection_clears_selection() {
-        let mut app = new_app();
-        dispatch(&mut app, SequenceCommand::SetSelection(crate::apps::sequence::commands::selection::set_selection::SetSelection { step_ids: vec!["step-1".into()] }));
+        let mut app = new_app_with_registry_wired();
+        select_steps(&mut app, &["step-1"]);
         dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: "[{\"operation\":\"deleteSelection\"}]".into() }));
         assert!(!app.snapshot().expect("projection").to_fixture().steps.iter().any(|step| step.id == "step-1"));
     }

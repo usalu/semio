@@ -30,6 +30,9 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        // 🕹️ Populated post-hoc by `create_architect_app`'s `.window_kind_interactions(..)` call —
+        // the "program" domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
@@ -86,12 +89,16 @@ pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Ve
     (nodes, edges)
 }
 
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `render` carries no `InteractionView`
+/// and `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
+/// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
+/// (empty/none), matching `dag`'s main window's and `space`'s workflow window's identical gap.
 pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let camera = GraphCamera { x: cfg.graph_camera_x, y: cfg.graph_camera_y, zoom: cfg.graph_camera_zoom };
     let (nodes, edges) = graph_media_json(program, &camera);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
     let mut scene = empty_component_scene(ARCHITECT_BODY_GRAPH, SurfaceKind::NodeGraph);
-    scene.node_graph = Some(NodeGraphScene { editable: Some(true), capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()), selection: cfg.selected_ids.clone(), ..NodeGraphScene::base(nodes, edges, viewport) });
+    scene.node_graph = Some(NodeGraphScene { editable: Some(true), capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()), ..NodeGraphScene::base(nodes, edges, viewport) });
     UiNode::ComponentScene(scene)
 }
 //#endregion 🔖️Render

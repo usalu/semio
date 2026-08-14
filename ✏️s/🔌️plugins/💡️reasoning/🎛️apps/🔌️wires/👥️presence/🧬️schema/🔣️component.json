@@ -4,18 +4,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "dragLastX",
     "dragLastY"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
     "dragNodeId": {
       "type": "string",
       "x-semio-state": "presence"

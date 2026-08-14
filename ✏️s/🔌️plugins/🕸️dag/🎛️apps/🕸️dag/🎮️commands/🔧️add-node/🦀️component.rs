@@ -16,15 +16,13 @@ pub struct AddNode {
     pub y: Option<f64>,
 }
 
+/// 🕹️ No longer auto-selects the newly-added node — no `Emit` channel writes `graph`'s selection
+/// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     let id = crate::artifacts::dag::schema::next_node_id(document);
     let node = crate::artifacts::dag::schema::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
-    Ok(Emit {
-        artifact_mutations: vec![create_node(node)],
-        config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![id] }],
-        ..Default::default()
-    })
+    Ok(Emit::mutations(vec![create_node(node)]))
 }
 
 //#region 🧪️Tests
@@ -32,20 +30,18 @@ pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &Con
 mod tests {
     use super::*;
     use crate::apps::dag::testkit;
-    use crate::apps::dag::{DagCommand, DAG_PLAY_BODY_MAIN};
+    use crate::apps::dag::commands::{patch_dag_nodes, remove_node, rename_dag_node};
+    use crate::apps::dag::DagCommand;
     use infinite_board_port_directed_dag::DagNodeKind;
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn add_node_action_updates_document_and_selects_the_new_node() {
+    fn add_node_action_updates_document_with_the_new_node() {
         let mut app = testkit::new_app();
         app.dispatch_typed(DagCommand::AddNode(AddNode { kind: "slider".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add node");
         let document = app.snapshot().expect("projection");
         let nodes = document.nodes();
         assert!(nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
-        let added_id = nodes.last().expect("added node").id.clone();
-        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains(&added_id), "the new node becomes the config selection");
     }
 
     #[test]
@@ -73,10 +69,9 @@ mod tests {
     }
 
     #[test]
-    fn remove_node_deletes_node_and_connected_edges_and_prunes_selection() {
+    fn remove_node_deletes_node_and_connected_edges() {
         let mut app = testkit::new_app();
         let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
-        app.dispatch_typed(DagCommand::SetSelection(crate::apps::dag::commands::set_selection::SetSelection { ids: vec![node_id.clone()] }), &semio_framework_plugin::testkit::meta("local")).expect("select");
         app.dispatch_typed(DagCommand::RemoveNode(remove_node::RemoveNode { node_id: node_id.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("remove");
         let document = app.snapshot().expect("projection");
         assert!(document.nodes().iter().all(|node| node.id != node_id));
@@ -85,8 +80,6 @@ mod tests {
             let (to, _) = crate::artifacts::dag::schema::split_endpoint(&edge.target);
             from != node_id && to != node_id
         }));
-        let node = app.render(DAG_PLAY_BODY_MAIN, None, &semio_framework_plugin::ViewModel::default()).expect("render");
-        assert!(!serde_json::to_string(&node).unwrap().contains(&node_id), "the removed node is pruned from the config selection");
     }
 
     #[test]

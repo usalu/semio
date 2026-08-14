@@ -15,6 +15,8 @@ pub struct RenameDagNode {
     pub value: String,
 }
 
+/// 🕹️ No longer re-selects the node under its new id — no `Emit` channel writes `graph`'s selection
+/// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn handle(payload: &RenameDagNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     let trimmed = payload.value.trim();
@@ -23,9 +25,5 @@ pub fn handle(payload: &RenameDagNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg
     }
     // 🏷️ `rename-node` already cascades the id change to every edge endpoint string that
     // referenced the old id — no manual node/edge rebuild needed here any more.
-    Ok(Emit {
-        artifact_mutations: vec![rename_node(payload.old_id.clone(), trimmed.to_string())],
-        config_mutations: vec![DagConfigMutation::SetSelection { node_ids: vec![trimmed.to_string()] }],
-        ..Default::default()
-    })
+    Ok(Emit::mutations(vec![rename_node(payload.old_id.clone(), trimmed.to_string())]))
 }

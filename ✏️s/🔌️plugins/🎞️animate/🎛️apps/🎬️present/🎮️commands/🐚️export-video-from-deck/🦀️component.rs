@@ -1,7 +1,7 @@
 //! 🐚️ 🐚️ Animate present app commands command — `export-video-from-deck`.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
-use crate::apps::present::tile_morph_prompt_effect;
+use crate::apps::present::PresentDispatchCtx;
 use crate::apps::present::engine::export_video_from_scene;
 use crate::apps::present::engine::PresentScene;
 use crate::artifacts::present::op::PresentMutation;
@@ -13,9 +13,6 @@ fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<
     export_video_from_scene(scene, std::path::Path::new(output_dir))
 }
 
-//#region 🔖️CopyPrompt
-//#endregion 🔖️CopyPrompt
-
 //#region 🔖️ExportVideoFromDeck
 //#endregion 🔖️ExportVideoFromDeck
 
@@ -26,7 +23,7 @@ pub struct ExportVideoFromDeck {
     pub scene_json: String,
 }
 
-pub fn handle(payload: &ExportVideoFromDeck, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &ExportVideoFromDeck, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let scene = serde_json::from_str::<PresentScene>(&payload.scene_json).unwrap_or_else(|_| PresentScene::empty("Deck export"));
     match export_video_from_deck(&scene, &payload.output_dir) {
         Ok(bundles) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()), encoding: None })),

@@ -3,8 +3,6 @@ export type AdjacencyKind = "required" | "preferred" | "optional" | "prohibited"
 
 export interface ArchitectConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
   activeRegister: string;
   /** @state config */
   searchQuery: string;

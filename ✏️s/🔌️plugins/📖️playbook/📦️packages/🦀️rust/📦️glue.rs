@@ -411,8 +411,6 @@ pub mod apps {
             pub mod remove_block;
             #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧱️move-block/🦀️component.rs"]
             pub mod move_block;
-            #[path = "../../🎛️apps/📖️playbook/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
             #[path = "../../🎛️apps/📖️playbook/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
             #[path = "../../🎛️apps/📖️playbook/🎮️commands/🧩️set-contributions/🦀️component.rs"]

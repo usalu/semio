@@ -92,6 +92,7 @@ pub fn window_definition(id: &str, label: LocalizedLabel, body_key: &str, icon_i
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        interactions: Vec::new(),
     }
 }
 

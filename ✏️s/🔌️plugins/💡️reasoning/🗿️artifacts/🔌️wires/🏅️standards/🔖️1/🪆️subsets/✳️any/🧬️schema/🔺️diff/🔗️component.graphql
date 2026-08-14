@@ -6,7 +6,6 @@ type WiresDiff {
   artifact: WiresArtifact @state(class: ARTIFACT)
   wiresFixture: DslValue @state(class: ARTIFACT)
   boardFixture: DslValue @state(class: ARTIFACT)
-  selectedIds: WiresStringList @state(class: PRESENCE)
   dragNodeId: String @state(class: ARTIFACT)
   dragLastX: Float @state(class: ARTIFACT)
   dragLastY: Float @state(class: ARTIFACT)
@@ -16,13 +15,8 @@ type WiresDiff {
 type WiresArtifact {
   wiresFixture: DslValue!
   boardFixture: DslValue!
-  selectedIds: [String!]!
   dragNodeId: String
   dragLastX: Float!
   dragLastY: Float!
   locale: String!
-}
-
-type WiresStringList {
-  values: [String!]!
 }

@@ -1,0 +1,19 @@
+Pre-existing failure evidence for semio-s-plugin-sequence W6 migration
+========================================================================
+
+Two test failures unrelated to hover/selection migration:
+  artifacts::sequence::standards::v1::subsets::any::schema::mutations::component::tests::delete_step_inverse_law
+  artifacts::sequence::standards::v1::subsets::any::schema::mutations::component::tests::delete_step_severs_and_reconnects_edges
+
+Both fail because ArtifactChild.child_id (a content hash) differs between the pre- and
+post-mutation snapshot in the delete-step inverse law -- a UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
+composed-child-hashing issue, nothing to do with selection/hover state.
+
+Evidence this file was never touched by this session's hover/selection migration:
+(empty diff above = untouched)
+
+git log --date=iso -1 on that file:
+1cf601859653b3f911d51e7601e10b7a302f342b 2026-08-13 15:56:12 +0200 🐙️ueli🎆️26🌙️06☀️04🚩️504
+
+Reproduced identically across two independent cargo test runs (see w6-sequence-cargo-test.txt):
+test result: FAILED. 125 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out

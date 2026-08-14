@@ -1,3 +1,2 @@
 type PlaybookPresence {
-  selectedIds: [String!]! @state(class: PRESENCE)
 }

@@ -6,7 +6,6 @@
   "required": [
     "wiresFixture",
     "boardFixture",
-    "selectedIds",
     "dragLastX",
     "dragLastY",
     "locale"
@@ -21,13 +20,6 @@
       "title": "DslValue",
       "type": "object",
       "x-semio-state": "artifact"
-    },
-    "selectedIds": {
-      "x-semio-state": "presence",
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
     },
     "dragNodeId": {
       "x-semio-state": "artifact",
@@ -46,24 +38,6 @@
     "locale": {
       "x-semio-state": "config",
       "type": "string"
-    }
-  },
-  "$defs": {
-    "WiresStringList": {
-      "title": "WiresStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
     }
   }
 }

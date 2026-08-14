@@ -388,26 +388,12 @@ pub mod apps {
             pub mod spotlight_commit;
             #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️delete-selection/🦀️component.rs"]
             pub mod delete_selection;
-            #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️select-all/🦀️component.rs"]
-            pub mod select_all;
             #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️focus-selection/🦀️component.rs"]
             pub mod focus_selection;
-            #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️set-selection/🦀️component.rs"]
-            pub mod set_selection;
-            #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️select-node/🦀️component.rs"]
-            pub mod select_node;
-            #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️node-graph-select/🦀️component.rs"]
-            pub mod node_graph_select;
-            #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️clear-selection/🦀️component.rs"]
-            pub mod clear_selection;
-            #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️graph-pointer-down/🦀️component.rs"]
-            pub mod graph_pointer_down;
             #[path = "../../🎛️apps/🌊️flow/🎮️commands/🗂️context-menu-at/🦀️component.rs"]
             pub mod context_menu_at;
             #[path = "../../🎛️apps/🌊️flow/🎮️commands/👁️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🎛️apps/🌊️flow/🎮️commands/👁️node-graph-hover/🦀️component.rs"]
-            pub mod node_graph_hover;
             #[path = "../../🎛️apps/🌊️flow/🎮️commands/👁️open-spotlight/🦀️component.rs"]
             pub mod open_spotlight;
             #[path = "../../🎛️apps/🌊️flow/🎮️commands/👁️replace-image/🦀️component.rs"]

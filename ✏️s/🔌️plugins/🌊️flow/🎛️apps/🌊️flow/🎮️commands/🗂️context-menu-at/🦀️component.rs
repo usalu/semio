@@ -1,8 +1,6 @@
 //! 🗂️ 🗂️ Flow play app commands command — `context-menu-at`.
 
 use crate::apps::flow::config::{FlowConfig, FlowConfigMutation};
-use crate::apps::flow::{focus_selection_camera, host_operations, sync_host_selection_domains};
-use crate::artifacts::flow::schema::widget_id;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -13,10 +11,11 @@ pub struct ContextMenuAt {
     pub id: String,
 }
 
-pub fn handle(payload: &ContextMenuAt, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    if payload.id.is_empty() {
-        return Ok(Emit::default());
-    }
-    let config = cfg.snapshot;
-    Ok(Emit::config(vec![FlowConfigMutation::SetSelection { node_ids: vec![payload.id.clone()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]))
+/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: right-clicking a node used to also
+/// select it via `FlowConfigMutation::SetSelection`; selection is framework-owned `InteractionState`
+/// now, only ever mutated by the framework's own injected `interactionSelect` handling, never by an app
+/// command's `Emit` (mirrors note's `add-block`) — a genuine no-operation, kept only because the shared
+/// `NodeGraph` canvas renderer (framework layer, unmigrated this wave) still dispatches it on right-click.
+pub fn handle(_payload: &ContextMenuAt, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    Ok(Emit::default())
 }

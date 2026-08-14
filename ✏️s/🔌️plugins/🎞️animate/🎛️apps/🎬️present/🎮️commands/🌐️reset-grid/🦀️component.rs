@@ -1,6 +1,7 @@
 //! 🌐️ 🌐️ Animate present app commands command — `reset-grid`.
 
 use crate::apps::present::config::{PresentConfig, PresentConfigMutation};
+use crate::apps::present::{interaction_select_effect, PresentDispatchCtx};
 use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;
@@ -16,10 +17,12 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reset-grid")]
 pub struct ResetGrid {}
 
-pub fn handle(_payload: &ResetGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(_payload: &ResetGrid, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
-    let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-    Ok(Emit { artifact_mutations: vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })], config_mutations: vec![PresentConfigMutation::SetSelectedIds { ids: selected }], ..Default::default() })
+    let selected: Vec<String> = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+    let mut emit = Emit::mutations(vec![PresentMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })]);
+    emit.effects.push(interaction_select_effect(&selected, "replace"));
+    Ok(emit)
 }

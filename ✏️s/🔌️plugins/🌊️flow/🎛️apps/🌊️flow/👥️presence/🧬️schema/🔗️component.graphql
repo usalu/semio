@@ -1,7 +1,4 @@
 type FlowPresence {
-  selectedNodeIds: [String!]! @state(class: PRESENCE)
-  selectedEdgeIds: [String!]! @state(class: PRESENCE)
-  selectedHandleIds: [String!]! @state(class: PRESENCE)
   previewOffNodeIds: [String!]! @state(class: PRESENCE)
   camera: CameraJson! @state(class: PRESENCE)
 }

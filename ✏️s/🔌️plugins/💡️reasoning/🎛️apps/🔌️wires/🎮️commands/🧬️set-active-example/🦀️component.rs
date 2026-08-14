@@ -28,7 +28,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifac
     let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID { metabolism_wires_example_snapshot() } else { empty_wires_snapshot() };
     Ok(Emit {
         effects: vec![crate::apps::wires::reset_wires_document_effect(&next)],
-        config_mutations: vec![WiresConfigMutation::SetSelection { ids: Vec::new() }, WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }],
+        config_mutations: vec![WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }],
         ..Default::default()
     })
 }

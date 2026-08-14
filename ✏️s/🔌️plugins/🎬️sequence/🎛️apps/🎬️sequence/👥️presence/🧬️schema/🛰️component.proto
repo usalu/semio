@@ -1,8 +1,7 @@
 syntax = "proto3";
 package semio.app.sequence.sequence;
 message SequencePresence {
-  // @state presence
-  repeated string selected_step_ids = 1;
+  reserved 1;
   // @state presence
   string orientation = 2;
   // @state presence

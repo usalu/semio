@@ -44,6 +44,7 @@ pub fn handle(_payload: &ForceLayout, doc: &ArtifactView<'_, WiresSnapshot>, _cf
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::apps::wires::commands::reorganize;
     use crate::apps::wires::testkit::{dispatch, metabolism_app};
     use crate::apps::wires::WiresCommand;
 

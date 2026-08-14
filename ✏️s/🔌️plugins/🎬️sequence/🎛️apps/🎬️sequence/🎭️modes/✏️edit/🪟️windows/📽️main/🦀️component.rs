@@ -28,6 +28,7 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+        interactions: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
@@ -73,8 +74,14 @@ pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
     host.layout_expanded_slots();
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let selection = config.selected_step_ids.clone();
-    build_node_graph_scene(SEQUENCE_PLAY_SURFACE_MAIN, SEQUENCE_PLAY_APP_ID, NodeGraphScene { editable: Some(true), selection, ..NodeGraphScene::base(nodes, edges, viewport) })
+    // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
+    // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and
+    // `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
+    // (unlike `UiNode::Tree` — see `stamp_and_cache_interaction_ui`), so `selection`/`hover` are left
+    // at `NodeGraphScene::base`'s defaults (empty/none) — the canvas no longer paints a live
+    // highlight until a future wave threads interaction into scene rendering. Flagged as a
+    // discovered framework gap, not worked around here (same gap `space`'s workflow window carries).
+    build_node_graph_scene(SEQUENCE_PLAY_SURFACE_MAIN, SEQUENCE_PLAY_APP_ID, NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 

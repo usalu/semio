@@ -3,7 +3,6 @@ export interface SequenceArtifact {
   /** @state artifact */ schema: string;
   /** @state artifact */ steps: SequenceStep[];
   /** @state artifact */ edges: SequenceEdge[];
-  /** @state presence */ selectedStepIds: string[];
   /** @state config */ lastRunJson: string;
   /** @state config */ orientation: string;
   /** @state config */ camera: SequenceCamera;

@@ -28,10 +28,10 @@ mod tests {
     use AddStep;
     use crate::apps::forms::testkit::{dispatch, forms_app};
     use crate::apps::forms::FormsCommand;
-    use move_step::MoveStep;
-    use patch_step::PatchStep;
-    use remove_step::RemoveStep;
-    use update_form::UpdateForm;
+    use crate::apps::forms::commands::move_step::MoveStep;
+    use crate::apps::forms::commands::patch_step::PatchStep;
+    use crate::apps::forms::commands::remove_step::RemoveStep;
+    use crate::apps::forms::commands::update_form::UpdateForm;
 
     #[test]
     fn add_step_action_appends_step() {

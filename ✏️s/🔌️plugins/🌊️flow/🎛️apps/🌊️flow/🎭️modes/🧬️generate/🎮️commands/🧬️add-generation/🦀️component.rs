@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn removing_an_unknown_generation_is_a_no_operation() {
         let mut app = flow_app();
-        let result = dispatch(&mut app, FlowCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "nope".into() }));
+        let result = dispatch(&mut app, FlowCommand::RemoveGeneration(crate::apps::flow::modes::generate::commands::remove_generation::RemoveGeneration { id: "nope".into() }));
         assert!(result.mutations.is_empty());
     }
 }

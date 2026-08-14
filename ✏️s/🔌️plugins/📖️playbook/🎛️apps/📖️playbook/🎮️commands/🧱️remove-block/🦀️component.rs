@@ -14,11 +14,13 @@ pub struct RemoveBlock {
     pub block_id: String,
 }
 
-pub fn handle(payload: &RemoveBlock, _doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer prunes the deleted block out
+// of a config-owned selection list here — the framework's own `revalidate_interaction_state_after_
+// document_change` prunes the "blocks" domain's selection against `interaction_topology` after every
+// document dispatch, so a deleted block's id is pruned automatically.
+pub fn handle(payload: &RemoveBlock, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     if payload.step_id.is_empty() || payload.block_id.is_empty() {
         return Ok(Emit::default());
     }
-    let config = cfg.snapshot;
-    let remaining: Vec<String> = config.selected_ids.iter().filter(|id| **id != payload.block_id).cloned().collect();
-    Ok(Emit { artifact_mutations: vec![remove_block_operation(&payload.step_id, &payload.block_id)], config_mutations: vec![PlaybookConfigMutation::SetSelectedIds { ids: remaining }], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![remove_block_operation(&payload.step_id, &payload.block_id)], ..Default::default() })
 }

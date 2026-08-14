@@ -2,9 +2,7 @@ syntax = "proto3";
 package semio.app.playbook.playbook;
 message PlaybookConfig {
   // @state config
-  repeated string selected_ids = 1;
+  string locale = 1;
   // @state config
-  string locale = 2;
-  // @state config
-  string contributions_json = 3;
+  string contributions_json = 2;
 }

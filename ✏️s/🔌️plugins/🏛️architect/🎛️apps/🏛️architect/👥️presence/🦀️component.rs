@@ -1,4 +1,8 @@
 //! 👥️ Architect presence — shareable live ephemeral state + mutations.
+//!
+//! 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection no longer lives
+//! here — it broadcasts automatically via the framework's typed `PresenceInteraction` (assembled
+//! from the "program" domain's `InteractionState`, zero app code).
 
 use crate::artifacts::program::registers::AdjacencyKind;
 use protocol::Mutation;
@@ -6,13 +10,12 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of architect view state (selection, active register, adjacency filter, graph camera).
+/// 👥️ Shareable live subset of architect view state (active register, adjacency filter, graph camera).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "architect.presence")]
 #[dsl(layout = "lines")]
 pub struct ArchitectPresence {
-    pub selected_ids: Vec<String>,
     pub active_register: String,
     pub adjacency_kind_filter: Option<AdjacencyKind>,
     pub graph_camera_x: f64,
@@ -23,7 +26,6 @@ pub struct ArchitectPresence {
 impl Default for ArchitectPresence {
     fn default() -> Self {
         Self {
-            selected_ids: Vec::new(),
             active_register: "elements".into(),
             adjacency_kind_filter: None,
             graph_camera_x: 0.0,

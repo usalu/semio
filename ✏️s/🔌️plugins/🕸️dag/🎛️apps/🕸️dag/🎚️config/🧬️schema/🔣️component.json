@@ -4,20 +4,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedNodeIds",
     "cameraX",
     "cameraY",
     "cameraZoom",
     "locale"
   ],
   "properties": {
-    "selectedNodeIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "cameraX": {
       "type": "number",
       "x-semio-state": "config"
