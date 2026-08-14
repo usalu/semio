@@ -26,10 +26,14 @@
 \providecommand{\semio@graph@node@image@opacity}{1.0}
 % 🪟 Trägerfläche hinter der Knoten-ID, NUR wenn ein Logo darunterliegt. Ohne
 % Kontur und halbtransparent: sie soll die Marke dämpfen, wo die Ziffern
-% stehen, und sonst nichts. Radius als Anteil des Knotenradius; 0.62 deckt die
-% dreistellige ID der Monospace in 5,2 pt gerade ab.
-\providecommand{\semio@graph@node@label@plate@radius}{0.62}
-\providecommand{\semio@graph@node@label@plate@opacity}{0.72}
+% stehen, und sonst nichts.
+% Radius = 1.0, also deckungsgleich mit dem Knotenkreis selbst -- explizit
+% angewiesen, nachdem 0.62 und danach 0.66 (nur ein Fleck hinter der ID) bei
+% kräftigen Marken (M44, M11, U27) nicht genug Kontrast für die ID hergaben.
+% Bei radius=1.0 liegt die Fläche exakt unter der äußeren Kontur, deckt also
+% den ganzen Kreis, nicht nur die Zone um das Label.
+\providecommand{\semio@graph@node@label@plate@radius}{1.0}
+\providecommand{\semio@graph@node@label@plate@opacity}{0.85}
 % 🔠 Node label face. Deliberately smaller than \semio@chrome@font@chip: a
 % graph label sits inside a ~4.5mm circle, not in a window tab.
 \providecommand{\semio@graph@label@size}{5.2pt}
