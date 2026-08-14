@@ -33,7 +33,10 @@
 % Bei radius=1.0 liegt die Fläche exakt unter der äußeren Kontur, deckt also
 % den ganzen Kreis, nicht nur die Zone um das Label.
 \providecommand{\semio@graph@node@label@plate@radius}{1.0}
-\providecommand{\semio@graph@node@label@plate@opacity}{0.85}
+% 0.60, nicht 0.85: auf Wunsch geöffnet, damit die Marke insgesamt sichtbarer
+% bleibt. ID-Kontrast über kräftigen Marken bei diesem Wert im gebauten PDF
+% gegenprüfen -- 0.85 war die zuletzt bestätigte untere Grenze für M44/M11/U27.
+\providecommand{\semio@graph@node@label@plate@opacity}{0.60}
 % 🔠 Node label face. Deliberately smaller than \semio@chrome@font@chip: a
 % graph label sits inside a ~4.5mm circle, not in a window tab.
 \providecommand{\semio@graph@label@size}{5.2pt}
